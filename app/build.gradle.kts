@@ -39,7 +39,7 @@ android {
 }
 
 dependencies {
-
+    implementation("io.github.alllexey123:my-itmo-api:1.1.2")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

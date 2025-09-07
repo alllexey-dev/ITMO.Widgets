@@ -51,7 +51,7 @@
                     android:layout_marginEnd="4dp" />
 
                 <TextView
-                    android:id="@+id/lecturer"
+                    android:id="@+id/teacher"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/open_sans"
@@ -75,7 +75,7 @@
                     android:layout_marginEnd="4dp" />
 
                 <TextView
-                    android:id="@+id/location_cabinet"
+                    android:id="@+id/location_room"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/open_sans"
