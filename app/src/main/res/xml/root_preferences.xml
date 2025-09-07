@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Аккаунт">
+
+        <EditTextPreference
+            app:key="refresh_token"
+            app:title="Refresh Token"
+            app:summary="Вставьте сюда refresh_token"
+            app:useSimpleSummaryProvider="true"
+            app:icon="@drawable/outline_code_blocks_24"/>
+
+        <Preference
+            app:key="refresh_token_expires"
+            app:isPreferenceVisible="false" />
+
+    </PreferenceCategory>
+
+
+    <PreferenceCategory app:title="Настройки виджета">
+
+        <ListPreference
+            app:key="update_interval"
+            app:title="Период обновления виджета"
+            app:summary="Как часто виджет будет обновляться"
+            app:entries="@array/update_interval_entries"
+            app:entryValues="@array/update_interval_values"
+            app:defaultValue="7"
+            app:useSimpleSummaryProvider="true"
+            app:icon="@drawable/outline_alarm_24"/>
+
+
+        <Preference
+            app:key="last_update_status"
+            app:title="Последнее успешное обновление"
+            app:summary="Обновлений пока не было"
+            app:icon="@drawable/outline_build_circle_24"
+            app:selectable="false" />
+    </PreferenceCategory>
+</PreferenceScreen>

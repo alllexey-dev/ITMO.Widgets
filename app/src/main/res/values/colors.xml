@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="primary_color">#FF1743BD</color>
+    <color name="primary_variant_color">#3A8AFF</color>
     <color name="practice_color">#FFF7B500</color>
     <color name="lab_color">#FFA50AFF</color>
     <color name="lecture_color">#FF0091FF</color>

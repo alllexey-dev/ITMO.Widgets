@@ -4,10 +4,9 @@
     android:initialKeyguardLayout="@layout/lesson_widget"
     android:initialLayout="@layout/lesson_widget"
     android:minWidth="250dp"
-    android:minHeight="60dp"
+    android:minHeight="80dp"
     android:previewImage="@drawable/lesson_widget_preview"
 
-    android:targetCellWidth="4"
-    android:targetCellHeight="1"
+    android:resizeMode="horizontal"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen" />
