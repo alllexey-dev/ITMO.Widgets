@@ -47,7 +47,7 @@ class WidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters
             val response = myItmo!!.api().getPersonalSchedule(currentDate, currentDate)
                 .execute().body()
 
-            if (response?.data != null && response.data.isNotEmpty()) {
+            if (response?.data != null && response.data.isNotEmpty() && response.data[0].lessons != null && response.data[0].lessons.isNotEmpty()) {
                 val lessons = response.data[0].lessons
                 var targetLesson: Lesson? = null
 
@@ -84,7 +84,7 @@ class WidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters
                         -1,
                         "нет",
                         "",
-                        hideTeacher = true, hideLocation = true, hideTime = false
+                        hideTeacher = true, hideLocation = true, hideTime = true
                     )
                 }
             } else {
