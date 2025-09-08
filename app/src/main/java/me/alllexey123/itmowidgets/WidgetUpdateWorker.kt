@@ -3,17 +3,18 @@ package me.alllexey123.itmowidgets
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
-import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import api.myitmo.model.Lesson
+import me.alllexey123.itmowidgets.providers.ScheduleProvider
+import me.alllexey123.itmowidgets.providers.StorageProvider
+import me.alllexey123.itmowidgets.widgets.SingleLessonWidget
+import me.alllexey123.itmowidgets.widgets.SingleLessonWidgetData
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 class WidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters) :
@@ -21,98 +22,46 @@ class WidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters
 
     override suspend fun doWork(): Result {
         val appWidgetManager = AppWidgetManager.getInstance(appContext)
-        val widgetProvider = ComponentName(appContext, LessonWidget::class.java)
+        val widgetProvider = ComponentName(appContext, SingleLessonWidget::class.java)
         val appWidgetIds = appWidgetManager.getAppWidgetIds(widgetProvider)
 
         if (appWidgetIds.isEmpty()) {
             return Result.success()
         }
 
-        val prefs = PreferenceManager.getDefaultSharedPreferences(appContext)
-        prefs.edit {
-            putLong("last_update_timestamp", System.currentTimeMillis())
-        }
+        val storage = StorageProvider.getStorage(appContext)
+        storage.setLastUpdateTimestamp(System.currentTimeMillis())
 
-        if (MyItmoProvider.myItmoSingleton == null) {
-            val myItmo = MyItmoProvider.createMyItmo(prefs)
-            MyItmoProvider.myItmoSingleton = myItmo
-        }
-
-        val myItmo = MyItmoProvider.myItmoSingleton
-
-        val lessonData: LessonData = try {
+        val singleLessonWidgetData: SingleLessonWidgetData = try {
             val currentDateTime = LocalDateTime.now()
-            val currentDate = LocalDate.now()
+            val currentDate = LocalDate.now().plusDays(1)
 
-            val response = myItmo!!.api().getPersonalSchedule(currentDate, currentDate)
-                .execute().body()
+            val daySchedule = ScheduleProvider.getDaySchedule(appContext, currentDate)
+            val lessons = daySchedule.lessons
 
-            if (response?.data != null && response.data.isNotEmpty() && response.data[0].lessons != null && response.data[0].lessons.isNotEmpty()) {
-                val lessons = response.data[0].lessons
-                var targetLesson: Lesson? = null
+            if (lessons == null || lessons.isEmpty()) {
+                SingleLessonWidget.noLessonsWidgetData()
+            }
 
-                val currTime = DateTimeFormatter.ofPattern("HH:mm").format(currentDateTime)
-                for (lesson in lessons) {
-                    if (lesson.timeEnd > currTime) {
-                        targetLesson = lesson
-                        break
-                    }
-                }
+            val targetLesson = ScheduleProvider.findCurrentOrNextLesson(lessons, currentDateTime)
 
-                if (targetLesson != null) {
-                    val startTime = targetLesson.timeStart
-                    val endTime = targetLesson.timeEnd
-                    val building = targetLesson.building
-                    val shortBuilding = if (building == null) "" else getShortBuildingName(building)
-                    val room = if (targetLesson.room == null) "нет кабинета" else targetLesson.room + ", "
-
-                    LessonData(
-                        targetLesson.subject ?: "Неизвестная дисциплина",
-                        "$startTime - $endTime",
-                        targetLesson.teacherName ?: "Неизвестный преподаватель",
-                        targetLesson.workTypeId,
-                        room,
-                        shortBuilding,
-                        hideTeacher = targetLesson.teacherName == null, hideLocation = false, hideTime = false
-                    )
-                } else {
-                    val lastLessonEndTime = lessons.lastOrNull()?.timeEnd ?: "00:00"
-                    LessonData(
-                        "Сегодня больше нет пар!",
-                        "$lastLessonEndTime - 23:59",
-                        "нет",
-                        -1,
-                        "нет",
-                        "",
-                        hideTeacher = true, hideLocation = true, hideTime = true
-                    )
-                }
+            if (targetLesson != null) {
+                SingleLessonWidget.widgetData(targetLesson)
             } else {
-                LessonData(
-                    "Сегодня пар нет!",
-                    "00:00 - 23:59",
-                    "нет",
-                    -1,
-                    "нет",
-                    "",
-                    hideTeacher = true, hideLocation = true, hideTime = true
-                )
+                SingleLessonWidget.noLeftLessonsWidgetData()
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            LessonData(
-                "Ошибка при получении данных",
-                "??:?? - ??:??",
-                "...",
-                0,
-                "...",
-                "",
-                hideTeacher = true, hideLocation = true, hideTime = true
-            )
+            SingleLessonWidget.errorLessonWidgetData()
         }
 
         for (appWidgetId in appWidgetIds) {
-            updateAppWidget(appContext, appWidgetManager, appWidgetId, lessonData)
+            SingleLessonWidget.updateAppWidget(
+                appContext,
+                appWidgetManager,
+                appWidgetId,
+                singleLessonWidgetData
+            )
         }
 
         scheduleNextUpdate(appContext)

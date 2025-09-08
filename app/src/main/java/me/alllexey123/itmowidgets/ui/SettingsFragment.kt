@@ -5,7 +5,10 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.core.content.edit
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
+import me.alllexey123.itmowidgets.utils.LAST_UPDATE_TIMESTAMP_KEY
 import me.alllexey123.itmowidgets.R
+import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_EXPIRES_KEY
+import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_KEY
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -15,10 +18,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
-        val refreshTokenPreference = findPreference<EditTextPreference>("refresh_token")
+        val refreshTokenPreference = findPreference<EditTextPreference>(REFRESH_TOKEN_KEY)
 
         refreshTokenPreference?.setOnPreferenceChangeListener { preference, newValue ->
-            val currentValue = preferenceManager.sharedPreferences?.getString("refresh_token", "")
+            val currentValue = preferenceManager.sharedPreferences?.getString(REFRESH_TOKEN_KEY, "")
 
             if (newValue is String && newValue != currentValue) {
                 resetTokenExpirationDate()
@@ -32,7 +35,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val sharedPreferences = preferenceManager.sharedPreferences ?: return
 
         sharedPreferences.edit {
-            putLong("refresh_token_expires", 0L)
+            putLong(REFRESH_TOKEN_EXPIRES_KEY, 0L)
         }
     }
 
@@ -44,9 +47,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun updateLastUpdateTime() {
         val prefs = preferenceManager.sharedPreferences ?: return
 
-        val lastUpdatePreference = findPreference<Preference>("last_update_status")
+        val lastUpdatePreference = findPreference<Preference>(LAST_UPDATE_TIMESTAMP_KEY)
 
-        val timestamp = prefs.getLong("last_update_timestamp", 0L)
+        val timestamp = prefs.getLong(LAST_UPDATE_TIMESTAMP_KEY, 0L)
 
         if (timestamp == 0L) {
             lastUpdatePreference?.summary = "Обновлений пока не было"

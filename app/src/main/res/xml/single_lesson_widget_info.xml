@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/lesson_widget_description"
-    android:initialKeyguardLayout="@layout/lesson_widget"
-    android:initialLayout="@layout/lesson_widget"
+    android:initialKeyguardLayout="@layout/single_lesson_widget"
+    android:initialLayout="@layout/single_lesson_widget"
     android:minWidth="250dp"
     android:minHeight="80dp"
     android:previewImage="@drawable/lesson_widget_preview"

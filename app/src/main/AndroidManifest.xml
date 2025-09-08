@@ -13,7 +13,7 @@
         android:theme="@style/AppTheme"
         android:name=".ItmoWidgetsApp">
         <receiver
-            android:name=".LessonWidget"
+            android:name=".widgets.SingleLessonWidget"
             android:exported="false"
             android:label="@string/lesson_widget_name">
             <intent-filter>
@@ -22,11 +22,11 @@
 
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/lesson_widget_info" />
+                android:resource="@xml/single_lesson_widget_info" />
         </receiver>
 
         <receiver
-            android:name=".BootReceiver"
+            android:name=".receivers.BootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
