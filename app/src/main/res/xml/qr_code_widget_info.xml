@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="150dp"
+    android:minHeight="150dp"
+    android:updatePeriodMillis="0"
+    android:previewImage="@drawable/rounded_divider"
+    android:initialLayout="@layout/qr_code_widget"
+    android:description="@string/qr_widget_description"
+
+    android:widgetCategory="home_screen"
+    android:initialKeyguardLayout="@layout/qr_code_widget"
+/>

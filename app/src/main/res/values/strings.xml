@@ -1,6 +1,7 @@
 <resources>
-    <string name="prefs_file_key">me.alllexey123.itmowidgets.PREFERENCE_FILE_KEY</string>
     <string name="app_name">ITMO.Widgets</string>
     <string name="lesson_widget_name">Следующая пара</string>
     <string name="lesson_widget_description">Отображает текущую или следующую пару</string>
+    <string name="qr_widget_name">QR-код</string>
+    <string name="qr_widget_description">QR-код в качестве пропуска</string>
 </resources>

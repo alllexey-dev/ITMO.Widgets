@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.work.WorkManager
 import api.myitmo.model.Lesson
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.WidgetUpdateWorker
+import me.alllexey123.itmowidgets.LessonWidgetUpdateWorker
 import me.alllexey123.itmowidgets.utils.ScheduleUtils
 
 class SingleLessonWidget : AppWidgetProvider() {
@@ -19,15 +19,15 @@ class SingleLessonWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        WidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
+        LessonWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
     }
 
     override fun onEnabled(context: Context) {
-        WidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
+        LessonWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
     }
 
     override fun onDisabled(context: Context) {
-        WorkManager.getInstance(context).cancelUniqueWork(WidgetUpdateWorker.Companion.WIDGET_UPDATE_WORK_NAME)
+        WorkManager.getInstance(context).cancelUniqueWork(LessonWidgetUpdateWorker.Companion.WIDGET_UPDATE_WORK_NAME)
     }
 
     companion object {

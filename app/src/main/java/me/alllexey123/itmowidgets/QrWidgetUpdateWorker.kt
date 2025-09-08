@@ -1,0 +1,93 @@
+package me.alllexey123.itmowidgets
+
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Color
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import me.alllexey123.itmowidgets.providers.QrCodeProvider
+import me.alllexey123.itmowidgets.widgets.QrCodeWidget
+import java.util.concurrent.TimeUnit
+
+class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters) :
+    CoroutineWorker(appContext, workerParams) {
+
+    override suspend fun doWork(): Result {
+        val appWidgetManager = AppWidgetManager.getInstance(appContext)
+        val widgetProvider = ComponentName(appContext, QrCodeWidget::class.java)
+        val appWidgetIds = appWidgetManager.getAppWidgetIds(widgetProvider)
+
+        if (appWidgetIds.isEmpty()) {
+            return Result.success()
+        }
+        
+        val bitmap: Bitmap = try {
+            val qrCode = QrCodeProvider.getQrCode(appContext)
+            QrCodeProvider.qrCodeToBitmap(qrCode, 21, 20)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            val bm = createBitmap(1, 1, Bitmap.Config.RGB_565) // empty
+            bm[0, 0] = Color.GRAY
+            bm
+        }
+
+        for (appWidgetId in appWidgetIds) {
+            QrCodeWidget.updateAppWidget(
+                appContext,
+                appWidgetManager,
+                appWidgetId,
+                bitmap
+            )
+        }
+
+        scheduleNextUpdate(appContext)
+
+        return Result.success()
+    }
+
+    companion object {
+        const val WIDGET_UPDATE_WORK_NAME = "me.alllexey123.itmowidgets.QrWidgetUpdate"
+
+        fun enqueueImmediateUpdate(context: Context) {
+            val immediateWorkRequest = OneTimeWorkRequestBuilder<QrWidgetUpdateWorker>()
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                WIDGET_UPDATE_WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                immediateWorkRequest
+            )
+        }
+
+        fun enqueueImmediateUpdateIfNot(context: Context) {
+            val immediateWorkRequest = OneTimeWorkRequestBuilder<QrWidgetUpdateWorker>()
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                WIDGET_UPDATE_WORK_NAME,
+                ExistingWorkPolicy.KEEP,
+                immediateWorkRequest
+            )
+        }
+
+        fun scheduleNextUpdate(context: Context) {
+            val duration = 60L
+            val updateWorkRequest = OneTimeWorkRequestBuilder<QrWidgetUpdateWorker>()
+                .setInitialDelay(duration, TimeUnit.MINUTES)
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                WIDGET_UPDATE_WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                updateWorkRequest
+            )
+        }
+    }
+}

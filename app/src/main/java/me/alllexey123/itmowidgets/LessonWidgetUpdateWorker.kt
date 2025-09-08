@@ -17,7 +17,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
-class WidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters) :
+class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -73,7 +73,7 @@ class WidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters
         const val WIDGET_UPDATE_WORK_NAME = "me.alllexey123.itmowidgets.LessonWidgetUpdate"
 
         fun enqueueImmediateUpdate(context: Context) {
-            val immediateWorkRequest = OneTimeWorkRequestBuilder<WidgetUpdateWorker>()
+            val immediateWorkRequest = OneTimeWorkRequestBuilder<LessonWidgetUpdateWorker>()
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
@@ -84,7 +84,7 @@ class WidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters
         }
 
         fun enqueueImmediateUpdateIfNot(context: Context) {
-            val immediateWorkRequest = OneTimeWorkRequestBuilder<WidgetUpdateWorker>()
+            val immediateWorkRequest = OneTimeWorkRequestBuilder<LessonWidgetUpdateWorker>()
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
@@ -98,7 +98,7 @@ class WidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters
         fun scheduleNextUpdate(context: Context) {
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
             val duration = prefs.getString("update_interval", "7")?.toLongOrNull() ?: 7L
-            val updateWorkRequest = OneTimeWorkRequestBuilder<WidgetUpdateWorker>()
+            val updateWorkRequest = OneTimeWorkRequestBuilder<LessonWidgetUpdateWorker>()
                 .setInitialDelay(duration, TimeUnit.MINUTES)
                 .build()
 

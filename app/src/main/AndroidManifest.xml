@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
+        android:name=".ItmoWidgetsApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -10,8 +13,19 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:name=".ItmoWidgetsApp">
+        android:theme="@style/AppTheme">
+        <receiver
+            android:name=".widgets.QrCodeWidget"
+            android:exported="false"
+            android:label="@string/qr_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/qr_code_widget_info" />
+        </receiver>
         <receiver
             android:name=".widgets.SingleLessonWidget"
             android:exported="false"
@@ -24,7 +38,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/single_lesson_widget_info" />
         </receiver>
-
         <receiver
             android:name=".receivers.BootReceiver"
             android:enabled="true"
