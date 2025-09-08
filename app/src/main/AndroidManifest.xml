@@ -10,7 +10,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ITMOWidgets"
+        android:theme="@style/AppTheme"
         android:name=".ItmoWidgetsApp">
         <receiver
             android:name=".LessonWidget"
@@ -36,8 +36,7 @@
 
         <activity
             android:name=".ui.SettingsActivity"
-            android:exported="true"
-            android:theme="@style/Theme.ITMOWidgets" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

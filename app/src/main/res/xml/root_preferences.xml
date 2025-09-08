@@ -27,14 +27,13 @@
             app:entryValues="@array/update_interval_values"
             app:defaultValue="7"
             app:useSimpleSummaryProvider="true"
-            app:icon="@drawable/outline_alarm_24"/>
+            app:icon="@drawable/outline_alarm_24" />
 
 
         <Preference
             app:key="last_update_status"
             app:title="Последнее успешное обновление"
             app:summary="Обновлений пока не было"
-            app:icon="@drawable/outline_build_circle_24"
-            app:selectable="false" />
+            app:icon="@drawable/outline_build_circle_24" />
     </PreferenceCategory>
 </PreferenceScreen>
