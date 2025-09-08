@@ -34,7 +34,7 @@ class WidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters
 
         val singleLessonWidgetData: SingleLessonWidgetData = try {
             val currentDateTime = LocalDateTime.now()
-            val currentDate = LocalDate.now().plusDays(1)
+            val currentDate = LocalDate.now()
 
             val daySchedule = ScheduleProvider.getDaySchedule(appContext, currentDate)
             val lessons = daySchedule.lessons
