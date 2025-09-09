@@ -3,13 +3,17 @@ package me.alllexey123.itmowidgets.providers
 import android.content.Context
 import api.myitmo.model.Lesson
 import api.myitmo.model.Schedule
-import java.time.DayOfWeek
+import com.google.gson.Gson
+import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalAdjusters
 
 object ScheduleProvider {
+
+    private const val CACHE_EXPIRATION_MS = 3 * 60 * 60 * 1000L // 3 hours
+
+    private data class CacheEntry(val timestamp: Long, val data: String?)
 
     fun findCurrentOrNextLesson(lessons: List<Lesson>, timeContext: LocalDateTime): Lesson? {
         return findCurrentLesson(lessons, timeContext) ?: findNextLesson(lessons, timeContext)
@@ -48,12 +52,16 @@ object ScheduleProvider {
     }
 
     fun getDaySchedule(context: Context, date: LocalDate): Schedule {
+        val cacheDir = cacheDir(context)
         val myItmo = MyItmoProvider.getMyItmo(context)
+
+        val cached = readSchedule(date, cacheDir, myItmo.gson)
+        if (cached != null) return cached
 
         try {
             val dataResponse = myItmo.api().getPersonalSchedule(date, date).execute().body()
 
-            if (dataResponse == null ) {
+            if (dataResponse == null) {
                 throw RuntimeException("Data response is null")
             }
 
@@ -61,33 +69,57 @@ object ScheduleProvider {
                 throw RuntimeException("Schedule data is empty")
             }
 
-            return dataResponse.data[0]
+            val schedule = dataResponse.data[0]
+
+            writeSchedule(schedule, cacheDir, myItmo.gson)
+
+            return schedule
 
         } catch (e: Exception) {
             throw RuntimeException("Could not get lessons", e)
         }
     }
 
-    fun getWeekSchedule(context: Context, date: LocalDate): List<Schedule> {
-        val weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    fun writeSchedule(schedule: Schedule, cacheDir: File, gson: Gson) {
+        val string = gson.toJson(schedule)
+        writeCache(string, schedule.date.toString(), cacheDir, gson)
+    }
 
-        val myItmo = MyItmoProvider.getMyItmo(context)
+    fun readSchedule(date: LocalDate, cacheDir: File, gson: Gson): Schedule? {
+        val string = readCache(date.toString(), cacheDir, gson)
+        if (string == null) return null
+        return gson.fromJson(string, Schedule::class.java)
+    }
 
+    fun readCache(name: String, cacheDir: File, gson: Gson): String? {
+        val file = File(cacheDir, "$name.json")
         try {
-            val dataResponse = myItmo.api().getPersonalSchedule(weekStart, weekStart.plusDays(6)).execute().body()
-
-            if (dataResponse == null ) {
-                throw RuntimeException("Data response is null")
-            }
-
-            if (dataResponse.data == null || dataResponse.data.isEmpty()) {
-                throw RuntimeException("Schedule data is empty")
-            }
-
-            return dataResponse.data
-
+            val entry = gson.fromJson(file.readText(), CacheEntry::class.java)
+            if (isExpired(entry.timestamp)) return null
+            return entry.data
         } catch (e: Exception) {
-            throw RuntimeException("Could not get lessons", e)
+            return null
         }
+    }
+
+    fun writeCache(data: String, name: String, cacheDir: File, gson: Gson) {
+        val file = File(cacheDir, "$name.json")
+        val entry = CacheEntry(System.currentTimeMillis(), data)
+        try {
+            file.writeText(gson.toJson(entry))
+        } catch (e: Exception) {
+        }
+    }
+
+    fun clearCache(context: Context) {
+        File(context.cacheDir, "schedule_cache").apply { deleteRecursively() }
+    }
+
+    fun cacheDir(context: Context): File {
+        return File(context.cacheDir, "schedule_cache").apply { mkdirs() }
+    }
+
+    fun isExpired(timestamp: Long): Boolean {
+        return (System.currentTimeMillis() - timestamp) > CACHE_EXPIRATION_MS
     }
 }
