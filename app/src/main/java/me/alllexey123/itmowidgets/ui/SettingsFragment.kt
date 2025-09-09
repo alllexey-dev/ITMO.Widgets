@@ -7,6 +7,9 @@ import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import me.alllexey123.itmowidgets.utils.LAST_UPDATE_TIMESTAMP_KEY
 import me.alllexey123.itmowidgets.R
+import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_EXPIRES_KEY
+import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_KEY
+import me.alllexey123.itmowidgets.utils.ID_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_KEY
 import java.text.SimpleDateFormat
@@ -24,18 +27,21 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val currentValue = preferenceManager.sharedPreferences?.getString(REFRESH_TOKEN_KEY, "")
 
             if (newValue is String && newValue != currentValue) {
-                resetTokenExpirationDate()
+                onRefreshTokenUpdate()
             }
 
             true
         }
     }
 
-    private fun resetTokenExpirationDate() {
+    private fun onRefreshTokenUpdate() {
         val sharedPreferences = preferenceManager.sharedPreferences ?: return
 
         sharedPreferences.edit {
-            putLong(REFRESH_TOKEN_EXPIRES_KEY, 0L)
+            remove(REFRESH_TOKEN_EXPIRES_KEY)
+            remove(ACCESS_TOKEN_KEY)
+            remove(ACCESS_TOKEN_EXPIRES_KEY)
+            remove(ID_TOKEN_KEY)
         }
     }
 
