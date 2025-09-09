@@ -74,7 +74,7 @@ object ScheduleProvider {
         val myItmo = MyItmoProvider.getMyItmo(context)
 
         try {
-            val dataResponse = myItmo.api().getPersonalSchedule(weekStart, weekStart.plusDays(7)).execute().body()
+            val dataResponse = myItmo.api().getPersonalSchedule(weekStart, weekStart.plusDays(6)).execute().body()
 
             if (dataResponse == null ) {
                 throw RuntimeException("Data response is null")
