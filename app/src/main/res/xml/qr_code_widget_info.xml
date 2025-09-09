@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="150dp"
-    android:minHeight="150dp"
+    android:minWidth="180dp"
+    android:minHeight="180dp"
     android:updatePeriodMillis="0"
     android:previewImage="@drawable/rounded_divider"
     android:initialLayout="@layout/qr_code_widget"
