@@ -15,6 +15,25 @@ import androidx.core.graphics.toColorInt
 
 object QrCodeProvider {
 
+    fun emptyQrCode(side: Int, rounding: Float, fillColor: Int): Bitmap {
+        val bitmap = createBitmap(side, side, Bitmap.Config.RGB_565)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(Color.WHITE)
+
+        val paint = Paint().apply {
+            color = fillColor
+            isAntiAlias = true
+        }
+
+        val path = Path().apply {
+            addRoundRect(RectF(0F, 0F, side.toFloat(), side.toFloat()), rounding, rounding, Path.Direction.CW)
+        }
+
+        canvas.drawPath(path, paint)
+
+        return bitmap
+    }
+
     fun qrCodeToBitmap(qrCode: QrCode, qrSide: Int, pixelsPerModule: Int): Bitmap {
         val bitmap = createBitmap(qrSide * pixelsPerModule, qrSide * pixelsPerModule)
         val canvas = Canvas(bitmap)

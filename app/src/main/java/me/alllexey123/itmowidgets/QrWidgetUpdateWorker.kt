@@ -5,8 +5,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
-import androidx.core.graphics.createBitmap
-import androidx.core.graphics.set
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -33,9 +31,7 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
             QrCodeProvider.qrCodeToBitmap(qrCode, 21, 20)
         } catch (e: Exception) {
             e.printStackTrace()
-            val bm = createBitmap(1, 1, Bitmap.Config.RGB_565) // empty
-            bm[0, 0] = Color.GRAY
-            bm
+            QrCodeProvider.emptyQrCode(400, 20F, Color.DKGRAY)
         }
 
         for (appWidgetId in appWidgetIds) {
