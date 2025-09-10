@@ -14,6 +14,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <receiver
             android:name=".widgets.QrCodeWidget"
             android:exported="false"
@@ -28,6 +29,7 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/qr_code_widget_info" />
         </receiver>
+
         <receiver
             android:name=".widgets.SingleLessonWidget"
             android:exported="false"
@@ -40,6 +42,20 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/single_lesson_widget_info" />
         </receiver>
+
+        <receiver
+            android:name=".widgets.SingleLessonWidgetVariant"
+            android:exported="false"
+            android:label="@string/lesson_widget_variant_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/single_lesson_widget_variant_info" />
+        </receiver>
+
         <receiver
             android:name=".receivers.BootReceiver"
             android:enabled="true"

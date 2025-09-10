@@ -6,6 +6,7 @@
     <color name="lab_color">#FFA50AFF</color>
     <color name="lecture_color">#FF0091FF</color>
     <color name="subtext_color">#FF5C5C5C</color>
+    <color name="subtext_color_lighter">#7A7A7A</color>
     <color name="free_color">#41B946</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>

@@ -12,7 +12,7 @@ import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.LessonWidgetUpdateWorker
 import me.alllexey123.itmowidgets.utils.ScheduleUtils
 
-class SingleLessonWidget : AppWidgetProvider() {
+open class SingleLessonWidget : AppWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
@@ -31,12 +31,16 @@ class SingleLessonWidget : AppWidgetProvider() {
     }
 
     companion object {
-        internal fun widgetData(lesson: Lesson): SingleLessonWidgetData {
+        internal fun widgetData(lesson: Lesson, moreLessons: Int?, till: String): SingleLessonWidgetData {
             val startTime = lesson.timeStart
             val endTime = lesson.timeEnd
             val building = lesson.building
             val shortBuilding = if (building == null) "" else ScheduleUtils.shortenBuildingName(building)
-            val room = if (lesson.room == null) "нет кабинета" else lesson.room + ", "
+            val room = if (lesson.room == null) "нет кабинета" else ScheduleUtils.shortenRoom(lesson.room!!) + ", "
+            val moreLessonsText =
+                if (moreLessons == null || moreLessons <= 0) "" else "и ещё $moreLessons " +
+                        ScheduleUtils.lessonDeclension(moreLessons) +
+                        " до $till"
 
             return SingleLessonWidgetData(
                 subject = lesson.subject ?: "Неизвестная дисциплина",
@@ -45,9 +49,11 @@ class SingleLessonWidget : AppWidgetProvider() {
                 workTypeId = lesson.workTypeId,
                 room = room,
                 building = shortBuilding,
+                moreLessonsText = moreLessonsText,
                 hideTeacher = lesson.teacherName == null,
                 hideLocation = false,
-                hideTime = false
+                hideTime = false,
+                hideMoreLessonsText = moreLessons == null
             )
 
         }
@@ -56,7 +62,7 @@ class SingleLessonWidget : AppWidgetProvider() {
             return SingleLessonWidgetData(
                 subject = "Сегодня пар нет!",
                 workTypeId = -1,
-                hideTeacher = true, hideLocation = true, hideTime = true
+                hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
             )
         }
 
@@ -64,7 +70,7 @@ class SingleLessonWidget : AppWidgetProvider() {
             return SingleLessonWidgetData(
                 subject = "Сегодня больше нет пар!",
                 workTypeId = -1,
-                hideTeacher = true, hideLocation = true, hideTime = true
+                hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
             )
         }
 
@@ -72,7 +78,7 @@ class SingleLessonWidget : AppWidgetProvider() {
             return SingleLessonWidgetData(
                 subject = "Ошибка при получении данных",
                 workTypeId = 0,
-                hideTeacher = true, hideLocation = true, hideTime = true
+                hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
             )
         }
 
@@ -80,28 +86,31 @@ class SingleLessonWidget : AppWidgetProvider() {
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
-            data: SingleLessonWidgetData
+            data: SingleLessonWidgetData,
+            layoutId: Int
         ) {
-            val views = RemoteViews(context.packageName, R.layout.single_lesson_widget)
+            val views = RemoteViews(context.packageName, layoutId)
 
             views.setTextViewText(R.id.title, data.subject)
             views.setTextViewText(R.id.teacher, data.teacher)
             views.setTextViewText(R.id.location_room, data.room)
             views.setTextViewText(R.id.location_building, data.building)
+            views.setTextViewText(R.id.more_lessons_text, data.moreLessonsText)
             views.setViewVisibility(R.id.teacher_layout, if (data.hideTeacher) View.GONE else View.VISIBLE)
             views.setViewVisibility(R.id.location_layout, if (data.hideLocation) View.GONE else View.VISIBLE)
             views.setViewVisibility(R.id.time_layout, if (data.hideTime) View.GONE else View.VISIBLE)
+            views.setViewVisibility(R.id.more_lessons_layout, if (data.hideMoreLessonsText) View.GONE else View.VISIBLE)
 
             views.setTextViewText(R.id.time, data.times)
 
             val colorId = ScheduleUtils.getWorkTypeColor(data.workTypeId)
 
             views.setInt(
-                R.id.divider, "setColorFilter",
+                R.id.type_indicator, "setColorFilter",
                 ContextCompat.getColor(context, colorId)
             )
 
-            appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
+            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
     }
 }
@@ -109,5 +118,6 @@ class SingleLessonWidget : AppWidgetProvider() {
 class SingleLessonWidgetData(
     val subject: String = "", val times: String = "", val teacher: String = "",
     val workTypeId: Int = 0, val room: String = "", val building: String = "",
-    val hideTeacher: Boolean, val hideLocation: Boolean, val hideTime: Boolean
+    val moreLessonsText: String = "",
+    val hideTeacher: Boolean, val hideLocation: Boolean, val hideTime: Boolean, val hideMoreLessonsText: Boolean
 )

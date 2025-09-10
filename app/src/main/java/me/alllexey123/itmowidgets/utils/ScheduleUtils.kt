@@ -1,8 +1,31 @@
 package me.alllexey123.itmowidgets.utils
 
 import me.alllexey123.itmowidgets.R
+import java.util.regex.Pattern
 
 object ScheduleUtils {
+
+    fun lessonDeclension(count: Int): String {
+        if (count % 10 == 1) return "пара"
+        if (listOf(5, 6, 7, 8, 9, 0).contains(count % 10)) return "пар"
+        else return "пары"
+    }
+
+    fun shortenRoom(room: String): String {
+        val roomLow = room.lowercase()
+        if (roomLow.contains("актовый")) return "Актовый зал"
+        val m1 = Pattern.compile("[0-9]{4}/[0-9]").matcher(roomLow)
+        if (m1.find()) {
+            return m1.group()
+        }
+
+        val m2 = Pattern.compile("[1-9]{4}").matcher(roomLow)
+        if (m2.find()) {
+            return m2.group()
+        }
+
+        return room
+    }
 
     fun shortenBuildingName(building: String): String {
         val name = building.lowercase()

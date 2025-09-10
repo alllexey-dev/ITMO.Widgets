@@ -13,6 +13,7 @@ import me.alllexey123.itmowidgets.providers.ScheduleProvider
 import me.alllexey123.itmowidgets.providers.StorageProvider
 import me.alllexey123.itmowidgets.widgets.SingleLessonWidget
 import me.alllexey123.itmowidgets.widgets.SingleLessonWidgetData
+import me.alllexey123.itmowidgets.widgets.SingleLessonWidgetVariant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -22,8 +23,15 @@ class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerPara
 
     override suspend fun doWork(): Result {
         val appWidgetManager = AppWidgetManager.getInstance(appContext)
-        val widgetProvider = ComponentName(appContext, SingleLessonWidget::class.java)
-        val appWidgetIds = appWidgetManager.getAppWidgetIds(widgetProvider)
+        val widgetClasses = listOf(SingleLessonWidget::class.java, SingleLessonWidgetVariant::class.java)
+        val appWidgetIds = mutableListOf<Int>()
+
+        for (clazz in widgetClasses) {
+            val widgetProvider = ComponentName(appContext, clazz)
+            val ids = appWidgetManager.getAppWidgetIds(widgetProvider)
+
+            appWidgetIds.addAll(ids.toList())
+        }
 
         if (appWidgetIds.isEmpty()) {
             return Result.success()
@@ -45,8 +53,11 @@ class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerPara
 
             val targetLesson = ScheduleProvider.findCurrentOrNextLesson(lessons, currentDateTime)
 
+            val moreLessons = lessons.size - lessons.indexOf(targetLesson) - 1
+            val till = lessons.last().timeEnd
+
             if (targetLesson != null) {
-                SingleLessonWidget.widgetData(targetLesson)
+                SingleLessonWidget.widgetData(targetLesson, moreLessons, till)
             } else {
                 SingleLessonWidget.noLeftLessonsWidgetData()
             }
@@ -56,11 +67,16 @@ class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerPara
         }
 
         for (appWidgetId in appWidgetIds) {
+
+            val providerInfo = appWidgetManager.getAppWidgetInfo(appWidgetId)
+            val layoutId = providerInfo.initialLayout
+
             SingleLessonWidget.updateAppWidget(
                 appContext,
                 appWidgetManager,
                 appWidgetId,
-                singleLessonWidgetData
+                singleLessonWidgetData,
+                layoutId
             )
         }
 
