@@ -3,7 +3,7 @@
     android:minWidth="180dp"
     android:minHeight="180dp"
     android:updatePeriodMillis="0"
-    android:previewImage="@drawable/rounded_divider"
+    android:previewImage="@drawable/qr_widget_preview"
     android:initialLayout="@layout/qr_code_widget"
     android:description="@string/qr_widget_description"
 
