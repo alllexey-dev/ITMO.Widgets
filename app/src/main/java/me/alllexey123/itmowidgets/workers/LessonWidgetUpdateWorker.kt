@@ -8,6 +8,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import api.myitmo.model.Lesson
 import me.alllexey123.itmowidgets.providers.ScheduleProvider
 import me.alllexey123.itmowidgets.providers.StorageProvider
 import me.alllexey123.itmowidgets.utils.ScheduleUtils
@@ -62,10 +63,19 @@ class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerPara
                 SingleLessonWidget.noLessonsWidgetData()
             }
 
-            val targetLesson = ScheduleProvider.findCurrentOrNextLesson(
-                lessons,
-                if (beforehandScheduling) currentDateTime.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET) else currentDateTime
-            )
+            val targetLesson: Lesson?
+            if (beforehandScheduling) {
+                val noBeforehand =
+                    ScheduleProvider.findCurrentOrNextLesson(lessons, currentDateTime)
+                val withBeforehand = ScheduleProvider.findCurrentOrNextLesson(
+                    lessons,
+                    currentDateTime.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
+                )
+
+                targetLesson = withBeforehand ?: noBeforehand
+            } else {
+                targetLesson = ScheduleProvider.findCurrentOrNextLesson(lessons, currentDateTime)
+            }
 
             val idx = lessons.indexOf(targetLesson)
             val moreLessons = lessons.size - idx - 1
@@ -106,7 +116,7 @@ class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerPara
             )
         }
 
-        nextUpdateAt = nextUpdateAt?.plusSeconds(10) // to prevent update loops (just in case)
+        nextUpdateAt = nextUpdateAt?.plusSeconds(70) // to prevent update loops
 
         scheduleNextUpdate(appContext, nextUpdateAt)
 
