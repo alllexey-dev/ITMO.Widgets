@@ -1,17 +1,18 @@
 package me.alllexey123.itmowidgets.ui
 
 import android.os.Bundle
-import androidx.preference.PreferenceFragmentCompat
 import androidx.core.content.edit
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import me.alllexey123.itmowidgets.utils.LAST_UPDATE_TIMESTAMP_KEY
 import me.alllexey123.itmowidgets.R
+import me.alllexey123.itmowidgets.providers.ScheduleProvider
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.BEFOREHAND_SCHEDULING_KEY
 import me.alllexey123.itmowidgets.utils.ID_TOKEN_KEY
+import me.alllexey123.itmowidgets.utils.LAST_UPDATE_TIMESTAMP_KEY
 import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.SMART_SCHEDULING_KEY
@@ -84,6 +85,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             remove(ACCESS_TOKEN_EXPIRES_KEY)
             remove(ID_TOKEN_KEY)
         }
+
+        ScheduleProvider.clearCache(preferenceManager.context)
 
         updateAllWidgets()
     }
