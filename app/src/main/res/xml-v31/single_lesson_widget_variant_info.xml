@@ -5,7 +5,7 @@
     android:initialLayout="@layout/single_lesson_widget_variant"
     android:minWidth="250dp"
     android:minHeight="80dp"
-    android:previewImage="@drawable/vertical_indicator"
+    android:previewImage="@drawable/lesson_widget_variant_preview"
 
     android:targetCellWidth="4"
     android:targetCellHeight="1"
