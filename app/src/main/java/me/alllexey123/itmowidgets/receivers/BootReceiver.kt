@@ -3,8 +3,8 @@ package me.alllexey123.itmowidgets.receivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import me.alllexey123.itmowidgets.LessonWidgetUpdateWorker
-import me.alllexey123.itmowidgets.QrWidgetUpdateWorker
+import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
+import me.alllexey123.itmowidgets.workers.QrWidgetUpdateWorker
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {

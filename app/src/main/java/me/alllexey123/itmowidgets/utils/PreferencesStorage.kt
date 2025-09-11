@@ -11,6 +11,10 @@ const val REFRESH_TOKEN_EXPIRES_KEY = REFRESH_TOKEN_KEY + "_expires"
 const val LAST_UPDATE_TIMESTAMP_KEY = "last_update_timestamp"
 const val ID_TOKEN_KEY = "id_token"
 
+const val SMART_SCHEDULING_KEY = "smart_scheduling"
+
+const val BEFOREHAND_SCHEDULING_KEY = "beforehand_scheduling"
+
 class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     override fun getAccessToken(): String? {
@@ -35,6 +39,14 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     fun getLastUpdateTimestamp(): Long {
         return prefs.getLong(LAST_UPDATE_TIMESTAMP_KEY, 0)
+    }
+
+    fun getSmartSchedulingState(): Boolean {
+        return prefs.getBoolean(SMART_SCHEDULING_KEY, true)
+    }
+
+    fun getBeforehandSchedulingState(): Boolean {
+        return prefs.getBoolean(BEFOREHAND_SCHEDULING_KEY, true)
     }
 
     override fun setAccessToken(accessToken: String?) {
@@ -70,6 +82,19 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
     fun setLastUpdateTimestamp(timestamp: Long) {
         prefs.edit {
             putLong(LAST_UPDATE_TIMESTAMP_KEY, timestamp)
+        }
+    }
+
+    fun setSmartSchedulingState(smartScheduling: Boolean) {
+        prefs.edit {
+            putBoolean(SMART_SCHEDULING_KEY, smartScheduling)
+        }
+    }
+
+
+    fun setBeforehandSchedulingState(beforehandScheduling: Boolean) {
+        prefs.edit {
+            putBoolean(BEFOREHAND_SCHEDULING_KEY, beforehandScheduling)
         }
     }
 

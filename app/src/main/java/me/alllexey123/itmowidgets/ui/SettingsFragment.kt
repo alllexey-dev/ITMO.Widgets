@@ -5,16 +5,22 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.core.content.edit
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
+import androidx.preference.SwitchPreference
 import me.alllexey123.itmowidgets.utils.LAST_UPDATE_TIMESTAMP_KEY
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_KEY
+import me.alllexey123.itmowidgets.utils.BEFOREHAND_SCHEDULING_KEY
 import me.alllexey123.itmowidgets.utils.ID_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_KEY
+import me.alllexey123.itmowidgets.utils.SMART_SCHEDULING_KEY
+import me.alllexey123.itmowidgets.utils.WidgetUtils
+import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.concurrent.thread
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -22,27 +28,64 @@ class SettingsFragment : PreferenceFragmentCompat() {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
         val refreshTokenPreference = findPreference<EditTextPreference>(REFRESH_TOKEN_KEY)
-
         refreshTokenPreference?.setOnPreferenceChangeListener { preference, newValue ->
             val currentValue = preferenceManager.sharedPreferences?.getString(REFRESH_TOKEN_KEY, "")
 
             if (newValue is String && newValue != currentValue) {
-                onRefreshTokenUpdate()
+                onRefreshTokenChange()
             }
 
             true
         }
+
+        val smartSchedulingPreference = findPreference<SwitchPreference>(SMART_SCHEDULING_KEY)
+        smartSchedulingPreference?.setOnPreferenceChangeListener { preference, newValue ->
+            onSmartSchedulingChange()
+            true
+        }
+
+        val beforehandSchedulingPreference = findPreference<SwitchPreference>(BEFOREHAND_SCHEDULING_KEY)
+        beforehandSchedulingPreference?.setOnPreferenceChangeListener { preference, newValue ->
+            onBeforehandSchedulingChange()
+            true
+        }
+
+        val triggerUpdateButton = findPreference<Preference>("trigger_update_button")
+        triggerUpdateButton?.setOnPreferenceClickListener { preference ->
+            updateAllWidgets()
+            true
+        }
     }
 
-    private fun onRefreshTokenUpdate() {
-        val sharedPreferences = preferenceManager.sharedPreferences ?: return
+    private fun onSmartSchedulingChange() {
+        updateAllWidgets()
+    }
 
-        sharedPreferences.edit {
+    private fun onBeforehandSchedulingChange() {
+        updateAllWidgets()
+    }
+
+    private fun updateAllWidgets() {
+        thread {
+            WidgetUtils.updateAllWidgets(preferenceManager.context)
+            sleep(500L)
+            activity?.runOnUiThread {
+                updateLastUpdateTime()
+            }
+        }
+    }
+
+    private fun onRefreshTokenChange() {
+        val prefs = preferenceManager.sharedPreferences ?: return
+
+        prefs.edit {
             remove(REFRESH_TOKEN_EXPIRES_KEY)
             remove(ACCESS_TOKEN_KEY)
             remove(ACCESS_TOKEN_EXPIRES_KEY)
             remove(ID_TOKEN_KEY)
         }
+
+        updateAllWidgets()
     }
 
     override fun onResume() {

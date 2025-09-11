@@ -1,4 +1,4 @@
-package me.alllexey123.itmowidgets
+package me.alllexey123.itmowidgets.workers
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -58,17 +58,6 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
             WorkManager.getInstance(context).enqueueUniqueWork(
                 WIDGET_UPDATE_WORK_NAME,
                 ExistingWorkPolicy.REPLACE,
-                immediateWorkRequest
-            )
-        }
-
-        fun enqueueImmediateUpdateIfNot(context: Context) {
-            val immediateWorkRequest = OneTimeWorkRequestBuilder<QrWidgetUpdateWorker>()
-                .build()
-
-            WorkManager.getInstance(context).enqueueUniqueWork(
-                WIDGET_UPDATE_WORK_NAME,
-                ExistingWorkPolicy.KEEP,
                 immediateWorkRequest
             )
         }

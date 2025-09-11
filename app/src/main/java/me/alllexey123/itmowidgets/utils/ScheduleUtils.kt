@@ -1,9 +1,20 @@
 package me.alllexey123.itmowidgets.utils
 
 import me.alllexey123.itmowidgets.R
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.regex.Pattern
 
 object ScheduleUtils {
+
+    fun parseTime(date: LocalDate, time: String): LocalDateTime {
+        val hoursStr = time.substring(0, time.indexOf(":"))
+        val minutesStr = time.substring(time.indexOf(":") + 1)
+
+        val hours = (if (hoursStr.startsWith('0')) hoursStr.substring(1) else hoursStr).toInt()
+        val minutes = (if (minutesStr.startsWith('0')) minutesStr.substring(1) else minutesStr).toInt()
+        return date.atTime(hours, minutes)
+    }
 
     fun lessonDeclension(count: Int): String {
         if (count % 10 == 1) return "пара"

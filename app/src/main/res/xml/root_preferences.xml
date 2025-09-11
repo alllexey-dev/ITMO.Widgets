@@ -17,23 +17,31 @@
     </PreferenceCategory>
 
 
-    <PreferenceCategory app:title="Настройки виджета">
+    <PreferenceCategory app:title="Настройки виджетов">
 
-        <ListPreference
-            app:key="update_interval"
-            app:title="Период обновления виджета"
-            app:summary="Как часто виджет будет обновляться"
-            app:entries="@array/update_interval_entries"
-            app:entryValues="@array/update_interval_values"
-            app:defaultValue="7"
-            app:useSimpleSummaryProvider="true"
-            app:icon="@drawable/outline_alarm_24" />
+        <SwitchPreference
+            app:key="smart_scheduling"
+            app:title="Оптимальное обновление"
+            app:summary="Виджет обновится только при изменении данных"
+            app:defaultValue="true"/>
+
+        <SwitchPreference
+            app:key="beforehand_scheduling"
+            app:title="Обновление заранее"
+            app:summary="За 15 минут до конца пары виджет начнёт показывать следующую"
+            app:defaultValue="true"/>
+
+        <Preference
+            app:key="last_update_timestamp"
+            app:title="Последнее обновление"
+            app:summary="Обновлений пока не было"
+            app:icon="@drawable/outline_info_24" />
 
 
         <Preference
-            app:key="last_update_status"
-            app:title="Последнее успешное обновление"
-            app:summary="Обновлений пока не было"
+            app:key="trigger_update_button"
+            app:title="Обновить виджеты"
+            app:summary="Моментально обновить все виджеты"
             app:icon="@drawable/outline_build_circle_24" />
     </PreferenceCategory>
 </PreferenceScreen>

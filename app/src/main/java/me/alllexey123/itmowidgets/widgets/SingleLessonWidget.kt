@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.work.WorkManager
 import api.myitmo.model.Lesson
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.LessonWidgetUpdateWorker
+import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 import me.alllexey123.itmowidgets.utils.ScheduleUtils
 
 open class SingleLessonWidget : AppWidgetProvider() {
@@ -38,7 +38,7 @@ open class SingleLessonWidget : AppWidgetProvider() {
             val shortBuilding = if (building == null) "" else ScheduleUtils.shortenBuildingName(building)
             val room = if (lesson.room == null) "нет кабинета" else ScheduleUtils.shortenRoom(lesson.room!!) + ", "
             val moreLessonsText =
-                if (moreLessons == null || moreLessons <= 0) "" else "и ещё $moreLessons " +
+                if (moreLessons == null || moreLessons <= 0) "это последняя пара на сегодня" else "и ещё $moreLessons " +
                         ScheduleUtils.lessonDeclension(moreLessons) +
                         " до $till"
 
@@ -53,7 +53,7 @@ open class SingleLessonWidget : AppWidgetProvider() {
                 hideTeacher = lesson.teacherName == null,
                 hideLocation = false,
                 hideTime = false,
-                hideMoreLessonsText = moreLessons == null
+                hideMoreLessonsText = false
             )
 
         }

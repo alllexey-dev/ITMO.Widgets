@@ -1,9 +1,8 @@
-package me.alllexey123.itmowidgets
+package me.alllexey123.itmowidgets.workers
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
-import androidx.preference.PreferenceManager
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -11,19 +10,25 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import me.alllexey123.itmowidgets.providers.ScheduleProvider
 import me.alllexey123.itmowidgets.providers.StorageProvider
+import me.alllexey123.itmowidgets.utils.ScheduleUtils
 import me.alllexey123.itmowidgets.widgets.SingleLessonWidget
 import me.alllexey123.itmowidgets.widgets.SingleLessonWidgetData
 import me.alllexey123.itmowidgets.widgets.SingleLessonWidgetVariant
-import java.time.LocalDate
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
+
+private const val UPDATE_PERIOD_SECONDS = 7L * 60 // 7 minutes
+
+private const val BEFOREHAND_SCHEDULING_OFFSET = 15L * 60 // 15 minutes
 
 class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         val appWidgetManager = AppWidgetManager.getInstance(appContext)
-        val widgetClasses = listOf(SingleLessonWidget::class.java, SingleLessonWidgetVariant::class.java)
+        val widgetClasses =
+            listOf(SingleLessonWidget::class.java, SingleLessonWidgetVariant::class.java)
         val appWidgetIds = mutableListOf<Int>()
 
         for (clazz in widgetClasses) {
@@ -39,26 +44,47 @@ class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerPara
 
         val storage = StorageProvider.getStorage(appContext)
         storage.setLastUpdateTimestamp(System.currentTimeMillis())
+        var nextUpdateAt: LocalDateTime? = null
+
+        val smartScheduling = storage.getSmartSchedulingState()
+        val beforehandScheduling = storage.getBeforehandSchedulingState()
 
         val singleLessonWidgetData: SingleLessonWidgetData = try {
             val currentDateTime = LocalDateTime.now()
-            val currentDate = LocalDate.now()
+
+            val currentDate = currentDateTime.toLocalDate()
 
             val daySchedule = ScheduleProvider.getDaySchedule(appContext, currentDate)
             val lessons = daySchedule.lessons
 
             if (lessons == null || lessons.isEmpty()) {
+                if (smartScheduling) nextUpdateAt = currentDate.plusDays(1).atStartOfDay()
                 SingleLessonWidget.noLessonsWidgetData()
             }
 
-            val targetLesson = ScheduleProvider.findCurrentOrNextLesson(lessons, currentDateTime)
+            val targetLesson = ScheduleProvider.findCurrentOrNextLesson(
+                lessons,
+                if (beforehandScheduling) currentDateTime.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET) else currentDateTime
+            )
 
-            val moreLessons = lessons.size - lessons.indexOf(targetLesson) - 1
+            val idx = lessons.indexOf(targetLesson)
+            val moreLessons = lessons.size - idx - 1
             val till = lessons.last().timeEnd
 
             if (targetLesson != null) {
+                if (smartScheduling) {
+                    val parsedTime = ScheduleUtils.parseTime(currentDate, targetLesson.timeEnd)
+                    nextUpdateAt =
+                        if (beforehandScheduling && moreLessons > 0) {
+                            parsedTime.minusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
+                        } else {
+                            parsedTime
+                        }
+                }
+
                 SingleLessonWidget.widgetData(targetLesson, moreLessons, till)
             } else {
+                if (smartScheduling) nextUpdateAt = currentDate.plusDays(1).atStartOfDay()
                 SingleLessonWidget.noLeftLessonsWidgetData()
             }
         } catch (e: Exception) {
@@ -80,7 +106,9 @@ class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerPara
             )
         }
 
-        scheduleNextUpdate(appContext)
+        nextUpdateAt = nextUpdateAt?.plusSeconds(10) // to prevent update loops (just in case)
+
+        scheduleNextUpdate(appContext, nextUpdateAt)
 
         return Result.success()
     }
@@ -99,23 +127,18 @@ class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerPara
             )
         }
 
-        fun enqueueImmediateUpdateIfNot(context: Context) {
-            val immediateWorkRequest = OneTimeWorkRequestBuilder<LessonWidgetUpdateWorker>()
-                .build()
+        // if "at" is null, then use update period
+        fun scheduleNextUpdate(context: Context, at: LocalDateTime?) {
+            val durationSeconds: Long
+            if (at == null) {
+                durationSeconds = UPDATE_PERIOD_SECONDS
+            } else {
+                val now = LocalDateTime.now()
+                durationSeconds = Duration.between(now, at).seconds.coerceAtLeast(0)
+            }
 
-            WorkManager.getInstance(context).enqueueUniqueWork(
-                WIDGET_UPDATE_WORK_NAME,
-                ExistingWorkPolicy.KEEP,
-                immediateWorkRequest
-            )
-        }
-
-
-        fun scheduleNextUpdate(context: Context) {
-            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val duration = prefs.getString("update_interval", "7")?.toLongOrNull() ?: 7L
             val updateWorkRequest = OneTimeWorkRequestBuilder<LessonWidgetUpdateWorker>()
-                .setInitialDelay(duration, TimeUnit.MINUTES)
+                .setInitialDelay(durationSeconds, TimeUnit.SECONDS)
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(

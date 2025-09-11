@@ -9,7 +9,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.widget.RemoteViews
 import androidx.work.WorkManager
-import me.alllexey123.itmowidgets.QrWidgetUpdateWorker
+import me.alllexey123.itmowidgets.workers.QrWidgetUpdateWorker
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.providers.QrCodeProvider
 
