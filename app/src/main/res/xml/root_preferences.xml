@@ -6,7 +6,7 @@
         <EditTextPreference
             app:key="refresh_token"
             app:title="Refresh Token"
-            app:summary="Вставьте сюда refresh_token"
+            app:summary="Введите сюда refresh_token для доступа к данным"
             app:useSimpleSummaryProvider="true"
             app:icon="@drawable/outline_code_blocks_24"/>
 
@@ -16,32 +16,30 @@
 
     </PreferenceCategory>
 
-
     <PreferenceCategory app:title="Настройки виджетов">
 
         <SwitchPreference
             app:key="smart_scheduling"
-            app:title="Оптимальное обновление"
-            app:summary="Виджет обновится только при изменении данных"
+            app:title="Экономия батареи"
+            app:summary="Виджет будет обновляться только при смене пары"
             app:defaultValue="true"/>
 
         <SwitchPreference
             app:key="beforehand_scheduling"
-            app:title="Обновление заранее"
-            app:summary="За 15 минут до конца пары виджет начнёт показывать следующую"
+            app:title="Показывать следующую пару заранее"
+            app:summary="За 15 минут до окончания пары виджет отобразит следующую"
             app:defaultValue="true"/>
 
         <Preference
             app:key="last_update_timestamp"
             app:title="Последнее обновление"
-            app:summary="Обновлений пока не было"
+            app:summary="Виджеты ещё не обновлялись"
             app:icon="@drawable/outline_info_24" />
-
 
         <Preference
             app:key="trigger_update_button"
-            app:title="Обновить виджеты"
-            app:summary="Моментально обновить все виджеты"
+            app:title="Обновить виджеты сейчас"
+            app:summary="Принудительно обновить все виджеты"
             app:icon="@drawable/outline_build_circle_24" />
     </PreferenceCategory>
 </PreferenceScreen>
