@@ -38,7 +38,7 @@
         <SwitchPreference
             app:key="dynamic_widget_theme"
             app:title="Адаптивная тема виджетов"
-            app:summary="Тема виджетов будет соответствовать системной теме"
+            app:summary="Тема виджетов будет соответствовать системной"
             app:defaultValue="true"/>
 
         <Preference
