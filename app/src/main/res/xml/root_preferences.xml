@@ -14,6 +14,11 @@
             app:key="refresh_token_expires"
             app:isPreferenceVisible="false" />
 
+        <Preference
+            app:key="refresh_token_help"
+            app:title="Откуда взять refresh token?"
+            app:icon="@drawable/outline_help_24" />
+
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Настройки виджетов">

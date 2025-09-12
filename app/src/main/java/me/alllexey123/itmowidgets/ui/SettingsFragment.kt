@@ -1,7 +1,10 @@
 package me.alllexey123.itmowidgets.ui
 
+import android.content.Intent
 import android.os.Bundle
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -54,6 +57,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val triggerUpdateButton = findPreference<Preference>("trigger_update_button")
         triggerUpdateButton?.setOnPreferenceClickListener { preference ->
             updateAllWidgets()
+            true
+        }
+
+        val refreshTokenHelp = findPreference<Preference>("refresh_token_help")
+        refreshTokenHelp?.setOnPreferenceClickListener { preference ->
+            val url = ContextCompat.getString(preferenceManager.context, R.string.refresh_token_help_url)
+            val linkIntent = Intent(Intent.ACTION_VIEW, url.toUri())
+            startActivity(linkIntent)
             true
         }
     }
