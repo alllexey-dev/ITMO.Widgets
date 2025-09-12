@@ -18,8 +18,9 @@
 
 **Особенности**:
  - Кэширование запросов
+ - Адаптивная тема приложения и виджетов с расписанием
  - Динамическое обновление виджетов
- - Скорость и лёгкость (вес <8 МБ)
+ - Скорость и лёгкость (вес apk <8 МБ)
 
 Проект использует [my-itmo-api](https://github.com/alllexey123/my-itmo-api) для взаимодействия с личным кабинетом ИТМО.
 
@@ -40,27 +41,14 @@
 5.  Найдите в списке cookie с названием `auth.refresh_token.itmoId` и скопируйте его значение.
 6.  Вставьте скопированный токен в соответствующее поле в приложении.
 
-**Осторожно:** **Никому не сообщайте ваш токен!** Это ключ к вашему личному кабинету. Приложение использует этот токен исключительно для отправки запросов на серверы MyITMO (см. исходный код).
+**Никому не сообщайте ваш токен!** Приложение хранит его **локально** и использует исключительно для отправки запросов на серверы MyITMO (см. исходный код).
 
 
-После этого просто добавьте виджет на экран, пользуйтесь!
-## Примеры
-
-### QR-виджет
-
-<img width="128" alt="qr-prev-cropped" src="https://github.com/user-attachments/assets/626f4ac5-7b6f-4025-8f11-e29331dcc40c" />
-
-### Текущая/следующая пара (первый вариант)
+После этого просто добавьте виджеты на экран, пользуйтесь!
+## Примеры виджетов
 
 <p>
-  <img width="256" alt="image" src="https://github.com/user-attachments/assets/63f5165b-55db-4f69-944a-8186dc6654bc" />
-  <img width="256" alt="image" src="https://github.com/user-attachments/assets/a31dd0de-6875-4bdb-bee3-319ceb579dad" />
-  <img width="256" alt="image" src="https://github.com/user-attachments/assets/7bb8129e-1b3e-4b6e-a74b-d7b5e791110b" />
-</p>
-
-### Текущая/следующая пара (второй вариант)
-
-<p>
-  <img height="86" alt="image" src="https://github.com/user-attachments/assets/9c009be0-a3a2-4bd9-898a-dafad43a5c33" />
-  <img height="86" alt="image" src="https://github.com/user-attachments/assets/60eec137-3d12-4498-aca4-87343da095ed" />
+  <img width="256" alt="image" src="https://github.com/user-attachments/assets/b0dd4ebb-5b12-436f-9760-8b4b1ff57493" />
+  <img width="256" alt="image" src="https://github.com/user-attachments/assets/8642ebb4-9723-4f15-bcf4-b0efcfc09db6" />
+  <img width="256" alt="image" src="https://github.com/user-attachments/assets/f6e44666-bb5c-4e2c-bf91-9c382f700c3c" />
 </p>
