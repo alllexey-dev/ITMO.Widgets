@@ -9,6 +9,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+private const val SCHEDULE_CACHE_DIR = "schedule_cache"
+
 object ScheduleProvider {
 
     private const val CACHE_EXPIRATION_MS = 3 * 60 * 60 * 1000L // 3 hours
@@ -71,6 +73,7 @@ object ScheduleProvider {
 
             val schedule = dataResponse.data[0]
 
+            clearOldCache(context)
             writeSchedule(schedule, cacheDir, myItmo.gson)
 
             return schedule
@@ -111,12 +114,23 @@ object ScheduleProvider {
         }
     }
 
+    fun clearOldCache(context: Context) {
+        val dir = cacheDir(context)
+        val removeBefore = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000 // 1 week
+        println(removeBefore)
+        for (file in dir.listFiles()) {
+            if (file.lastModified() < removeBefore) {
+                file.apply { delete() }
+            }
+        }
+    }
+
     fun clearCache(context: Context) {
-        File(context.cacheDir, "schedule_cache").apply { deleteRecursively() }
+        cacheDir(context).apply { deleteRecursively() }
     }
 
     fun cacheDir(context: Context): File {
-        return File(context.cacheDir, "schedule_cache").apply { mkdirs() }
+        return File(context.cacheDir, SCHEDULE_CACHE_DIR).apply { mkdirs() }
     }
 
     fun isExpired(timestamp: Long): Boolean {
