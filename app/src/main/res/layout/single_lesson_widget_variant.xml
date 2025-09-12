@@ -30,12 +30,14 @@
                 android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="sans-serif"
                 android:hyphenationFrequency="full"
                 android:text="Обновление информации..."
                 android:textColor="@color/black"
                 android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end" />
 
             <LinearLayout
                 android:id="@+id/teacher_layout"

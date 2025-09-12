@@ -37,7 +37,9 @@
                 android:text="Обновление информации..."
                 android:textColor="?attr/colorOnSurface"
                 android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end" />
 
             <LinearLayout
                 android:id="@+id/teacher_layout"
