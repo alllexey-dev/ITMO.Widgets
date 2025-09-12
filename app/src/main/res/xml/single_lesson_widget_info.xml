@@ -4,7 +4,7 @@
     android:initialKeyguardLayout="@layout/single_lesson_widget"
     android:initialLayout="@layout/single_lesson_widget"
     android:minWidth="250dp"
-    android:minHeight="80dp"
+    android:minHeight="60dp"
     android:previewImage="@drawable/lesson_widget_preview"
 
     android:updatePeriodMillis="0"

@@ -112,6 +112,17 @@ open class SingleLessonWidget : AppWidgetProvider() {
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
+
+
+        fun getLayoutId(initialLayoutId: Int, dynamic: Boolean): Int {
+            val ids = listOf(
+                listOf(R.layout.single_lesson_widget, R.layout.single_lesson_widget_dynamic),
+                listOf(R.layout.single_lesson_widget_variant, R.layout.single_lesson_widget_variant_dynamic))
+            for (list in ids) {
+                if (list.contains(initialLayoutId)) return list[if (dynamic) 1 else 0]
+            }
+            return initialLayoutId
+        }
     }
 }
 

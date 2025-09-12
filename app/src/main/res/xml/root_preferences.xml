@@ -25,7 +25,7 @@
 
         <SwitchPreference
             app:key="smart_scheduling"
-            app:title="Экономия батареи"
+            app:title="Умное обновление"
             app:summary="Виджет будет обновляться только при смене пары"
             app:defaultValue="true"/>
 
@@ -33,6 +33,12 @@
             app:key="beforehand_scheduling"
             app:title="Показывать следующую пару заранее"
             app:summary="За 15 минут до окончания пары виджет отобразит следующую"
+            app:defaultValue="true"/>
+
+        <SwitchPreference
+            app:key="dynamic_widget_theme"
+            app:title="Адаптивная тема виджетов"
+            app:summary="Тема виджетов будет соответствовать системной теме"
             app:defaultValue="true"/>
 
         <Preference

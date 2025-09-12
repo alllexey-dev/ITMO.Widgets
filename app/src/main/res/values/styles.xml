@@ -1,4 +1,14 @@
 <resources>
 
-    <style name="AppTheme" parent="Theme" />
+    <style name="Base.AppTheme" parent="Theme.Material3.DynamicColors.DayNight">
+        <item name="colorPrimary">@color/primary_color</item>
+        <item name="android:statusBarColor">?android:colorBackground</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme" parent="Base.AppTheme" />
+
 </resources>

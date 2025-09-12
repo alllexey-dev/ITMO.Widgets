@@ -105,14 +105,15 @@ class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerPara
         for (appWidgetId in appWidgetIds) {
 
             val providerInfo = appWidgetManager.getAppWidgetInfo(appWidgetId)
-            val layoutId = providerInfo.initialLayout
+            val initialLayoutId = providerInfo.initialLayout
+            val realLayoutId = SingleLessonWidget.getLayoutId(initialLayoutId, storage.getDynamicTheme())
 
             SingleLessonWidget.updateAppWidget(
                 appContext,
                 appWidgetManager,
                 appWidgetId,
                 singleLessonWidgetData,
-                layoutId
+                realLayoutId
             )
         }
 

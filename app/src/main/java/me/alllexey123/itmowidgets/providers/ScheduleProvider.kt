@@ -13,7 +13,6 @@ import java.time.format.DateTimeFormatter
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
-
 private const val SCHEDULE_CACHE_DIR = "schedule_cache"
 
 object ScheduleProvider {

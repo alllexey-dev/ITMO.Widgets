@@ -15,6 +15,8 @@ const val SMART_SCHEDULING_KEY = "smart_scheduling"
 
 const val BEFOREHAND_SCHEDULING_KEY = "beforehand_scheduling"
 
+const val DYNAMIC_WIDGET_THEME = "dynamic_widget_theme"
+
 class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     override fun getAccessToken(): String? {
@@ -47,6 +49,10 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     fun getBeforehandSchedulingState(): Boolean {
         return prefs.getBoolean(BEFOREHAND_SCHEDULING_KEY, true)
+    }
+
+    fun getDynamicTheme(): Boolean {
+        return prefs.getBoolean(DYNAMIC_WIDGET_THEME, true)
     }
 
     override fun setAccessToken(accessToken: String?) {
@@ -95,6 +101,12 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
     fun setBeforehandSchedulingState(beforehandScheduling: Boolean) {
         prefs.edit {
             putBoolean(BEFOREHAND_SCHEDULING_KEY, beforehandScheduling)
+        }
+    }
+
+    fun setDynamicTheme(dynamicTheme: Boolean) {
+        prefs.edit {
+            putBoolean(DYNAMIC_WIDGET_THEME, dynamicTheme)
         }
     }
 
