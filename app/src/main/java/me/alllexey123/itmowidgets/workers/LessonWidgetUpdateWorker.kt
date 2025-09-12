@@ -58,44 +58,45 @@ class LessonWidgetUpdateWorker(val appContext: Context, workerParams: WorkerPara
             val daySchedule = ScheduleProvider.getDaySchedule(appContext, currentDate)
             val lessons = daySchedule.lessons
 
-            if (lessons == null || lessons.isEmpty()) {
+            if (lessons.isNullOrEmpty()) {
                 if (smartScheduling) nextUpdateAt = currentDate.plusDays(1).atStartOfDay()
                 SingleLessonWidget.noLessonsWidgetData()
-            }
-
-            val targetLesson: Lesson?
-            if (beforehandScheduling) {
-                val noBeforehand =
-                    ScheduleProvider.findCurrentOrNextLesson(lessons, currentDateTime)
-                val withBeforehand = ScheduleProvider.findCurrentOrNextLesson(
-                    lessons,
-                    currentDateTime.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
-                )
-
-                targetLesson = withBeforehand ?: noBeforehand
             } else {
-                targetLesson = ScheduleProvider.findCurrentOrNextLesson(lessons, currentDateTime)
-            }
+                val targetLesson: Lesson?
+                if (beforehandScheduling) {
+                    val noBeforehand =
+                        ScheduleProvider.findCurrentOrNextLesson(lessons, currentDateTime)
+                    val withBeforehand = ScheduleProvider.findCurrentOrNextLesson(
+                        lessons,
+                        currentDateTime.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
+                    )
 
-            val idx = lessons.indexOf(targetLesson)
-            val moreLessons = lessons.size - idx - 1
-            val till = lessons.last().timeEnd
-
-            if (targetLesson != null) {
-                if (smartScheduling) {
-                    val parsedTime = ScheduleUtils.parseTime(currentDate, targetLesson.timeEnd)
-                    nextUpdateAt =
-                        if (beforehandScheduling && moreLessons > 0) {
-                            parsedTime.minusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
-                        } else {
-                            parsedTime
-                        }
+                    targetLesson = withBeforehand ?: noBeforehand
+                } else {
+                    targetLesson =
+                        ScheduleProvider.findCurrentOrNextLesson(lessons, currentDateTime)
                 }
 
-                SingleLessonWidget.widgetData(targetLesson, moreLessons, till)
-            } else {
-                if (smartScheduling) nextUpdateAt = currentDate.plusDays(1).atStartOfDay()
-                SingleLessonWidget.noLeftLessonsWidgetData()
+                val idx = lessons.indexOf(targetLesson)
+                val moreLessons = lessons.size - idx - 1
+                val till = lessons.last().timeEnd
+
+                if (targetLesson != null) {
+                    if (smartScheduling) {
+                        val parsedTime = ScheduleUtils.parseTime(currentDate, targetLesson.timeEnd)
+                        nextUpdateAt =
+                            if (beforehandScheduling && moreLessons > 0) {
+                                parsedTime.minusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
+                            } else {
+                                parsedTime
+                            }
+                    }
+
+                    SingleLessonWidget.widgetData(targetLesson, moreLessons, till)
+                } else {
+                    if (smartScheduling) nextUpdateAt = currentDate.plusDays(1).atStartOfDay()
+                    SingleLessonWidget.noLeftLessonsWidgetData()
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
