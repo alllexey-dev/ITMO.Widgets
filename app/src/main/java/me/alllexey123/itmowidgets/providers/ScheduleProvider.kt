@@ -117,7 +117,6 @@ object ScheduleProvider {
     fun clearOldCache(context: Context) {
         val dir = cacheDir(context)
         val removeBefore = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000 // 1 week
-        println(removeBefore)
         for (file in dir.listFiles()) {
             if (file.lastModified() < removeBefore) {
                 file.apply { delete() }
