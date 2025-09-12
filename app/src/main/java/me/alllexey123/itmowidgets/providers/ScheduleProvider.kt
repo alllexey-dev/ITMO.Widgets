@@ -5,9 +5,14 @@ import api.myitmo.model.Lesson
 import api.myitmo.model.Schedule
 import com.google.gson.Gson
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
+
 
 private const val SCHEDULE_CACHE_DIR = "schedule_cache"
 
@@ -97,7 +102,11 @@ object ScheduleProvider {
     fun readCache(name: String, cacheDir: File, gson: Gson): String? {
         val file = File(cacheDir, "$name.json")
         try {
-            val entry = gson.fromJson(file.readText(), CacheEntry::class.java)
+            val fis = FileInputStream(file)
+            val gzipIs = GZIPInputStream(fis)
+            val buffer = gzipIs.readBytes()
+            gzipIs.close()
+            val entry = gson.fromJson(String(buffer), CacheEntry::class.java)
             if (isExpired(entry.timestamp)) return null
             return entry.data
         } catch (e: Exception) {
@@ -109,7 +118,12 @@ object ScheduleProvider {
         val file = File(cacheDir, "$name.json")
         val entry = CacheEntry(System.currentTimeMillis(), data)
         try {
-            file.writeText(gson.toJson(entry))
+            val json = gson.toJson(entry)
+            val fos = FileOutputStream(file)
+            val gzipOs = GZIPOutputStream(fos)
+            val buffer = json.toByteArray()
+            gzipOs.write(buffer, 0, buffer.size)
+            gzipOs.close()
         } catch (e: Exception) {
         }
     }
