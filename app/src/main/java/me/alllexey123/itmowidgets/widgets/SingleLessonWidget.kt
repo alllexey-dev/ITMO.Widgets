@@ -6,11 +6,10 @@ import android.content.Context
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
-import androidx.work.WorkManager
 import api.myitmo.model.Lesson
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 import me.alllexey123.itmowidgets.utils.ScheduleUtils
+import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 
 open class SingleLessonWidget : AppWidgetProvider() {
 
@@ -27,11 +26,11 @@ open class SingleLessonWidget : AppWidgetProvider() {
     }
 
     override fun onDisabled(context: Context) {
-        WorkManager.getInstance(context).cancelUniqueWork(LessonWidgetUpdateWorker.Companion.WIDGET_UPDATE_WORK_NAME)
+
     }
 
     companion object {
-        internal fun widgetData(lesson: Lesson, moreLessons: Int?, till: String): SingleLessonWidgetData {
+        internal fun widgetData(lesson: Lesson, moreLessons: Int?, till: String?): SingleLessonData {
             val startTime = lesson.timeStart
             val endTime = lesson.timeEnd
             val building = lesson.building
@@ -42,7 +41,7 @@ open class SingleLessonWidget : AppWidgetProvider() {
                         ScheduleUtils.lessonDeclension(moreLessons) +
                         " до $till"
 
-            return SingleLessonWidgetData(
+            return SingleLessonData(
                 subject = lesson.subject ?: "Неизвестная дисциплина",
                 times = "$startTime - $endTime",
                 teacher = lesson.teacherName ?: "",
@@ -53,29 +52,29 @@ open class SingleLessonWidget : AppWidgetProvider() {
                 hideTeacher = lesson.teacherName == null,
                 hideLocation = false,
                 hideTime = false,
-                hideMoreLessonsText = false
+                hideMoreLessonsText = till == null
             )
 
         }
 
-        fun noLessonsWidgetData(): SingleLessonWidgetData {
-            return SingleLessonWidgetData(
+        fun noLessonsWidgetData(): SingleLessonData {
+            return SingleLessonData(
                 subject = "Сегодня пар нет!",
                 workTypeId = -1,
                 hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
             )
         }
 
-        internal fun noLeftLessonsWidgetData(): SingleLessonWidgetData {
-            return SingleLessonWidgetData(
+        internal fun noLeftLessonsWidgetData(): SingleLessonData {
+            return SingleLessonData(
                 subject = "Сегодня больше нет пар!",
                 workTypeId = -1,
                 hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
             )
         }
 
-        fun errorLessonWidgetData(): SingleLessonWidgetData {
-            return SingleLessonWidgetData(
+        fun errorLessonWidgetData(): SingleLessonData {
+            return SingleLessonData(
                 subject = "Ошибка при получении данных",
                 workTypeId = 0,
                 hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
@@ -86,7 +85,7 @@ open class SingleLessonWidget : AppWidgetProvider() {
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
-            data: SingleLessonWidgetData,
+            data: SingleLessonData,
             layoutId: Int
         ) {
             val views = RemoteViews(context.packageName, layoutId)
@@ -117,7 +116,8 @@ open class SingleLessonWidget : AppWidgetProvider() {
         fun getLayoutId(initialLayoutId: Int, dynamic: Boolean): Int {
             val ids = listOf(
                 listOf(R.layout.single_lesson_widget, R.layout.single_lesson_widget_dynamic),
-                listOf(R.layout.single_lesson_widget_variant, R.layout.single_lesson_widget_variant_dynamic))
+                listOf(R.layout.single_lesson_widget_variant, R.layout.single_lesson_widget_variant_dynamic),
+                listOf(R.layout.lesson_list_widget, R.layout.lesson_list_widget_dynamic))
             for (list in ids) {
                 if (list.contains(initialLayoutId)) return list[if (dynamic) 1 else 0]
             }
@@ -126,9 +126,3 @@ open class SingleLessonWidget : AppWidgetProvider() {
     }
 }
 
-class SingleLessonWidgetData(
-    val subject: String = "", val times: String = "", val teacher: String = "",
-    val workTypeId: Int = 0, val room: String = "", val building: String = "",
-    val moreLessonsText: String = "",
-    val hideTeacher: Boolean, val hideLocation: Boolean, val hideTime: Boolean, val hideMoreLessonsText: Boolean
-)

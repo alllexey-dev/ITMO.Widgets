@@ -57,6 +57,19 @@
         </receiver>
 
         <receiver
+            android:name=".widgets.LessonListWidget"
+            android:exported="false"
+            android:label="@string/lesson_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/lesson_list_widget_info" />
+        </receiver>
+
+        <receiver
             android:name=".receivers.BootReceiver"
             android:enabled="true"
             android:exported="true">
@@ -73,6 +86,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".widgets.LessonListWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
     </application>
 
 </manifest>
