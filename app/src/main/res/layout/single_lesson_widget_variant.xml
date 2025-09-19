@@ -5,7 +5,9 @@
     android:background="@drawable/widget_background_rounded"
     android:minHeight="80dp"
     android:orientation="vertical"
-    android:padding="6dp">
+    android:padding="6dp"
+    android:theme="@style/AppTheme"
+    android:backgroundTint="?attr/colorSurface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,7 +35,7 @@
                 android:fontFamily="sans-serif"
                 android:hyphenationFrequency="full"
                 android:text="Обновление информации..."
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:maxLines="2"
@@ -53,7 +55,7 @@
                     android:layout_height="16dp"
                     android:layout_marginEnd="4dp"
                     android:src="@drawable/ic_user"
-                    android:tint="@color/subtext_color" />
+                    android:tint="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/teacher"
@@ -61,7 +63,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif"
                     android:text="..."
-                    android:textColor="@color/subtext_color"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="11sp" />
 
             </LinearLayout>
@@ -85,7 +87,7 @@
                         android:layout_height="16dp"
                         android:layout_marginEnd="4dp"
                         android:src="@drawable/ic_location"
-                        android:tint="@color/subtext_color" />
+                        android:tint="?attr/colorOnSurfaceVariant" />
 
                     <TextView
                         android:id="@+id/location_room"
@@ -93,7 +95,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif"
                         android:text="..."
-                        android:textColor="@color/subtext_color"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="11sp" />
 
                     <TextView
@@ -102,7 +104,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
                         android:text=""
-                        android:textColor="@color/subtext_color"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="11sp" />
 
                 </LinearLayout>
@@ -121,7 +123,7 @@
                         android:layout_height="16dp"
                         android:layout_marginEnd="4dp"
                         android:src="@drawable/ic_clock"
-                        android:tint="@color/subtext_color" />
+                        android:tint="?attr/colorOnSurfaceVariant" />
 
                     <TextView
                         android:id="@+id/time"
@@ -130,7 +132,7 @@
                         android:fontFamily="sans-serif"
                         android:paddingRight="4dp"
                         android:text="..."
-                        android:textColor="@color/subtext_color"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="11sp" />
                 </LinearLayout>
             </RelativeLayout>
@@ -149,7 +151,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
                     android:text="..."
-                    android:textColor="@color/subtext_color_lighter"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="11sp" />
 
             </LinearLayout>

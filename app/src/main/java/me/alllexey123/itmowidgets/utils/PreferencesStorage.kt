@@ -15,8 +15,6 @@ const val SMART_SCHEDULING_KEY = "smart_scheduling"
 
 const val BEFOREHAND_SCHEDULING_KEY = "beforehand_scheduling"
 
-const val DYNAMIC_WIDGET_THEME = "dynamic_widget_theme"
-
 const val SINGLE_LESSON_WIDGET_STYLE = "single_lesson_widget_style"
 
 const val LIST_LESSON_WIDGET_STYLE = "list_lesson_widget_style"
@@ -57,10 +55,6 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     fun getBeforehandSchedulingState(): Boolean {
         return prefs.getBoolean(BEFOREHAND_SCHEDULING_KEY, true)
-    }
-
-    fun getDynamicTheme(): Boolean {
-        return prefs.getBoolean(DYNAMIC_WIDGET_THEME, true)
     }
 
     fun getSingleLessonWidgetStyle(): String? {
@@ -117,12 +111,6 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
     fun setBeforehandSchedulingState(beforehandScheduling: Boolean) {
         prefs.edit {
             putBoolean(BEFOREHAND_SCHEDULING_KEY, beforehandScheduling)
-        }
-    }
-
-    fun setDynamicTheme(dynamicTheme: Boolean) {
-        prefs.edit {
-            putBoolean(DYNAMIC_WIDGET_THEME, dynamicTheme)
         }
     }
 

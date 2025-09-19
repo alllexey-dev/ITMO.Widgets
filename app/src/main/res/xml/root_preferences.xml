@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="Аккаунт">
+    <PreferenceCategory app:title="Аккаунт" app:icon="@drawable/account_circle_24">
 
         <EditTextPreference
             app:key="refresh_token"
             app:title="Refresh Token"
             app:summary="Введите сюда refresh_token для доступа к данным"
-            app:useSimpleSummaryProvider="true"
-            app:icon="@drawable/outline_code_blocks_24"/>
+            app:useSimpleSummaryProvider="true"/>
 
         <Preference
             app:key="refresh_token_expires"
@@ -21,7 +20,28 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="Настройки виджетов">
+    <PreferenceCategory app:title="Стили" app:icon="@drawable/format_paint_24">
+
+        <ListPreference
+            app:key="single_lesson_widget_style"
+            app:title="Маленький виджет"
+            app:entryValues="@array/widget_style_values"
+            app:entries="@array/widget_style_entries"
+            app:defaultValue="dot"
+            app:useSimpleSummaryProvider="true"
+            />
+
+        <ListPreference
+            app:key="list_lesson_widget_style"
+            app:title="Большой виджет"
+            app:entryValues="@array/widget_style_values"
+            app:entries="@array/widget_style_entries"
+            app:defaultValue="dot"
+            app:useSimpleSummaryProvider="true"
+            />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Поведение виджетов" app:icon="@drawable/settings_24">
 
         <SwitchPreference
             app:key="smart_scheduling"
@@ -34,30 +54,6 @@
             app:title="Показывать следующую пару заранее"
             app:summary="За 15 минут до окончания пары виджет отобразит следующую"
             app:defaultValue="true"/>
-
-        <SwitchPreference
-            app:key="dynamic_widget_theme"
-            app:title="Адаптивная тема виджетов"
-            app:summary="Тема виджетов будет соответствовать системной"
-            app:defaultValue="true"/>
-
-        <ListPreference
-            app:key="single_lesson_widget_style"
-            app:title="Стиль маленького виджета"
-            app:entryValues="@array/widget_style_values"
-            app:entries="@array/widget_style_entries"
-            app:defaultValue="dot"
-            app:useSimpleSummaryProvider="true"
-            />
-
-        <ListPreference
-            app:key="list_lesson_widget_style"
-            app:title="Стиль большого виджета"
-            app:entryValues="@array/widget_style_values"
-            app:entries="@array/widget_style_entries"
-            app:defaultValue="dot"
-            app:useSimpleSummaryProvider="true"
-            />
 
         <Preference
             app:key="last_update_timestamp"

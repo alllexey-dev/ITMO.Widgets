@@ -112,12 +112,11 @@ class LessonWidgetUpdateWorker(
         storage: PreferencesStorage,
         data: SingleLessonData
     ) {
-        val dynamicTheme = storage.getDynamicTheme()
         widgetIds.forEach { appWidgetId ->
             val realLayoutId = if (storage.getSingleLessonWidgetStyle() == LINE_STYLE) {
-                SingleLessonWidget.getLayoutId(R.layout.single_lesson_widget, dynamicTheme)
+                R.layout.single_lesson_widget
             } else {
-                SingleLessonWidget.getLayoutId(R.layout.single_lesson_widget_variant, dynamicTheme)
+                R.layout.single_lesson_widget_variant
             }
             SingleLessonWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, data, realLayoutId)
         }
@@ -158,17 +157,13 @@ class LessonWidgetUpdateWorker(
         storage: PreferencesStorage,
         data: List<SingleLessonData>
     ) {
-        val dynamicTheme = storage.getDynamicTheme()
         widgetIds.forEach { appWidgetId ->
             val providerInfo = appWidgetManager.getAppWidgetInfo(appWidgetId)
-            val realLayoutId = SingleLessonWidget.getLayoutId(
-                providerInfo.initialLayout,
-                dynamicTheme
-            )
+            val realLayoutId = providerInfo.initialLayout
             val rowLayoutId = if (storage.getListLessonWidgetStyle() == LINE_STYLE) {
-                SingleLessonWidget.getLayoutId(R.layout.single_lesson_widget, dynamicTheme)
+                R.layout.single_lesson_widget
             } else {
-                SingleLessonWidget.getLayoutId(R.layout.single_lesson_widget_variant, dynamicTheme)
+                R.layout.single_lesson_widget_variant
             }
             LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, ArrayList(data), realLayoutId, rowLayoutId)
         }

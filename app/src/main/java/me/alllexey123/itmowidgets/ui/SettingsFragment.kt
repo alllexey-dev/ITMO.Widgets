@@ -15,7 +15,6 @@ import me.alllexey123.itmowidgets.providers.ScheduleProvider
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.BEFOREHAND_SCHEDULING_KEY
-import me.alllexey123.itmowidgets.utils.DYNAMIC_WIDGET_THEME
 import me.alllexey123.itmowidgets.utils.ID_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.LAST_UPDATE_TIMESTAMP_KEY
 import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_EXPIRES_KEY
@@ -56,12 +55,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        val dynamicThemePreference = findPreference<SwitchPreference>(DYNAMIC_WIDGET_THEME)
-        dynamicThemePreference?.setOnPreferenceChangeListener { preference, newValue ->
-            onDynamicThemeChange()
-            true
-        }
-
         val triggerUpdateButton = findPreference<Preference>("trigger_update_button")
         triggerUpdateButton?.setOnPreferenceClickListener { preference ->
             updateAllWidgets()
@@ -90,10 +83,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun onBeforehandSchedulingChange() {
-        updateAllWidgets()
-    }
-
-    private fun onDynamicThemeChange() {
         updateAllWidgets()
     }
 
