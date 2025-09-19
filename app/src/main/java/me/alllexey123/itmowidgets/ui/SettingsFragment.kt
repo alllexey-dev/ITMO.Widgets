@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.preference.EditTextPreference
+import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
@@ -74,6 +75,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
             startActivity(linkIntent)
             true
         }
+
+        listOf("single_lesson_widget_style", "list_lesson_widget_style")
+            .map { s -> findPreference<ListPreference>(s) }.forEach { preference ->
+                preference?.setOnPreferenceChangeListener { pref, newValue ->
+                    updateAllWidgets()
+                    true
+                }
+            }
     }
 
     private fun onSmartSchedulingChange() {

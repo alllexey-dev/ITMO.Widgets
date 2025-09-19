@@ -17,6 +17,14 @@ const val BEFOREHAND_SCHEDULING_KEY = "beforehand_scheduling"
 
 const val DYNAMIC_WIDGET_THEME = "dynamic_widget_theme"
 
+const val SINGLE_LESSON_WIDGET_STYLE = "single_lesson_widget_style"
+
+const val LIST_LESSON_WIDGET_STYLE = "list_lesson_widget_style"
+
+const val DOT_STYLE = "dot"
+
+const val LINE_STYLE = "line"
+
 class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     override fun getAccessToken(): String? {
@@ -53,6 +61,14 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     fun getDynamicTheme(): Boolean {
         return prefs.getBoolean(DYNAMIC_WIDGET_THEME, true)
+    }
+
+    fun getSingleLessonWidgetStyle(): String? {
+        return prefs.getString(SINGLE_LESSON_WIDGET_STYLE, DOT_STYLE)
+    }
+
+    fun getListLessonWidgetStyle(): String? {
+        return prefs.getString(LIST_LESSON_WIDGET_STYLE, DOT_STYLE)
     }
 
     override fun setAccessToken(accessToken: String?) {
@@ -110,5 +126,16 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
         }
     }
 
+    fun setSingleLessonWidgetStyle(style: String?) {
+        prefs.edit {
+            putString(SINGLE_LESSON_WIDGET_STYLE, style)
+        }
+    }
+
+    fun setListLessonWidgetStyle(style: String?) {
+        prefs.edit {
+            putString(LIST_LESSON_WIDGET_STYLE, style)
+        }
+    }
 
 }

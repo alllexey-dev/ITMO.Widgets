@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_background_rounded"
-    android:padding="6dp">
+    android:paddingBottom="6dp">
 
     <ListView
         android:id="@+id/lesson_list"

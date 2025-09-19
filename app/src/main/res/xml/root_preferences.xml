@@ -41,6 +41,24 @@
             app:summary="Тема виджетов будет соответствовать системной"
             app:defaultValue="true"/>
 
+        <ListPreference
+            app:key="single_lesson_widget_style"
+            app:title="Стиль маленького виджета"
+            app:entryValues="@array/widget_style_values"
+            app:entries="@array/widget_style_entries"
+            app:defaultValue="dot"
+            app:useSimpleSummaryProvider="true"
+            />
+
+        <ListPreference
+            app:key="list_lesson_widget_style"
+            app:title="Стиль большого виджета"
+            app:entryValues="@array/widget_style_values"
+            app:entries="@array/widget_style_entries"
+            app:defaultValue="dot"
+            app:useSimpleSummaryProvider="true"
+            />
+
         <Preference
             app:key="last_update_timestamp"
             app:title="Последнее обновление"

@@ -20,7 +20,6 @@ class LessonListWidget : AppWidgetProvider() {
         LessonWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
     }
 
-
     companion object {
         const val LESSON_LIST_EXTRA = "lesson_list_extra"
 
@@ -31,29 +30,38 @@ class LessonListWidget : AppWidgetProvider() {
             appWidgetId: Int,
             lessons: ArrayList<SingleLessonData>,
             layoutId: Int,
+            rowLayoutId: Int,
         ) {
+            println("PUTTING $rowLayoutId")
             val intent = Intent(context, LessonListWidgetService::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                val list = ArrayList(lessons.map {
+                    Bundle().apply {
+                        putString("subject", it.subject)
+                        putString("times", it.times)
+                        putString("teacher", it.teacher)
+                        putInt("workTypeId", it.workTypeId)
+                        putString("room", it.room)
+                        putString("building", it.building)
+                        putString("moreLessonsText", it.moreLessonsText)
+                        putBoolean("hideTeacher", it.hideTeacher)
+                        putBoolean("hideLocation", it.hideLocation)
+                        putBoolean("hideTime", it.hideTime)
+                        putBoolean("hideMoreLessonsText", it.hideMoreLessonsText)
+                    }
+                })
+
+                list.add(Bundle().apply {
+                    putInt("rowLayoutId", rowLayoutId)
+                })
+
                 putParcelableArrayListExtra(
                     LESSON_LIST_EXTRA,
-                    lessons.map {
-                        Bundle().apply {
-                            putString("subject", it.subject)
-                            putString("times", it.times)
-                            putString("teacher", it.teacher)
-                            putInt("workTypeId", it.workTypeId)
-                            putString("room", it.room)
-                            putString("building", it.building)
-                            putString("moreLessonsText", it.moreLessonsText)
-                            putBoolean("hideTeacher", it.hideTeacher)
-                            putBoolean("hideLocation", it.hideLocation)
-                            putBoolean("hideTime", it.hideTime)
-                            putBoolean("hideMoreLessonsText", it.hideMoreLessonsText)
-                        }
-                    } as ArrayList<Bundle>
+                    list
                 )
 
-                data = toUri(Intent.URI_INTENT_SCHEME).toUri()
+                data = ("${toUri(Intent.URI_INTENT_SCHEME)}-${lessons.hashCode()}-${rowLayoutId}").toUri()
+
             }
 
             val views = RemoteViews(context.packageName, layoutId)
@@ -63,10 +71,10 @@ class LessonListWidget : AppWidgetProvider() {
 //            views.setEmptyView(
 //                R.id.lesson_list,
 //                R.id.empty_view
-//            )
+//
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
-//            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.lesson_list)
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.lesson_list)
         }
 
     }

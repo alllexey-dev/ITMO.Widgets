@@ -9,8 +9,10 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import api.myitmo.model.Lesson
+import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.providers.ScheduleProvider
 import me.alllexey123.itmowidgets.providers.StorageProvider
+import me.alllexey123.itmowidgets.utils.LINE_STYLE
 import me.alllexey123.itmowidgets.utils.PreferencesStorage
 import me.alllexey123.itmowidgets.utils.ScheduleUtils
 import me.alllexey123.itmowidgets.widgets.LessonListWidget
@@ -110,12 +112,13 @@ class LessonWidgetUpdateWorker(
         storage: PreferencesStorage,
         data: SingleLessonData
     ) {
+        val dynamicTheme = storage.getDynamicTheme()
         widgetIds.forEach { appWidgetId ->
-            val providerInfo = appWidgetManager.getAppWidgetInfo(appWidgetId)
-            val realLayoutId = SingleLessonWidget.getLayoutId(
-                providerInfo.initialLayout,
-                storage.getDynamicTheme()
-            )
+            val realLayoutId = if (storage.getSingleLessonWidgetStyle() == LINE_STYLE) {
+                SingleLessonWidget.getLayoutId(R.layout.single_lesson_widget, dynamicTheme)
+            } else {
+                SingleLessonWidget.getLayoutId(R.layout.single_lesson_widget_variant, dynamicTheme)
+            }
             SingleLessonWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, data, realLayoutId)
         }
     }
@@ -155,13 +158,19 @@ class LessonWidgetUpdateWorker(
         storage: PreferencesStorage,
         data: List<SingleLessonData>
     ) {
+        val dynamicTheme = storage.getDynamicTheme()
         widgetIds.forEach { appWidgetId ->
             val providerInfo = appWidgetManager.getAppWidgetInfo(appWidgetId)
             val realLayoutId = SingleLessonWidget.getLayoutId(
                 providerInfo.initialLayout,
-                storage.getDynamicTheme()
+                dynamicTheme
             )
-            LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, ArrayList(data), realLayoutId)
+            val rowLayoutId = if (storage.getListLessonWidgetStyle() == LINE_STYLE) {
+                SingleLessonWidget.getLayoutId(R.layout.single_lesson_widget, dynamicTheme)
+            } else {
+                SingleLessonWidget.getLayoutId(R.layout.single_lesson_widget_variant, dynamicTheme)
+            }
+            LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, ArrayList(data), realLayoutId, rowLayoutId)
         }
     }
 

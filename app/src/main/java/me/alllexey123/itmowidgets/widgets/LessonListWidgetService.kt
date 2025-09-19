@@ -20,6 +20,8 @@ class LessonListWidgetService : RemoteViewsService() {
 
         var lessons: ArrayList<SingleLessonData> = ArrayList()
 
+        var rowLayoutId: Int = R.layout.single_lesson_widget_variant
+
         override fun getCount(): Int {
             return lessons.size
         }
@@ -33,7 +35,7 @@ class LessonListWidgetService : RemoteViewsService() {
         }
 
         override fun getViewAt(position: Int): RemoteViews? {
-            val views = RemoteViews(context.packageName, R.layout.single_lesson_widget_dynamic)
+            val views = RemoteViews(context.packageName, rowLayoutId)
             val data: SingleLessonData? = lessons[position]
             if (data == null) return null
 
@@ -80,11 +82,11 @@ class LessonListWidgetService : RemoteViewsService() {
         }
 
         override fun onCreate() {
-            lessons = extractLessons(intent)
+            extractData(intent)
         }
 
         override fun onDataSetChanged() {
-            lessons = extractLessons(intent)
+            extractData(intent)
         }
 
         override fun onDestroy() {
@@ -92,9 +94,9 @@ class LessonListWidgetService : RemoteViewsService() {
         }
 
         @Suppress("DEPRECATION")
-        private fun extractLessons(intent: Intent): ArrayList<SingleLessonData> {
+        private fun extractData(intent: Intent) {
             val bundles = intent.getParcelableArrayListExtra<Bundle>(LessonListWidget.LESSON_LIST_EXTRA)
-            return bundles?.map { b ->
+            lessons = bundles?.subList(0, bundles.size - 1)?.map { b ->
                 SingleLessonData(
                     subject = b.getString("subject", ""),
                     times = b.getString("times", ""),
@@ -109,6 +111,8 @@ class LessonListWidgetService : RemoteViewsService() {
                     hideMoreLessonsText = b.getBoolean("hideMoreLessonsText", false)
                 )
             }?.let { ArrayList(it) } ?: ArrayList()
+
+            rowLayoutId = bundles?.get(bundles.size - 1)?.getInt("rowLayoutId") ?: R.layout.single_lesson_widget_variant
         }
 
 
