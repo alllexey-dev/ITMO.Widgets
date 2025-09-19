@@ -24,7 +24,7 @@ object ScheduleUtils {
 
     fun shortenRoom(room: String): String {
         val roomLow = room.lowercase()
-        if (roomLow.contains("актовый")) return "Актовый зал"
+        if (roomLow.contains("актовый")) return "Акт. зал"
         val m1 = Pattern.compile("[0-9]{4}/[0-9]").matcher(roomLow)
         if (m1.find()) {
             return m1.group()

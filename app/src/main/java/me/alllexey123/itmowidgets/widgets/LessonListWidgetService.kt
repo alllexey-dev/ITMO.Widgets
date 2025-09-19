@@ -23,7 +23,7 @@ class LessonListWidgetService : RemoteViewsService() {
         var rowLayoutId: Int = R.layout.single_lesson_widget_variant
 
         override fun getCount(): Int {
-            return lessons.size
+            return lessons.size + 1
         }
 
         override fun getItemId(position: Int): Long {
@@ -35,46 +35,53 @@ class LessonListWidgetService : RemoteViewsService() {
         }
 
         override fun getViewAt(position: Int): RemoteViews? {
-            val views = RemoteViews(context.packageName, rowLayoutId)
-            val data: SingleLessonData? = lessons[position]
-            if (data == null) return null
+            if (lessons.isEmpty()) {
+                return RemoteViews(context.packageName, R.layout.lesson_list_empty)
+            } else {
+                if (position >= lessons.size) {
+                    return RemoteViews(context.packageName, R.layout.lesson_list_end)
+                }
+                val views = RemoteViews(context.packageName, rowLayoutId)
+                val data: SingleLessonData? = lessons[position]
+                if (data == null) return null
 
-            views.setTextViewText(R.id.title, data.subject)
-            views.setTextViewText(R.id.teacher, data.teacher)
-            views.setTextViewText(R.id.location_room, data.room)
-            views.setTextViewText(R.id.location_building, data.building)
-            views.setTextViewText(R.id.more_lessons_text, data.moreLessonsText)
-            views.setViewVisibility(
-                R.id.teacher_layout,
-                if (data.hideTeacher) View.GONE else View.VISIBLE
-            )
-            views.setViewVisibility(
-                R.id.location_layout,
-                if (data.hideLocation) View.GONE else View.VISIBLE
-            )
-            views.setViewVisibility(
-                R.id.time_layout,
-                if (data.hideTime) View.GONE else View.VISIBLE
-            )
-            views.setViewVisibility(
-                R.id.more_lessons_layout,
-                if (data.hideMoreLessonsText) View.GONE else View.VISIBLE
-            )
+                views.setTextViewText(R.id.title, data.subject)
+                views.setTextViewText(R.id.teacher, data.teacher)
+                views.setTextViewText(R.id.location_room, data.room)
+                views.setTextViewText(R.id.location_building, data.building)
+                views.setTextViewText(R.id.more_lessons_text, data.moreLessonsText)
+                views.setViewVisibility(
+                    R.id.teacher_layout,
+                    if (data.hideTeacher) View.GONE else View.VISIBLE
+                )
+                views.setViewVisibility(
+                    R.id.location_layout,
+                    if (data.hideLocation) View.GONE else View.VISIBLE
+                )
+                views.setViewVisibility(
+                    R.id.time_layout,
+                    if (data.hideTime) View.GONE else View.VISIBLE
+                )
+                views.setViewVisibility(
+                    R.id.more_lessons_layout,
+                    if (data.hideMoreLessonsText) View.GONE else View.VISIBLE
+                )
 
-            views.setTextViewText(R.id.time, data.times)
+                views.setTextViewText(R.id.time, data.times)
 
-            val colorId = ScheduleUtils.getWorkTypeColor(data.workTypeId)
+                val colorId = ScheduleUtils.getWorkTypeColor(data.workTypeId)
 
-            views.setInt(
-                R.id.type_indicator, "setColorFilter",
-                ContextCompat.getColor(context, colorId)
-            )
+                views.setInt(
+                    R.id.type_indicator, "setColorFilter",
+                    ContextCompat.getColor(context, colorId)
+                )
 
-            return views
+                return views
+            }
         }
 
         override fun getViewTypeCount(): Int {
-            return 1
+            return 2
         }
 
         override fun hasStableIds(): Boolean {

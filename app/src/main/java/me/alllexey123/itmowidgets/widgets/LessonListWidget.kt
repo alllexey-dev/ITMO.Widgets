@@ -32,7 +32,6 @@ class LessonListWidget : AppWidgetProvider() {
             layoutId: Int,
             rowLayoutId: Int,
         ) {
-            println("PUTTING $rowLayoutId")
             val intent = Intent(context, LessonListWidgetService::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                 val list = ArrayList(lessons.map {
