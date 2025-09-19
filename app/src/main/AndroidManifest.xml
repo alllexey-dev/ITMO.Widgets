@@ -33,7 +33,7 @@
         <receiver
             android:name=".widgets.SingleLessonWidget"
             android:exported="false"
-            android:label="@string/lesson_widget_name">
+            android:label="@string/single_lesson_widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -46,7 +46,7 @@
         <receiver
             android:name=".widgets.LessonListWidget"
             android:exported="false"
-            android:label="@string/lesson_widget_name">
+            android:label="@string/list_lesson_widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

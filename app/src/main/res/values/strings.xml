@@ -1,9 +1,10 @@
 <resources>
     <string name="app_name">ITMO.Widgets</string>
-    <string name="lesson_widget_name">Следующая пара</string>
-    <string name="lesson_widget_variant_name">Следующая пара (2)</string>
-    <string name="lesson_widget_description">Отображает текущую или следующую пару</string>
+    <string name="single_lesson_widget_name">Пара</string>
+    <string name="single_lesson_widget_description">Текущая / следующая</string>
+    <string name="list_lesson_widget_name">Расписание</string>
+    <string name="list_lesson_widget_description">Список пар на сегодня</string>
     <string name="qr_widget_name">QR-код</string>
-    <string name="qr_widget_description">QR-код в качестве пропуска</string>
+    <string name="qr_widget_description">QR-пропуск в корпус</string>
     <string name="refresh_token_help_url">https://github.com/alllexey123/ITMO.Widgets?tab=readme-ov-file#использование</string>
 </resources>
