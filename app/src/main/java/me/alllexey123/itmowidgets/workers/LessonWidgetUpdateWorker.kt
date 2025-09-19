@@ -18,7 +18,6 @@ import me.alllexey123.itmowidgets.utils.ScheduleUtils
 import me.alllexey123.itmowidgets.widgets.LessonListWidget
 import me.alllexey123.itmowidgets.widgets.SingleLessonData
 import me.alllexey123.itmowidgets.widgets.SingleLessonWidget
-import me.alllexey123.itmowidgets.widgets.SingleLessonWidgetVariant
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -35,10 +34,9 @@ class LessonWidgetUpdateWorker(
     override suspend fun doWork(): Result {
         val appWidgetManager = AppWidgetManager.getInstance(appContext)
 
-        val singleWidgetIds = collectWidgetIds(appWidgetManager, listOf(
-            SingleLessonWidget::class.java,
-            SingleLessonWidgetVariant::class.java
-        ))
+        val singleWidgetIds = appWidgetManager.getAppWidgetIds(
+            ComponentName(appContext, SingleLessonWidget::class.java)
+        )
         val listWidgetIds = appWidgetManager.getAppWidgetIds(
             ComponentName(appContext, LessonListWidget::class.java)
         )
@@ -108,7 +106,7 @@ class LessonWidgetUpdateWorker(
 
     private fun updateSingleLessonWidgets(
         appWidgetManager: AppWidgetManager,
-        widgetIds: List<Int>,
+        widgetIds: IntArray,
         storage: PreferencesStorage,
         data: SingleLessonData
     ) {
@@ -166,15 +164,6 @@ class LessonWidgetUpdateWorker(
                 R.layout.single_lesson_widget_variant
             }
             LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, ArrayList(data), realLayoutId, rowLayoutId)
-        }
-    }
-
-    private fun collectWidgetIds(
-        appWidgetManager: AppWidgetManager,
-        classes: List<Class<*>>
-    ): List<Int> {
-        return classes.flatMap { clazz ->
-            appWidgetManager.getAppWidgetIds(ComponentName(appContext, clazz)).toList()
         }
     }
 

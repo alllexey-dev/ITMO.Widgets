@@ -4,12 +4,12 @@
     android:initialKeyguardLayout="@layout/single_lesson_widget"
     android:initialLayout="@layout/single_lesson_widget"
     android:minWidth="250dp"
-    android:minHeight="60dp"
+    android:minHeight="80dp"
     android:previewImage="@drawable/lesson_widget_preview"
 
-    android:targetCellWidth="4"
-    android:targetCellHeight="1"
-    android:updatePeriodMillis="0"
     android:resizeMode="horizontal"
     android:maxResizeWidth="340dp"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen"
+    android:targetCellWidth="4"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="0"/>

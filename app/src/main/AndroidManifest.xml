@@ -44,19 +44,6 @@
         </receiver>
 
         <receiver
-            android:name=".widgets.SingleLessonWidgetVariant"
-            android:exported="false"
-            android:label="@string/lesson_widget_variant_name">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/single_lesson_widget_variant_info" />
-        </receiver>
-
-        <receiver
             android:name=".widgets.LessonListWidget"
             android:exported="false"
             android:label="@string/lesson_widget_name">
