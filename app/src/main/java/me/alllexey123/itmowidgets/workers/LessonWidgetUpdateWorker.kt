@@ -163,7 +163,7 @@ class LessonWidgetUpdateWorker(
             val rowLayoutId = if (storage.getListLessonWidgetStyle() == LINE_STYLE) {
                 R.layout.single_lesson_widget
             } else {
-                R.layout.single_lesson_widget_variant
+                R.layout.single_lesson_widget_variant_var_height
             }
             LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, ArrayList(data), realLayoutId, rowLayoutId, fullDayEmpty)
         }
