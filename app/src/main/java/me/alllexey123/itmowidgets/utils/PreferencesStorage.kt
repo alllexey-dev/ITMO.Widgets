@@ -23,6 +23,8 @@ const val DOT_STYLE = "dot"
 
 const val LINE_STYLE = "line"
 
+const val HIDE_TEACHER_KEY = "hide_teacher"
+
 class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     override fun getAccessToken(): String? {
@@ -63,6 +65,10 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     fun getListLessonWidgetStyle(): String? {
         return prefs.getString(LIST_LESSON_WIDGET_STYLE, DOT_STYLE)
+    }
+
+    fun getHideTeacherState(): Boolean {
+        return prefs.getBoolean(HIDE_TEACHER_KEY, false)
     }
 
     override fun setAccessToken(accessToken: String?) {
@@ -107,7 +113,6 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
         }
     }
 
-
     fun setBeforehandSchedulingState(beforehandScheduling: Boolean) {
         prefs.edit {
             putBoolean(BEFOREHAND_SCHEDULING_KEY, beforehandScheduling)
@@ -123,6 +128,12 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
     fun setListLessonWidgetStyle(style: String?) {
         prefs.edit {
             putString(LIST_LESSON_WIDGET_STYLE, style)
+        }
+    }
+
+    fun setHideTeacherState(hideTeacher: Boolean) {
+        prefs.edit {
+            putBoolean(HIDE_TEACHER_KEY, hideTeacher)
         }
     }
 

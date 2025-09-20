@@ -15,6 +15,7 @@ import me.alllexey123.itmowidgets.providers.ScheduleProvider
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.BEFOREHAND_SCHEDULING_KEY
+import me.alllexey123.itmowidgets.utils.HIDE_TEACHER_KEY
 import me.alllexey123.itmowidgets.utils.ID_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.LAST_UPDATE_TIMESTAMP_KEY
 import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_EXPIRES_KEY
@@ -76,6 +77,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     true
                 }
             }
+
+        val hideTeacherPreference = findPreference<SwitchPreference>(HIDE_TEACHER_KEY)
+        hideTeacherPreference?.setOnPreferenceChangeListener { preference, newValue ->
+            onHideTeacherChange()
+            true
+        }
     }
 
     private fun onSmartSchedulingChange() {
@@ -83,6 +90,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun onBeforehandSchedulingChange() {
+        updateAllWidgets()
+    }
+
+    private fun onHideTeacherChange() {
         updateAllWidgets()
     }
 

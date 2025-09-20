@@ -8,6 +8,7 @@ import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import api.myitmo.model.Lesson
 import me.alllexey123.itmowidgets.R
+import me.alllexey123.itmowidgets.utils.PreferencesStorage
 import me.alllexey123.itmowidgets.utils.ScheduleUtils
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 
@@ -30,7 +31,7 @@ open class SingleLessonWidget : AppWidgetProvider() {
     }
 
     companion object {
-        internal fun widgetData(lesson: Lesson, moreLessons: Int?, till: String?): SingleLessonData {
+        internal fun widgetData(lesson: Lesson, moreLessons: Int?, till: String?, storage: PreferencesStorage): SingleLessonData {
             val startTime = lesson.timeStart
             val endTime = lesson.timeEnd
             val building = lesson.building
@@ -49,7 +50,7 @@ open class SingleLessonWidget : AppWidgetProvider() {
                 room = room,
                 building = shortBuilding,
                 moreLessonsText = moreLessonsText,
-                hideTeacher = lesson.teacherName == null,
+                hideTeacher = lesson.teacherName == null || storage.getHideTeacherState(),
                 hideLocation = false,
                 hideTime = false,
                 hideMoreLessonsText = till == null

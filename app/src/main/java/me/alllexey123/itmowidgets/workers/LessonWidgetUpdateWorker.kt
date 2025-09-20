@@ -56,7 +56,7 @@ class LessonWidgetUpdateWorker(
             updateSingleLessonWidgets(appWidgetManager, singleWidgetIds, storage, data)
         }
 
-        loadLessonListData().also { (data, fullDayEmpty) ->
+        loadLessonListData(storage).also { (data, fullDayEmpty) ->
             updateLessonListWidgets(appWidgetManager, listWidgetIds, storage, data, fullDayEmpty)
         }
 
@@ -93,7 +93,7 @@ class LessonWidgetUpdateWorker(
                     } else parsedTime
                 } else null
 
-                SingleLessonWidget.widgetData(targetLesson, moreLessons, till) to nextUpdate
+                SingleLessonWidget.widgetData(targetLesson, moreLessons, till, storage) to nextUpdate
             } else {
                 val nextUpdate = if (smartScheduling) currentDate.plusDays(1).atStartOfDay() else null
                 SingleLessonWidget.noLeftLessonsWidgetData() to nextUpdate
@@ -137,12 +137,12 @@ class LessonWidgetUpdateWorker(
         }
     }
 
-    private fun loadLessonListData(): Pair<List<SingleLessonData>, Boolean> {
+    private fun loadLessonListData(storage: PreferencesStorage): Pair<List<SingleLessonData>, Boolean> {
         return try {
             val now = LocalDateTime.now()
             val currentDate: LocalDate = now.toLocalDate()
             val lessons = ScheduleProvider.getDaySchedule(appContext, currentDate).lessons.orEmpty()
-            lessons.map { SingleLessonWidget.widgetData(it, null, null) }
+            lessons.map { SingleLessonWidget.widgetData(it, null, null, storage) }
                 .to(lessons.isEmpty())
         } catch (e: Exception) {
             e.printStackTrace()

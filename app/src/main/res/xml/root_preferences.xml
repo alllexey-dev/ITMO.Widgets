@@ -39,6 +39,11 @@
             app:defaultValue="dot"
             app:useSimpleSummaryProvider="true"
             />
+
+        <SwitchPreference
+            app:key="hide_teacher"
+            app:title="Спрятать преподавателя"
+            app:defaultValue="false"/>
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Поведение виджетов" app:icon="@drawable/settings_24">
