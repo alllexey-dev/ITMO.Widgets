@@ -22,6 +22,8 @@ class LessonListWidgetService : RemoteViewsService() {
 
         var rowLayoutId: Int = R.layout.single_lesson_widget_variant
 
+        var bonusLayoutId: Int = R.layout.lesson_list_empty
+
         override fun getCount(): Int {
             return lessons.size + 1
         }
@@ -36,7 +38,7 @@ class LessonListWidgetService : RemoteViewsService() {
 
         override fun getViewAt(position: Int): RemoteViews? {
             if (lessons.isEmpty()) {
-                return RemoteViews(context.packageName, R.layout.lesson_list_empty)
+                return RemoteViews(context.packageName, bonusLayoutId)
             } else {
                 if (position >= lessons.size) {
                     return RemoteViews(context.packageName, R.layout.lesson_list_end)
@@ -102,7 +104,8 @@ class LessonListWidgetService : RemoteViewsService() {
 
         @Suppress("DEPRECATION")
         private fun extractData(intent: Intent) {
-            val bundles = intent.getParcelableArrayListExtra<Bundle>(LessonListWidget.LESSON_LIST_EXTRA)
+            val bundles =
+                intent.getParcelableArrayListExtra<Bundle>(LessonListWidget.LESSON_LIST_EXTRA)
             lessons = bundles?.subList(0, bundles.size - 1)?.map { b ->
                 SingleLessonData(
                     subject = b.getString("subject", ""),
@@ -119,7 +122,9 @@ class LessonListWidgetService : RemoteViewsService() {
                 )
             }?.let { ArrayList(it) } ?: ArrayList()
 
-            rowLayoutId = bundles?.get(bundles.size - 1)?.getInt("rowLayoutId") ?: R.layout.single_lesson_widget_variant
+            val settingsBundle = bundles?.get(bundles.size - 1)
+            rowLayoutId = settingsBundle?.getInt("rowLayoutId") ?: R.layout.single_lesson_widget_variant
+            bonusLayoutId = settingsBundle?.getInt("bonusLayoutId") ?: R.layout.lesson_list_empty
         }
 
 

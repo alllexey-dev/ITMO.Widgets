@@ -56,8 +56,8 @@ class LessonWidgetUpdateWorker(
             updateSingleLessonWidgets(appWidgetManager, singleWidgetIds, storage, data)
         }
 
-        loadLessonListData().apply {
-            updateLessonListWidgets(appWidgetManager, listWidgetIds, storage, this)
+        loadLessonListData().also { (data, fullDayEmpty) ->
+            updateLessonListWidgets(appWidgetManager, listWidgetIds, storage, data, fullDayEmpty)
         }
 
         // Small offset to prevent update loops
@@ -137,15 +137,16 @@ class LessonWidgetUpdateWorker(
         }
     }
 
-    private fun loadLessonListData(): List<SingleLessonData> {
+    private fun loadLessonListData(): Pair<List<SingleLessonData>, Boolean> {
         return try {
             val now = LocalDateTime.now()
             val currentDate: LocalDate = now.toLocalDate()
             val lessons = ScheduleProvider.getDaySchedule(appContext, currentDate).lessons.orEmpty()
             lessons.map { SingleLessonWidget.widgetData(it, null, null) }
+                .to(lessons.isEmpty())
         } catch (e: Exception) {
             e.printStackTrace()
-            listOf(SingleLessonWidget.errorLessonWidgetData())
+            listOf(SingleLessonWidget.errorLessonWidgetData()).to(true)
         }
     }
 
@@ -153,7 +154,8 @@ class LessonWidgetUpdateWorker(
         appWidgetManager: AppWidgetManager,
         widgetIds: IntArray,
         storage: PreferencesStorage,
-        data: List<SingleLessonData>
+        data: List<SingleLessonData>,
+        fullDayEmpty: Boolean
     ) {
         widgetIds.forEach { appWidgetId ->
             val providerInfo = appWidgetManager.getAppWidgetInfo(appWidgetId)
@@ -163,7 +165,7 @@ class LessonWidgetUpdateWorker(
             } else {
                 R.layout.single_lesson_widget_variant
             }
-            LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, ArrayList(data), realLayoutId, rowLayoutId)
+            LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, ArrayList(data), realLayoutId, rowLayoutId, fullDayEmpty)
         }
     }
 

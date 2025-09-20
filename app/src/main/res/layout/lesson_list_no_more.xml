@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="16dp"
-        android:text="Сегодня нет пар"
+        android:text="Сегодня больше нет пар"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="?attr/colorOnSurface" />
 

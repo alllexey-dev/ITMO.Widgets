@@ -31,6 +31,7 @@ class LessonListWidget : AppWidgetProvider() {
             lessons: ArrayList<SingleLessonData>,
             layoutId: Int,
             rowLayoutId: Int,
+            fullDayEmpty: Boolean
         ) {
             val intent = Intent(context, LessonListWidgetService::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -52,6 +53,7 @@ class LessonListWidget : AppWidgetProvider() {
 
                 list.add(Bundle().apply {
                     putInt("rowLayoutId", rowLayoutId)
+                    putInt("bonusLayoutId", if (fullDayEmpty) R.layout.lesson_list_empty else R.layout.lesson_list_no_more)
                 })
 
                 putParcelableArrayListExtra(
