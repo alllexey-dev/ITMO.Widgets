@@ -56,7 +56,7 @@ object ScheduleUtils {
             1 -> R.color.lecture_color
             2 -> R.color.lab_color
             3 -> R.color.practice_color
-            4,5,6,7,8,9 -> R.color.red_lesson_color
+            4,5,6,7,8,9 -> R.color.red_lesson_color // idk what is this meant for
             10 -> R.color.sport_color
             11 -> R.color.free_sport_color
             else -> R.color.subtext_color
