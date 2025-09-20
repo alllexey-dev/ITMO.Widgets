@@ -2,9 +2,14 @@
 <resources>
     <color name="primary_color">#FF1743BD</color>
     <color name="primary_variant_color">#3A8AFF</color>
+
     <color name="practice_color">#FFF7B500</color>
     <color name="lab_color">#FFA50AFF</color>
     <color name="lecture_color">#FF0091FF</color>
+    <color name="free_sport_color">#74D150</color>
+    <color name="sport_color">#FF1846C7</color>
+    <color name="red_lesson_color">#FFEE215B</color>
+
     <color name="subtext_color">#FF5C5C5C</color>
     <color name="subtext_color_lighter">#7A7A7A</color>
     <color name="free_color">#41B946</color>
