@@ -45,6 +45,12 @@
             app:title="Скрывать преподавателя"
             app:summary="Не показывать имя преподавателя в виджете"
             app:defaultValue="false"/>
+
+        <SwitchPreference
+            app:key="hide_previous_lessons"
+            app:title="Скрывать прошедшие пары"
+            app:summary="На большом виджете не будут видны прошлые занятия"
+            app:defaultValue="false"/>
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Поведение виджетов" app:icon="@drawable/settings_24">

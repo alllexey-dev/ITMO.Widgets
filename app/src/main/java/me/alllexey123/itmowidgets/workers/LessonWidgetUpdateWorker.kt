@@ -139,10 +139,23 @@ class LessonWidgetUpdateWorker(
 
     private fun loadLessonListData(storage: PreferencesStorage): Pair<List<SingleLessonData>, Boolean> {
         return try {
+            val hidePrevious = storage.getHidePreviousLessonsState()
+            val beforehandScheduling = storage.getBeforehandSchedulingState()
             val now = LocalDateTime.now()
             val currentDate: LocalDate = now.toLocalDate()
             val lessons = ScheduleProvider.getDaySchedule(appContext, currentDate).lessons.orEmpty()
-            lessons.map { SingleLessonWidget.widgetData(it, null, null, storage) }
+            lessons.filterIndexed { i, l ->
+                if (!hidePrevious) true
+                val lessonEndTime = ScheduleUtils.parseTime(currentDate, l.timeEnd)
+                val deadline: LocalDateTime
+                if (i == lessons.size - 1 || !beforehandScheduling) { // no beforehand
+                    deadline = now
+                } else {
+                    deadline = now.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
+                }
+
+                deadline <= lessonEndTime
+            }.map { SingleLessonWidget.widgetData(it, null, null, storage) }
                 .to(lessons.isEmpty())
         } catch (e: Exception) {
             e.printStackTrace()

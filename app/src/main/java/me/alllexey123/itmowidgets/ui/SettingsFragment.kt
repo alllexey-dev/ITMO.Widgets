@@ -15,6 +15,7 @@ import me.alllexey123.itmowidgets.providers.ScheduleProvider
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.BEFOREHAND_SCHEDULING_KEY
+import me.alllexey123.itmowidgets.utils.HIDE_PREVIOUS_LESSONS_KEY
 import me.alllexey123.itmowidgets.utils.HIDE_TEACHER_KEY
 import me.alllexey123.itmowidgets.utils.ID_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.LAST_UPDATE_TIMESTAMP_KEY
@@ -46,13 +47,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val smartSchedulingPreference = findPreference<SwitchPreference>(SMART_SCHEDULING_KEY)
         smartSchedulingPreference?.setOnPreferenceChangeListener { preference, newValue ->
-            onSmartSchedulingChange()
+            updateAllWidgets()
             true
         }
 
         val beforehandSchedulingPreference = findPreference<SwitchPreference>(BEFOREHAND_SCHEDULING_KEY)
         beforehandSchedulingPreference?.setOnPreferenceChangeListener { preference, newValue ->
-            onBeforehandSchedulingChange()
+            updateAllWidgets()
             true
         }
 
@@ -80,21 +81,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val hideTeacherPreference = findPreference<SwitchPreference>(HIDE_TEACHER_KEY)
         hideTeacherPreference?.setOnPreferenceChangeListener { preference, newValue ->
-            onHideTeacherChange()
+            updateAllWidgets()
             true
         }
-    }
 
-    private fun onSmartSchedulingChange() {
-        updateAllWidgets()
-    }
-
-    private fun onBeforehandSchedulingChange() {
-        updateAllWidgets()
-    }
-
-    private fun onHideTeacherChange() {
-        updateAllWidgets()
+        val hidePreviousLessons = findPreference<SwitchPreference>(HIDE_PREVIOUS_LESSONS_KEY)
+        hidePreviousLessons?.setOnPreferenceChangeListener { preference, newValue ->
+            updateAllWidgets()
+            true
+        }
     }
 
     private fun updateAllWidgets() {

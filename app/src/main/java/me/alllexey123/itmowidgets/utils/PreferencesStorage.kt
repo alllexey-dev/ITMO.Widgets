@@ -25,6 +25,8 @@ const val LINE_STYLE = "line"
 
 const val HIDE_TEACHER_KEY = "hide_teacher"
 
+const val HIDE_PREVIOUS_LESSONS_KEY = "hide_previous_lessons"
+
 class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     override fun getAccessToken(): String? {
@@ -69,6 +71,10 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     fun getHideTeacherState(): Boolean {
         return prefs.getBoolean(HIDE_TEACHER_KEY, false)
+    }
+
+    fun getHidePreviousLessonsState(): Boolean {
+        return prefs.getBoolean(HIDE_PREVIOUS_LESSONS_KEY, false)
     }
 
     override fun setAccessToken(accessToken: String?) {
@@ -134,6 +140,12 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
     fun setHideTeacherState(hideTeacher: Boolean) {
         prefs.edit {
             putBoolean(HIDE_TEACHER_KEY, hideTeacher)
+        }
+    }
+
+    fun setHidePreviousLessonsState(hidePreviousLessons: Boolean) {
+        prefs.edit {
+            putBoolean(HIDE_PREVIOUS_LESSONS_KEY, hidePreviousLessons)
         }
     }
 
