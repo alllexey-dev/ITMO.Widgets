@@ -17,10 +17,10 @@ import me.alllexey123.itmowidgets.R
 
 object QrCodeProvider {
 
-    fun emptyQrCode(side: Int, rounding: Float, fillColor: Int): Bitmap {
+    fun emptyQrCode(side: Int, rounding: Float, bgColor: Int, fillColor: Int): Bitmap {
         val bitmap = createBitmap(side, side, Bitmap.Config.RGB_565)
         val canvas = Canvas(bitmap)
-        canvas.drawColor(Color.WHITE)
+        canvas.drawColor(bgColor)
 
         val paint = Paint().apply {
             color = fillColor

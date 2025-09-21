@@ -39,7 +39,7 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
             QrCodeProvider.qrCodeToBitmap(qrCode, 21, 20, whiteColor, blackColor)
         } catch (e: Exception) {
             storage.setErrorLog("[${javaClass.name}] at ${LocalDateTime.now()}: ${e.stackTraceToString()}")
-            QrCodeProvider.emptyQrCode(400, 20F, Color.DKGRAY)
+            QrCodeProvider.emptyQrCode(21 * 20, 10F, colors.first, Color.GRAY)
         }
 
         for (appWidgetId in appWidgetIds) {

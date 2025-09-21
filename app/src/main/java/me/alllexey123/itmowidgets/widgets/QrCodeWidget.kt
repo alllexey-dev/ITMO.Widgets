@@ -6,7 +6,6 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.widget.RemoteViews
 import androidx.work.WorkManager
 import me.alllexey123.itmowidgets.R
@@ -47,7 +46,9 @@ class QrCodeWidget : AppWidgetProvider() {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
 
-            val bitmap = QrCodeProvider.emptyQrCode(400, 20F, Color.LTGRAY)
+            val colors = QrCodeProvider.getQrColors(context, true)
+            val bitmap = QrCodeProvider.emptyQrCode(21 * 20, 10F, colors.first, colors.second)
+
             views.setImageViewBitmap(R.id.qr_code_image, bitmap)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
