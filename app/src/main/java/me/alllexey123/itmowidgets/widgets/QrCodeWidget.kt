@@ -9,9 +9,9 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.widget.RemoteViews
 import androidx.work.WorkManager
-import me.alllexey123.itmowidgets.workers.QrWidgetUpdateWorker
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.providers.QrCodeProvider
+import me.alllexey123.itmowidgets.workers.QrWidgetUpdateWorker
 
 
 class QrCodeWidget : AppWidgetProvider() {
@@ -67,10 +67,14 @@ class QrCodeWidget : AppWidgetProvider() {
 
         const val ACTION_WIDGET_CLICK: String = "me.alllexey123.itmowidgets.action.QR_WIDGET_CLICK"
 
-        fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, bitmap: Bitmap) {
+        fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, bitmap: Bitmap, bgColor: Int) {
 
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
 
+            views.setInt(
+                R.id.qr_bg_image, "setColorFilter",
+                bgColor
+            )
             views.setImageViewBitmap(R.id.qr_code_image, bitmap)
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }

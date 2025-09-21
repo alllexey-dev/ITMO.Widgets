@@ -7,11 +7,13 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.view.ContextThemeWrapper
 import io.nayuki.qrcodegen.QrCode
 import io.nayuki.qrcodegen.QrSegment
 import java.nio.charset.StandardCharsets
 import androidx.core.graphics.createBitmap
-import androidx.core.graphics.toColorInt
+import com.google.android.material.color.MaterialColors
+import me.alllexey123.itmowidgets.R
 
 object QrCodeProvider {
 
@@ -34,18 +36,19 @@ object QrCodeProvider {
         return bitmap
     }
 
-    fun qrCodeToBitmap(qrCode: QrCode, qrSide: Int, pixelsPerModule: Int): Bitmap {
+    fun qrCodeToBitmap(qrCode: QrCode, qrSide: Int, pixelsPerModule: Int, whiteColor: Int, blackColor: Int): Bitmap {
         val bitmap = createBitmap(qrSide * pixelsPerModule, qrSide * pixelsPerModule)
         val canvas = Canvas(bitmap)
-        canvas.drawColor(Color.WHITE)
+
+        canvas.drawColor(whiteColor)
 
         val black = Paint().apply {
-            color = "#FF222222".toColorInt()
+            color = blackColor
             isAntiAlias = true
         }
 
         val white = Paint().apply {
-            color = Color.WHITE
+            color = whiteColor
             isAntiAlias = true
         }
 
@@ -167,4 +170,50 @@ object QrCodeProvider {
             throw RuntimeException("Could not get QR code", e)
         }
     }
+
+    fun getQrColors(context: Context, dynamic: Boolean): Pair<Int, Int> {
+        var darkModule: Int
+        var lightBg: Int
+
+        if (dynamic) {
+            val themedContext = ContextThemeWrapper(context, R.style.AppTheme)
+            lightBg = MaterialColors.getColor(
+                themedContext,
+                com.google.android.material.R.attr.colorSurface,
+                Color.WHITE
+            )
+            darkModule = MaterialColors.getColor(
+                themedContext,
+                com.google.android.material.R.attr.colorOnSurfaceVariant,
+                Color.BLACK
+            )
+            // swap
+            if (lightBg.isDark()) {
+                lightBg = darkModule.also { darkModule = lightBg }
+            }
+
+            val darkModuleVariant = MaterialColors.getColor(
+                themedContext,
+                com.google.android.material.R.attr.colorOnSurface,
+                Color.BLACK
+            )
+
+            darkModule = maxOf(darkModule, darkModuleVariant, Comparator.comparingDouble { value -> value.darkness() })
+        } else {
+            darkModule = Color.BLACK
+            lightBg = Color.WHITE
+        }
+
+
+        return lightBg to darkModule
+    }
+
+    fun Int.isDark(): Boolean {
+        return darkness() >= 0.5
+    }
+
+    fun Int.darkness(): Double {
+        return 1 - (0.299 * Color.red(this) + 0.587 * Color.green(this) + 0.114 * Color.blue(this)) / 255
+    }
+
 }

@@ -41,6 +41,12 @@
             />
 
         <SwitchPreference
+            app:key="dynamic_qr_colors"
+            app:title="Адаптивные цвета QR"
+            app:summary="Цвета QR кода будет мягко адаптироваться под цвета системы"
+            app:defaultValue="true"/>
+
+        <SwitchPreference
             app:key="hide_teacher"
             app:title="Скрывать преподавателя"
             app:summary="Не показывать имя преподавателя в виджете"

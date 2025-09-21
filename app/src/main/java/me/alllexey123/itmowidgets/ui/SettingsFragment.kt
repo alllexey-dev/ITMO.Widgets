@@ -15,6 +15,7 @@ import me.alllexey123.itmowidgets.providers.ScheduleProvider
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.BEFOREHAND_SCHEDULING_KEY
+import me.alllexey123.itmowidgets.utils.DYNAMIC_QR_COLORS_KEY
 import me.alllexey123.itmowidgets.utils.HIDE_PREVIOUS_LESSONS_KEY
 import me.alllexey123.itmowidgets.utils.HIDE_TEACHER_KEY
 import me.alllexey123.itmowidgets.utils.ID_TOKEN_KEY
@@ -87,6 +88,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val hidePreviousLessons = findPreference<SwitchPreference>(HIDE_PREVIOUS_LESSONS_KEY)
         hidePreviousLessons?.setOnPreferenceChangeListener { preference, newValue ->
+            updateAllWidgets()
+            true
+        }
+
+        val dynamicQrColors = findPreference<SwitchPreference>(DYNAMIC_QR_COLORS_KEY)
+        dynamicQrColors?.setOnPreferenceChangeListener { preference, newValue ->
             updateAllWidgets()
             true
         }

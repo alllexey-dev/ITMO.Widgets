@@ -1,15 +1,22 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="180dp"
     android:layout_height="180dp"
-    android:background="@drawable/widget_background_rounded"
     android:gravity="center_vertical"
-    android:padding="9dp">
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/qr_bg_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_background_rounded" />
 
     <ImageView
         android:id="@+id/qr_code_image"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-    </ImageView>
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        android:background="@android:color/transparent" />
 
 </RelativeLayout>

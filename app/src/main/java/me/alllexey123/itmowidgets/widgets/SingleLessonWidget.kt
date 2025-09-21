@@ -60,7 +60,7 @@ open class SingleLessonWidget : AppWidgetProvider() {
 
         fun noLessonsWidgetData(): SingleLessonData {
             return SingleLessonData(
-                subject = "Сегодня пар нет!",
+                subject = "Сегодня нет пар",
                 workTypeId = -1,
                 hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
             )
@@ -68,7 +68,7 @@ open class SingleLessonWidget : AppWidgetProvider() {
 
         internal fun noLeftLessonsWidgetData(): SingleLessonData {
             return SingleLessonData(
-                subject = "Сегодня больше нет пар!",
+                subject = "Сегодня больше нет пар",
                 workTypeId = -1,
                 hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
             )

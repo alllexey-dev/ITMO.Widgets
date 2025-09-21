@@ -11,6 +11,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import me.alllexey123.itmowidgets.providers.QrCodeProvider
+import me.alllexey123.itmowidgets.providers.StorageProvider
 import me.alllexey123.itmowidgets.widgets.QrCodeWidget
 import java.util.concurrent.TimeUnit
 
@@ -22,13 +23,19 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
         val widgetProvider = ComponentName(appContext, QrCodeWidget::class.java)
         val appWidgetIds = appWidgetManager.getAppWidgetIds(widgetProvider)
 
+        val storage = StorageProvider.getStorage(appContext)
+
         if (appWidgetIds.isEmpty()) {
             return Result.success()
         }
-        
+
+        val colors = QrCodeProvider.getQrColors(appContext, storage.getDynamicQrColorsState())
+        val whiteColor = colors.first
+        val blackColor = colors.second
+
         val bitmap: Bitmap = try {
             val qrCode = QrCodeProvider.getQrCode(appContext)
-            QrCodeProvider.qrCodeToBitmap(qrCode, 21, 20)
+            QrCodeProvider.qrCodeToBitmap(qrCode, 21, 20, whiteColor, blackColor)
         } catch (e: Exception) {
             e.printStackTrace()
             QrCodeProvider.emptyQrCode(400, 20F, Color.DKGRAY)
@@ -39,7 +46,8 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
                 appContext,
                 appWidgetManager,
                 appWidgetId,
-                bitmap
+                bitmap,
+                whiteColor
             )
         }
 
