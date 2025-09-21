@@ -30,7 +30,7 @@ object ScheduleUtils {
             return m1.group()
         }
 
-        val m2 = Pattern.compile("[1-9]{4}").matcher(roomLow)
+        val m2 = Pattern.compile("[0-9]{4}").matcher(roomLow)
         if (m2.find()) {
             return m2.group()
         }
