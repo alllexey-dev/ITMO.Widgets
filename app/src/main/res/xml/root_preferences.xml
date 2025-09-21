@@ -43,7 +43,7 @@
         <SwitchPreference
             app:key="dynamic_qr_colors"
             app:title="Адаптивные цвета QR"
-            app:summary="Цвета QR кода будет мягко адаптироваться под цвета системы"
+            app:summary="Цвета QR кода будут мягко адаптироваться под цвета системы"
             app:defaultValue="true"/>
 
         <SwitchPreference
@@ -85,7 +85,8 @@
         <Preference
             app:key="trigger_update_button"
             app:title="Обновить вручную"
-            app:summary="Сразу обновить все виджеты" />
+            app:summary="Сразу обновить все виджеты"
+            app:icon="@drawable/refresh_24"/>
 
         <EditTextPreference
             app:key="error_log"
