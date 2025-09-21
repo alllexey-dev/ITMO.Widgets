@@ -148,15 +148,17 @@ class LessonWidgetUpdateWorker(
             val lessons = ScheduleProvider.getDaySchedule(appContext, currentDate).lessons.orEmpty()
             lessons.filterIndexed { i, l ->
                 if (!hidePrevious) true
-                val lessonEndTime = ScheduleUtils.parseTime(currentDate, l.timeEnd)
-                val deadline: LocalDateTime
-                if (i == lessons.size - 1 || !beforehandScheduling) { // no beforehand
-                    deadline = now
-                } else {
-                    deadline = now.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
-                }
+                else {
+                    val lessonEndTime = ScheduleUtils.parseTime(currentDate, l.timeEnd)
+                    val deadline: LocalDateTime
+                    if (i == lessons.size - 1 || !beforehandScheduling) { // no beforehand
+                        deadline = now
+                    } else {
+                        deadline = now.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
+                    }
 
-                deadline <= lessonEndTime
+                    deadline <= lessonEndTime
+                }
             }.map { SingleLessonWidget.widgetData(it, null, null, storage) }
                 .to(lessons.isEmpty())
         } catch (e: Exception) {
