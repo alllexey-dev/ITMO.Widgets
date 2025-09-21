@@ -127,9 +127,11 @@ class LessonWidgetUpdateWorker(
     ): Lesson? {
         val noBeforehand = ScheduleProvider.findCurrentOrNextLesson(lessons, now)
         return if (beforehandScheduling) {
+            val withBeforehandTime = now.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
+            if (withBeforehandTime.toLocalDate() != now.toLocalDate()) return noBeforehand
             val withBeforehand = ScheduleProvider.findCurrentOrNextLesson(
                 lessons,
-                now.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
+                withBeforehandTime
             )
             withBeforehand ?: noBeforehand
         } else {
