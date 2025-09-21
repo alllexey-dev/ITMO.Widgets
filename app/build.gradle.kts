@@ -41,7 +41,7 @@ android {
 
 dependencies {
     implementation("io.nayuki:qrcodegen:1.8.0")
-    implementation("io.github.alllexey123:my-itmo-api:1.2.0")
+    implementation("io.github.alllexey123:my-itmo-api:1.2.3")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
