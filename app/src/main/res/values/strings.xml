@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">ITMO.Widgets</string>
     <string name="single_lesson_widget_name">Пара</string>
-    <string name="single_lesson_widget_description">Текущая / следующая</string>
+    <string name="single_lesson_widget_description">Текущая или следующая</string>
     <string name="list_lesson_widget_name">Расписание</string>
     <string name="list_lesson_widget_description">Список пар на сегодня</string>
     <string name="qr_widget_name">QR-код</string>

@@ -5,7 +5,7 @@
     android:initialLayout="@layout/lesson_list_widget"
     android:minWidth="250dp"
     android:minHeight="120dp"
-    android:previewImage="@drawable/circle_indicator"
+    android:previewImage="@drawable/lesson_list_widget_preview"
 
     android:updatePeriodMillis="3600000"
     android:targetCellHeight="3"
