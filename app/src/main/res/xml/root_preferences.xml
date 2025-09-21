@@ -72,6 +72,9 @@
             app:title="Показывать следующую пару заранее"
             app:summary="За 15 минут до конца занятия будет показана следующая пара"
             app:defaultValue="true"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Инструменты разработчика" app:icon="@drawable/outline_build_circle_24">
 
         <Preference
             app:key="last_update_timestamp"
@@ -82,7 +85,12 @@
         <Preference
             app:key="trigger_update_button"
             app:title="Обновить вручную"
-            app:summary="Сразу обновить все виджеты"
-            app:icon="@drawable/outline_build_circle_24" />
+            app:summary="Сразу обновить все виджеты" />
+
+        <EditTextPreference
+            app:key="error_log"
+            app:title="Логи ошибок"
+            app:summary="При возникновении каких-то проблем"
+            app:useSimpleSummaryProvider="false"/>
     </PreferenceCategory>
 </PreferenceScreen>

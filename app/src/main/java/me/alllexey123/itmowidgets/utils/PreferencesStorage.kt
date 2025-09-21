@@ -29,6 +29,8 @@ const val HIDE_PREVIOUS_LESSONS_KEY = "hide_previous_lessons"
 
 const val DYNAMIC_QR_COLORS_KEY = "dynamic_qr_colors"
 
+const val ERROR_LOG = "error_log"
+
 class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     override fun getAccessToken(): String? {
@@ -81,6 +83,10 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     fun getDynamicQrColorsState(): Boolean {
         return prefs.getBoolean(DYNAMIC_QR_COLORS_KEY, true)
+    }
+
+    fun getPreviousErrorLog(): String? {
+        return prefs.getString(ERROR_LOG, "empty")
     }
 
     override fun setAccessToken(accessToken: String?) {
@@ -158,6 +164,12 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
     fun setDynamicQrColorsState(dynamicQrColors: Boolean) {
         prefs.edit {
             putBoolean(DYNAMIC_QR_COLORS_KEY, dynamicQrColors)
+        }
+    }
+
+    fun setErrorLog(errorLog: String?) {
+        prefs.edit {
+            putString(ERROR_LOG, errorLog)
         }
     }
 

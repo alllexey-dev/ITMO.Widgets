@@ -99,7 +99,7 @@ class LessonWidgetUpdateWorker(
                 SingleLessonWidget.noLeftLessonsWidgetData() to nextUpdate
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            storage.setErrorLog("[${javaClass.name}] at ${LocalDateTime.now()}: ${e.stackTraceToString()}")
             SingleLessonWidget.errorLessonWidgetData() to null
         }
     }

@@ -13,6 +13,7 @@ import androidx.work.WorkerParameters
 import me.alllexey123.itmowidgets.providers.QrCodeProvider
 import me.alllexey123.itmowidgets.providers.StorageProvider
 import me.alllexey123.itmowidgets.widgets.QrCodeWidget
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters) :
@@ -37,7 +38,7 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
             val qrCode = QrCodeProvider.getQrCode(appContext)
             QrCodeProvider.qrCodeToBitmap(qrCode, 21, 20, whiteColor, blackColor)
         } catch (e: Exception) {
-            e.printStackTrace()
+            storage.setErrorLog("[${javaClass.name}] at ${LocalDateTime.now()}: ${e.stackTraceToString()}")
             QrCodeProvider.emptyQrCode(400, 20F, Color.DKGRAY)
         }
 
