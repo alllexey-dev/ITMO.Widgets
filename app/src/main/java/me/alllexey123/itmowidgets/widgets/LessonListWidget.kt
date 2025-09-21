@@ -69,11 +69,6 @@ class LessonListWidget : AppWidgetProvider() {
 
             views.setRemoteAdapter(R.id.lesson_list, intent)
 
-//            views.setEmptyView(
-//                R.id.lesson_list,
-//                R.id.empty_view
-//
-
             appWidgetManager.updateAppWidget(appWidgetId, views)
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.lesson_list)
         }

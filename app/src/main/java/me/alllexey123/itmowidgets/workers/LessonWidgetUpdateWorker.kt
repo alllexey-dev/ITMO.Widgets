@@ -158,7 +158,7 @@ class LessonWidgetUpdateWorker(
             }.map { SingleLessonWidget.widgetData(it, null, null, storage) }
                 .to(lessons.isEmpty())
         } catch (e: Exception) {
-            e.printStackTrace()
+            storage.setErrorLog("[${javaClass.name}] at ${LocalDateTime.now()}: ${e.stackTraceToString()}")
             listOf(SingleLessonWidget.errorLessonWidgetData()).to(true)
         }
     }
