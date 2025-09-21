@@ -85,7 +85,7 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
         return prefs.getBoolean(DYNAMIC_QR_COLORS_KEY, true)
     }
 
-    fun getPreviousErrorLog(): String? {
+    fun getErrorLog(): String? {
         return prefs.getString(ERROR_LOG, "empty")
     }
 
