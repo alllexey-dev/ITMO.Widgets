@@ -18,19 +18,9 @@ class QrCodeWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         for (appWidgetId in appWidgetIds) {
 
-            val intent = Intent(context, QrCodeWidget::class.java)
-            intent.setAction(ACTION_WIDGET_CLICK)
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                appWidgetId,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT + PendingIntent.FLAG_IMMUTABLE
-            )
-
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
+            val pendingIntent = getClickIntent(context, appWidgetId)
             views.setOnClickPendingIntent(R.id.qr_code_image, pendingIntent)
-
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
         QrWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
@@ -76,8 +66,27 @@ class QrCodeWidget : AppWidgetProvider() {
                 R.id.qr_bg_image, "setColorFilter",
                 bgColor
             )
+
+            val pendingIntent = getClickIntent(context, appWidgetId)
+            views.setOnClickPendingIntent(R.id.qr_code_image, pendingIntent)
             views.setImageViewBitmap(R.id.qr_code_image, bitmap)
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+
+
+        fun getClickIntent(context: Context, appWidgetId: Int):  PendingIntent {
+
+            val intent = Intent(context, QrCodeWidget::class.java)
+            intent.setAction(ACTION_WIDGET_CLICK)
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                appWidgetId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT + PendingIntent.FLAG_IMMUTABLE
+            )
+
+            return pendingIntent
         }
     }
 }
