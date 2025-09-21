@@ -6,21 +6,18 @@
 
 **ITMO.Widgets** — коллекция виджетов для Android, созданная для упрощения студенческой жизни в ИТМО.
 
-*Проект находится в активной разработке.*
-
 ## Функционал
 
-**Виджеты** (на данный момент):
+**Виджеты**:
  - QR-пропуск в корпуса университета
- - Текущая/следующая пара (два варианта)
-
-*(надеюсь, в будущем будут ещё)* <br>
+ - Текущая/следующая пара (два стиля)
+ - Расписание на день (два стиля)
 
 **Особенности**:
- - Кэширование запросов
- - Адаптивная тема приложения и виджетов с расписанием
+ - Кэширование расписания
+ - Адаптивная тема приложения и виджетов
  - Динамическое обновление виджетов
- - Скорость и лёгкость (вес apk <8 МБ)
+ - Скорость и лёгкость (вес apk <10 МБ)
 
 Проект использует [my-itmo-api](https://github.com/alllexey123/my-itmo-api) для взаимодействия с личным кабинетом ИТМО.
 
@@ -48,7 +45,8 @@
 ## Примеры виджетов
 
 <p>
-  <img width="256" alt="image" src="https://github.com/user-attachments/assets/b0dd4ebb-5b12-436f-9760-8b4b1ff57493" />
-  <img width="256" alt="image" src="https://github.com/user-attachments/assets/8642ebb4-9723-4f15-bcf4-b0efcfc09db6" />
-  <img width="256" alt="image" src="https://github.com/user-attachments/assets/f6e44666-bb5c-4e2c-bf91-9c382f700c3c" />
+  <img height="256" alt="image" src="https://github.com/user-attachments/assets/c8521157-dfc6-4cdf-95ea-b215e722a647" />
+  <img height="256" alt="image" src="https://github.com/user-attachments/assets/99109bab-a5c1-4018-bd2e-fb36ca6e738b" />
+  <img height="256" alt="image" src="https://github.com/user-attachments/assets/447de56c-d6d3-41bb-9897-c2145aa3ccc6" />
+  <img height="256" alt="image" src="https://github.com/user-attachments/assets/fe290ce8-13e9-4372-8304-9845b7bfc783" />
 </p>
