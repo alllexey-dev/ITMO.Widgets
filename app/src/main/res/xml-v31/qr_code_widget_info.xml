@@ -2,7 +2,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="180dp"
     android:minHeight="180dp"
-    android:updatePeriodMillis="0"
+    android:updatePeriodMillis="3600000"
     android:previewImage="@drawable/qr_widget_preview"
     android:initialLayout="@layout/qr_code_widget"
     android:description="@string/qr_widget_description"

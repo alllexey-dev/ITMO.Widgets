@@ -7,7 +7,7 @@
     android:minHeight="120dp"
     android:previewImage="@drawable/circle_indicator"
 
-    android:updatePeriodMillis="0"
+    android:updatePeriodMillis="3600000"
     android:targetCellHeight="3"
     android:targetCellWidth="3"
     android:resizeMode="horizontal|vertical"
