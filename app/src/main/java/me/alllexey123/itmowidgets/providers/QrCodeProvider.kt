@@ -147,10 +147,18 @@ object QrCodeProvider {
         val myItmo = MyItmoProvider.getMyItmo(context)
 
         try {
-            val simpleResponse = myItmo.api().getQrCode().execute().body()
+            var simpleResponse = myItmo.api().getQrCode().execute().body()
 
             if (simpleResponse == null) {
-                throw RuntimeException("QR code response body is null")
+                try {
+                    myItmo.refreshTokens(myItmo.storage.refreshToken)
+                    simpleResponse = myItmo.api().getQrCode().execute().body()
+                    if (simpleResponse == null) {
+                        throw RuntimeException("QR code response body is null (even after refreshing tokens)")
+                    }
+                } catch (e: Exception) {
+                    throw RuntimeException("Error while refreshing tokens for QR code", e)
+                }
             }
 
             if (simpleResponse.response == null) {
