@@ -33,6 +33,7 @@ class QrCodeWidget : AppWidgetProvider() {
                 AppWidgetManager.EXTRA_APPWIDGET_ID,
                 AppWidgetManager.INVALID_APPWIDGET_ID
             )
+            QrCodeProvider.clearCache(context) // force clear cache
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
 

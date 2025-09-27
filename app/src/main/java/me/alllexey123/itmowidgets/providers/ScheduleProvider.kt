@@ -19,7 +19,7 @@ object ScheduleProvider {
 
     private const val CACHE_EXPIRATION_MS = 3 * 60 * 60 * 1000L // 3 hours
 
-    private data class CacheEntry(val timestamp: Long, val data: String?)
+    data class CacheEntry(val timestamp: Long, val data: String?)
 
     fun findCurrentOrNextLesson(lessons: List<Lesson>, timeContext: LocalDateTime): Lesson? {
         return findCurrentLesson(lessons, timeContext) ?: findNextLesson(lessons, timeContext)
@@ -62,7 +62,7 @@ object ScheduleProvider {
         val myItmo = MyItmoProvider.getMyItmo(context)
 
         val cached = readSchedule(date, cacheDir, myItmo.gson)
-        if (cached != null) return cached
+        if (cached != null && !isExpired(cached.second)) return cached.first
 
         try {
             val dataResponse = myItmo.api().getPersonalSchedule(date, date).execute().body()
@@ -83,7 +83,9 @@ object ScheduleProvider {
             return schedule
 
         } catch (e: Exception) {
-            throw RuntimeException("Could not get lessons", e)
+            if (cached == null) throw RuntimeException("Could not get lessons", e)
+            StorageProvider.getStorage(context).setErrorLog("[WARN] [${javaClass.name}] at ${LocalDateTime.now()}: ${e.stackTraceToString()}")
+            return cached.first
         }
     }
 
@@ -92,13 +94,13 @@ object ScheduleProvider {
         writeCache(string, schedule.date.toString(), cacheDir, gson)
     }
 
-    fun readSchedule(date: LocalDate, cacheDir: File, gson: Gson): Schedule? {
-        val string = readCache(date.toString(), cacheDir, gson)
-        if (string == null) return null
-        return gson.fromJson(string, Schedule::class.java)
+    fun readSchedule(date: LocalDate, cacheDir: File, gson: Gson): Pair<Schedule, Long>? {
+        val entry = readCache(date.toString(), cacheDir, gson)
+        if (entry == null) return null
+        return gson.fromJson(entry.data, Schedule::class.java).to(entry.timestamp)
     }
 
-    fun readCache(name: String, cacheDir: File, gson: Gson): String? {
+    fun readCache(name: String, cacheDir: File, gson: Gson): CacheEntry? {
         val file = File(cacheDir, "$name.json")
         try {
             val fis = FileInputStream(file)
@@ -106,8 +108,7 @@ object ScheduleProvider {
             val buffer = gzipIs.readBytes()
             gzipIs.close()
             val entry = gson.fromJson(String(buffer), CacheEntry::class.java)
-            if (isExpired(entry.timestamp)) return null
-            return entry.data
+            return entry
         } catch (e: Exception) {
             return null
         }

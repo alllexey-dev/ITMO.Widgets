@@ -26,8 +26,6 @@ import java.util.concurrent.TimeUnit
 private const val UPDATE_PERIOD_SECONDS = 7L * 60 // 7 minutes
 private const val BEFOREHAND_SCHEDULING_OFFSET = 15L * 60 // 15 minutes
 
-private const val onlyDataChangedKey = "ONLY_DATA_CHANGED"
-
 class LessonWidgetUpdateWorker(
     private val appContext: Context,
     workerParams: WorkerParameters

@@ -14,6 +14,9 @@ import java.nio.charset.StandardCharsets
 import androidx.core.graphics.createBitmap
 import com.google.android.material.color.MaterialColors
 import me.alllexey123.itmowidgets.R
+import java.io.File
+import java.nio.file.Files
+import java.time.LocalDateTime
 
 object QrCodeProvider {
 
@@ -28,7 +31,12 @@ object QrCodeProvider {
         }
 
         val path = Path().apply {
-            addRoundRect(RectF(0F, 0F, side.toFloat(), side.toFloat()), rounding, rounding, Path.Direction.CW)
+            addRoundRect(
+                RectF(0F, 0F, side.toFloat(), side.toFloat()),
+                rounding,
+                rounding,
+                Path.Direction.CW
+            )
         }
 
         canvas.drawPath(path, paint)
@@ -36,7 +44,13 @@ object QrCodeProvider {
         return bitmap
     }
 
-    fun qrCodeToBitmap(qrCode: QrCode, qrSide: Int, pixelsPerModule: Int, whiteColor: Int, blackColor: Int): Bitmap {
+    fun qrCodeToBitmap(
+        qrCode: QrCode,
+        qrSide: Int,
+        pixelsPerModule: Int,
+        whiteColor: Int,
+        blackColor: Int
+    ): Bitmap {
         val bitmap = createBitmap(qrSide * pixelsPerModule, qrSide * pixelsPerModule)
         val canvas = Canvas(bitmap)
 
@@ -146,6 +160,9 @@ object QrCodeProvider {
     fun getQrCode(context: Context): QrCode {
         val myItmo = MyItmoProvider.getMyItmo(context)
 
+        val cached = readCache(context)
+
+        var qrHex: String? = null
         try {
             var simpleResponse = myItmo.api().getQrCode().execute().body()
 
@@ -169,14 +186,38 @@ object QrCodeProvider {
                 throw RuntimeException("QR code is null")
             }
 
-            val qrHex = simpleResponse.response.qrHex
-            val segment = QrSegment.makeBytes(qrHex.toByteArray(StandardCharsets.ISO_8859_1))
-            val qrCode = QrCode.encodeSegments(listOf(segment), QrCode.Ecc.LOW, 1, 1, -1, false)
-
-            return qrCode
+            qrHex = simpleResponse.response.qrHex
+            writeCache(context, qrHex)
         } catch (e: Exception) {
-            throw RuntimeException("Could not get QR code", e)
+            if (cached == null) throw RuntimeException("Could not get QR code", e)
+            StorageProvider.getStorage(context).setErrorLog("[WARN] [${javaClass.name}] at ${LocalDateTime.now()}: ${e.stackTraceToString()}")
         }
+
+        val segment = QrSegment.makeBytes((qrHex ?: cached)!!.toByteArray(StandardCharsets.ISO_8859_1))
+        val qrCode = QrCode.encodeSegments(listOf(segment), QrCode.Ecc.LOW, 1, 1, -1, false)
+
+        return qrCode
+    }
+
+    fun writeCache(context: Context, str: String) {
+        Files.write(cacheFile(context).toPath(), listOf(str))
+    }
+
+    fun readCache(context: Context): String? {
+        return try {
+            Files.readAllLines(cacheFile(context).toPath())[0]
+                .let { s -> if (s.length < 6) null else s }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    fun clearCache(context: Context) {
+        cacheFile(context).apply { delete() }
+    }
+
+    fun cacheFile(context: Context): File {
+        return File(context.cacheDir, "qr_hex").apply { parentFile!!.mkdirs() }
     }
 
     fun getQrColors(context: Context, dynamic: Boolean): Pair<Int, Int> {
@@ -206,7 +247,10 @@ object QrCodeProvider {
                 Color.BLACK
             )
 
-            darkModule = maxOf(darkModule, darkModuleVariant, Comparator.comparingDouble { value -> value.darkness() })
+            darkModule = maxOf(
+                darkModule,
+                darkModuleVariant,
+                Comparator.comparingDouble { value -> value.darkness() })
         } else {
             darkModule = Color.BLACK
             lightBg = Color.WHITE

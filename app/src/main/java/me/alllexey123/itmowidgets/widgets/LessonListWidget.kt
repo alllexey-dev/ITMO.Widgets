@@ -7,6 +7,7 @@ import android.content.Intent
 import android.widget.RemoteViews
 import androidx.core.net.toUri
 import me.alllexey123.itmowidgets.R
+import me.alllexey123.itmowidgets.providers.StorageProvider
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 
 class LessonListWidget : AppWidgetProvider() {
@@ -16,6 +17,7 @@ class LessonListWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager?,
         appWidgetIds: IntArray?
     ) {
+        StorageProvider.getStorage(context).setLessonWidgetStyleChanged(true)
         LessonWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
     }
 
