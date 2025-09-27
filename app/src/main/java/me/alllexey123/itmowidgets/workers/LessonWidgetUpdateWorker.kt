@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit
 private const val UPDATE_PERIOD_SECONDS = 7L * 60 // 7 minutes
 private const val BEFOREHAND_SCHEDULING_OFFSET = 15L * 60 // 15 minutes
 
+private const val onlyDataChangedKey = "ONLY_DATA_CHANGED"
+
 class LessonWidgetUpdateWorker(
     private val appContext: Context,
     workerParams: WorkerParameters
@@ -49,6 +51,8 @@ class LessonWidgetUpdateWorker(
             setLastUpdateTimestamp(System.currentTimeMillis())
         }
 
+        val onlyDataChanged = !storage.getLessonWidgetStyleChanged()
+
         var nextUpdateAt: LocalDateTime? = null
 
         loadSingleLessonData(storage).also { (data, nextUpdate) ->
@@ -57,8 +61,10 @@ class LessonWidgetUpdateWorker(
         }
 
         loadLessonListData(storage).also { (data, fullDayEmpty) ->
-            updateLessonListWidgets(appWidgetManager, listWidgetIds, storage, data, fullDayEmpty)
+            updateLessonListWidgets(appWidgetManager, listWidgetIds, storage, data, fullDayEmpty, onlyDataChanged)
         }
+
+        storage.setLessonWidgetStyleChanged(false)
 
         // Small offset to prevent update loops
         nextUpdateAt = nextUpdateAt?.plusSeconds(70)
@@ -172,7 +178,8 @@ class LessonWidgetUpdateWorker(
         widgetIds: IntArray,
         storage: PreferencesStorage,
         data: List<SingleLessonData>,
-        fullDayEmpty: Boolean
+        fullDayEmpty: Boolean,
+        onlyDataChanged: Boolean
     ) {
         widgetIds.forEach { appWidgetId ->
             val providerInfo = appWidgetManager.getAppWidgetInfo(appWidgetId)
@@ -182,7 +189,7 @@ class LessonWidgetUpdateWorker(
             } else {
                 R.layout.single_lesson_widget_variant_list
             }
-            LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, ArrayList(data), realLayoutId, rowLayoutId, fullDayEmpty)
+            LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, ArrayList(data), realLayoutId, rowLayoutId, fullDayEmpty, onlyDataChanged)
         }
     }
 

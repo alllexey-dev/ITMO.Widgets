@@ -12,6 +12,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.providers.ScheduleProvider
+import me.alllexey123.itmowidgets.providers.StorageProvider
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.ACCESS_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.BEFOREHAND_SCHEDULING_KEY
@@ -34,6 +35,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
+
+        val storage = StorageProvider.getStorage(requireContext())
 
         val refreshTokenPreference = findPreference<EditTextPreference>(REFRESH_TOKEN_KEY)
         refreshTokenPreference?.setOnPreferenceChangeListener { preference, newValue ->
@@ -60,6 +63,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val triggerUpdateButton = findPreference<Preference>("trigger_update_button")
         triggerUpdateButton?.setOnPreferenceClickListener { preference ->
+            storage.setLessonWidgetStyleChanged(true)
             updateAllWidgets()
             true
         }
@@ -75,6 +79,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         listOf("single_lesson_widget_style", "list_lesson_widget_style")
             .map { s -> findPreference<ListPreference>(s) }.forEach { preference ->
                 preference?.setOnPreferenceChangeListener { pref, newValue ->
+                    storage.setLessonWidgetStyleChanged(true)
                     updateAllWidgets()
                     true
                 }

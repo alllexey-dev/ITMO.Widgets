@@ -29,7 +29,9 @@ const val HIDE_PREVIOUS_LESSONS_KEY = "hide_previous_lessons"
 
 const val DYNAMIC_QR_COLORS_KEY = "dynamic_qr_colors"
 
-const val ERROR_LOG = "error_log"
+const val ERROR_LOG_KEY = "error_log"
+
+const val LESSON_WIDGET_STYLE_CHANGED_KEY = "lesson_widget_style_changed"
 
 class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
@@ -86,7 +88,11 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
     }
 
     fun getErrorLog(): String? {
-        return prefs.getString(ERROR_LOG, "empty")
+        return prefs.getString(ERROR_LOG_KEY, "empty")
+    }
+
+    fun getLessonWidgetStyleChanged(): Boolean {
+        return prefs.getBoolean(LESSON_WIDGET_STYLE_CHANGED_KEY, true)
     }
 
     override fun setAccessToken(accessToken: String?) {
@@ -169,7 +175,13 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
 
     fun setErrorLog(errorLog: String?) {
         prefs.edit {
-            putString(ERROR_LOG, errorLog)
+            putString(ERROR_LOG_KEY, errorLog)
+        }
+    }
+
+    fun setLessonWidgetStyleChanged(lessonWidgetStyleChanged: Boolean) {
+        prefs.edit {
+            putBoolean(LESSON_WIDGET_STYLE_CHANGED_KEY, lessonWidgetStyleChanged)
         }
     }
 

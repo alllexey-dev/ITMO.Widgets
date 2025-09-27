@@ -9,8 +9,8 @@ import me.alllexey123.itmowidgets.workers.QrWidgetUpdateWorker
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent?.action == Intent.ACTION_BOOT_COMPLETED) {
-            LessonWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
             QrWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
+            LessonWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
         }
     }
 }
