@@ -1,12 +1,50 @@
 package me.alllexey123.itmowidgets.util
 
+import api.myitmo.model.Lesson
 import me.alllexey123.itmowidgets.R
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 
 object ScheduleUtils {
+
+    fun findCurrentOrNextLesson(lessons: List<Lesson>, timeContext: LocalDateTime): Lesson? {
+        return findCurrentLesson(lessons, timeContext) ?: findNextLesson(lessons, timeContext)
+    }
+
+    // suppose the lessons are in the correct order
+    fun findCurrentLesson(lessons: List<Lesson>, timeContext: LocalDateTime): Lesson? {
+        var result: Lesson? = null
+
+        val currTime = DateTimeFormatter.ofPattern("HH:mm").format(timeContext)
+
+        for (lesson in lessons) {
+            if (lesson.timeEnd >= currTime && lesson.timeStart <= currTime) {
+                result = lesson
+                break
+            }
+        }
+
+        return result
+    }
+
+    // suppose the lessons are in the correct order
+    fun findNextLesson(lessons: List<Lesson>, timeContext: LocalDateTime): Lesson? {
+        var result: Lesson? = null
+
+        val currTime = DateTimeFormatter.ofPattern("HH:mm").format(timeContext)
+
+        for (lesson in lessons) {
+            if (lesson.timeEnd > currTime) {
+                result = lesson
+                break
+            }
+        }
+
+        return result
+    }
 
     fun parseTime(date: LocalDate, time: String): LocalDateTime {
         val hoursStr = time.substring(0, time.indexOf(":"))

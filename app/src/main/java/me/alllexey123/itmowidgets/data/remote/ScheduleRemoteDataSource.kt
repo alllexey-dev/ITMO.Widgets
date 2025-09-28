@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 interface ScheduleRemoteDataSource {
 
-    suspend fun getSchedule(startDate: LocalDate, endDate: LocalDate): List<Schedule>?
+    suspend fun getScheduleForRange(startDate: LocalDate, endDate: LocalDate): List<Schedule>?
 
     suspend fun getSchedule(date: LocalDate): Schedule?
 }

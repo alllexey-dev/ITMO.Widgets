@@ -15,14 +15,13 @@ import me.alllexey123.itmowidgets.workers.QrWidgetUpdateWorker
 class QrCodeWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        println("ON UPDATE RECEIVED")
         for (appWidgetId in appWidgetIds) {
-
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
             val pendingIntent = getClickIntent(context, appWidgetId)
             views.setOnClickPendingIntent(R.id.qr_code_image, pendingIntent)
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
+
         QrWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
     }
 
@@ -37,11 +36,10 @@ class QrCodeWidget : AppWidgetProvider() {
             val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
             val renderer = appContainer.qrBitmapRenderer
             val dynamicColors = appContainer.storage.getDynamicQrColorsState()
-
             appContainer.qrCodeRepository.clearCache() // force clear cache
+
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
-
             val bitmap = renderer.renderEmpty(21 * PIXELS_PER_MODULE, PIXELS_PER_MODULE / 2F, dynamicColors)
 
             views.setImageViewBitmap(R.id.qr_code_image, bitmap)

@@ -10,9 +10,9 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import me.alllexey123.itmowidgets.AppContainer
+import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.providers.ScheduleProvider
-import me.alllexey123.itmowidgets.providers.StorageProvider
 import me.alllexey123.itmowidgets.util.ACCESS_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.util.ACCESS_TOKEN_KEY
 import me.alllexey123.itmowidgets.util.BEFOREHAND_SCHEDULING_KEY
@@ -37,14 +37,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
-        val storage = StorageProvider.getStorage(requireContext())
+        val appContainer = (requireContext().applicationContext as ItmoWidgetsApp).appContainer
+
+        val storage = appContainer.storage
 
         val refreshTokenPreference = findPreference<EditTextPreference>(REFRESH_TOKEN_KEY)
         refreshTokenPreference?.setOnPreferenceChangeListener { preference, newValue ->
             val currentValue = preferenceManager.sharedPreferences?.getString(REFRESH_TOKEN_KEY, "")
 
             if (newValue is String && newValue != currentValue) {
-                onRefreshTokenChange()
+                onRefreshTokenChange(appContainer)
             }
 
             true
@@ -115,7 +117,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun onRefreshTokenChange() {
+    private fun onRefreshTokenChange(appContainer: AppContainer) {
         val prefs = preferenceManager.sharedPreferences ?: return
 
         prefs.edit {
@@ -126,7 +128,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             remove(LESSON_WIDGET_STYLE_CHANGED_KEY)
         }
 
-        ScheduleProvider.clearCache(preferenceManager.context)
+        appContainer.scheduleRepository.clearCache()
 
         updateAllWidgets()
     }

@@ -9,15 +9,15 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import api.myitmo.model.Lesson
+import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.providers.ScheduleProvider
-import me.alllexey123.itmowidgets.providers.StorageProvider
-import me.alllexey123.itmowidgets.util.LINE_STYLE
-import me.alllexey123.itmowidgets.util.PreferencesStorage
-import me.alllexey123.itmowidgets.util.ScheduleUtils
+import me.alllexey123.itmowidgets.data.repository.ScheduleRepository
 import me.alllexey123.itmowidgets.ui.widgets.LessonListWidget
 import me.alllexey123.itmowidgets.ui.widgets.SingleLessonData
 import me.alllexey123.itmowidgets.ui.widgets.SingleLessonWidget
+import me.alllexey123.itmowidgets.util.LINE_STYLE
+import me.alllexey123.itmowidgets.util.PreferencesStorage
+import me.alllexey123.itmowidgets.util.ScheduleUtils
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -32,6 +32,11 @@ class LessonWidgetUpdateWorker(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
+        val appContainer = (appContext as ItmoWidgetsApp).appContainer
+        val storage = appContainer.storage
+        storage.setLastUpdateTimestamp(System.currentTimeMillis())
+        val repository = appContainer.scheduleRepository
+
         val appWidgetManager = AppWidgetManager.getInstance(appContext)
 
         val singleWidgetIds = appWidgetManager.getAppWidgetIds(
@@ -45,20 +50,16 @@ class LessonWidgetUpdateWorker(
             return Result.success()
         }
 
-        val storage = StorageProvider.getStorage(appContext).apply {
-            setLastUpdateTimestamp(System.currentTimeMillis())
-        }
-
         val onlyDataChanged = !storage.getLessonWidgetStyleChanged()
 
         var nextUpdateAt: LocalDateTime? = null
 
-        loadSingleLessonData(storage).also { (data, nextUpdate) ->
+        loadSingleLessonData(storage, repository).also { (data, nextUpdate) ->
             nextUpdateAt = nextUpdate
             updateSingleLessonWidgets(appWidgetManager, singleWidgetIds, storage, data)
         }
 
-        loadLessonListData(storage).also { (data, fullDayEmpty) ->
+        loadLessonListData(storage, repository).also { (data, fullDayEmpty) ->
             updateLessonListWidgets(appWidgetManager, listWidgetIds, storage, data, fullDayEmpty, onlyDataChanged)
         }
 
@@ -71,14 +72,14 @@ class LessonWidgetUpdateWorker(
         return Result.success()
     }
 
-    private fun loadSingleLessonData(storage: PreferencesStorage): Pair<SingleLessonData, LocalDateTime?> {
+    private suspend fun loadSingleLessonData(storage: PreferencesStorage, repository: ScheduleRepository): Pair<SingleLessonData, LocalDateTime?> {
         val smartScheduling = storage.getSmartSchedulingState()
         val beforehandScheduling = storage.getBeforehandSchedulingState()
 
         return try {
             val now = LocalDateTime.now()
             val currentDate = now.toLocalDate()
-            val lessons = ScheduleProvider.getDaySchedule(appContext, currentDate).lessons.orEmpty()
+            val lessons = repository.getDaySchedule(currentDate).lessons.orEmpty()
 
             if (lessons.isEmpty()) {
                 val nextUpdate = if (smartScheduling) currentDate.plusDays(1).atStartOfDay() else null
@@ -129,11 +130,11 @@ class LessonWidgetUpdateWorker(
         now: LocalDateTime,
         beforehandScheduling: Boolean
     ): Lesson? {
-        val noBeforehand = ScheduleProvider.findCurrentOrNextLesson(lessons, now)
+        val noBeforehand = ScheduleUtils.findCurrentOrNextLesson(lessons, now)
         return if (beforehandScheduling) {
             val withBeforehandTime = now.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
             if (withBeforehandTime.toLocalDate() != now.toLocalDate()) return noBeforehand
-            val withBeforehand = ScheduleProvider.findCurrentOrNextLesson(
+            val withBeforehand = ScheduleUtils.findCurrentOrNextLesson(
                 lessons,
                 withBeforehandTime
             )
@@ -143,13 +144,13 @@ class LessonWidgetUpdateWorker(
         }
     }
 
-    private fun loadLessonListData(storage: PreferencesStorage): Pair<List<SingleLessonData>, Boolean> {
+    private suspend fun loadLessonListData(storage: PreferencesStorage, repository: ScheduleRepository): Pair<List<SingleLessonData>, Boolean> {
         return try {
             val hidePrevious = storage.getHidePreviousLessonsState()
             val beforehandScheduling = storage.getBeforehandSchedulingState()
             val now = LocalDateTime.now()
             val currentDate: LocalDate = now.toLocalDate()
-            val lessons = ScheduleProvider.getDaySchedule(appContext, currentDate).lessons.orEmpty()
+            val lessons = repository.getDaySchedule(currentDate).lessons.orEmpty()
             lessons.filterIndexed { i, l ->
                 if (!hidePrevious) true
                 else {

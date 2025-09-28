@@ -11,7 +11,7 @@ class ScheduleRemoteDataSourceImpl(
     private val myItmoApi: MyItmoApi
 ) : ScheduleRemoteDataSource {
 
-    override suspend fun getSchedule(
+    override suspend fun getScheduleForRange(
         startDate: LocalDate,
         endDate: LocalDate
     ): List<Schedule>? {
@@ -25,6 +25,6 @@ class ScheduleRemoteDataSourceImpl(
     }
 
     override suspend fun getSchedule(date: LocalDate): Schedule? {
-        return getSchedule(date, date)?.firstOrNull()
+        return getScheduleForRange(date, date)?.firstOrNull()
     }
 }

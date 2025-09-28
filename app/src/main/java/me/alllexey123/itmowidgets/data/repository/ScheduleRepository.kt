@@ -32,4 +32,17 @@ class ScheduleRepository(
             }
         }
     }
+
+    suspend fun getScheduleForRange(startDate: LocalDate, endDate: LocalDate): List<Schedule> {
+        val remoteSchedule = remoteDataSource.getScheduleForRange(startDate, endDate)
+            ?: throw RuntimeException("API returned empty schedule data for range")
+
+        remoteSchedule.forEach { localDataSource.saveSchedule(it) }
+
+        return remoteSchedule
+    }
+
+    fun clearCache() {
+        localDataSource.clearCache()
+    }
 }

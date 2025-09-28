@@ -7,8 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import androidx.core.net.toUri
+import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.providers.StorageProvider
 import me.alllexey123.itmowidgets.ui.schedule.ScheduleActivity
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 
@@ -20,7 +20,8 @@ class LessonListWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager?,
         appWidgetIds: IntArray?
     ) {
-        StorageProvider.getStorage(context).setLessonWidgetStyleChanged(true)
+        val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
+        appContainer.storage.setLessonWidgetStyleChanged(true)
         LessonWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
     }
 

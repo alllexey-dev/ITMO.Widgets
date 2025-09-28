@@ -9,61 +9,72 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.providers.MyItmoProvider
-import me.alllexey123.itmowidgets.providers.ScheduleProvider
 import java.time.LocalDate
 
 class ScheduleActivity : AppCompatActivity() {
     private lateinit var outerRecyclerView: RecyclerView
     private lateinit var dayScheduleAdapter: DayScheduleAdapter
+    private lateinit var progressBar: ProgressBar
 
-    private val scheduleViewModel: ScheduleViewModel by viewModels()
+    private val scheduleViewModel: ScheduleViewModel by viewModels {
+        val appContainer = (application as ItmoWidgetsApp).appContainer
+        ScheduleViewModelFactory(appContainer.scheduleRepository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_schedule)
 
-        val cachedTodaySchedule = ScheduleProvider.readSchedule(
-            LocalDate.now(), ScheduleProvider.cacheDir(applicationContext),
-            MyItmoProvider.getMyItmo(applicationContext).gson
-        )?.first
+        setupRecyclerView()
+        progressBar = findViewById(R.id.loadingProgressBar)
 
+        observeUiState()
+
+        scheduleViewModel.fetchScheduleData()
+    }
+
+    private fun setupRecyclerView() {
         outerRecyclerView = findViewById(R.id.outerRecyclerView)
         outerRecyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
-        dayScheduleAdapter = DayScheduleAdapter(
-            if (cachedTodaySchedule != null) listOf(
-                cachedTodaySchedule
-            ) else listOf()
-        )
+        dayScheduleAdapter = DayScheduleAdapter(listOf())
         outerRecyclerView.adapter = dayScheduleAdapter
 
         val snapHelper = PagerSnapHelper()
         snapHelper.attachToRecyclerView(outerRecyclerView)
-        val progressBar = findViewById<ProgressBar>(R.id.loadingProgressBar)
+    }
 
-        scheduleViewModel.fetchScheduleData(applicationContext)
-        scheduleViewModel.scheduleData.observe(this) { scheduleList ->
-            val today = LocalDate.now()
-            val todayIndex = scheduleList.indexOfFirst { it.date == today }
+    private fun observeUiState() {
+        scheduleViewModel.uiState.observe(this) { state ->
+            when (state) {
+                is ScheduleUiState.Loading -> {
+                    progressBar.visibility = View.VISIBLE
+                    outerRecyclerView.visibility = View.GONE
+                }
+                is ScheduleUiState.Success -> {
+                    progressBar.visibility = View.GONE
+                    outerRecyclerView.visibility = View.VISIBLE
 
-            if (todayIndex != -1) {
-                outerRecyclerView.post {
-                    val layoutManager = outerRecyclerView.layoutManager as LinearLayoutManager
-                    layoutManager.scrollToPosition(todayIndex)
+                    val scheduleList = state.schedule
+                    dayScheduleAdapter.updateData(scheduleList)
+
+                    val today = LocalDate.now()
+                    val todayIndex = scheduleList.indexOfFirst { it.date == today }
+                    if (todayIndex != -1) {
+                        outerRecyclerView.post {
+                            val layoutManager = outerRecyclerView.layoutManager as LinearLayoutManager
+                            layoutManager.scrollToPosition(todayIndex)
+                        }
+                    }
+                }
+                is ScheduleUiState.Error -> {
+                    progressBar.visibility = View.GONE
+                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
                 }
             }
-
-            progressBar.visibility = View.GONE
-            outerRecyclerView.visibility = View.VISIBLE
-            dayScheduleAdapter.updateData(scheduleList)
-        }
-
-        scheduleViewModel.error.observe(this) { errorMessage ->
-            progressBar.visibility = View.GONE
-            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
         }
     }
 
