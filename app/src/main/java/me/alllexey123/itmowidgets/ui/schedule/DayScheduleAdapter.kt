@@ -14,7 +14,7 @@ import java.time.Duration
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-class DayScheduleAdapter(private var daySchedules: List<Schedule>) :
+class DayScheduleAdapter(private var schedules: List<Schedule>) :
     RecyclerView.Adapter<DayScheduleAdapter.DayViewHolder>() {
 
     private val viewPool = RecyclerView.RecycledViewPool()
@@ -26,7 +26,7 @@ class DayScheduleAdapter(private var daySchedules: List<Schedule>) :
     }
 
     override fun onBindViewHolder(holder: DayViewHolder, position: Int) {
-        val daySchedule = daySchedules[position]
+        val daySchedule = schedules[position]
         holder.dayTitle.text = ScheduleUtils.getRuDayOfWeek(daySchedule.date.dayOfWeek)
         val dtf = DateTimeFormatter.ofPattern("dd.MM")
         holder.dayDate.text = dtf.format(daySchedule.date)
@@ -48,12 +48,12 @@ class DayScheduleAdapter(private var daySchedules: List<Schedule>) :
     }
 
     fun updateData(newDaySchedules: List<Schedule>) {
-        val oldDaySchedules = this.daySchedules
-        this.daySchedules = newDaySchedules
+        val oldDaySchedules = this.schedules
+        this.schedules = newDaySchedules
         if (oldDaySchedules != newDaySchedules)notifyDataSetChanged()
     }
 
-    override fun getItemCount(): Int = daySchedules.size
+    override fun getItemCount(): Int = schedules.size
 
     inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val dayTitle: TextView = itemView.findViewById(R.id.dayTitleTextView)

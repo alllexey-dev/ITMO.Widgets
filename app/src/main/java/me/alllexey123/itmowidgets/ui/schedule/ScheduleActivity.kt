@@ -1,6 +1,7 @@
 package me.alllexey123.itmowidgets.ui.schedule
 
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -17,6 +18,8 @@ class ScheduleActivity : AppCompatActivity() {
     private lateinit var outerRecyclerView: RecyclerView
     private lateinit var dayScheduleAdapter: DayScheduleAdapter
     private lateinit var progressBar: ProgressBar
+
+    private val snapHelper = PagerSnapHelper()
 
     private val scheduleViewModel: ScheduleViewModel by viewModels {
         val appContainer = (application as ItmoWidgetsApp).appContainer
@@ -43,9 +46,12 @@ class ScheduleActivity : AppCompatActivity() {
         dayScheduleAdapter = DayScheduleAdapter(listOf())
         outerRecyclerView.adapter = dayScheduleAdapter
 
-        val snapHelper = PagerSnapHelper()
         snapHelper.attachToRecyclerView(outerRecyclerView)
     }
+
+    private var isInitialLoad = true
+
+    private var layoutManagerState: Parcelable? = null
 
     private fun observeUiState() {
         scheduleViewModel.uiState.observe(this) { state ->
@@ -57,22 +63,35 @@ class ScheduleActivity : AppCompatActivity() {
 
                 is ScheduleUiState.Success -> {
                     val scheduleList = state.schedule
+                    if (scheduleList.isEmpty()) {
+                        outerRecyclerView.visibility = View.GONE
+                        progressBar.visibility = View.GONE
+                        return@observe
+                    }
+
+                    val layoutManager = outerRecyclerView.layoutManager as LinearLayoutManager
+                    if (!isInitialLoad) {
+                        layoutManagerState = layoutManager.onSaveInstanceState()
+                    }
+
                     dayScheduleAdapter.updateData(scheduleList)
 
-                    if (state.isCached) {
-                        progressBar.visibility = View.VISIBLE
-
-                        // scroll if cached
+                    if (isInitialLoad) {
                         val today = LocalDate.now()
                         val todayIndex = scheduleList.indexOfFirst { it.date == today }
                         if (todayIndex != -1) {
-                            val layoutManager =
-                                outerRecyclerView.layoutManager as LinearLayoutManager
                             layoutManager.scrollToPositionWithOffset(todayIndex, 0)
                         }
-                    } else {
-                        progressBar.visibility = View.GONE
+                        isInitialLoad = false
+                    } else if (layoutManagerState != null) {
+                        layoutManager.onRestoreInstanceState(layoutManagerState)
                     }
+
+                    if (scheduleList.isNotEmpty()) {
+                        isInitialLoad = false
+                    }
+
+                    progressBar.visibility = if (state.isCached) View.VISIBLE else View.GONE
                     outerRecyclerView.visibility = View.VISIBLE
                 }
 
