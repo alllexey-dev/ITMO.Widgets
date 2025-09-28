@@ -1,4 +1,4 @@
-package me.alllexey123.itmowidgets.ui
+package me.alllexey123.itmowidgets.ui.schedule
 
 import android.content.Context
 import androidx.lifecycle.LiveData

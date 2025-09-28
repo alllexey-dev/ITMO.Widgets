@@ -12,7 +12,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import me.alllexey123.itmowidgets.providers.QrCodeProvider
 import me.alllexey123.itmowidgets.providers.StorageProvider
-import me.alllexey123.itmowidgets.widgets.QrCodeWidget
+import me.alllexey123.itmowidgets.ui.widgets.QrCodeWidget
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 

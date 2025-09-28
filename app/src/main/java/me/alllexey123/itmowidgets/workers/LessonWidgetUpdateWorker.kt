@@ -15,9 +15,9 @@ import me.alllexey123.itmowidgets.providers.StorageProvider
 import me.alllexey123.itmowidgets.utils.LINE_STYLE
 import me.alllexey123.itmowidgets.utils.PreferencesStorage
 import me.alllexey123.itmowidgets.utils.ScheduleUtils
-import me.alllexey123.itmowidgets.widgets.LessonListWidget
-import me.alllexey123.itmowidgets.widgets.SingleLessonData
-import me.alllexey123.itmowidgets.widgets.SingleLessonWidget
+import me.alllexey123.itmowidgets.ui.widgets.LessonListWidget
+import me.alllexey123.itmowidgets.ui.widgets.SingleLessonData
+import me.alllexey123.itmowidgets.ui.widgets.SingleLessonWidget
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime

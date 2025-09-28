@@ -1,4 +1,4 @@
-package me.alllexey123.itmowidgets.widgets
+package me.alllexey123.itmowidgets.ui.widgets
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -9,7 +9,7 @@ import android.widget.RemoteViews
 import androidx.core.net.toUri
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.providers.StorageProvider
-import me.alllexey123.itmowidgets.ui.ScheduleActivity
+import me.alllexey123.itmowidgets.ui.schedule.ScheduleActivity
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 
 

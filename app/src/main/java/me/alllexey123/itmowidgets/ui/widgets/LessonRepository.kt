@@ -1,4 +1,4 @@
-package me.alllexey123.itmowidgets.widgets
+package me.alllexey123.itmowidgets.ui.widgets
 
 import me.alllexey123.itmowidgets.R
 

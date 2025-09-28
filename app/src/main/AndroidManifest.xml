@@ -15,11 +15,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".ui.ScheduleActivity"
+            android:name=".ui.schedule.ScheduleActivity"
             android:exported="false" />
 
         <receiver
-            android:name=".widgets.QrCodeWidget"
+            android:name=".ui.widgets.QrCodeWidget"
             android:exported="false"
             android:label="@string/qr_widget_name">
             <intent-filter>
@@ -32,7 +32,7 @@
                 android:resource="@xml/qr_code_widget_info" />
         </receiver>
         <receiver
-            android:name=".widgets.SingleLessonWidget"
+            android:name=".ui.widgets.SingleLessonWidget"
             android:exported="false"
             android:label="@string/single_lesson_widget_name">
             <intent-filter>
@@ -44,7 +44,7 @@
                 android:resource="@xml/single_lesson_widget_info" />
         </receiver>
         <receiver
-            android:name=".widgets.LessonListWidget"
+            android:name=".ui.widgets.LessonListWidget"
             android:exported="false"
             android:label="@string/list_lesson_widget_name">
             <intent-filter>
@@ -65,7 +65,7 @@
         </receiver>
 
         <activity
-            android:name=".ui.SettingsActivity"
+            android:name=".ui.settings.SettingsActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -75,7 +75,7 @@
         </activity>
 
         <service
-            android:name=".widgets.LessonListWidgetService"
+            android:name=".ui.widgets.LessonListWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
     </application>
 

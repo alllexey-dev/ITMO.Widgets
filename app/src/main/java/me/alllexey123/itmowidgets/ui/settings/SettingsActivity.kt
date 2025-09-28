@@ -1,4 +1,4 @@
-package me.alllexey123.itmowidgets.ui
+package me.alllexey123.itmowidgets.ui.settings
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
