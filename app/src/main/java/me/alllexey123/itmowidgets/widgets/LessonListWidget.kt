@@ -1,5 +1,6 @@
 package me.alllexey123.itmowidgets.widgets
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
@@ -8,7 +9,9 @@ import android.widget.RemoteViews
 import androidx.core.net.toUri
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.providers.StorageProvider
+import me.alllexey123.itmowidgets.ui.ScheduleActivity
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
+
 
 class LessonListWidget : AppWidgetProvider() {
 
@@ -43,7 +46,17 @@ class LessonListWidget : AppWidgetProvider() {
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                     data = ("widget://${appWidgetId}-${System.currentTimeMillis()}").toUri()
                 }
+
+                val clickIntent = Intent(context, ScheduleActivity::class.java)
+                val pendingIntent = PendingIntent.getActivity(
+                    context,
+                    0,
+                    clickIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+
                 val views = RemoteViews(context.packageName, layoutId)
+                views.setPendingIntentTemplate(R.id.lesson_list, pendingIntent)
                 views.setRemoteAdapter(R.id.lesson_list, intent)
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)

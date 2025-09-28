@@ -7,7 +7,8 @@
     android:paddingStart="4dp"
     android:paddingEnd="2dp"
     android:backgroundTint="?attr/colorSurface"
-    android:theme="@style/AppTheme">
+    android:theme="@style/AppTheme"
+    android:id="@+id/item_root">
 
     <LinearLayout
         android:paddingTop="6dp"

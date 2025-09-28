@@ -1,6 +1,7 @@
 package me.alllexey123.itmowidgets.utils
 
 import me.alllexey123.itmowidgets.R
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.regex.Pattern
@@ -48,6 +49,18 @@ object ScheduleUtils {
         if (name.contains("вязем")) return "Вязьма"
 
         return building.substring(0, 6)
+    }
+
+    fun getRuDayOfWeek(dayOfWeek: DayOfWeek): String {
+        return when (dayOfWeek) {
+            DayOfWeek.MONDAY -> "Понедельник"
+            DayOfWeek.TUESDAY -> "Вторник"
+            DayOfWeek.WEDNESDAY -> "Среда"
+            DayOfWeek.THURSDAY -> "Четверг"
+            DayOfWeek.FRIDAY -> "Пятница"
+            DayOfWeek.SATURDAY -> "Суббота"
+            DayOfWeek.SUNDAY -> "Воскресение"
+        }
     }
 
     fun getWorkTypeColor(workTypeId: Int): Int {

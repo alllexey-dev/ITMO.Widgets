@@ -38,33 +38,38 @@ class LessonListWidgetService : RemoteViewsService() {
         override fun getCount(): Int = lessons.size + 1
 
         override fun getViewAt(position: Int): RemoteViews? {
+            var rv: RemoteViews
             if (lessons.isEmpty()) {
-                return RemoteViews(context.packageName, bonusLayoutId)
+                rv = RemoteViews(context.packageName, bonusLayoutId)
+            } else if (position >= lessons.size) {
+                rv = RemoteViews(context.packageName, R.layout.lesson_list_end)
+            } else {
+
+                val data = lessons[position]
+                val views = RemoteViews(context.packageName, rowLayoutId)
+
+                views.setTextViewText(R.id.title, data.subject)
+                views.setTextViewText(R.id.teacher, data.teacher)
+                views.setTextViewText(R.id.location_room, data.room)
+                views.setTextViewText(R.id.location_building, data.building)
+                views.setTextViewText(R.id.more_lessons_text, data.moreLessonsText)
+
+                views.setViewVisibility(R.id.teacher_layout, if (data.hideTeacher) View.GONE else View.VISIBLE)
+                views.setViewVisibility(R.id.location_layout, if (data.hideLocation) View.GONE else View.VISIBLE)
+                views.setViewVisibility(R.id.time_layout, if (data.hideTime) View.GONE else View.VISIBLE)
+                views.setViewVisibility(R.id.more_lessons_layout, if (data.hideMoreLessonsText) View.GONE else View.VISIBLE)
+
+                views.setTextViewText(R.id.time, data.times)
+
+                val colorId = ScheduleUtils.getWorkTypeColor(data.workTypeId)
+                views.setInt(R.id.type_indicator, "setColorFilter", ContextCompat.getColor(context, colorId))
+
+                rv = views
             }
-            if (position >= lessons.size) {
-                return RemoteViews(context.packageName, R.layout.lesson_list_end)
-            }
+            val fillInIntent = Intent()
+            rv.setOnClickFillInIntent(R.id.item_root, fillInIntent)
 
-            val data = lessons[position]
-            val views = RemoteViews(context.packageName, rowLayoutId)
-
-            views.setTextViewText(R.id.title, data.subject)
-            views.setTextViewText(R.id.teacher, data.teacher)
-            views.setTextViewText(R.id.location_room, data.room)
-            views.setTextViewText(R.id.location_building, data.building)
-            views.setTextViewText(R.id.more_lessons_text, data.moreLessonsText)
-
-            views.setViewVisibility(R.id.teacher_layout, if (data.hideTeacher) View.GONE else View.VISIBLE)
-            views.setViewVisibility(R.id.location_layout, if (data.hideLocation) View.GONE else View.VISIBLE)
-            views.setViewVisibility(R.id.time_layout, if (data.hideTime) View.GONE else View.VISIBLE)
-            views.setViewVisibility(R.id.more_lessons_layout, if (data.hideMoreLessonsText) View.GONE else View.VISIBLE)
-
-            views.setTextViewText(R.id.time, data.times)
-
-            val colorId = ScheduleUtils.getWorkTypeColor(data.workTypeId)
-            views.setInt(R.id.type_indicator, "setColorFilter", ContextCompat.getColor(context, colorId))
-
-            return views
+            return rv
         }
 
         override fun getLoadingView(): RemoteViews? = null

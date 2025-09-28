@@ -14,6 +14,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity
+            android:name=".ui.ScheduleActivity"
+            android:exported="false" />
 
         <receiver
             android:name=".widgets.QrCodeWidget"
@@ -21,7 +24,6 @@
             android:label="@string/qr_widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-
                 <action android:name="me.alllexey123.itmowidgets.action.QR_WIDGET_CLICK" />
             </intent-filter>
 
@@ -29,7 +31,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/qr_code_widget_info" />
         </receiver>
-
         <receiver
             android:name=".widgets.SingleLessonWidget"
             android:exported="false"
@@ -42,7 +43,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/single_lesson_widget_info" />
         </receiver>
-
         <receiver
             android:name=".widgets.LessonListWidget"
             android:exported="false"
@@ -55,7 +55,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/lesson_list_widget_info" />
         </receiver>
-
         <receiver
             android:name=".receivers.BootReceiver"
             android:enabled="true"
@@ -70,6 +69,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
