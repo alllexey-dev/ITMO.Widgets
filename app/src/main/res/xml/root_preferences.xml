@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="Аккаунт" app:icon="@drawable/account_circle_24">
+    <PreferenceCategory app:title="Аккаунт" app:icon="@drawable/ic_account_circle">
 
         <EditTextPreference
             app:key="refresh_token"
@@ -16,11 +16,11 @@
         <Preference
             app:key="refresh_token_help"
             app:title="Откуда взять ключ доступа?"
-            app:icon="@drawable/outline_help_24" />
+            app:icon="@drawable/ic_outline_help" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="Стили" app:icon="@drawable/format_paint_24">
+    <PreferenceCategory app:title="Стили" app:icon="@drawable/ic_format_paint">
 
         <ListPreference
             app:key="single_lesson_widget_style"
@@ -59,7 +59,7 @@
             app:defaultValue="false"/>
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="Поведение виджетов" app:icon="@drawable/settings_24">
+    <PreferenceCategory app:title="Поведение виджетов" app:icon="@drawable/ic_settings">
 
         <SwitchPreference
             app:key="smart_scheduling"
@@ -74,19 +74,19 @@
             app:defaultValue="true"/>
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="Инструменты разработчика" app:icon="@drawable/outline_build_circle_24">
+    <PreferenceCategory app:title="Инструменты разработчика" app:icon="@drawable/ic_outline_build_circle">
 
         <Preference
             app:key="last_update_timestamp"
             app:title="Последнее обновление"
             app:summary="Виджеты пока не обновлялись"
-            app:icon="@drawable/outline_info_24" />
+            app:icon="@drawable/ic_outline_info" />
 
         <Preference
             app:key="trigger_update_button"
             app:title="Обновить вручную"
             app:summary="Сразу обновить все виджеты"
-            app:icon="@drawable/refresh_24"/>
+            app:icon="@drawable/ic_refresh"/>
 
         <EditTextPreference
             app:key="error_log"

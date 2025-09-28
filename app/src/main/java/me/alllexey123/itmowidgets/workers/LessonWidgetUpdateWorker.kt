@@ -116,9 +116,9 @@ class LessonWidgetUpdateWorker(
     ) {
         widgetIds.forEach { appWidgetId ->
             val realLayoutId = if (storage.getSingleLessonWidgetStyle() == LINE_STYLE) {
-                R.layout.single_lesson_widget
+                R.layout.single_lesson_widget_dash
             } else {
-                R.layout.single_lesson_widget_variant
+                R.layout.single_lesson_widget_dot
             }
             SingleLessonWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, data, realLayoutId)
         }
@@ -183,9 +183,9 @@ class LessonWidgetUpdateWorker(
             val providerInfo = appWidgetManager.getAppWidgetInfo(appWidgetId)
             val realLayoutId = providerInfo.initialLayout
             val rowLayoutId = if (storage.getListLessonWidgetStyle() == LINE_STYLE) {
-                R.layout.single_lesson_widget_list
+                R.layout.item_lesson_list_entry_dash
             } else {
-                R.layout.single_lesson_widget_variant_list
+                R.layout.item_lesson_list_entry_dot
             }
             LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, ArrayList(data), realLayoutId, rowLayoutId, fullDayEmpty, onlyDataChanged)
         }

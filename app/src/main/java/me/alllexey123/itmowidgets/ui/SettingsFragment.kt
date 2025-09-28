@@ -21,6 +21,7 @@ import me.alllexey123.itmowidgets.utils.HIDE_PREVIOUS_LESSONS_KEY
 import me.alllexey123.itmowidgets.utils.HIDE_TEACHER_KEY
 import me.alllexey123.itmowidgets.utils.ID_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.LAST_UPDATE_TIMESTAMP_KEY
+import me.alllexey123.itmowidgets.utils.LESSON_WIDGET_STYLE_CHANGED_KEY
 import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.utils.REFRESH_TOKEN_KEY
 import me.alllexey123.itmowidgets.utils.SMART_SCHEDULING_KEY
@@ -122,6 +123,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             remove(ACCESS_TOKEN_KEY)
             remove(ACCESS_TOKEN_EXPIRES_KEY)
             remove(ID_TOKEN_KEY)
+            remove(LESSON_WIDGET_STYLE_CHANGED_KEY)
         }
 
         ScheduleProvider.clearCache(preferenceManager.context)

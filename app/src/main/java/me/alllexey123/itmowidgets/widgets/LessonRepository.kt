@@ -7,10 +7,10 @@ object LessonRepository {
     private var lessons: List<SingleLessonData> = emptyList()
 
     @Volatile
-    var rowLayoutId: Int = R.layout.single_lesson_widget_variant
+    var rowLayoutId: Int = R.layout.single_lesson_widget_dot
 
     @Volatile
-    var bonusLayoutId: Int = R.layout.lesson_list_empty
+    var bonusLayoutId: Int = R.layout.item_lesson_list_empty
 
     fun setLessons(newLessons: List<SingleLessonData>) {
         lessons = newLessons

@@ -18,8 +18,8 @@ class LessonListWidgetService : RemoteViewsService() {
     class ViewsFactory(private val context: Context) : RemoteViewsFactory {
 
         private var lessons: List<SingleLessonData> = emptyList()
-        private var rowLayoutId: Int = R.layout.single_lesson_widget_variant
-        private var bonusLayoutId: Int = R.layout.lesson_list_empty
+        private var rowLayoutId: Int = R.layout.single_lesson_widget_dot
+        private var bonusLayoutId: Int = R.layout.item_lesson_list_empty
 
         override fun onCreate() {
             loadData()
@@ -42,7 +42,7 @@ class LessonListWidgetService : RemoteViewsService() {
             if (lessons.isEmpty()) {
                 rv = RemoteViews(context.packageName, bonusLayoutId)
             } else if (position >= lessons.size) {
-                rv = RemoteViews(context.packageName, R.layout.lesson_list_end)
+                rv = RemoteViews(context.packageName, R.layout.item_lesson_list_end)
             } else {
 
                 val data = lessons[position]

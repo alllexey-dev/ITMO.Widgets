@@ -39,7 +39,7 @@ class LessonListWidget : AppWidgetProvider() {
         ) {
             LessonRepository.setLessons(lessons)
             LessonRepository.rowLayoutId = rowLayoutId
-            LessonRepository.bonusLayoutId = if (fullDayEmpty) R.layout.lesson_list_empty else R.layout.lesson_list_no_more
+            LessonRepository.bonusLayoutId = if (fullDayEmpty) R.layout.item_lesson_list_empty else R.layout.item_lesson_list_no_more
 
             if (!onlyDataChanged){
                 val intent = Intent(context, LessonListWidgetService::class.java).apply {

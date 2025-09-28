@@ -3,15 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/widget_background_rounded"
-    android:gravity="center_vertical"
-    android:minHeight="80dp"
     android:orientation="vertical"
-    android:padding="6dp"
-    android:paddingStart="8dp"
+    android:paddingStart="4dp"
+    android:paddingEnd="2dp"
     android:backgroundTint="?attr/colorSurface"
-    android:theme="@style/AppTheme">
+    android:theme="@style/AppTheme"
+    android:id="@+id/item_root">
 
     <LinearLayout
+        android:paddingTop="6dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -20,8 +20,8 @@
         <ImageView
             android:id="@+id/type_indicator"
             android:layout_width="4dp"
-            android:layout_height="50dp"
-            android:src="@drawable/vertical_indicator" />
+            android:layout_height="40dp"
+            android:src="@drawable/indicator_dash" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -140,4 +140,10 @@
             </RelativeLayout>
         </LinearLayout>
     </LinearLayout>
+    <ImageView
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider"
+        android:layout_marginTop="6dp"/>
 </LinearLayout>

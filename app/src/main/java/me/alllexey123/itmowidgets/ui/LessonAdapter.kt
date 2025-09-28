@@ -36,7 +36,7 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
         return when (viewType) {
             VIEW_TYPE_LESSON -> {
                 val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.single_lesson_widget_variant_list, parent, false)
+                    .inflate(R.layout.item_lesson_list_entry_dot, parent, false)
                 LessonViewHolder(view)
             }
 

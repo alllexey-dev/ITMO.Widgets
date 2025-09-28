@@ -10,7 +10,7 @@
         android:layout_height="32dp"
         android:layout_marginTop="-4dp"
         android:layout_gravity="center_horizontal"
-        android:src="@drawable/keyboard_arrow_up_24"
+        android:src="@drawable/ic_keyboard_arrow_up"
         android:tint="?attr/colorOnSurfaceVariant">
 
     </ImageView>
