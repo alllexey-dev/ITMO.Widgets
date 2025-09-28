@@ -8,8 +8,8 @@ import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import api.myitmo.model.Lesson
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.utils.PreferencesStorage
-import me.alllexey123.itmowidgets.utils.ScheduleUtils
+import me.alllexey123.itmowidgets.util.PreferencesStorage
+import me.alllexey123.itmowidgets.util.ScheduleUtils
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 
 open class SingleLessonWidget : AppWidgetProvider() {

@@ -7,7 +7,7 @@ import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.utils.ScheduleUtils
+import me.alllexey123.itmowidgets.util.ScheduleUtils
 
 
 class LessonListWidgetService : RemoteViewsService() {

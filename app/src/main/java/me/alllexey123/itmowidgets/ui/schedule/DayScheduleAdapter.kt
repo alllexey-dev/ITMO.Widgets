@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import api.myitmo.model.Lesson
 import api.myitmo.model.Schedule
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.utils.ScheduleUtils
+import me.alllexey123.itmowidgets.util.ScheduleUtils
 import java.time.Duration
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter

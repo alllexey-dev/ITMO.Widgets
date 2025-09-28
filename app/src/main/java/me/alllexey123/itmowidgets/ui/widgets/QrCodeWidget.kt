@@ -8,14 +8,14 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.widget.RemoteViews
 import androidx.work.WorkManager
+import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.providers.QrCodeProvider
 import me.alllexey123.itmowidgets.workers.QrWidgetUpdateWorker
-
 
 class QrCodeWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        println("ON UPDATE RECEIVED")
         for (appWidgetId in appWidgetIds) {
 
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
@@ -26,6 +26,7 @@ class QrCodeWidget : AppWidgetProvider() {
         QrWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
     }
 
+    // on qr code click
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (ACTION_WIDGET_CLICK == intent.action) {
@@ -33,12 +34,15 @@ class QrCodeWidget : AppWidgetProvider() {
                 AppWidgetManager.EXTRA_APPWIDGET_ID,
                 AppWidgetManager.INVALID_APPWIDGET_ID
             )
-            QrCodeProvider.clearCache(context) // force clear cache
+            val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
+            val renderer = appContainer.qrBitmapRenderer
+            val dynamicColors = appContainer.storage.getDynamicQrColorsState()
+
+            appContainer.qrCodeRepository.clearCache() // force clear cache
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
 
-            val colors = QrCodeProvider.getQrColors(context, true)
-            val bitmap = QrCodeProvider.emptyQrCode(21 * 20, 10F, colors.first, colors.second)
+            val bitmap = renderer.renderEmpty(21 * PIXELS_PER_MODULE, PIXELS_PER_MODULE / 2F, dynamicColors)
 
             views.setImageViewBitmap(R.id.qr_code_image, bitmap)
 
@@ -48,7 +52,7 @@ class QrCodeWidget : AppWidgetProvider() {
     }
 
     override fun onEnabled(context: Context) {
-        QrWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
+//        QrWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
     }
 
     override fun onDisabled(context: Context) {
@@ -56,6 +60,8 @@ class QrCodeWidget : AppWidgetProvider() {
     }
 
     companion object {
+
+        const val PIXELS_PER_MODULE = 20
 
         const val ACTION_WIDGET_CLICK: String = "me.alllexey123.itmowidgets.action.QR_WIDGET_CLICK"
 

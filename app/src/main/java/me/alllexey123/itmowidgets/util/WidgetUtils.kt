@@ -1,4 +1,4 @@
-package me.alllexey123.itmowidgets.utils
+package me.alllexey123.itmowidgets.util
 
 import android.content.Context
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker

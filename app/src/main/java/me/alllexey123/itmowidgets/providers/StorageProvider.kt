@@ -2,7 +2,7 @@ package me.alllexey123.itmowidgets.providers
 
 import android.content.Context
 import androidx.preference.PreferenceManager
-import me.alllexey123.itmowidgets.utils.PreferencesStorage
+import me.alllexey123.itmowidgets.util.PreferencesStorage
 
 object StorageProvider {
     var storageSingleton: PreferencesStorage? = null

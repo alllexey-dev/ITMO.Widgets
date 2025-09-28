@@ -10,7 +10,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import api.myitmo.model.Lesson
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.utils.ScheduleUtils
+import me.alllexey123.itmowidgets.util.ScheduleUtils
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.max

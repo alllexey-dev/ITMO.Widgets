@@ -1,4 +1,4 @@
-package me.alllexey123.itmowidgets.providers
+package me.alllexey123.itmowidgets.util
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -8,69 +8,41 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.view.ContextThemeWrapper
-import io.nayuki.qrcodegen.QrCode
-import io.nayuki.qrcodegen.QrSegment
-import java.nio.charset.StandardCharsets
 import androidx.core.graphics.createBitmap
 import com.google.android.material.color.MaterialColors
+import io.nayuki.qrcodegen.QrCode
 import me.alllexey123.itmowidgets.R
-import java.io.File
-import java.nio.file.Files
-import java.time.LocalDateTime
 
-object QrCodeProvider {
+class QrBitmapRenderer(
+    private val context: Context
+) {
 
-    fun emptyQrCode(side: Int, rounding: Float, bgColor: Int, fillColor: Int): Bitmap {
-        val bitmap = createBitmap(side, side, Bitmap.Config.RGB_565)
+    fun render(qrCode: QrCode, pixelsPerModule: Int, dynamic: Boolean): Bitmap {
+        val colors = getQrColors(dynamic)
+
+        val qrSize = qrCode.size
+        val bitmap = createBitmap(qrSize * pixelsPerModule, qrSize * pixelsPerModule)
         val canvas = Canvas(bitmap)
+
+        val bgColor = colors.first
+        val fgColor = colors.second
         canvas.drawColor(bgColor)
 
-        val paint = Paint().apply {
-            color = fillColor
+        val foregroundPaint = Paint().apply {
+            color = fgColor
             isAntiAlias = true
         }
 
-        val path = Path().apply {
-            addRoundRect(
-                RectF(0F, 0F, side.toFloat(), side.toFloat()),
-                rounding,
-                rounding,
-                Path.Direction.CW
-            )
-        }
-
-        canvas.drawPath(path, paint)
-
-        return bitmap
-    }
-
-    fun qrCodeToBitmap(
-        qrCode: QrCode,
-        qrSide: Int,
-        pixelsPerModule: Int,
-        whiteColor: Int,
-        blackColor: Int
-    ): Bitmap {
-        val bitmap = createBitmap(qrSide * pixelsPerModule, qrSide * pixelsPerModule)
-        val canvas = Canvas(bitmap)
-
-        canvas.drawColor(whiteColor)
-
-        val black = Paint().apply {
-            color = blackColor
-            isAntiAlias = true
-        }
-
-        val white = Paint().apply {
-            color = whiteColor
+        val backgroundPaint = Paint().apply {
+            color = bgColor
             isAntiAlias = true
         }
 
         val cornerRadius = pixelsPerModule * 0.5f
 
         // draw the black modules
-        for (x in 0 until qrSide) {
-            for (y in 0 until qrSide) {
+        for (x in 0 until qrSize) {
+            for (y in 0 until qrSize) {
                 if (qrCode.getModule(x, y)) {
                     val left = (x * pixelsPerModule).toFloat()
                     val top = (y * pixelsPerModule).toFloat()
@@ -99,14 +71,14 @@ object QrCodeProvider {
                     val path = Path().apply {
                         addRoundRect(RectF(left, top, right, bottom), radii, Path.Direction.CW)
                     }
-                    canvas.drawPath(path, black)
+                    canvas.drawPath(path, foregroundPaint)
                 }
             }
         }
 
         // redraw the white modules (round corners)
-        for (x in 0 until qrSide) {
-            for (y in 0 until qrSide) {
+        for (x in 0 until qrSize) {
+            for (y in 0 until qrSize) {
                 if (!qrCode.getModule(x, y)) {
                     val x1 = (x * pixelsPerModule).toFloat()
                     val y1 = (y * pixelsPerModule).toFloat()
@@ -140,7 +112,7 @@ object QrCodeProvider {
                         topLeft = cornerRadius
                     }
 
-                    canvas.drawRect(rect, black)
+                    canvas.drawRect(rect, foregroundPaint)
                     val radii = floatArrayOf(
                         topLeft, topLeft,
                         topRight, topRight,
@@ -148,7 +120,7 @@ object QrCodeProvider {
                         bottomLeft, bottomLeft
                     )
                     val roundPath = Path().apply { addRoundRect(rect, radii, Path.Direction.CW) }
-                    canvas.drawPath(roundPath, white)
+                    canvas.drawPath(roundPath, backgroundPaint)
                 }
             }
         }
@@ -156,71 +128,33 @@ object QrCodeProvider {
         return bitmap
     }
 
+    fun renderEmpty(side: Int, rounding: Float, dynamic: Boolean): Bitmap {
+        val colors = getQrColors(dynamic)
+        val bitmap = createBitmap(side, side, Bitmap.Config.RGB_565)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(colors.first)
 
-    fun getQrCode(context: Context): QrCode {
-        val myItmo = MyItmoProvider.getMyItmo(context)
-
-        val cached = readCache(context)
-
-        var qrHex: String? = null
-        try {
-            var simpleResponse = myItmo.api().getQrCode().execute().body()
-
-            if (simpleResponse == null) {
-                try {
-                    myItmo.refreshTokens(myItmo.storage.refreshToken)
-                    simpleResponse = myItmo.api().getQrCode().execute().body()
-                    if (simpleResponse == null) {
-                        throw RuntimeException("QR code response body is null (even after refreshing tokens)")
-                    }
-                } catch (e: Exception) {
-                    throw RuntimeException("Error while refreshing tokens for QR code", e)
-                }
-            }
-
-            if (simpleResponse.response == null) {
-                throw RuntimeException("QR code wrapper is null")
-            }
-
-            if (simpleResponse.response.qrHex == null) {
-                throw RuntimeException("QR code is null")
-            }
-
-            qrHex = simpleResponse.response.qrHex
-            writeCache(context, qrHex)
-        } catch (e: Exception) {
-            if (cached == null) throw RuntimeException("Could not get QR code", e)
-            StorageProvider.getStorage(context).setErrorLog("[WARN] [${javaClass.name}] at ${LocalDateTime.now()}: ${e.stackTraceToString()}")
+        val paint = Paint().apply {
+            color = colors.second
+            isAntiAlias = true
         }
 
-        val segment = QrSegment.makeBytes((qrHex ?: cached)!!.toByteArray(StandardCharsets.ISO_8859_1))
-        val qrCode = QrCode.encodeSegments(listOf(segment), QrCode.Ecc.LOW, 1, 1, -1, false)
-
-        return qrCode
-    }
-
-    fun writeCache(context: Context, str: String) {
-        Files.write(cacheFile(context).toPath(), listOf(str))
-    }
-
-    fun readCache(context: Context): String? {
-        return try {
-            Files.readAllLines(cacheFile(context).toPath())[0]
-                .let { s -> if (s.length < 6) null else s }
-        } catch (_: Exception) {
-            null
+        val path = Path().apply {
+            addRoundRect(
+                RectF(0F, 0F, side.toFloat(), side.toFloat()),
+                rounding,
+                rounding,
+                Path.Direction.CW
+            )
         }
+
+        canvas.drawPath(path, paint)
+
+        return bitmap
     }
 
-    fun clearCache(context: Context) {
-        cacheFile(context).apply { delete() }
-    }
-
-    fun cacheFile(context: Context): File {
-        return File(context.cacheDir, "qr_hex").apply { parentFile!!.mkdirs() }
-    }
-
-    fun getQrColors(context: Context, dynamic: Boolean): Pair<Int, Int> {
+    // [background, foreground]
+    fun getQrColors(dynamic: Boolean): Pair<Int, Int> {
         var darkModule: Int
         var lightBg: Int
 
@@ -236,6 +170,7 @@ object QrCodeProvider {
                 com.google.android.material.R.attr.colorOnSurfaceVariant,
                 Color.BLACK
             )
+
             // swap
             if (lightBg.isDark()) {
                 lightBg = darkModule.also { darkModule = lightBg }
@@ -267,5 +202,4 @@ object QrCodeProvider {
     fun Int.darkness(): Double {
         return 1 - (0.299 * Color.red(this) + 0.587 * Color.green(this) + 0.114 * Color.blue(this)) / 255
     }
-
 }
