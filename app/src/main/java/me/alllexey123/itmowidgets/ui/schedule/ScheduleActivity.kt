@@ -66,17 +66,14 @@ class ScheduleActivity : AppCompatActivity() {
                         val today = LocalDate.now()
                         val todayIndex = scheduleList.indexOfFirst { it.date == today }
                         if (todayIndex != -1) {
-                            outerRecyclerView.post {
-                                val layoutManager =
-                                    outerRecyclerView.layoutManager as LinearLayoutManager
-                                layoutManager.scrollToPosition(todayIndex)
-                            }
+                            val layoutManager =
+                                outerRecyclerView.layoutManager as LinearLayoutManager
+                            layoutManager.scrollToPositionWithOffset(todayIndex, 0)
                         }
                     } else {
                         progressBar.visibility = View.GONE
                     }
                     outerRecyclerView.visibility = View.VISIBLE
-
                 }
 
                 is ScheduleUiState.Error -> {

@@ -22,9 +22,6 @@ class ScheduleViewModel(
     private val _uiState = MutableLiveData<ScheduleUiState>()
     val uiState: LiveData<ScheduleUiState> = _uiState
 
-    private val _scheduleData = MutableLiveData<List<Schedule>>()
-    val scheduleData: LiveData<List<Schedule>> = _scheduleData
-
     fun fetchScheduleData() {
         _uiState.value = ScheduleUiState.Loading
 
@@ -35,16 +32,13 @@ class ScheduleViewModel(
 
                 val cachedSchedule =
                     scheduleRepository.getCachedScheduleForRange(startDate, endDate)
-                println(cachedSchedule)
                 if (cachedSchedule.isNotEmpty()) {
-                    _scheduleData.postValue(cachedSchedule)
                     _uiState.postValue(ScheduleUiState.Success(cachedSchedule, true))
                 } else {
                     _uiState.value = ScheduleUiState.Loading
                 }
 
                 val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
-                _scheduleData.postValue(remoteSchedule)
                 _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
             } catch (e: Exception) {
                 val errorMessage = "Failed to update schedule: ${e.message}"
