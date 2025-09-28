@@ -92,4 +92,8 @@ class DayScheduleAdapter(private var schedules: List<Schedule>) :
 
         return processedList
     }
+
+    fun getItemAt(position: Int): Schedule? {
+        return schedules.getOrNull(position)
+    }
 }

@@ -51,8 +51,6 @@ class ScheduleActivity : AppCompatActivity() {
 
     private var isInitialLoad = true
 
-    private var layoutManagerState: Parcelable? = null
-
     private fun observeUiState() {
         scheduleViewModel.uiState.observe(this) { state ->
             when (state) {
@@ -63,28 +61,35 @@ class ScheduleActivity : AppCompatActivity() {
 
                 is ScheduleUiState.Success -> {
                     val scheduleList = state.schedule
-                    if (scheduleList.isEmpty()) {
-                        outerRecyclerView.visibility = View.GONE
-                        progressBar.visibility = View.GONE
-                        return@observe
-                    }
-
                     val layoutManager = outerRecyclerView.layoutManager as LinearLayoutManager
+
+                    var dateToRestore: LocalDate? = null
+                    var offsetToRestore = 0
+
                     if (!isInitialLoad) {
-                        layoutManagerState = layoutManager.onSaveInstanceState()
+                        val snapView = snapHelper.findSnapView(layoutManager)
+                        val snapPosition = snapView?.let { layoutManager.getPosition(it) }
+
+                        if (snapPosition != null && snapPosition != RecyclerView.NO_POSITION) {
+                            dateToRestore = dayScheduleAdapter.getItemAt(snapPosition)?.date
+                            offsetToRestore =
+                                layoutManager.getDecoratedLeft(snapView) - outerRecyclerView.paddingLeft * 2
+                        }
                     }
 
                     dayScheduleAdapter.updateData(scheduleList)
 
-                    if (isInitialLoad) {
+                    if (dateToRestore != null) {
+                        val newIndex = scheduleList.indexOfFirst { it.date == dateToRestore }
+                        if (newIndex != -1) {
+                            layoutManager.scrollToPositionWithOffset(newIndex, offsetToRestore)
+                        }
+                    } else {
                         val today = LocalDate.now()
                         val todayIndex = scheduleList.indexOfFirst { it.date == today }
                         if (todayIndex != -1) {
-                            layoutManager.scrollToPositionWithOffset(todayIndex, 0)
+                            layoutManager.scrollToPosition(todayIndex)
                         }
-                        isInitialLoad = false
-                    } else if (layoutManagerState != null) {
-                        layoutManager.onRestoreInstanceState(layoutManagerState)
                     }
 
                     if (scheduleList.isNotEmpty()) {
