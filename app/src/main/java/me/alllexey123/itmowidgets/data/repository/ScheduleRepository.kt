@@ -42,6 +42,10 @@ class ScheduleRepository(
         return remoteSchedule
     }
 
+    fun getCachedScheduleForRange(startDate: LocalDate, endDate: LocalDate): List<Schedule> {
+        return localDataSource.getSchedulesForRange(startDate, endDate)
+    }
+
     fun clearCache() {
         localDataSource.clearCache()
     }

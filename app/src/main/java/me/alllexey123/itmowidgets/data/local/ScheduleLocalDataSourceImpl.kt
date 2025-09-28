@@ -39,6 +39,18 @@ class ScheduleLocalDataSourceImpl(
         cacheDir.mkdirs()
     }
 
+    override fun getSchedulesForRange(startDate: LocalDate, endDate: LocalDate): List<Schedule> {
+        val cachedSchedules = mutableListOf<Schedule>()
+        var currentDate = startDate
+        while (!currentDate.isAfter(endDate)) {
+            getSchedule(currentDate)?.let { (schedule, _) ->
+                cachedSchedules.add(schedule)
+            }
+            currentDate = currentDate.plusDays(1)
+        }
+        return cachedSchedules
+    }
+
     private fun readCache(name: String): CacheEntry? {
         val file = File(cacheDir, "$name.json")
         try {
@@ -65,9 +77,13 @@ class ScheduleLocalDataSourceImpl(
     }
 
     private fun clearOldCache() {
-        val removeBefore = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000 // 1 month
+        val removeBefore = LocalDate.now().minusDays(30) // 1 month
         cacheDir.listFiles()?.forEach { file ->
-            if (file.lastModified() < removeBefore) {
+            try {
+                if (LocalDate.parse(file.name.substringBefore('.')) < removeBefore) {
+                    file.delete()
+                }
+            } catch (_: Exception) {
                 file.delete()
             }
         }

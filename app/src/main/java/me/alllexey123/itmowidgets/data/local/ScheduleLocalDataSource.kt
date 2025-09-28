@@ -12,4 +12,7 @@ interface ScheduleLocalDataSource {
     fun isExpired(timestamp: Long): Boolean
 
     fun clearCache()
+
+    // all schedules found for given range
+    fun getSchedulesForRange(startDate: LocalDate, endDate: LocalDate): List<Schedule>
 }

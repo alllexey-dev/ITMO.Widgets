@@ -54,22 +54,31 @@ class ScheduleActivity : AppCompatActivity() {
                     progressBar.visibility = View.VISIBLE
                     outerRecyclerView.visibility = View.GONE
                 }
-                is ScheduleUiState.Success -> {
-                    progressBar.visibility = View.GONE
-                    outerRecyclerView.visibility = View.VISIBLE
 
+                is ScheduleUiState.Success -> {
                     val scheduleList = state.schedule
                     dayScheduleAdapter.updateData(scheduleList)
 
-                    val today = LocalDate.now()
-                    val todayIndex = scheduleList.indexOfFirst { it.date == today }
-                    if (todayIndex != -1) {
-                        outerRecyclerView.post {
-                            val layoutManager = outerRecyclerView.layoutManager as LinearLayoutManager
-                            layoutManager.scrollToPosition(todayIndex)
+                    if (state.isCached) {
+                        progressBar.visibility = View.VISIBLE
+
+                        // scroll if cached
+                        val today = LocalDate.now()
+                        val todayIndex = scheduleList.indexOfFirst { it.date == today }
+                        if (todayIndex != -1) {
+                            outerRecyclerView.post {
+                                val layoutManager =
+                                    outerRecyclerView.layoutManager as LinearLayoutManager
+                                layoutManager.scrollToPosition(todayIndex)
+                            }
                         }
+                    } else {
+                        progressBar.visibility = View.GONE
                     }
+                    outerRecyclerView.visibility = View.VISIBLE
+
                 }
+
                 is ScheduleUiState.Error -> {
                     progressBar.visibility = View.GONE
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
