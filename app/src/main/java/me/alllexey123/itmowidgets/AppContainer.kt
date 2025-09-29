@@ -10,7 +10,7 @@ import me.alllexey123.itmowidgets.data.remote.QrCodeRemoteDataSourceImpl
 import me.alllexey123.itmowidgets.data.remote.ScheduleRemoteDataSourceImpl
 import me.alllexey123.itmowidgets.data.repository.QrCodeRepository
 import me.alllexey123.itmowidgets.data.repository.ScheduleRepository
-import me.alllexey123.itmowidgets.util.PreferencesStorage
+import me.alllexey123.itmowidgets.data.PreferencesStorage
 import me.alllexey123.itmowidgets.util.QrBitmapRenderer
 import me.alllexey123.itmowidgets.util.QrCodeGenerator
 import java.io.File

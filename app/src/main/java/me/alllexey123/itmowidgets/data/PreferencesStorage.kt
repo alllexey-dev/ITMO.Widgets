@@ -1,4 +1,4 @@
-package me.alllexey123.itmowidgets.util
+package me.alllexey123.itmowidgets.data
 
 import android.content.SharedPreferences
 import api.myitmo.storage.Storage

@@ -3,8 +3,8 @@ package me.alllexey123.itmowidgets.ui.widgets.data
 import api.myitmo.model.Lesson
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.data.repository.ScheduleRepository
-import me.alllexey123.itmowidgets.util.LINE_STYLE
-import me.alllexey123.itmowidgets.util.PreferencesStorage
+import me.alllexey123.itmowidgets.data.LINE_STYLE
+import me.alllexey123.itmowidgets.data.PreferencesStorage
 import me.alllexey123.itmowidgets.util.ScheduleUtils
 import java.time.LocalDate
 import java.time.LocalDateTime
