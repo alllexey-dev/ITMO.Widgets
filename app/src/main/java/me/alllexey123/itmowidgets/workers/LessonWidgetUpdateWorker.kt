@@ -65,7 +65,7 @@ class LessonWidgetUpdateWorker(
 
             storage.setLessonWidgetStyleChanged(false)
 
-            scheduleNextUpdate(appContext, widgetsState.nextUpdateAt)
+            scheduleNextUpdate(appContext, widgetsState.nextUpdateAt.plusSeconds(3))
         } catch (e: Exception) {
             storage.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
 

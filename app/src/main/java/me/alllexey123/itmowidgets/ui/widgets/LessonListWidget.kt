@@ -1,6 +1,5 @@
 package me.alllexey123.itmowidgets.ui.widgets
 
-import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
@@ -46,13 +45,7 @@ class LessonListWidget : AppWidgetProvider() {
                     data = ("widget://${appWidgetId}-${System.currentTimeMillis()}").toUri()
                 }
 
-                val clickIntent = Intent(context, ScheduleActivity::class.java)
-                val pendingIntent = PendingIntent.getActivity(
-                    context,
-                    0,
-                    clickIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
+                val pendingIntent = ScheduleActivity.getOnClickPendingIntent(context)
 
                 val views = RemoteViews(context.packageName, layoutId)
                 views.setPendingIntentTemplate(R.id.lesson_list, pendingIntent)

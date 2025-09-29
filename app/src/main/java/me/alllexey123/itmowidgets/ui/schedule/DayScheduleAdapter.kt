@@ -50,7 +50,7 @@ class DayScheduleAdapter(private var schedules: List<Schedule>) :
     fun updateData(newDaySchedules: List<Schedule>) {
         val oldDaySchedules = this.schedules
         this.schedules = newDaySchedules
-        if (oldDaySchedules != newDaySchedules)notifyDataSetChanged()
+        if (oldDaySchedules != newDaySchedules) notifyDataSetChanged()
     }
 
     override fun getItemCount(): Int = schedules.size

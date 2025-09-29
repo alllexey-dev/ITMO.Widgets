@@ -9,7 +9,8 @@
     android:padding="6dp"
     android:paddingStart="8dp"
     android:backgroundTint="?attr/colorSurface"
-    android:theme="@style/AppTheme">
+    android:theme="@style/AppTheme"
+    android:id="@+id/lesson_widget_root">
 
     <LinearLayout
         android:layout_width="match_parent"

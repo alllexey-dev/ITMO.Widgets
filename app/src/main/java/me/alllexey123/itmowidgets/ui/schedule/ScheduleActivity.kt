@@ -1,7 +1,9 @@
 package me.alllexey123.itmowidgets.ui.schedule
 
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -105,6 +107,18 @@ class ScheduleActivity : AppCompatActivity() {
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
                 }
             }
+        }
+    }
+
+    companion object {
+        fun getOnClickPendingIntent(context: Context): PendingIntent? {
+            val clickIntent = Intent(context, ScheduleActivity::class.java)
+            return PendingIntent.getActivity(
+                context,
+                0,
+                clickIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         }
     }
 

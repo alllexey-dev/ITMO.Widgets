@@ -59,7 +59,6 @@ class LessonListWidgetService : RemoteViewsService() {
                     setViewVisibility(R.id.location_layout, if (hideLocation) View.GONE else View.VISIBLE)
                     setViewVisibility(R.id.time_layout, if (entry.times.isNullOrEmpty()) View.GONE else View.VISIBLE)
 
-                    // Set the color indicator.
                     val color = ScheduleUtils.getWorkTypeColor(entry.workTypeId)
                     setInt(R.id.type_indicator, "setColorFilter", ContextCompat.getColor(context, color))
                 }

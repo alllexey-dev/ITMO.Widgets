@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.widget.RemoteViews
-import androidx.work.WorkManager
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.workers.QrWidgetUpdateWorker
@@ -47,14 +46,6 @@ class QrCodeWidget : AppWidgetProvider() {
             appWidgetManager.updateAppWidget(appWidgetId, views)
             QrWidgetUpdateWorker.enqueueImmediateUpdate(context)
         }
-    }
-
-    override fun onEnabled(context: Context) {
-//        QrWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
-    }
-
-    override fun onDisabled(context: Context) {
-        WorkManager.getInstance(context).cancelUniqueWork(QrWidgetUpdateWorker.Companion.WIDGET_UPDATE_WORK_NAME)
     }
 
     companion object {
