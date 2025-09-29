@@ -71,7 +71,7 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage {
         return prefs.getString(SINGLE_LESSON_WIDGET_STYLE, DOT_STYLE)
     }
 
-    fun getListLessonWidgetStyle(): String? {
+    fun getLessonListWidgetStyle(): String? {
         return prefs.getString(LIST_LESSON_WIDGET_STYLE, DOT_STYLE)
     }
 

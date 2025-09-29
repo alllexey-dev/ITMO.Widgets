@@ -48,7 +48,7 @@ open class SingleLessonWidget : AppWidgetProvider() {
                 teacher = lesson.teacherName ?: "",
                 workTypeId = lesson.workTypeId,
                 room = room,
-                building = shortBuilding,
+                building = shortBuilding ?: "",
                 moreLessonsText = moreLessonsText,
                 hideTeacher = lesson.teacherName == null || storage.getHideTeacherState(),
                 hideLocation = false,

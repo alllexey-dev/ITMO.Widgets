@@ -5,6 +5,7 @@ import me.alllexey123.itmowidgets.R
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 
@@ -47,12 +48,7 @@ object ScheduleUtils {
     }
 
     fun parseTime(date: LocalDate, time: String): LocalDateTime {
-        val hoursStr = time.substring(0, time.indexOf(":"))
-        val minutesStr = time.substring(time.indexOf(":") + 1)
-
-        val hours = (if (hoursStr.startsWith('0')) hoursStr.substring(1) else hoursStr).toInt()
-        val minutes = (if (minutesStr.startsWith('0')) minutesStr.substring(1) else minutesStr).toInt()
-        return date.atTime(hours, minutes)
+        return date.atTime(LocalTime.parse(time))
     }
 
     fun lessonDeclension(count: Int): String {
@@ -61,7 +57,8 @@ object ScheduleUtils {
         else return "пары"
     }
 
-    fun shortenRoom(room: String): String {
+    fun shortenRoom(room: String?): String? {
+        if (room == null) return null
         val roomLow = room.lowercase()
         if (roomLow.contains("актовый")) return "Акт. зал"
         val m1 = Pattern.compile("[0-9]{4}/[0-9]").matcher(roomLow)
@@ -77,7 +74,8 @@ object ScheduleUtils {
         return room
     }
 
-    fun shortenBuildingName(building: String): String {
+    fun shortenBuildingName(building: String?): String? {
+        if (building == null) return null
         val name = building.lowercase()
         if (name.contains("кронв")) return "Кронва"
         if (name.contains("ломо")) return "Ломо"

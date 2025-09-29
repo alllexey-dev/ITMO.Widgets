@@ -156,7 +156,7 @@ class LessonWidgetUpdateWorker(
                 else {
                     val lessonEndTime = ScheduleUtils.parseTime(currentDate, l.timeEnd)
                     val deadline: LocalDateTime
-                    if (i == lessons.size - 1 || !beforehandScheduling) { // no beforehand
+                    if (i == lessons.size - 1 || !beforehandScheduling) {
                         deadline = now
                     } else {
                         deadline = now.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
@@ -183,7 +183,7 @@ class LessonWidgetUpdateWorker(
         widgetIds.forEach { appWidgetId ->
             val providerInfo = appWidgetManager.getAppWidgetInfo(appWidgetId)
             val realLayoutId = providerInfo.initialLayout
-            val rowLayoutId = if (storage.getListLessonWidgetStyle() == LINE_STYLE) {
+            val rowLayoutId = if (storage.getLessonListWidgetStyle() == LINE_STYLE) {
                 R.layout.item_lesson_list_entry_dash
             } else {
                 R.layout.item_lesson_list_entry_dot
