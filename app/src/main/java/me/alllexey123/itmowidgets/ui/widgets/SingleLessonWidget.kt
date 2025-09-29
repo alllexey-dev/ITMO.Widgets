@@ -45,10 +45,10 @@ open class SingleLessonWidget : AppWidgetProvider() {
             views.setTextViewText(R.id.location_building, widgetData.building)
             views.setTextViewText(R.id.time, widgetData.times)
             views.setTextViewText(R.id.more_lessons_text, widgetData.moreLessonsText)
-            views.setViewVisibility(R.id.teacher_layout, if (widgetData.teacher == null) View.GONE else View.VISIBLE)
+            views.setViewVisibility(R.id.teacher_layout, if (widgetData.teacher.isNullOrEmpty()) View.GONE else View.VISIBLE)
             views.setViewVisibility(R.id.location_layout, if (widgetData.room == null && widgetData.building == null) View.GONE else View.VISIBLE)
-            views.setViewVisibility(R.id.time_layout, if (widgetData.times == null) View.GONE else View.VISIBLE)
-            views.setViewVisibility(R.id.more_lessons_layout, if (widgetData.moreLessonsText == null) View.GONE else View.VISIBLE)
+            views.setViewVisibility(R.id.time_layout, if (widgetData.times.isNullOrEmpty()) View.GONE else View.VISIBLE)
+            views.setViewVisibility(R.id.more_lessons_layout, if (widgetData.moreLessonsText.isNullOrEmpty()) View.GONE else View.VISIBLE)
 
             val colorId = ScheduleUtils.getWorkTypeColor(widgetData.workTypeId)
             views.setInt(

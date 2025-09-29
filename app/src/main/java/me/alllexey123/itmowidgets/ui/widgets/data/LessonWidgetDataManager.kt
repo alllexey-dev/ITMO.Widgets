@@ -30,7 +30,7 @@ class LessonWidgetDataManager(
             listDataResult = getLessonListData(lessons)
             nextUpdateAt = getNextUpdateAt(lessons)
         } catch (e: Exception) {
-            e.printStackTrace()
+            storage.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
             singleDataResult = SingleLessonWidgetData.Error(getSingleLessonWidgetLayout())
 
             listDataResult = LessonListWidgetData(

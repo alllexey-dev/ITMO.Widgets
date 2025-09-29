@@ -22,7 +22,7 @@ object ScheduleUtils {
         val currTime = DateTimeFormatter.ofPattern("HH:mm").format(timeContext)
 
         for (lesson in lessons) {
-            if (lesson.timeEnd >= currTime && lesson.timeStart <= currTime) {
+            if (lesson.timeEnd > currTime && lesson.timeStart <= currTime) {
                 result = lesson
                 break
             }

@@ -44,30 +44,34 @@ class LessonWidgetUpdateWorker(
             return Result.success()
         }
 
-        val onlyDataChanged = !storage.getLessonWidgetStyleChanged()
+        try {
+            val onlyDataChanged = !storage.getLessonWidgetStyleChanged()
 
-        val dataManager = LessonWidgetDataManager(repository, storage)
-        val widgetsState = dataManager.getLessonWidgetsState()
-        
-        updateSingleLessonWidgets(
-            appWidgetManager,
-            singleWidgetIds,
-            widgetsState.singleLessonData
-        )
-        
-        updateLessonListWidgets(
-            appWidgetManager,
-            listWidgetIds,
-            widgetsState.lessonListWidgetData,
-            onlyDataChanged
-        )
+            val dataManager = LessonWidgetDataManager(repository, storage)
+            val widgetsState = dataManager.getLessonWidgetsState()
 
-        storage.setLessonWidgetStyleChanged(false)
+            updateSingleLessonWidgets(
+                appWidgetManager,
+                singleWidgetIds,
+                widgetsState.singleLessonData
+            )
 
-        // Small offset to prevent update loops
-//        nextUpdateAt = nextUpdateAt?.plusSeconds(70)
+            updateLessonListWidgets(
+                appWidgetManager,
+                listWidgetIds,
+                widgetsState.lessonListWidgetData,
+                onlyDataChanged
+            )
 
-        scheduleNextUpdate(appContext, widgetsState.nextUpdateAt)
+            storage.setLessonWidgetStyleChanged(false)
+
+            scheduleNextUpdate(appContext, widgetsState.nextUpdateAt)
+        } catch (e: Exception) {
+            storage.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
+
+            scheduleNextUpdate(appContext, null)
+        }
+
         return Result.success()
     }
 
