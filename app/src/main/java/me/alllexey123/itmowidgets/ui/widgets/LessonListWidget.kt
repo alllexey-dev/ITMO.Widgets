@@ -10,6 +10,8 @@ import androidx.core.net.toUri
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.ui.schedule.ScheduleActivity
+import me.alllexey123.itmowidgets.ui.widgets.data.LessonListDataHolder
+import me.alllexey123.itmowidgets.ui.widgets.data.LessonListWidgetData
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 
 
@@ -32,15 +34,11 @@ class LessonListWidget : AppWidgetProvider() {
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
-            lessons: List<SingleLessonData>,
+            widgetData: LessonListWidgetData,
             layoutId: Int,
-            rowLayoutId: Int,
-            fullDayEmpty: Boolean,
             onlyDataChanged: Boolean
         ) {
-            LessonRepository.setLessons(lessons)
-            LessonRepository.rowLayoutId = rowLayoutId
-            LessonRepository.bonusLayoutId = if (fullDayEmpty) R.layout.item_lesson_list_empty else R.layout.item_lesson_list_no_more
+            LessonListDataHolder.setData(widgetData)
 
             if (!onlyDataChanged){
                 val intent = Intent(context, LessonListWidgetService::class.java).apply {

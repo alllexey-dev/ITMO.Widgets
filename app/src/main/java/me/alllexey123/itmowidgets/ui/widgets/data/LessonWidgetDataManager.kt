@@ -86,7 +86,8 @@ class LessonWidgetDataManager(
 
         val lessonsToShow = if (hidePrevious) {
             val startFrom = getLessonToShow(lessons)
-            lessons.drop(lessons.indexOf(startFrom))
+            if (startFrom == null) listOf()
+            else lessons.drop(lessons.indexOf(startFrom))
         } else lessons
 
         return if (lessonsToShow.isEmpty()) {
@@ -146,15 +147,16 @@ class LessonWidgetDataManager(
         val beforehandScheduling = storage.getBeforehandSchedulingState()
         val now = LocalDateTime.now()
 
-        val currOrNext = ScheduleUtils.findCurrentOrNextLesson(lessons, now)
+        val found = ScheduleUtils.findCurrentOrNextLesson(lessons, now)
         val lesson = if (beforehandScheduling) {
             val nowWithBeforehand = now.plusSeconds(BEFOREHAND_SCHEDULING_OFFSET)
-            val currOrNextWithBeforehand =
+            if (nowWithBeforehand.toLocalDate() != now.toLocalDate()) return found
+            val foundWithBeforehand =
                 ScheduleUtils.findCurrentOrNextLesson(lessons, nowWithBeforehand)
 
-            currOrNextWithBeforehand ?: currOrNext
+            foundWithBeforehand ?: found
         } else {
-            currOrNext
+            found
         }
         return lesson
     }

@@ -7,6 +7,9 @@ import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
 import me.alllexey123.itmowidgets.R
+import me.alllexey123.itmowidgets.ui.widgets.data.LessonListDataHolder
+import me.alllexey123.itmowidgets.ui.widgets.data.LessonListWidgetData
+import me.alllexey123.itmowidgets.ui.widgets.data.LessonListWidgetEntry
 import me.alllexey123.itmowidgets.util.ScheduleUtils
 
 
@@ -17,9 +20,7 @@ class LessonListWidgetService : RemoteViewsService() {
 
     class ViewsFactory(private val context: Context) : RemoteViewsFactory {
 
-        private var lessons: List<SingleLessonData> = emptyList()
-        private var rowLayoutId: Int = R.layout.single_lesson_widget_dot
-        private var bonusLayoutId: Int = R.layout.item_lesson_list_empty
+        private var data: LessonListWidgetData = LessonListDataHolder.getData()
 
         override fun onCreate() {
             loadData()
@@ -30,42 +31,40 @@ class LessonListWidgetService : RemoteViewsService() {
         }
 
         private fun loadData() {
-            lessons = LessonRepository.getLessons()
-            rowLayoutId = LessonRepository.rowLayoutId
-            bonusLayoutId = LessonRepository.bonusLayoutId
+            data = LessonListDataHolder.getData()
         }
 
-        override fun getCount(): Int = lessons.size + 1
+        override fun getCount(): Int = data.entries.size
 
         override fun getViewAt(position: Int): RemoteViews? {
-            var rv: RemoteViews
-            if (lessons.isEmpty()) {
-                rv = RemoteViews(context.packageName, bonusLayoutId)
-            } else if (position >= lessons.size) {
-                rv = RemoteViews(context.packageName, R.layout.item_lesson_list_end)
-            } else {
+            val entry = data.entries[position]
 
-                val data = lessons[position]
-                val views = RemoteViews(context.packageName, rowLayoutId)
+            val rv = RemoteViews(context.packageName, entry.layoutId)
 
-                views.setTextViewText(R.id.title, data.subject)
-                views.setTextViewText(R.id.teacher, data.teacher)
-                views.setTextViewText(R.id.location_room, data.room)
-                views.setTextViewText(R.id.location_building, data.building)
-                views.setTextViewText(R.id.more_lessons_text, data.moreLessonsText)
+            if (entry is LessonListWidgetEntry.LessonData) {
+                rv.apply {
+                    setTextViewText(R.id.title, entry.subject)
+                    setTextViewText(R.id.teacher, entry.teacher)
+                    setTextViewText(R.id.time, entry.times)
 
-                views.setViewVisibility(R.id.teacher_layout, if (data.hideTeacher) View.GONE else View.VISIBLE)
-                views.setViewVisibility(R.id.location_layout, if (data.hideLocation) View.GONE else View.VISIBLE)
-                views.setViewVisibility(R.id.time_layout, if (data.hideTime) View.GONE else View.VISIBLE)
-                views.setViewVisibility(R.id.more_lessons_layout, if (data.hideMoreLessonsText) View.GONE else View.VISIBLE)
+                    setTextViewText(R.id.title, entry.subject)
+                    setTextViewText(R.id.teacher, entry.teacher)
+                    val roomText = if (entry.building == null) entry.room else entry.room?.let { room -> "${room}, " }
+                    setTextViewText(R.id.location_room, roomText)
+                    setTextViewText(R.id.location_building, entry.building)
+                    setTextViewText(R.id.time, entry.times)
 
-                views.setTextViewText(R.id.time, data.times)
+                    setViewVisibility(R.id.teacher_layout, if (entry.teacher.isNullOrEmpty()) View.GONE else View.VISIBLE)
+                    val hideLocation = roomText.isNullOrEmpty() && entry.building.isNullOrEmpty()
+                    setViewVisibility(R.id.location_layout, if (hideLocation) View.GONE else View.VISIBLE)
+                    setViewVisibility(R.id.time_layout, if (entry.times.isNullOrEmpty()) View.GONE else View.VISIBLE)
 
-                val colorId = ScheduleUtils.getWorkTypeColor(data.workTypeId)
-                views.setInt(R.id.type_indicator, "setColorFilter", ContextCompat.getColor(context, colorId))
-
-                rv = views
+                    // Set the color indicator.
+                    val color = ScheduleUtils.getWorkTypeColor(entry.workTypeId)
+                    setInt(R.id.type_indicator, "setColorFilter", ContextCompat.getColor(context, color))
+                }
             }
+
             val fillInIntent = Intent()
             rv.setOnClickFillInIntent(R.id.item_root, fillInIntent)
 
@@ -73,7 +72,7 @@ class LessonListWidgetService : RemoteViewsService() {
         }
 
         override fun getLoadingView(): RemoteViews? = null
-        override fun getViewTypeCount(): Int = 2
+        override fun getViewTypeCount(): Int = 3
         override fun hasStableIds(): Boolean = true
         override fun getItemId(position: Int): Long = position.toLong()
         override fun onDestroy() {}

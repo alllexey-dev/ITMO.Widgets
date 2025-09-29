@@ -6,9 +6,8 @@ import android.content.Context
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
-import api.myitmo.model.Lesson
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.util.PreferencesStorage
+import me.alllexey123.itmowidgets.ui.widgets.data.SingleLessonWidgetData
 import me.alllexey123.itmowidgets.util.ScheduleUtils
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 
@@ -31,80 +30,27 @@ open class SingleLessonWidget : AppWidgetProvider() {
     }
 
     companion object {
-        internal fun widgetData(lesson: Lesson, moreLessons: Int?, till: String?, storage: PreferencesStorage): SingleLessonData {
-            val startTime = lesson.timeStart
-            val endTime = lesson.timeEnd
-            val building = lesson.building
-            val shortBuilding = if (building == null) "" else ScheduleUtils.shortenBuildingName(building)
-            val room = if (lesson.room == null) "нет кабинета" else ScheduleUtils.shortenRoom(lesson.room!!) + ", "
-            val moreLessonsText =
-                if (moreLessons == null || moreLessons <= 0) "это последняя пара на сегодня" else "и ещё $moreLessons " +
-                        ScheduleUtils.lessonDeclension(moreLessons) +
-                        " до $till"
-
-            return SingleLessonData(
-                subject = lesson.subject ?: "Неизвестная дисциплина",
-                times = "$startTime - $endTime",
-                teacher = lesson.teacherName ?: "",
-                workTypeId = lesson.workTypeId,
-                room = room,
-                building = shortBuilding ?: "",
-                moreLessonsText = moreLessonsText,
-                hideTeacher = lesson.teacherName == null || storage.getHideTeacherState(),
-                hideLocation = false,
-                hideTime = false,
-                hideMoreLessonsText = till == null
-            )
-
-        }
-
-        fun noLessonsWidgetData(): SingleLessonData {
-            return SingleLessonData(
-                subject = "Сегодня нет пар",
-                workTypeId = -1,
-                hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
-            )
-        }
-
-        internal fun noLeftLessonsWidgetData(): SingleLessonData {
-            return SingleLessonData(
-                subject = "Сегодня больше нет пар",
-                workTypeId = -1,
-                hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
-            )
-        }
-
-        fun errorLessonWidgetData(): SingleLessonData {
-            return SingleLessonData(
-                subject = "Ошибка при получении данных",
-                workTypeId = 0,
-                hideTeacher = true, hideLocation = true, hideTime = true, hideMoreLessonsText = true
-            )
-        }
-
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
-            data: SingleLessonData,
-            layoutId: Int
+            widgetData: SingleLessonWidgetData
         ) {
-            val views = RemoteViews(context.packageName, layoutId)
+            val views = RemoteViews(context.packageName, widgetData.layoutId)
 
-            views.setTextViewText(R.id.title, data.subject)
-            views.setTextViewText(R.id.teacher, data.teacher)
-            views.setTextViewText(R.id.location_room, data.room)
-            views.setTextViewText(R.id.location_building, data.building)
-            views.setTextViewText(R.id.more_lessons_text, data.moreLessonsText)
-            views.setViewVisibility(R.id.teacher_layout, if (data.hideTeacher) View.GONE else View.VISIBLE)
-            views.setViewVisibility(R.id.location_layout, if (data.hideLocation) View.GONE else View.VISIBLE)
-            views.setViewVisibility(R.id.time_layout, if (data.hideTime) View.GONE else View.VISIBLE)
-            views.setViewVisibility(R.id.more_lessons_layout, if (data.hideMoreLessonsText) View.GONE else View.VISIBLE)
+            views.setTextViewText(R.id.title, widgetData.subject)
+            views.setTextViewText(R.id.teacher, widgetData.teacher)
+            val roomText = if (widgetData.building == null) widgetData.room else widgetData.room?.let { room -> "${room}, " }
+            views.setTextViewText(R.id.location_room, roomText)
+            views.setTextViewText(R.id.location_building, widgetData.building)
+            views.setTextViewText(R.id.time, widgetData.times)
+            views.setTextViewText(R.id.more_lessons_text, widgetData.moreLessonsText)
+            views.setViewVisibility(R.id.teacher_layout, if (widgetData.teacher == null) View.GONE else View.VISIBLE)
+            views.setViewVisibility(R.id.location_layout, if (widgetData.room == null && widgetData.building == null) View.GONE else View.VISIBLE)
+            views.setViewVisibility(R.id.time_layout, if (widgetData.times == null) View.GONE else View.VISIBLE)
+            views.setViewVisibility(R.id.more_lessons_layout, if (widgetData.moreLessonsText == null) View.GONE else View.VISIBLE)
 
-            views.setTextViewText(R.id.time, data.times)
-
-            val colorId = ScheduleUtils.getWorkTypeColor(data.workTypeId)
-
+            val colorId = ScheduleUtils.getWorkTypeColor(widgetData.workTypeId)
             views.setInt(
                 R.id.type_indicator, "setColorFilter",
                 ContextCompat.getColor(context, colorId)
