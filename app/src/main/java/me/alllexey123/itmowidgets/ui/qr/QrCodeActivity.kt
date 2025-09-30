@@ -11,8 +11,6 @@ import me.alllexey123.itmowidgets.R
 
 class QrCodeActivity : AppCompatActivity() {
 
-    private lateinit var qrBgImage: ImageView
-
     private lateinit var qrCodeImage: ImageView
 
     private lateinit var fabRefresh: FloatingActionButton
@@ -27,7 +25,6 @@ class QrCodeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_qr_code)
         qrCodeImage = findViewById(R.id.qr_code_image)
-        qrBgImage = findViewById(R.id.qr_bg_image)
         setupButtons()
 
         observeUiState()
@@ -73,8 +70,6 @@ class QrCodeActivity : AppCompatActivity() {
                 }
             }
 
-            val colors = renderer.getQrColors(dynamicColors)
-            qrBgImage.setColorFilter(colors.first)
             qrCodeImage.setImageBitmap(bitmap)
         }
     }

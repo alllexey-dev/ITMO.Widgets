@@ -52,14 +52,9 @@ class QrCodeWidget : AppWidgetProvider() {
 
         const val ACTION_WIDGET_CLICK: String = "me.alllexey123.itmowidgets.action.QR_WIDGET_CLICK"
 
-        fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, bitmap: Bitmap, bgColor: Int) {
+        fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, bitmap: Bitmap) {
 
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
-
-            views.setInt(
-                R.id.qr_bg_image, "setColorFilter",
-                bgColor
-            )
 
             val pendingIntent = getClickIntent(context, appWidgetId)
             views.setOnClickPendingIntent(R.id.qr_code_image, pendingIntent)

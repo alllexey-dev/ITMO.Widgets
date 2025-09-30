@@ -44,15 +44,12 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
             renderer.renderEmpty(dynamic = dynamicColors)
         }
 
-        val colors = renderer.getQrColors(dynamicColors)
-
         for (appWidgetId in appWidgetIds) {
             QrCodeWidget.updateAppWidget(
                 appContext,
                 appWidgetManager,
                 appWidgetId,
-                bitmap,
-                colors.first
+                bitmap
             )
         }
 

@@ -19,13 +19,6 @@
         android:layout_marginBottom="120dp">
 
         <ImageView
-            android:id="@+id/qr_bg_image"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="fitXY"
-            android:src="@drawable/widget_background_rounded" />
-
-        <ImageView
             android:id="@+id/qr_code_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
