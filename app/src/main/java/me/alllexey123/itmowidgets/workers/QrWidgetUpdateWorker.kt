@@ -11,7 +11,6 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.ui.widgets.QrCodeWidget
-import me.alllexey123.itmowidgets.ui.widgets.QrCodeWidget.Companion.PIXELS_PER_MODULE
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
@@ -38,10 +37,11 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
         val bitmap: Bitmap = try {
             val qrHex = repository.getQrHex()
             val qrCode = generator.generate(qrHex)
-            renderer.render(qrCode, PIXELS_PER_MODULE, dynamicColors)
+            val qrCodeBooleans = generator.toBooleans(qrCode)
+            renderer.render(qrCode = qrCodeBooleans, dynamic = dynamicColors)
         } catch (e: Exception) {
             storage.setErrorLog("[${javaClass.name}] at ${LocalDateTime.now()}: ${e.stackTraceToString()}")
-            renderer.renderEmpty(21 * PIXELS_PER_MODULE, PIXELS_PER_MODULE / 2F, dynamicColors)
+            renderer.renderEmpty(dynamic = dynamicColors)
         }
 
         val colors = renderer.getQrColors(dynamicColors)

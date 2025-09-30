@@ -7,65 +7,151 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.util.TypedValue
 import android.view.ContextThemeWrapper
 import androidx.core.graphics.createBitmap
 import com.google.android.material.color.MaterialColors
-import io.nayuki.qrcodegen.QrCode
 import me.alllexey123.itmowidgets.R
 
 class QrBitmapRenderer(
     private val context: Context
 ) {
 
-    fun render(qrCode: QrCode, pixelsPerModule: Int, dynamic: Boolean): Bitmap {
-        val colors = getQrColors(dynamic)
 
+    fun render(
+        qrCode: List<List<Boolean>>,
+        qrSidePixels: Int = defaultSidePixels(),
+        relativePadding: Float = defaultRelativePadding(),
+        bgRoundingPixels: Float = defaultBgRounding(),
+        dynamic: Boolean
+    ): Bitmap {
+        val colors = getQrColors(dynamic)
+        return render(
+            qrCode,
+            qrSidePixels,
+            colors.first,
+            colors.second,
+            relativePadding,
+            bgRoundingPixels
+        )
+    }
+
+    fun renderEmpty(
+        qrSidePixels: Int = defaultSidePixels(),
+        relativePadding: Float = defaultRelativePadding(),
+        bgRoundingPixels: Float = defaultBgRounding(),
+        dynamic: Boolean
+    ): Bitmap {
+        val colors = getQrColors(dynamic)
+        return renderFilled(
+            qrSidePixels,
+            colors.first,
+            colors.first,
+            relativePadding,
+            bgRoundingPixels
+        )
+    }
+
+    fun renderFull(
+        qrSidePixels: Int = defaultSidePixels(),
+        relativePadding: Float = defaultRelativePadding(),
+        bgRoundingPixels: Float = defaultBgRounding(),
+        dynamic: Boolean
+    ): Bitmap {
+        val colors = getQrColors(dynamic)
+        return renderFilled(
+            qrSidePixels,
+            colors.first,
+            colors.second,
+            relativePadding,
+            bgRoundingPixels
+        )
+    }
+
+    fun renderFilled(
+        qrSidePixels: Int = defaultSidePixels(),
+        backgroundColor: Int,
+        foregroundColor: Int,
+        relativePadding: Float = defaultRelativePadding(),
+        bgRoundingPixels: Float = defaultBgRounding()
+    ): Bitmap {
+        val booleans = List(21) { MutableList(21) { true } }
+        return render(
+            booleans,
+            qrSidePixels,
+            backgroundColor,
+            foregroundColor,
+            relativePadding,
+            bgRoundingPixels
+        )
+    }
+
+
+    // padding: [0, 0.5]
+    fun render(
+        qrCode: List<List<Boolean>>,
+        qrSidePixels: Int,
+        backgroundColor: Int,
+        foregroundColor: Int,
+        relativePadding: Float,
+        bgRoundingPixels: Float
+    ): Bitmap {
         val qrSize = qrCode.size
-        val bitmap = createBitmap(qrSize * pixelsPerModule, qrSize * pixelsPerModule)
+        val bitmap = createBitmap(qrSidePixels, qrSidePixels)
         val canvas = Canvas(bitmap)
 
-        val bgColor = colors.first
-        val fgColor = colors.second
-        canvas.drawColor(bgColor)
-
         val foregroundPaint = Paint().apply {
-            color = fgColor
+            color = foregroundColor
             isAntiAlias = true
         }
 
         val backgroundPaint = Paint().apply {
-            color = bgColor
+            color = backgroundColor
             isAntiAlias = true
         }
 
-        val cornerRadius = pixelsPerModule * 0.5f
+        val moduleSidePixels = qrSidePixels * (1 - relativePadding * 2) / qrSize
+        val moduleCornerRadius = moduleSidePixels * 0.5f
+
+        // draw rounded background
+        val bg = Path().apply {
+            addRoundRect(
+                RectF(0F, 0F, qrSidePixels.toFloat(), qrSidePixels.toFloat()),
+                bgRoundingPixels,
+                bgRoundingPixels,
+                Path.Direction.CW
+            )
+        }
+
+        val paddingPixels = qrSidePixels * relativePadding
+        canvas.drawPath(bg, backgroundPaint)
 
         // draw the black modules
         for (x in 0 until qrSize) {
             for (y in 0 until qrSize) {
-                if (qrCode.getModule(x, y)) {
-                    val left = (x * pixelsPerModule).toFloat()
-                    val top = (y * pixelsPerModule).toFloat()
-                    val right = left + pixelsPerModule
-                    val bottom = top + pixelsPerModule
+                if (qrCode[x][y]) {
+                    val left = x * moduleSidePixels + paddingPixels
+                    val top = y * moduleSidePixels + paddingPixels
+                    val right = left + moduleSidePixels
+                    val bottom = top + moduleSidePixels
 
-                    val topN = qrCode.getModule(x, y - 1)
-                    val bottomN = qrCode.getModule(x, y + 1)
-                    val leftN = qrCode.getModule(x - 1, y)
-                    val rightN = qrCode.getModule(x + 1, y)
+                    val topN = qrCode.getOrNull(x)?.getOrNull(y - 1) == true
+                    val bottomN = qrCode.getOrNull(x)?.getOrNull(y + 1) == true
+                    val leftN = qrCode.getOrNull(x - 1)?.getOrNull(y) == true
+                    val rightN = qrCode.getOrNull(x + 1)?.getOrNull(y) == true
 
                     val radii = floatArrayOf(
-                        if (!topN && !leftN) cornerRadius else 0f,
-                        if (!topN && !leftN) cornerRadius else 0f,
+                        if (!topN && !leftN) moduleCornerRadius else 0f,
+                        if (!topN && !leftN) moduleCornerRadius else 0f,
 
-                        if (!topN && !rightN) cornerRadius else 0f,
-                        if (!topN && !rightN) cornerRadius else 0f,
+                        if (!topN && !rightN) moduleCornerRadius else 0f,
+                        if (!topN && !rightN) moduleCornerRadius else 0f,
 
-                        if (!bottomN && !rightN) cornerRadius else 0f,
-                        if (!bottomN && !rightN) cornerRadius else 0f,
+                        if (!bottomN && !rightN) moduleCornerRadius else 0f,
+                        if (!bottomN && !rightN) moduleCornerRadius else 0f,
 
-                        if (!bottomN && !leftN) cornerRadius else 0f,
-                        if (!bottomN && !leftN) cornerRadius else 0f
+                        if (!bottomN && !leftN) moduleCornerRadius else 0f,
+                        if (!bottomN && !leftN) moduleCornerRadius else 0f
                     )
 
                     val path = Path().apply {
@@ -79,11 +165,11 @@ class QrBitmapRenderer(
         // redraw the white modules (round corners)
         for (x in 0 until qrSize) {
             for (y in 0 until qrSize) {
-                if (!qrCode.getModule(x, y)) {
-                    val x1 = (x * pixelsPerModule).toFloat()
-                    val y1 = (y * pixelsPerModule).toFloat()
-                    val x2 = x1 + pixelsPerModule
-                    val y2 = y1 + pixelsPerModule
+                if (!qrCode[x][y]) {
+                    val x1 = x * moduleSidePixels + paddingPixels
+                    val y1 = y * moduleSidePixels + paddingPixels
+                    val x2 = x1 + moduleSidePixels
+                    val y2 = y1 + moduleSidePixels
                     val rect = RectF(x1, y1, x2, y2)
 
                     var bottomRight = 0f
@@ -91,25 +177,25 @@ class QrBitmapRenderer(
                     var topLeft = 0f
                     var topRight = 0f
 
-                    val top = qrCode.getModule(x, y - 1)
-                    val right = qrCode.getModule(x + 1, y)
-                    val bottom = qrCode.getModule(x, y + 1)
-                    val left = qrCode.getModule(x - 1, y)
+                    val top = qrCode.getOrNull(x)?.getOrNull(y - 1) == true
+                    val right = qrCode.getOrNull(x + 1)?.getOrNull(y) == true
+                    val bottom = qrCode.getOrNull(x)?.getOrNull(y + 1) == true
+                    val left = qrCode.getOrNull(x - 1)?.getOrNull(y) == true
 
-                    if (right && bottom && qrCode.getModule(x + 1, y + 1)) {
-                        bottomRight = cornerRadius
+                    if (right && bottom && qrCode.getOrNull(x + 1)?.getOrNull(y + 1) == true) {
+                        bottomRight = moduleCornerRadius
                     }
 
-                    if (left && bottom && qrCode.getModule(x - 1, y + 1)) {
-                        bottomLeft = cornerRadius
+                    if (left && bottom && qrCode.getOrNull(x - 1)?.getOrNull(y + 1) == true) {
+                        bottomLeft = moduleCornerRadius
                     }
 
-                    if (right && top && qrCode.getModule(x + 1, y - 1)) {
-                        topRight = cornerRadius
+                    if (right && top && qrCode.getOrNull(x + 1)?.getOrNull(y - 1) == true) {
+                        topRight = moduleCornerRadius
                     }
 
-                    if (left && top && qrCode.getModule(x - 1, y - 1)) {
-                        topLeft = cornerRadius
+                    if (left && top && qrCode.getOrNull(x - 1)?.getOrNull(y - 1) == true) {
+                        topLeft = moduleCornerRadius
                     }
 
                     canvas.drawRect(rect, foregroundPaint)
@@ -128,38 +214,24 @@ class QrBitmapRenderer(
         return bitmap
     }
 
-    fun renderEmpty(side: Int, rounding: Float, dynamic: Boolean): Bitmap {
-        val colors = getQrColors(dynamic)
-        return renderFilled(side, rounding, colors.first, colors.first)
+    fun dpToPx(dp: Float): Float {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp,
+            context.resources.displayMetrics
+        )
     }
 
-    fun renderFull(side: Int, rounding: Float, dynamic: Boolean): Bitmap {
-        val colors = getQrColors(dynamic)
-        return renderFilled(side, rounding, colors.first, colors.second)
+    fun defaultBgRounding(): Float {
+        return dpToPx(16F)
     }
 
-    fun renderFilled(side: Int, rounding: Float, bgColor: Int, fillColor: Int): Bitmap {
-        val bitmap = createBitmap(side, side, Bitmap.Config.RGB_565)
-        val canvas = Canvas(bitmap)
-        canvas.drawColor(bgColor)
+    fun defaultSidePixels(): Int {
+        return 420
+    }
 
-        val paint = Paint().apply {
-            color = fillColor
-            isAntiAlias = true
-        }
-
-        val path = Path().apply {
-            addRoundRect(
-                RectF(0F, 0F, side.toFloat(), side.toFloat()),
-                rounding,
-                rounding,
-                Path.Direction.CW
-            )
-        }
-
-        canvas.drawPath(path, paint)
-
-        return bitmap
+    fun defaultRelativePadding(): Float {
+        return 0.05F
     }
 
     // [background, foreground]

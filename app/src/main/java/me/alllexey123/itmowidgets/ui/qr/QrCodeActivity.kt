@@ -8,10 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.ui.widgets.QrCodeWidget
-
-private const val PIXELS_PER_MODULE: Int =
-    (QrCodeWidget.Companion.PIXELS_PER_MODULE * 1.5).toInt()
 
 class QrCodeActivity : AppCompatActivity() {
 
@@ -62,17 +58,18 @@ class QrCodeActivity : AppCompatActivity() {
 
             val bitmap = when (state) {
                 is QrCodeUiState.Loading -> {
-                    renderer.renderFull(21 * PIXELS_PER_MODULE, PIXELS_PER_MODULE / 2F, dynamicColors)
+                    renderer.renderFull(dynamic = dynamicColors)
                 }
 
                 is QrCodeUiState.Success -> {
                     val qrCode = generator.generate(state.qrCodeHex)
-                    renderer.render(qrCode, PIXELS_PER_MODULE, dynamicColors)
+                    val qrCodeBooleans = generator.toBooleans(qrCode)
+                    renderer.render(qrCodeBooleans, dynamic = dynamicColors)
                 }
 
                 is QrCodeUiState.Error -> {
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
-                    renderer.renderEmpty(21 * PIXELS_PER_MODULE, PIXELS_PER_MODULE / 2F, dynamicColors)
+                    renderer.renderEmpty(dynamic = dynamicColors)
                 }
             }
 
