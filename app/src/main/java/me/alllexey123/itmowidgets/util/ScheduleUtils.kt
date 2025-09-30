@@ -99,6 +99,16 @@ object ScheduleUtils {
         }
     }
 
+    fun getRussianMonthInGenitiveCase(monthNumber: Int): String {
+        val months = arrayOf(
+            "января", "февраля", "марта", "апреля", "мая", "июня",
+            "июля", "августа", "сентября", "октября", "ноября", "декабря"
+        )
+
+        return months[monthNumber - 1]
+    }
+
+
     fun getWorkTypeColor(workTypeId: Int): Int {
         return when (workTypeId) {
             -1 -> R.color.free_color

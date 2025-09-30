@@ -11,6 +11,8 @@ import api.myitmo.model.Schedule
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.util.ScheduleUtils
 import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -27,9 +29,17 @@ class DayScheduleAdapter(private var schedules: List<Schedule>) :
 
     override fun onBindViewHolder(holder: DayViewHolder, position: Int) {
         val daySchedule = schedules[position]
-        holder.dayTitle.text = ScheduleUtils.getRuDayOfWeek(daySchedule.date.dayOfWeek)
-        val dtf = DateTimeFormatter.ofPattern("dd.MM")
-        holder.dayDate.text = dtf.format(daySchedule.date)
+        val date = daySchedule.date
+        val lessons = daySchedule.lessons
+
+        holder.dayTitle.text = ScheduleUtils.getRuDayOfWeek(date.dayOfWeek)
+        holder.dayDate.text = "${date.dayOfMonth} ${ScheduleUtils.getRussianMonthInGenitiveCase(date.monthValue)}"
+        val numberOfLessonsText = if (lessons.isEmpty()) {
+            "нет пар"
+        } else {
+            "${lessons.size} ${ScheduleUtils.lessonDeclension(lessons.size)}"
+        }
+        holder.numberOfLessons.text = numberOfLessonsText
 
         val layoutManager = LinearLayoutManager(
             holder.innerRecyclerView.context,
@@ -37,7 +47,7 @@ class DayScheduleAdapter(private var schedules: List<Schedule>) :
             false
         )
 
-        val processed = processLessonsWithBreaks(daySchedule.lessons)
+        val processed = processLessonsWithBreaks(lessons, date)
         layoutManager.initialPrefetchItemCount = processed.size
 
         val lessonAdapter = LessonAdapter(processed)
@@ -56,20 +66,36 @@ class DayScheduleAdapter(private var schedules: List<Schedule>) :
     override fun getItemCount(): Int = schedules.size
 
     inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val dayTitle: TextView = itemView.findViewById(R.id.dayTitleTextView)
+        val dayTitle: TextView = itemView.findViewById(R.id.day_title)
 
-        val dayDate: TextView = itemView.findViewById(R.id.dayDateTextView)
-        val innerRecyclerView: RecyclerView = itemView.findViewById(R.id.innerRecyclerView)
+        val numberOfLessons: TextView = itemView.findViewById(R.id.number_of_lessons)
+
+        val dayDate: TextView = itemView.findViewById(R.id.day_date)
+        val innerRecyclerView: RecyclerView = itemView.findViewById(R.id.inner_recycler_view)
     }
 
-    fun processLessonsWithBreaks(lessons: List<Lesson>): List<ScheduleItem> {
+    fun processLessonsWithBreaks(lessons: List<Lesson>, date: LocalDate): List<ScheduleItem> {
         val BIG_BREAK_THRESHOLD = Duration.ofMinutes(60)
+
+        val now = LocalDateTime.now()
 
         val processedList = mutableListOf<ScheduleItem>()
         val sortedLessons = lessons.sortedBy { it.timeStart }
 
         sortedLessons.forEachIndexed { index, currentLesson ->
-            processedList.add(ScheduleItem.LessonItem(currentLesson))
+            val lessonStartTime = ScheduleUtils.parseTime(date, currentLesson.timeStart)
+            val lessonEndTime = ScheduleUtils.parseTime(date, currentLesson.timeEnd)
+            val lessonState = if (lessonEndTime < now) {
+                ScheduleItem.LessonState.COMPLETED
+            } else {
+                if (lessonStartTime < now) {
+                    ScheduleItem.LessonState.CURRENT
+                } else {
+                    ScheduleItem.LessonState.UPCOMING
+                }
+            }
+
+            processedList.add(ScheduleItem.LessonItem(currentLesson, lessonState))
 
             if (index < sortedLessons.size - 1) {
                 val nextLesson = sortedLessons[index + 1]
@@ -88,6 +114,20 @@ class DayScheduleAdapter(private var schedules: List<Schedule>) :
                     e.printStackTrace()
                 }
             }
+        }
+
+        if (processedList.isEmpty()) {
+            val nowDate = now.toLocalDate()
+            val lessonState = if (date < nowDate) {
+                ScheduleItem.LessonState.COMPLETED
+            } else {
+                if (date > nowDate) {
+                    ScheduleItem.LessonState.UPCOMING
+                } else {
+                    ScheduleItem.LessonState.CURRENT
+                }
+            }
+            return listOf(ScheduleItem.NoLessonsItem(lessonState))
         }
 
         return processedList

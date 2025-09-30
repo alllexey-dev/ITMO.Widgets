@@ -34,6 +34,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         app:srcCompat="@drawable/ic_qr_code"
+        style="@style/Widget.Material3.FloatingActionButton.Secondary"
         app:layout_constraintBottom_toTopOf="@id/fab_settings"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -44,6 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         app:srcCompat="@drawable/ic_settings"
+        style="@style/Widget.Material3.FloatingActionButton.Primary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
