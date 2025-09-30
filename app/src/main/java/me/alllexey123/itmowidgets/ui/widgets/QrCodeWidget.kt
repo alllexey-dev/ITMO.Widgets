@@ -39,7 +39,7 @@ class QrCodeWidget : AppWidgetProvider() {
 
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
-            val bitmap = renderer.renderEmpty(21 * PIXELS_PER_MODULE, PIXELS_PER_MODULE / 2F, dynamicColors)
+            val bitmap = renderer.renderFull(21 * PIXELS_PER_MODULE, PIXELS_PER_MODULE / 2F, dynamicColors)
 
             views.setImageViewBitmap(R.id.qr_code_image, bitmap)
 

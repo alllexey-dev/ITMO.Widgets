@@ -130,12 +130,21 @@ class QrBitmapRenderer(
 
     fun renderEmpty(side: Int, rounding: Float, dynamic: Boolean): Bitmap {
         val colors = getQrColors(dynamic)
+        return renderFilled(side, rounding, colors.first, colors.first)
+    }
+
+    fun renderFull(side: Int, rounding: Float, dynamic: Boolean): Bitmap {
+        val colors = getQrColors(dynamic)
+        return renderFilled(side, rounding, colors.first, colors.second)
+    }
+
+    fun renderFilled(side: Int, rounding: Float, bgColor: Int, fillColor: Int): Bitmap {
         val bitmap = createBitmap(side, side, Bitmap.Config.RGB_565)
         val canvas = Canvas(bitmap)
-        canvas.drawColor(colors.first)
+        canvas.drawColor(bgColor)
 
         val paint = Paint().apply {
-            color = colors.second
+            color = fillColor
             isAntiAlias = true
         }
 
