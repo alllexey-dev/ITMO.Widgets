@@ -12,14 +12,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
+import me.alllexey123.itmowidgets.ui.settings.SettingsActivity
 import java.time.LocalDate
 
 class ScheduleActivity : AppCompatActivity() {
     private lateinit var outerRecyclerView: RecyclerView
     private lateinit var dayScheduleAdapter: DayScheduleAdapter
     private lateinit var progressBar: ProgressBar
+
+    private lateinit var fabSettings: FloatingActionButton
 
     private val snapHelper = PagerSnapHelper()
 
@@ -33,11 +37,19 @@ class ScheduleActivity : AppCompatActivity() {
         setContentView(R.layout.activity_schedule)
 
         setupRecyclerView()
+        setupButtons()
         progressBar = findViewById(R.id.loadingProgressBar)
-
         observeUiState()
 
         scheduleViewModel.fetchScheduleData()
+    }
+
+    private fun setupButtons() {
+        fabSettings = findViewById(R.id.fab_settings)
+        fabSettings.setOnClickListener { view ->
+            val intent = Intent(this, SettingsActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun setupRecyclerView() {
