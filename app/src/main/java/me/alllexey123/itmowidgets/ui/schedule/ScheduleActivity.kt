@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
+import me.alllexey123.itmowidgets.ui.qr.QrCodeActivity
 import me.alllexey123.itmowidgets.ui.settings.SettingsActivity
 import java.time.LocalDate
 
@@ -24,6 +25,8 @@ class ScheduleActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
 
     private lateinit var fabSettings: FloatingActionButton
+
+    private lateinit var fabQr: FloatingActionButton
 
     private val snapHelper = PagerSnapHelper()
 
@@ -48,6 +51,11 @@ class ScheduleActivity : AppCompatActivity() {
         fabSettings = findViewById(R.id.fab_settings)
         fabSettings.setOnClickListener { view ->
             val intent = Intent(this, SettingsActivity::class.java)
+            startActivity(intent)
+        }
+        fabQr = findViewById(R.id.fab_qr)
+        fabQr.setOnClickListener { view ->
+            val intent = Intent(this, QrCodeActivity::class.java)
             startActivity(intent)
         }
     }
