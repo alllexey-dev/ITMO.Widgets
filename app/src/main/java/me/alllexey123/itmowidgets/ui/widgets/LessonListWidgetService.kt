@@ -6,8 +6,10 @@ import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.ui.widgets.data.LessonListDataHolder
 import me.alllexey123.itmowidgets.ui.widgets.data.LessonListWidgetData
 import me.alllexey123.itmowidgets.ui.widgets.data.LessonListWidgetEntry
 import me.alllexey123.itmowidgets.util.ScheduleUtils
@@ -20,10 +22,12 @@ class LessonListWidgetService : RemoteViewsService() {
 
     class ViewsFactory(private val context: Context) : RemoteViewsFactory {
 
-        private var data: LessonListWidgetData = LessonListDataHolder.getData()
+        private val lessonListRepository =
+            (context.applicationContext as ItmoWidgetsApp).appContainer.lessonListRepository
+
+        private var data: LessonListWidgetData = LessonListWidgetData(listOf())
 
         override fun onCreate() {
-            loadData()
         }
 
         override fun onDataSetChanged() {
@@ -31,12 +35,18 @@ class LessonListWidgetService : RemoteViewsService() {
         }
 
         private fun loadData() {
-            data = LessonListDataHolder.getData()
+            runBlocking {
+                data = lessonListRepository.data.first()
+            }
         }
 
         override fun getCount(): Int = data.entries.size
 
         override fun getViewAt(position: Int): RemoteViews? {
+            if (position >= data.entries.size) {
+                return null
+            }
+
             val entry = data.entries[position]
 
             val rv = RemoteViews(context.packageName, entry.layoutId)
@@ -71,7 +81,7 @@ class LessonListWidgetService : RemoteViewsService() {
         }
 
         override fun getLoadingView(): RemoteViews? = null
-        override fun getViewTypeCount(): Int = 3
+        override fun getViewTypeCount(): Int = 9
         override fun hasStableIds(): Boolean = true
         override fun getItemId(position: Int): Long = position.toLong()
         override fun onDestroy() {}

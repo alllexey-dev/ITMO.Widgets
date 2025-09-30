@@ -2,12 +2,24 @@ package me.alllexey123.itmowidgets.ui.widgets.data
 
 import me.alllexey123.itmowidgets.R
 
-sealed class LessonListWidgetEntry(open val layoutId: Int) {
-    object Error : LessonListWidgetEntry(R.layout.item_lesson_list_error)
-    object FullDayEmpty : LessonListWidgetEntry(R.layout.item_lesson_list_empty)
-    object NoMoreLessons : LessonListWidgetEntry(R.layout.item_lesson_list_no_more)
-    object LessonListEnd : LessonListWidgetEntry(R.layout.item_lesson_list_end)
-    object Updating : LessonListWidgetEntry(R.layout.item_lesson_list_updating)
+sealed class LessonListWidgetEntry {
+    abstract val layoutId: Int
+
+    object Error : LessonListWidgetEntry() {
+        override val layoutId: Int = R.layout.item_lesson_list_error
+    }
+    object FullDayEmpty : LessonListWidgetEntry() {
+        override val layoutId: Int = R.layout.item_lesson_list_empty
+    }
+    object NoMoreLessons : LessonListWidgetEntry() {
+        override val layoutId: Int = R.layout.item_lesson_list_no_more
+    }
+    object LessonListEnd : LessonListWidgetEntry() {
+        override val layoutId: Int = R.layout.item_lesson_list_end
+    }
+    object Updating : LessonListWidgetEntry() {
+        override val layoutId: Int = R.layout.item_lesson_list_updating
+    }
 
     // null to hide
     data class LessonData(
@@ -18,5 +30,5 @@ sealed class LessonListWidgetEntry(open val layoutId: Int) {
         val room: String? = null,
         val building: String? = null,
         override val layoutId: Int,
-    ) : LessonListWidgetEntry(layoutId)
+    ) : LessonListWidgetEntry()
 }

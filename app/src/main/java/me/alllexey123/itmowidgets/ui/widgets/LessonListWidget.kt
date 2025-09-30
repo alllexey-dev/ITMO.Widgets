@@ -9,8 +9,6 @@ import androidx.core.net.toUri
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.ui.schedule.ScheduleActivity
-import me.alllexey123.itmowidgets.ui.widgets.data.LessonListDataHolder
-import me.alllexey123.itmowidgets.ui.widgets.data.LessonListWidgetData
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 
 
@@ -33,12 +31,9 @@ class LessonListWidget : AppWidgetProvider() {
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
-            widgetData: LessonListWidgetData,
             layoutId: Int,
             onlyDataChanged: Boolean
         ) {
-            LessonListDataHolder.setData(widgetData)
-
             if (!onlyDataChanged){
                 val intent = Intent(context, LessonListWidgetService::class.java).apply {
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -52,8 +47,9 @@ class LessonListWidget : AppWidgetProvider() {
                 views.setRemoteAdapter(R.id.lesson_list, intent)
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
+            } else {
+                appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.lesson_list)
             }
-            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.lesson_list)
         }
 
 

@@ -82,7 +82,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         listOf("single_lesson_widget_style", "list_lesson_widget_style")
             .map { s -> findPreference<ListPreference>(s) }.forEach { preference ->
                 preference?.setOnPreferenceChangeListener { pref, newValue ->
-                    storage.setLessonWidgetStyleChanged(true)
                     updateAllWidgets()
                     true
                 }

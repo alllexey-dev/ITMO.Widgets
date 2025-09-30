@@ -11,6 +11,7 @@ import me.alllexey123.itmowidgets.data.remote.ScheduleRemoteDataSourceImpl
 import me.alllexey123.itmowidgets.data.repository.QrCodeRepository
 import me.alllexey123.itmowidgets.data.repository.ScheduleRepository
 import me.alllexey123.itmowidgets.data.PreferencesStorage
+import me.alllexey123.itmowidgets.ui.widgets.data.LessonListRepository
 import me.alllexey123.itmowidgets.util.QrBitmapRenderer
 import me.alllexey123.itmowidgets.util.QrCodeGenerator
 import java.io.File
@@ -30,6 +31,8 @@ class AppContainer(context: Context) {
             this.storage = this@AppContainer.storage
         }
     }
+
+    val lessonListRepository by lazy { LessonListRepository(context) }
 
     val scheduleRepository: ScheduleRepository by lazy {
         ScheduleRepository(

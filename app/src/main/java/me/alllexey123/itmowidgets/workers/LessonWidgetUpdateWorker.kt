@@ -12,6 +12,7 @@ import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.ui.widgets.LessonListWidget
 import me.alllexey123.itmowidgets.ui.widgets.SingleLessonWidget
 import me.alllexey123.itmowidgets.ui.widgets.data.LessonListWidgetData
+import me.alllexey123.itmowidgets.ui.widgets.data.LessonListWidgetEntry
 import me.alllexey123.itmowidgets.ui.widgets.data.LessonWidgetDataManager
 import me.alllexey123.itmowidgets.ui.widgets.data.SingleLessonWidgetData
 import java.time.Duration
@@ -29,6 +30,7 @@ class LessonWidgetUpdateWorker(
         val appContainer = (appContext as ItmoWidgetsApp).appContainer
         val storage = appContainer.storage
         val repository = appContainer.scheduleRepository
+        val lessonListRepository = appContainer.lessonListRepository
         storage.setLastUpdateTimestamp(System.currentTimeMillis())
 
         val appWidgetManager = AppWidgetManager.getInstance(appContext)
@@ -49,7 +51,7 @@ class LessonWidgetUpdateWorker(
 
             val dataManager = LessonWidgetDataManager(repository, storage)
             val widgetsState = dataManager.getLessonWidgetsState()
-
+            lessonListRepository.setData(widgetsState.lessonListWidgetData)
             updateSingleLessonWidgets(
                 appWidgetManager,
                 singleWidgetIds,
@@ -59,7 +61,6 @@ class LessonWidgetUpdateWorker(
             updateLessonListWidgets(
                 appWidgetManager,
                 listWidgetIds,
-                widgetsState.lessonListWidgetData,
                 onlyDataChanged
             )
 
@@ -67,8 +68,9 @@ class LessonWidgetUpdateWorker(
 
             scheduleNextUpdate(appContext, widgetsState.nextUpdateAt.plusSeconds(3))
         } catch (e: Exception) {
+            e.printStackTrace()
             storage.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
-
+            lessonListRepository.setData(LessonListWidgetData(listOf(LessonListWidgetEntry.Error)))
             scheduleNextUpdate(appContext, null)
         }
 
@@ -88,13 +90,12 @@ class LessonWidgetUpdateWorker(
     private fun updateLessonListWidgets(
         appWidgetManager: AppWidgetManager,
         widgetIds: IntArray,
-        data: LessonListWidgetData,
         onlyDataChanged: Boolean
     ) {
         widgetIds.forEach { appWidgetId ->
             val providerInfo = appWidgetManager.getAppWidgetInfo(appWidgetId)
             val outerLayoutId = providerInfo.initialLayout
-            LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, data, outerLayoutId, onlyDataChanged)
+            LessonListWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, outerLayoutId, onlyDataChanged)
         }
     }
 
