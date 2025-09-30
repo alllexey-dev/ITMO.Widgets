@@ -3,7 +3,7 @@ package me.alllexey123.itmowidgets.ui.widgets.data
 object LessonListDataHolder {
     @Volatile
     private var data: LessonListWidgetData = LessonListWidgetData(
-        listOf(LessonListWidgetEntry.LessonListEnd)
+        listOf(LessonListWidgetEntry.Updating)
     )
 
     fun setData(newData: LessonListWidgetData) {

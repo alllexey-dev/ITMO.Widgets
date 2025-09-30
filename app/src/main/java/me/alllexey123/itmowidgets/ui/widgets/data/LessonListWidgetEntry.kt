@@ -7,6 +7,7 @@ sealed class LessonListWidgetEntry(open val layoutId: Int) {
     object FullDayEmpty : LessonListWidgetEntry(R.layout.item_lesson_list_empty)
     object NoMoreLessons : LessonListWidgetEntry(R.layout.item_lesson_list_no_more)
     object LessonListEnd : LessonListWidgetEntry(R.layout.item_lesson_list_end)
+    object Updating : LessonListWidgetEntry(R.layout.item_lesson_list_updating)
 
     // null to hide
     data class LessonData(
