@@ -46,11 +46,12 @@ class ScheduleActivity : AppCompatActivity() {
 
         observeUiState()
 
-        scheduleViewModel.fetchScheduleData(forceRefresh = false)
 
         swipeRefreshLayout.setOnRefreshListener {
             scheduleViewModel.fetchScheduleData(forceRefresh = true)
         }
+
+        scheduleViewModel.fetchScheduleData(forceRefresh = false)
     }
 
     private fun setupButtons() {
@@ -75,6 +76,25 @@ class ScheduleActivity : AppCompatActivity() {
         outerRecyclerView.adapter = dayScheduleAdapter
 
         snapHelper.attachToRecyclerView(outerRecyclerView)
+
+        outerRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+                val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
+                val totalItemCount = dayScheduleAdapter.itemCount
+
+                if (totalItemCount > 0) {
+                    if (firstVisibleItemPosition < 2) {
+                        scheduleViewModel.fetchPreviousDays()
+                    }
+                    if (lastVisibleItemPosition > totalItemCount - 3) {
+                        scheduleViewModel.fetchNextDays()
+                    }
+                }
+            }
+        })
     }
 
     private var isInitialLoad = true
