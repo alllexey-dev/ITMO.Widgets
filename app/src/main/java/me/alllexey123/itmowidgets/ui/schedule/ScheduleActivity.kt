@@ -5,13 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
@@ -20,9 +20,10 @@ import me.alllexey123.itmowidgets.ui.settings.SettingsActivity
 import java.time.LocalDate
 
 class ScheduleActivity : AppCompatActivity() {
+
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var outerRecyclerView: RecyclerView
     private lateinit var dayScheduleAdapter: DayScheduleAdapter
-    private lateinit var progressBar: ProgressBar
 
     private lateinit var fabSettings: FloatingActionButton
 
@@ -41,10 +42,15 @@ class ScheduleActivity : AppCompatActivity() {
 
         setupRecyclerView()
         setupButtons()
-        progressBar = findViewById(R.id.loadingProgressBar)
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout)
+
         observeUiState()
 
-        scheduleViewModel.fetchScheduleData()
+        scheduleViewModel.fetchScheduleData(forceRefresh = false)
+
+        swipeRefreshLayout.setOnRefreshListener {
+            scheduleViewModel.fetchScheduleData(forceRefresh = true)
+        }
     }
 
     private fun setupButtons() {
@@ -77,8 +83,8 @@ class ScheduleActivity : AppCompatActivity() {
         scheduleViewModel.uiState.observe(this) { state ->
             when (state) {
                 is ScheduleUiState.Loading -> {
-                    progressBar.visibility = View.VISIBLE
-                    outerRecyclerView.visibility = View.GONE
+                    swipeRefreshLayout.isRefreshing = true
+                    outerRecyclerView.visibility = View.VISIBLE
                 }
 
                 is ScheduleUiState.Success -> {
@@ -118,12 +124,12 @@ class ScheduleActivity : AppCompatActivity() {
                         isInitialLoad = false
                     }
 
-                    progressBar.visibility = if (state.isCached) View.VISIBLE else View.GONE
+                    swipeRefreshLayout.isRefreshing = state.isStillUpdating
                     outerRecyclerView.visibility = View.VISIBLE
                 }
 
                 is ScheduleUiState.Error -> {
-                    progressBar.visibility = View.GONE
+                    swipeRefreshLayout.isRefreshing = false
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
                 }
             }

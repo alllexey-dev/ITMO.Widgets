@@ -7,11 +7,12 @@ import androidx.lifecycle.viewModelScope
 import api.myitmo.model.Schedule
 import kotlinx.coroutines.launch
 import me.alllexey123.itmowidgets.data.repository.ScheduleRepository
+import java.time.Duration
 import java.time.LocalDate
 
 sealed class ScheduleUiState {
     object Loading : ScheduleUiState()
-    data class Success(val schedule: List<Schedule>, val isCached: Boolean) : ScheduleUiState()
+    data class Success(val schedule: List<Schedule>, val isStillUpdating: Boolean) : ScheduleUiState()
     data class Error(val message: String) : ScheduleUiState()
 }
 
@@ -22,9 +23,7 @@ class ScheduleViewModel(
     private val _uiState = MutableLiveData<ScheduleUiState>()
     val uiState: LiveData<ScheduleUiState> = _uiState
 
-    fun fetchScheduleData() {
-        _uiState.value = ScheduleUiState.Loading
-
+    fun fetchScheduleData(forceRefresh: Boolean) {
         viewModelScope.launch {
             try {
                 val startDate = LocalDate.now().minusDays(7)
@@ -32,14 +31,23 @@ class ScheduleViewModel(
 
                 val cachedSchedule =
                     scheduleRepository.getCachedScheduleForRange(startDate, endDate)
-                if (cachedSchedule.isNotEmpty()) {
-                    _uiState.postValue(ScheduleUiState.Success(cachedSchedule, true))
+
+                if (cachedSchedule.isNotEmpty() && !forceRefresh) {
+
+                    val totalDays = Duration.between(startDate.atStartOfDay(), endDate.atStartOfDay()).toDays() + 1
+
+                    if (cachedSchedule.size < totalDays) {
+                        _uiState.postValue(ScheduleUiState.Success(cachedSchedule, true))
+                        val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
+                        _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
+                    } else {
+                        _uiState.postValue(ScheduleUiState.Success(cachedSchedule, false))
+                    }
                 } else {
                     _uiState.value = ScheduleUiState.Loading
+                    val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
+                    _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
                 }
-
-                val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
-                _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
             } catch (e: Exception) {
                 val errorMessage = "Failed to update schedule: ${e.message}"
                 _uiState.postValue(ScheduleUiState.Error(errorMessage))
