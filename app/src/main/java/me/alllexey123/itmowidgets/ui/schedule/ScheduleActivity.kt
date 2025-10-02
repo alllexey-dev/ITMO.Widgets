@@ -4,6 +4,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -17,6 +19,7 @@ import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.ui.qr.QrCodeActivity
 import me.alllexey123.itmowidgets.ui.settings.SettingsActivity
+import java.time.Duration
 import java.time.LocalDate
 
 class ScheduleActivity : AppCompatActivity() {
@@ -30,6 +33,9 @@ class ScheduleActivity : AppCompatActivity() {
     private lateinit var fabQr: FloatingActionButton
 
     private val snapHelper = PagerSnapHelper()
+
+    private val handler = Handler(Looper.getMainLooper())
+    private lateinit var updateTimeRunnable: Runnable
 
     private val scheduleViewModel: ScheduleViewModel by viewModels {
         val appContainer = (application as ItmoWidgetsApp).appContainer
@@ -52,6 +58,16 @@ class ScheduleActivity : AppCompatActivity() {
         }
 
         scheduleViewModel.fetchScheduleData(forceRefresh = false)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        startLessonStateUpdater()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopLessonStateUpdater()
     }
 
     private fun setupButtons() {
@@ -166,6 +182,20 @@ class ScheduleActivity : AppCompatActivity() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         }
+    }
+
+    private fun startLessonStateUpdater() {
+        updateTimeRunnable = object : Runnable {
+            override fun run() {
+                dayScheduleAdapter.updateLessonStates()
+                handler.postDelayed(this, Duration.ofMinutes(1).toMillis())
+            }
+        }
+        handler.post(updateTimeRunnable)
+    }
+
+    private fun stopLessonStateUpdater() {
+        handler.removeCallbacks(updateTimeRunnable)
     }
 
 }

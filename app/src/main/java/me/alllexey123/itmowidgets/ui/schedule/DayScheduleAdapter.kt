@@ -63,6 +63,10 @@ class DayScheduleAdapter(private var schedules: List<Schedule>) :
         if (oldDaySchedules != newDaySchedules) notifyDataSetChanged()
     }
 
+    fun updateLessonStates() {
+        notifyDataSetChanged()
+    }
+
     override fun getItemCount(): Int = schedules.size
 
     inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
