@@ -96,7 +96,7 @@
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="32dp"
         android:gravity="center"
-        android:text="Убедитесь, что используете официальную версию приложения с GitHub. Логин и пароль не сохраняются и используются только для получения токена авторизации.\nТакже вы можете напрямую сообщить токен в настройках, без авторизации."
+        android:text="Убедитесь, что используете официальную версию приложения с GitHub. Логин и пароль не сохраняются, не передаются никуда кроме серверов ИТМО и используются единоразово для получения токена авторизации.\nТакже вы можете напрямую вставить токен в настройках, без ввода логина и пароля."
         android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
