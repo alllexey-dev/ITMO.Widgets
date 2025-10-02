@@ -197,7 +197,7 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
                     typeIndicator.setImageResource(R.drawable.indicator_circle_hollow)
                 }
                 isHollow = !isHollow
-                handler.postDelayed(this, 1000)
+                handler.postDelayed(this, 700)
             }
         }
 
