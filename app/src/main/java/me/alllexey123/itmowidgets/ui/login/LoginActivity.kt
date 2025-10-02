@@ -1,12 +1,16 @@
 package me.alllexey123.itmowidgets.ui.login
 
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
+import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.databinding.ActivityLoginBinding
 import me.alllexey123.itmowidgets.ui.widgets.WidgetUtils
 
@@ -16,10 +20,14 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         binding = ActivityLoginBinding.inflate(layoutInflater)
-
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
 
         binding.buttonLogin.setOnClickListener {
             performLogin()
