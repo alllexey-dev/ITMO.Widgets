@@ -3,6 +3,10 @@
 
     <PreferenceCategory app:title="Аккаунт" app:icon="@drawable/ic_account_circle">
 
+        <Preference
+            app:key="login_itmoid"
+            app:title="Войти через ITMO.ID" />
+
         <EditTextPreference
             app:key="refresh_token"
             app:title="Ключ доступа"

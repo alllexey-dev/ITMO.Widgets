@@ -25,6 +25,7 @@ import me.alllexey123.itmowidgets.data.LESSON_WIDGET_STYLE_CHANGED_KEY
 import me.alllexey123.itmowidgets.data.REFRESH_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.data.REFRESH_TOKEN_KEY
 import me.alllexey123.itmowidgets.data.SMART_SCHEDULING_KEY
+import me.alllexey123.itmowidgets.ui.login.LoginActivity
 import me.alllexey123.itmowidgets.ui.widgets.WidgetUtils
 import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
@@ -102,6 +103,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val dynamicQrColors = findPreference<SwitchPreference>(DYNAMIC_QR_COLORS_KEY)
         dynamicQrColors?.setOnPreferenceChangeListener { preference, newValue ->
             updateAllWidgets()
+            true
+        }
+
+        val loginItmoId = findPreference<Preference>("login_itmoid")
+        loginItmoId?.setOnPreferenceClickListener { preference ->
+            val intent = Intent(context, LoginActivity::class.java)
+            startActivity(intent)
             true
         }
     }
