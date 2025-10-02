@@ -52,7 +52,6 @@ class ScheduleActivity : AppCompatActivity() {
 
         observeUiState()
 
-
         swipeRefreshLayout.setOnRefreshListener {
             scheduleViewModel.fetchScheduleData(forceRefresh = true)
         }
@@ -88,7 +87,7 @@ class ScheduleActivity : AppCompatActivity() {
         outerRecyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
-        dayScheduleAdapter = DayScheduleAdapter(listOf())
+        dayScheduleAdapter = DayScheduleAdapter()
         outerRecyclerView.adapter = dayScheduleAdapter
 
         snapHelper.attachToRecyclerView(outerRecyclerView)
@@ -127,37 +126,17 @@ class ScheduleActivity : AppCompatActivity() {
                     val scheduleList = state.schedule
                     val layoutManager = outerRecyclerView.layoutManager as LinearLayoutManager
 
-                    var dateToRestore: LocalDate? = null
-                    var offsetToRestore = 0
-
-                    if (!isInitialLoad) {
-                        val snapView = snapHelper.findSnapView(layoutManager)
-                        val snapPosition = snapView?.let { layoutManager.getPosition(it) }
-
-                        if (snapPosition != null && snapPosition != RecyclerView.NO_POSITION) {
-                            dateToRestore = dayScheduleAdapter.getItemAt(snapPosition)?.date
-                            offsetToRestore =
-                                layoutManager.getDecoratedLeft(snapView) - outerRecyclerView.paddingLeft * 2
+                    if (isInitialLoad && scheduleList.isNotEmpty()) {
+                        dayScheduleAdapter.submitList(scheduleList) {
+                            val todayIndex = scheduleList.indexOfFirst { it.date == LocalDate.now() }
+                            if (todayIndex != -1) {
+                                layoutManager.scrollToPosition(todayIndex)
+                            }
                         }
-                    }
-
-                    dayScheduleAdapter.updateData(scheduleList)
-
-                    if (dateToRestore != null) {
-                        val newIndex = scheduleList.indexOfFirst { it.date == dateToRestore }
-                        if (newIndex != -1) {
-                            layoutManager.scrollToPositionWithOffset(newIndex, offsetToRestore)
-                        }
-                    } else {
-                        val today = LocalDate.now()
-                        val todayIndex = scheduleList.indexOfFirst { it.date == today }
-                        if (todayIndex != -1) {
-                            layoutManager.scrollToPosition(todayIndex)
-                        }
-                    }
-
-                    if (scheduleList.isNotEmpty()) {
                         isInitialLoad = false
+                    } else {
+
+                        dayScheduleAdapter.submitList(scheduleList)
                     }
 
                     swipeRefreshLayout.isRefreshing = state.isStillUpdating
@@ -169,18 +148,6 @@ class ScheduleActivity : AppCompatActivity() {
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
                 }
             }
-        }
-    }
-
-    companion object {
-        fun getOnClickPendingIntent(context: Context): PendingIntent? {
-            val clickIntent = Intent(context, ScheduleActivity::class.java)
-            return PendingIntent.getActivity(
-                context,
-                0,
-                clickIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
         }
     }
 
@@ -196,6 +163,18 @@ class ScheduleActivity : AppCompatActivity() {
 
     private fun stopLessonStateUpdater() {
         handler.removeCallbacks(updateTimeRunnable)
+    }
+
+    companion object {
+        fun getOnClickPendingIntent(context: Context): PendingIntent? {
+            val clickIntent = Intent(context, ScheduleActivity::class.java)
+            return PendingIntent.getActivity(
+                context,
+                0,
+                clickIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
     }
 
 }
