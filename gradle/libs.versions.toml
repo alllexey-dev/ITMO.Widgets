@@ -1,20 +1,24 @@
 [versions]
-agp = "8.12.2"
-kotlin = "2.0.21"
+agp = "8.12.3"
+datastorePreferences = "1.1.7"
+kotlin = "2.2.20"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 appcompat = "1.7.1"
-material = "1.12.0"
-workRuntimeKtx = "2.10.3"
+material = "1.13.0"
+myItmoApi = "1.2.4"
+qrcodegen = "1.8.0"
+workRuntimeKtx = "2.10.5"
 preferenceKtx = "1.2.1"
-activity = "1.8.0"
-constraintlayout = "2.1.4"
+activity = "1.11.0"
+constraintlayout = "2.2.1"
 swiperefreshlayout = "1.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -25,6 +29,8 @@ androidx-preference-ktx = { group = "androidx.preference", name = "preference-kt
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
+qrcodegen = { module = "io.nayuki:qrcodegen", version.ref = "qrcodegen" }
+my-itmo-api = { module = "io.github.alllexey123:my-itmo-api", version.ref = "myItmoApi" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
