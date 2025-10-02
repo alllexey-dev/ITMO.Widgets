@@ -9,7 +9,7 @@ import java.time.LocalDate
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
-private const val CACHE_EXPIRATION_MS = 3 * 60 * 60 * 1000L // 3 hours
+private const val CACHE_EXPIRATION_MS = 3 * 24 * 60 * 60 * 1000L // 3 days
 
 class ScheduleLocalDataSourceImpl(
     private val gson: Gson,
