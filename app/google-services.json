@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "753324533973",
+    "project_id": "itmo-widgets",
+    "storage_bucket": "itmo-widgets.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:753324533973:android:3bcd293bcb5d8172a29a5c",
+        "android_client_info": {
+          "package_name": "me.alllexey123.itmowidgets"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3uwJBdHEWVtsawBoVoUF7SXgCqdFzG9o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

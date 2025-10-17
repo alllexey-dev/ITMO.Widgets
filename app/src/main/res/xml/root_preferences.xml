@@ -22,6 +22,12 @@
             app:title="Откуда взять ключ доступа?"
             app:icon="@drawable/ic_outline_help" />
 
+        <SwitchPreference
+            app:key="backend_allow"
+            app:title="Неофициальные сервисы"
+            app:summary="indev"
+            app:defaultValue="false"/>
+
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Стили" app:icon="@drawable/ic_format_paint">

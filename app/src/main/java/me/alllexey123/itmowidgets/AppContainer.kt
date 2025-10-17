@@ -4,18 +4,18 @@ import android.content.Context
 import androidx.preference.PreferenceManager
 import api.myitmo.MyItmo
 import com.google.gson.Gson
+import me.alllexey123.itmowidgets.api.ItmoWidgetsBackend
+import me.alllexey123.itmowidgets.data.PreferencesStorage
 import me.alllexey123.itmowidgets.data.local.QrCodeLocalDataSourceImpl
 import me.alllexey123.itmowidgets.data.local.ScheduleLocalDataSourceImpl
 import me.alllexey123.itmowidgets.data.remote.QrCodeRemoteDataSourceImpl
 import me.alllexey123.itmowidgets.data.remote.ScheduleRemoteDataSourceImpl
 import me.alllexey123.itmowidgets.data.repository.QrCodeRepository
 import me.alllexey123.itmowidgets.data.repository.ScheduleRepository
-import me.alllexey123.itmowidgets.data.PreferencesStorage
 import me.alllexey123.itmowidgets.ui.widgets.data.LessonListRepository
 import me.alllexey123.itmowidgets.util.QrBitmapRenderer
 import me.alllexey123.itmowidgets.util.QrCodeGenerator
 import java.io.File
-import kotlin.getValue
 
 class AppContainer(context: Context) {
 
@@ -30,6 +30,10 @@ class AppContainer(context: Context) {
         MyItmo().apply {
             this.storage = this@AppContainer.storage
         }
+    }
+
+    val backend: ItmoWidgetsBackend by lazy {
+        ItmoWidgetsBackend(this)
     }
 
     val lessonListRepository by lazy { LessonListRepository(context) }

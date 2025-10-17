@@ -15,6 +15,7 @@ import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
 import me.alllexey123.itmowidgets.data.ACCESS_TOKEN_EXPIRES_KEY
 import me.alllexey123.itmowidgets.data.ACCESS_TOKEN_KEY
+import me.alllexey123.itmowidgets.data.BACKEND_ALLOW_KEY
 import me.alllexey123.itmowidgets.data.BEFOREHAND_SCHEDULING_KEY
 import me.alllexey123.itmowidgets.data.DYNAMIC_QR_COLORS_KEY
 import me.alllexey123.itmowidgets.data.HIDE_PREVIOUS_LESSONS_KEY
@@ -110,6 +111,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
         loginItmoId?.setOnPreferenceClickListener { preference ->
             val intent = Intent(context, LoginActivity::class.java)
             startActivity(intent)
+            true
+        }
+
+        val allowBackend = findPreference<SwitchPreference>(BACKEND_ALLOW_KEY)
+        allowBackend?.setOnPreferenceChangeListener { preference, newValue ->
+            val firebaseToken = appContainer.storage.getFirebaseToken()
+            if (firebaseToken != null && newValue as Boolean) {
+                appContainer.backend.sendFirebaseToken(firebaseToken)
+            }
             true
         }
     }
