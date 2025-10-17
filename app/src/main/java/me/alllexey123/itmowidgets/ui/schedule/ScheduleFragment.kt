@@ -1,64 +1,43 @@
 package me.alllexey123.itmowidgets.ui.schedule
 
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.ui.qr.QrCodeActivity
-import me.alllexey123.itmowidgets.ui.settings.SettingsActivity
 import java.time.Duration
 import java.time.LocalDate
 
-class ScheduleActivity : AppCompatActivity() {
+class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
 
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var outerRecyclerView: RecyclerView
     private lateinit var dayScheduleAdapter: DayScheduleAdapter
 
-    private lateinit var fabSettings: FloatingActionButton
-
-    private lateinit var fabQr: FloatingActionButton
-
     private val snapHelper = PagerSnapHelper()
-
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var updateTimeRunnable: Runnable
 
     private val scheduleViewModel: ScheduleViewModel by viewModels {
-        val appContainer = (application as ItmoWidgetsApp).appContainer
+        val appContainer = (requireActivity().application as ItmoWidgetsApp).appContainer
         ScheduleViewModelFactory(appContainer.scheduleRepository)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_schedule)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout)
+        outerRecyclerView = view.findViewById(R.id.outerRecyclerView)
 
         setupRecyclerView()
-        setupButtons()
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout)
-
         observeUiState()
 
         swipeRefreshLayout.setOnRefreshListener {
@@ -78,23 +57,9 @@ class ScheduleActivity : AppCompatActivity() {
         stopLessonStateUpdater()
     }
 
-    private fun setupButtons() {
-        fabSettings = findViewById(R.id.fab_settings)
-        fabSettings.setOnClickListener { view ->
-            val intent = Intent(this, SettingsActivity::class.java)
-            startActivity(intent)
-        }
-        fabQr = findViewById(R.id.fab_qr)
-        fabQr.setOnClickListener { view ->
-            val intent = Intent(this, QrCodeActivity::class.java)
-            startActivity(intent)
-        }
-    }
-
     private fun setupRecyclerView() {
-        outerRecyclerView = findViewById(R.id.outerRecyclerView)
         outerRecyclerView.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
         dayScheduleAdapter = DayScheduleAdapter()
         outerRecyclerView.adapter = dayScheduleAdapter
@@ -124,7 +89,7 @@ class ScheduleActivity : AppCompatActivity() {
     private var isInitialLoad = true
 
     private fun observeUiState() {
-        scheduleViewModel.uiState.observe(this) { state ->
+        scheduleViewModel.uiState.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is ScheduleUiState.Loading -> {
                     swipeRefreshLayout.isRefreshing = true
@@ -154,7 +119,7 @@ class ScheduleActivity : AppCompatActivity() {
 
                 is ScheduleUiState.Error -> {
                     swipeRefreshLayout.isRefreshing = false
-                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -173,17 +138,4 @@ class ScheduleActivity : AppCompatActivity() {
     private fun stopLessonStateUpdater() {
         handler.removeCallbacks(updateTimeRunnable)
     }
-
-    companion object {
-        fun getOnClickPendingIntent(context: Context): PendingIntent? {
-            val clickIntent = Intent(context, ScheduleActivity::class.java)
-            return PendingIntent.getActivity(
-                context,
-                0,
-                clickIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-        }
-    }
-
 }

@@ -5,7 +5,7 @@
         android:icon="@drawable/ic_globe"
         android:title="@string/title_web" />
     <item
-        android:id="@+id/navigation_qr"
+        android:id="@+id/navigation_qr_code"
         android:icon="@drawable/ic_qr_code"
         android:title="@string/title_qr" />
     <item

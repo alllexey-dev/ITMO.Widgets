@@ -7,7 +7,7 @@ import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.ui.schedule.ScheduleActivity
+import me.alllexey123.itmowidgets.ui.schedule.ScheduleFragment
 import me.alllexey123.itmowidgets.ui.widgets.data.SingleLessonWidgetData
 import me.alllexey123.itmowidgets.util.ScheduleUtils
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
@@ -49,8 +49,8 @@ open class SingleLessonWidget : AppWidgetProvider() {
                 ContextCompat.getColor(context, colorId)
             )
 
-            val pendingIntent = ScheduleActivity.getOnClickPendingIntent(context)
-            views.setOnClickPendingIntent(R.id.lesson_widget_root, pendingIntent)
+//            val pendingIntent = ScheduleFragment.getOnClickPendingIntent(context)
+//            views.setOnClickPendingIntent(R.id.lesson_widget_root, pendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
