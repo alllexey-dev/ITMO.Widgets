@@ -24,9 +24,9 @@ interface BackendStorage {
     fun updateBackendTokens(response: BackendTokenResponse) {
         val currentMillis = System.currentTimeMillis()
         setBackendAccessToken(response.accessToken)
-        setBackendAccessExpiresAt(currentMillis + response.accessTokenExpiresIn * 1000)
+        setBackendAccessExpiresAt(currentMillis + response.accessTokenExpiresIn)
         setBackendRefreshToken(response.refreshToken)
-        setBackendRefreshExpiresAt(currentMillis + response.refreshTokenExpiresIn * 1000)
+        setBackendRefreshExpiresAt(currentMillis + response.refreshTokenExpiresIn)
     }
 
     fun clearBackendTokens() {
