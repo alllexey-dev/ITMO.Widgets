@@ -8,4 +8,8 @@
     <string name="qr_widget_description">QR-пропуск в корпус</string>
     <string name="refresh_token_help_url">https://github.com/alllexey123/ITMO.Widgets?tab=readme-ov-file#использование</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
+    <string name="title_schedule">Расписание</string>
+    <string name="title_qr">Пропуск</string>
+    <string name="title_settings">Настройки</string>
+    <string name="title_web">Сайт MyItmo</string>
 </resources>
