@@ -1,13 +1,17 @@
 package me.alllexey123.itmowidgets.ui.widgets
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.content.Intent
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
+import me.alllexey123.itmowidgets.AppIntents
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.ui.schedule.ScheduleActivity
+import me.alllexey123.itmowidgets.ui.main.MainActivity
+import me.alllexey123.itmowidgets.ui.schedule.ScheduleFragment
 import me.alllexey123.itmowidgets.ui.widgets.data.SingleLessonWidgetData
 import me.alllexey123.itmowidgets.util.ScheduleUtils
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
@@ -49,7 +53,18 @@ open class SingleLessonWidget : AppWidgetProvider() {
                 ContextCompat.getColor(context, colorId)
             )
 
-            val pendingIntent = ScheduleActivity.getOnClickPendingIntent(context)
+            val launchIntent = Intent(context, MainActivity::class.java).apply {
+                putExtra(AppIntents.EXTRA_TARGET_FRAGMENT, AppIntents.TARGET_SCHEDULE_FRAGMENT)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                appWidgetId,
+                launchIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
             views.setOnClickPendingIntent(R.id.lesson_widget_root, pendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)

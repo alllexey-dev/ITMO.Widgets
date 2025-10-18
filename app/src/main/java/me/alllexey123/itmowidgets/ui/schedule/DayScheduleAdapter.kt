@@ -1,5 +1,6 @@
 package me.alllexey123.itmowidgets.ui.schedule
 
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +24,8 @@ class DayScheduleAdapter :
 
     private val viewPool = RecyclerView.RecycledViewPool()
 
+    private var firstUpdate = true
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_day_schedule, parent, false)
@@ -33,6 +36,7 @@ class DayScheduleAdapter :
         val daySchedule = getItem(position)
         val date = daySchedule.date
         val lessons = daySchedule.lessons
+        val context = holder.itemView.context
 
         holder.dayTitle.text = ScheduleUtils.getRuDayOfWeek(date.dayOfWeek)
         holder.dayDate.text = "${date.dayOfMonth} ${ScheduleUtils.getRussianMonthInGenitiveCase(date.monthValue)}"
@@ -42,6 +46,23 @@ class DayScheduleAdapter :
             "${lessons.size} ${ScheduleUtils.lessonDeclension(lessons.size)}"
         }
         holder.numberOfLessons.text = numberOfLessonsText
+
+        val today = LocalDate.now()
+        if (date.isBefore(today) || lessons.isEmpty()) {
+            val typedValue = TypedValue()
+            context.theme.resolveAttribute(com.google.android.material.R.attr.colorSecondary, typedValue, true)
+            holder.dayTitle.setTextColor(typedValue.data)
+            holder.itemView.alpha = 0.6f
+        } else {
+            val typedValue = TypedValue()
+            if (date.equals(today)) {
+                context.theme.resolveAttribute(com.google.android.material.R.attr.colorTertiary, typedValue, true)
+            } else {
+                context.theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
+            }
+            holder.dayTitle.setTextColor(typedValue.data)
+            holder.itemView.alpha = 1.0f
+        }
 
         val layoutManager = LinearLayoutManager(
             holder.innerRecyclerView.context,
@@ -60,7 +81,12 @@ class DayScheduleAdapter :
     }
 
     fun updateLessonStates() {
-        submitList(currentList.toList())
+        if (firstUpdate) {
+            notifyDataSetChanged()
+            firstUpdate = false
+        } else {
+            submitList(currentList.toList())
+        }
     }
 
     inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

@@ -20,7 +20,7 @@
             android:layout_height="14dp"
             android:layout_marginLeft="3dp"
             android:layout_marginRight="6dp"
-            android:layout_marginTop="3.5dp"
+            android:layout_marginTop="4.5dp"
             android:src="@drawable/indicator_circle_hollow_dot" />
 
         <LinearLayout
@@ -37,7 +37,7 @@
                 android:hyphenationFrequency="full"
                 android:text="Обновление информации..."
                 android:textColor="?attr/colorOnSurface"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 android:textStyle="normal"
                 android:maxLines="3"
                 android:ellipsize="end" />
@@ -64,7 +64,7 @@
                     android:fontFamily="sans-serif"
                     android:text="..."
                     android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="12sp" />
+                    android:textSize="13sp" />
 
             </LinearLayout>
 
@@ -95,7 +95,7 @@
                         android:fontFamily="sans-serif"
                         android:text="..."
                         android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="12sp" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/location_building"
@@ -104,7 +104,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:text=""
                         android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="12sp" />
+                        android:textSize="13sp" />
 
                 </LinearLayout>
 
@@ -129,8 +129,9 @@
                         android:layout_height="wrap_content"
                         android:paddingRight="4dp"
                         android:text="..."
+                        android:fontFamily="sans-serif"
                         android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="12sp" />
+                        android:textSize="13sp" />
                 </LinearLayout>
             </RelativeLayout>
         </LinearLayout>

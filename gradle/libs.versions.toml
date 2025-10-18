@@ -17,10 +17,12 @@ constraintlayout = "2.2.1"
 swiperefreshlayout = "1.1.0"
 googleGmsGoogleServices = "4.4.4"
 firebaseMessaging = "25.0.1"
+navigationFragmentKtx = "2.9.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
+androidx-navigation-ui = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigationFragmentKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -34,6 +36,7 @@ androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "s
 qrcodegen = { module = "io.nayuki:qrcodegen", version.ref = "qrcodegen" }
 my-itmo-api = { module = "io.github.alllexey123:my-itmo-api", version.ref = "myItmoApi" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
+androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

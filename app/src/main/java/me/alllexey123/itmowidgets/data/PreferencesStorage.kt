@@ -3,6 +3,7 @@ package me.alllexey123.itmowidgets.data
 import android.content.SharedPreferences
 import api.myitmo.storage.Storage
 import androidx.core.content.edit
+import api.myitmo.model.TokenResponse
 import me.alllexey123.itmowidgets.api.BackendStorage
 
 const val ACCESS_TOKEN_KEY = "access_token"
@@ -116,129 +117,144 @@ class PreferencesStorage(val prefs: SharedPreferences) : Storage, BackendStorage
     }
 
     override fun setAccessToken(accessToken: String?) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putString(ACCESS_TOKEN_KEY, accessToken)
         }
     }
 
     override fun setAccessExpiresAt(accessExpiresAt: Long) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putLong(ACCESS_TOKEN_EXPIRES_KEY, accessExpiresAt)
         }
     }
 
     override fun setRefreshToken(refreshToken: String?) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putString(REFRESH_TOKEN_KEY, refreshToken)
         }
     }
 
     override fun setRefreshExpiresAt(refreshExpiresAt: Long) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putLong(REFRESH_TOKEN_EXPIRES_KEY, refreshExpiresAt)
         }
     }
 
     override fun setIdToken(idToken: String?) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putString(ID_TOKEN_KEY, idToken)
         }
     }
 
     override fun setBackendAccessToken(accessToken: String?) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putString(BACKEND_ACCESS_TOKEN_KEY, accessToken)
         }
     }
 
     override fun setBackendAccessExpiresAt(accessExpiresAt: Long) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putLong(BACKEND_ACCESS_TOKEN_EXPIRES_KEY, accessExpiresAt)
         }
     }
 
     override fun setBackendRefreshToken(refreshToken: String?) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putString(BACKEND_REFRESH_TOKEN_KEY, refreshToken)
         }
     }
 
     override fun setBackendRefreshExpiresAt(refreshExpiresAt: Long) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putLong(BACKEND_REFRESH_TOKEN_EXPIRES_KEY, refreshExpiresAt)
         }
     }
 
     override fun setBackendAllow(allow: Boolean) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putBoolean(BACKEND_ALLOW_KEY, allow)
         }
     }
 
     fun setFirebaseToken(token: String?) {
-        prefs.edit() {
+        prefs.edit(commit = true) {
             putString(FIREBASE_TOKEN_KEY, token)
         }
     }
 
     fun setLastUpdateTimestamp(timestamp: Long) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putLong(LAST_UPDATE_TIMESTAMP_KEY, timestamp)
         }
     }
 
     fun setSmartSchedulingState(smartScheduling: Boolean) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putBoolean(SMART_SCHEDULING_KEY, smartScheduling)
         }
     }
 
     fun setBeforehandSchedulingState(beforehandScheduling: Boolean) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putBoolean(BEFOREHAND_SCHEDULING_KEY, beforehandScheduling)
         }
     }
 
     fun setSingleLessonWidgetStyle(style: String?) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putString(SINGLE_LESSON_WIDGET_STYLE, style)
         }
     }
 
     fun setListLessonWidgetStyle(style: String?) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putString(LIST_LESSON_WIDGET_STYLE, style)
         }
     }
 
     fun setHideTeacherState(hideTeacher: Boolean) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putBoolean(HIDE_TEACHER_KEY, hideTeacher)
         }
     }
 
     fun setHidePreviousLessonsState(hidePreviousLessons: Boolean) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putBoolean(HIDE_PREVIOUS_LESSONS_KEY, hidePreviousLessons)
         }
     }
 
     fun setDynamicQrColorsState(dynamicQrColors: Boolean) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putBoolean(DYNAMIC_QR_COLORS_KEY, dynamicQrColors)
         }
     }
 
     fun setErrorLog(errorLog: String?) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putString(ERROR_LOG_KEY, errorLog)
         }
     }
 
     fun setLessonWidgetStyleChanged(lessonWidgetStyleChanged: Boolean) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putBoolean(LESSON_WIDGET_STYLE_CHANGED_KEY, lessonWidgetStyleChanged)
         }
     }
 
+    override fun update(tokenResponse: TokenResponse) {
+        prefs.edit(commit = true) {
+            putString(ACCESS_TOKEN_KEY, tokenResponse.accessToken)
+                .putLong(
+                    ACCESS_TOKEN_EXPIRES_KEY,
+                    System.currentTimeMillis() + (tokenResponse.expiresIn * 1000)
+                )
+                .putString(REFRESH_TOKEN_KEY, tokenResponse.refreshToken)
+                .putLong(
+                    REFRESH_TOKEN_EXPIRES_KEY,
+                    System.currentTimeMillis() + (tokenResponse.refreshExpiresIn * 1000)
+                )
+                .putString(ID_TOKEN_KEY, tokenResponse.idToken)
+        }
+    }
 }

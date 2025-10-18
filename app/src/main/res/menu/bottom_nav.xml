@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_web"
+        android:icon="@drawable/ic_myitmo_half_outline"
+        android:title="@string/title_web" />
+    <item
+        android:id="@+id/navigation_qr_code"
+        android:icon="@drawable/ic_qr_code"
+        android:title="@string/title_qr" />
+    <item
+        android:id="@+id/navigation_schedule"
+        android:icon="@drawable/ic_schedule"
+        android:title="@string/title_schedule" />
+    <item
+        android:id="@+id/navigation_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/title_settings" />
+</menu>

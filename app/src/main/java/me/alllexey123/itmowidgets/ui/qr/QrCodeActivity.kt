@@ -1,61 +1,51 @@
 package me.alllexey123.itmowidgets.ui.qr
 
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
 
-class QrCodeActivity : AppCompatActivity() {
+class QrCodeFragment : Fragment(R.layout.fragment_qr_code) {
 
     private lateinit var qrCodeImage: ImageView
-
     private lateinit var fabRefresh: FloatingActionButton
 
     private val qrCodeViewModel: QrCodeViewModel by viewModels {
-        val appContainer = (application as ItmoWidgetsApp).appContainer
+        val appContainer = (requireActivity().application as ItmoWidgetsApp).appContainer
         QrCodeViewModelFactory(appContainer.qrCodeRepository)
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_qr_code)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-        qrCodeImage = findViewById(R.id.qr_code_image)
+        qrCodeImage = view.findViewById(R.id.qr_code_image)
+        fabRefresh = view.findViewById(R.id.fab_refresh)
+
         setupButtons()
-
         observeUiState()
         updateQr()
     }
 
     private fun setupButtons() {
-        fabRefresh = findViewById(R.id.fab_refresh)
         fabRefresh.setOnClickListener {
-            val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
+            val appContainer = (requireContext().applicationContext as ItmoWidgetsApp).appContainer
             appContainer.qrCodeRepository.clearCache()
             updateQr()
         }
     }
 
-    fun updateQr() {
+    private fun updateQr() {
         qrCodeViewModel.fetchQrCode()
     }
 
     private fun observeUiState() {
-        qrCodeViewModel.uiState.observe(this) { state ->
-            val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
+        qrCodeViewModel.uiState.observe(viewLifecycleOwner) { state ->
+            val appContainer = (requireContext().applicationContext as ItmoWidgetsApp).appContainer
             val generator = appContainer.qrCodeGenerator
             val renderer = appContainer.qrBitmapRenderer
             val storage = appContainer.storage
@@ -74,13 +64,11 @@ class QrCodeActivity : AppCompatActivity() {
                 }
 
                 is QrCodeUiState.Error -> {
-                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
                     renderer.renderEmpty(dynamic = dynamicColors)
                 }
             }
-
             qrCodeImage.setImageBitmap(bitmap)
         }
     }
-
 }

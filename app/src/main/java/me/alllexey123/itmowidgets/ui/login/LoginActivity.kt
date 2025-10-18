@@ -1,90 +1,68 @@
 package me.alllexey123.itmowidgets.ui.login
 
 import android.os.Bundle
+import android.util.Log
+import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.core.view.updatePadding
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import api.myitmo.model.TokenResponse
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.databinding.ActivityLoginBinding
-import me.alllexey123.itmowidgets.ui.widgets.WidgetUtils
+import me.alllexey123.itmowidgets.ui.web.WebViewListener
+import me.alllexey123.itmowidgets.ui.web.WebViewManager
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : AppCompatActivity(), WebViewListener {
 
-    private lateinit var binding: ActivityLoginBinding
+    private lateinit var webViewManager: WebViewManager
+    private lateinit var webView: WebView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        binding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+        setContentView(R.layout.activity_login)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            view.updatePadding(left = systemBars.left, top = systemBars.top, right = systemBars.right)
             insets
         }
 
-        binding.buttonLogin.setOnClickListener {
-            performLogin()
+        webView = findViewById(R.id.web_view)
+        val swipeRefreshLayout: SwipeRefreshLayout = findViewById(R.id.swipe_refresh_layout_login)
+
+        webViewManager = WebViewManager(this, webView, swipeRefreshLayout, this, false)
+
+        swipeRefreshLayout.setOnRefreshListener {
+            webView.reload()
         }
 
+        swipeRefreshLayout.setOnChildScrollUpCallback { parent, child ->
+            webView.scrollY > 0
+        }
+
+        webViewManager.loadUrlWithCleanState()
     }
 
-    private fun performLogin() {
-        binding.loginInputLayout.error = null
-        binding.passwordInputLayout.error = null
-        binding.textViewResult.text = null
-
-        val login = binding.editTextLogin.text.toString().trim()
-        val password = binding.editTextPassword.text.toString()
-
-        var isValid = true
-
-        if (login.isEmpty()) {
-            binding.loginInputLayout.error = "Логин не может быть пустым"
-            isValid = false
+    override fun onTokensReceived(tokensResponseString: String) {
+        runOnUiThread {
+            saveTokensToAppStorage(tokensResponseString)
+            setResult(RESULT_OK)
+            finish()
         }
+    }
 
-        if (password.isEmpty()) {
-            binding.passwordInputLayout.error = "Пароль не может быть пустым"
-            isValid = false
-        }
+    private fun saveTokensToAppStorage(tokensResponseString: String) {
+        val appContainer = (application as ItmoWidgetsApp).appContainer
+        val tokenResponse = appContainer.myItmo.gson.fromJson(tokensResponseString, TokenResponse::class.java)
+        appContainer.storage.update(tokenResponse)
+        Log.d(TAG, "Successfully updated tokens from LoginActivity.")
+    }
 
-        if (!isValid) {
-            return
-        }
-
-        lifecycleScope.launch {
-            try {
-                binding.buttonLogin.isEnabled = false
-                binding.textViewResult.text = "Выполняется вход..."
-
-                val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
-                val authResult = withContext(Dispatchers.IO) {
-                    appContainer.myItmo.auth(login, password)
-                    "Вход выполнен. Теперь можно использовать виджеты."
-                }
-
-                appContainer.scheduleRepository.clearCache()
-                appContainer.qrCodeRepository.clearCache()
-                WidgetUtils.updateAllWidgets(applicationContext)
-                binding.textViewResult.text = authResult
-
-            } catch (e: Exception) {
-                if (e.message?.contains("Could not get authorize", ignoreCase = true) ?: false) {
-                    binding.textViewResult.text = "Ошибка: проверьте введённые данные"
-                } else {
-                    binding.textViewResult.text = "Ошибка: ${e.message}"
-                }
-
-            } finally {
-                binding.buttonLogin.isEnabled = true
-            }
-        }
+    companion object {
+        private const val TAG = "LoginActivity"
     }
 }

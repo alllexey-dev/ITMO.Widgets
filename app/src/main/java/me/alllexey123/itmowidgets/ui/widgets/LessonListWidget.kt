@@ -1,14 +1,17 @@
 package me.alllexey123.itmowidgets.ui.widgets
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import androidx.core.net.toUri
+import me.alllexey123.itmowidgets.AppIntents
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
-import me.alllexey123.itmowidgets.ui.schedule.ScheduleActivity
+import me.alllexey123.itmowidgets.ui.main.MainActivity
+import me.alllexey123.itmowidgets.ui.schedule.ScheduleFragment
 import me.alllexey123.itmowidgets.workers.LessonWidgetUpdateWorker
 
 
@@ -40,7 +43,17 @@ class LessonListWidget : AppWidgetProvider() {
                     data = ("widget://${appWidgetId}-${System.currentTimeMillis()}").toUri()
                 }
 
-                val pendingIntent = ScheduleActivity.getOnClickPendingIntent(context)
+                val launchIntent = Intent(context, MainActivity::class.java).apply {
+                    putExtra(AppIntents.EXTRA_TARGET_FRAGMENT, AppIntents.TARGET_SCHEDULE_FRAGMENT)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+
+                val pendingIntent = PendingIntent.getActivity(
+                    context,
+                    appWidgetId,
+                    launchIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
 
                 val views = RemoteViews(context.packageName, layoutId)
                 views.setPendingIntentTemplate(R.id.lesson_list, pendingIntent)
