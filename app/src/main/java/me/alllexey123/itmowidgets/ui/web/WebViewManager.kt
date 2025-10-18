@@ -42,7 +42,7 @@ class WebViewManager(
                 super.onPageStarted(view, url, favicon)
                 swipeRefreshLayout.isRefreshing = true
                 injectInterceptorScript(view)
-                if (forceStorageCookies) {
+                if (forceStorageCookies && view.url?.startsWith("https://my.itmo.ru") == true) {
                     val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
                     setAuthCookies(appContainer.storage)
                 }
