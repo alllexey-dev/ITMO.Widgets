@@ -13,13 +13,15 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import api.myitmo.storage.Storage
+import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import java.io.IOException
 
 class WebViewManager(
     private val context: Context,
     private val webView: WebView,
     private val swipeRefreshLayout: SwipeRefreshLayout,
-    private val listener: WebViewListener
+    private val listener: WebViewListener,
+    private val forceStorageCookies: Boolean,
 ) {
 
     private val siteUrl = "https://my.itmo.ru/"
@@ -40,6 +42,10 @@ class WebViewManager(
                 super.onPageStarted(view, url, favicon)
                 swipeRefreshLayout.isRefreshing = true
                 injectInterceptorScript(view)
+                if (forceStorageCookies) {
+                    val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
+                    setAuthCookies(appContainer.storage)
+                }
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {

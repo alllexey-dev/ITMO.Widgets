@@ -34,7 +34,7 @@ class LoginActivity : AppCompatActivity(), WebViewListener {
         webView = findViewById(R.id.web_view)
         val swipeRefreshLayout: SwipeRefreshLayout = findViewById(R.id.swipe_refresh_layout_login)
 
-        webViewManager = WebViewManager(this, webView, swipeRefreshLayout, this)
+        webViewManager = WebViewManager(this, webView, swipeRefreshLayout, this, false)
 
         swipeRefreshLayout.setOnRefreshListener {
             webView.reload()
