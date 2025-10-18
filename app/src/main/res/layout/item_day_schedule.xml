@@ -19,14 +19,16 @@
             android:id="@+id/day_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="-2dp"
+            android:fontFamily="@font/inter_medium"
             android:text="День"
             android:textColor="?attr/colorPrimary"
-            android:textSize="24sp" />
+            android:textSize="28sp" />
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="-2dp">
 
             <TextView
                 android:id="@+id/day_date"
@@ -34,7 +36,7 @@
                 android:layout_height="wrap_content"
                 android:text="1 января"
                 android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="18sp" />
+                android:textSize="20sp" />
 
             <ImageView
                 android:layout_width="5dp"
@@ -53,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:text="нет пар"
                 android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="18sp" />
+                android:textSize="20sp" />
 
         </LinearLayout>
     </LinearLayout>
