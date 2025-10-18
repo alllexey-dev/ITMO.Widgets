@@ -22,7 +22,7 @@ class WebFragment : Fragment(R.layout.fragment_web), WebViewListener {
         val swipeRefreshLayout: SwipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout_web)
         val appContainer = (requireActivity().application as ItmoWidgetsApp).appContainer
 
-        webViewManager = WebViewManager(requireContext(), webView, swipeRefreshLayout, this, false)
+        webViewManager = WebViewManager(requireContext(), webView, swipeRefreshLayout, this, true)
 
         swipeRefreshLayout.setOnRefreshListener {
             webView.reload()
