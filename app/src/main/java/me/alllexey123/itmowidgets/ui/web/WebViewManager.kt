@@ -2,6 +2,7 @@ package me.alllexey123.itmowidgets.ui.web
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.Base64
 import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
@@ -12,6 +13,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import api.myitmo.storage.Storage
+import java.io.IOException
 
 class WebViewManager(
     private val context: Context,
@@ -43,6 +45,9 @@ class WebViewManager(
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 swipeRefreshLayout.isRefreshing = false
+                if (view != null) {
+                    injectCustomCss(view)
+                }
             }
         }
 
@@ -116,6 +121,31 @@ class WebViewManager(
         }
 
         cookieManager.flush()
+    }
+
+    private fun injectCustomCss(view: WebView) {
+        try {
+            val inputStream = context.assets.open("custom_style.css")
+            val buffer = inputStream.readBytes()
+            inputStream.close()
+
+            val encodedCss = Base64.encodeToString(buffer, Base64.NO_WRAP)
+
+            val js = """
+            (function() {
+                var parent = document.getElementsByTagName('head').item(0);
+                var style = document.createElement('style');
+                style.type = 'text/css';
+                style.innerHTML = window.atob('$encodedCss');
+                parent.appendChild(style);
+            })()
+            """.trimIndent()
+
+            view.evaluateJavascript(js, null)
+            Log.d(TAG, "Custom CSS injected successfully.")
+        } catch (e: IOException) {
+            Log.e(TAG, "Failed to inject custom CSS", e)
+        }
     }
 
     private fun injectInterceptorScript(webView: WebView) {
