@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/navigation_web"
-        android:icon="@drawable/ic_globe"
+        android:icon="@drawable/ic_myitmo_half_outline"
         android:title="@string/title_web" />
     <item
         android:id="@+id/navigation_qr_code"
