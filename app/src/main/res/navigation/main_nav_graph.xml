@@ -6,6 +6,12 @@
     app:startDestination="@id/navigation_schedule">
 
     <fragment
+        android:id="@+id/navigation_web"
+        android:name="me.alllexey123.itmowidgets.ui.web.WebFragment"
+        android:label="Web page"
+        tools:layout="@layout/fragment_web" />
+
+    <fragment
         android:id="@+id/navigation_qr_code"
         android:name="me.alllexey123.itmowidgets.ui.qr.QrCodeFragment"
         android:label="Qr code"
