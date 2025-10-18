@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
@@ -22,7 +21,6 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
     private lateinit var outerRecyclerView: RecyclerView
     private lateinit var dayScheduleAdapter: DayScheduleAdapter
 
-    private val snapHelper = PagerSnapHelper()
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var updateTimeRunnable: Runnable
 
@@ -59,12 +57,10 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
 
     private fun setupRecyclerView() {
         outerRecyclerView.layoutManager =
-            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
 
         dayScheduleAdapter = DayScheduleAdapter()
         outerRecyclerView.adapter = dayScheduleAdapter
-
-        snapHelper.attachToRecyclerView(outerRecyclerView)
 
         outerRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -75,10 +71,10 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
                 val totalItemCount = dayScheduleAdapter.itemCount
 
                 if (totalItemCount > 0) {
-                    if (firstVisibleItemPosition < 2) {
-                        scheduleViewModel.fetchPreviousDays()
-                    }
-                    if (lastVisibleItemPosition > totalItemCount - 3) {
+//                    if (firstVisibleItemPosition < 2 && dy < 0) {
+//                        scheduleViewModel.fetchPreviousDays()
+//                    }
+                    if (lastVisibleItemPosition > totalItemCount - 3 && dy > 0) {
                         scheduleViewModel.fetchNextDays()
                     }
                 }
@@ -109,7 +105,6 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
                         }
                         isInitialLoad = false
                     } else {
-
                         dayScheduleAdapter.submitList(scheduleList)
                     }
 

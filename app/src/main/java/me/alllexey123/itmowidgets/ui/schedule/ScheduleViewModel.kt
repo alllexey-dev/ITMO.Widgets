@@ -32,7 +32,7 @@ class ScheduleViewModel(
 
         viewModelScope.launch {
             try {
-                val startDate = dateRange?.start ?: LocalDate.now().minusDays(7)
+                val startDate = dateRange?.start ?: LocalDate.now().minusDays(1)
                 val endDate = dateRange?.endInclusive ?: LocalDate.now().plusDays(7)
 
                 val cachedSchedule = scheduleRepository.getCachedScheduleForRange(startDate, endDate)
