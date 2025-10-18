@@ -40,6 +40,10 @@ class LoginActivity : AppCompatActivity(), WebViewListener {
             webView.reload()
         }
 
+        swipeRefreshLayout.setOnChildScrollUpCallback { parent, child ->
+            webView.scrollY > 0
+        }
+
         webViewManager.loadUrlWithCleanState()
     }
 

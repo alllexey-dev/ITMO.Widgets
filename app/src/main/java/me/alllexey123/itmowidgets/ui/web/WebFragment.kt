@@ -28,6 +28,10 @@ class WebFragment : Fragment(R.layout.fragment_web), WebViewListener {
             webView.reload()
         }
 
+        swipeRefreshLayout.setOnChildScrollUpCallback { parent, child ->
+            webView.scrollY > 0
+        }
+
         if (webView.url == null) {
             webViewManager.loadUrlWithAuth(appContainer.storage)
         }
