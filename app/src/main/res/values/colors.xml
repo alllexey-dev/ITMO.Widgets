@@ -3,12 +3,12 @@
     <color name="primary_color">#FF1743BD</color>
     <color name="primary_variant_color">#3A8AFF</color>
 
-    <color name="practice_color">#F5C443</color>
-    <color name="lab_color">#B840FF</color>
-    <color name="lecture_color">#3CAAFD</color>
-    <color name="red_lesson_color">#F54173</color>
-    <color name="sport_color">#3969F8</color>
-    <color name="free_sport_color">#54F247</color>
+    <color name="practice_color">#DAB74F</color>
+    <color name="lab_color">#8A5BE1</color>
+    <color name="lecture_color">#4984E2</color>
+    <color name="red_lesson_color">#F14F7B</color>
+    <color name="sport_color">#355EDA</color>
+    <color name="free_sport_color">#8CED69</color>
 
     <color name="subtext_color">#FF5C5C5C</color>
     <color name="subtext_color_lighter">#7A7A7A</color>
