@@ -7,7 +7,8 @@
 </p>
 
 **ITMO.Widgets** — коллекция виджетов для Android, созданная для упрощения студенческой жизни в ИТМО.<br>
-[Примеры виджетов](#Примеры)
+
+<a href="https://github.com/users/alllexey-dev/projects/1"><strong>Roadmap & status </strong></a>
 ## О приложении 
 
 **Виджеты**:
