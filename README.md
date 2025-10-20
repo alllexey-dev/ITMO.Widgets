@@ -2,6 +2,8 @@
 
 <p align="center">
   <strong>Полезные виджеты для студентов ИТМО на Android</strong>
+  <br />
+  <a href="https://github.com/alllexey-dev/ITMO.Widgets/releases/latest"><strong>» Скачать приложение «</strong></a>
 </p>
 
 **ITMO.Widgets** — коллекция виджетов для Android, созданная для упрощения студенческой жизни в ИТМО.<br>
