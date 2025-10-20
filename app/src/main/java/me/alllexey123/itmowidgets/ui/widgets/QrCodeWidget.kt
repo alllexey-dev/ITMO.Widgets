@@ -1,5 +1,6 @@
 package me.alllexey123.itmowidgets.ui.widgets
 
+import android.R.attr.action
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -7,8 +8,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.widget.RemoteViews
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import me.alllexey123.itmowidgets.ItmoWidgetsApp
 import me.alllexey123.itmowidgets.R
+import me.alllexey123.itmowidgets.workers.QrAnimationWorker
 import me.alllexey123.itmowidgets.workers.QrWidgetUpdateWorker
 
 class QrCodeWidget : AppWidgetProvider() {
@@ -32,20 +38,21 @@ class QrCodeWidget : AppWidgetProvider() {
                 AppWidgetManager.EXTRA_APPWIDGET_ID,
                 AppWidgetManager.INVALID_APPWIDGET_ID
             )
-            val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
-            val renderer = appContainer.qrBitmapRenderer
-            val dynamicColors = appContainer.storage.getDynamicQrColorsState()
-            appContainer.qrCodeRepository.clearCache() // force clear cache
 
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
-            val bitmap = renderer.renderFull(dynamic = dynamicColors)
-
-            views.setImageViewBitmap(R.id.qr_code_image, bitmap)
-
-            appWidgetManager.updateAppWidget(appWidgetId, views)
-            QrWidgetUpdateWorker.enqueueImmediateUpdate(context)
+            if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                startAnimationWorker(context, appWidgetId)
+            }
         }
+    }
+
+    private fun startAnimationWorker(context: Context, appWidgetId: Int) {
+        val inputData = workDataOf(QrAnimationWorker.KEY_APP_WIDGET_ID to appWidgetId)
+
+        val animationWorkRequest = OneTimeWorkRequestBuilder<QrAnimationWorker>()
+            .setInputData(inputData)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniqueWork(QrAnimationWorker.WORK_NAME, ExistingWorkPolicy.KEEP, animationWorkRequest)
     }
 
     companion object {
@@ -53,9 +60,7 @@ class QrCodeWidget : AppWidgetProvider() {
         const val ACTION_WIDGET_CLICK: String = "me.alllexey123.itmowidgets.action.QR_WIDGET_CLICK"
 
         fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, bitmap: Bitmap) {
-
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
-
             val pendingIntent = getClickIntent(context, appWidgetId)
             views.setOnClickPendingIntent(R.id.qr_code_image, pendingIntent)
             views.setImageViewBitmap(R.id.qr_code_image, bitmap)

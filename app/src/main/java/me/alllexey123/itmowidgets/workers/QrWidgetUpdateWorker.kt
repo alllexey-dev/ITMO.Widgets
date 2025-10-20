@@ -19,10 +19,9 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
 
     override suspend fun doWork(): Result {
         val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
-        val repository = appContainer.qrCodeRepository
-        val generator = appContainer.qrCodeGenerator
         val renderer = appContainer.qrBitmapRenderer
         val storage = appContainer.storage
+        val qrBitmapCache = appContainer.qrBitmapCache
 
         val appWidgetManager = AppWidgetManager.getInstance(appContext)
         val appWidgetIds =
@@ -33,16 +32,11 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
         }
 
         val dynamicColors = storage.getDynamicQrColorsState()
+        val sidePixels = renderer.defaultSidePixels()
+        val colors = renderer.getQrColors(dynamicColors)
 
-        val bitmap: Bitmap = try {
-            val qrHex = repository.getQrHex()
-            val qrCode = generator.generate(qrHex)
-            val qrCodeBooleans = generator.toBooleans(qrCode)
-            renderer.render(qrCode = qrCodeBooleans, dynamic = dynamicColors)
-        } catch (e: Exception) {
-            storage.setErrorLog("[${javaClass.name}] at ${LocalDateTime.now()}: ${e.stackTraceToString()}")
-            renderer.renderEmpty(dynamic = dynamicColors)
-        }
+        val bitmap: Bitmap = qrBitmapCache.loadNoiseBitmap(sidePixels, colors.first, colors.second)
+            ?: renderer.renderNoise(dynamic = dynamicColors).also { qrBitmapCache.saveNoiseBitmap(it, sidePixels, colors.first, colors.second) }
 
         for (appWidgetId in appWidgetIds) {
             QrCodeWidget.updateAppWidget(

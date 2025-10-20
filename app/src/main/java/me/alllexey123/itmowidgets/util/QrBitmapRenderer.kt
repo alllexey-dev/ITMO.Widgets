@@ -1,5 +1,6 @@
 package me.alllexey123.itmowidgets.util
 
+import android.animation.ArgbEvaluator
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -12,6 +13,8 @@ import android.view.ContextThemeWrapper
 import androidx.core.graphics.createBitmap
 import com.google.android.material.color.MaterialColors
 import me.alllexey123.itmowidgets.R
+import kotlin.random.Random
+import kotlin.random.nextInt
 
 class QrBitmapRenderer(
     private val context: Context
@@ -212,6 +215,111 @@ class QrBitmapRenderer(
         }
 
         return bitmap
+    }
+
+    fun renderNoise(
+        qrSidePixels: Int = defaultSidePixels(),
+        dynamic: Boolean,
+        relativePadding: Float = defaultRelativePadding(),
+        bgRoundingPixels: Float = defaultBgRounding()
+    ): Bitmap {
+        val colors = getQrColors(dynamic)
+        return renderNoise(
+            qrSidePixels,
+            colors.first,
+            colors.second,
+            relativePadding,
+            bgRoundingPixels
+        )
+    }
+
+    fun renderNoise(
+        qrSidePixels: Int = defaultSidePixels(),
+        backgroundColor: Int,
+        foregroundColor: Int,
+        relativePadding: Float = defaultRelativePadding(),
+        bgRoundingPixels: Float = defaultBgRounding()
+    ): Bitmap {
+        val bitmap = createBitmap(qrSidePixels, qrSidePixels)
+        val canvas = Canvas(bitmap)
+
+        val paletteSize = 7
+
+        val palette = generateColorPalette(backgroundColor, foregroundColor, paletteSize)
+            .map { Paint().apply { color = it; isAntiAlias = true } }
+
+        val backgroundPaint = Paint().apply {
+            color = backgroundColor
+            isAntiAlias = true
+        }
+
+        val bg = Path().apply {
+            addRoundRect(
+                RectF(0F, 0F, qrSidePixels.toFloat(), qrSidePixels.toFloat()),
+                bgRoundingPixels,
+                bgRoundingPixels,
+                Path.Direction.CW
+            )
+        }
+
+        canvas.drawPath(bg, backgroundPaint)
+
+        val clip = Path().apply {
+            addRoundRect(
+                RectF(
+                    qrSidePixels * relativePadding,
+                    qrSidePixels * relativePadding,
+                    qrSidePixels.toFloat() * (1 - relativePadding),
+                    qrSidePixels.toFloat() * (1 - relativePadding)
+                ),
+                bgRoundingPixels / 1.5F,
+                bgRoundingPixels / 1.5F,
+                Path.Direction.CW
+            )
+        }
+
+
+        canvas.clipPath(clip)
+
+        val paddingPixels = qrSidePixels * relativePadding / 2
+        val numberOfSquares = 1000
+        val minSquareRelSide = 0.02
+        val maxSquareRelSide = 0.03
+
+        val random = Random.Default
+        for (i in 1..numberOfSquares) {
+            val side =
+                (random.nextDouble(minSquareRelSide, maxSquareRelSide) * qrSidePixels).toFloat()
+            val centerPadding = maxSquareRelSide * qrSidePixels + paddingPixels
+            val centerX = random.nextDouble(centerPadding, qrSidePixels - centerPadding).toFloat()
+            val centerY = random.nextDouble(centerPadding, qrSidePixels - centerPadding).toFloat()
+            val color = palette[random.nextInt(paletteSize - 2) + 1]
+            val shape = Path().apply {
+                addRoundRect(
+                    centerX - side / 2,
+                    centerY - side / 2,
+                    centerX + side / 2,
+                    centerY + side / 2,
+                    side / 3,
+                    side / 3,
+                    Path.Direction.CW
+                )
+            }
+            canvas.drawPath(shape, color)
+        }
+
+        return bitmap
+    }
+
+    fun generateColorPalette(startColor: Int, endColor: Int, count: Int): List<Int> {
+        val palette = mutableListOf<Int>()
+        val evaluator = ArgbEvaluator()
+        for (i in 0 until count) {
+            val fraction = i.toFloat() / (count - 1)
+            val color = evaluator.evaluate(fraction, startColor, endColor) as Int
+            palette.add(color)
+        }
+        return palette
     }
 
     fun dpToPx(dp: Float): Float {

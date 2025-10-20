@@ -8,6 +8,8 @@ import me.alllexey123.itmowidgets.api.ItmoWidgetsBackend
 import me.alllexey123.itmowidgets.data.PreferencesStorage
 import me.alllexey123.itmowidgets.data.local.QrCodeLocalDataSourceImpl
 import me.alllexey123.itmowidgets.data.local.ScheduleLocalDataSourceImpl
+import me.alllexey123.itmowidgets.data.local.QrBitmapCache
+import me.alllexey123.itmowidgets.data.local.QrBitmapCacheImpl
 import me.alllexey123.itmowidgets.data.remote.QrCodeRemoteDataSourceImpl
 import me.alllexey123.itmowidgets.data.remote.ScheduleRemoteDataSourceImpl
 import me.alllexey123.itmowidgets.data.repository.QrCodeRepository
@@ -64,5 +66,8 @@ class AppContainer(context: Context) {
 
     val qrBitmapRenderer by lazy { QrBitmapRenderer(context) }
 
+    val qrBitmapCache: QrBitmapCache by lazy {
+        QrBitmapCacheImpl(context)
+    }
 
 }
