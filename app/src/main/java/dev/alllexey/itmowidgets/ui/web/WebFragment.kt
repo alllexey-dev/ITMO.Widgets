@@ -33,7 +33,7 @@ class WebFragment : Fragment(R.layout.fragment_web), WebViewListener {
         }
 
         if (webView.url == null) {
-            webViewManager.loadUrlWithAuth(appContainer.storage)
+            webViewManager.loadUrlWithAuth(appContainer)
         }
     }
 
@@ -46,7 +46,7 @@ class WebFragment : Fragment(R.layout.fragment_web), WebViewListener {
     private fun saveTokensToAppStorage(tokensResponseString: String) {
         val appContainer = (requireActivity().application as ItmoWidgetsApp).appContainer
         val tokenResponse = appContainer.myItmo.gson.fromJson(tokensResponseString, TokenResponse::class.java)
-        appContainer.storage.update(tokenResponse)
+        appContainer.myItmoStorage.update(tokenResponse)
         Log.d(TAG, "Successfully updated tokens from WebFragment.")
     }
 

@@ -22,7 +22,7 @@ class LessonListWidget : AppWidgetProvider() {
         appWidgetIds: IntArray?
     ) {
         val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
-        appContainer.storage.setLessonWidgetStyleChanged(true)
+        appContainer.userSettingsStorage.setLessonWidgetStyleChanged(true)
         LessonWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
     }
 

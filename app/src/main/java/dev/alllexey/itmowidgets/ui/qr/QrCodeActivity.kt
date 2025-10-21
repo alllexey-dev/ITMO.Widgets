@@ -48,7 +48,7 @@ class QrCodeFragment : Fragment(R.layout.fragment_qr_code) {
             val appContainer = (requireContext().applicationContext as ItmoWidgetsApp).appContainer
             val generator = appContainer.qrCodeGenerator
             val renderer = appContainer.qrBitmapRenderer
-            val storage = appContainer.storage
+            val storage = appContainer.userSettingsStorage
 
             val dynamicColors = storage.getDynamicQrColorsState()
 

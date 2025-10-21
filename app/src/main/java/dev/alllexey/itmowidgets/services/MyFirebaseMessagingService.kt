@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.api
+package dev.alllexey.itmowidgets.services
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,7 +10,8 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.ui.schedule.ScheduleFragment
+import dev.alllexey.itmowidgets.ui.main.MainActivity
+import kotlinx.coroutines.runBlocking
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
@@ -29,7 +30,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun sendNotification(title: String?, messageBody: String?) {
-        val intent = Intent(this, ScheduleFragment::class.java)
+        val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(this, 0, intent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
@@ -44,9 +45,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        val channel = NotificationChannel(channelId,
+        val channel = NotificationChannel(
+            channelId,
             "Default Channel",
-            NotificationManager.IMPORTANCE_DEFAULT)
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
         notificationManager.createNotificationChannel(channel)
 
         notificationManager.notify(0, notificationBuilder.build())
@@ -54,10 +57,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     private fun sendTokenToServer(token: String) {
         val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
-        val backend = appContainer.backend
-        appContainer.storage.setFirebaseToken(token)
-        if (appContainer.storage.getBackendAllow()) {
-            backend.sendFirebaseToken(token)
+        val itmoWidgets = appContainer.itmoWidgets
+        appContainer.userSettingsStorage.setFirebaseToken(token)
+        if (appContainer.userSettingsStorage.getBackendAllow()) {
+            runBlocking { itmoWidgets.sendFirebaseToken(token) }
         }
     }
 

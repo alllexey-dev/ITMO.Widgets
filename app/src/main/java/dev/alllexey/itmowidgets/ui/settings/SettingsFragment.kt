@@ -13,21 +13,22 @@ import androidx.preference.SwitchPreference
 import dev.alllexey.itmowidgets.AppContainer
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.data.ACCESS_TOKEN_EXPIRES_KEY
-import dev.alllexey.itmowidgets.data.ACCESS_TOKEN_KEY
-import dev.alllexey.itmowidgets.data.BACKEND_ALLOW_KEY
-import dev.alllexey.itmowidgets.data.BEFOREHAND_SCHEDULING_KEY
-import dev.alllexey.itmowidgets.data.DYNAMIC_QR_COLORS_KEY
-import dev.alllexey.itmowidgets.data.HIDE_PREVIOUS_LESSONS_KEY
-import dev.alllexey.itmowidgets.data.HIDE_TEACHER_KEY
-import dev.alllexey.itmowidgets.data.ID_TOKEN_KEY
-import dev.alllexey.itmowidgets.data.LAST_UPDATE_TIMESTAMP_KEY
-import dev.alllexey.itmowidgets.data.LESSON_WIDGET_STYLE_CHANGED_KEY
-import dev.alllexey.itmowidgets.data.REFRESH_TOKEN_EXPIRES_KEY
-import dev.alllexey.itmowidgets.data.REFRESH_TOKEN_KEY
-import dev.alllexey.itmowidgets.data.SMART_SCHEDULING_KEY
+import dev.alllexey.itmowidgets.data.MyItmoPreferencesStorage.KEYS.REFRESH_TOKEN_KEY
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.BEFOREHAND_SCHEDULING_KEY
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.CUSTOM_SERVICES_ALLOW_KEY
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.DYNAMIC_QR_COLORS_KEY
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.HIDE_PREVIOUS_LESSONS_KEY
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.HIDE_TEACHER_KEY
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.LAST_UPDATE_TIMESTAMP_KEY
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.LESSON_WIDGET_STYLE_CHANGED_KEY
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.LIST_LESSON_WIDGET_STYLE
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.SINGLE_LESSON_WIDGET_STYLE
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.SMART_SCHEDULING_KEY
 import dev.alllexey.itmowidgets.ui.login.LoginActivity
 import dev.alllexey.itmowidgets.ui.widgets.WidgetUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -41,7 +42,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val appContainer = (requireContext().applicationContext as ItmoWidgetsApp).appContainer
 
-        val storage = appContainer.storage
+        val storage = appContainer.userSettingsStorage
 
         val refreshTokenPreference = findPreference<EditTextPreference>(REFRESH_TOKEN_KEY)
         refreshTokenPreference?.setOnPreferenceChangeListener { preference, newValue ->
@@ -60,7 +61,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        val beforehandSchedulingPreference = findPreference<SwitchPreference>(BEFOREHAND_SCHEDULING_KEY)
+        val beforehandSchedulingPreference =
+            findPreference<SwitchPreference>(BEFOREHAND_SCHEDULING_KEY)
         beforehandSchedulingPreference?.setOnPreferenceChangeListener { preference, newValue ->
             updateAllWidgets()
             true
@@ -75,13 +77,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val refreshTokenHelp = findPreference<Preference>("refresh_token_help")
         refreshTokenHelp?.setOnPreferenceClickListener { preference ->
-            val url = ContextCompat.getString(preferenceManager.context, R.string.refresh_token_help_url)
+            val url =
+                ContextCompat.getString(preferenceManager.context, R.string.refresh_token_help_url)
             val linkIntent = Intent(Intent.ACTION_VIEW, url.toUri())
             startActivity(linkIntent)
             true
         }
 
-        listOf("single_lesson_widget_style", "list_lesson_widget_style")
+        listOf(SINGLE_LESSON_WIDGET_STYLE, LIST_LESSON_WIDGET_STYLE)
             .map { s -> findPreference<ListPreference>(s) }.forEach { preference ->
                 preference?.setOnPreferenceChangeListener { pref, newValue ->
                     updateAllWidgets()
@@ -114,11 +117,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        val allowBackend = findPreference<SwitchPreference>(BACKEND_ALLOW_KEY)
+        val allowBackend = findPreference<SwitchPreference>(CUSTOM_SERVICES_ALLOW_KEY)
         allowBackend?.setOnPreferenceChangeListener { preference, newValue ->
-            val firebaseToken = appContainer.storage.getFirebaseToken()
+            val firebaseToken = appContainer.userSettingsStorage.getFirebaseToken()
             if (firebaseToken != null && newValue as Boolean) {
-                appContainer.backend.sendFirebaseToken(firebaseToken)
+                CoroutineScope(Dispatchers.IO).launch {
+                    appContainer.itmoWidgets.sendFirebaseToken(
+                        firebaseToken
+                    )
+                }
             }
             true
         }
@@ -138,14 +145,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val prefs = preferenceManager.sharedPreferences ?: return
 
         prefs.edit {
-            remove(REFRESH_TOKEN_EXPIRES_KEY)
-            remove(ACCESS_TOKEN_KEY)
-            remove(ACCESS_TOKEN_EXPIRES_KEY)
-            remove(ID_TOKEN_KEY)
             remove(LESSON_WIDGET_STYLE_CHANGED_KEY)
         }
 
         appContainer.scheduleRepository.clearCache()
+        appContainer.qrCodeRepository.clearCache()
+        appContainer.itmoWidgetsStorage.clearTokens()
+        appContainer.myItmoStorage.clearTokens()
 
         updateAllWidgets()
     }

@@ -40,9 +40,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.itmo.widgets.core)
     implementation(libs.androidx.navigation.ui)
     implementation(libs.qrcodegen)
-    implementation(libs.my.itmo.api)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

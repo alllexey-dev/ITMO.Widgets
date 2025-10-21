@@ -19,7 +19,7 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
     override suspend fun doWork(): Result {
         val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
         val renderer = appContainer.qrBitmapRenderer
-        val storage = appContainer.storage
+        val storage = appContainer.userSettingsStorage
         val qrBitmapCache = appContainer.qrBitmapCache
 
         val appWidgetManager = AppWidgetManager.getInstance(appContext)

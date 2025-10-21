@@ -13,6 +13,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import api.myitmo.storage.Storage
+import dev.alllexey.itmowidgets.AppContainer
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import java.io.IOException
 
@@ -44,7 +45,12 @@ class WebViewManager(
                 injectInterceptorScript(view)
                 if (forceStorageCookies && view.url?.startsWith("https://my.itmo.ru") == true) {
                     val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
-                    setAuthCookies(appContainer.storage)
+                    try {
+                        appContainer.myItmo.validTokens
+                        setAuthCookies(appContainer.myItmoStorage)
+                    } catch (e: Exception) {
+                        Log.d(TAG, "Could not load valid tokens. Skipping token update.", e)
+                    }
                 }
             }
 
@@ -84,15 +90,20 @@ class WebViewManager(
         cookieManager.flush()
     }
 
-    fun loadUrlWithAuth(storage: Storage) {
-        setAuthCookies(storage)
-        Log.d(TAG, "Auth cookies set. Loading authenticated session...")
+    fun loadUrlWithAuth(appContainer: AppContainer) {
+        try {
+            appContainer.myItmo.validTokens
+            setAuthCookies(appContainer.myItmoStorage)
+            Log.d(TAG, "Auth cookies set. Loading authenticated session...")
+        } catch (e: Exception) {
+            Log.d(TAG, "Could not load valid tokens. Loading non authenticated session...", e)
+        }
         webView.loadUrl(siteUrl)
     }
 
     private fun setAuthCookies(storage: Storage) {
         val accessToken = storage.accessToken
-        val accessTokenExpiration = storage.accessExpiresAt - System.currentTimeMillis()
+        val accessTokenExpiration = storage.accessExpiresAt
         val refreshToken = storage.refreshToken
         val refreshTokenExpiration = storage.refreshExpiresAt
         val idToken = storage.idToken

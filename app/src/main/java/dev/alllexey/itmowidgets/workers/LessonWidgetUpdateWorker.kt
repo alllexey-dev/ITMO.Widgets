@@ -28,7 +28,7 @@ class LessonWidgetUpdateWorker(
 
     override suspend fun doWork(): Result {
         val appContainer = (appContext as ItmoWidgetsApp).appContainer
-        val storage = appContainer.storage
+        val storage = appContainer.userSettingsStorage
         val repository = appContainer.scheduleRepository
         val lessonListRepository = appContainer.lessonListRepository
         storage.setLastUpdateTimestamp(System.currentTimeMillis())

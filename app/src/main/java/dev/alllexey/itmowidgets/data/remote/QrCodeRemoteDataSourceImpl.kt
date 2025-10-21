@@ -14,7 +14,7 @@ class QrCodeRemoteDataSourceImpl(
             var response = myItmo.api().getQrCode().awaitResponse()
             // try to refresh tokens if null (possible fix)
             if (response.body()?.response?.qrHex == null) {
-                myItmo.refreshTokens(myItmo.storage.refreshToken)
+                myItmo.forceRefreshTokens()
                 response = myItmo.api().getQrCode().awaitResponse()
             }
 

@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.receivers
+package dev.alllexey.itmowidgets.services
 
 import android.content.BroadcastReceiver
 import android.content.Context

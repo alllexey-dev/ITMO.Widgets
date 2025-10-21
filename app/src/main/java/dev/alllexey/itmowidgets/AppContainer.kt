@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.preference.PreferenceManager
 import api.myitmo.MyItmo
 import com.google.gson.Gson
-import dev.alllexey.itmowidgets.api.ItmoWidgetsBackend
-import dev.alllexey.itmowidgets.data.PreferencesStorage
+import dev.alllexey.itmowidgets.api.ItmoWidgetsClient
+import dev.alllexey.itmowidgets.data.ItmoWidgetsPreferencesStorage
+import dev.alllexey.itmowidgets.data.MyItmoPreferencesStorage
+import dev.alllexey.itmowidgets.data.UserSettingsStorage
 import dev.alllexey.itmowidgets.data.local.QrCodeLocalDataSourceImpl
 import dev.alllexey.itmowidgets.data.local.ScheduleLocalDataSourceImpl
 import dev.alllexey.itmowidgets.data.local.QrBitmapCache
@@ -21,21 +23,31 @@ import java.io.File
 
 class AppContainer(context: Context) {
 
-    val storage: PreferencesStorage by lazy {
+    val userSettingsStorage: UserSettingsStorage by lazy {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        PreferencesStorage(prefs)
+        UserSettingsStorage(prefs)
+    }
+
+    val myItmoStorage: MyItmoPreferencesStorage by lazy {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        MyItmoPreferencesStorage(prefs)
+    }
+
+    val itmoWidgetsStorage: ItmoWidgetsPreferencesStorage by lazy {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        ItmoWidgetsPreferencesStorage(prefs)
     }
 
     val gson: Gson by lazy { myItmo.gson }
 
     val myItmo: MyItmo by lazy {
         MyItmo().apply {
-            this.storage = this@AppContainer.storage
+            this.storage = this@AppContainer.myItmoStorage
         }
     }
 
-    val backend: ItmoWidgetsBackend by lazy {
-        ItmoWidgetsBackend(this)
+    val itmoWidgets: ItmoWidgetsClient by lazy {
+        ItmoWidgetsClient(myItmo, itmoWidgetsStorage)
     }
 
     val lessonListRepository by lazy { LessonListRepository(context) }

@@ -44,7 +44,7 @@ class QrAnimationWorker(appContext: Context, workerParams: WorkerParameters) :
         val repository = appContainer.qrCodeRepository
         val generator = appContainer.qrCodeGenerator
         val qrBitmapCache = appContainer.qrBitmapCache
-        val storage = appContainer.storage
+        val storage = appContainer.userSettingsStorage
 
         val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
         val remoteViews = RemoteViews(applicationContext.packageName, R.layout.qr_code_widget)

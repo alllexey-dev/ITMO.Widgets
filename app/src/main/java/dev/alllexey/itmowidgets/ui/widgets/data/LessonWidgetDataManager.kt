@@ -3,8 +3,8 @@ package dev.alllexey.itmowidgets.ui.widgets.data
 import api.myitmo.model.Lesson
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
-import dev.alllexey.itmowidgets.data.LINE_STYLE
-import dev.alllexey.itmowidgets.data.PreferencesStorage
+import dev.alllexey.itmowidgets.data.UserSettingsStorage
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.LINE_STYLE
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -17,7 +17,7 @@ private const val BEFOREHAND_SCHEDULING_OFFSET = 15L * 60 // 15 minutes
 
 class LessonWidgetDataManager(
     private val scheduleRepository: ScheduleRepository,
-    private val storage: PreferencesStorage
+    private val storage: UserSettingsStorage
 ) {
 
     suspend fun getLessonWidgetsState(): LessonWidgetsState {
