@@ -19,10 +19,10 @@ class MainActivity : AppCompatActivity() {
     private val fragmentManager = supportFragmentManager
     private var activeFragment: Fragment? = null
 
-    private val scheduleFragment = ScheduleFragment()
-    private val webFragment = WebFragment()
-    private val qrCodeFragment = QrCodeFragment()
-    private val settingsFragment = SettingsFragment()
+    private lateinit var scheduleFragment: ScheduleFragment
+    private lateinit var webFragment: WebFragment
+    private lateinit var qrCodeFragment: QrCodeFragment
+    private lateinit var settingsFragment: SettingsFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +42,11 @@ class MainActivity : AppCompatActivity() {
         val bottomNavView = findViewById<BottomNavigationView>(R.id.bottom_nav_view)
 
         if (savedInstanceState == null) {
+            scheduleFragment = ScheduleFragment()
+            webFragment = WebFragment()
+            qrCodeFragment = QrCodeFragment()
+            settingsFragment = SettingsFragment()
+
             fragmentManager.beginTransaction().apply {
                 add(R.id.nav_host_fragment, settingsFragment, R.id.navigation_settings.toString()).hide(settingsFragment)
                 add(R.id.nav_host_fragment, qrCodeFragment, R.id.navigation_qr_code.toString()).hide(qrCodeFragment)
@@ -49,6 +54,14 @@ class MainActivity : AppCompatActivity() {
                 add(R.id.nav_host_fragment, scheduleFragment, R.id.navigation_schedule.toString())
             }.commit()
             activeFragment = scheduleFragment
+        } else {
+            scheduleFragment = fragmentManager.findFragmentByTag(R.id.navigation_schedule.toString()) as ScheduleFragment
+            webFragment = fragmentManager.findFragmentByTag(R.id.navigation_web.toString()) as WebFragment
+            qrCodeFragment = fragmentManager.findFragmentByTag(R.id.navigation_qr_code.toString()) as QrCodeFragment
+            settingsFragment = fragmentManager.findFragmentByTag(R.id.navigation_settings.toString()) as SettingsFragment
+
+            val lastActiveTag = savedInstanceState.getString("ACTIVE_FRAGMENT_TAG")
+            activeFragment = lastActiveTag?.let { fragmentManager.findFragmentByTag(it) } ?: scheduleFragment
         }
 
         bottomNavView.setOnItemSelectedListener { item ->
@@ -71,10 +84,6 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        if (savedInstanceState != null) {
-            val lastActiveTag = savedInstanceState.getString("ACTIVE_FRAGMENT_TAG")
-            activeFragment = lastActiveTag?.let { fragmentManager.findFragmentByTag(it) } ?: scheduleFragment
-        }
         bottomNavView.selectedItemId = R.id.navigation_schedule
     }
 
