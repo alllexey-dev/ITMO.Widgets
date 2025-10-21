@@ -22,8 +22,6 @@ class WebFragment : Fragment(R.layout.fragment_web), WebViewListener {
         val swipeRefreshLayout: SwipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout_web)
         val appContainer = (requireActivity().application as ItmoWidgetsApp).appContainer
 
-        webViewManager = WebViewManager(requireContext(), webView, swipeRefreshLayout, this, true)
-
         swipeRefreshLayout.setOnRefreshListener {
             webView.reload()
         }
@@ -32,9 +30,13 @@ class WebFragment : Fragment(R.layout.fragment_web), WebViewListener {
             webView.scrollY > 0
         }
 
-        if (webView.url == null) {
-            webViewManager.loadUrlWithAuth(appContainer)
+        view.post {
+            webViewManager = WebViewManager(requireContext(), webView, swipeRefreshLayout, this, true)
+            if (webView.url == null) {
+                webViewManager.loadUrlWithAuth(appContainer)
+            }
         }
+
     }
 
     override fun onTokensReceived(tokensResponseString: String) {

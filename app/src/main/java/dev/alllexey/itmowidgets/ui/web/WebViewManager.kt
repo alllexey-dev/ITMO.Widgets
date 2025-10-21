@@ -15,6 +15,10 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import api.myitmo.storage.Storage
 import dev.alllexey.itmowidgets.AppContainer
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 class WebViewManager(
@@ -91,14 +95,21 @@ class WebViewManager(
     }
 
     fun loadUrlWithAuth(appContainer: AppContainer) {
-        try {
-            appContainer.myItmo.validTokens
-            setAuthCookies(appContainer.myItmoStorage)
-            Log.d(TAG, "Auth cookies set. Loading authenticated session...")
-        } catch (e: Exception) {
-            Log.d(TAG, "Could not load valid tokens. Loading non authenticated session...", e)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                appContainer.myItmo.validTokens
+                setAuthCookies(appContainer.myItmoStorage)
+                Log.d(TAG, "Auth cookies set. Loading authenticated session...")
+                withContext(Dispatchers.Main) {
+                    webView.loadUrl(siteUrl)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    webView.loadUrl(siteUrl)
+                }
+                Log.d(TAG, "Could not load valid tokens. Loading non authenticated session...", e)
+            }
         }
-        webView.loadUrl(siteUrl)
     }
 
     private fun setAuthCookies(storage: Storage) {

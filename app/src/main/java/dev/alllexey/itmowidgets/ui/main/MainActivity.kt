@@ -16,13 +16,15 @@ import dev.alllexey.itmowidgets.ui.web.WebFragment
 
 class MainActivity : AppCompatActivity() {
 
-    private val fragmentManager = supportFragmentManager
+    private val fragmentManager by lazy { supportFragmentManager }
     private var activeFragment: Fragment? = null
 
-    private lateinit var scheduleFragment: ScheduleFragment
-    private lateinit var webFragment: WebFragment
-    private lateinit var qrCodeFragment: QrCodeFragment
-    private lateinit var settingsFragment: SettingsFragment
+    private val fragmentTags = mapOf(
+        R.id.navigation_schedule to "schedule",
+        R.id.navigation_web to "web",
+        R.id.navigation_qr_code to "qr",
+        R.id.navigation_settings to "settings"
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,50 +43,42 @@ class MainActivity : AppCompatActivity() {
 
         val bottomNavView = findViewById<BottomNavigationView>(R.id.bottom_nav_view)
 
-        if (savedInstanceState == null) {
-            scheduleFragment = ScheduleFragment()
-            webFragment = WebFragment()
-            qrCodeFragment = QrCodeFragment()
-            settingsFragment = SettingsFragment()
-
-            fragmentManager.beginTransaction().apply {
-                add(R.id.nav_host_fragment, settingsFragment, R.id.navigation_settings.toString()).hide(settingsFragment)
-                add(R.id.nav_host_fragment, qrCodeFragment, R.id.navigation_qr_code.toString()).hide(qrCodeFragment)
-                add(R.id.nav_host_fragment, webFragment, R.id.navigation_web.toString()).hide(webFragment)
-                add(R.id.nav_host_fragment, scheduleFragment, R.id.navigation_schedule.toString())
-            }.commit()
-            activeFragment = scheduleFragment
-        } else {
-            scheduleFragment = fragmentManager.findFragmentByTag(R.id.navigation_schedule.toString()) as ScheduleFragment
-            webFragment = fragmentManager.findFragmentByTag(R.id.navigation_web.toString()) as WebFragment
-            qrCodeFragment = fragmentManager.findFragmentByTag(R.id.navigation_qr_code.toString()) as QrCodeFragment
-            settingsFragment = fragmentManager.findFragmentByTag(R.id.navigation_settings.toString()) as SettingsFragment
-
+        if (savedInstanceState != null) {
             val lastActiveTag = savedInstanceState.getString("ACTIVE_FRAGMENT_TAG")
-            activeFragment = lastActiveTag?.let { fragmentManager.findFragmentByTag(it) } ?: scheduleFragment
+            activeFragment = fragmentManager.findFragmentByTag(lastActiveTag)
         }
 
         bottomNavView.setOnItemSelectedListener { item ->
-            val fragmentToShow = when (item.itemId) {
-                R.id.navigation_schedule -> scheduleFragment
-                R.id.navigation_web -> webFragment
-                R.id.navigation_qr_code -> qrCodeFragment
-                R.id.navigation_settings -> settingsFragment
+            val tag = fragmentTags[item.itemId]
+            val existingFragment = fragmentManager.findFragmentByTag(tag)
+
+            val fragmentToShow = existingFragment ?: when (item.itemId) {
+                R.id.navigation_schedule -> ScheduleFragment()
+                R.id.navigation_web -> WebFragment()
+                R.id.navigation_qr_code -> QrCodeFragment()
+                R.id.navigation_settings -> SettingsFragment()
                 else -> throw IllegalStateException("Unknown menu item ID")
             }
 
-            if (fragmentToShow !== activeFragment) {
-                fragmentManager.beginTransaction().apply {
-                    activeFragment?.let { hide(it) }
-                    show(fragmentToShow)
-                    commit()
+            fragmentManager.beginTransaction().apply {
+                fragmentManager.fragments.forEach {
+                    hide(it)
                 }
-                activeFragment = fragmentToShow
+                if (existingFragment == null) {
+                    add(R.id.nav_host_fragment, fragmentToShow, tag)
+                } else {
+                    show(fragmentToShow)
+                }
+                commit()
             }
+
+            activeFragment = fragmentToShow
             true
         }
 
-        bottomNavView.selectedItemId = R.id.navigation_schedule
+        if (savedInstanceState == null) {
+            bottomNavView.selectedItemId = R.id.navigation_schedule
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
