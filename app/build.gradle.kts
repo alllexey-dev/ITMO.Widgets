@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "me.alllexey123.itmowidgets"
+    namespace = "dev.alllexey.itmowidgets"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "me.alllexey123.itmowidgets"
+        applicationId = "dev.alllexey.itmowidgets"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

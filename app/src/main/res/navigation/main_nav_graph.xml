@@ -7,25 +7,25 @@
 
     <fragment
         android:id="@+id/navigation_web"
-        android:name="me.alllexey123.itmowidgets.ui.web.WebFragment"
+        android:name="dev.alllexey.itmowidgets.ui.web.WebFragment"
         android:label="Web page"
         tools:layout="@layout/fragment_web" />
 
     <fragment
         android:id="@+id/navigation_qr_code"
-        android:name="me.alllexey123.itmowidgets.ui.qr.QrCodeFragment"
+        android:name="dev.alllexey.itmowidgets.ui.qr.QrCodeFragment"
         android:label="Qr code"
         tools:layout="@layout/fragment_qr_code" />
 
     <fragment
         android:id="@+id/navigation_schedule"
-        android:name="me.alllexey123.itmowidgets.ui.schedule.ScheduleFragment"
+        android:name="dev.alllexey.itmowidgets.ui.schedule.ScheduleFragment"
         android:label="Schedule"
         tools:layout="@layout/fragment_schedule" />
 
     <fragment
         android:id="@+id/navigation_settings"
-        android:name="me.alllexey123.itmowidgets.ui.settings.SettingsFragment"
+        android:name="dev.alllexey.itmowidgets.ui.settings.SettingsFragment"
         android:label="Settings" />
 
 </navigation>

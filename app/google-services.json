@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:753324533973:android:3bcd293bcb5d8172a29a5c",
+        "mobilesdk_app_id": "1:753324533973:android:8a8ce0fa50a4c84ea29a5c",
         "android_client_info": {
-          "package_name": "me.alllexey123.itmowidgets"
+          "package_name": "dev.alllexey.itmowidgets"
         }
       },
       "oauth_client": [],
