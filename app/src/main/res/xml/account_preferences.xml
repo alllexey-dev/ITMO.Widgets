@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:title="Аккаунт">
+
+    <PreferenceCategory
+        app:icon="@drawable/ic_account_circle"
+        app:title="Аккаунт MyITMO">
+
+        <Preference
+            app:icon="@drawable/ic_login"
+            app:key="login_itmoid"
+            app:summary="Автоматически получит ключ доступа"
+            app:title="Войти через ITMO.ID" />
+
+        <EditTextPreference
+            app:icon="@drawable/ic_vpn_key"
+            app:key="my_itmo_refresh_token"
+            app:summary="Используется для получения данных"
+            app:title="Ключ доступа (Refresh token)"
+            app:useSimpleSummaryProvider="false" />
+
+        <Preference
+            app:icon="@drawable/ic_outline_help"
+            app:key="refresh_token_help"
+            app:summary="Открыть инструкцию на GitHub"
+            app:title="Где найти ключ доступа?" />
+    </PreferenceCategory>
+</PreferenceScreen>

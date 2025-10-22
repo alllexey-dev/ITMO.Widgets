@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:title="Виджет с расписанием">
+
+    <PreferenceCategory
+        app:icon="@drawable/ic_wand_stars"
+        app:title="Поведение">
+        <SwitchPreference
+            app:defaultValue="true"
+            app:key="smart_scheduling"
+            app:summary="Обновлять виджет только при смене занятия"
+            app:title="Экономия батареи" />
+
+        <SwitchPreference
+            app:defaultValue="true"
+            app:key="beforehand_scheduling"
+            app:summary="Показывать следующее занятие за 15 минут до конца текущего"
+            app:title="Следующая пара заранее" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:icon="@drawable/ic_format_paint"
+        app:title="Внешний вид">
+
+        <ListPreference
+            app:defaultValue="dot"
+            app:entries="@array/widget_style_entries"
+            app:entryValues="@array/widget_style_values"
+            app:key="single_lesson_widget_style"
+            app:title="Стиль маленького виджета"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="dot"
+            app:entries="@array/widget_style_entries"
+            app:entryValues="@array/widget_style_values"
+            app:key="list_lesson_widget_style"
+            app:title="Стиль большого виджета"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreference
+            app:defaultValue="false"
+            app:key="hide_teacher"
+            app:summary="Не отображать ФИО преподавателя"
+            app:title="Скрывать преподавателя" />
+
+        <SwitchPreference
+            app:defaultValue="false"
+            app:key="hide_previous_lessons"
+            app:summary="В большом виджете не показывать пары, которые уже закончились"
+            app:title="Скрывать прошедшие занятия" />
+    </PreferenceCategory>
+</PreferenceScreen>

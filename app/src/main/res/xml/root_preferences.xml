@@ -1,107 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="Аккаунт" app:icon="@drawable/ic_account_circle">
+    <Preference
+        app:fragment="dev.alllexey.itmowidgets.ui.settings.AccountSettingsFragment"
+        app:icon="@drawable/ic_account_circle"
+        app:summary="Настройка данных для MyITMO и сервисов"
+        app:title="Аккаунт" />
+
+    <Preference
+        app:fragment="dev.alllexey.itmowidgets.ui.settings.ScheduleWidgetSettingsFragment"
+        app:icon="@drawable/ic_event_note"
+        app:summary="Настройки виджета с парами"
+        app:title="Виджет с расписанием" />
+
+    <Preference
+        app:fragment="dev.alllexey.itmowidgets.ui.settings.QrWidgetSettingsFragment"
+        app:icon="@drawable/ic_qr_code"
+        app:summary="Настройки виджета с QR-кодом"
+        app:title="Виджет с QR-пропуском" />
+
+    <PreferenceCategory
+        app:icon="@drawable/ic_outline_build_circle"
+        app:title="Синхронизация и отладка">
 
         <Preference
-            app:key="login_itmoid"
-            app:title="Войти через ITMO.ID" />
-
-        <EditTextPreference
-            app:key="refresh_token"
-            app:title="Ключ доступа"
-            app:summary="Используется для получения данных"
-            app:useSimpleSummaryProvider="false"/>
-
-        <Preference
-            app:key="refresh_token_expires"
-            app:isPreferenceVisible="false" />
-
-        <Preference
-            app:key="refresh_token_help"
-            app:title="Откуда взять ключ доступа?"
-            app:icon="@drawable/ic_outline_help" />
-
-        <SwitchPreference
-            app:key="backend_allow"
-            app:title="Неофициальные сервисы"
-            app:summary="indev"
-            app:defaultValue="false"/>
-
-    </PreferenceCategory>
-
-    <PreferenceCategory app:title="Стили" app:icon="@drawable/ic_format_paint">
-
-        <ListPreference
-            app:key="single_lesson_widget_style"
-            app:title="Маленький виджет"
-            app:entryValues="@array/widget_style_values"
-            app:entries="@array/widget_style_entries"
-            app:defaultValue="dot"
-            app:useSimpleSummaryProvider="true"
-            />
-
-        <ListPreference
-            app:key="list_lesson_widget_style"
-            app:title="Большой виджет"
-            app:entryValues="@array/widget_style_values"
-            app:entries="@array/widget_style_entries"
-            app:defaultValue="dot"
-            app:useSimpleSummaryProvider="true"
-            />
-
-        <SwitchPreference
-            app:key="dynamic_qr_colors"
-            app:title="Адаптивные цвета QR"
-            app:summary="Цвета QR кода будут мягко адаптироваться под цвета системы"
-            app:defaultValue="true"/>
-
-        <SwitchPreference
-            app:key="hide_teacher"
-            app:title="Скрывать преподавателя"
-            app:summary="Не показывать имя преподавателя в виджете"
-            app:defaultValue="false"/>
-
-        <SwitchPreference
-            app:key="hide_previous_lessons"
-            app:title="Скрывать прошедшие пары"
-            app:summary="На большом виджете не будут видны прошлые занятия"
-            app:defaultValue="false"/>
-    </PreferenceCategory>
-
-    <PreferenceCategory app:title="Поведение виджетов" app:icon="@drawable/ic_settings">
-
-        <SwitchPreference
-            app:key="smart_scheduling"
-            app:title="Умное обновление"
-            app:summary="Виджет обновляется только при смене пары"
-            app:defaultValue="true"/>
-
-        <SwitchPreference
-            app:key="beforehand_scheduling"
-            app:title="Показывать следующую пару заранее"
-            app:summary="За 15 минут до конца занятия будет показана следующая пара"
-            app:defaultValue="true"/>
-    </PreferenceCategory>
-
-    <PreferenceCategory app:title="Инструменты разработчика" app:icon="@drawable/ic_outline_build_circle">
-
-        <Preference
+            app:icon="@drawable/ic_history"
             app:key="last_update_timestamp"
-            app:title="Последнее обновление"
             app:summary="Виджеты пока не обновлялись"
-            app:icon="@drawable/ic_outline_info" />
+            app:title="Последнее обновление" />
 
         <Preference
+            app:icon="@drawable/ic_refresh"
             app:key="trigger_update_button"
-            app:title="Обновить вручную"
-            app:summary="Сразу обновить все виджеты"
-            app:icon="@drawable/ic_refresh"/>
+            app:summary="Синхронизировать все виджеты"
+            app:title="Принудительное обновление" />
 
         <EditTextPreference
             app:key="error_log"
-            app:title="Логи ошибок"
-            app:summary="При возникновении каких-то проблем"
-            app:useSimpleSummaryProvider="false"/>
+            app:summary="Для быстрой диагностики"
+            app:title="Журнал ошибок"
+            app:useSimpleSummaryProvider="false" />
     </PreferenceCategory>
 </PreferenceScreen>
