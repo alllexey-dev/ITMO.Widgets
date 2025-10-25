@@ -7,13 +7,22 @@ import dev.alllexey.itmowidgets.core.utils.ItmoWidgetsException
 import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
 import dev.alllexey.itmowidgets.core.model.RegisterDeviceRequest
 import dev.alllexey.itmowidgets.core.utils.ItmoWidgetsStorage
+import dev.alllexey.itmowidgets.data.UserSettingsStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 
 class ItmoWidgetsClient(
     myItmo: MyItmo,
-    storage: ItmoWidgetsStorage
+    storage: ItmoWidgetsStorage,
+    val settings: UserSettingsStorage
 ) : ItmoWidgetsImpl(myItmo, storage) {
+
+    override fun okHttpClient(): OkHttpClient {
+        return super.okHttpClient().newBuilder()
+            .addInterceptor(SettingsStateInterceptor(settings))
+            .build()
+    }
 
     suspend fun sendFirebaseToken(token: String, deviceName: String = getDeviceName()): Result<String> {
         return withContext(Dispatchers.IO) {

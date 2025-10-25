@@ -25,4 +25,21 @@
             app:summary="Открыть инструкцию на GitHub"
             app:title="Где найти ключ доступа?" />
     </PreferenceCategory>
+
+    <PreferenceCategory
+        app:icon="@drawable/ic_star_shine"
+        app:title="Расширенные возможности">
+
+        <SwitchPreference
+            app:defaultValue="false"
+            app:key="custom_services_allow"
+            app:summary="Добавляет в приложение уникальные инструменты"
+            app:title="Пользовательские сервисы" />
+
+        <Preference
+            app:icon="@drawable/ic_outline_help"
+            app:key="custom_services_info"
+            app:summary="Подробное описание новых функций"
+            app:title="Что это дает?" />
+    </PreferenceCategory>
 </PreferenceScreen>
