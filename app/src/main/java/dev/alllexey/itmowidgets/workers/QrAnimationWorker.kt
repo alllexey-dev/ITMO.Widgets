@@ -58,7 +58,7 @@ class QrAnimationWorker(appContext: Context, workerParams: WorkerParameters) :
         val qrToolkit = appContainer.qrToolkit
 
         val durationMs = 800L
-        val frameRate = 30
+        val frameRate = 60
         val frameDelay = 1000L / frameRate
         val totalFrames = (durationMs / frameDelay).toInt()
 

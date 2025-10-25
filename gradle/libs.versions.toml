@@ -1,5 +1,6 @@
 [versions]
 agp = "8.12.3"
+androidImageCropper = "4.6.0"
 datastorePreferences = "1.1.7"
 itmoWidgetsCore = "1.0.1"
 kotlin = "2.2.20"
@@ -20,6 +21,7 @@ firebaseMessaging = "25.0.1"
 navigationFragmentKtx = "2.9.5"
 
 [libraries]
+android-image-cropper = { module = "com.vanniktech:android-image-cropper", version.ref = "androidImageCropper" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-navigation-ui = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigationFragmentKtx" }

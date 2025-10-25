@@ -35,5 +35,13 @@
             app:title="Тип анимации"
             app:useSimpleSummaryProvider="true" />
 
+        <Preference
+            app:key="choose_custom_spoiler"
+            app:title="Выбрать изображение"
+            app:summary="Вы можете поставить своё изображение в качестве спойлера"/>
+
+        <Preference
+            app:key="remove_custom_spoiler"
+            app:title="Сбросить изображение" />
     </PreferenceCategory>
 </PreferenceScreen>

@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.data.local.QrBitmapCacheImpl
 import dev.alllexey.itmowidgets.data.local.QrCodeLocalDataSourceImpl
 import dev.alllexey.itmowidgets.data.remote.QrCodeRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.data.repository.QrCodeRepository
+import androidx.core.graphics.scale
 
 class QrToolkit(
     private val appContainer: AppContainer,
@@ -20,6 +21,7 @@ class QrToolkit(
     val renderer: QrBitmapRenderer = QrBitmapRenderer(),
     val colorResolver: QrColorResolver = QrColorResolver(appContainer),
     val bitmapCache: QrBitmapCache = QrBitmapCacheImpl(context),
+    val customSpoilerManager: CustomSpoilerManager = CustomSpoilerManager(context)
 ) {
 
     suspend fun getQrHex(allowCached: Boolean = true): String {
@@ -43,6 +45,13 @@ class QrToolkit(
     }
 
     fun generateSpoilerBitmap(noCache: Boolean = false): Bitmap {
+        val customSpoiler = customSpoilerManager.getCustomSpoilerBitmap()
+        if (customSpoiler != null) {
+            if (customSpoiler.width != defaultSidePixels() || customSpoiler.height != defaultSidePixels()) {
+                return customSpoiler.scale(defaultSidePixels(), defaultSidePixels())
+            }
+            return customSpoiler
+        }
         return generateNoiseBitmap(noCache)
     }
 

@@ -27,6 +27,9 @@
             android:name=".ui.login.LoginActivity"
             android:exported="false" />
 
+        <activity
+            android:name="com.canhub.cropper.CropImageActivity"
+            android:theme="@style/Theme.Material3.DynamicColors.DayNight" />
 
         <service
             android:name=".services.MyFirebaseMessagingService"
