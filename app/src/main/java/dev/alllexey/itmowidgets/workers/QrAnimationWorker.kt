@@ -11,11 +11,11 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.withSave
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import kotlinx.coroutines.delay
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.data.UserSettingsStorage
+import dev.alllexey.itmowidgets.ui.widgets.data.QrAnimationType
 import dev.alllexey.itmowidgets.ui.widgets.data.QrWidgetState
+import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.hypot
@@ -68,17 +68,15 @@ class QrAnimationWorker(appContext: Context, workerParams: WorkerParameters) :
 
         val animationType = appContainer.storage.settings.getQrSpoilerAnimationType()
         val animation: QrAnimation = when (animationType) {
-            UserSettingsStorage.CIRCLE_ANIMATION -> CircleAnimation(
+            QrAnimationType.CIRCLE -> CircleAnimation(
                 qrCodeBitmap = qrBitmap,
                 spoilerBitmap = spoilerBitmap
             )
 
-            UserSettingsStorage.FADE_ANIMATION -> FadeAnimation(
+            QrAnimationType.FADE -> FadeAnimation(
                 qrCodeBitmap = qrBitmap,
                 spoilerBitmap = spoilerBitmap
             )
-
-            else -> throw RuntimeException("Unknown animation type")
         }
 
         appContainer.storage.utility.setQrWidgetState(appWidgetId, QrWidgetState.ANIMATING)

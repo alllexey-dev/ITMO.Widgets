@@ -6,8 +6,8 @@
     </string-array>
 
     <string-array name="widget_style_values">
-        <item>dot</item>
-        <item>line</item>
+        <item>DOT</item>
+        <item>LINE</item>
     </string-array>
 
     <string-array name="qr_spoiler_animation_entries">
@@ -16,7 +16,7 @@
     </string-array>
 
     <string-array name="qr_spoiler_animation_values">
-        <item>circle</item>
-        <item>fade</item>
+        <item>CIRCLE</item>
+        <item>FADE</item>
     </string-array>
 </resources>

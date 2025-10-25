@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.ui.widgets.data
 import api.myitmo.model.Lesson
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.data.Storage
-import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.LINE_STYLE
 import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 import java.time.LocalDate
@@ -126,7 +125,7 @@ class LessonWidgetDataManager(
     }
 
     fun getSingleLessonWidgetLayout(): Int {
-        return if (storage.settings.getSingleLessonWidgetStyle() == LINE_STYLE) {
+        return if (storage.settings.getSingleLessonWidgetStyle() == LessonStyle.LINE) {
             R.layout.single_lesson_widget_dash
         } else {
             R.layout.single_lesson_widget_dot
@@ -134,7 +133,7 @@ class LessonWidgetDataManager(
     }
 
     fun getListWidgetLessonLayout(): Int {
-        return if (storage.settings.getLessonListWidgetStyle() == LINE_STYLE) {
+        return if (storage.settings.getLessonListWidgetStyle() == LessonStyle.LINE) {
             R.layout.item_lesson_list_entry_dash
         } else {
             R.layout.item_lesson_list_entry_dot

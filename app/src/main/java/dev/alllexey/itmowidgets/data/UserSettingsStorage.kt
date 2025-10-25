@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.data
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import dev.alllexey.itmowidgets.ui.widgets.data.LessonStyle
+import dev.alllexey.itmowidgets.ui.widgets.data.QrAnimationType
 import dev.alllexey.itmowidgets.ui.widgets.data.QrWidgetState
 
 class UserSettingsStorage(val prefs: SharedPreferences) {
@@ -10,18 +12,14 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
         const val CUSTOM_SERVICES_ALLOW_KEY = "custom_services_allow"
         const val SMART_SCHEDULING_KEY = "smart_scheduling"
         const val BEFOREHAND_SCHEDULING_KEY = "beforehand_scheduling"
-        const val SINGLE_LESSON_WIDGET_STYLE = "single_lesson_widget_style"
-        const val LIST_LESSON_WIDGET_STYLE = "list_lesson_widget_style"
-        const val DOT_STYLE = "dot" // todo: better implementation
-        const val LINE_STYLE = "line"
+        const val SINGLE_LESSON_WIDGET_STYLE_KEY = "single_lesson_widget_style"
+        const val LIST_LESSON_WIDGET_STYLE_KEY = "list_lesson_widget_style"
         const val HIDE_TEACHER_KEY = "hide_teacher"
         const val HIDE_PREVIOUS_LESSONS_KEY = "hide_previous_lessons"
         const val DYNAMIC_QR_COLORS_KEY = "dynamic_qr_colors"
         const val QR_SPOILER_KEY = "qr_spoiler"
         const val QR_SPOILER_ANIMATION_TYPE_KEY = "qr_spoiler_animation_type"
-        const val FADE_ANIMATION = "fade" // todo: better implementation
         const val QR_WIDGET_STATE_PREFIX = "qr_widget_state_"
-        const val CIRCLE_ANIMATION = "circle"
     }
 
     fun getCustomServicesState(): Boolean {
@@ -36,12 +34,14 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
         return prefs.getBoolean(BEFOREHAND_SCHEDULING_KEY, true)
     }
 
-    fun getSingleLessonWidgetStyle(): String? {
-        return prefs.getString(SINGLE_LESSON_WIDGET_STYLE, DOT_STYLE)
+    fun getSingleLessonWidgetStyle(): LessonStyle {
+        val str = prefs.getString(SINGLE_LESSON_WIDGET_STYLE_KEY, null)
+        return LessonStyle.valueOf(str ?: LessonStyle.DOT.name)
     }
 
-    fun getLessonListWidgetStyle(): String? {
-        return prefs.getString(LIST_LESSON_WIDGET_STYLE, DOT_STYLE)
+    fun getLessonListWidgetStyle(): LessonStyle {
+        val str = prefs.getString(LIST_LESSON_WIDGET_STYLE_KEY, null)
+        return LessonStyle.valueOf(str ?: LessonStyle.DOT.name)
     }
 
     fun getHideTeacherState(): Boolean {
@@ -60,12 +60,14 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
         return prefs.getBoolean(QR_SPOILER_KEY, true)
     }
 
-    fun getQrSpoilerAnimationType(): String? {
-        return prefs.getString(QR_SPOILER_ANIMATION_TYPE_KEY, CIRCLE_ANIMATION)
+    fun getQrSpoilerAnimationType(): QrAnimationType {
+        val str = prefs.getString(QR_SPOILER_ANIMATION_TYPE_KEY, null)
+        return QrAnimationType.valueOf(str ?: QrAnimationType.CIRCLE.name)
     }
 
     fun getQrWidgetState(appWidgetId: Int): QrWidgetState {
-        val stateName = prefs.getString("$QR_WIDGET_STATE_PREFIX$appWidgetId", QrWidgetState.SPOILER.name)
+        val stateName =
+            prefs.getString("$QR_WIDGET_STATE_PREFIX$appWidgetId", QrWidgetState.SPOILER.name)
         return QrWidgetState.valueOf(stateName ?: QrWidgetState.SPOILER.name)
     }
 
@@ -93,15 +95,15 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
         }
     }
 
-    fun setSingleLessonWidgetStyle(style: String?) {
+    fun setSingleLessonWidgetStyle(style: LessonStyle) {
         prefs.edit(commit = true) {
-            putString(SINGLE_LESSON_WIDGET_STYLE, style)
+            putString(SINGLE_LESSON_WIDGET_STYLE_KEY, style.name)
         }
     }
 
-    fun setListLessonWidgetStyle(style: String?) {
+    fun setListLessonWidgetStyle(style: LessonStyle) {
         prefs.edit(commit = true) {
-            putString(LIST_LESSON_WIDGET_STYLE, style)
+            putString(LIST_LESSON_WIDGET_STYLE_KEY, style.name)
         }
     }
 
@@ -120,6 +122,12 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
     fun setDynamicQrColorsState(dynamicQrColors: Boolean) {
         prefs.edit(commit = true) {
             putBoolean(DYNAMIC_QR_COLORS_KEY, dynamicQrColors)
+        }
+    }
+
+    fun setQrAnimationType(qrAnimationType: QrAnimationType) {
+        prefs.edit(commit = true) {
+            putString(QR_SPOILER_ANIMATION_TYPE_KEY, qrAnimationType.name)
         }
     }
 }
