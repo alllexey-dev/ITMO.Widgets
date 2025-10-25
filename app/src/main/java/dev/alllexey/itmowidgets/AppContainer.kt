@@ -27,7 +27,7 @@ class AppContainer(val context: Context) {
     }
 
     val itmoWidgets: ItmoWidgetsClient by lazy {
-        ItmoWidgetsClient(myItmo, storage.itmoWidgets)
+        ItmoWidgetsClient(myItmo, storage.itmoWidgets, storage.settings)
     }
 
     val qrToolkit: QrToolkit by lazy {
