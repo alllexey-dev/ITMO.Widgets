@@ -5,7 +5,7 @@ import androidx.core.content.edit
 import api.myitmo.model.TokenResponse
 import api.myitmo.storage.Storage
 
-class MyItmoPreferencesStorage(val prefs: SharedPreferences) : Storage {
+class MyItmoStorage(val prefs: SharedPreferences) : Storage {
 
     override fun getAccessToken(): String? {
         return prefs.getString(ACCESS_TOKEN_KEY, null)

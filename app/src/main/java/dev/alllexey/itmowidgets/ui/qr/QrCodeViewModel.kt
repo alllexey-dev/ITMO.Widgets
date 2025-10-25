@@ -4,8 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.alllexey.itmowidgets.util.qr.QrToolkit
 import kotlinx.coroutines.launch
-import dev.alllexey.itmowidgets.data.repository.QrCodeRepository
 
 sealed class QrCodeUiState {
     object Loading : QrCodeUiState()
@@ -14,7 +14,7 @@ sealed class QrCodeUiState {
 }
 
 class QrCodeViewModel(
-    private val qrCodeRepository: QrCodeRepository
+    private val qrToolkit: QrToolkit
 ) : ViewModel()  {
 
     private val _uiState = MutableLiveData<QrCodeUiState>()
@@ -26,7 +26,7 @@ class QrCodeViewModel(
         viewModelScope.launch {
             try {
                 _uiState.value = QrCodeUiState.Loading
-                val qrCodeHex = qrCodeRepository.getQrHex()
+                val qrCodeHex = qrToolkit.getQrHex()
                 _uiState.postValue(QrCodeUiState.Success(qrCodeHex))
             } catch (e: Exception) {
                 val errorMessage = "Failed to update qr code: ${e.message}"

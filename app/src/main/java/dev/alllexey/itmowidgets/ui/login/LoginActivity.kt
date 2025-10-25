@@ -58,7 +58,7 @@ class LoginActivity : AppCompatActivity(), WebViewListener {
     private fun saveTokensToAppStorage(tokensResponseString: String) {
         val appContainer = (application as ItmoWidgetsApp).appContainer
         val tokenResponse = appContainer.myItmo.gson.fromJson(tokensResponseString, TokenResponse::class.java)
-        appContainer.myItmoStorage.update(tokenResponse)
+        appContainer.storage.myItmo.update(tokenResponse)
         Log.d(TAG, "Successfully updated tokens from LoginActivity.")
     }
 

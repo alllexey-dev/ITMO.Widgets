@@ -9,4 +9,14 @@
         <item>dot</item>
         <item>line</item>
     </string-array>
+
+    <string-array name="qr_spoiler_animation_entries">
+        <item>Круг</item>
+        <item>Затухание</item>
+    </string-array>
+
+    <string-array name="qr_spoiler_animation_values">
+        <item>circle</item>
+        <item>fade</item>
+    </string-array>
 </resources>

@@ -51,7 +51,7 @@ class WebViewManager(
                     val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
                     try {
                         appContainer.myItmo.validTokens
-                        setAuthCookies(appContainer.myItmoStorage)
+                        setAuthCookies(appContainer.storage.myItmo)
                     } catch (e: Exception) {
                         Log.d(TAG, "Could not load valid tokens. Skipping token update.", e)
                     }
@@ -98,7 +98,7 @@ class WebViewManager(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 appContainer.myItmo.validTokens
-                setAuthCookies(appContainer.myItmoStorage)
+                setAuthCookies(appContainer.storage.myItmo)
                 Log.d(TAG, "Auth cookies set. Loading authenticated session...")
                 withContext(Dispatchers.Main) {
                     webView.loadUrl(siteUrl)

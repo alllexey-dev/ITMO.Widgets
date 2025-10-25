@@ -28,10 +28,10 @@ class LessonWidgetUpdateWorker(
 
     override suspend fun doWork(): Result {
         val appContainer = (appContext as ItmoWidgetsApp).appContainer
-        val storage = appContainer.userSettingsStorage
+        val storage = appContainer.storage
         val repository = appContainer.scheduleRepository
         val lessonListRepository = appContainer.lessonListRepository
-        storage.setLastUpdateTimestamp(System.currentTimeMillis())
+        storage.utility.setLastUpdateTimestamp(System.currentTimeMillis())
 
         val appWidgetManager = AppWidgetManager.getInstance(appContext)
 
@@ -47,7 +47,7 @@ class LessonWidgetUpdateWorker(
         }
 
         try {
-            val onlyDataChanged = !storage.getLessonWidgetStyleChanged()
+            val onlyDataChanged = !storage.utility.getLessonWidgetStyleChanged()
 
             val dataManager = LessonWidgetDataManager(repository, storage)
             val widgetsState = dataManager.getLessonWidgetsState()
@@ -64,12 +64,12 @@ class LessonWidgetUpdateWorker(
                 onlyDataChanged
             )
 
-            storage.setLessonWidgetStyleChanged(false)
+            storage.utility.setLessonWidgetStyleChanged(false)
 
             scheduleNextUpdate(appContext, widgetsState.nextUpdateAt.plusSeconds(3))
         } catch (e: Exception) {
             e.printStackTrace()
-            storage.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
+            storage.utility.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
             lessonListRepository.setData(LessonListWidgetData(listOf(LessonListWidgetEntry.Error)))
             scheduleNextUpdate(appContext, null)
         }

@@ -8,9 +8,9 @@ class QrCodeRepository(
     private val remoteDataSource: QrCodeRemoteDataSource
 ) {
 
-    suspend fun getQrHex(): String {
+    suspend fun getQrHex(allowCached: Boolean = true): String {
         val cachedHex = localDataSource.getQrHex()
-        if (cachedHex != null) {
+        if (cachedHex != null && allowCached) {
             return cachedHex
         }
 

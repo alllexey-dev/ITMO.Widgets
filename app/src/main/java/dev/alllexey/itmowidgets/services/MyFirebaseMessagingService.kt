@@ -58,8 +58,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun sendTokenToServer(token: String) {
         val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
         val itmoWidgets = appContainer.itmoWidgets
-        appContainer.userSettingsStorage.setFirebaseToken(token)
-        if (appContainer.userSettingsStorage.getBackendAllow()) {
+        appContainer.storage.utility.setFirebaseToken(token)
+        if (appContainer.storage.settings.getCustomServicesState()) {
             runBlocking { itmoWidgets.sendFirebaseToken(token) }
         }
     }

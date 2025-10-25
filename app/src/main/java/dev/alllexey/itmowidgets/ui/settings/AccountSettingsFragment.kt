@@ -12,9 +12,9 @@ import androidx.preference.SwitchPreference
 import dev.alllexey.itmowidgets.AppContainer
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.data.MyItmoPreferencesStorage.KEYS.REFRESH_TOKEN_KEY
+import dev.alllexey.itmowidgets.data.MyItmoStorage.KEYS.REFRESH_TOKEN_KEY
 import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.CUSTOM_SERVICES_ALLOW_KEY
-import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.LESSON_WIDGET_STYLE_CHANGED_KEY
+import dev.alllexey.itmowidgets.data.UtilityStorage.KEYS.LESSON_WIDGET_STYLE_CHANGED_KEY
 import dev.alllexey.itmowidgets.ui.login.LoginActivity
 import dev.alllexey.itmowidgets.ui.widgets.WidgetUtils
 import kotlinx.coroutines.CoroutineScope
@@ -57,12 +57,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
         val allowBackend = findPreference<SwitchPreference>(CUSTOM_SERVICES_ALLOW_KEY)
         allowBackend?.setOnPreferenceChangeListener { preference, newValue ->
-            val firebaseToken = appContainer.userSettingsStorage.getFirebaseToken()
+            val firebaseToken = appContainer.storage.utility.getFirebaseToken()
             if (firebaseToken != null && newValue as Boolean) {
                 CoroutineScope(Dispatchers.IO).launch {
-                    appContainer.itmoWidgets.sendFirebaseToken(
-                        firebaseToken
-                    )
+                    appContainer.itmoWidgets.sendFirebaseToken(firebaseToken)
                 }
             }
             true
@@ -77,9 +75,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         }
 
         appContainer.scheduleRepository.clearCache()
-        appContainer.qrCodeRepository.clearCache()
-        appContainer.itmoWidgetsStorage.clearTokens()
-        appContainer.myItmoStorage.clearTokens()
+        appContainer.qrToolkit.repository.clearCache()
+        appContainer.storage.itmoWidgets.clearTokens()
+        appContainer.storage.myItmo.clearTokens()
 
         updateAllWidgets()
     }

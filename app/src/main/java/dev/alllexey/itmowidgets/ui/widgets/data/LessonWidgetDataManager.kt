@@ -2,14 +2,12 @@ package dev.alllexey.itmowidgets.ui.widgets.data
 
 import api.myitmo.model.Lesson
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
-import dev.alllexey.itmowidgets.data.UserSettingsStorage
+import dev.alllexey.itmowidgets.data.Storage
 import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.LINE_STYLE
+import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 import java.time.LocalDate
 import java.time.LocalDateTime
-import kotlin.collections.map
-import kotlin.collections.orEmpty
 
 const val RETRY_DELAY_SECONDS: Long = 7 * 60 // 7 minutes
 
@@ -17,7 +15,7 @@ private const val BEFOREHAND_SCHEDULING_OFFSET = 15L * 60 // 15 minutes
 
 class LessonWidgetDataManager(
     private val scheduleRepository: ScheduleRepository,
-    private val storage: UserSettingsStorage
+    private val storage: Storage
 ) {
 
     suspend fun getLessonWidgetsState(): LessonWidgetsState {
@@ -30,7 +28,7 @@ class LessonWidgetDataManager(
             listDataResult = getLessonListData(lessons)
             nextUpdateAt = getNextUpdateAt(lessons)
         } catch (e: Exception) {
-            storage.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
+            storage.utility.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
             singleDataResult = SingleLessonWidgetData.Error(getSingleLessonWidgetLayout())
 
             listDataResult = LessonListWidgetData(
@@ -51,7 +49,7 @@ class LessonWidgetDataManager(
         val layoutId = getSingleLessonWidgetLayout()
         if (lessons.isEmpty()) return SingleLessonWidgetData.FullDayEmpty(layoutId)
 
-        val hideTeacher = storage.getHideTeacherState()
+        val hideTeacher = storage.settings.getHideTeacherState()
         val lesson = getLessonToShow(lessons)
 
         return if (lesson == null) {
@@ -81,8 +79,8 @@ class LessonWidgetDataManager(
     private fun getLessonListData(lessons: List<Lesson>): LessonListWidgetData {
         if (lessons.isEmpty()) return LessonListWidgetData(listOf(LessonListWidgetEntry.FullDayEmpty))
 
-        val hidePrevious = storage.getHidePreviousLessonsState()
-        val hideTeacher = storage.getHideTeacherState()
+        val hidePrevious = storage.settings.getHidePreviousLessonsState()
+        val hideTeacher = storage.settings.getHideTeacherState()
 
         val lessonsToShow = if (hidePrevious) {
             val startFrom = getLessonToShow(lessons)
@@ -119,7 +117,7 @@ class LessonWidgetDataManager(
         val now = LocalDate.now()
         if (lesson == null) return now.plusDays(1).atStartOfDay()
 
-        val beforehandScheduling = storage.getBeforehandSchedulingState()
+        val beforehandScheduling = storage.settings.getBeforehandSchedulingState()
         return if (lesson == lessons.last() || !beforehandScheduling) {
             ScheduleUtils.parseTime(now, lesson.timeEnd)
         } else {
@@ -128,7 +126,7 @@ class LessonWidgetDataManager(
     }
 
     fun getSingleLessonWidgetLayout(): Int {
-        return if (storage.getSingleLessonWidgetStyle() == LINE_STYLE) {
+        return if (storage.settings.getSingleLessonWidgetStyle() == LINE_STYLE) {
             R.layout.single_lesson_widget_dash
         } else {
             R.layout.single_lesson_widget_dot
@@ -136,7 +134,7 @@ class LessonWidgetDataManager(
     }
 
     fun getListWidgetLessonLayout(): Int {
-        return if (storage.getLessonListWidgetStyle() == LINE_STYLE) {
+        return if (storage.settings.getLessonListWidgetStyle() == LINE_STYLE) {
             R.layout.item_lesson_list_entry_dash
         } else {
             R.layout.item_lesson_list_entry_dot
@@ -144,7 +142,7 @@ class LessonWidgetDataManager(
     }
 
     fun getLessonToShow(lessons: List<Lesson>): Lesson? {
-        val beforehandScheduling = storage.getBeforehandSchedulingState()
+        val beforehandScheduling = storage.settings.getBeforehandSchedulingState()
         val now = LocalDateTime.now()
 
         val found = ScheduleUtils.findCurrentOrNextLesson(lessons, now)

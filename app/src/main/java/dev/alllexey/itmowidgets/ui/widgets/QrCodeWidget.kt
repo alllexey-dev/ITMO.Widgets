@@ -7,17 +7,28 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.widget.RemoteViews
+import android.widget.Toast
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.ui.widgets.data.QrWidgetState
 import dev.alllexey.itmowidgets.workers.QrAnimationWorker
 import dev.alllexey.itmowidgets.workers.QrWidgetUpdateWorker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class QrCodeWidget : AppWidgetProvider() {
 
-    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
         for (appWidgetId in appWidgetIds) {
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
             val pendingIntent = getClickIntent(context, appWidgetId)
@@ -38,7 +49,14 @@ class QrCodeWidget : AppWidgetProvider() {
             )
 
             if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                startAnimationWorker(context, appWidgetId)
+                val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
+                val state = appContainer.storage.utility.getQrWidgetState(appWidgetId)
+                when (state) {
+                    QrWidgetState.SPOILER -> startAnimationWorker(context, appWidgetId)
+                    QrWidgetState.ANIMATING -> {}
+                    QrWidgetState.SHOWING_QR -> forceBackgroundUpdate(context, appWidgetId)
+                    QrWidgetState.UPDATING -> showUpdatingToast(context)
+                }
             }
         }
     }
@@ -50,14 +68,66 @@ class QrCodeWidget : AppWidgetProvider() {
             .setInputData(inputData)
             .build()
 
-        WorkManager.getInstance(context).enqueueUniqueWork(QrAnimationWorker.WORK_NAME, ExistingWorkPolicy.KEEP, animationWorkRequest)
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            QrAnimationWorker.WORK_NAME,
+            ExistingWorkPolicy.KEEP,
+            animationWorkRequest
+        )
+        QrWidgetUpdateWorker.scheduleNextUpdate(context, 30)
+    }
+
+    private fun showUpdatingToast(context: Context) {
+        CoroutineScope(Dispatchers.Main).launch {
+            Toast.makeText(context, "QR-код уже обновляется!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun forceBackgroundUpdate(context: Context, appWidgetId: Int) {
+        val appContext = context.applicationContext
+        val appContainer = (appContext as ItmoWidgetsApp).appContainer
+        val qrToolkit = appContainer.qrToolkit
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                appContainer.storage.utility.setQrWidgetState(
+                    appWidgetId,
+                    QrWidgetState.UPDATING
+                )
+
+                val qrHex = qrToolkit.getQrHex(allowCached = false)
+                val qrBitmap = qrToolkit.generateQrBitmap(qrHex)
+
+                val appWidgetManager = AppWidgetManager.getInstance(appContext)
+                withContext(Dispatchers.Main) {
+                    updateAppWidget(
+                        appContext,
+                        appWidgetManager,
+                        appWidgetId,
+                        qrBitmap
+                    )
+
+                    Toast.makeText(context, "QR-код обновлён", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Ошибка обновления QR: ${e.message}", Toast.LENGTH_LONG)
+                        .show()
+                }
+            }
+            appContainer.storage.utility.setQrWidgetState(appWidgetId, QrWidgetState.SHOWING_QR)
+        }
     }
 
     companion object {
 
         const val ACTION_WIDGET_CLICK: String = "me.alllexey123.itmowidgets.action.QR_WIDGET_CLICK"
 
-        fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, bitmap: Bitmap) {
+        fun updateAppWidget(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int,
+            bitmap: Bitmap
+        ) {
             val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
             val pendingIntent = getClickIntent(context, appWidgetId)
             views.setOnClickPendingIntent(R.id.qr_code_image, pendingIntent)
@@ -66,7 +136,7 @@ class QrCodeWidget : AppWidgetProvider() {
         }
 
 
-        fun getClickIntent(context: Context, appWidgetId: Int):  PendingIntent {
+        fun getClickIntent(context: Context, appWidgetId: Int): PendingIntent {
 
             val intent = Intent(context, QrCodeWidget::class.java)
             intent.setAction(ACTION_WIDGET_CLICK)

@@ -2,36 +2,30 @@ package dev.alllexey.itmowidgets.data
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import dev.alllexey.itmowidgets.ui.widgets.data.QrWidgetState
 
 class UserSettingsStorage(val prefs: SharedPreferences) {
 
     companion object KEYS {
         const val CUSTOM_SERVICES_ALLOW_KEY = "custom_services_allow"
-        const val FIREBASE_TOKEN_KEY = "firebase_token"
-        const val LAST_UPDATE_TIMESTAMP_KEY = "last_update_timestamp"
         const val SMART_SCHEDULING_KEY = "smart_scheduling"
         const val BEFOREHAND_SCHEDULING_KEY = "beforehand_scheduling"
         const val SINGLE_LESSON_WIDGET_STYLE = "single_lesson_widget_style"
         const val LIST_LESSON_WIDGET_STYLE = "list_lesson_widget_style"
-        const val DOT_STYLE = "dot"
+        const val DOT_STYLE = "dot" // todo: better implementation
         const val LINE_STYLE = "line"
         const val HIDE_TEACHER_KEY = "hide_teacher"
         const val HIDE_PREVIOUS_LESSONS_KEY = "hide_previous_lessons"
         const val DYNAMIC_QR_COLORS_KEY = "dynamic_qr_colors"
-        const val ERROR_LOG_KEY = "error_log"
-        const val LESSON_WIDGET_STYLE_CHANGED_KEY = "lesson_widget_style_changed"
+        const val QR_SPOILER_KEY = "qr_spoiler"
+        const val QR_SPOILER_ANIMATION_TYPE_KEY = "qr_spoiler_animation_type"
+        const val FADE_ANIMATION = "fade" // todo: better implementation
+        const val QR_WIDGET_STATE_PREFIX = "qr_widget_state_"
+        const val CIRCLE_ANIMATION = "circle"
     }
 
-    fun getBackendAllow(): Boolean {
+    fun getCustomServicesState(): Boolean {
         return prefs.getBoolean(CUSTOM_SERVICES_ALLOW_KEY, false)
-    }
-
-    fun getFirebaseToken(): String? {
-        return prefs.getString(FIREBASE_TOKEN_KEY, null)
-    }
-
-    fun getLastUpdateTimestamp(): Long {
-        return prefs.getLong(LAST_UPDATE_TIMESTAMP_KEY, 0)
     }
 
     fun getSmartSchedulingState(): Boolean {
@@ -62,29 +56,28 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
         return prefs.getBoolean(DYNAMIC_QR_COLORS_KEY, true)
     }
 
-    fun getErrorLog(): String? {
-        return prefs.getString(ERROR_LOG_KEY, "empty")
+    fun getQrSpoilerState(): Boolean {
+        return prefs.getBoolean(QR_SPOILER_KEY, true)
     }
 
-    fun getLessonWidgetStyleChanged(): Boolean {
-        return prefs.getBoolean(LESSON_WIDGET_STYLE_CHANGED_KEY, true)
+    fun getQrSpoilerAnimationType(): String? {
+        return prefs.getString(QR_SPOILER_ANIMATION_TYPE_KEY, CIRCLE_ANIMATION)
     }
 
-    fun setBackendAllow(allow: Boolean) {
+    fun getQrWidgetState(appWidgetId: Int): QrWidgetState {
+        val stateName = prefs.getString("$QR_WIDGET_STATE_PREFIX$appWidgetId", QrWidgetState.SPOILER.name)
+        return QrWidgetState.valueOf(stateName ?: QrWidgetState.SPOILER.name)
+    }
+
+    fun setQrWidgetState(appWidgetId: Int, state: QrWidgetState) {
+        prefs.edit(commit = true) {
+            putString("$QR_WIDGET_STATE_PREFIX$appWidgetId", state.name)
+        }
+    }
+
+    fun setCustomServicesState(allow: Boolean) {
         prefs.edit(commit = true) {
             putBoolean(CUSTOM_SERVICES_ALLOW_KEY, allow)
-        }
-    }
-
-    fun setFirebaseToken(token: String?) {
-        prefs.edit(commit = true) {
-            putString(FIREBASE_TOKEN_KEY, token)
-        }
-    }
-
-    fun setLastUpdateTimestamp(timestamp: Long) {
-        prefs.edit(commit = true) {
-            putLong(LAST_UPDATE_TIMESTAMP_KEY, timestamp)
         }
     }
 
@@ -127,18 +120,6 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
     fun setDynamicQrColorsState(dynamicQrColors: Boolean) {
         prefs.edit(commit = true) {
             putBoolean(DYNAMIC_QR_COLORS_KEY, dynamicQrColors)
-        }
-    }
-
-    fun setErrorLog(errorLog: String?) {
-        prefs.edit(commit = true) {
-            putString(ERROR_LOG_KEY, errorLog)
-        }
-    }
-
-    fun setLessonWidgetStyleChanged(lessonWidgetStyleChanged: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(LESSON_WIDGET_STYLE_CHANGED_KEY, lessonWidgetStyleChanged)
         }
     }
 }

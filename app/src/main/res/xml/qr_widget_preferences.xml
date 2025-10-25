@@ -14,4 +14,26 @@
             app:title="Динамические цвета" />
 
     </PreferenceCategory>
+
+    <PreferenceCategory
+        app:icon="@drawable/ic_visibility_off"
+        app:title="Спойлер">
+
+        <SwitchPreference
+            app:defaultValue="true"
+            app:key="qr_spoiler"
+            app:summary="QR-код будет скрыт до тех пор, пока вы не нажмете на виджет"
+            app:title="Спрятать QR за спойлером" />
+
+        <ListPreference
+            app:defaultValue="circle"
+            app:entries="@array/qr_spoiler_animation_entries"
+            app:entryValues="@array/qr_spoiler_animation_values"
+            app:key="qr_spoiler_animation_type"
+            app:icon="@drawable/ic_animation"
+            app:summary="Анимация появления QR-кода при нажатии"
+            app:title="Тип анимации"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
 </PreferenceScreen>

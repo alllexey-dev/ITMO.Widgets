@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.util
+package dev.alllexey.itmowidgets.util.qr
 
 import io.nayuki.qrcodegen.QrCode
 import io.nayuki.qrcodegen.QrSegment

@@ -5,7 +5,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.LAST_UPDATE_TIMESTAMP_KEY
+import dev.alllexey.itmowidgets.data.UtilityStorage.KEYS.LAST_UPDATE_TIMESTAMP_KEY
 import dev.alllexey.itmowidgets.ui.widgets.WidgetUtils
 import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
@@ -19,11 +19,11 @@ class RootSettingsFragment : PreferenceFragmentCompat() {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
         val appContainer = (requireContext().applicationContext as ItmoWidgetsApp).appContainer
-        val storage = appContainer.userSettingsStorage
+        val storage = appContainer.storage
 
         val triggerUpdateButton = findPreference<Preference>("trigger_update_button")
         triggerUpdateButton?.setOnPreferenceClickListener { preference ->
-            storage.setLessonWidgetStyleChanged(true)
+            storage.utility.setLessonWidgetStyleChanged(true)
             updateAllWidgets()
             true
         }

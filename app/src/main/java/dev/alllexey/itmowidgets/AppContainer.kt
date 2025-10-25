@@ -5,50 +5,36 @@ import androidx.preference.PreferenceManager
 import api.myitmo.MyItmo
 import com.google.gson.Gson
 import dev.alllexey.itmowidgets.api.ItmoWidgetsClient
-import dev.alllexey.itmowidgets.data.ItmoWidgetsPreferencesStorage
-import dev.alllexey.itmowidgets.data.MyItmoPreferencesStorage
-import dev.alllexey.itmowidgets.data.UserSettingsStorage
-import dev.alllexey.itmowidgets.data.local.QrCodeLocalDataSourceImpl
+import dev.alllexey.itmowidgets.data.Storage
 import dev.alllexey.itmowidgets.data.local.ScheduleLocalDataSourceImpl
-import dev.alllexey.itmowidgets.data.local.QrBitmapCache
-import dev.alllexey.itmowidgets.data.local.QrBitmapCacheImpl
-import dev.alllexey.itmowidgets.data.remote.QrCodeRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.data.remote.ScheduleRemoteDataSourceImpl
-import dev.alllexey.itmowidgets.data.repository.QrCodeRepository
 import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
 import dev.alllexey.itmowidgets.ui.widgets.data.LessonListRepository
-import dev.alllexey.itmowidgets.util.QrBitmapRenderer
-import dev.alllexey.itmowidgets.util.QrCodeGenerator
+import dev.alllexey.itmowidgets.util.qr.QrToolkit
 import java.io.File
 
-class AppContainer(context: Context) {
+class AppContainer(val context: Context) {
 
-    val userSettingsStorage: UserSettingsStorage by lazy {
+    val storage: Storage by lazy {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        UserSettingsStorage(prefs)
+        Storage(prefs)
     }
-
-    val myItmoStorage: MyItmoPreferencesStorage by lazy {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        MyItmoPreferencesStorage(prefs)
-    }
-
-    val itmoWidgetsStorage: ItmoWidgetsPreferencesStorage by lazy {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        ItmoWidgetsPreferencesStorage(prefs)
-    }
-
-    val gson: Gson by lazy { myItmo.gson }
 
     val myItmo: MyItmo by lazy {
         MyItmo().apply {
-            this.storage = this@AppContainer.myItmoStorage
+            this.storage = this@AppContainer.storage.myItmo
         }
     }
 
     val itmoWidgets: ItmoWidgetsClient by lazy {
-        ItmoWidgetsClient(myItmo, itmoWidgetsStorage)
+        ItmoWidgetsClient(myItmo, storage.itmoWidgets)
     }
+
+    val qrToolkit: QrToolkit by lazy {
+        QrToolkit(this)
+    }
+
+    val gson: Gson by lazy { myItmo.gson }
 
     val lessonListRepository by lazy { LessonListRepository(context) }
 
@@ -63,23 +49,4 @@ class AppContainer(context: Context) {
             )
         )
     }
-
-    val qrCodeRepository by lazy {
-        QrCodeRepository(
-            QrCodeLocalDataSourceImpl(
-                context = context
-            ), QrCodeRemoteDataSourceImpl(
-                myItmo = myItmo
-            )
-        )
-    }
-
-    val qrCodeGenerator by lazy { QrCodeGenerator() }
-
-    val qrBitmapRenderer by lazy { QrBitmapRenderer(context) }
-
-    val qrBitmapCache: QrBitmapCache by lazy {
-        QrBitmapCacheImpl(context)
-    }
-
 }

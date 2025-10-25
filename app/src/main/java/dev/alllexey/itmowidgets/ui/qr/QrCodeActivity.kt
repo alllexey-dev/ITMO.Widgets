@@ -17,7 +17,7 @@ class QrCodeFragment : Fragment(R.layout.fragment_qr_code) {
 
     private val qrCodeViewModel: QrCodeViewModel by viewModels {
         val appContainer = (requireActivity().application as ItmoWidgetsApp).appContainer
-        QrCodeViewModelFactory(appContainer.qrCodeRepository)
+        QrCodeViewModelFactory(appContainer.qrToolkit)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -34,7 +34,7 @@ class QrCodeFragment : Fragment(R.layout.fragment_qr_code) {
     private fun setupButtons() {
         fabRefresh.setOnClickListener {
             val appContainer = (requireContext().applicationContext as ItmoWidgetsApp).appContainer
-            appContainer.qrCodeRepository.clearCache()
+            appContainer.qrToolkit.repository.clearCache()
             updateQr()
         }
     }
@@ -46,26 +46,20 @@ class QrCodeFragment : Fragment(R.layout.fragment_qr_code) {
     private fun observeUiState() {
         qrCodeViewModel.uiState.observe(viewLifecycleOwner) { state ->
             val appContainer = (requireContext().applicationContext as ItmoWidgetsApp).appContainer
-            val generator = appContainer.qrCodeGenerator
-            val renderer = appContainer.qrBitmapRenderer
-            val storage = appContainer.userSettingsStorage
-
-            val dynamicColors = storage.getDynamicQrColorsState()
+            val qrToolkit = appContainer.qrToolkit
 
             val bitmap = when (state) {
                 is QrCodeUiState.Loading -> {
-                    renderer.renderFull(dynamic = dynamicColors)
+                    qrToolkit.generateEmptyQrBitmap()
                 }
 
                 is QrCodeUiState.Success -> {
-                    val qrCode = generator.generate(state.qrCodeHex)
-                    val qrCodeBooleans = generator.toBooleans(qrCode)
-                    renderer.render(qrCodeBooleans, dynamic = dynamicColors)
+                    qrToolkit.generateQrBitmap(state.qrCodeHex)
                 }
 
                 is QrCodeUiState.Error -> {
                     Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
-                    renderer.renderEmpty(dynamic = dynamicColors)
+                    qrToolkit.generateEmptyQrBitmap()
                 }
             }
             qrCodeImage.setImageBitmap(bitmap)

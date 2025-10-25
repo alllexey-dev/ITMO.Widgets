@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.workers
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
@@ -13,17 +14,31 @@ import androidx.work.WorkerParameters
 import kotlinx.coroutines.delay
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.data.UserSettingsStorage
+import dev.alllexey.itmowidgets.ui.widgets.data.QrWidgetState
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.hypot
+import kotlin.math.sin
 
 class QrAnimationWorker(appContext: Context, workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
 
     companion object {
-
         const val WORK_NAME = "me.alllexey123.itmowidgets.QrWidgetAnimation"
         const val KEY_APP_WIDGET_ID = "app_widget_id"
+
+        fun easeInOut(fraction: Float): Float {
+            return (1f - cos(fraction * PI.toFloat())) / 2f
+        }
+
+        fun easeOut(fraction: Float): Float {
+            return sin(fraction * PI.toFloat() / 2f)
+        }
+
+        fun easeIn(fraction: Float): Float {
+            return fraction * fraction
+        }
     }
 
     override suspend fun doWork(): Result {
@@ -34,60 +49,50 @@ class QrAnimationWorker(appContext: Context, workerParams: WorkerParameters) :
         }
 
         runAnimation(appWidgetId)
-
         return Result.success()
     }
 
     private suspend fun runAnimation(appWidgetId: Int) {
-        val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
-        val renderer = appContainer.qrBitmapRenderer
-        val repository = appContainer.qrCodeRepository
-        val generator = appContainer.qrCodeGenerator
-        val qrBitmapCache = appContainer.qrBitmapCache
-        val storage = appContainer.userSettingsStorage
-
         val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
-        val remoteViews = RemoteViews(applicationContext.packageName, R.layout.qr_code_widget)
+        val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
+        val qrToolkit = appContainer.qrToolkit
 
-        val durationMs = 600L
+        val durationMs = 800L
         val frameRate = 30
         val frameDelay = 1000L / frameRate
         val totalFrames = (durationMs / frameDelay).toInt()
 
-        val qrSidePixels = renderer.defaultSidePixels()
-        val dynamicColors = storage.getDynamicQrColorsState()
+        val qrHex = qrToolkit.getQrHex()
+        val qrBitmap = qrToolkit.generateQrBitmap(qrHex)
+        val spoilerBitmap = qrToolkit.generateSpoilerBitmap()
 
-        val qrHex = repository.getQrHex()
-        val qrCode = generator.generate(qrHex)
-        val qrCodeBooleans = generator.toBooleans(qrCode)
+        val animationType = appContainer.storage.settings.getQrSpoilerAnimationType()
+        val animation: QrAnimation = when (animationType) {
+            UserSettingsStorage.CIRCLE_ANIMATION -> CircleAnimation(
+                qrCodeBitmap = qrBitmap,
+                spoilerBitmap = spoilerBitmap
+            )
 
-        val qrBitmap = renderer.render(qrCode = qrCodeBooleans, dynamic = dynamicColors)
-        val (bgColor, fgColor) = renderer.getQrColors(dynamicColors)
-        val noiseBitmap = qrBitmapCache.loadNoiseBitmap(renderer.defaultSidePixels(), bgColor, fgColor)
-            ?: renderer.renderNoise(dynamic = dynamicColors)
+            UserSettingsStorage.FADE_ANIMATION -> FadeAnimation(
+                qrCodeBitmap = qrBitmap,
+                spoilerBitmap = spoilerBitmap
+            )
 
-        val maxRadius = hypot(qrSidePixels / 2.0, qrSidePixels / 2.0).toFloat()
+            else -> throw RuntimeException("Unknown animation type")
+        }
 
+        appContainer.storage.utility.setQrWidgetState(appWidgetId, QrWidgetState.ANIMATING)
+
+        var remoteViews = RemoteViews(applicationContext.packageName, R.layout.qr_code_widget)
         for (frame in 0..totalFrames) {
             val startTime = System.currentTimeMillis()
             val progress = frame.toFloat() / totalFrames
-
             val easedProgress = easeInOut(progress)
-            val currentRadius = maxRadius * easedProgress
 
-            val frameBitmap = createBitmap(qrSidePixels, qrSidePixels)
-            val canvas = Canvas(frameBitmap)
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+            val frameBitmap = animation.getBitmap(easedProgress)
 
-            canvas.drawBitmap(qrBitmap, 0f, 0f, paint)
-
-            canvas.withSave {
-                val noiseClipPath = Path().apply {
-                    addRect(0f, 0f, qrSidePixels.toFloat(), qrSidePixels.toFloat(), Path.Direction.CW)
-                    addCircle(qrSidePixels / 2f, qrSidePixels / 2f, currentRadius, Path.Direction.CCW)
-                }
-                clipPath(noiseClipPath)
-                drawBitmap(noiseBitmap, 0f, 0f, paint)
+            if (frame % 10 == 0) {
+                remoteViews = RemoteViews(applicationContext.packageName, R.layout.qr_code_widget)
             }
 
             remoteViews.setImageViewBitmap(R.id.qr_code_image, frameBitmap)
@@ -98,11 +103,78 @@ class QrAnimationWorker(appContext: Context, workerParams: WorkerParameters) :
             delay(delayTime)
         }
 
+        appContainer.storage.utility.setQrWidgetState(appWidgetId, QrWidgetState.SHOWING_QR)
+
         remoteViews.setImageViewBitmap(R.id.qr_code_image, qrBitmap)
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
     }
 
-    private fun easeInOut(fraction: Float): Float {
-        return (1f - cos(fraction * PI.toFloat())) / 2f
+
+    interface QrAnimation {
+        fun getBitmap(progress: Float): Bitmap
+    }
+
+    class FadeAnimation(
+        private val qrCodeBitmap: Bitmap,
+        private val spoilerBitmap: Bitmap,
+        private val qrSidePixels: Int = qrCodeBitmap.height
+    ) : QrAnimation {
+        override fun getBitmap(progress: Float): Bitmap {
+            val frameBitmap = createBitmap(qrSidePixels, qrSidePixels)
+            val canvas = Canvas(frameBitmap)
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+            val alphaQr = (progress * 255).toInt().coerceIn(0, 255)
+            val alphaNoise = 255 - alphaQr
+
+            paint.alpha = alphaNoise
+            canvas.drawBitmap(spoilerBitmap, 0f, 0f, paint)
+
+            paint.alpha = alphaQr
+            canvas.drawBitmap(qrCodeBitmap, 0f, 0f, paint)
+
+            return frameBitmap
+        }
+    }
+
+    class CircleAnimation(
+        val qrCodeBitmap: Bitmap,
+        val spoilerBitmap: Bitmap,
+        val qrSidePixels: Int = qrCodeBitmap.height,
+        val maxRadius: Float = hypot(qrSidePixels / 2.0, qrSidePixels / 2.0).toFloat()
+    ) : QrAnimation {
+        override fun getBitmap(
+            progress: Float
+        ): Bitmap {
+            val currentRadius = maxRadius * progress
+
+            val frameBitmap = createBitmap(qrSidePixels, qrSidePixels)
+            val canvas = Canvas(frameBitmap)
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+            canvas.drawBitmap(qrCodeBitmap, 0f, 0f, paint)
+
+            canvas.withSave {
+                val noiseClipPath = Path().apply {
+                    addRect(
+                        0f,
+                        0f,
+                        qrSidePixels.toFloat(),
+                        qrSidePixels.toFloat(),
+                        Path.Direction.CW
+                    )
+                    addCircle(
+                        qrSidePixels / 2f,
+                        qrSidePixels / 2f,
+                        currentRadius,
+                        Path.Direction.CCW
+                    )
+                }
+                clipPath(noiseClipPath)
+                drawBitmap(spoilerBitmap, 0f, 0f, paint)
+            }
+
+            return frameBitmap
+        }
     }
 }

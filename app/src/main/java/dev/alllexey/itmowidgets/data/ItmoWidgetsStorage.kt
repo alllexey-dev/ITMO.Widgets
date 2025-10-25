@@ -5,7 +5,7 @@ import androidx.core.content.edit
 import dev.alllexey.itmowidgets.core.model.TokenResponse
 import dev.alllexey.itmowidgets.core.utils.ItmoWidgetsStorage
 
-class ItmoWidgetsPreferencesStorage(val prefs: SharedPreferences) : ItmoWidgetsStorage {
+class ItmoWidgetsStorage(val prefs: SharedPreferences) : ItmoWidgetsStorage {
 
     override fun setAccessToken(accessToken: String?) {
         prefs.edit(commit = true) {

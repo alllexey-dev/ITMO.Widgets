@@ -11,6 +11,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.ui.widgets.QrCodeWidget
+import dev.alllexey.itmowidgets.ui.widgets.data.QrWidgetState
 import java.util.concurrent.TimeUnit
 
 class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParameters) :
@@ -18,9 +19,8 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
 
     override suspend fun doWork(): Result {
         val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
-        val renderer = appContainer.qrBitmapRenderer
-        val storage = appContainer.userSettingsStorage
-        val qrBitmapCache = appContainer.qrBitmapCache
+        val storage = appContainer.storage
+        val qrToolkit = appContainer.qrToolkit
 
         val appWidgetManager = AppWidgetManager.getInstance(appContext)
         val appWidgetIds =
@@ -30,14 +30,20 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
             return Result.success()
         }
 
-        val dynamicColors = storage.getDynamicQrColorsState()
-        val sidePixels = renderer.defaultSidePixels()
-        val colors = renderer.getQrColors(dynamicColors)
-
-        val bitmap: Bitmap = qrBitmapCache.loadNoiseBitmap(sidePixels, colors.first, colors.second)
-            ?: renderer.renderNoise(dynamic = dynamicColors).also { qrBitmapCache.saveNoiseBitmap(it, sidePixels, colors.first, colors.second) }
+        val bitmap: Bitmap = if (storage.settings.getQrSpoilerState()) {
+            qrToolkit.generateSpoilerBitmap(noCache = true)
+        } else {
+            val qrHex = qrToolkit.getQrHex(allowCached = false)
+            qrToolkit.generateQrBitmap(qrHex)
+        }
 
         for (appWidgetId in appWidgetIds) {
+            if (storage.settings.getQrSpoilerState()) {
+                storage.utility.setQrWidgetState(appWidgetId, QrWidgetState.SPOILER)
+            } else {
+                storage.utility.setQrWidgetState(appWidgetId, QrWidgetState.SHOWING_QR)
+            }
+
             QrCodeWidget.updateAppWidget(
                 appContext,
                 appWidgetManager,
@@ -64,10 +70,9 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
             )
         }
 
-        fun scheduleNextUpdate(context: Context) {
-            val duration = 60L
+        fun scheduleNextUpdate(context: Context, durationSeconds: Long = 60 * 60L) {
             val updateWorkRequest = OneTimeWorkRequestBuilder<QrWidgetUpdateWorker>()
-                .setInitialDelay(duration, TimeUnit.MINUTES)
+                .setInitialDelay(durationSeconds, TimeUnit.SECONDS)
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
