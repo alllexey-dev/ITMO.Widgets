@@ -2,11 +2,7 @@ package dev.alllexey.itmowidgets.util.qr
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
-import android.view.ContextThemeWrapper
-import com.google.android.material.color.MaterialColors
 import dev.alllexey.itmowidgets.AppContainer
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.data.local.QrBitmapCache
 import dev.alllexey.itmowidgets.data.local.QrBitmapCacheImpl
 import dev.alllexey.itmowidgets.data.local.QrCodeLocalDataSourceImpl
@@ -22,7 +18,8 @@ class QrToolkit(
     ),
     val generator: QrCodeGenerator = QrCodeGenerator(),
     val renderer: QrBitmapRenderer = QrBitmapRenderer(),
-    val bitmapCache: QrBitmapCache = QrBitmapCacheImpl(context)
+    val colorResolver: QrColorResolver = QrColorResolver(appContainer),
+    val bitmapCache: QrBitmapCache = QrBitmapCacheImpl(context),
 ) {
 
     suspend fun getQrHex(allowCached: Boolean = true): String {
@@ -30,7 +27,7 @@ class QrToolkit(
     }
 
     fun generateQrBitmap(qrHex: String): Bitmap {
-        val (bgColor, fgColor) = getQrColors()
+        val (bgColor, fgColor) = colorResolver.getQrColors()
 
         val qrCode = generator.generate(qrHex)
         val qrCodeBooleans = generator.toBooleans(qrCode)
@@ -50,7 +47,7 @@ class QrToolkit(
     }
 
     fun generateNoiseBitmap(noCache: Boolean = false): Bitmap {
-        val (bgColor, fgColor) = getQrColors()
+        val (bgColor, fgColor) = colorResolver.getQrColors()
         val qrSidePixels = defaultSidePixels()
 
         if (!noCache) {
@@ -72,7 +69,7 @@ class QrToolkit(
     }
 
     fun generateEmptyQrBitmap(): Bitmap {
-        val (bgColor, _) = getQrColors()
+        val (bgColor, _) = colorResolver.getQrColors()
         return renderer.renderEmpty(
             qrSidePixels = defaultSidePixels(),
             color = bgColor,
@@ -90,59 +87,5 @@ class QrToolkit(
 
     fun defaultRelativePadding(): Float {
         return 0.05F
-    }
-
-    fun getQrColors(): Pair<Int, Int> {
-        val dynamicColorsState = appContainer.storage.settings.getDynamicQrColorsState()
-        return getQrColors(dynamicColorsState)
-    }
-
-    // [background, foreground]
-    fun getQrColors(dynamic: Boolean): Pair<Int, Int> {
-        var darkModule: Int
-        var lightBg: Int
-
-        if (dynamic) {
-            val themedContext = ContextThemeWrapper(context, R.style.AppTheme)
-            lightBg = MaterialColors.getColor(
-                themedContext,
-                com.google.android.material.R.attr.colorSurface,
-                Color.WHITE
-            )
-            darkModule = MaterialColors.getColor(
-                themedContext,
-                com.google.android.material.R.attr.colorOnSurfaceVariant,
-                Color.BLACK
-            )
-
-            // swap
-            if (lightBg.isDark()) {
-                lightBg = darkModule.also { darkModule = lightBg }
-            }
-
-            val darkModuleVariant = MaterialColors.getColor(
-                themedContext,
-                com.google.android.material.R.attr.colorOnSurface,
-                Color.BLACK
-            )
-
-            darkModule = maxOf(
-                darkModule,
-                darkModuleVariant,
-                Comparator.comparingDouble { value -> value.darkness() })
-        } else {
-            darkModule = Color.BLACK
-            lightBg = Color.WHITE
-        }
-
-        return lightBg to darkModule
-    }
-
-    fun Int.isDark(): Boolean {
-        return darkness() >= 0.5
-    }
-
-    fun Int.darkness(): Double {
-        return 1 - (0.299 * Color.red(this) + 0.587 * Color.green(this) + 0.114 * Color.blue(this)) / 255
     }
 }
