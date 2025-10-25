@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 import java.time.LocalDate
 import java.time.LocalDateTime
+
 class LessonWidgetDataManager(
     private val scheduleRepository: ScheduleRepository,
     private val storage: Storage
@@ -21,9 +22,18 @@ class LessonWidgetDataManager(
         var listDataResult: LessonListWidgetData
         var nextUpdateAt: LocalDateTime
         try {
-            val lessons = scheduleRepository.getDaySchedule(LocalDate.now()).lessons.orEmpty()
+            val now = LocalDate.now()
+            val lessons = scheduleRepository.getDaySchedule(now).lessons.orEmpty()
             singleDataResult = getSingleLessonData(lessons)
-            listDataResult = getLessonListData(lessons)
+
+            listDataResult = if (storage.settings.getShowScheduleForTomorrowState()
+                && (lessons.isEmpty() || getLessonToShow(lessons) == null)) {
+                val tomorrowLessons = scheduleRepository.getDaySchedule(now.plusDays(1)).lessons.orEmpty()
+                getLessonListData(tomorrowLessons, now.plusDays(1))
+            } else {
+                getLessonListData(lessons, now)
+            }
+
             nextUpdateAt = getNextUpdateAt(lessons)
         } catch (e: Exception) {
             storage.utility.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
@@ -74,13 +84,20 @@ class LessonWidgetDataManager(
         }
     }
 
-    private fun getLessonListData(lessons: List<Lesson>): LessonListWidgetData {
-        if (lessons.isEmpty()) return LessonListWidgetData(listOf(LessonListWidgetEntry.FullDayEmpty))
+    private fun getLessonListData(lessons: List<Lesson>, date: LocalDate): LessonListWidgetData {
+        val isTomorrow = date > LocalDate.now()
+        if (lessons.isEmpty()) return LessonListWidgetData(
+            listOf(
+                LessonListWidgetEntry.FullDayEmpty(
+                    isTomorrow
+                )
+            )
+        )
 
         val hidePrevious = storage.settings.getHidePreviousLessonsState()
         val hideTeacher = storage.settings.getHideTeacherState()
 
-        val lessonsToShow = if (hidePrevious) {
+        val lessonsToShow = if (hidePrevious && !isTomorrow) {
             val startFrom = getLessonToShow(lessons)
             if (startFrom == null) listOf()
             else lessons.drop(lessons.indexOf(startFrom))
@@ -102,11 +119,21 @@ class LessonWidgetDataManager(
                     building = ScheduleUtils.shortenBuildingName(lesson.building),
                     layoutId = layoutId
                 )
-            }.plus(LessonListWidgetEntry.LessonListEnd)
+            } + LessonListWidgetEntry.LessonListEnd(isTomorrow)
 
-            LessonListWidgetData(
-                entries
-            )
+            if (storage.settings.getShowScheduleForTomorrowState()) {
+                val dayTitle = (if (isTomorrow) "Завтра" else "Сегодня") + "  •  ${date.dayOfMonth} ${
+                    ScheduleUtils.getRussianMonthInGenitiveCase(date.monthValue)
+                }"
+                LessonListWidgetData(
+                    listOf(LessonListWidgetEntry.DayTitle(dayTitle)) + entries
+                )
+            } else {
+                LessonListWidgetData(
+                    entries
+                )
+            }
+
         }
     }
 

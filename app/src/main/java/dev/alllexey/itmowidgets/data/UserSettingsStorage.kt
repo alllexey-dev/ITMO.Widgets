@@ -16,6 +16,7 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
         const val LIST_LESSON_WIDGET_STYLE_KEY = "list_lesson_widget_style"
         const val HIDE_TEACHER_KEY = "hide_teacher"
         const val HIDE_PREVIOUS_LESSONS_KEY = "hide_previous_lessons"
+        const val SHOW_SCHEDULE_FOR_TOMORROW_KEY = "show_schedule_for_tomorrow"
         const val DYNAMIC_QR_COLORS_KEY = "dynamic_qr_colors"
         const val QR_SPOILER_KEY = "qr_spoiler"
         const val QR_SPOILER_ANIMATION_TYPE_KEY = "qr_spoiler_animation_type"
@@ -50,6 +51,10 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
 
     fun getHidePreviousLessonsState(): Boolean {
         return prefs.getBoolean(HIDE_PREVIOUS_LESSONS_KEY, false)
+    }
+
+    fun getShowScheduleForTomorrowState(): Boolean {
+        return prefs.getBoolean(SHOW_SCHEDULE_FOR_TOMORROW_KEY, false)
     }
 
     fun getDynamicQrColorsState(): Boolean {
@@ -116,6 +121,12 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
     fun setHidePreviousLessonsState(hidePreviousLessons: Boolean) {
         prefs.edit(commit = true) {
             putBoolean(HIDE_PREVIOUS_LESSONS_KEY, hidePreviousLessons)
+        }
+    }
+
+    fun setScheduleForTomorrowState(showScheduleForTomorrow: Boolean) {
+        prefs.edit(commit = true) {
+            putBoolean(SHOW_SCHEDULE_FOR_TOMORROW_KEY, showScheduleForTomorrow)
         }
     }
 

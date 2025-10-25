@@ -8,13 +8,16 @@ sealed class LessonListWidgetEntry {
     object Error : LessonListWidgetEntry() {
         override val layoutId: Int = R.layout.item_lesson_list_error
     }
-    object FullDayEmpty : LessonListWidgetEntry() {
+    data class DayTitle(val title: String) : LessonListWidgetEntry() {
+        override val layoutId: Int = R.layout.item_lesson_list_day_title
+    }
+    data class FullDayEmpty(val isTomorrow: Boolean) : LessonListWidgetEntry() {
         override val layoutId: Int = R.layout.item_lesson_list_empty
     }
     object NoMoreLessons : LessonListWidgetEntry() {
         override val layoutId: Int = R.layout.item_lesson_list_no_more
     }
-    object LessonListEnd : LessonListWidgetEntry() {
+    data class LessonListEnd(val isTomorrow: Boolean) : LessonListWidgetEntry() {
         override val layoutId: Int = R.layout.item_lesson_list_end
     }
     object Updating : LessonListWidgetEntry() {

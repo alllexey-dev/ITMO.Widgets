@@ -9,6 +9,7 @@ import com.google.gson.GsonBuilder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import dev.alllexey.itmowidgets.util.RuntimeTypeAdapterFactory
+
 class LessonListRepository(private val context: Context) {
 
     companion object {
@@ -18,8 +19,10 @@ class LessonListRepository(private val context: Context) {
     }
 
     private val gson: Gson by lazy {
-        val lessonListEntryAdapterFactory = RuntimeTypeAdapterFactory.of(LessonListWidgetEntry::class.java)
+        val lessonListEntryAdapterFactory =
+            RuntimeTypeAdapterFactory.of(LessonListWidgetEntry::class.java)
                 .registerSubtype(LessonListWidgetEntry.Error::class.java, "error")
+                .registerSubtype(LessonListWidgetEntry.DayTitle::class.java, "day_title")
                 .registerSubtype(LessonListWidgetEntry.FullDayEmpty::class.java, "full_day_empty")
                 .registerSubtype(LessonListWidgetEntry.NoMoreLessons::class.java, "no_more_lessons")
                 .registerSubtype(LessonListWidgetEntry.LessonListEnd::class.java, "lesson_list_end")

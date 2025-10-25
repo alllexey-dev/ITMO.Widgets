@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.BEFOREHAND_SCHEDUL
 import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.HIDE_PREVIOUS_LESSONS_KEY
 import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.HIDE_TEACHER_KEY
 import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.LIST_LESSON_WIDGET_STYLE_KEY
+import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.SHOW_SCHEDULE_FOR_TOMORROW_KEY
 import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.SINGLE_LESSON_WIDGET_STYLE_KEY
 import dev.alllexey.itmowidgets.data.UserSettingsStorage.KEYS.SMART_SCHEDULING_KEY
 import dev.alllexey.itmowidgets.ui.widgets.WidgetUtils
@@ -47,6 +48,12 @@ class ScheduleWidgetSettingsFragment : PreferenceFragmentCompat() {
 
         val hidePreviousLessons = findPreference<SwitchPreference>(HIDE_PREVIOUS_LESSONS_KEY)
         hidePreviousLessons?.setOnPreferenceChangeListener { preference, newValue ->
+            updateAllWidgets()
+            true
+        }
+
+        val showTomorrow = findPreference<SwitchPreference>(SHOW_SCHEDULE_FOR_TOMORROW_KEY)
+        showTomorrow?.setOnPreferenceChangeListener { preference, newValue ->
             updateAllWidgets()
             true
         }

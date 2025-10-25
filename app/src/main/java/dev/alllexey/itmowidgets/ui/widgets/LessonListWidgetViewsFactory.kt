@@ -51,6 +51,26 @@ class LessonListWidgetViewsFactory : RemoteViewsService() {
 
             val rv = RemoteViews(context.packageName, entry.layoutId)
 
+            if (entry is LessonListWidgetEntry.DayTitle) {
+                rv.apply {
+                    setTextViewText(R.id.day_title, entry.title)
+                }
+            }
+
+            if (entry is LessonListWidgetEntry.FullDayEmpty) {
+                rv.apply {
+                    val text = if (entry.isTomorrow) "Сегодня и завтра нет пар" else "Сегодня нет пар"
+                    setTextViewText(R.id.no_lessons, text)
+                }
+            }
+
+            if (entry is LessonListWidgetEntry.LessonListEnd) {
+                rv.apply {
+                    val text = if (entry.isTomorrow) "Это все пары на завтра" else "Это все пары на сегодня"
+                    setTextViewText(R.id.end_marker, text)
+                }
+            }
+
             if (entry is LessonListWidgetEntry.LessonData) {
                 rv.apply {
                     setTextViewText(R.id.title, entry.subject)

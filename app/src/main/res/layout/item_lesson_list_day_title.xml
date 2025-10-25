@@ -5,13 +5,14 @@
     android:id="@+id/item_root">
 
     <TextView
-        android:id="@+id/no_lessons"
+        android:id="@+id/day_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="16dp"
-        android:text="Сегодня нет пар"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="?attr/colorOnSurface" />
+        android:paddingStart="8dp"
+        android:paddingTop="2dp"
+        android:gravity="center_horizontal"
+        android:text="Сегодня  •  24 октября"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="?attr/colorOnSurfaceVariant" />
 
 </LinearLayout>

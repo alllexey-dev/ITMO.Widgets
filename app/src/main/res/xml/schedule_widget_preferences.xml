@@ -49,5 +49,11 @@
             app:key="hide_previous_lessons"
             app:summary="В большом виджете не показывать пары, которые уже закончились"
             app:title="Скрывать прошедшие занятия" />
+
+        <SwitchPreference
+            app:defaultValue="false"
+            app:key="show_schedule_for_tomorrow"
+            app:summary="Если сегодня больше нет пар, то отображать расписание на завтра"
+            app:title="Расписание на завтра" />
     </PreferenceCategory>
 </PreferenceScreen>
