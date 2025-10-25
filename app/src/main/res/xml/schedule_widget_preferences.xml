@@ -23,7 +23,7 @@
         app:title="Внешний вид">
 
         <ListPreference
-            app:defaultValue="dot"
+            app:defaultValue="DOT"
             app:entries="@array/widget_style_entries"
             app:entryValues="@array/widget_style_values"
             app:key="single_lesson_widget_style"
@@ -31,7 +31,7 @@
             app:useSimpleSummaryProvider="true" />
 
         <ListPreference
-            app:defaultValue="dot"
+            app:defaultValue="DOT"
             app:entries="@array/widget_style_entries"
             app:entryValues="@array/widget_style_values"
             app:key="list_lesson_widget_style"

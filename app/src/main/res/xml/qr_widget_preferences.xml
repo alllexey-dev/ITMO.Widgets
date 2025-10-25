@@ -26,7 +26,7 @@
             app:title="Спрятать QR за спойлером" />
 
         <ListPreference
-            app:defaultValue="circle"
+            app:defaultValue="CIRCLE"
             app:entries="@array/qr_spoiler_animation_entries"
             app:entryValues="@array/qr_spoiler_animation_values"
             app:key="qr_spoiler_animation_type"
