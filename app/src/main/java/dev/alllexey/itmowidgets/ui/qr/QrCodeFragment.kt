@@ -10,7 +10,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 
-class QrCodeFragment : Fragment(R.layout.fragment_qr_code) {
+class QrCodeFragment : Fragment(R.layout.fragment_qr) {
 
     private lateinit var qrCodeImage: ImageView
     private lateinit var fabRefresh: FloatingActionButton

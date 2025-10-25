@@ -37,7 +37,7 @@ class LessonListWidget : AppWidgetProvider() {
             onlyDataChanged: Boolean
         ) {
             if (!onlyDataChanged){
-                val intent = Intent(context, LessonListWidgetService::class.java).apply {
+                val intent = Intent(context, LessonListWidgetViewsFactory::class.java).apply {
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                     data = ("widget://${appWidgetId}-${System.currentTimeMillis()}").toUri()
                 }

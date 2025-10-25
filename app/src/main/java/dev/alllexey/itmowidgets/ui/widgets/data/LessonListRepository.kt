@@ -9,10 +9,14 @@ import com.google.gson.GsonBuilder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import dev.alllexey.itmowidgets.util.RuntimeTypeAdapterFactory
-
-val Context.lessonListDataStore by preferencesDataStore(name = "lesson_list_data")
-
 class LessonListRepository(private val context: Context) {
+
+    companion object {
+        val Context.lessonListDataStore by preferencesDataStore(name = "lesson_list_data")
+
+        private val KEY = stringPreferencesKey("lesson_list_json")
+    }
+
     private val gson: Gson by lazy {
         val lessonListEntryAdapterFactory = RuntimeTypeAdapterFactory.of(LessonListWidgetEntry::class.java)
                 .registerSubtype(LessonListWidgetEntry.Error::class.java, "error")
@@ -24,7 +28,6 @@ class LessonListRepository(private val context: Context) {
             .registerTypeAdapterFactory(lessonListEntryAdapterFactory)
             .create()
     }
-    private val KEY = stringPreferencesKey("lesson_list_json")
 
     val data: Flow<LessonListWidgetData> =
         context.lessonListDataStore.data.map { prefs ->

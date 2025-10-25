@@ -15,7 +15,7 @@ import dev.alllexey.itmowidgets.ui.widgets.data.LessonListWidgetEntry
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 
 
-class LessonListWidgetService : RemoteViewsService() {
+class LessonListWidgetViewsFactory : RemoteViewsService() {
     override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
         return ViewsFactory(applicationContext)
     }

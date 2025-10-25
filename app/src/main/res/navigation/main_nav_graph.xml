@@ -15,7 +15,7 @@
         android:id="@+id/navigation_qr_code"
         android:name="dev.alllexey.itmowidgets.ui.qr.QrCodeFragment"
         android:label="Qr code"
-        tools:layout="@layout/fragment_qr_code" />
+        tools:layout="@layout/fragment_qr" />
 
     <fragment
         android:id="@+id/navigation_schedule"

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="180dp"
-    android:minHeight="180dp"
-    android:maxResizeWidth="400dp"
-    android:maxResizeHeight="400dp"
+    android:minWidth="100dp"
+    android:minHeight="100dp"
+    android:maxResizeWidth="600dp"
+    android:maxResizeHeight="600dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="3600000"
     android:previewImage="@drawable/qr_widget_preview"
@@ -11,7 +11,7 @@
     android:description="@string/qr_widget_description"
 
     android:widgetCategory="home_screen"
-    android:targetCellHeight="2"
-    android:targetCellWidth="3"
+    android:targetCellHeight="1"
+    android:targetCellWidth="1"
     android:initialKeyguardLayout="@layout/qr_code_widget"
 />

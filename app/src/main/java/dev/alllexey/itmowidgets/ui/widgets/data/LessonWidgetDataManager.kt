@@ -7,15 +7,14 @@ import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 import java.time.LocalDate
 import java.time.LocalDateTime
-
-const val RETRY_DELAY_SECONDS: Long = 7 * 60 // 7 minutes
-
-private const val BEFOREHAND_SCHEDULING_OFFSET = 15L * 60 // 15 minutes
-
 class LessonWidgetDataManager(
     private val scheduleRepository: ScheduleRepository,
     private val storage: Storage
 ) {
+    companion object {
+        const val RETRY_DELAY_SECONDS: Long = 7 * 60 // 7 minutes
+        private const val BEFOREHAND_SCHEDULING_OFFSET = 15L * 60 // 15 minutes
+    }
 
     suspend fun getLessonWidgetsState(): LessonWidgetsState {
         var singleDataResult: SingleLessonWidgetData
