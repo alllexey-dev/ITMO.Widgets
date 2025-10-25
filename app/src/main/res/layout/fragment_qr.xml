@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.qr.QrCodeActivity">
+    tools:context=".ui.qr.QrCodeFragment">
 
     <RelativeLayout
         android:layout_width="270dp"
