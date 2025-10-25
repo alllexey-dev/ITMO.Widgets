@@ -8,42 +8,31 @@
       android:translateX="23.43"
       android:translateY="23.43">
     <path
-        android:pathData="M0,0h142v142h-142z"
-        android:fillColor="#FFFFFF"/>
-    <path
-        android:pathData="M89,29A24,24 0,0 1,113 53L89,53Z"
-        android:fillColor="#f7b500"/>
-    <path
-        android:pathData="M89,53m-12,0a12,12 0,1 1,24 0a12,12 0,1 1,-24 0"
-        android:strokeWidth="0.264583"
-        android:fillColor="#ffffff"/>
+        android:pathData="M89,29L89,41A12,12 0,0 1,101 53L113,53A24,24 0,0 0,89 29z"
+        android:fillColor="#f3be2f"/>
     <path
         android:pathData="M89,35m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0"
-        android:fillColor="#f7b500"/>
+        android:fillColor="#f3be2f"/>
     <path
         android:pathData="M107,53m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0"
-        android:fillColor="#f7b500"/>
+        android:fillColor="#f3be2f"/>
     <path
-        android:pathData="M53.01,113A24,24 0,0 1,29.01 89L53.01,89Z"
-        android:fillColor="#41b946"/>
-    <path
-        android:pathData="M53.01,89m12,-0a12,12 0,1 1,-24 -0a12,12 0,1 1,24 -0"
-        android:strokeWidth="0.264583"
-        android:fillColor="#ffffff"/>
+        android:pathData="M29.01,89A24,24 0,0 0,53.01 113L53.01,101A12,12 0,0 1,41.01 89L29.01,89z"
+        android:fillColor="#5bcf61"/>
     <path
         android:pathData="M53.01,107m6,-0a6,6 0,1 1,-12 -0a6,6 0,1 1,12 -0"
-        android:fillColor="#41b946"/>
+        android:fillColor="#5bcf61"/>
     <path
         android:pathData="M35.01,89m6,-0a6,6 0,1 1,-12 -0a6,6 0,1 1,12 -0"
-        android:fillColor="#41b946"/>
+        android:fillColor="#5bcf61"/>
     <path
         android:pathData="M38,38m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0"
-        android:fillColor="#ee215b"/>
+        android:fillColor="#f14f7b"/>
     <path
         android:pathData="M95,95m-18,0a18,18 0,1 1,36 0a18,18 0,1 1,-36 0"
-        android:fillColor="#1451cf"/>
+        android:fillColor="#4984e2"/>
     <path
         android:pathData="M63,63m-13.5,0a13.5,13.5 0,1 1,27 0a13.5,13.5 0,1 1,-27 0"
-        android:fillColor="#a50aff"/>
+        android:fillColor="#8a5be1"/>
   </group>
 </vector>
