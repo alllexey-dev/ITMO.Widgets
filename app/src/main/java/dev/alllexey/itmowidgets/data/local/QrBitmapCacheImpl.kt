@@ -43,4 +43,8 @@ class QrBitmapCacheImpl(context: Context) : QrBitmapCache {
             null
         }
     }
+
+    override fun clearCache() {
+        cacheDir.listFiles()?.forEach { file -> file.delete() }
+    }
 }

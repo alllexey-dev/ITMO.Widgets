@@ -65,6 +65,7 @@ class QrAnimationWorker(appContext: Context, workerParams: WorkerParameters) :
         val qrHex = qrToolkit.getQrHex()
         val qrBitmap = qrToolkit.generateQrBitmap(qrHex)
         val spoilerBitmap = qrToolkit.generateSpoilerBitmap()
+        qrToolkit.bitmapCache.clearCache()
 
         val animationType = appContainer.storage.settings.getQrSpoilerAnimationType()
         val animation: QrAnimation = when (animationType) {

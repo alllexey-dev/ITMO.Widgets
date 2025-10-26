@@ -31,7 +31,7 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
         }
 
         val bitmap: Bitmap = if (storage.settings.getQrSpoilerState()) {
-            qrToolkit.generateSpoilerBitmap(noCache = true)
+            qrToolkit.generateSpoilerBitmap()
         } else {
             val qrHex = qrToolkit.getQrHex(allowCached = false)
             qrToolkit.generateQrBitmap(qrHex)
