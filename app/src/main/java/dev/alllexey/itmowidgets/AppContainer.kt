@@ -17,7 +17,7 @@ class AppContainer(val context: Context) {
 
     val storage: Storage by lazy {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        Storage(prefs)
+        Storage(prefs, context)
     }
 
     val myItmo: MyItmo by lazy {

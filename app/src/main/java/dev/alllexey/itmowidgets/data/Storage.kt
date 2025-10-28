@@ -1,8 +1,9 @@
 package dev.alllexey.itmowidgets.data
 
+import android.content.Context
 import android.content.SharedPreferences
 
-class Storage(val prefs: SharedPreferences) {
+class Storage(val prefs: SharedPreferences, val context: Context) {
 
     val settings: UserSettingsStorage by lazy {
         UserSettingsStorage(prefs)
@@ -17,6 +18,6 @@ class Storage(val prefs: SharedPreferences) {
     }
 
     val utility: UtilityStorage by lazy {
-        UtilityStorage(prefs)
+        UtilityStorage(prefs, context)
     }
 }

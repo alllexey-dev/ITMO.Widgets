@@ -1,10 +1,13 @@
 package dev.alllexey.itmowidgets.data
 
+import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.ui.widgets.data.QrWidgetState
 
-class UtilityStorage(val prefs: SharedPreferences) {
+class UtilityStorage(val prefs: SharedPreferences, val context: Context) {
 
     companion object KEYS {
         const val FIREBASE_TOKEN_KEY = "firebase_token"
@@ -12,6 +15,7 @@ class UtilityStorage(val prefs: SharedPreferences) {
         const val QR_WIDGET_STATE_PREFIX = "qr_widget_state_"
         const val ERROR_LOG_KEY = "error_log"
         const val LESSON_WIDGET_STYLE_CHANGED_KEY = "lesson_widget_style_changed"
+        const val SKIPPED_VERSION_KEY = "skipped_version"
     }
 
     fun getFirebaseToken(): String? {
@@ -33,6 +37,10 @@ class UtilityStorage(val prefs: SharedPreferences) {
     fun getQrWidgetState(appWidgetId: Int): QrWidgetState {
         val stateName = prefs.getString("$QR_WIDGET_STATE_PREFIX$appWidgetId", QrWidgetState.SPOILER.name)
         return QrWidgetState.valueOf(stateName ?: QrWidgetState.SPOILER.name)
+    }
+
+    fun getSkippedVersion(): String {
+        return prefs.getString(SKIPPED_VERSION_KEY, null) ?: ContextCompat.getString(context, R.string.app_version)
     }
 
     fun setQrWidgetState(appWidgetId: Int, state: QrWidgetState) {
@@ -62,6 +70,12 @@ class UtilityStorage(val prefs: SharedPreferences) {
     fun setLessonWidgetStyleChanged(lessonWidgetStyleChanged: Boolean) {
         prefs.edit(commit = true) {
             putBoolean(LESSON_WIDGET_STYLE_CHANGED_KEY, lessonWidgetStyleChanged)
+        }
+    }
+
+    fun setSkippedVersion(skippedVersion: String) {
+        prefs.edit(commit = true) {
+            putString(SKIPPED_VERSION_KEY, skippedVersion)
         }
     }
 }

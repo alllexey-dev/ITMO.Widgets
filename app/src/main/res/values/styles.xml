@@ -11,4 +11,11 @@
 
     <style name="AppTheme" parent="Base.AppTheme" />
 
+    <style name="FilledButton" parent="Widget.Material3.Button">
+    </style>
+
+    <style name="AlertDialogTheme_FilledButton" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="buttonBarPositiveButtonStyle">@style/FilledButton</item>
+    </style>
+
 </resources>

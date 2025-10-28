@@ -1,18 +1,28 @@
 package dev.alllexey.itmowidgets.ui.main
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat.getString
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.ui.qr.QrCodeFragment
 import dev.alllexey.itmowidgets.ui.schedule.ScheduleFragment
 import dev.alllexey.itmowidgets.ui.settings.SettingsFragment
 import dev.alllexey.itmowidgets.ui.web.WebFragment
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -79,6 +89,46 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             bottomNavView.selectedItemId = R.id.navigation_schedule
         }
+
+        checkVersion()
+    }
+
+    fun checkVersion() {
+        val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
+        CoroutineScope(Dispatchers.IO).launch {
+            if (!appContainer.storage.settings.getCustomServicesState()) return@launch
+            try {
+                val latestVersion = appContainer.itmoWidgets.api().getLatestAppVersion().data!!
+                val currentVersion = getString(applicationContext, R.string.app_version)
+                withContext(Dispatchers.Main) {
+                    if (latestVersion > currentVersion && latestVersion > appContainer.storage.utility.getSkippedVersion()) {
+                        showVersionPopup(latestVersion, currentVersion)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun showVersionPopup(latestVersion: String, currentVersion: String) {
+        MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme_FilledButton)
+            .setTitle("Новая версия \uD83D\uDE80")
+            .setMessage("У приложения вышло обновление! Возможно, там будет что-то интересное для тебя \uD83D\uDC40\n${currentVersion} ➜ ${latestVersion} ")
+            .setNeutralButton("Напомнить позже") { dialog, which ->
+
+            }
+            .setNegativeButton("Пропустить версию") { dialog, which ->
+                Toast.makeText(applicationContext, "Хорошо, пропустим версию \uD83D\uDC4C", Toast.LENGTH_SHORT).show()
+                val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
+                appContainer.storage.utility.setSkippedVersion(latestVersion)
+            }
+            .setPositiveButton("Обновить") { dialog, which ->
+                val url = getString(applicationContext, R.string.latest_release_url)
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                startActivity(intent)
+            }
+            .show()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

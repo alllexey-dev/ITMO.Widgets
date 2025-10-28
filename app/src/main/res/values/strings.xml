@@ -1,12 +1,14 @@
 <resources>
     <string name="app_name">ITMO.Widgets</string>
+    <string name="app_version">1.4.0</string>
     <string name="single_lesson_widget_name">Пара</string>
     <string name="single_lesson_widget_description">Текущая или следующая</string>
     <string name="list_lesson_widget_name">Расписание</string>
     <string name="list_lesson_widget_description">Список пар на сегодня</string>
     <string name="qr_widget_name">QR-код</string>
     <string name="qr_widget_description">QR-пропуск в корпус</string>
-    <string name="refresh_token_help_url">https://github.com/alllexey123/ITMO.Widgets?tab=readme-ov-file#использование</string>
+    <string name="refresh_token_help_url">https://github.com/alllexey-dev/ITMO.Widgets?tab=readme-ov-file#использование</string>
+    <string name="latest_release_url">https://github.com/alllexey-dev/ITMO.Widgets/releases/latest</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
     <string name="title_schedule">Расписание</string>
     <string name="title_qr">Пропуск</string>
