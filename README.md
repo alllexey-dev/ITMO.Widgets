@@ -28,7 +28,7 @@
 
 ## Установка
 
-Собранные APK доступны в [Releases](https://github.com/alllexey123/ITMO.Widgets/releases), можно собрать из исходников самостоятельно.
+Собранные APK доступны в [Releases](https://github.com/alllexey-dev/ITMO.Widgets/releases), можно собрать из исходников самостоятельно.
 
 ## Использование
 
