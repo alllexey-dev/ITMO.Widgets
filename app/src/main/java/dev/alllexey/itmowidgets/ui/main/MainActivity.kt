@@ -119,9 +119,9 @@ class MainActivity : AppCompatActivity() {
 
             }
             .setNegativeButton("Пропустить версию") { dialog, which ->
-                Toast.makeText(applicationContext, "Хорошо, пропустим версию \uD83D\uDC4C", Toast.LENGTH_SHORT).show()
                 val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
                 appContainer.storage.utility.setSkippedVersion(latestVersion)
+                Toast.makeText(applicationContext, "Хорошо, пропустим версию \uD83D\uDC4C", Toast.LENGTH_SHORT).show()
             }
             .setPositiveButton("Обновить") { dialog, which ->
                 val url = getString(applicationContext, R.string.latest_release_url)
