@@ -13,6 +13,10 @@
         android:icon="@drawable/ic_schedule"
         android:title="@string/title_schedule" />
     <item
+        android:id="@+id/navigation_sport"
+        android:icon="@drawable/ic_exercise"
+        android:title="@string/title_sport" />
+    <item
         android:id="@+id/navigation_settings"
         android:icon="@drawable/ic_settings"
         android:title="@string/title_settings" />

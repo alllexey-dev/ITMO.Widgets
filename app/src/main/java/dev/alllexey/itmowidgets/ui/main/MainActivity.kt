@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.ui.qr.QrCodeFragment
 import dev.alllexey.itmowidgets.ui.schedule.ScheduleFragment
 import dev.alllexey.itmowidgets.ui.settings.SettingsFragment
+import dev.alllexey.itmowidgets.ui.sport.SportFragment
 import dev.alllexey.itmowidgets.ui.web.WebFragment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +34,8 @@ class MainActivity : AppCompatActivity() {
         R.id.navigation_schedule to "schedule",
         R.id.navigation_web to "web",
         R.id.navigation_qr_code to "qr",
-        R.id.navigation_settings to "settings"
+        R.id.navigation_settings to "settings",
+        R.id.navigation_sport to "sport"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,9 +65,10 @@ class MainActivity : AppCompatActivity() {
             val existingFragment = fragmentManager.findFragmentByTag(tag)
 
             val fragmentToShow = existingFragment ?: when (item.itemId) {
-                R.id.navigation_schedule -> ScheduleFragment()
                 R.id.navigation_web -> WebFragment()
                 R.id.navigation_qr_code -> QrCodeFragment()
+                R.id.navigation_schedule -> ScheduleFragment()
+                R.id.navigation_sport -> SportFragment()
                 R.id.navigation_settings -> SettingsFragment()
                 else -> throw IllegalStateException("Unknown menu item ID")
             }

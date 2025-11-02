@@ -10,8 +10,9 @@
     <string name="refresh_token_help_url">https://github.com/alllexey-dev/ITMO.Widgets?tab=readme-ov-file#использование</string>
     <string name="latest_release_url">https://github.com/alllexey-dev/ITMO.Widgets/releases/latest</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
-    <string name="title_schedule">Расписание</string>
-    <string name="title_qr">Пропуск</string>
-    <string name="title_settings">Настройки</string>
     <string name="title_web">Сайт MyItmo</string>
+    <string name="title_qr">Пропуск</string>
+    <string name="title_schedule">Расписание</string>
+    <string name="title_sport">Спорт</string>
+    <string name="title_settings">Настройки</string>
 </resources>

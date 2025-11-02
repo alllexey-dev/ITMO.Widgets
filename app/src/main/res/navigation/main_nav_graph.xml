@@ -24,6 +24,11 @@
         tools:layout="@layout/fragment_schedule" />
 
     <fragment
+        android:id="@+id/navigation_sport"
+        android:name="dev.alllexey.itmowidgets.ui.settings.RootSettingsFragment"
+        android:label="Settings" />
+
+    <fragment
         android:id="@+id/navigation_settings"
         android:name="dev.alllexey.itmowidgets.ui.settings.RootSettingsFragment"
         android:label="Settings" />
