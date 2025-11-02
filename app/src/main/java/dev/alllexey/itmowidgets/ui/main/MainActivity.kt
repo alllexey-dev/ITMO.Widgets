@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             if (!appContainer.storage.settings.getCustomServicesState()) return@launch
             try {
-                val latestVersion = appContainer.itmoWidgets.api().getLatestAppVersion().data!!
+                val latestVersion = appContainer.itmoWidgets.api().latestAppVersion().data!!
                 val currentVersion = getString(applicationContext, R.string.app_version)
                 withContext(Dispatchers.Main) {
                     if (latestVersion > currentVersion && latestVersion > appContainer.storage.utility.getSkippedVersion()) {
