@@ -10,6 +10,8 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.model.fcm.FcmJsonWrapper
+import dev.alllexey.itmowidgets.core.model.fcm.impl.SportLessonsPayload
 import dev.alllexey.itmowidgets.ui.main.MainActivity
 import kotlinx.coroutines.runBlocking
 
@@ -21,11 +23,28 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
         Log.d(TAG, "From: ${remoteMessage.from}")
 
         remoteMessage.notification?.let {
             Log.d(TAG, "Message Notification Body: ${it.body}")
             sendNotification(it.title, it.body)
+        }
+
+        // todo: remove later (test only)
+        remoteMessage.data["data"]?.let { jsonPayload ->
+            val gson = appContainer.gson
+            try {
+                val wrapper = gson.fromJson(jsonPayload, FcmJsonWrapper::class.java)
+                when (wrapper.type) {
+                    SportLessonsPayload.TYPE -> {
+                        val data = gson.fromJson(wrapper.payload, SportLessonsPayload::class.java)
+                        sendNotification("SPORT NOTIF", "${data.sportLessonIds.size} new lessons")
+                    }
+                }
+            } catch (e: Exception) {
+
+            }
         }
     }
 
