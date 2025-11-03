@@ -15,4 +15,7 @@
     <string name="title_schedule">Расписание</string>
     <string name="title_sport">Спорт</string>
     <string name="title_settings">Настройки</string>
+    <string name="title_sport_me">Мой спорт</string>
+    <string name="title_sport_sign">Запись</string>
+    <string name="title_sport_notifications">Уведомления</string>
 </resources>
