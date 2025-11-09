@@ -7,11 +7,14 @@
     android:layout_height="match_parent"
     tools:context=".ui.sport.me.SportMeFragment">
 
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="me fragment">
-    </TextView>
+    <include
+        android:id="@+id/progressCircle"
+        layout="@layout/component_sport_circle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

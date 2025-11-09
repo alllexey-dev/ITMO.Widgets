@@ -10,6 +10,9 @@
     <color name="sport_color">#355EDA</color>
     <color name="free_sport_color">#8CED69</color>
 
+    <color name="red_sport_color">#ED3E6F</color>
+    <color name="blue_sport_color">#3D67DE</color>
+
     <color name="subtext_color">#FF5C5C5C</color>
     <color name="subtext_color_lighter">#7A7A7A</color>
     <color name="free_color">#7A7A7A</color>
