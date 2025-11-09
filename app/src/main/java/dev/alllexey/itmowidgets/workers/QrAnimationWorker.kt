@@ -90,7 +90,7 @@ class QrAnimationWorker(appContext: Context, workerParams: WorkerParameters) :
 
             val frameBitmap = animation.getBitmap(easedProgress)
 
-            if (frame % 3 == 0) {
+            if (frame % 2 == 0) {
                 remoteViews = RemoteViews(applicationContext.packageName, R.layout.qr_code_widget)
             }
 
