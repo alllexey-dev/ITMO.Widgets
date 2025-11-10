@@ -66,14 +66,10 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
                 val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
                 val totalItemCount = dayScheduleAdapter.itemCount
 
                 if (totalItemCount > 0) {
-//                    if (firstVisibleItemPosition < 2 && dy < 0) {
-//                        scheduleViewModel.fetchPreviousDays()
-//                    }
                     if (lastVisibleItemPosition > totalItemCount - 3 && dy > 0) {
                         scheduleViewModel.fetchNextDays()
                     }

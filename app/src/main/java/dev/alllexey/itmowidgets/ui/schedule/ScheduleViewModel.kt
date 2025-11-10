@@ -38,16 +38,9 @@ class ScheduleViewModel(
                 val cachedSchedule = scheduleRepository.getCachedScheduleForRange(startDate, endDate)
 
                 if (cachedSchedule.isNotEmpty() && !forceRefresh) {
-
-                    val totalDays = Duration.between(startDate.atStartOfDay(), endDate.atStartOfDay()).toDays() + 1
-
-                    if (cachedSchedule.size < totalDays) {
-                        _uiState.postValue(ScheduleUiState.Success(cachedSchedule, true))
-                        val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
-                        _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
-                    } else {
-                        _uiState.postValue(ScheduleUiState.Success(cachedSchedule, false))
-                    }
+                    _uiState.postValue(ScheduleUiState.Success(cachedSchedule, true))
+                    val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
+                    _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
                 } else {
                     _uiState.value = ScheduleUiState.Loading
                     val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
