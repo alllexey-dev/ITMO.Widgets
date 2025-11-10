@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.util
 
-import api.myitmo.model.Lesson
+import api.myitmo.model.schedule.Lesson
 import dev.alllexey.itmowidgets.R
 import java.time.DayOfWeek
 import java.time.LocalDate

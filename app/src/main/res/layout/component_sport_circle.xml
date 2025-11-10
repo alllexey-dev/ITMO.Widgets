@@ -8,21 +8,21 @@
 
     <dev.alllexey.itmowidgets.ui.misc.CircularProgressBar
         android:id="@+id/circularProgressBar"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:bgColor="?colorSurfaceContainerHigh"
-        app:progressBarThickness="20dp" />
+        app:bgColor="?colorSurfaceVariant"
+        app:progressBarThickness="16dp" />
 
     <TextView
         android:id="@+id/progressTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="40sp"
+        android:textSize="32sp"
         android:textColor="?colorOnSurface"
         android:textAppearance="@style/TextAppearance.Material3.HeadlineLarge.Emphasized"
         app:layout_constraintBottom_toBottomOf="@id/circularProgressBar"

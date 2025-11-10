@@ -10,7 +10,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import api.myitmo.model.Lesson
+import api.myitmo.model.schedule.Lesson
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 import java.time.LocalTime

@@ -9,8 +9,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import api.myitmo.model.Lesson
-import api.myitmo.model.Schedule
+import api.myitmo.model.schedule.Lesson
+import api.myitmo.model.schedule.Schedule
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 import java.time.Duration

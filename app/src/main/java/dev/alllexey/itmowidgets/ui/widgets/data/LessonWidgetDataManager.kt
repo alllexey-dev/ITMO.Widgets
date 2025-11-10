@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.ui.widgets.data
 
-import api.myitmo.model.Lesson
+import api.myitmo.model.schedule.Lesson
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.data.Storage
 import dev.alllexey.itmowidgets.data.repository.ScheduleRepository

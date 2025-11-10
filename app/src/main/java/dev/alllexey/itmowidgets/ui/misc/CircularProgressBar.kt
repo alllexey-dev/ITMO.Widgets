@@ -30,6 +30,7 @@ class CircularProgressBar @JvmOverloads constructor(
     private var currentSectors = emptyList<Sector>()
 
     private data class RenderData(val color: Int, val startAngle: Float, val sweepAngle: Float)
+
     private var renderDataList = emptyList<RenderData>()
 
     private var animator: ValueAnimator? = null
@@ -67,20 +68,26 @@ class CircularProgressBar @JvmOverloads constructor(
         invalidate()
     }
 
-    fun animateSectors(newSectors: List<Sector>, duration: Long = 1000L) {
+    fun animateSectors(
+        newSectors: List<Sector>,
+        duration: Long = 1000L,
+        startDelay: Long = 0L
+    ) {
         animator?.cancel()
 
         val oldSectors = currentSectors
 
         animator = ValueAnimator.ofFloat(0f, 1f).apply {
             this.duration = duration
-            interpolator = PathInterpolator(.31F,.09F,.2F,.99F)
+            this.startDelay = startDelay
+            interpolator = PathInterpolator(.31F, .09F, .2F, .99F)
 
             addUpdateListener { animation ->
                 val fraction = animation.animatedValue as Float
                 val intermediateSectors = newSectors.mapIndexed { index, targetSector ->
                     val startPercentage = oldSectors.getOrNull(index)?.percentage ?: 0f
-                    val currentPercentage = startPercentage + (targetSector.percentage - startPercentage) * fraction
+                    val currentPercentage =
+                        startPercentage + (targetSector.percentage - startPercentage) * fraction
                     Sector(targetSector.color, currentPercentage)
                 }
                 currentSectors = intermediateSectors
@@ -103,8 +110,8 @@ class CircularProgressBar @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (renderDataList.isEmpty()) return
         canvas.drawArc(bounds, 0f, 360f, false, backgroundPaint)
+        if (renderDataList.isEmpty()) return
         paint.style = Paint.Style.STROKE
         paint.strokeCap = Paint.Cap.BUTT
         for (data in renderDataList) {

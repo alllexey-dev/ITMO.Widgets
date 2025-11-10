@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.data.local
 
-import api.myitmo.model.Schedule
+import api.myitmo.model.schedule.Schedule
 import com.google.gson.Gson
 import java.io.File
 import java.io.FileInputStream

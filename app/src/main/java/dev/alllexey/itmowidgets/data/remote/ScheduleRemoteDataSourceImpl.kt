@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.data.remote
 
 import api.myitmo.MyItmoApi
-import api.myitmo.model.Schedule
+import api.myitmo.model.schedule.Schedule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.awaitResponse

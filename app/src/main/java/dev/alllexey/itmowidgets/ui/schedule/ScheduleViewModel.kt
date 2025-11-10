@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import api.myitmo.model.Schedule
+import api.myitmo.model.schedule.Schedule
 import kotlinx.coroutines.launch
 import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
 import java.time.Duration

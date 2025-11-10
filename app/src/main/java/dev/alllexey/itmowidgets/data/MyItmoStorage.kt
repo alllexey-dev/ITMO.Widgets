@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.data
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import api.myitmo.model.TokenResponse
+import api.myitmo.model.other.TokenResponse
 import api.myitmo.storage.Storage
 
 class MyItmoStorage(val prefs: SharedPreferences) : Storage {

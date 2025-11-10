@@ -9,7 +9,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import api.myitmo.model.TokenResponse
+import api.myitmo.model.other.TokenResponse
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.ui.web.WebViewListener

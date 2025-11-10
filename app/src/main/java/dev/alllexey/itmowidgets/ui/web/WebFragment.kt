@@ -6,7 +6,7 @@ import android.view.View
 import android.webkit.WebView
 import androidx.fragment.app.Fragment
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import api.myitmo.model.TokenResponse
+import api.myitmo.model.other.TokenResponse
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 

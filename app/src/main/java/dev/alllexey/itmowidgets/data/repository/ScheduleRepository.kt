@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.data.repository
 
-import api.myitmo.model.Schedule
+import api.myitmo.model.schedule.Schedule
 import dev.alllexey.itmowidgets.data.local.ScheduleLocalDataSource
 import dev.alllexey.itmowidgets.data.remote.ScheduleRemoteDataSource
 import java.time.LocalDate
