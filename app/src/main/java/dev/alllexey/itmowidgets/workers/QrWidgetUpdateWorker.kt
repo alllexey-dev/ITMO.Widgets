@@ -70,7 +70,7 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
             )
         }
 
-        fun scheduleNextUpdate(context: Context, durationSeconds: Long = 60 * 60L) {
+        fun scheduleNextUpdate(context: Context, durationSeconds: Long = 30 * 60L) {
             val updateWorkRequest = OneTimeWorkRequestBuilder<QrWidgetUpdateWorker>()
                 .setInitialDelay(durationSeconds, TimeUnit.SECONDS)
                 .build()

@@ -73,6 +73,8 @@ class QrCodeWidget : AppWidgetProvider() {
             ExistingWorkPolicy.KEEP,
             animationWorkRequest
         )
+
+        forceBackgroundUpdate(context, appWidgetId)
         QrWidgetUpdateWorker.scheduleNextUpdate(context, 30)
     }
 
@@ -99,12 +101,15 @@ class QrCodeWidget : AppWidgetProvider() {
 
                 val appWidgetManager = AppWidgetManager.getInstance(appContext)
                 withContext(Dispatchers.Main) {
-                    updateAppWidget(
-                        appContext,
-                        appWidgetManager,
-                        appWidgetId,
-                        qrBitmap
-                    )
+                    val state = appContainer.storage.utility.getQrWidgetState(appWidgetId)
+                    if (state == QrWidgetState.SHOWING_QR) {
+                        updateAppWidget(
+                            appContext,
+                            appWidgetManager,
+                            appWidgetId,
+                            qrBitmap
+                        )
+                    }
 
                     Toast.makeText(context, "QR-код обновлён", Toast.LENGTH_SHORT).show()
                 }

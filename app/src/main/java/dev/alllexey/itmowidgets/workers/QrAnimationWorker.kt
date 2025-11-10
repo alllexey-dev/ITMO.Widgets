@@ -104,7 +104,10 @@ class QrAnimationWorker(appContext: Context, workerParams: WorkerParameters) :
 
         appContainer.storage.utility.setQrWidgetState(appWidgetId, QrWidgetState.SHOWING_QR)
 
-        remoteViews.setImageViewBitmap(R.id.qr_code_image, qrBitmap)
+        val actualQrHex = qrToolkit.getQrHex()
+        val actualQrBitmap = qrToolkit.generateQrBitmap(actualQrHex)
+
+        remoteViews.setImageViewBitmap(R.id.qr_code_image, actualQrBitmap)
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
     }
 
