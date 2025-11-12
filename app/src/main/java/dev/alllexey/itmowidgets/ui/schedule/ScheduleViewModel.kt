@@ -26,7 +26,7 @@ class ScheduleViewModel(
     private var isLoading = false
     private var dateRange: ClosedRange<LocalDate>? = null
 
-    fun fetchScheduleData(forceRefresh: Boolean) {
+    fun fetchScheduleData() {
         if (isLoading) return
         isLoading = true
 
@@ -37,15 +37,9 @@ class ScheduleViewModel(
 
                 val cachedSchedule = scheduleRepository.getCachedScheduleForRange(startDate, endDate)
 
-                if (cachedSchedule.isNotEmpty() && !forceRefresh) {
-                    _uiState.postValue(ScheduleUiState.Success(cachedSchedule, true))
-                    val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
-                    _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
-                } else {
-                    _uiState.value = ScheduleUiState.Loading
-                    val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
-                    _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
-                }
+                _uiState.postValue(ScheduleUiState.Success(cachedSchedule, true))
+                val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
+                _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
                 dateRange = startDate..endDate
             } catch (e: Exception) {
                 val errorMessage = "Failed to update schedule: ${e.message}"

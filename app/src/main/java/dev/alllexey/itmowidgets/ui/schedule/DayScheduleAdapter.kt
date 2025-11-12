@@ -39,7 +39,8 @@ class DayScheduleAdapter :
         val context = holder.itemView.context
 
         holder.dayTitle.text = ScheduleUtils.getRuDayOfWeek(date.dayOfWeek)
-        holder.dayDate.text = "${date.dayOfMonth} ${ScheduleUtils.getRussianMonthInGenitiveCase(date.monthValue)}"
+        holder.dayDate.text =
+            "${date.dayOfMonth} ${ScheduleUtils.getRussianMonthInGenitiveCase(date.monthValue)}"
         val numberOfLessonsText = if (lessons.isEmpty()) {
             "нет пар"
         } else {
@@ -50,13 +51,21 @@ class DayScheduleAdapter :
         val today = LocalDate.now()
         if (date.isBefore(today) || lessons.isEmpty()) {
             val typedValue = TypedValue()
-            context.theme.resolveAttribute(com.google.android.material.R.attr.colorSecondary, typedValue, true)
+            context.theme.resolveAttribute(
+                com.google.android.material.R.attr.colorSecondary,
+                typedValue,
+                true
+            )
             holder.dayTitle.setTextColor(typedValue.data)
             holder.itemView.alpha = 0.6f
         } else {
             val typedValue = TypedValue()
             if (date.equals(today)) {
-                context.theme.resolveAttribute(com.google.android.material.R.attr.colorTertiary, typedValue, true)
+                context.theme.resolveAttribute(
+                    com.google.android.material.R.attr.colorTertiary,
+                    typedValue,
+                    true
+                )
             } else {
                 context.theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
             }
@@ -80,13 +89,21 @@ class DayScheduleAdapter :
         holder.innerRecyclerView.setRecycledViewPool(viewPool)
     }
 
-    fun updateLessonStates() {
-        if (firstUpdate) {
+    // workaround for empty days/yesterday not getting dimmed on first update
+    override fun onCurrentListChanged(
+        previousList: MutableList<Schedule>,
+        currentList: MutableList<Schedule>
+    ) {
+        super.onCurrentListChanged(previousList, currentList)
+        if (previousList.isEmpty() && currentList.isNotEmpty() && firstUpdate) {
             notifyDataSetChanged()
             firstUpdate = false
-        } else {
-            submitList(currentList.toList())
         }
+    }
+
+    // this definitely could be improved
+    fun updateLessonStates() {
+        notifyDataSetChanged()
     }
 
     inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -96,7 +113,10 @@ class DayScheduleAdapter :
         val innerRecyclerView: RecyclerView = itemView.findViewById(R.id.inner_recycler_view)
     }
 
-    private fun processLessonsWithBreaks(lessons: List<Lesson>, date: LocalDate): List<ScheduleItem> {
+    private fun processLessonsWithBreaks(
+        lessons: List<Lesson>,
+        date: LocalDate
+    ): List<ScheduleItem> {
         val BIG_BREAK_THRESHOLD = Duration.ofMinutes(60)
         val now = LocalDateTime.now()
         val processedList = mutableListOf<ScheduleItem>()
@@ -115,8 +135,10 @@ class DayScheduleAdapter :
             if (index < sortedLessons.size - 1) {
                 val nextLesson = sortedLessons[index + 1]
                 try {
-                    val currentEndTime = LocalTime.parse(currentLesson.timeEnd, DateTimeFormatter.ofPattern("HH:mm"))
-                    val nextStartTime = LocalTime.parse(nextLesson.timeStart, DateTimeFormatter.ofPattern("HH:mm"))
+                    val currentEndTime =
+                        LocalTime.parse(currentLesson.timeEnd, DateTimeFormatter.ofPattern("HH:mm"))
+                    val nextStartTime =
+                        LocalTime.parse(nextLesson.timeStart, DateTimeFormatter.ofPattern("HH:mm"))
                     val breakDuration = Duration.between(currentEndTime, nextStartTime)
                     if (breakDuration.abs() > BIG_BREAK_THRESHOLD) {
                         processedList.add(ScheduleItem.BreakItem(currentEndTime, nextStartTime))

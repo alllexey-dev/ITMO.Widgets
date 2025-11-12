@@ -12,8 +12,11 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.ui.widgets.WidgetUtils
+import java.lang.Thread.sleep
 import java.time.Duration
 import java.time.LocalDate
+import kotlin.concurrent.thread
 
 class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
 
@@ -39,10 +42,10 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
         observeUiState()
 
         swipeRefreshLayout.setOnRefreshListener {
-            scheduleViewModel.fetchScheduleData(forceRefresh = true)
+            scheduleViewModel.fetchScheduleData()
         }
 
-        scheduleViewModel.fetchScheduleData(forceRefresh = false)
+        scheduleViewModel.fetchScheduleData()
     }
 
     override fun onResume() {
@@ -120,7 +123,7 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
         updateTimeRunnable = object : Runnable {
             override fun run() {
                 dayScheduleAdapter.updateLessonStates()
-                handler.postDelayed(this, Duration.ofMinutes(1).toMillis())
+                handler.postDelayed(this, Duration.ofMinutes(5).toMillis())
             }
         }
         handler.post(updateTimeRunnable)
