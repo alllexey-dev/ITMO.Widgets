@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.ui.schedule
 
-import android.util.TypedValue
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +11,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import api.myitmo.model.schedule.Lesson
 import api.myitmo.model.schedule.Schedule
+import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.util.ColorUtil
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 import java.time.Duration
 import java.time.LocalDate
@@ -26,6 +28,8 @@ class DayScheduleAdapter :
 
     private var firstUpdate = true
 
+    private lateinit var colorUtil: ColorUtil
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_day_schedule, parent, false)
@@ -37,6 +41,7 @@ class DayScheduleAdapter :
         val date = daySchedule.date
         val lessons = daySchedule.lessons
         val context = holder.itemView.context
+        if (!this::colorUtil.isInitialized) colorUtil = (context.applicationContext as ItmoWidgetsApp).appContainer.colorUtil
 
         holder.dayTitle.text = ScheduleUtils.getRuDayOfWeek(date.dayOfWeek)
         holder.dayDate.text =
@@ -50,26 +55,14 @@ class DayScheduleAdapter :
 
         val today = LocalDate.now()
         if (date.isBefore(today) || lessons.isEmpty()) {
-            val typedValue = TypedValue()
-            context.theme.resolveAttribute(
-                com.google.android.material.R.attr.colorSecondary,
-                typedValue,
-                true
-            )
-            holder.dayTitle.setTextColor(typedValue.data)
+            val color = if (date.equals(today)) colorUtil.getTertiaryColor(Color.WHITE)
+            else colorUtil.getSecondaryColor(Color.GRAY)
+            holder.dayTitle.setTextColor(color)
             holder.itemView.alpha = 0.6f
         } else {
-            val typedValue = TypedValue()
-            if (date.equals(today)) {
-                context.theme.resolveAttribute(
-                    com.google.android.material.R.attr.colorTertiary,
-                    typedValue,
-                    true
-                )
-            } else {
-                context.theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
-            }
-            holder.dayTitle.setTextColor(typedValue.data)
+            val color = if (date.equals(today)) colorUtil.getTertiaryColor(Color.WHITE)
+            else colorUtil.getPrimaryColor(Color.GRAY)
+            holder.dayTitle.setTextColor(color)
             holder.itemView.alpha = 1.0f
         }
 

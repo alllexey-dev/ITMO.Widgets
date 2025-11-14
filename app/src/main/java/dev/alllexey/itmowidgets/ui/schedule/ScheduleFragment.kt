@@ -12,11 +12,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.ui.widgets.WidgetUtils
-import java.lang.Thread.sleep
 import java.time.Duration
 import java.time.LocalDate
-import kotlin.concurrent.thread
 
 class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
 

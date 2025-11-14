@@ -2,18 +2,15 @@ package dev.alllexey.itmowidgets.ui.sport.me
 
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import api.myitmo.model.sport.ChosenSportSection
 import api.myitmo.model.sport.SportScore
-import com.google.android.material.color.MaterialColors
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.FragmentSportMeBinding
@@ -37,6 +34,8 @@ class SportMeFragment : Fragment() {
     private lateinit var sportRecordAdapter: SportRecordAdapter
 
     private val myItmo by lazy { (requireContext().applicationContext as ItmoWidgetsApp).appContainer.myItmo }
+
+    private val colorUtil by lazy { (requireContext().applicationContext as ItmoWidgetsApp).appContainer.colorUtil }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -102,15 +101,11 @@ class SportMeFragment : Fragment() {
     }
 
     private fun updateUi(score: SportScore, chosenSections: List<ChosenSportSection>) {
-        val attendanceColor = MaterialColors.getColor(
-            requireContext(),
-            com.google.android.material.R.attr.colorTertiary,
-            ContextCompat.getColor(requireContext(), R.color.red_sport_color)
+        val attendanceColor = colorUtil.getTertiaryColor(
+            colorUtil.getColor(R.color.red_sport_color)
         ).withSaturation(4f)
-        val bonusColor = MaterialColors.getColor(
-            requireContext(),
-            com.google.android.material.R.attr.colorSecondary,
-            ContextCompat.getColor(requireContext(), R.color.blue_sport_color)
+        val bonusColor = colorUtil.getSecondaryColor(
+            colorUtil.getColor(R.color.blue_sport_color)
         ).withSaturation(4f)
 
         val attendancePoints = score.sum.attendances
@@ -119,7 +114,8 @@ class SportMeFragment : Fragment() {
         val totalPoints = attendancePoints + bonusPoints
 
         binding.attendancePointsTextView.text = attendancePoints.toString()
-        binding.bonusPointsTextView.text = if (realBonusPoints > bonusPoints) "$bonusPoints ($realBonusPoints)" else "$bonusPoints"
+        binding.bonusPointsTextView.text =
+            if (realBonusPoints > bonusPoints) "$bonusPoints ($realBonusPoints)" else "$bonusPoints"
         binding.attendanceIndicator.imageTintList = ColorStateList.valueOf(attendanceColor)
         binding.bonusIndicator.imageTintList = ColorStateList.valueOf(bonusColor)
 
@@ -142,8 +138,18 @@ class SportMeFragment : Fragment() {
                 attendancePoints.toFloat() to bonusPoints.toFloat()
             }
 
-            if (attendancePercentage > 0) sectors.add(CircularProgressBar.Sector(attendanceColor, attendancePercentage))
-            if (bonusPercentage > 0) sectors.add(CircularProgressBar.Sector(bonusColor, bonusPercentage))
+            if (attendancePercentage > 0) sectors.add(
+                CircularProgressBar.Sector(
+                    attendanceColor,
+                    attendancePercentage
+                )
+            )
+            if (bonusPercentage > 0) sectors.add(
+                CircularProgressBar.Sector(
+                    bonusColor,
+                    bonusPercentage
+                )
+            )
         }
 
         progressBar.animateSectors(sectors, duration = 800L, startDelay = 300L)
