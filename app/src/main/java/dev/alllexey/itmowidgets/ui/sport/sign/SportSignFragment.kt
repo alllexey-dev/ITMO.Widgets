@@ -1,12 +1,9 @@
 package dev.alllexey.itmowidgets.ui.sport.sign
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -15,6 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -25,12 +23,16 @@ import dev.alllexey.itmowidgets.databinding.FragmentSportSignBinding
 import dev.alllexey.itmowidgets.ui.misc.SelectableItem
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlin.concurrent.thread
+import java.time.LocalDate
 
-class SportSignFragment : Fragment(R.layout.fragment_sport_sign) {
+class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsListener {
 
     private var _binding: FragmentSportSignBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var headerAdapter: FiltersHeaderAdapter
+    private lateinit var lessonsAdapter: SportLessonsAdapter
+    private lateinit var concatAdapter: ConcatAdapter
 
     private val viewModel: SportSignViewModel by viewModels {
         object : ViewModelProvider.Factory {
@@ -49,73 +51,38 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign) {
         return binding.root
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupRecyclerView()
         setupUIListeners()
-        view.setOnTouchListener { _, _ ->
-            binding.buildingAutoComplete.clearFocus()
-            binding.teacherAutoComplete.clearFocus()
-            binding.timeAutoComplete.clearFocus()
-            false
-        }
         observeViewModel()
+    }
+
+    private fun setupRecyclerView() {
+        headerAdapter = FiltersHeaderAdapter(this)
+
+        lessonsAdapter = SportLessonsAdapter { lesson ->
+            viewModel.signUpForLesson(lesson)
+        }
+
+        lessonsAdapter.setBuildingsMap(viewModel.allBuildingsMap)
+
+        concatAdapter = ConcatAdapter(headerAdapter, lessonsAdapter)
+
+        binding.mainRecyclerView.apply {
+            adapter = concatAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+//            val animator = itemAnimator
+//            if (animator is SimpleItemAnimator) {
+//                animator.supportsChangeAnimations = false
+//            }
+            itemAnimator = null
+        }
     }
 
     private fun setupUIListeners() {
         binding.swipeRefreshLayout.setOnRefreshListener {
             viewModel.loadInitialData()
-        }
-
-        binding.sportEditText.setOnClickListener {
-            showMultiSelectSearchableDialog(viewModel.uiState.value)
-        }
-
-        binding.freeSportSwitch.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.setFreeAttendance(isChecked)
-        }
-
-        binding.buildingAutoComplete.setOnItemClickListener { parent, _, position, _ ->
-            val selected = parent.adapter.getItem(position) as String
-            viewModel.selectBuilding(selected)
-            binding.buildingAutoComplete.clearFocus()
-        }
-
-        // weird workaround
-        binding.buildingAutoComplete.setOnDismissListener {
-            binding.buildingAutoComplete.dismissDropDown()
-            thread {
-                Thread.sleep(50)
-                binding.buildingAutoComplete.post { binding.buildingAutoComplete.clearFocus() }
-            }
-        }
-
-        binding.teacherAutoComplete.setOnItemClickListener { parent, _, position, _ ->
-            val selected = parent.adapter.getItem(position) as String
-            viewModel.selectTeacher(selected)
-            binding.teacherAutoComplete.clearFocus()
-        }
-
-        binding.teacherAutoComplete.setOnDismissListener {
-            binding.teacherAutoComplete.dismissDropDown()
-            thread {
-                Thread.sleep(50)
-                binding.teacherAutoComplete.post { binding.teacherAutoComplete.clearFocus() }
-            }
-        }
-
-        binding.timeAutoComplete.setOnItemClickListener { parent, _, position, _ ->
-            val selected = parent.adapter.getItem(position) as String
-            viewModel.selectTime(selected)
-            binding.timeAutoComplete.clearFocus()
-        }
-
-        binding.timeAutoComplete.setOnDismissListener {
-            binding.timeAutoComplete.dismissDropDown()
-            thread {
-                Thread.sleep(50)
-                binding.timeAutoComplete.post { binding.timeAutoComplete.clearFocus() }
-            }
         }
     }
 
@@ -129,24 +96,42 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign) {
                     Toast.makeText(context, state.errorMessage, Toast.LENGTH_SHORT).show()
                 }
 
-                binding.sportEditText.setText(state.selectedSportNames.joinToString(", ").ifEmpty { null })
+                headerAdapter.updateState(state)
 
-                updateAdapter(binding.buildingAutoComplete, state.availableBuildings)
-                updateAdapter(binding.teacherAutoComplete, state.availableTeachers)
-                updateAdapter(binding.timeAutoComplete, state.availableTimeSlots)
-
-                binding.buildingAutoComplete.setText(state.selectedBuildingName ?: "", false)
-                binding.teacherAutoComplete.setText(state.selectedTeacherName ?: "", false)
-                binding.timeAutoComplete.setText(state.selectedTimeSlot ?: "", false)
-
-                // todo: update lesson list
-
+                lessonsAdapter.submitList(state.filteredLessons)
             }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    private fun <T> updateAdapter(autoCompleteTextView: AutoCompleteTextView, data: List<T>) {
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, data)
-        autoCompleteTextView.setAdapter(adapter)
+    override fun onSportClick() {
+        showMultiSelectSearchableDialog(viewModel.uiState.value)
+    }
+
+    override fun onFreeAttendanceChanged(isChecked: Boolean) {
+        viewModel.setFreeAttendance(isChecked)
+    }
+
+    override fun onBuildingSelected(building: String) {
+        viewModel.selectBuilding(building)
+    }
+
+    override fun onTeacherSelected(teacher: String) {
+        viewModel.selectTeacher(teacher)
+    }
+
+    override fun onTimeSelected(time: String) {
+        viewModel.selectTime(time)
+    }
+
+    override fun onDateSelected(date: LocalDate) {
+        viewModel.selectDate(date)
+    }
+
+    override fun onPrevWeekClick() {
+        viewModel.prevWeek()
+    }
+
+    override fun onNextWeekClick() {
+        viewModel.nextWeek()
     }
 
     private fun showMultiSelectSearchableDialog(state: SportSignUiState) {
@@ -183,6 +168,7 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign) {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.mainRecyclerView.adapter = null
         _binding = null
     }
 }

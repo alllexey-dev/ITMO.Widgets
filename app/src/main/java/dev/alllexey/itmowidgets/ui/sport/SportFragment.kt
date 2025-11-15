@@ -17,6 +17,7 @@ class SportFragment : Fragment(R.layout.fragment_sport) {
         val tabLayout = view.findViewById<TabLayout>(R.id.sport_tab_layout)
 
         viewPager.adapter = SportPagerAdapter(requireActivity())
+        viewPager.isUserInputEnabled = false
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = when (position) {
                 0 -> getString(R.string.title_sport_me)
