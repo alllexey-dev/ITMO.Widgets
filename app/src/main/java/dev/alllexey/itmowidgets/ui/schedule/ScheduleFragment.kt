@@ -119,8 +119,8 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
     private fun startLessonStateUpdater() {
         updateTimeRunnable = object : Runnable {
             override fun run() {
-                dayScheduleAdapter.updateLessonStates()
                 handler.postDelayed(this, Duration.ofMinutes(5).toMillis())
+                dayScheduleAdapter.updateLessonStates()
             }
         }
         handler.post(updateTimeRunnable)

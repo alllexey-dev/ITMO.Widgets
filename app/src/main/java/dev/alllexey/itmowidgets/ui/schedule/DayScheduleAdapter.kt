@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -58,12 +59,12 @@ class DayScheduleAdapter :
             val color = if (date.equals(today)) colorUtil.getTertiaryColor(Color.WHITE)
             else colorUtil.getSecondaryColor(Color.GRAY)
             holder.dayTitle.setTextColor(color)
-            holder.itemView.alpha = 0.6f
+            holder.itemRoot.alpha = 0.6f
         } else {
             val color = if (date.equals(today)) colorUtil.getTertiaryColor(Color.WHITE)
             else colorUtil.getPrimaryColor(Color.GRAY)
             holder.dayTitle.setTextColor(color)
-            holder.itemView.alpha = 1.0f
+            holder.itemRoot.alpha = 1.0f
         }
 
         val layoutManager = LinearLayoutManager(
@@ -83,16 +84,16 @@ class DayScheduleAdapter :
     }
 
     // workaround for empty days/yesterday not getting dimmed on first update
-    override fun onCurrentListChanged(
-        previousList: MutableList<Schedule>,
-        currentList: MutableList<Schedule>
-    ) {
-        super.onCurrentListChanged(previousList, currentList)
-        if (previousList.isEmpty() && currentList.isNotEmpty() && firstUpdate) {
-            notifyDataSetChanged()
-            firstUpdate = false
-        }
-    }
+//    override fun onCurrentListChanged(
+//        previousList: MutableList<Schedule>,
+//        currentList: MutableList<Schedule>
+//    ) {
+//        super.onCurrentListChanged(previousList, currentList)
+//        if (previousList.isEmpty() && currentList.isNotEmpty() && firstUpdate) {
+//            notifyDataSetChanged()
+//            firstUpdate = false
+//        }
+//    }
 
     // this definitely could be improved
     fun updateLessonStates() {
@@ -100,6 +101,7 @@ class DayScheduleAdapter :
     }
 
     inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val itemRoot: LinearLayout = itemView.findViewById(R.id.dayItemRoot)
         val dayTitle: TextView = itemView.findViewById(R.id.day_title)
         val numberOfLessons: TextView = itemView.findViewById(R.id.number_of_lessons)
         val dayDate: TextView = itemView.findViewById(R.id.day_date)
