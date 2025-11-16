@@ -118,19 +118,27 @@
 
         <ImageButton
             android:id="@+id/prev_week_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:scaleType="fitCenter"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Предыдущая неделя"
             android:src="@drawable/ic_chevron_left"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/next_week_button"
+            app:layout_constraintEnd_toStartOf="@id/space"
             app:layout_constraintTop_toTopOf="parent" />
+        <Space
+            android:id="@+id/space"
+            android:layout_width="12dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="@id/prev_week_button"
+            app:layout_constraintEnd_toStartOf="@id/next_week_button"/>
 
         <ImageButton
             android:id="@+id/next_week_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:scaleType="fitCenter"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Следующая неделя"
             android:src="@drawable/ic_chevron_right"
