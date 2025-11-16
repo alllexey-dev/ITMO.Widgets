@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import dev.alllexey.itmowidgets.databinding.ItemSportFiltersHeaderBinding
 import java.time.LocalDate
+import kotlin.concurrent.thread
 
 interface FilterActionsListener {
     fun onSportClick()
@@ -65,12 +66,15 @@ class FiltersHeaderAdapter(
             binding.buildingAutoComplete.setOnItemClickListener { parent, _, position, _ ->
                 listener.onBuildingSelected(parent.adapter.getItem(position) as String)
             }
+            binding.buildingAutoComplete.setupDismissWorkaround()
             binding.teacherAutoComplete.setOnItemClickListener { parent, _, position, _ ->
                 listener.onTeacherSelected(parent.adapter.getItem(position) as String)
             }
+            binding.teacherAutoComplete.setupDismissWorkaround()
             binding.timeAutoComplete.setOnItemClickListener { parent, _, position, _ ->
                 listener.onTimeSelected(parent.adapter.getItem(position) as String)
             }
+            binding.timeAutoComplete.setupDismissWorkaround()
             binding.prevWeekButton.setOnClickListener { listener.onPrevWeekClick() }
             binding.nextWeekButton.setOnClickListener { listener.onNextWeekClick() }
         }
@@ -99,6 +103,16 @@ class FiltersHeaderAdapter(
         private fun <T> updateAdapter(autoCompleteTextView: AutoCompleteTextView, data: List<T>) {
             val adapter = ArrayAdapter(itemView.context, android.R.layout.simple_spinner_dropdown_item, data)
             autoCompleteTextView.setAdapter(adapter)
+        }
+
+        private fun AutoCompleteTextView.setupDismissWorkaround() {
+            setOnDismissListener {
+                dismissDropDown()
+                thread {
+                    Thread.sleep(50)
+                    post { clearFocus() }
+                }
+            }
         }
     }
 }

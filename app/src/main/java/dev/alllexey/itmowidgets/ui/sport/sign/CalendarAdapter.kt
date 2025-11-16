@@ -57,6 +57,10 @@ class CalendarAdapter(
                     textColor = MaterialColors.getColor(context, com.google.android.material.R.attr.colorOnPrimaryContainer, 0)
                 }
                 day.isToday -> {
+                    cardColor = MaterialColors.getColor(context, com.google.android.material.R.attr.colorTertiaryContainer, 0)
+                    textColor = MaterialColors.getColor(context, com.google.android.material.R.attr.colorOnTertiaryContainer, 0)
+                }
+                day.hasAvailableLessons -> {
                     cardColor = MaterialColors.getColor(context, com.google.android.material.R.attr.colorSecondaryContainer, 0)
                     textColor = MaterialColors.getColor(context, com.google.android.material.R.attr.colorOnSecondaryContainer, 0)
                 }

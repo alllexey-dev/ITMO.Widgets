@@ -22,6 +22,7 @@ data class CalendarDay(
     val dayOfWeek: String,
     val dayOfMonth: String,
     val hasLessons: Boolean,
+    val hasAvailableLessons: Boolean,
     val isSelected: Boolean,
     val isToday: Boolean
 )
@@ -29,9 +30,10 @@ data class CalendarDay(
 data class SportSignUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
+
     val allLessons: List<SportLesson> = emptyList(),
     val filteredLessons: List<SportLesson> = emptyList(),
-    val lessonsListMessage: String? = null,
+    val displayedLessons: List<SportLesson> = emptyList(),
 
     val selectedSportNames: Set<String> = emptySet(),
     val selectedBuildingName: String? = null,
@@ -158,12 +160,18 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
             .map { it.date.toLocalDate() }
             .toSet()
 
+        val datesWithAvailableLessons = _uiState.value.filteredLessons
+            .filter { it.canSignIn.isCanSignIn }
+            .map { it.date.toLocalDate() }
+            .toSet()
+
         val calendarDays = days.map { date ->
             CalendarDay(
                 date = date,
                 dayOfWeek = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale("ru")),
                 dayOfMonth = date.dayOfMonth.toString(),
                 hasLessons = datesWithLessons.contains(date),
+                hasAvailableLessons = datesWithAvailableLessons.contains(date),
                 isSelected = date.isEqual(selectedDate),
                 isToday = date.isEqual(today)
             )
@@ -288,9 +296,6 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
                 }
 
             val finalFilteredLessons = lessonsForTeacherCalculation.filter { lesson ->
-                val lessonDate = lesson.date.toLocalDate()
-                if (!lessonDate.isEqual(selectedDate)) return@filter false
-
                 val timeSlotId =
                     allTimeSlotsMap.entries.find { it.value == currentState.selectedTimeSlot }?.key
                 if (currentState.selectedTimeSlot != null && lesson.timeSlotId != timeSlotId) return@filter false
@@ -299,9 +304,15 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
                 validTeacherName == null || lesson.teacherIsu == teacherId
             }.sortedBy { it.date }
 
+            val displayedLessons = finalFilteredLessons.filter { lesson ->
+                val lessonDate = lesson.date.toLocalDate()
+                lessonDate.isEqual(selectedDate)
+            }
+
             _uiState.update {
                 it.copy(
                     filteredLessons = finalFilteredLessons,
+                    displayedLessons = displayedLessons,
                     availableSports = availableSports,
                     availableBuildings = listOf(ANY_BUILDING_KEY) + availableBuildings,
                     availableTeachers = listOf(ANY_TEACHER_KEY) + availableTeachers,

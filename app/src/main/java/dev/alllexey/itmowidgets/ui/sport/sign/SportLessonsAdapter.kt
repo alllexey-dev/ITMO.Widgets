@@ -80,7 +80,7 @@ class SportLessonsAdapter(
 
         private fun setMuted(isMuted: Boolean) {
             val alpha = if (isMuted) 0.6f else 1.0f
-            binding.root.alpha = alpha
+            binding.sportLessonCardView.alpha = alpha
         }
     }
 }

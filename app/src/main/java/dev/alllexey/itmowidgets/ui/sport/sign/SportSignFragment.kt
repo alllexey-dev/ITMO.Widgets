@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
@@ -72,11 +73,10 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
         binding.mainRecyclerView.apply {
             adapter = concatAdapter
             layoutManager = LinearLayoutManager(requireContext())
-//            val animator = itemAnimator
-//            if (animator is SimpleItemAnimator) {
-//                animator.supportsChangeAnimations = false
-//            }
-            itemAnimator = null
+            val animator = itemAnimator
+            if (animator is SimpleItemAnimator) {
+                animator.supportsChangeAnimations = false
+            }
         }
     }
 
@@ -98,7 +98,7 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
 
                 headerAdapter.updateState(state)
 
-                lessonsAdapter.submitList(state.filteredLessons)
+                lessonsAdapter.submitList(state.displayedLessons)
             }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
