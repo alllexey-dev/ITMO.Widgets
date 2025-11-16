@@ -110,6 +110,10 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
         viewModel.setFreeAttendance(isChecked)
     }
 
+    override fun onShowOnlyAvailableChanged(isChecked: Boolean) {
+        viewModel.setShowOnlyAvailable(isChecked)
+    }
+
     override fun onBuildingSelected(building: String) {
         viewModel.selectBuilding(building)
     }

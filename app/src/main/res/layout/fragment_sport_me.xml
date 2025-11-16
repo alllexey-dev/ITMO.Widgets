@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/swipeRefreshLayout"
@@ -17,11 +16,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            app:cardElevation="4dp"
             app:cardCornerRadius="24dp"
-            app:layout_constraintTop_toTopOf="parent"
+            app:cardElevation="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeColor="?attr/colorOutline">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -33,107 +33,107 @@
                     layout="@layout/component_sport_circle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <ImageView
                     android:id="@+id/attendanceIndicator"
                     android:layout_width="8dp"
                     android:layout_height="20dp"
+                    android:layout_marginStart="16dp"
+                    android:paddingTop="12dp"
                     android:src="@drawable/indicator_circle"
-                    app:tint="?colorTertiary"
                     app:layout_constraintStart_toEndOf="@id/progressCircle"
                     app:layout_constraintTop_toTopOf="parent"
-                    android:layout_marginStart="16dp"
-                    android:paddingTop="12dp"/>
+                    app:tint="?colorTertiary" />
 
                 <TextView
                     android:id="@+id/attendancePointsTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
                     android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                     android:textStyle="bold"
-                    tools:text="30"
                     app:layout_constraintStart_toEndOf="@id/attendanceIndicator"
                     app:layout_constraintTop_toTopOf="parent"
-                    android:layout_marginStart="6dp"/>
+                    tools:text="30" />
 
                 <TextView
                     android:id="@+id/attendanceLabelTextView"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
                     android:text="за посещение"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    app:layout_constraintStart_toEndOf="@id/attendancePointsTextView"
+                    app:layout_constraintBaseline_toBaselineOf="@id/attendancePointsTextView"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginStart="6dp"
-                    app:layout_constraintBaseline_toBaselineOf="@id/attendancePointsTextView" />
+                    app:layout_constraintStart_toEndOf="@id/attendancePointsTextView" />
 
                 <ImageView
                     android:id="@+id/bonusIndicator"
                     android:layout_width="8dp"
                     android:layout_height="26dp"
+                    android:paddingTop="18dp"
                     android:src="@drawable/indicator_circle"
-                    app:tint="?colorSecondary"
                     app:layout_constraintStart_toStartOf="@id/attendanceIndicator"
                     app:layout_constraintTop_toBottomOf="@id/attendancePointsTextView"
-                    android:paddingTop="18dp"/>
+                    app:tint="?colorSecondary" />
 
                 <TextView
                     android:id="@+id/bonusPointsTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
                     android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                     android:textStyle="bold"
-                    tools:text="20"
                     app:layout_constraintStart_toStartOf="@id/attendancePointsTextView"
                     app:layout_constraintTop_toBottomOf="@id/attendancePointsTextView"
-                    android:layout_marginTop="6dp"/>
+                    tools:text="20" />
 
                 <TextView
                     android:id="@+id/bonusLabelTextView"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
                     android:text="бонусы"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    app:layout_constraintStart_toEndOf="@id/bonusPointsTextView"
+                    app:layout_constraintBaseline_toBaselineOf="@id/bonusPointsTextView"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginStart="6dp"
-                    app:layout_constraintBaseline_toBaselineOf="@id/bonusPointsTextView" />
+                    app:layout_constraintStart_toEndOf="@id/bonusPointsTextView" />
 
                 <ImageView
                     android:id="@+id/needIndicator"
                     android:layout_width="8dp"
                     android:layout_height="26dp"
+                    android:paddingTop="18dp"
                     android:src="@drawable/indicator_circle"
-                    app:tint="?colorSurfaceVariant"
+                    android:visibility="invisible"
                     app:layout_constraintStart_toStartOf="@id/bonusIndicator"
                     app:layout_constraintTop_toBottomOf="@id/bonusPointsTextView"
-                    android:visibility="invisible"
-                    android:paddingTop="18dp"/>
+                    app:tint="?colorSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/needPointsTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
                     android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                     android:textStyle="bold"
-                    tools:text="20"
                     app:layout_constraintStart_toStartOf="@id/bonusPointsTextView"
                     app:layout_constraintTop_toBottomOf="@id/bonusPointsTextView"
-                    android:layout_marginTop="6dp"/>
+                    tools:text="20" />
 
                 <TextView
                     android:id="@+id/needLabelTextView"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
                     android:text="до зачёта"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    app:layout_constraintStart_toEndOf="@id/needPointsTextView"
+                    app:layout_constraintBaseline_toBaselineOf="@id/needPointsTextView"
                     app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginStart="6dp"
-                    app:layout_constraintBaseline_toBaselineOf="@id/needPointsTextView" />
+                    app:layout_constraintStart_toEndOf="@id/needPointsTextView" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -143,14 +143,15 @@
             android:id="@+id/sportRecordsRecyclerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="80dp"
             android:clipToPadding="false"
+            android:paddingTop="80dp"
             android:paddingBottom="16dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintTop_toBottomOf="@id/pointsCard"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:listitem="@layout/item_sport_record" />
 
         <TextView
@@ -162,10 +163,10 @@
             android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
             android:textColor="?android:attr/textColorSecondary"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/pointsCard"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/pointsCard"
             tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

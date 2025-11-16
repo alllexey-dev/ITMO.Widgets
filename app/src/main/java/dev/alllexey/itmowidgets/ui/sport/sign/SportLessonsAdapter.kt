@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import api.myitmo.model.sport.SportLesson
 import dev.alllexey.itmowidgets.databinding.ItemSportLessonBinding
+import dev.alllexey.itmowidgets.util.SportUtils
 
 class SportLessonsAdapter(
     private val onSignUpClick: (SportLesson) -> Unit
@@ -34,7 +35,7 @@ class SportLessonsAdapter(
 
         fun bind(lesson: SportLesson) {
             this.lesson = lesson
-            binding.sectionNameTextView.text = lesson.sectionName
+            binding.sectionNameTextView.text = SportUtils.shortenSectionName(lesson.sectionName)
             binding.timeTextView.text = "${lesson.timeSlotStart}-${lesson.timeSlotEnd}"
             binding.teacherTextView.text = lesson.teacherFio
 
@@ -44,12 +45,13 @@ class SportLessonsAdapter(
             val isSigned = lesson.signed ?: false
 
             if (isSigned) {
-                binding.signUpButton.text = "Вы записаны"
-                binding.signUpButton.isEnabled = false
+                binding.signUpButton.text = "Отписаться"
+                binding.signUpButton.visibility = View.VISIBLE
+                binding.signUpButton.isEnabled = true
                 binding.statusChip.visibility = View.GONE
                 binding.signUpButton.setOnClickListener(null)
                 setMuted(false)
-            } else if (canSignIn) {
+            } else if (canSignIn && lesson.available > 0) {
                 binding.signUpButton.text = "Записаться"
                 binding.signUpButton.isEnabled = true
                 binding.signUpButton.visibility = View.VISIBLE
@@ -59,22 +61,23 @@ class SportLessonsAdapter(
                 }
                 setMuted(false)
             } else {
+                val unavailableReasons = UnavailableReason.getSortedUnavailableReasons(lesson)
+                val reason = unavailableReasons.lastOrNull()
                 binding.signUpButton.setOnClickListener(null)
-                binding.signUpButton.visibility = View.GONE
                 binding.statusChip.visibility = View.VISIBLE
+                binding.statusChip.text = reason?.shortDescription
 
-                when {
-                    lesson.intersection == true -> {
-                        binding.statusChip.text = "Пересечение"
+                if (reason is UnavailableReason.Full) {
+                    binding.signUpButton.visibility = View.VISIBLE
+                    binding.signUpButton.text = "Автозапись"
+                    binding.signUpButton.setOnClickListener {
+                        // todo: auto sign up handling
                     }
-                    (lesson.available ?: 0) <= 0 -> {
-                        binding.statusChip.text = "Нет мест"
-                    }
-                    else -> {
-                        binding.statusChip.text = lesson.canSignIn.unavailableReasons.firstOrNull() ?: "Недоступно"
-                    }
+                    setMuted(false)
+                } else {
+                    binding.signUpButton.visibility = View.GONE
+                    setMuted(true)
                 }
-                setMuted(true)
             }
         }
 

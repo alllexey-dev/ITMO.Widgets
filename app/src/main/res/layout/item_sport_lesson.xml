@@ -6,11 +6,12 @@
     android:layout_height="wrap_content">
 
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/sportLessonCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginVertical="6dp"
-        android:id="@+id/sportLessonCardView"
+        style="@style/Widget.Material3.CardView.Elevated"
         app:cardElevation="2dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -23,7 +24,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="Фитнес (функциональный)" />
@@ -32,8 +34,8 @@
                 android:id="@+id/time_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:drawablePadding="8dp"
+                android:layout_marginTop="4dp"
+                android:drawablePadding="6dp"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 app:drawableStartCompat="@drawable/ic_clock"
                 app:drawableTint="?android:attr/textColorSecondary"
@@ -42,38 +44,40 @@
                 tools:text="08:10-09:40" />
 
             <TextView
-                android:id="@+id/location_text_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:drawablePadding="8dp"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                app:drawableStartCompat="@drawable/ic_location"
-                app:drawableTint="?android:attr/textColorSecondary"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/time_text_view"
-                tools:text="Кронверкский пр., д.49, Тренажерный зал" />
-
-            <TextView
                 android:id="@+id/teacher_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:drawablePadding="8dp"
+                android:drawablePadding="6dp"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 app:drawableStartCompat="@drawable/ic_user"
                 app:drawableTint="?android:attr/textColorSecondary"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/location_text_view"
+                app:layout_constraintTop_toBottomOf="@id/time_text_view"
                 tools:text="Каменьщиков Павел Валерьевич" />
+
+            <TextView
+                android:id="@+id/location_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:drawablePadding="6dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                app:drawableStartCompat="@drawable/ic_location"
+                app:drawableTint="?android:attr/textColorSecondary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/teacher_text_view"
+                tools:text="Кронверкский пр., д.49, Тренажерный зал" />
 
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="6dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/teacher_text_view">
+                app:layout_constraintTop_toBottomOf="@+id/location_text_view">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/sign_up_button"

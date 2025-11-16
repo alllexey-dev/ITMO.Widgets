@@ -14,6 +14,7 @@ import kotlin.concurrent.thread
 interface FilterActionsListener {
     fun onSportClick()
     fun onFreeAttendanceChanged(isChecked: Boolean)
+    fun onShowOnlyAvailableChanged(isChecked: Boolean)
     fun onBuildingSelected(building: String)
     fun onTeacherSelected(teacher: String)
     fun onTimeSelected(time: String)
@@ -59,10 +60,14 @@ class FiltersHeaderAdapter(
                 animator.supportsChangeAnimations = false
             }
 
-            binding.sportEditText.setOnClickListener { listener.onSportClick() }
             binding.freeSportSwitch.setOnCheckedChangeListener { _, isChecked ->
                 listener.onFreeAttendanceChanged(isChecked)
             }
+            binding.availableSportSwitch.setOnCheckedChangeListener { _, isChecked ->
+                listener.onShowOnlyAvailableChanged(isChecked)
+            }
+
+            binding.sportEditText.setOnClickListener { listener.onSportClick() }
             binding.buildingAutoComplete.setOnItemClickListener { parent, _, position, _ ->
                 listener.onBuildingSelected(parent.adapter.getItem(position) as String)
             }
@@ -75,6 +80,7 @@ class FiltersHeaderAdapter(
                 listener.onTimeSelected(parent.adapter.getItem(position) as String)
             }
             binding.timeAutoComplete.setupDismissWorkaround()
+
             binding.prevWeekButton.setOnClickListener { listener.onPrevWeekClick() }
             binding.nextWeekButton.setOnClickListener { listener.onNextWeekClick() }
         }

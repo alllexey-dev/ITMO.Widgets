@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import api.myitmo.MyItmoApi
 import api.myitmo.model.sport.SportLesson
+import dev.alllexey.itmowidgets.util.SportUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +41,7 @@ data class SportSignUiState(
     val selectedTeacherName: String? = null,
     val selectedTimeSlot: String? = null,
     val isFreeAttendance: Boolean = true, // true by default
+    val showOnlyAvailable: Boolean = true, // true by default
 
     val availableSports: List<SelectableSport> = emptyList(),
     val availableBuildings: List<String> = emptyList(),
@@ -105,7 +107,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
                     .distinctBy { it.sectionId }
                     .map {
                         SelectableSport(
-                            it.sectionName,
+                            SportUtils.shortenSectionName(it.sectionName)!!,
                             it.sectionLevel.isFreeSection(),
                             it.sectionId
                         )
@@ -209,6 +211,15 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
         updateFiltersAndLessons()
     }
 
+    fun setShowOnlyAvailable(showOnlyAvailable: Boolean) {
+        _uiState.update {
+            it.copy(
+                showOnlyAvailable = showOnlyAvailable
+            )
+        }
+        updateFiltersAndLessons()
+    }
+
     fun selectSports(sportNames: Set<String>) {
         _uiState.update {
             it.copy(
@@ -305,6 +316,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
             }.sortedBy { it.date }
 
             val displayedLessons = finalFilteredLessons.filter { lesson ->
+                if (!lesson.signed && currentState.showOnlyAvailable && !lesson.canSignIn.isCanSignIn) return@filter false
                 val lessonDate = lesson.date.toLocalDate()
                 lessonDate.isEqual(selectedDate)
             }
