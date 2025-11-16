@@ -44,6 +44,19 @@
                 tools:text="08:10-09:40" />
 
             <TextView
+                android:id="@+id/signed_up_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:drawablePadding="6dp"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                app:drawableTint="?android:attr/textColorSecondary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/section_name_text_view"
+                tools:text="Записались: 15 из 20" />
+
+
+            <TextView
                 android:id="@+id/teacher_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

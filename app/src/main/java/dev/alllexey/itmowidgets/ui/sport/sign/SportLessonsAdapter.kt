@@ -38,6 +38,7 @@ class SportLessonsAdapter(
             binding.sectionNameTextView.text = SportUtils.shortenSectionName(lesson.sectionName)
             binding.timeTextView.text = "${lesson.timeSlotStart}-${lesson.timeSlotEnd}"
             binding.teacherTextView.text = lesson.teacherFio
+            binding.signedUpTextView.text = "Записались: ${lesson.limit - lesson.available} из ${lesson.limit}"
 
             binding.locationTextView.text = lesson.roomName
 
