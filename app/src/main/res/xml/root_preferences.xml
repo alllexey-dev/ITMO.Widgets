@@ -19,6 +19,12 @@
         app:summary="Настройки виджета с QR-кодом"
         app:title="Виджет с QR-пропуском" />
 
+    <Preference
+        app:fragment="dev.alllexey.itmowidgets.ui.settings.SportSettingsFragment"
+        app:icon="@drawable/ic_exercise"
+        app:summary="Настройки меню спорта"
+        app:title="Спорт" />
+
     <PreferenceCategory
         app:icon="@drawable/ic_outline_build_circle"
         app:title="Синхронизация и отладка">

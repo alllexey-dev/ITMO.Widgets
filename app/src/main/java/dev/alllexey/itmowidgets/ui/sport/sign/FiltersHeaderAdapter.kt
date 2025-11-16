@@ -1,12 +1,14 @@
 package dev.alllexey.itmowidgets.ui.sport.sign
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
+import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.databinding.ItemSportFiltersHeaderBinding
 import java.time.LocalDate
 import kotlin.concurrent.thread
@@ -52,12 +54,25 @@ class FiltersHeaderAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         init {
+            val appContainer = (binding.root.context.applicationContext as ItmoWidgetsApp).appContainer
             binding.calendarRecyclerView.adapter = calendarAdapter
             binding.calendarRecyclerView.layoutManager = LinearLayoutManager(itemView.context, LinearLayoutManager.HORIZONTAL, false)
 
             val animator = binding.calendarRecyclerView.itemAnimator
             if (animator is SimpleItemAnimator) {
                 animator.supportsChangeAnimations = false
+            }
+
+            if (appContainer.storage.settings.getSportSignHideTeacherSelectorState()) {
+                binding.teacherInputLayout.visibility = View.GONE
+            } else {
+                binding.teacherInputLayout.visibility = View.VISIBLE
+            }
+
+            if (appContainer.storage.settings.getSportSignHideTimeSelectorState()) {
+                binding.timeInputLayout.visibility = View.GONE
+            } else {
+                binding.timeInputLayout.visibility = View.VISIBLE
             }
 
             binding.freeSportSwitch.setOnCheckedChangeListener { _, isChecked ->

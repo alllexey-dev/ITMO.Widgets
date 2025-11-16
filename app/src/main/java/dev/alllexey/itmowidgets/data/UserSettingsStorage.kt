@@ -21,6 +21,8 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
         const val QR_SPOILER_KEY = "qr_spoiler"
         const val QR_SPOILER_ANIMATION_TYPE_KEY = "qr_spoiler_animation_type"
         const val QR_WIDGET_STATE_PREFIX = "qr_widget_state_"
+        const val SPORT_SIGN_TEACHER_SELECTOR_KEY = "sport_sign_hide_teacher_selector"
+        const val SPORT_SIGN_TIME_SELECTOR_KEY = "sport_sign_hide_time_selector"
     }
 
     fun getCustomServicesState(): Boolean {
@@ -68,6 +70,14 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
     fun getQrSpoilerAnimationType(): QrAnimationType {
         val str = prefs.getString(QR_SPOILER_ANIMATION_TYPE_KEY, null)
         return QrAnimationType.valueOf(str ?: QrAnimationType.CIRCLE.name)
+    }
+
+    fun getSportSignHideTeacherSelectorState(): Boolean {
+        return prefs.getBoolean(SPORT_SIGN_TEACHER_SELECTOR_KEY, true)
+    }
+
+    fun getSportSignHideTimeSelectorState(): Boolean {
+        return prefs.getBoolean(SPORT_SIGN_TIME_SELECTOR_KEY, true)
     }
 
     fun getQrWidgetState(appWidgetId: Int): QrWidgetState {

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:title="Спорт">
+
+    <PreferenceCategory
+        app:icon="@drawable/ic_exercise"
+        app:title="Запись на спорт">
+
+        <SwitchPreference
+            app:defaultValue="false"
+            app:key="sport_sign_hide_teacher_selector"
+            app:title="Спрятать выбор преподавателя" />
+
+        <SwitchPreference
+            app:defaultValue="false"
+            app:key="sport_sign_hide_time_selector"
+            app:title="Спрятать выбор времени" />
+
+    </PreferenceCategory>
+</PreferenceScreen>
