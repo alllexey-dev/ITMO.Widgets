@@ -11,8 +11,12 @@ import com.google.firebase.messaging.RemoteMessage
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.fcm.FcmJsonWrapper
-import dev.alllexey.itmowidgets.core.model.fcm.impl.SportLessonsPayload
+import dev.alllexey.itmowidgets.core.model.fcm.impl.SportFreeSignLessonsPayload
+import dev.alllexey.itmowidgets.core.model.fcm.impl.SportNewLessonsPayload
 import dev.alllexey.itmowidgets.ui.main.MainActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
@@ -37,9 +41,22 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             try {
                 val wrapper = gson.fromJson(jsonPayload, FcmJsonWrapper::class.java)
                 when (wrapper.type) {
-                    SportLessonsPayload.TYPE -> {
-                        val data = gson.fromJson(wrapper.payload, SportLessonsPayload::class.java)
+                    SportNewLessonsPayload.TYPE -> {
+                        val data = gson.fromJson(wrapper.payload, SportNewLessonsPayload::class.java)
                         sendNotification("SPORT NOTIF", "${data.sportLessonIds.size} new lessons")
+                    }
+                    SportFreeSignLessonsPayload.TYPE -> {
+                        val data = gson.fromJson(wrapper.payload, SportFreeSignLessonsPayload::class.java)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            data.sportLessonIds.forEach {
+                                try {
+                                    appContainer.myItmo.api().signInLessons(listOf(it)).execute().body()!!.result
+                                    sendNotification("Автозапись", "Вы успешно записаны на занятие!")
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
                     }
                 }
             } catch (e: Exception) {

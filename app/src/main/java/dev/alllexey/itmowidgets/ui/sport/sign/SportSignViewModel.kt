@@ -94,7 +94,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
                 val timeSlotsDeferred = async { myItmo.timeSlots.execute().body()!!.data }
                 val scheduleDeferred = async {
                     myItmo.getSportSchedule(
-                        LocalDate.now(), LocalDate.now().plusDays(14),
+                        LocalDate.now(), LocalDate.now().plusDays(21),
                         null, null, null
                     ).execute().body()!!.result
                 }
@@ -346,7 +346,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
 
                 _uiState.update { it.copy(isLoading = true) }
                 val schedule = myItmo.getSportSchedule(
-                    LocalDate.now(), LocalDate.now().plusDays(14),
+                    LocalDate.now(), LocalDate.now().plusDays(21),
                     null, null, null
                 ).execute().body()!!.result
 
@@ -357,7 +357,31 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(errorMessage = "Ошибка записи") }
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    fun unSignForLesson(lesson: SportLesson) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+
+                myItmo.signOutLessons(listOf(lesson.id)).execute()
+
+                _uiState.update { it.copy(isLoading = true) }
+                val schedule = myItmo.getSportSchedule(
+                    LocalDate.now(), LocalDate.now().plusDays(21),
+                    null, null, null
+                ).execute().body()!!.result
+
+                allScheduleLessons = schedule.flatMap { it.lessons ?: emptyList() }
+
+                _uiState.update { it.copy(allLessons = allScheduleLessons) }
+                updateFiltersAndLessons()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }

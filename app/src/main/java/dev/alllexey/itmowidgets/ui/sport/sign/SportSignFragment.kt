@@ -16,17 +16,25 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
+import api.myitmo.model.sport.SportLesson
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.model.SportFreeSignRequest
 import dev.alllexey.itmowidgets.databinding.FragmentSportSignBinding
 import dev.alllexey.itmowidgets.ui.misc.SelectableItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 
-class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsListener {
+class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsListener,
+    SportSignActionsListener {
 
     private var _binding: FragmentSportSignBinding? = null
     private val binding get() = _binding!!
@@ -62,9 +70,7 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
     private fun setupRecyclerView() {
         headerAdapter = FiltersHeaderAdapter(this)
 
-        lessonsAdapter = SportLessonsAdapter { lesson ->
-            viewModel.signUpForLesson(lesson)
-        }
+        lessonsAdapter = SportLessonsAdapter(this)
 
         lessonsAdapter.setBuildingsMap(viewModel.allBuildingsMap)
 
@@ -136,6 +142,73 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
 
     override fun onNextWeekClick() {
         viewModel.nextWeek()
+    }
+
+    override fun onSignUpClick(lesson: SportLesson) {
+        viewModel.signUpForLesson(lesson)
+    }
+
+    override fun onUnSignClick(lesson: SportLesson) {
+        viewModel.unSignForLesson(lesson)
+    }
+
+    override fun onAutoSignClick(lesson: SportLesson) {
+        showAutoSelectDialog(lesson, viewModel.uiState.value)
+    }
+
+    private fun showAutoSelectDialog(lesson: SportLesson, state: SportSignUiState) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val appContainer =
+                    (requireContext().applicationContext as ItmoWidgetsApp).appContainer
+                if (appContainer.storage.settings.getCustomServicesState()) {
+                    val allEntries = appContainer.itmoWidgets.api().allFreeSignEntries()
+                    val entry = allEntries.data?.find { it.lessonId == lesson.id }
+                    if (entry != null) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setMessage("У вас уже есть автозапись на это число. Позиция в очереди: ${entry.position} из ${entry.total}")
+                                .setNegativeButton("Назад", null)
+                                .setPositiveButton("Отписаться") { _, _ ->
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        appContainer.itmoWidgets.api().deleteFreeSignEntry(entry.id)
+                                    }
+                                }
+                                .show()
+                        }
+                    } else {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setMessage("Вы можете встать в очередь на автозапись.")
+                                .setNegativeButton("Назад", null)
+                                .setPositiveButton("Автозапись") { _, _ ->
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        appContainer.itmoWidgets.api().createFreeSignEntry(
+                                            SportFreeSignRequest(lessonId = lesson.id)
+                                        )
+                                    }
+                                }
+                                .show()
+                        }
+                    }
+                } else {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setMessage("У вас выключены неофициальные сервисы \uD83D\uDE1D\n\nИх можно включить в настройках")
+                            .setPositiveButton("Хорошо", null)
+                            .show()
+                    }
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                CoroutineScope(Dispatchers.Main).launch {
+                    Toast.makeText(context, "Ошибка загрузки данных", Toast.LENGTH_SHORT).show()
+                }
+            } finally {
+                binding.swipeRefreshLayout.isRefreshing = false
+            }
+        }
     }
 
     private fun showMultiSelectSearchableDialog(state: SportSignUiState) {

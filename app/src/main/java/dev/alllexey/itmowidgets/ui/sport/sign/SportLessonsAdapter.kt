@@ -10,9 +10,13 @@ import api.myitmo.model.sport.SportLesson
 import dev.alllexey.itmowidgets.databinding.ItemSportLessonBinding
 import dev.alllexey.itmowidgets.util.SportUtils
 
-class SportLessonsAdapter(
-    private val onSignUpClick: (SportLesson) -> Unit
-) : ListAdapter<SportLesson, SportLessonsAdapter.LessonViewHolder>(LessonDiffCallback()) {
+interface SportSignActionsListener {
+    fun onSignUpClick(lesson: SportLesson)
+    fun onUnSignClick(lesson: SportLesson)
+    fun onAutoSignClick(lesson: SportLesson)
+}
+
+class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<SportLesson, SportLessonsAdapter.LessonViewHolder>(LessonDiffCallback()) {
 
     private var buildingsMap: Map<Long, String> = emptyMap()
 
@@ -50,7 +54,9 @@ class SportLessonsAdapter(
                 binding.signUpButton.visibility = View.VISIBLE
                 binding.signUpButton.isEnabled = true
                 binding.statusChip.visibility = View.GONE
-                binding.signUpButton.setOnClickListener(null)
+                binding.signUpButton.setOnClickListener {
+                    listener.onUnSignClick(lesson)
+                }
                 setMuted(false)
             } else if (canSignIn && lesson.available > 0) {
                 binding.signUpButton.text = "Записаться"
@@ -58,7 +64,7 @@ class SportLessonsAdapter(
                 binding.signUpButton.visibility = View.VISIBLE
                 binding.statusChip.visibility = View.GONE
                 binding.signUpButton.setOnClickListener {
-                    onSignUpClick(lesson)
+                    listener.onSignUpClick(lesson)
                 }
                 setMuted(false)
             } else {
@@ -72,7 +78,7 @@ class SportLessonsAdapter(
                     binding.signUpButton.visibility = View.VISIBLE
                     binding.signUpButton.text = "Автозапись"
                     binding.signUpButton.setOnClickListener {
-                        // todo: auto sign up handling
+                        listener.onAutoSignClick(lesson)
                     }
                     setMuted(false)
                 } else {
