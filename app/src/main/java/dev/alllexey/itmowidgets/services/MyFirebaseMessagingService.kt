@@ -60,7 +60,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     }
                 }
             } catch (e: Exception) {
-
+                try {
+                    sendNotification("FCM", "Ошибка обработки события, посмотрите логи")
+                    appContainer.storage.utility.setErrorLog("[FCM]: ${e.stackTraceToString()}")
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }
