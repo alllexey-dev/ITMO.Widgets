@@ -1,5 +1,6 @@
 [versions]
-itmoWidgetsCore = "1.0.7"
+itmoWidgetsCore = "1.1.0"
+myItmoApi = "1.4.1"
 agp = "8.12.3"
 androidImageCropper = "4.6.0"
 datastorePreferences = "1.1.7"
@@ -26,6 +27,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-navigation-ui = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigationFragmentKtx" }
 itmo-widgets-core = { module = "dev.alllexey:itmo-widgets-core", version.ref = "itmoWidgetsCore" }
+my-itmo-api = { module = "dev.alllexey:my-itmo-api", version.ref = "myItmoApi" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

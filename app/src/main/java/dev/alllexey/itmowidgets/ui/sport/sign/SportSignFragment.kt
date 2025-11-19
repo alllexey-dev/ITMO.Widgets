@@ -26,11 +26,9 @@ import dev.alllexey.itmowidgets.databinding.FragmentSportSignBinding
 import dev.alllexey.itmowidgets.ui.misc.SelectableItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 
 class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsListener,
@@ -47,7 +45,7 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val myItmo = (requireActivity().application as ItmoWidgetsApp).appContainer.myItmo
-                return SportSignViewModel(myItmo.api()) as T
+                return SportSignViewModel(myItmo.api(), requireContext()) as T
             }
         }
     }
@@ -144,35 +142,42 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
         viewModel.nextWeek()
     }
 
-    override fun onSignUpClick(lesson: SportLesson) {
+    override fun onSignUpClick(lesson: SportLessonData) {
         viewModel.signUpForLesson(lesson)
     }
 
-    override fun onUnSignClick(lesson: SportLesson) {
+    override fun onUnSignClick(lesson: SportLessonData) {
         viewModel.unSignForLesson(lesson)
     }
 
-    override fun onAutoSignClick(lesson: SportLesson) {
-        showAutoSelectDialog(lesson, viewModel.uiState.value)
+    override fun onAutoSignClick(lesson: SportLessonData) {
+        showAutoSelectDialog(lesson)
     }
 
-    private fun showAutoSelectDialog(lesson: SportLesson, state: SportSignUiState) {
+    override fun onUnAutoSignClick(lesson: SportLessonData) {
+        showAutoSelectDialog(lesson)
+    }
+
+    private fun showAutoSelectDialog(lesson: SportLessonData) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val appContainer =
                     (requireContext().applicationContext as ItmoWidgetsApp).appContainer
                 if (appContainer.storage.settings.getCustomServicesState()) {
-                    val allEntries = appContainer.itmoWidgets.api().allFreeSignEntries()
-                    val entry = allEntries.data?.find { it.lessonId == lesson.id }
+                    val allEntries = appContainer.itmoWidgets.api().mySportFreeSignEntries()
+                    val entry = allEntries.data?.find { it.lessonId == lesson.apiData.id }
                     if (entry != null) {
                         CoroutineScope(Dispatchers.Main).launch {
                             MaterialAlertDialogBuilder(requireContext())
-                                .setMessage("У вас уже есть автозапись на это число. Позиция в очереди: ${entry.position} из ${entry.total}")
+                                .setMessage("У вас уже есть автозапись на это занятие. Позиция в очереди: ${entry.position} из ${entry.total}")
                                 .setNegativeButton("Назад", null)
                                 .setPositiveButton("Отписаться") { _, _ ->
                                     CoroutineScope(Dispatchers.IO).launch {
-                                        appContainer.itmoWidgets.api().deleteFreeSignEntry(entry.id)
+                                        appContainer.itmoWidgets.api().deleteSportFreeSignEntry(entry.id)
                                     }
+
+                                    Thread.sleep(200)
+                                    viewModel.loadInitialData()
                                 }
                                 .show()
                         }
@@ -183,9 +188,12 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
                                 .setNegativeButton("Назад", null)
                                 .setPositiveButton("Автозапись") { _, _ ->
                                     CoroutineScope(Dispatchers.IO).launch {
-                                        appContainer.itmoWidgets.api().createFreeSignEntry(
-                                            SportFreeSignRequest(lessonId = lesson.id)
+                                        appContainer.itmoWidgets.api().createSportFreeSignEntry(
+                                            SportFreeSignRequest(lessonId = lesson.apiData.id)
                                         )
+
+                                        Thread.sleep(200)
+                                        viewModel.loadInitialData()
                                     }
                                 }
                                 .show()

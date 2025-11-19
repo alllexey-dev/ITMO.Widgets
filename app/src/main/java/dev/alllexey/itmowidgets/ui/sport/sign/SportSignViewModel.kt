@@ -1,9 +1,17 @@
 package dev.alllexey.itmowidgets.ui.sport.sign
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import api.myitmo.MyItmoApi
 import api.myitmo.model.sport.SportLesson
+import dev.alllexey.itmowidgets.ItmoWidgetsApp
+import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
+import dev.alllexey.itmowidgets.core.model.SportAutoSignLimits
+import dev.alllexey.itmowidgets.core.model.SportAutoSignQueue
+import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry
+import dev.alllexey.itmowidgets.core.model.SportFreeSignQueue
+import dev.alllexey.itmowidgets.ui.misc.SelectableItem
 import dev.alllexey.itmowidgets.util.SportUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -12,7 +20,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 fun Long.isFreeSection(): Boolean {
     return this == 1L
@@ -32,9 +43,12 @@ data class SportSignUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
 
-    val allLessons: List<SportLesson> = emptyList(),
-    val filteredLessons: List<SportLesson> = emptyList(),
-    val displayedLessons: List<SportLesson> = emptyList(),
+    // region filters
+
+    val availableSports: List<SelectableSport> = emptyList(),
+    val availableBuildings: List<String> = emptyList(),
+    val availableTeachers: List<String> = emptyList(),
+    val availableTimeSlots: List<String> = emptyList(),
 
     val selectedSportNames: Set<String> = emptySet(),
     val selectedBuildingName: String? = null,
@@ -43,15 +57,16 @@ data class SportSignUiState(
     val isFreeAttendance: Boolean = true, // true by default
     val showOnlyAvailable: Boolean = true, // true by default
 
-    val availableSports: List<SelectableSport> = emptyList(),
-    val availableBuildings: List<String> = emptyList(),
-    val availableTeachers: List<String> = emptyList(),
-    val availableTimeSlots: List<String> = emptyList(),
-
     val displayedWeek: List<CalendarDay> = emptyList(),
     val currentMonthName: String = "",
     val canGoToPrevWeek: Boolean = false,
-    val canGoToNextWeek: Boolean = true
+    val canGoToNextWeek: Boolean = true,
+
+    // endregion filters
+
+    val allLessons: List<SportLesson> = emptyList(),
+    val filteredLessons: List<SportLesson> = emptyList(),
+    val displayedLessons: List<SportLessonData> = emptyList(),
 )
 
 data class SelectableSport(
@@ -60,16 +75,24 @@ data class SelectableSport(
     val id: Long
 )
 
-class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
+class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SportSignUiState())
     val uiState: StateFlow<SportSignUiState> = _uiState.asStateFlow()
+
+    private val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
 
     var allSportsMap = mapOf<Long, SelectableSport>()
     var allBuildingsMap = mapOf<Long, String>()
     var allTeachersMap = mapOf<Long, String>()
     var allTimeSlotsMap = mapOf<Long, String>()
     var allScheduleLessons = listOf<SportLesson>()
+
+    var autoSignLimits: SportAutoSignLimits? = null
+    var freeSignEntries: List<SportFreeSignEntry> = emptyList()
+    var freeSignQueues: List<SportFreeSignQueue> = emptyList()
+    var autoSignEntries: List<SportAutoSignEntry> = emptyList()
+    var autoSignQueues: List<SportAutoSignQueue> = emptyList()
 
     private val today = LocalDate.now()
     private var selectedDate = today
@@ -99,6 +122,25 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
                     ).execute().body()!!.result
                 }
 
+                if (appContainer.storage.settings.getCustomServicesState()) {
+                    val freeSignEntriesDeferred =
+                        async { appContainer.itmoWidgets.api().mySportFreeSignEntries() }
+                    val freeSignQueuesDeferred =
+                        async { appContainer.itmoWidgets.api().currentSportFreeSignQueues() }
+                    val autoSignLimitsDeferred =
+                        async { appContainer.itmoWidgets.api().sportAutoSignLimits() }
+                    val autoSignEntriesDeferred =
+                        async { appContainer.itmoWidgets.api().mySportAutoSignEntries() }
+                    val autoSignQueuesDeferred =
+                        async { appContainer.itmoWidgets.api().currentSportAutoSignQueues() }
+
+                    freeSignEntries = freeSignEntriesDeferred.await().data.orEmpty()
+                    freeSignQueues = freeSignQueuesDeferred.await().data.orEmpty()
+                    autoSignLimits = autoSignLimitsDeferred.await().data
+                    autoSignEntries = autoSignEntriesDeferred.await().data.orEmpty()
+                    autoSignQueues = autoSignQueuesDeferred.await().data.orEmpty()
+                }
+
                 val filters = filtersDeferred.await()
                 val timeSlots = timeSlotsDeferred.await()
                 val schedule = scheduleDeferred.await()
@@ -118,7 +160,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
                 allTimeSlotsMap = timeSlots.associate { it.id to "${it.timeStart}-${it.timeEnd}" }
                 allScheduleLessons = schedule.flatMap { it.lessons ?: emptyList() }
 
-                _uiState.update { it.copy(allLessons = allScheduleLessons) }
+                _uiState.update { it.copy(allLessons = allScheduleLessons, errorMessage = null) }
                 updateFiltersAndLessons()
 
             } catch (e: Exception) {
@@ -139,7 +181,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
     fun nextWeek() {
         if (weekOffset < MAX_WEEKS_FORWARD) {
             weekOffset++
-            selectedDate = today.plusWeeks(weekOffset.toLong()).with(java.time.DayOfWeek.MONDAY)
+            selectedDate = today.plusWeeks(weekOffset.toLong()).with(DayOfWeek.MONDAY)
             updateCalendar()
             updateFiltersAndLessons()
         }
@@ -148,14 +190,14 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
     fun prevWeek() {
         if (weekOffset > 0) {
             weekOffset--
-            selectedDate = today.plusWeeks(weekOffset.toLong()).with(java.time.DayOfWeek.MONDAY)
+            selectedDate = today.plusWeeks(weekOffset.toLong()).with(DayOfWeek.MONDAY)
             updateCalendar()
             updateFiltersAndLessons()
         }
     }
 
     private fun updateCalendar() {
-        val startOfWeek = today.plusWeeks(weekOffset.toLong()).with(java.time.DayOfWeek.MONDAY)
+        val startOfWeek = today.plusWeeks(weekOffset.toLong()).with(DayOfWeek.MONDAY)
         val days = (0..6).map { startOfWeek.plusDays(it.toLong()) }
 
         val datesWithLessons = _uiState.value.filteredLessons
@@ -170,7 +212,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
         val calendarDays = days.map { date ->
             CalendarDay(
                 date = date,
-                dayOfWeek = date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale("ru")),
+                dayOfWeek = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("ru")),
                 dayOfMonth = date.dayOfMonth.toString(),
                 hasLessons = datesWithLessons.contains(date),
                 hasAvailableLessons = datesWithAvailableLessons.contains(date),
@@ -179,8 +221,8 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
             )
         }
 
-        val monthName = days[3].month.getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, java.util.Locale("ru"))
-            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale("ru")) else it.toString() }
+        val monthName = days[3].month.getDisplayName(TextStyle.FULL_STANDALONE, Locale("ru"))
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale("ru")) else it.toString() }
 
         _uiState.update {
             it.copy(
@@ -313,12 +355,24 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
 
                 val teacherId = allTeachersMap.entries.find { it.value == validTeacherName }?.key
                 validTeacherName == null || lesson.teacherIsu == teacherId
-            }.sortedBy { it.date }
+            }.sortedWith(compareBy<SportLesson> { it.signed }.thenBy { it.date }.thenBy { it.sectionName })
 
             val displayedLessons = finalFilteredLessons.filter { lesson ->
                 if (!lesson.signed && currentState.showOnlyAvailable && !lesson.canSignIn.isCanSignIn) return@filter false
                 val lessonDate = lesson.date.toLocalDate()
                 lessonDate.isEqual(selectedDate)
+            }.map {
+                val reasons = UnavailableReason.getSortedUnavailableReasons(it)
+                SportLessonData(
+                    apiData = it,
+                    isReal = true,
+                    unavailableReasons = reasons,
+                    canSignIn = it.canSignIn.isCanSignIn,
+                    freeSignStatus = freeSignEntries.find { e -> e.lessonId == it.id },
+                    freeSignQueue = freeSignQueues.find { e -> e.lessonId == it.id },
+                    autoSignStatus = null,
+                    autoSignQueue = null,
+                )
             }
 
             _uiState.update {
@@ -338,11 +392,11 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
         }
     }
 
-    fun signUpForLesson(lesson: SportLesson) {
+    fun signUpForLesson(lesson: SportLessonData) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
 
-                myItmo.signInLessons(listOf(lesson.id)).execute()
+                myItmo.signInLessons(listOf(lesson.apiData.id)).execute()
 
                 _uiState.update { it.copy(isLoading = true) }
                 val schedule = myItmo.getSportSchedule(
@@ -363,11 +417,11 @@ class SportSignViewModel(private val myItmo: MyItmoApi) : ViewModel() {
         }
     }
 
-    fun unSignForLesson(lesson: SportLesson) {
+    fun unSignForLesson(lesson: SportLessonData) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
 
-                myItmo.signOutLessons(listOf(lesson.id)).execute()
+                myItmo.signOutLessons(listOf(lesson.apiData.id)).execute()
 
                 _uiState.update { it.copy(isLoading = true) }
                 val schedule = myItmo.getSportSchedule(

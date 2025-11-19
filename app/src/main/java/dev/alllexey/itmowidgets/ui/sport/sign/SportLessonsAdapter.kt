@@ -6,17 +6,17 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import api.myitmo.model.sport.SportLesson
 import dev.alllexey.itmowidgets.databinding.ItemSportLessonBinding
 import dev.alllexey.itmowidgets.util.SportUtils
 
 interface SportSignActionsListener {
-    fun onSignUpClick(lesson: SportLesson)
-    fun onUnSignClick(lesson: SportLesson)
-    fun onAutoSignClick(lesson: SportLesson)
+    fun onSignUpClick(lesson: SportLessonData)
+    fun onUnSignClick(lesson: SportLessonData)
+    fun onAutoSignClick(lesson: SportLessonData)
+    fun onUnAutoSignClick(lesson: SportLessonData)
 }
 
-class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<SportLesson, SportLessonsAdapter.LessonViewHolder>(LessonDiffCallback()) {
+class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<SportLessonData, SportLessonsAdapter.LessonViewHolder>(LessonDiffCallback()) {
 
     private var buildingsMap: Map<Long, String> = emptyMap()
 
@@ -35,19 +35,20 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<
 
     inner class LessonViewHolder(private val binding: ItemSportLessonBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        private lateinit var lesson: SportLesson
+        private lateinit var lessonData: SportLessonData
 
-        fun bind(lesson: SportLesson) {
-            this.lesson = lesson
-            binding.sectionNameTextView.text = SportUtils.shortenSectionName(lesson.sectionName)
-            binding.timeTextView.text = "${lesson.timeSlotStart}-${lesson.timeSlotEnd}"
-            binding.teacherTextView.text = lesson.teacherFio
-            binding.signedUpTextView.text = "Записались: ${lesson.limit - lesson.available} из ${lesson.limit}"
+        fun bind(lessonData: SportLessonData) {
+            this.lessonData = lessonData
+            val apiLesson = lessonData.apiData
+            binding.sectionNameTextView.text = SportUtils.shortenSectionName(apiLesson.sectionName)
+            binding.timeTextView.text = "${apiLesson.timeSlotStart}-${apiLesson.timeSlotEnd}"
+            binding.teacherTextView.text = apiLesson.teacherFio
+            binding.signedUpTextView.text = "Записались: ${apiLesson.limit - apiLesson.available} из ${apiLesson.limit}"
 
-            binding.locationTextView.text = lesson.roomName
+            binding.locationTextView.text = apiLesson.roomName
 
-            val canSignIn = lesson.canSignIn.isCanSignIn
-            val isSigned = lesson.signed ?: false
+            val canSignIn = apiLesson.canSignIn.isCanSignIn
+            val isSigned = apiLesson.signed ?: false
 
             if (isSigned) {
                 binding.signUpButton.text = "Отписаться"
@@ -55,30 +56,48 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<
                 binding.signUpButton.isEnabled = true
                 binding.statusChip.visibility = View.GONE
                 binding.signUpButton.setOnClickListener {
-                    listener.onUnSignClick(lesson)
+                    listener.onUnSignClick(lessonData)
                 }
                 setMuted(false)
-            } else if (canSignIn && lesson.available > 0) {
+            } else if (canSignIn && apiLesson.available > 0) {
                 binding.signUpButton.text = "Записаться"
                 binding.signUpButton.isEnabled = true
                 binding.signUpButton.visibility = View.VISIBLE
                 binding.statusChip.visibility = View.GONE
                 binding.signUpButton.setOnClickListener {
-                    listener.onSignUpClick(lesson)
+                    listener.onSignUpClick(lessonData)
                 }
                 setMuted(false)
             } else {
-                val unavailableReasons = UnavailableReason.getSortedUnavailableReasons(lesson)
+                val unavailableReasons = UnavailableReason.getSortedUnavailableReasons(apiLesson)
                 val reason = unavailableReasons.lastOrNull()
                 binding.signUpButton.setOnClickListener(null)
                 binding.statusChip.visibility = View.VISIBLE
                 binding.statusChip.text = reason?.shortDescription
 
                 if (reason is UnavailableReason.Full) {
-                    binding.signUpButton.visibility = View.VISIBLE
-                    binding.signUpButton.text = "Автозапись"
-                    binding.signUpButton.setOnClickListener {
-                        listener.onAutoSignClick(lesson)
+                    val freeSignQueue = lessonData.freeSignQueue
+                    val freeSignStatus = lessonData.freeSignStatus
+                    if (freeSignQueue != null) {
+                        if (freeSignStatus != null) {
+                            binding.signUpButton.visibility = View.VISIBLE
+                            binding.signUpButton.text = "Автозапись (${freeSignStatus.position} / ${freeSignStatus.total})"
+                            binding.signUpButton.setOnClickListener {
+                                listener.onUnAutoSignClick(lessonData)
+                            }
+                        } else {
+                            binding.signUpButton.visibility = View.VISIBLE
+                            binding.signUpButton.text = "Автозапись (${freeSignQueue.total})"
+                            binding.signUpButton.setOnClickListener {
+                                listener.onAutoSignClick(lessonData)
+                            }
+                        }
+                    } else {
+                        binding.signUpButton.visibility = View.VISIBLE
+                        binding.signUpButton.text = "Автозапись"
+                        binding.signUpButton.setOnClickListener {
+                            listener.onAutoSignClick(lessonData)
+                        }
                     }
                     setMuted(false)
                 } else {
@@ -95,12 +114,12 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<
     }
 }
 
-class LessonDiffCallback : DiffUtil.ItemCallback<SportLesson>() {
-    override fun areItemsTheSame(oldItem: SportLesson, newItem: SportLesson): Boolean {
-        return oldItem.id == newItem.id
+class LessonDiffCallback : DiffUtil.ItemCallback<SportLessonData>() {
+    override fun areItemsTheSame(oldItem: SportLessonData, newItem: SportLessonData): Boolean {
+        return oldItem.apiData.id == newItem.apiData.id
     }
 
-    override fun areContentsTheSame(oldItem: SportLesson, newItem: SportLesson): Boolean {
+    override fun areContentsTheSame(oldItem: SportLessonData, newItem: SportLessonData): Boolean {
         return oldItem == newItem
     }
 }

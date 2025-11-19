@@ -42,6 +42,7 @@ android {
 dependencies {
     implementation(libs.android.image.cropper)
     implementation(libs.itmo.widgets.core)
+    implementation(libs.my.itmo.api)
     implementation(libs.androidx.navigation.ui)
     implementation(libs.qrcodegen)
     implementation(libs.androidx.datastore.preferences)
