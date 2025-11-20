@@ -11,7 +11,7 @@ sealed class UnavailableReason(val shortDescription: String, val weight: Int) {
     object WeeklyLimitReached : UnavailableReason("Лимит записей на неделе", 50)
     object SelectionFailed : UnavailableReason("Не пройден отбор", 60)
     object HealthGroupMismatch : UnavailableReason("Другая группа здоровья", 70)
-    object LessonInPast : UnavailableReason("Занятие в прошлом", 80)
+    object LessonInPast : UnavailableReason("Занятие в прошлом", 90)
     class Other(reason: String) : UnavailableReason(reason, 100)
 
     companion object {

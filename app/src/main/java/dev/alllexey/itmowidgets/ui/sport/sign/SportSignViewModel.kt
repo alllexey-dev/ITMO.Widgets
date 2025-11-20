@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.ui.sport.sign
 
 import android.content.Context
+import androidx.datastore.dataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import api.myitmo.MyItmoApi
@@ -11,7 +12,6 @@ import dev.alllexey.itmowidgets.core.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.core.model.SportAutoSignQueue
 import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.core.model.SportFreeSignQueue
-import dev.alllexey.itmowidgets.ui.misc.SelectableItem
 import dev.alllexey.itmowidgets.util.SportUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -99,7 +99,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
     private var weekOffset = 0
 
     companion object {
-        const val MAX_WEEKS_FORWARD = 3
+        const val MAX_WEEKS_FORWARD = 5
         const val ANY_BUILDING_KEY = "Любой корпус"
         const val ANY_TEACHER_KEY = "Любой преподаватель"
         const val ANY_TIME_KEY = "Любое время"
@@ -355,9 +355,14 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
 
                 val teacherId = allTeachersMap.entries.find { it.value == validTeacherName }?.key
                 validTeacherName == null || lesson.teacherIsu == teacherId
-            }.sortedWith(compareBy<SportLesson> { it.signed }.thenBy { it.date }.thenBy { it.sectionName })
+            }
 
-            val displayedLessons = finalFilteredLessons.filter { lesson ->
+            val twoWeeksAgoLessons = finalFilteredLessons.filter { lesson ->
+                val lessonDate = lesson.date.toLocalDate()
+                lessonDate.isEqual(selectedDate.minusWeeks(2))
+            }
+
+            val todayDisplayedLessons = finalFilteredLessons.filter { lesson ->
                 if (!lesson.signed && currentState.showOnlyAvailable && !lesson.canSignIn.isCanSignIn) return@filter false
                 val lessonDate = lesson.date.toLocalDate()
                 lessonDate.isEqual(selectedDate)
@@ -374,6 +379,33 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
                     autoSignQueue = null,
                 )
             }
+
+            val allowedUnavailableReasons = listOf(UnavailableReason.SelectionFailed::javaClass,
+                UnavailableReason.HealthGroupMismatch::javaClass,
+                UnavailableReason.Other::javaClass)
+            val todayLessonsByStartDate = todayDisplayedLessons.groupBy { it.apiData.date }
+            val fakeLessons = twoWeeksAgoLessons.filter { lesson ->
+                !(todayLessonsByStartDate[lesson.date.plusWeeks(2)]?.any {
+                    it.apiData.sectionId == lesson.sectionId && it.apiData.teacherIsu == lesson.teacherIsu
+                } ?: false)
+            }.map {
+                val reasons = UnavailableReason.getSortedUnavailableReasons(it)
+                    .filter { r -> allowedUnavailableReasons.contains(r::javaClass) }
+                SportLessonData(
+                    apiData = it,
+                    isReal = false,
+                    unavailableReasons = reasons,
+                    canSignIn = reasons.isEmpty(),
+                    freeSignStatus = null,
+                    freeSignQueue = null,
+                    autoSignStatus = autoSignEntries.find { e -> e.prototypeLessonId == it.id },
+                    autoSignQueue = autoSignQueues.find { e -> e.prototypeLessonId == it.id },
+                )
+            }
+
+            val displayedLessons = (todayDisplayedLessons + fakeLessons)
+                .sortedWith(compareBy<SportLessonData> { it.apiData.signed && it.isReal }.thenBy { it.apiData.date }
+                    .thenBy { it.apiData.sectionName })
 
             _uiState.update {
                 it.copy(

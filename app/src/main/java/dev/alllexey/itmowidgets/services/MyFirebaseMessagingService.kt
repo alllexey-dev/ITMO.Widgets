@@ -11,6 +11,7 @@ import com.google.firebase.messaging.RemoteMessage
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.fcm.FcmJsonWrapper
+import dev.alllexey.itmowidgets.core.model.fcm.impl.SportAutoSignLessonsPayload
 import dev.alllexey.itmowidgets.core.model.fcm.impl.SportFreeSignLessonsPayload
 import dev.alllexey.itmowidgets.core.model.fcm.impl.SportNewLessonsPayload
 import dev.alllexey.itmowidgets.ui.main.MainActivity
@@ -51,7 +52,20 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                             data.sportLessonIds.forEach {
                                 try {
                                     appContainer.myItmo.api().signInLessons(listOf(it)).execute().body()!!.result
-                                    sendNotification("Автозапись", "Вы успешно записаны на занятие!")
+                                    sendNotification("Автозапись (при освобождении)", "Вы успешно записаны на занятие!")
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                        }
+                    }
+                    SportAutoSignLessonsPayload.TYPE -> {
+                        val data = gson.fromJson(wrapper.payload, SportFreeSignLessonsPayload::class.java)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            data.sportLessonIds.forEach {
+                                try {
+                                    appContainer.myItmo.api().signInLessons(listOf(it)).execute().body()!!.result
+                                    sendNotification("Автозапись (на прогнозируемое занятие)", "Вы успешно записаны на занятие!")
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }

@@ -21,6 +21,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.core.model.SportFreeSignRequest
 import dev.alllexey.itmowidgets.databinding.FragmentSportSignBinding
 import dev.alllexey.itmowidgets.ui.misc.SelectableItem
@@ -164,39 +165,86 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
                 val appContainer =
                     (requireContext().applicationContext as ItmoWidgetsApp).appContainer
                 if (appContainer.storage.settings.getCustomServicesState()) {
-                    val allEntries = appContainer.itmoWidgets.api().mySportFreeSignEntries()
-                    val entry = allEntries.data?.find { it.lessonId == lesson.apiData.id }
-                    if (entry != null) {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            MaterialAlertDialogBuilder(requireContext())
-                                .setMessage("У вас уже есть автозапись на это занятие. Позиция в очереди: ${entry.position} из ${entry.total}")
-                                .setNegativeButton("Назад", null)
-                                .setPositiveButton("Отписаться") { _, _ ->
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        appContainer.itmoWidgets.api().deleteSportFreeSignEntry(entry.id)
-                                    }
-
-                                    Thread.sleep(200)
-                                    viewModel.loadInitialData()
-                                }
-                                .show()
-                        }
-                    } else {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            MaterialAlertDialogBuilder(requireContext())
-                                .setMessage("Вы можете встать в очередь на автозапись.")
-                                .setNegativeButton("Назад", null)
-                                .setPositiveButton("Автозапись") { _, _ ->
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        appContainer.itmoWidgets.api().createSportFreeSignEntry(
-                                            SportFreeSignRequest(lessonId = lesson.apiData.id)
-                                        )
+                    if (lesson.isReal) {
+                        val allEntries = appContainer.itmoWidgets.api().mySportFreeSignEntries()
+                        val entry = allEntries.data?.find { it.lessonId == lesson.apiData.id }
+                        if (entry != null) {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                MaterialAlertDialogBuilder(requireContext())
+                                    .setMessage("У вас уже есть автозапись на это занятие. Позиция в очереди: ${entry.position} из ${entry.total}")
+                                    .setNegativeButton("Назад", null)
+                                    .setPositiveButton("Отписаться") { _, _ ->
+                                        CoroutineScope(Dispatchers.IO).launch {
+                                            appContainer.itmoWidgets.api().deleteSportFreeSignEntry(entry.id)
+                                        }
 
                                         Thread.sleep(200)
                                         viewModel.loadInitialData()
                                     }
+                                    .show()
+                            }
+                        } else {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                MaterialAlertDialogBuilder(requireContext())
+                                    .setMessage("Вы можете встать в очередь на автозапись.")
+                                    .setNegativeButton("Назад", null)
+                                    .setPositiveButton("Автозапись") { _, _ ->
+                                        CoroutineScope(Dispatchers.IO).launch {
+                                            appContainer.itmoWidgets.api().createSportFreeSignEntry(
+                                                SportFreeSignRequest(lessonId = lesson.apiData.id)
+                                            )
+
+                                            Thread.sleep(200)
+                                            viewModel.loadInitialData()
+                                        }
+                                    }
+                                    .show()
+                            }
+                        }
+                    } else {
+                        val allEntries = appContainer.itmoWidgets.api().mySportAutoSignEntries()
+                        val limits = appContainer.itmoWidgets.api().sportAutoSignLimits()
+                        val entry = allEntries.data?.find { it.prototypeLessonId == lesson.apiData.id }
+                        if (entry != null) {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                MaterialAlertDialogBuilder(requireContext())
+                                    .setMessage("У вас уже есть автозапись на это занятие. Позиция в очереди: ${entry.position} из ${entry.total}")
+                                    .setNegativeButton("Назад", null)
+                                    .setPositiveButton("Отписаться") { _, _ ->
+                                        CoroutineScope(Dispatchers.IO).launch {
+                                            appContainer.itmoWidgets.api().deleteSportAutoSignEntry(entry.id)
+                                        }
+
+                                        Thread.sleep(200)
+                                        viewModel.loadInitialData()
+                                    }
+                                    .show()
+                            }
+                        } else {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                val data = limits.data
+                                if ((data?.available ?: 1) > 0) {
+                                    MaterialAlertDialogBuilder(requireContext())
+                                        .setMessage("Вы можете встать в очередь на автозапись.")
+                                        .setNegativeButton("Назад", null)
+                                        .setPositiveButton("Автозапись") { _, _ ->
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                appContainer.itmoWidgets.api().createSportAutoSignEntry(
+                                                    SportAutoSignRequest(prototypeLessonId = lesson.apiData.id)
+                                                )
+
+                                                Thread.sleep(200)
+                                                viewModel.loadInitialData()
+                                            }
+                                        }
+                                        .show()
+                                } else {
+                                    MaterialAlertDialogBuilder(requireContext())
+                                        .setMessage("Вы достигли месячного лимита автозаписи на прогнозируемые пары.\n\nВ следующий раз можно будет записаться ${data?.nextAvailableAt}")
+                                        .setPositiveButton("Хорошо", null)
+                                        .show()
                                 }
-                                .show()
+                            }
                         }
                     }
                 } else {

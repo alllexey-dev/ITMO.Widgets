@@ -16,7 +16,8 @@ interface SportSignActionsListener {
     fun onUnAutoSignClick(lesson: SportLessonData)
 }
 
-class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<SportLessonData, SportLessonsAdapter.LessonViewHolder>(LessonDiffCallback()) {
+class SportLessonsAdapter(val listener: SportSignActionsListener) :
+    ListAdapter<SportLessonData, SportLessonsAdapter.LessonViewHolder>(LessonDiffCallback()) {
 
     private var buildingsMap: Map<Long, String> = emptyMap()
 
@@ -25,7 +26,8 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
-        val binding = ItemSportLessonBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding =
+            ItemSportLessonBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return LessonViewHolder(binding)
     }
 
@@ -33,7 +35,8 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<
         holder.bind(getItem(position))
     }
 
-    inner class LessonViewHolder(private val binding: ItemSportLessonBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class LessonViewHolder(private val binding: ItemSportLessonBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
         private lateinit var lessonData: SportLessonData
 
@@ -43,51 +46,107 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<
             binding.sectionNameTextView.text = SportUtils.shortenSectionName(apiLesson.sectionName)
             binding.timeTextView.text = "${apiLesson.timeSlotStart}-${apiLesson.timeSlotEnd}"
             binding.teacherTextView.text = apiLesson.teacherFio
-            binding.signedUpTextView.text = "Записались: ${apiLesson.limit - apiLesson.available} из ${apiLesson.limit}"
 
             binding.locationTextView.text = apiLesson.roomName
+            val reason = lessonData.unavailableReasons.lastOrNull()
 
-            val canSignIn = apiLesson.canSignIn.isCanSignIn
+            val canSignIn = lessonData.canSignIn
             val isSigned = apiLesson.signed ?: false
+            if (lessonData.isReal) {
+                binding.signedUpTextView.text =
+                    "Записались: ${apiLesson.limit - apiLesson.available} из ${apiLesson.limit}"
+                if (isSigned) {
+                    binding.signUpButton.text = "Отписаться"
+                    binding.signUpButton.visibility = View.VISIBLE
+                    binding.signUpButton.isEnabled = true
+                    binding.statusChip.visibility = View.GONE
+                    binding.signUpButton.setOnClickListener {
+                        listener.onUnSignClick(lessonData)
+                    }
+                    setMuted(false)
+                } else if (canSignIn && apiLesson.available > 0) {
+                    binding.signUpButton.text = "Записаться"
+                    binding.signUpButton.isEnabled = true
+                    binding.signUpButton.visibility = View.VISIBLE
+                    if (lessonData.apiData.intersection ?: false) {
+                        binding.statusChip.text = "Пересечение"
+                        binding.statusChip.visibility = View.VISIBLE
+                    } else {
+                        binding.statusChip.visibility = View.GONE
+                    }
+                    binding.signUpButton.setOnClickListener {
+                        listener.onSignUpClick(lessonData)
+                    }
+                    setMuted(false)
+                } else {
+                    binding.signUpButton.setOnClickListener(null)
+                    binding.statusChip.visibility = View.VISIBLE
+                    binding.statusChip.text = reason?.shortDescription
 
-            if (isSigned) {
-                binding.signUpButton.text = "Отписаться"
-                binding.signUpButton.visibility = View.VISIBLE
-                binding.signUpButton.isEnabled = true
-                binding.statusChip.visibility = View.GONE
-                binding.signUpButton.setOnClickListener {
-                    listener.onUnSignClick(lessonData)
-                }
-                setMuted(false)
-            } else if (canSignIn && apiLesson.available > 0) {
-                binding.signUpButton.text = "Записаться"
-                binding.signUpButton.isEnabled = true
-                binding.signUpButton.visibility = View.VISIBLE
-                binding.statusChip.visibility = View.GONE
-                binding.signUpButton.setOnClickListener {
-                    listener.onSignUpClick(lessonData)
-                }
-                setMuted(false)
-            } else {
-                val unavailableReasons = UnavailableReason.getSortedUnavailableReasons(apiLesson)
-                val reason = unavailableReasons.lastOrNull()
-                binding.signUpButton.setOnClickListener(null)
-                binding.statusChip.visibility = View.VISIBLE
-                binding.statusChip.text = reason?.shortDescription
-
-                if (reason is UnavailableReason.Full) {
-                    val freeSignQueue = lessonData.freeSignQueue
-                    val freeSignStatus = lessonData.freeSignStatus
-                    if (freeSignQueue != null) {
-                        if (freeSignStatus != null) {
+                    if (reason is UnavailableReason.Full) {
+                        val freeSignQueue = lessonData.freeSignQueue
+                        val freeSignStatus = lessonData.freeSignStatus
+                        if (apiLesson.intersection ?: false) {
+                            binding.statusChip.text = reason.shortDescription + " + пересечение"
+                        }
+                        if (freeSignQueue != null) {
+                            if (freeSignStatus != null) {
+                                binding.signUpButton.visibility = View.VISIBLE
+                                binding.signUpButton.text =
+                                    "Автозапись (${freeSignStatus.position} / ${freeSignStatus.total})"
+                                binding.signUpButton.setOnClickListener {
+                                    listener.onUnAutoSignClick(lessonData)
+                                }
+                            } else {
+                                binding.signUpButton.visibility = View.VISIBLE
+                                binding.signUpButton.text = "Автозапись (${freeSignQueue.total})"
+                                binding.signUpButton.setOnClickListener {
+                                    listener.onAutoSignClick(lessonData)
+                                }
+                            }
+                        } else {
                             binding.signUpButton.visibility = View.VISIBLE
-                            binding.signUpButton.text = "Автозапись (${freeSignStatus.position} / ${freeSignStatus.total})"
+                            binding.signUpButton.text = "Автозапись"
+                            binding.signUpButton.setOnClickListener {
+                                listener.onAutoSignClick(lessonData)
+                            }
+                        }
+                        setMuted(false)
+                    } else {
+                        binding.signUpButton.visibility = View.GONE
+                        setMuted(true)
+                    }
+                }
+            } else {
+                binding.signedUpTextView.text =
+                    "Прогнозируемое занятие"
+                if (canSignIn) {
+                    binding.signUpButton.text = "Автозапись"
+                    binding.signUpButton.isEnabled = true
+                    binding.signUpButton.visibility = View.VISIBLE
+                    if (lessonData.apiData.intersection ?: false) {
+                        binding.statusChip.text = "Пересечение"
+                        binding.statusChip.visibility = View.VISIBLE
+                    } else {
+                        binding.statusChip.visibility = View.GONE
+                    }
+                    binding.signUpButton.setOnClickListener {
+                        listener.onAutoSignClick(lessonData)
+                    }
+
+                    val autoSignQueue = lessonData.autoSignQueue
+                    val autoSignStatus = lessonData.autoSignStatus
+                    if (autoSignQueue != null) {
+                        if (autoSignStatus != null) {
+                            binding.signUpButton.visibility = View.VISIBLE
+                            binding.signUpButton.text =
+                                "Автозапись (${autoSignStatus.position} / ${autoSignStatus.total})"
                             binding.signUpButton.setOnClickListener {
                                 listener.onUnAutoSignClick(lessonData)
                             }
                         } else {
                             binding.signUpButton.visibility = View.VISIBLE
-                            binding.signUpButton.text = "Автозапись (${freeSignQueue.total})"
+                            binding.signUpButton.text = "Автозапись (${autoSignQueue.total})"
                             binding.signUpButton.setOnClickListener {
                                 listener.onAutoSignClick(lessonData)
                             }
@@ -101,6 +160,10 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) : ListAdapter<
                     }
                     setMuted(false)
                 } else {
+                    binding.signUpButton.setOnClickListener(null)
+                    binding.statusChip.visibility = View.VISIBLE
+                    binding.statusChip.text = reason?.shortDescription
+
                     binding.signUpButton.visibility = View.GONE
                     setMuted(true)
                 }
