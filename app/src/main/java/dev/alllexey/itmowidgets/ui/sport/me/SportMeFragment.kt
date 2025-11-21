@@ -7,40 +7,47 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import api.myitmo.model.sport.ChosenSportSection
 import api.myitmo.model.sport.SportScore
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.databinding.FragmentSportMeBinding
 import dev.alllexey.itmowidgets.ui.misc.CircularProgressBar
-import dev.alllexey.itmowidgets.util.SportUtils
 import dev.alllexey.itmowidgets.util.withSaturation
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
 
-class SportMeFragment : Fragment() {
+class SportMeFragment : Fragment(R.layout.fragment_sport_me), SportRecordListener {
 
     private var _binding: FragmentSportMeBinding? = null
     private val binding get() = _binding!!
 
+    private val viewModel: SportMeViewModel by viewModels {
+        object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                val myItmo = (requireActivity().application as ItmoWidgetsApp).appContainer.myItmo
+                return SportMeViewModel(myItmo.api(), requireContext()) as T
+            }
+        }
+    }
+
     private lateinit var sportRecordAdapter: SportRecordAdapter
-
-    private val myItmo by lazy { (requireContext().applicationContext as ItmoWidgetsApp).appContainer.myItmo }
-
     private val colorUtil by lazy { (requireContext().applicationContext as ItmoWidgetsApp).appContainer.colorUtil }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentSportMeBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -49,64 +56,78 @@ class SportMeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerView()
-        setupSwipeToRefresh()
 
-        val progressCircleView = binding.progressCircle
-        val progressBar = progressCircleView.circularProgressBar
-        progressBar.animateSectors(listOf(), duration = 0L, startDelay = 0L)
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            viewModel.loadData()
+        }
 
-        loadData()
+        binding.progressCircle.circularProgressBar.animateSectors(listOf(), duration = 0L, startDelay = 0L)
+
+        observeViewModel()
     }
 
     private fun setupRecyclerView() {
-        sportRecordAdapter = SportRecordAdapter()
+        sportRecordAdapter = SportRecordAdapter(this)
         binding.sportRecordsRecyclerView.apply {
             adapter = sportRecordAdapter
             layoutManager = LinearLayoutManager(context)
         }
     }
 
-    private fun setupSwipeToRefresh() {
-        binding.swipeRefreshLayout.setOnRefreshListener {
-            loadData()
-        }
+    private fun observeViewModel() {
+        viewModel.uiState
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .onEach { state ->
+                binding.swipeRefreshLayout.isRefreshing = state.isLoading
+
+                if (state.errorMessage != null && !state.isLoading) {
+                    Toast.makeText(context, state.errorMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                if (state.score != null) {
+                    updateScoreUi(state.score)
+                }
+
+                if (state.listItems.isEmpty() && !state.isLoading) {
+                    binding.sportRecordsRecyclerView.visibility = View.GONE
+                    binding.emptyStateTextView.visibility = View.VISIBLE
+                } else {
+                    binding.sportRecordsRecyclerView.visibility = View.VISIBLE
+                    binding.emptyStateTextView.visibility = View.GONE
+                    sportRecordAdapter.submitList(state.listItems)
+                }
+
+            }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    private fun loadData() {
-        binding.swipeRefreshLayout.isRefreshing = true
+    override fun onUnSignClick(model: SportRecordUiModel) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setMessage("Отменить запись на это занятие?")
+            .setNegativeButton("Назад", null)
+            .setPositiveButton("Отменить") { _, _ ->
+                val appContainer = (requireContext().applicationContext as ItmoWidgetsApp).appContainer
+                CoroutineScope(Dispatchers.IO).launch {
+                    when (model.type) {
+                        is RecordType.Signed -> appContainer.myItmo.api().signOutLessons(listOf(model.lessonId)).execute()
+                        is RecordType.Queue -> {
+                            if (model.type.isPrediction) {
+                                appContainer.itmoWidgets.api().deleteSportAutoSignEntry(model.type.entryId)
+                            } else {
+                                appContainer.itmoWidgets.api().deleteSportFreeSignEntry(model.type.entryId)
+                            }
+                        }
+                    }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val chosenDeferred = async(Dispatchers.IO) {
-                    myItmo.api().chosenSportSections.execute().body()!!.result
+                    delay(200)
+                    viewModel.loadData()
                 }
-                val scoreDeferred = async(Dispatchers.IO) {
-                    myItmo.api().getSportScore(null).execute().body()!!.result
-                }
-
-                val chosen = chosenDeferred.await()
-                val score = scoreDeferred.await()
-
-                updateUi(score, chosen)
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(context, "Ошибка загрузки данных", Toast.LENGTH_SHORT).show()
-                binding.sportRecordsRecyclerView.visibility = View.GONE
-                binding.emptyStateTextView.visibility = View.VISIBLE
-            } finally {
-                binding.swipeRefreshLayout.isRefreshing = false
             }
-        }
+            .show()
     }
 
-    private fun updateUi(score: SportScore, chosenSections: List<ChosenSportSection>) {
-        val attendanceColor = colorUtil.getTertiaryColor(
-            colorUtil.getColor(R.color.red_sport_color)
-        ).withSaturation(4f)
-        val bonusColor = colorUtil.getSecondaryColor(
-            colorUtil.getColor(R.color.blue_sport_color)
-        ).withSaturation(4f)
+    private fun updateScoreUi(score: SportScore) {
+        val attendanceColor = colorUtil.getTertiaryColor(colorUtil.getColor(R.color.red_sport_color)).withSaturation(4f)
+        val bonusColor = colorUtil.getSecondaryColor(colorUtil.getColor(R.color.blue_sport_color)).withSaturation(4f)
 
         val attendancePoints = score.sum.attendances
         val realBonusPoints = score.sum.other
@@ -114,8 +135,7 @@ class SportMeFragment : Fragment() {
         val totalPoints = attendancePoints + bonusPoints
 
         binding.attendancePointsTextView.text = attendancePoints.toString()
-        binding.bonusPointsTextView.text =
-            if (realBonusPoints > bonusPoints) "$bonusPoints ($realBonusPoints)" else "$bonusPoints"
+        binding.bonusPointsTextView.text = if (realBonusPoints > bonusPoints) "$bonusPoints ($realBonusPoints)" else "$bonusPoints"
         binding.attendanceIndicator.imageTintList = ColorStateList.valueOf(attendanceColor)
         binding.bonusIndicator.imageTintList = ColorStateList.valueOf(bonusColor)
 
@@ -124,78 +144,25 @@ class SportMeFragment : Fragment() {
         binding.needPointsTextView.text = if (enough) "Зачёт" else "$need"
         binding.needLabelTextView.text = if (enough) "" else "до зачёта"
 
-        val progressCircleView = binding.progressCircle
-        val progressBar = progressCircleView.circularProgressBar
-        val progressTextView = progressCircleView.progressTextView
-
-        progressTextView.text = totalPoints.toString()
+        binding.progressCircle.progressTextView.text = totalPoints.toString()
 
         val sectors = mutableListOf<CircularProgressBar.Sector>()
         if (totalPoints > 0) {
-            val (attendancePercentage, bonusPercentage) = if (totalPoints > 100) {
+            val (attPct, bonPct) = if (totalPoints > 100) {
                 (attendancePoints.toFloat() / totalPoints) * 100 to (bonusPoints.toFloat() / totalPoints) * 100
             } else {
                 attendancePoints.toFloat() to bonusPoints.toFloat()
             }
 
-            if (attendancePercentage > 0) sectors.add(
-                CircularProgressBar.Sector(
-                    attendanceColor,
-                    attendancePercentage
-                )
-            )
-            if (bonusPercentage > 0) sectors.add(
-                CircularProgressBar.Sector(
-                    bonusColor,
-                    bonusPercentage
-                )
-            )
+            if (attPct > 0) sectors.add(CircularProgressBar.Sector(attendanceColor, attPct))
+            if (bonPct > 0) sectors.add(CircularProgressBar.Sector(bonusColor, bonPct))
         }
-
-        progressBar.animateSectors(sectors, duration = 800L, startDelay = 300L)
-
-        val records = mapChosenSectionsToSportRecords(chosenSections)
-        if (records.isEmpty()) {
-            binding.sportRecordsRecyclerView.visibility = View.GONE
-            binding.emptyStateTextView.visibility = View.VISIBLE
-        } else {
-            binding.sportRecordsRecyclerView.visibility = View.VISIBLE
-            binding.emptyStateTextView.visibility = View.GONE
-            sportRecordAdapter.submitList(records)
-        }
-    }
-
-    private fun mapChosenSectionsToSportRecords(sections: List<ChosenSportSection>): List<SportRecord> {
-        val formatter = DateTimeFormatter.ofPattern("d MMMM", Locale.getDefault())
-
-        val records = sections.flatMap { it.lessonGroups.map { lg -> lg to it.sectionName } }
-            .flatMap { it.first.lessons.map { l -> l to it.second } }
-            .sortedBy { it.first.dateEnd }
-            .mapNotNull { (lesson, sectionName) ->
-                if (lesson.dateEnd < OffsetDateTime.now()) return@mapNotNull null
-                val dateTimeString =
-                    "${lesson.dateStart.format(formatter)}, ${lesson.timeStart} - ${lesson.timeEnd}"
-
-                SportRecord(
-                    title = SportUtils.shortenSectionName(sectionName)!!,
-                    dateTime = dateTimeString,
-                    location = lesson.roomName ?: "Место не указано",
-                    teacher = lesson.teacherFio ?: "Преподаватель не указан"
-                )
-            }
-
-        return records
+        binding.progressCircle.circularProgressBar.animateSectors(sectors, duration = 800L, startDelay = 300L)
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        binding.sportRecordsRecyclerView.adapter = null
         _binding = null
+        super.onDestroyView()
     }
 }
-
-data class SportRecord(
-    val title: String,
-    val dateTime: String,
-    val location: String,
-    val teacher: String
-)

@@ -10,6 +10,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
 import dev.alllexey.itmowidgets.core.model.fcm.FcmJsonWrapper
 import dev.alllexey.itmowidgets.core.model.fcm.impl.SportAutoSignLessonsPayload
 import dev.alllexey.itmowidgets.core.model.fcm.impl.SportFreeSignLessonsPayload
@@ -49,9 +50,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     SportFreeSignLessonsPayload.TYPE -> {
                         val data = gson.fromJson(wrapper.payload, SportFreeSignLessonsPayload::class.java)
                         CoroutineScope(Dispatchers.IO).launch {
+                            val freeSignEntries = appContainer.itmoWidgets.api().mySportFreeSignEntries()
                             data.sportLessonIds.forEach {
                                 try {
                                     appContainer.myItmo.api().signInLessons(listOf(it)).execute().body()!!.result
+                                    freeSignEntries.data?.firstOrNull { e -> e.status == QueueEntryStatus.NOTIFIED }
+                                        ?.let { e -> appContainer.itmoWidgets.api().markSportFreeSignEntrySatisfied(e.id) }
                                     sendNotification("Автозапись (при освобождении)", "Вы успешно записаны на занятие!")
                                 } catch (e: Exception) {
                                     e.printStackTrace()
@@ -62,9 +66,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     SportAutoSignLessonsPayload.TYPE -> {
                         val data = gson.fromJson(wrapper.payload, SportFreeSignLessonsPayload::class.java)
                         CoroutineScope(Dispatchers.IO).launch {
+                            val autoSignEntries = appContainer.itmoWidgets.api().mySportAutoSignEntries()
                             data.sportLessonIds.forEach {
                                 try {
                                     appContainer.myItmo.api().signInLessons(listOf(it)).execute().body()!!.result
+                                    autoSignEntries.data?.firstOrNull { e -> e.status == QueueEntryStatus.NOTIFIED }
+                                        ?.let { e -> appContainer.itmoWidgets.api().markSportAutoSignEntrySatisfied(e.id) }
                                     sendNotification("Автозапись (на прогнозируемое занятие)", "Вы успешно записаны на занятие!")
                                 } catch (e: Exception) {
                                     e.printStackTrace()
