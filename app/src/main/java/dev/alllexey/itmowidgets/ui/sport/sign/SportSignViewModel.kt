@@ -401,7 +401,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
                     autoSignStatus = autoSignEntries.find { e -> e.prototypeLessonId == it.id },
                     autoSignQueue = autoSignQueues.find { e -> e.prototypeLessonId == it.id },
                 )
-            }
+            }.filter { !currentState.showOnlyAvailable || it.canSignIn }
 
             val displayedLessons = (todayDisplayedLessons + fakeLessons)
                 .sortedWith(compareBy<SportLessonData> { it.apiData.signed && it.isReal }.thenBy { it.apiData.date }

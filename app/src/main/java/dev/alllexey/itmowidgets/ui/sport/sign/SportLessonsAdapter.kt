@@ -52,7 +52,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
 
             val canSignIn = lessonData.canSignIn
             val isSigned = apiLesson.signed ?: false
-            if (lessonData.apiData.intersection) {
+            if (lessonData.apiData.intersection ?: false) {
                 binding.intersectionIcon.visibility = View.VISIBLE
             } else {
                 binding.intersectionIcon.visibility = View.GONE
@@ -73,12 +73,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
                     binding.signUpButton.text = "Записаться"
                     binding.signUpButton.isEnabled = true
                     binding.signUpButton.visibility = View.VISIBLE
-                    if (lessonData.apiData.intersection ?: false) {
-                        binding.statusChip.text = "Пересечение"
-                        binding.statusChip.visibility = View.VISIBLE
-                    } else {
-                        binding.statusChip.visibility = View.GONE
-                    }
+                    binding.statusChip.visibility = View.GONE
                     binding.signUpButton.setOnClickListener {
                         listener.onSignUpClick(lessonData)
                     }
@@ -126,6 +121,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
                     binding.signUpButton.text = "Автозапись"
                     binding.signUpButton.isEnabled = true
                     binding.signUpButton.visibility = View.VISIBLE
+                    binding.statusChip.visibility = View.GONE
                     binding.signUpButton.setOnClickListener {
                         listener.onAutoSignClick(lessonData)
                     }
