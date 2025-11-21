@@ -73,11 +73,11 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
     }
 
     fun getSportSignHideTeacherSelectorState(): Boolean {
-        return prefs.getBoolean(SPORT_SIGN_TEACHER_SELECTOR_KEY, true)
+        return prefs.getBoolean(SPORT_SIGN_TEACHER_SELECTOR_KEY, false)
     }
 
     fun getSportSignHideTimeSelectorState(): Boolean {
-        return prefs.getBoolean(SPORT_SIGN_TIME_SELECTOR_KEY, true)
+        return prefs.getBoolean(SPORT_SIGN_TIME_SELECTOR_KEY, false)
     }
 
     fun getQrWidgetState(appWidgetId: Int): QrWidgetState {

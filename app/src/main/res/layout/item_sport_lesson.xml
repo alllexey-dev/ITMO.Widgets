@@ -43,6 +43,20 @@
                 app:layout_constraintTop_toBottomOf="@id/section_name_text_view"
                 tools:text="08:10-09:40" />
 
+            <ImageView
+                android:id="@+id/intersection_icon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginTop="5.5dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_error"
+                app:layout_constraintStart_toEndOf="@+id/time_text_view"
+                app:layout_constraintTop_toBottomOf="@+id/section_name_text_view"
+                app:tint="?colorError">
+
+
+            </ImageView>
+
             <TextView
                 android:id="@+id/signed_up_text_view"
                 android:layout_width="wrap_content"
