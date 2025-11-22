@@ -68,13 +68,9 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
 
     private fun setupRecyclerView() {
         headerAdapter = FiltersHeaderAdapter(this)
-
         lessonsAdapter = SportLessonsAdapter(this)
-
         lessonsAdapter.setBuildingsMap(viewModel.allBuildingsMap)
-
         concatAdapter = ConcatAdapter(headerAdapter, lessonsAdapter)
-
         binding.mainRecyclerView.apply {
             adapter = concatAdapter
             layoutManager = LinearLayoutManager(requireContext())

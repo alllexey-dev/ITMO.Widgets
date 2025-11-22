@@ -17,7 +17,6 @@ import api.myitmo.model.sport.SportScore
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.databinding.FragmentSportMeBinding
 import dev.alllexey.itmowidgets.ui.misc.CircularProgressBar
 import dev.alllexey.itmowidgets.ui.sport.SportFragment
