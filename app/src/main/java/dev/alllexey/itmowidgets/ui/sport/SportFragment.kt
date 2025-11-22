@@ -1,27 +1,33 @@
 package dev.alllexey.itmowidgets.ui.sport
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import dev.alllexey.itmowidgets.R
-import kotlinx.coroutines.launch
+import dev.alllexey.itmowidgets.databinding.FragmentSportBinding
 
 class SportFragment : Fragment(R.layout.fragment_sport) {
 
-    private lateinit var viewPager: ViewPager2
+    private var _binding: FragmentSportBinding? = null
+    private val binding get() = _binding!!
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = FragmentSportBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewPager = view.findViewById(R.id.sport_view_pager)
-        val tabLayout = view.findViewById<TabLayout>(R.id.sport_tab_layout)
+        val viewPager = binding.sportViewPager
+        val tabLayout = binding.sportTabLayout
 
         viewPager.adapter = SportPagerAdapter(this)
         viewPager.isUserInputEnabled = false
@@ -35,6 +41,6 @@ class SportFragment : Fragment(R.layout.fragment_sport) {
     }
 
     fun changeView(index: Int) {
-        viewPager.setCurrentItem(index, true)
+        binding.sportViewPager.setCurrentItem(index, true)
     }
 }

@@ -27,8 +27,6 @@ class DayScheduleAdapter :
 
     private val viewPool = RecyclerView.RecycledViewPool()
 
-    private var firstUpdate = true
-
     private lateinit var colorUtil: ColorUtil
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
@@ -82,18 +80,6 @@ class DayScheduleAdapter :
         holder.innerRecyclerView.adapter = lessonAdapter
         holder.innerRecyclerView.setRecycledViewPool(viewPool)
     }
-
-    // workaround for empty days/yesterday not getting dimmed on first update
-//    override fun onCurrentListChanged(
-//        previousList: MutableList<Schedule>,
-//        currentList: MutableList<Schedule>
-//    ) {
-//        super.onCurrentListChanged(previousList, currentList)
-//        if (previousList.isEmpty() && currentList.isNotEmpty() && firstUpdate) {
-//            notifyDataSetChanged()
-//            firstUpdate = false
-//        }
-//    }
 
     // this definitely could be improved
     fun updateLessonStates() {
