@@ -21,6 +21,7 @@
         android:id="@+id/day_card"
         android:layout_width="40dp"
         android:layout_height="40dp"
+        app:strokeWidth="0dp"
         app:strokeColor="?attr/colorOutline"
         android:layout_marginTop="4dp">
 

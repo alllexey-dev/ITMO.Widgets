@@ -1,12 +1,11 @@
 package dev.alllexey.itmowidgets.ui.sport
 
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import dev.alllexey.itmowidgets.ui.sport.me.SportMeFragment
 import dev.alllexey.itmowidgets.ui.sport.sign.SportSignFragment
 
-class SportPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity) {
+class SportPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
     override fun getItemCount(): Int = 2
 

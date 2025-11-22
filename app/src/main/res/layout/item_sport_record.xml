@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,6 +8,7 @@
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="6dp"
     app:cardElevation="2dp"
+    app:cardCornerRadius="16dp"
     style="@style/Widget.Material3.CardView.Elevated">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -14,16 +16,85 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/dateBadgeCard"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/dateDayTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="15" />
+
+                <TextView
+                    android:id="@+id/dateMonthTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textAllCaps="true"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="НОЯ" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <TextView
             android:id="@+id/recordTitleTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:maxLines="2"
+            android:ellipsize="end"
+            app:layout_constraintStart_toEndOf="@id/dateBadgeCard"
+            app:layout_constraintEnd_toStartOf="@+id/optionsMenu"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Фитнес (функциональный)" />
+
+        <ImageView
+            android:id="@+id/optionsMenu"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:padding="4dp"
+            android:src="@drawable/ic_more_vert"
+            app:tint="?attr/colorOnSurfaceVariant"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Опции"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginEnd="-4dp"
+            android:layout_marginTop="-4dp" />
+
+        <TextView
+            android:id="@+id/timeTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            android:textColor="?android:attr/textColorSecondary"
+            app:layout_constraintStart_toStartOf="@id/recordTitleTextView"
+            app:layout_constraintEnd_toEndOf="@id/optionsMenu"
+            app:layout_constraintTop_toBottomOf="@id/recordTitleTextView"
+            tools:text="Сегодня • 19:00 - 20:30" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/statusChipCard"
@@ -35,8 +106,8 @@
             app:cardElevation="0dp"
             app:strokeWidth="0dp"
             android:visibility="visible"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/recordTitleTextView">
+            app:layout_constraintStart_toStartOf="@id/recordTitleTextView"
+            app:layout_constraintTop_toBottomOf="@id/timeTextView">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -47,10 +118,11 @@
 
                 <ImageView
                     android:id="@+id/statusIcon"
+                    android:layout_marginTop="1dp"
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_group"
-                    app:tint="?attr/colorOnSecondaryContainer" />
+                    app:tint="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/statusTextView"
@@ -58,25 +130,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
-                    android:textColor="?attr/colorOnSecondaryContainer"
+                    android:textColor="?attr/colorOnSurface"
                     tools:text="В очереди: 5 из 20" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-
-        <TextView
-            android:id="@+id/recordDateTimeTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:drawablePadding="6dp"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?android:attr/textColorSecondary"
-            app:drawableStartCompat="@drawable/ic_clock"
-            app:drawableTint="?android:attr/textColorSecondary"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/statusChipCard"
-            app:layout_goneMarginTop="8dp"
-            tools:text="15 ноября, 19:00 - 20:30" />
 
         <TextView
             android:id="@+id/recordTeacherTextView"
@@ -90,7 +147,7 @@
             app:drawableTint="?colorOnSurfaceVariant"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/recordDateTimeTextView"
+            app:layout_constraintTop_toBottomOf="@id/statusChipCard"
             app:tint="?attr/colorControlNormal"
             tools:text="Иванов Иван Иванович" />
 
@@ -98,11 +155,14 @@
             android:id="@+id/recordLocationTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:drawablePadding="6dp"
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLines="2"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             app:drawableStartCompat="@drawable/ic_location"
             app:drawableTint="?colorOnSurfaceVariant"
@@ -112,15 +172,5 @@
             app:tint="?attr/colorControlNormal"
             tools:text="Кронверкский пр-т, д. 49" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/un_sigh_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Отменить"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/recordLocationTextView" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </com.google.android.material.card.MaterialCardView>

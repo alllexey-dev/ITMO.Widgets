@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.databinding.FragmentSportMeBinding
 import dev.alllexey.itmowidgets.ui.misc.CircularProgressBar
+import dev.alllexey.itmowidgets.ui.sport.SportFragment
 import dev.alllexey.itmowidgets.util.withSaturation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +62,10 @@ class SportMeFragment : Fragment(R.layout.fragment_sport_me), SportRecordListene
             viewModel.loadData()
         }
 
+        binding.btnGoToSchedule.setOnClickListener {
+            (parentFragment as SportFragment).changeView(2)
+        }
+
         binding.progressCircle.circularProgressBar.animateSectors(listOf(), duration = 0L, startDelay = 0L)
 
         observeViewModel()
@@ -90,10 +95,10 @@ class SportMeFragment : Fragment(R.layout.fragment_sport_me), SportRecordListene
 
                 if (state.listItems.isEmpty() && !state.isLoading) {
                     binding.sportRecordsRecyclerView.visibility = View.GONE
-                    binding.emptyStateTextView.visibility = View.VISIBLE
+                    binding.emptyStateLayout.visibility = View.VISIBLE
                 } else {
                     binding.sportRecordsRecyclerView.visibility = View.VISIBLE
-                    binding.emptyStateTextView.visibility = View.GONE
+                    binding.emptyStateLayout.visibility = View.GONE
                     sportRecordAdapter.submitList(state.listItems)
                 }
 

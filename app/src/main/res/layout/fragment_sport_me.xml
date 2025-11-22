@@ -154,20 +154,46 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:listitem="@layout/item_sport_record" />
 
-        <TextView
-            android:id="@+id/emptyStateTextView"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+        <LinearLayout
+            android:id="@+id/emptyStateLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:gravity="center"
-            android:text="У вас нет актуальных записей на спорт"
-            android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-            android:textColor="?android:attr/textColorSecondary"
+            android:padding="32dp"
             android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/pointsCard"
-            tools:visibility="visible" />
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/ic_calendar_add"
+                app:tint="?attr/colorOutline" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Нет записей"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="У вас нет активных записей на занятия. Самое время выбрать что-то полезное!"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textColor="?android:attr/textColorSecondary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGoToSchedule"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Открыть расписание" />
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -41,7 +41,7 @@ data class SportRecordUiModel(
     val lessonId: Long?,
     val title: String,
     val dateTime: OffsetDateTime,
-    val dateTimeString: String,
+    val timeString: String,
     val location: String,
     val teacher: String,
     val type: RecordType
@@ -117,7 +117,7 @@ class SportMeViewModel(
                         lessonId = lesson.id,
                         title = SportUtils.shortenSectionName(section.sectionName) ?: section.sectionName,
                         dateTime = lesson.dateStart,
-                        dateTimeString = "${localStart.format(dateFormatter)}, ${localStart.format(timeFormatter)} - ${localEnd.format(timeFormatter)}",
+                        timeString = "${localStart.format(timeFormatter)} - ${localEnd.format(timeFormatter)}",
                         location = lesson.roomName ?: "Место не указано",
                         teacher = lesson.teacherFio ?: "",
                         type = RecordType.Signed(thoughAutoSign = freeSignEntries.filter { it.status == QueueEntryStatus.SATISFIED }
@@ -165,7 +165,7 @@ class SportMeViewModel(
             lessonId = id,
             title = SportUtils.shortenSectionName(sectionName) ?: sectionName,
             dateTime = dateStart.plusWeeks(weeksToAdd),
-            dateTimeString = "${localStart.format(dateFormatter)}, ${localStart.format(timeFormatter)} - ${localEnd.format(timeFormatter)}",
+            timeString = "${localStart.format(timeFormatter)} - ${localEnd.format(timeFormatter)}",
             location = roomName,
             teacher = teacherFio,
             type = type
