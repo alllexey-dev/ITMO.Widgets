@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
-import api.myitmo.model.sport.SportLesson
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
@@ -140,10 +139,12 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
     }
 
     override fun onSignUpClick(lesson: SportLessonData) {
+        Toast.makeText(requireContext(), "Выполняем запись...", Toast.LENGTH_SHORT).show()
         viewModel.signUpForLesson(lesson)
     }
 
     override fun onUnSignClick(lesson: SportLessonData) {
+        Toast.makeText(requireContext(), "Отменяем запись...", Toast.LENGTH_SHORT).show()
         viewModel.unSignForLesson(lesson)
     }
 
@@ -207,6 +208,7 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
                                     .setMessage("У вас уже есть автозапись на это занятие. Позиция в очереди: ${entry.position} из ${entry.total}")
                                     .setNegativeButton("Назад", null)
                                     .setPositiveButton("Отписаться") { _, _ ->
+                                        Toast.makeText(requireContext(), "Удаляю из очереди...", Toast.LENGTH_SHORT).show()
                                         CoroutineScope(Dispatchers.IO).launch {
                                             appContainer.itmoWidgets.api().deleteSportAutoSignEntry(entry.id)
                                         }
@@ -224,14 +226,15 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
                                         .setMessage("Вы можете встать в очередь на автозапись.")
                                         .setNegativeButton("Назад", null)
                                         .setPositiveButton("Автозапись") { _, _ ->
+                                            Toast.makeText(requireContext(), "Добавляю в очередь...", Toast.LENGTH_SHORT).show()
                                             CoroutineScope(Dispatchers.IO).launch {
                                                 appContainer.itmoWidgets.api().createSportAutoSignEntry(
                                                     SportAutoSignRequest(prototypeLessonId = lesson.apiData.id)
                                                 )
-
-                                                Thread.sleep(200)
-                                                viewModel.loadInitialData()
                                             }
+
+                                            Thread.sleep(200)
+                                            viewModel.loadInitialData()
                                         }
                                         .show()
                                 } else {

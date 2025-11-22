@@ -7,12 +7,12 @@
         app:title="Запись на спорт">
 
         <SwitchPreference
-            app:defaultValue="false"
+            app:defaultValue="true"
             app:key="sport_sign_hide_teacher_selector"
             app:title="Спрятать выбор преподавателя" />
 
         <SwitchPreference
-            app:defaultValue="false"
+            app:defaultValue="true"
             app:key="sport_sign_hide_time_selector"
             app:title="Спрятать выбор времени" />
 

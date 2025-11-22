@@ -75,10 +75,10 @@ class FiltersHeaderAdapter(
                 binding.timeInputLayout.visibility = View.VISIBLE
             }
 
-            binding.freeSportSwitch.setOnCheckedChangeListener { _, isChecked ->
+            binding.freeSportChip.setOnCheckedChangeListener { _, isChecked ->
                 listener.onFreeAttendanceChanged(isChecked)
             }
-            binding.availableSportSwitch.setOnCheckedChangeListener { _, isChecked ->
+            binding.availableSportChip.setOnCheckedChangeListener { _, isChecked ->
                 listener.onShowOnlyAvailableChanged(isChecked)
             }
 

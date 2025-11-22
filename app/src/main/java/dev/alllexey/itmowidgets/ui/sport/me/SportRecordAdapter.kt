@@ -91,9 +91,9 @@ class SportRecordAdapter(val listener: SportRecordListener) : ListAdapter<SportR
                     val total = item.type.total
 
                     if (item.type.isPrediction) {
-                        val bgColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorPrimaryContainer, Color.WHITE)
+                        val bgColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorTertiaryContainer, Color.WHITE)
                         val contentColor =
-                            colorUtil.getDynamicColor(com.google.android.material.R.attr.colorOnPrimaryContainer, Color.BLACK)
+                            colorUtil.getDynamicColor(com.google.android.material.R.attr.colorOnTertiaryContainer, Color.BLACK)
 
                         setupChip(
                             text = "Прогноз: $pos из $total",
@@ -102,8 +102,8 @@ class SportRecordAdapter(val listener: SportRecordListener) : ListAdapter<SportR
                             contentColor = contentColor
                         )
                     } else {
-                        val bgColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorTertiaryContainer, Color.WHITE)
-                        val contentColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorOnTertiaryContainer, Color.WHITE)
+                        val bgColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorPrimaryContainer, Color.WHITE)
+                        val contentColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorOnPrimaryContainer, Color.WHITE)
 
                         setupChip(
                             text = "Очередь: $pos из $total",

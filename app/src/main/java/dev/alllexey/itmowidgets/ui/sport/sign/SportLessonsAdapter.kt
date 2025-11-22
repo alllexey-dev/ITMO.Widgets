@@ -1,11 +1,14 @@
 package dev.alllexey.itmowidgets.ui.sport.sign
 
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.AttrRes
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.color.MaterialColors
 import dev.alllexey.itmowidgets.databinding.ItemSportLessonBinding
 import dev.alllexey.itmowidgets.util.SportUtils
 
@@ -26,8 +29,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
-        val binding =
-            ItemSportLessonBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemSportLessonBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return LessonViewHolder(binding)
     }
 
@@ -38,133 +40,127 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
     inner class LessonViewHolder(private val binding: ItemSportLessonBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        private lateinit var lessonData: SportLessonData
-
         fun bind(lessonData: SportLessonData) {
-            this.lessonData = lessonData
             val apiLesson = lessonData.apiData
+
             binding.sectionNameTextView.text = SportUtils.shortenSectionName(apiLesson.sectionName)
             binding.timeTextView.text = "${apiLesson.timeSlotStart}-${apiLesson.timeSlotEnd}"
             binding.teacherTextView.text = apiLesson.teacherFio
-
             binding.locationTextView.text = apiLesson.roomName
+
+            bindBadges(lessonData)
+            bindProgress(lessonData)
+            bindActions(lessonData)
+        }
+
+        private fun bindBadges(lessonData: SportLessonData) {
+            val apiLesson = lessonData.apiData
+            val isFull = lessonData.isReal && (apiLesson.available ?: 0) <= 0 && apiLesson.signed != true
+
+            binding.intersectionBadge.isVisible = apiLesson.intersection == true
+            binding.predictionBadge.isVisible = !lessonData.isReal
+            binding.fullBadge.isVisible = isFull
+
+            binding.badgesLayout.isVisible = binding.intersectionBadge.isVisible ||
+                    binding.predictionBadge.isVisible ||
+                    binding.fullBadge.isVisible
+        }
+
+        private fun bindProgress(lessonData: SportLessonData) {
+            val apiLesson = lessonData.apiData
+            if (lessonData.isReal) {
+                val signed = apiLesson.limit - (apiLesson.available ?: 0)
+                binding.signedUpTextView.text = "$signed / ${apiLesson.limit}"
+                binding.occupancyProgress.max = apiLesson.limit.toInt()
+                binding.occupancyProgress.progress = signed.toInt()
+
+                binding.occupancyProgress.isVisible = true
+                binding.signedUpLabel.isVisible = true
+            } else {
+                binding.occupancyProgress.isVisible = false
+                binding.signedUpLabel.isVisible = false
+                binding.signedUpTextView.text = ""
+            }
+        }
+
+        private fun bindActions(lessonData: SportLessonData) {
+            val apiLesson = lessonData.apiData
+            val isSigned = apiLesson.signed == true
+            val canSignIn = lessonData.canSignIn
             val reason = lessonData.unavailableReasons.lastOrNull()
 
-            val canSignIn = lessonData.canSignIn
-            val isSigned = apiLesson.signed ?: false
-            if (lessonData.apiData.intersection ?: false) {
-                binding.intersectionIcon.visibility = View.VISIBLE
-            } else {
-                binding.intersectionIcon.visibility = View.GONE
-            }
-            if (lessonData.isReal) {
-                binding.signedUpTextView.text =
-                    "Записались: ${apiLesson.limit - apiLesson.available} из ${apiLesson.limit}"
-                if (isSigned) {
-                    binding.signUpButton.text = "Отписаться"
-                    binding.signUpButton.visibility = View.VISIBLE
-                    binding.signUpButton.isEnabled = true
-                    binding.statusChip.visibility = View.GONE
-                    binding.signUpButton.setOnClickListener {
-                        listener.onUnSignClick(lessonData)
-                    }
-                    setMuted(false)
-                } else if (canSignIn && apiLesson.available > 0) {
-                    binding.signUpButton.text = "Записаться"
-                    binding.signUpButton.isEnabled = true
-                    binding.signUpButton.visibility = View.VISIBLE
-                    binding.statusChip.visibility = View.GONE
-                    binding.signUpButton.setOnClickListener {
-                        listener.onSignUpClick(lessonData)
-                    }
-                    setMuted(false)
-                } else {
-                    binding.signUpButton.setOnClickListener(null)
-                    binding.statusChip.visibility = View.VISIBLE
-                    binding.statusChip.text = reason?.shortDescription
+            binding.statusChip.isVisible = false
+            binding.signUpButton.isVisible = false
+            binding.signUpButton.setOnClickListener(null)
+            setMuted(false)
 
-                    if (reason is UnavailableReason.Full) {
-                        val freeSignQueue = lessonData.freeSignQueue
-                        val freeSignStatus = lessonData.freeSignStatus
-                        if (freeSignQueue != null) {
-                            if (freeSignStatus != null) {
-                                binding.signUpButton.visibility = View.VISIBLE
-                                binding.signUpButton.text =
-                                    "Автозапись (${freeSignStatus.position} / ${freeSignStatus.total})"
-                                binding.signUpButton.setOnClickListener {
-                                    listener.onUnAutoSignClick(lessonData)
-                                }
-                            } else {
-                                binding.signUpButton.visibility = View.VISIBLE
-                                binding.signUpButton.text = "Автозапись (${freeSignQueue.total})"
-                                binding.signUpButton.setOnClickListener {
-                                    listener.onAutoSignClick(lessonData)
-                                }
-                            }
-                        } else {
-                            binding.signUpButton.visibility = View.VISIBLE
-                            binding.signUpButton.text = "Автозапись"
-                            binding.signUpButton.setOnClickListener {
-                                listener.onAutoSignClick(lessonData)
-                            }
-                        }
-                        setMuted(false)
-                    } else {
-                        binding.signUpButton.visibility = View.GONE
-                        setMuted(true)
-                    }
+            when {
+                isSigned && lessonData.isReal -> {
+                    setupButton(
+                        text = "Отписаться",
+                        colorAttr = com.google.android.material.R.attr.colorErrorContainer,
+                        textColorAttr = com.google.android.material.R.attr.colorOnErrorContainer,
+                        onClick = { listener.onUnSignClick(lessonData) }
+                    )
                 }
-            } else {
-                binding.signedUpTextView.text =
-                    "Прогнозируемое занятие"
-                if (canSignIn) {
-                    binding.signUpButton.text = "Автозапись"
-                    binding.signUpButton.isEnabled = true
-                    binding.signUpButton.visibility = View.VISIBLE
-                    binding.statusChip.visibility = View.GONE
-                    binding.signUpButton.setOnClickListener {
-                        listener.onAutoSignClick(lessonData)
-                    }
 
-                    val autoSignQueue = lessonData.autoSignQueue
-                    val autoSignStatus = lessonData.autoSignStatus
-                    if (autoSignQueue != null) {
-                        if (autoSignStatus != null) {
-                            binding.signUpButton.visibility = View.VISIBLE
-                            binding.signUpButton.text =
-                                "Автозапись (${autoSignStatus.position} / ${autoSignStatus.total})"
-                            binding.signUpButton.setOnClickListener {
-                                listener.onUnAutoSignClick(lessonData)
-                            }
-                        } else {
-                            binding.signUpButton.visibility = View.VISIBLE
-                            binding.signUpButton.text = "Автозапись (${autoSignQueue.total})"
-                            binding.signUpButton.setOnClickListener {
-                                listener.onAutoSignClick(lessonData)
-                            }
-                        }
+                lessonData.isReal && canSignIn && (apiLesson.available ?: 0) > 0 -> {
+                    setupButton(
+                        text = "Записаться",
+                        colorAttr = com.google.android.material.R.attr.colorSecondaryContainer,
+                        textColorAttr = com.google.android.material.R.attr.colorOnSecondaryContainer,
+                        onClick = { listener.onSignUpClick(lessonData) }
+                    )
+                }
+
+                (lessonData.isReal && reason is UnavailableReason.Full) || (!lessonData.isReal && canSignIn) -> {
+                    val status = if (lessonData.isReal) lessonData.freeSignStatus else lessonData.autoSignStatus
+                    val position = if (lessonData.isReal) lessonData.freeSignStatus?.position else lessonData.autoSignStatus?.position
+                    val queue = if (lessonData.isReal) lessonData.freeSignQueue else lessonData.autoSignQueue
+                    val total = if (lessonData.isReal) lessonData.freeSignQueue?.total else lessonData.autoSignQueue?.total
+
+                    val buttonText = if (status != null) {
+                        "Автозапись (${position} / ${total})"
+                    } else if (queue != null) {
+                        "Автозапись (${total})"
                     } else {
-                        binding.signUpButton.visibility = View.VISIBLE
-                        binding.signUpButton.text = "Автозапись"
-                        binding.signUpButton.setOnClickListener {
-                            listener.onAutoSignClick(lessonData)
-                        }
+                        "Автозапись"
                     }
-                    setMuted(false)
-                } else {
-                    binding.signUpButton.setOnClickListener(null)
-                    binding.statusChip.visibility = View.VISIBLE
-                    binding.statusChip.text = reason?.shortDescription
 
-                    binding.signUpButton.visibility = View.GONE
+                    setupButton(
+                        text = buttonText,
+                        colorAttr = com.google.android.material.R.attr.colorTertiaryContainer,
+                        textColorAttr = com.google.android.material.R.attr.colorOnTertiaryContainer,
+                        onClick = {
+                            if (status != null) listener.onUnAutoSignClick(lessonData)
+                            else listener.onAutoSignClick(lessonData)
+                        }
+                    )
+                }
+
+                else -> {
+                    binding.statusChip.isVisible = true
+                    binding.statusChip.text = reason?.shortDescription ?: "Недоступно"
                     setMuted(true)
                 }
             }
         }
 
+        private fun setupButton(text: String, @AttrRes colorAttr: Int, @AttrRes textColorAttr: Int, onClick: () -> Unit) {
+            binding.signUpButton.isVisible = true
+            binding.signUpButton.isEnabled = true
+            binding.signUpButton.text = text
+            binding.signUpButton.backgroundTintList = ColorStateList.valueOf(resolveColor(colorAttr))
+            binding.signUpButton.setTextColor(resolveColor(textColorAttr))
+            binding.signUpButton.setOnClickListener { onClick() }
+        }
+
+        private fun resolveColor(@AttrRes attr: Int): Int {
+            return MaterialColors.getColor(itemView, attr, 0)
+        }
+
         private fun setMuted(isMuted: Boolean) {
-            val alpha = if (isMuted) 0.6f else 1.0f
-            binding.sportLessonCardView.alpha = alpha
+            binding.sportLessonCardView.alpha = if (isMuted) 0.6f else 1.0f
         }
     }
 }
