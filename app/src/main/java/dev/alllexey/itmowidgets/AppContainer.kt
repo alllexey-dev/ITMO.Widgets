@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.api.ItmoWidgetsClient
 import dev.alllexey.itmowidgets.data.Storage
 import dev.alllexey.itmowidgets.data.local.ScheduleLocalDataSourceImpl
 import dev.alllexey.itmowidgets.data.remote.ScheduleRemoteDataSourceImpl
+import dev.alllexey.itmowidgets.data.repository.ErrorLogRepository
 import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
 import dev.alllexey.itmowidgets.ui.widgets.data.LessonListRepository
 import dev.alllexey.itmowidgets.util.ColorUtil
@@ -52,4 +53,6 @@ class AppContainer(val context: Context) {
     }
 
     val colorUtil: ColorUtil by lazy { ColorUtil(context) }
+
+    val errorLogRepository by lazy { ErrorLogRepository(context) }
 }

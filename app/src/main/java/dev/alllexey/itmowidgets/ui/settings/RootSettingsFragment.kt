@@ -1,11 +1,13 @@
 package dev.alllexey.itmowidgets.ui.settings
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.data.UtilityStorage.KEYS.LAST_UPDATE_TIMESTAMP_KEY
+import dev.alllexey.itmowidgets.ui.error.ErrorLogActivity
 import dev.alllexey.itmowidgets.ui.widgets.WidgetUtils
 import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
@@ -27,6 +29,14 @@ class RootSettingsFragment : PreferenceFragmentCompat() {
             updateAllWidgets()
             true
         }
+
+        val errorLogButton = findPreference<Preference>("error_log")
+        errorLogButton?.setOnPreferenceClickListener { preference ->
+            val intent = Intent(context, ErrorLogActivity::class.java)
+            startActivity(intent)
+            true
+        }
+
     }
 
     private fun updateAllWidgets() {

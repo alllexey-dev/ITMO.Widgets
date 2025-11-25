@@ -28,6 +28,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.error.ErrorLogActivity"
+            android:exported="false" />
+
+        <activity
             android:name="com.canhub.cropper.CropImageActivity"
             android:theme="@style/Theme.Material3.DynamicColors.DayNight" />
 

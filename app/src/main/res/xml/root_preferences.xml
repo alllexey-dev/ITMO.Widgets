@@ -41,7 +41,7 @@
             app:summary="Синхронизировать все виджеты"
             app:title="Принудительное обновление" />
 
-        <EditTextPreference
+        <Preference
             app:key="error_log"
             app:summary="Для быстрой диагностики"
             app:title="Журнал ошибок"
