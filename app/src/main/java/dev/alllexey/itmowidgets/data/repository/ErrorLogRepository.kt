@@ -12,6 +12,7 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.LocalDateTime
 
@@ -29,6 +30,7 @@ class ErrorLogRepository(val context: Context) {
                 override fun write(out: JsonWriter, value: LocalDateTime?) {
                     out.value(value?.toString())
                 }
+
                 override fun read(input: JsonReader): LocalDateTime? {
                     return LocalDateTime.parse(input.nextString())
                 }
@@ -60,10 +62,10 @@ class ErrorLogRepository(val context: Context) {
             prefs[KEY] = gson.toJson(wrapper)
         }
     }
-    
-    suspend fun logThrowable(throwable: Throwable, module: String) {
+
+    fun logThrowable(throwable: Throwable, module: String) {
         val entry = ErrorLogEntry(Log.getStackTraceString(throwable), LocalDateTime.now(), module)
-        addLogEntry(entry)
+        runBlocking { addLogEntry(entry) }
     }
 
     suspend fun checkPendingCrashes() {
@@ -79,7 +81,11 @@ class ErrorLogRepository(val context: Context) {
 
                         val entry = ErrorLogEntry(
                             stacktrace = stack,
-                            time = try { LocalDateTime.parse(timeStr) } catch(e: Exception) { LocalDateTime.now() },
+                            time = try {
+                                LocalDateTime.parse(timeStr)
+                            } catch (e: Exception) {
+                                LocalDateTime.now()
+                            },
                             module = "Crash"
                         )
                         addLogEntry(entry)

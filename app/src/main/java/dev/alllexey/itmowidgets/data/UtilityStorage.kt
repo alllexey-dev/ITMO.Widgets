@@ -13,7 +13,6 @@ class UtilityStorage(val prefs: SharedPreferences, val context: Context) {
         const val FIREBASE_TOKEN_KEY = "firebase_token"
         const val LAST_UPDATE_TIMESTAMP_KEY = "last_update_timestamp"
         const val QR_WIDGET_STATE_PREFIX = "qr_widget_state_"
-        const val ERROR_LOG_KEY = "error_log"
         const val LESSON_WIDGET_STYLE_CHANGED_KEY = "lesson_widget_style_changed"
         const val SKIPPED_VERSION_KEY = "skipped_version"
     }
@@ -24,10 +23,6 @@ class UtilityStorage(val prefs: SharedPreferences, val context: Context) {
 
     fun getLastUpdateTimestamp(): Long {
         return prefs.getLong(LAST_UPDATE_TIMESTAMP_KEY, 0)
-    }
-
-    fun getErrorLog(): String? {
-        return prefs.getString(ERROR_LOG_KEY, "empty")
     }
 
     fun getLessonWidgetStyleChanged(): Boolean {
@@ -58,12 +53,6 @@ class UtilityStorage(val prefs: SharedPreferences, val context: Context) {
     fun setLastUpdateTimestamp(timestamp: Long) {
         prefs.edit(commit = true) {
             putLong(LAST_UPDATE_TIMESTAMP_KEY, timestamp)
-        }
-    }
-
-    fun setErrorLog(errorLog: String?) {
-        prefs.edit(commit = true) {
-            putString(ERROR_LOG_KEY, errorLog)
         }
     }
 

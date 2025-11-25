@@ -49,7 +49,7 @@ class LessonWidgetUpdateWorker(
         try {
             val onlyDataChanged = !storage.utility.getLessonWidgetStyleChanged()
 
-            val dataManager = LessonWidgetDataManager(repository, storage)
+            val dataManager = LessonWidgetDataManager(repository, appContainer)
             val widgetsState = dataManager.getLessonWidgetsState()
             lessonListRepository.setData(widgetsState.lessonListWidgetData)
             updateSingleLessonWidgets(
@@ -69,7 +69,7 @@ class LessonWidgetUpdateWorker(
             scheduleNextUpdate(appContext, widgetsState.nextUpdateAt.plusSeconds(3))
         } catch (e: Exception) {
             e.printStackTrace()
-            storage.utility.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
+            appContainer.errorLogRepository.logThrowable(e, javaClass.name)
             lessonListRepository.setData(LessonListWidgetData(listOf(LessonListWidgetEntry.Error)))
             scheduleNextUpdate(appContext, null)
         }

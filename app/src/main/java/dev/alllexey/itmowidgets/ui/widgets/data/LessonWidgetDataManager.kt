@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.ui.widgets.data
 
 import api.myitmo.model.schedule.Lesson
+import dev.alllexey.itmowidgets.AppContainer
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.data.Storage
 import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
@@ -10,7 +11,8 @@ import java.time.LocalDateTime
 
 class LessonWidgetDataManager(
     private val scheduleRepository: ScheduleRepository,
-    private val storage: Storage
+    private val appContainer: AppContainer,
+    private val storage: Storage = appContainer.storage
 ) {
     companion object {
         const val RETRY_DELAY_SECONDS: Long = 7 * 60 // 7 minutes
@@ -36,7 +38,7 @@ class LessonWidgetDataManager(
 
             nextUpdateAt = getNextUpdateAt(lessons)
         } catch (e: Exception) {
-            storage.utility.setErrorLog("[${javaClass.name}]: ${e.stackTraceToString()}}")
+            appContainer.errorLogRepository.logThrowable(e, javaClass.name)
             singleDataResult = SingleLessonWidgetData.Error(getSingleLessonWidgetLayout())
 
             listDataResult = LessonListWidgetData(
