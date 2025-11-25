@@ -31,7 +31,10 @@ class GlobalExceptionHandler(
         val file = File(context.filesDir, "pending_crash.log")
 
         val writer = PrintWriter(FileWriter(file, true))
-        writer.println(reportContent)
+
+        writer.print(reportContent)
+        writer.print("|||CRASH_END|||")
+
         writer.flush()
         writer.close()
     }

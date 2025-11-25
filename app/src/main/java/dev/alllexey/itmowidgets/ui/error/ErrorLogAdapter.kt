@@ -35,7 +35,7 @@ class ErrorLogAdapter(val listener: ErrorLogListener) :
     inner class ErrorLogViewHolder(private val binding: ItemErrorLogBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        private val dtf = DateTimeFormatter.ofPattern("yyyy-MM-DD HH-mm")
+        private val dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm")
 
         fun bind(item: ErrorLogEntry) {
             binding.timeView.text = dtf.format(item.time)

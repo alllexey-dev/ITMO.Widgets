@@ -72,9 +72,11 @@ class ErrorLogRepository(val context: Context) {
         val file = File(context.filesDir, "pending_crash.log")
         if (file.exists()) {
             try {
-                val lines = file.readLines()
-                for (line in lines) {
-                    val parts = line.split("|SPLIT|")
+                val fullContent = file.readText()
+                val reports = fullContent.split("|||CRASH_END|||")
+                for (report in reports) {
+                    if (report.isBlank()) continue
+                    val parts = report.split("|SPLIT|")
                     if (parts.size >= 2) {
                         val timeStr = parts[0]
                         val stack = parts[1]
