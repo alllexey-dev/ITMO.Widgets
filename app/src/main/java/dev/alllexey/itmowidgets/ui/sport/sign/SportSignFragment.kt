@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.core.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.core.model.SportFreeSignRequest
 import dev.alllexey.itmowidgets.databinding.FragmentSportSignBinding
 import dev.alllexey.itmowidgets.ui.misc.SelectableItem
+import dev.alllexey.itmowidgets.util.SportUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -114,6 +115,10 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
         viewModel.setShowOnlyAvailable(isChecked)
     }
 
+    override fun onShowAutoSignChanged(isChecked: Boolean) {
+        viewModel.setShowAutoSign(isChecked)
+    }
+
     override fun onBuildingSelected(building: String) {
         viewModel.selectBuilding(building)
     }
@@ -172,7 +177,8 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
                                     .setNegativeButton("Назад", null)
                                     .setPositiveButton("Отписаться") { _, _ ->
                                         CoroutineScope(Dispatchers.IO).launch {
-                                            appContainer.itmoWidgets.api().deleteSportFreeSignEntry(entry.id)
+                                            appContainer.itmoWidgets.api()
+                                                .deleteSportFreeSignEntry(entry.id)
                                         }
 
                                         Thread.sleep(200)
@@ -201,21 +207,45 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
                     } else {
                         val allEntries = appContainer.itmoWidgets.api().mySportAutoSignEntries()
                         val limits = appContainer.itmoWidgets.api().sportAutoSignLimits()
-                        val entry = allEntries.data?.find { it.prototypeLessonId == lesson.apiData.id }
+                        val entry =
+                            allEntries.data?.find { it.prototypeLessonId == lesson.apiData.id }
+                        val thisDayEntry = allEntries.data?.find {
+                            it.prototypeLessonData.dateStart.toLocalDate()
+                                .equals(lesson.apiData.date.toLocalDate())
+                        }
                         if (entry != null) {
                             CoroutineScope(Dispatchers.Main).launch {
                                 MaterialAlertDialogBuilder(requireContext())
                                     .setMessage("У вас уже есть автозапись на это занятие. Позиция в очереди: ${entry.position} из ${entry.total}")
                                     .setNegativeButton("Назад", null)
                                     .setPositiveButton("Отписаться") { _, _ ->
-                                        Toast.makeText(requireContext(), "Удаляю из очереди...", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            requireContext(),
+                                            "Удаляю из очереди...",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                         CoroutineScope(Dispatchers.IO).launch {
-                                            appContainer.itmoWidgets.api().deleteSportAutoSignEntry(entry.id)
+                                            appContainer.itmoWidgets.api()
+                                                .deleteSportAutoSignEntry(entry.id)
                                         }
 
                                         Thread.sleep(200)
                                         viewModel.loadInitialData()
                                     }
+                                    .show()
+                            }
+                        } else if (thisDayEntry != null) {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                val lessonData = thisDayEntry.prototypeLessonData
+                                MaterialAlertDialogBuilder(requireContext())
+                                    .setMessage(
+                                        "У вас уже есть автозапись на этот день: \n${
+                                            SportUtils.shortenSectionName(
+                                                lessonData.sectionName
+                                            )
+                                        }\n${lessonData.teacherFio}"
+                                    )
+                                    .setPositiveButton("Назад", null)
                                     .show()
                             }
                         } else {
@@ -226,11 +256,16 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
                                         .setMessage("Вы можете встать в очередь на автозапись.")
                                         .setNegativeButton("Назад", null)
                                         .setPositiveButton("Автозапись") { _, _ ->
-                                            Toast.makeText(requireContext(), "Добавляю в очередь...", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                requireContext(),
+                                                "Добавляю в очередь...",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                             CoroutineScope(Dispatchers.IO).launch {
-                                                appContainer.itmoWidgets.api().createSportAutoSignEntry(
-                                                    SportAutoSignRequest(prototypeLessonId = lesson.apiData.id)
-                                                )
+                                                appContainer.itmoWidgets.api()
+                                                    .createSportAutoSignEntry(
+                                                        SportAutoSignRequest(prototypeLessonId = lesson.apiData.id)
+                                                    )
                                             }
 
                                             Thread.sleep(200)
@@ -269,11 +304,11 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
     private fun showMultiSelectSearchableDialog(state: SportSignUiState) {
         val selectableItems = state.availableSports.map { sport ->
             SelectableItem(
-                name = sport.name,
+                name = sport.name + if (viewModel.usedSportNames.contains(sport.name)) " \uD83D\uDD25" else "",
                 isSelected = state.selectedSportNames.contains(sport.name)
             )
         }.sortedWith(
-            compareBy<SelectableItem> { !it.isSelected }.thenBy { it.name }
+            compareBy<SelectableItem> { !it.isSelected }.thenBy { !it.name.contains("\uD83D\uDD25") }.thenBy { it.name }
         )
 
         val dialogView = layoutInflater.inflate(R.layout.dialog_searchable_list, null)
@@ -292,7 +327,7 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
             .setView(dialogView)
             .setNegativeButton("Отмена", null)
             .setPositiveButton("Готово") { _, _ ->
-                val selectedNames = adapter.getSelectedItems().map { it.name }.toSet()
+                val selectedNames = adapter.getSelectedItems().map { it.name.replace(" \uD83D\uDD25", "") }.toSet()
                 viewModel.selectSports(selectedNames)
             }
             .show()

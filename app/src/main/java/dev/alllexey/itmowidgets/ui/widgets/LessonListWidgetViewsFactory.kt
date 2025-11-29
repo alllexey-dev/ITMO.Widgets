@@ -6,13 +6,13 @@ import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
-import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.appContainer
 import dev.alllexey.itmowidgets.ui.widgets.data.LessonListWidgetData
 import dev.alllexey.itmowidgets.ui.widgets.data.LessonListWidgetEntry
 import dev.alllexey.itmowidgets.util.ScheduleUtils
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 
 class LessonListWidgetViewsFactory : RemoteViewsService() {
@@ -23,7 +23,7 @@ class LessonListWidgetViewsFactory : RemoteViewsService() {
     class ViewsFactory(private val context: Context) : RemoteViewsFactory {
 
         private val lessonListRepository =
-            (context.applicationContext as ItmoWidgetsApp).appContainer.lessonListRepository
+            context.appContainer().lessonListRepository
 
         private var data: LessonListWidgetData = LessonListWidgetData(listOf())
 

@@ -10,7 +10,6 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import java.time.Duration
 import java.time.LocalDate
@@ -25,8 +24,7 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
     private lateinit var updateTimeRunnable: Runnable
 
     private val scheduleViewModel: ScheduleViewModel by viewModels {
-        val appContainer = (requireActivity().application as ItmoWidgetsApp).appContainer
-        ScheduleViewModelFactory(appContainer.scheduleRepository)
+        ScheduleViewModelFactory(requireContext())
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

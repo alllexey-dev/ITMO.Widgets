@@ -47,6 +47,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
             binding.timeTextView.text = "${apiLesson.timeSlotStart}-${apiLesson.timeSlotEnd}"
             binding.teacherTextView.text = apiLesson.teacherFio
             binding.locationTextView.text = apiLesson.roomName
+            binding.intersectionIndicator.isVisible = apiLesson.intersection == true
 
             bindBadges(lessonData)
             bindProgress(lessonData)
@@ -57,13 +58,9 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
             val apiLesson = lessonData.apiData
             val isFull = lessonData.isReal && (apiLesson.available ?: 0) <= 0 && apiLesson.signed != true
 
-            binding.intersectionBadge.isVisible = apiLesson.intersection == true
+            binding.typeText.text = SportUtils.getSportLessonTypeName(lessonData.apiData)
             binding.predictionBadge.isVisible = !lessonData.isReal
             binding.fullBadge.isVisible = isFull
-
-            binding.badgesLayout.isVisible = binding.intersectionBadge.isVisible ||
-                    binding.predictionBadge.isVisible ||
-                    binding.fullBadge.isVisible
         }
 
         private fun bindProgress(lessonData: SportLessonData) {

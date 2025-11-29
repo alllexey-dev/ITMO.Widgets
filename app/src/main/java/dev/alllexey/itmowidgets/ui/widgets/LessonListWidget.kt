@@ -8,8 +8,8 @@ import android.content.Intent
 import android.widget.RemoteViews
 import androidx.core.net.toUri
 import dev.alllexey.itmowidgets.AppIntents
-import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.appContainer
 import dev.alllexey.itmowidgets.ui.main.MainActivity
 import dev.alllexey.itmowidgets.workers.LessonWidgetUpdateWorker
 
@@ -21,7 +21,7 @@ class LessonListWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager?,
         appWidgetIds: IntArray?
     ) {
-        val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
+        val appContainer = context.appContainer()
         appContainer.storage.utility.setLessonWidgetStyleChanged(true)
         LessonWidgetUpdateWorker.Companion.enqueueImmediateUpdate(context)
     }

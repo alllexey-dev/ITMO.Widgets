@@ -10,6 +10,7 @@ sealed class UnavailableReason(val shortDescription: String, val weight: Int) {
     object DailyLimitReached : UnavailableReason("Лимит записей на день", 40)
     object WeeklyLimitReached : UnavailableReason("Лимит записей на неделе", 50)
     object SelectionFailed : UnavailableReason("Не пройден отбор", 60)
+    object ExternatOnly : UnavailableReason("Занятие для экстерната", 65)
     object HealthGroupMismatch : UnavailableReason("Другая группа здоровья", 70)
     object LessonInPast : UnavailableReason("Занятие в прошлом", 90)
     class Other(reason: String) : UnavailableReason(reason, 100)
@@ -42,6 +43,7 @@ sealed class UnavailableReason(val shortDescription: String, val weight: Int) {
                 reasonString.startsWith("Выбрано 1 занятие в этот день") -> DailyLimitReached
                 reasonString.startsWith("Нет необходимой группы здоровья") -> HealthGroupMismatch
                 reasonString.startsWith("Есть запись на занятия в это время") -> TimeConflict
+                reasonString.startsWith("Занятие для экстерната") -> ExternatOnly
                 reasonString.startsWith("Вы уже записаны") -> AlreadyEnrolled
                 else -> Other(reasonString)
             }

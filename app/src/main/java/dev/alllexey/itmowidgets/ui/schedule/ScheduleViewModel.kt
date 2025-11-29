@@ -1,10 +1,12 @@
 package dev.alllexey.itmowidgets.ui.schedule
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import api.myitmo.model.schedule.Schedule
+import dev.alllexey.itmowidgets.appContainer
 import kotlinx.coroutines.launch
 import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
 import java.time.Duration
@@ -17,7 +19,8 @@ sealed class ScheduleUiState {
 }
 
 class ScheduleViewModel(
-    private val scheduleRepository: ScheduleRepository
+    private val context: Context,
+    private val scheduleRepository: ScheduleRepository = context.appContainer().scheduleRepository
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData<ScheduleUiState>()
@@ -42,7 +45,8 @@ class ScheduleViewModel(
                 _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
                 dateRange = startDate..endDate
             } catch (e: Exception) {
-                val errorMessage = "Failed to update schedule: ${e.message}"
+                context.appContainer().errorLogRepository.logThrowable(e, javaClass.name)
+                val errorMessage = "Ошибка загрузки данных"
                 _uiState.postValue(ScheduleUiState.Error(errorMessage))
                 e.printStackTrace()
             } finally {

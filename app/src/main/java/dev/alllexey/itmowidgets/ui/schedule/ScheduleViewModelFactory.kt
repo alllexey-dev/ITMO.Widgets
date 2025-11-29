@@ -1,17 +1,17 @@
 package dev.alllexey.itmowidgets.ui.schedule
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
 
 class ScheduleViewModelFactory(
-    private val scheduleRepository: ScheduleRepository
+    private val context: Context
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ScheduleViewModel::class.java)) {
-            return ScheduleViewModel(scheduleRepository) as T
+            return ScheduleViewModel(context) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

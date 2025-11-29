@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import api.myitmo.MyItmoApi
 import api.myitmo.model.sport.ChosenSportSection
 import api.myitmo.model.sport.SportScore
-import dev.alllexey.itmowidgets.ItmoWidgetsApp
+import dev.alllexey.itmowidgets.appContainer
 import dev.alllexey.itmowidgets.core.model.BasicSportLessonData
 import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
 import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
@@ -19,10 +19,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 data class SportMeUiState(
     val isLoading: Boolean = true,
@@ -52,14 +52,13 @@ class SportMeViewModel(
     context: Context
 ) : ViewModel() {
 
-    private val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
+    private val appContainer = context.appContainer()
     private val widgetsApi by lazy { appContainer.itmoWidgets.api() }
     private val settings by lazy { appContainer.storage.settings }
 
     private val _uiState = MutableStateFlow(SportMeUiState())
     val uiState: StateFlow<SportMeUiState> = _uiState.asStateFlow()
 
-    private val dateFormatter = DateTimeFormatter.ofPattern("d MMMM", Locale("ru"))
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     init {
@@ -70,33 +69,36 @@ class SportMeViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                val scoreDeferred = async { myItmo.getSportScore(null).execute().body()!!.result }
-                val signedDeferred = async { myItmo.chosenSportSections.execute().body()!!.result }
+                supervisorScope {
+                    val scoreDeferred = async { myItmo.getSportScore(null).execute().body()!!.result }
+                    val signedDeferred = async { myItmo.chosenSportSections.execute().body()!!.result }
 
-                val customServicesEnabled = settings.getCustomServicesState()
-                val freeSignDeferred = if (customServicesEnabled) async { widgetsApi.mySportFreeSignEntries() } else null
-                val autoSignDeferred = if (customServicesEnabled) async { widgetsApi.mySportAutoSignEntries() } else null
+                    val customServicesEnabled = settings.getCustomServicesState()
+                    val freeSignDeferred = if (customServicesEnabled) async { widgetsApi.mySportFreeSignEntries() } else null
+                    val autoSignDeferred = if (customServicesEnabled) async { widgetsApi.mySportAutoSignEntries() } else null
 
-                val score = scoreDeferred.await()
-                val signedLessons = signedDeferred.await()
-                val freeSignEntries = freeSignDeferred?.await()?.data ?: emptyList()
-                val autoSignEntries = autoSignDeferred?.await()?.data ?: emptyList()
+                    val score = scoreDeferred.await()
+                    val signedLessons = signedDeferred.await()
+                    val freeSignEntries = freeSignDeferred?.await()?.data ?: emptyList()
+                    val autoSignEntries = autoSignDeferred?.await()?.data ?: emptyList()
 
-                val signedModels = mapSignedLessons(signedLessons, freeSignEntries, autoSignEntries)
-                val freeSignModels = mapFreeSignEntries(freeSignEntries, signedModels)
-                val autoSignModels = mapAutoSignEntries(autoSignEntries, signedModels)
+                    val signedModels = mapSignedLessons(signedLessons, freeSignEntries, autoSignEntries)
+                    val freeSignModels = mapFreeSignEntries(freeSignEntries, signedModels)
+                    val autoSignModels = mapAutoSignEntries(autoSignEntries, signedModels)
 
-                val allItems = (signedModels + freeSignModels + autoSignModels)
-                    .filter { it.dateTime.isAfter(OffsetDateTime.now().minusHours(1)) }
-                    .sortedBy { it.dateTime }
+                    val allItems = (signedModels + freeSignModels + autoSignModels)
+                        .filter { it.dateTime.isAfter(OffsetDateTime.now().minusHours(1)) }
+                        .sortedBy { it.dateTime }
 
-                _uiState.update {
-                    it.copy(
-                        score = score,
-                        listItems = allItems
-                    )
+                    _uiState.update {
+                        it.copy(
+                            score = score,
+                            listItems = allItems
+                        )
+                    }
                 }
             } catch (e: Exception) {
+                appContainer.errorLogRepository.logThrowable(e, javaClass.name)
                 e.printStackTrace()
                 _uiState.update { it.copy(errorMessage = "Ошибка загрузки данных") }
             } finally {

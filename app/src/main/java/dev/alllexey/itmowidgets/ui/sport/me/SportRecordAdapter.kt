@@ -7,16 +7,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import androidx.annotation.ColorInt
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.appContainer
 import dev.alllexey.itmowidgets.databinding.ItemSportRecordBinding
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import androidx.core.net.toUri
-import dev.alllexey.itmowidgets.ItmoWidgetsApp
 
 interface SportRecordListener {
     fun onUnSignClick(model: SportRecordUiModel)
@@ -66,7 +66,7 @@ class SportRecordAdapter(val listener: SportRecordListener) : ListAdapter<SportR
             }
 
             val context = root.context
-            val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
+            val appContainer = context.appContainer()
             val colorUtil = appContainer.colorUtil
 
             when (item.type) {

@@ -14,6 +14,7 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.appContainer
 import dev.alllexey.itmowidgets.ui.widgets.data.QrWidgetState
 import dev.alllexey.itmowidgets.workers.QrAnimationWorker
 import dev.alllexey.itmowidgets.workers.QrWidgetUpdateWorker
@@ -49,7 +50,7 @@ class QrCodeWidget : AppWidgetProvider() {
             )
 
             if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
+                val appContainer = context.appContainer()
                 val state = appContainer.storage.utility.getQrWidgetState(appWidgetId)
                 when (state) {
                     QrWidgetState.SPOILER -> startAnimationWorker(context, appWidgetId)

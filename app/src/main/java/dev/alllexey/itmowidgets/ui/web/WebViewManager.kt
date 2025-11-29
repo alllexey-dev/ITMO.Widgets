@@ -14,7 +14,7 @@ import android.webkit.WebViewClient
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import api.myitmo.storage.Storage
 import dev.alllexey.itmowidgets.AppContainer
-import dev.alllexey.itmowidgets.ItmoWidgetsApp
+import dev.alllexey.itmowidgets.appContainer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,7 +48,7 @@ class WebViewManager(
                 swipeRefreshLayout.isRefreshing = true
                 injectInterceptorScript(view)
                 if (forceStorageCookies && view.url?.startsWith("https://my.itmo.ru") == true) {
-                    val appContainer = (context.applicationContext as ItmoWidgetsApp).appContainer
+                    val appContainer = context.appContainer()
                     try {
                         appContainer.myItmo.validTokens
                         setAuthCookies(appContainer.storage.myItmo)

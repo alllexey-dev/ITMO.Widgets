@@ -17,6 +17,7 @@ interface FilterActionsListener {
     fun onSportClick()
     fun onFreeAttendanceChanged(isChecked: Boolean)
     fun onShowOnlyAvailableChanged(isChecked: Boolean)
+    fun onShowAutoSignChanged(isChecked: Boolean)
     fun onBuildingSelected(building: String)
     fun onTeacherSelected(teacher: String)
     fun onTimeSelected(time: String)
@@ -80,6 +81,9 @@ class FiltersHeaderAdapter(
             }
             binding.availableSportChip.setOnCheckedChangeListener { _, isChecked ->
                 listener.onShowOnlyAvailableChanged(isChecked)
+            }
+            binding.autoSignSportChip.setOnCheckedChangeListener { _, isChecked ->
+                listener.onShowAutoSignChanged(isChecked)
             }
 
             binding.sportEditText.setOnClickListener { listener.onSportClick() }

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets
 
 import android.app.Application
+import android.content.Context
 import dev.alllexey.itmowidgets.util.GlobalExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -23,4 +24,8 @@ class ItmoWidgetsApp : Application() {
             appContainer.errorLogRepository.checkPendingCrashes()
         }
     }
+}
+
+fun Context.appContainer(): AppContainer {
+    return (this.applicationContext as ItmoWidgetsApp).appContainer
 }

@@ -12,8 +12,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import api.myitmo.model.schedule.Lesson
 import api.myitmo.model.schedule.Schedule
-import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.appContainer
 import dev.alllexey.itmowidgets.util.ColorUtil
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 import java.time.Duration
@@ -40,7 +40,7 @@ class DayScheduleAdapter :
         val date = daySchedule.date
         val lessons = daySchedule.lessons
         val context = holder.itemView.context
-        if (!this::colorUtil.isInitialized) colorUtil = (context.applicationContext as ItmoWidgetsApp).appContainer.colorUtil
+        if (!this::colorUtil.isInitialized) colorUtil = context.appContainer().colorUtil
 
         holder.dayTitle.text = ScheduleUtils.getRuDayOfWeek(date.dayOfWeek)
         holder.dayDate.text =
