@@ -27,7 +27,7 @@ sealed class UnavailableReason(val shortDescription: String, val weight: Int) {
                 reasons.add(LessonInPast)
             }
 
-            if (lesson.available != null && lesson.available <= 0 && lesson.signed != true) {
+            if ((lesson.available ?: 1) <= 0 && lesson.signed != true) {
                 reasons.add(Full)
             }
 
