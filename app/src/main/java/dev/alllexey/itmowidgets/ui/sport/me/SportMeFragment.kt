@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.FragmentSportMeBinding
 import dev.alllexey.itmowidgets.ui.misc.CircularProgressBar
 import dev.alllexey.itmowidgets.ui.sport.SportFragment
+import dev.alllexey.itmowidgets.util.getColorFromAttr
 import dev.alllexey.itmowidgets.util.withSaturation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,6 +61,12 @@ class SportMeFragment : Fragment(R.layout.fragment_sport_me), SportRecordListene
         binding.swipeRefreshLayout.setOnRefreshListener {
             viewModel.loadData()
         }
+
+        val colorPrimary = requireContext().getColorFromAttr(android.R.attr.colorPrimary)
+        binding.swipeRefreshLayout.setColorSchemeColors(colorPrimary)
+
+        val colorBackground = requireContext().getColorFromAttr(com.google.android.material.R.attr.colorSurfaceContainerHigh)
+        binding.swipeRefreshLayout.setProgressBackgroundColorSchemeColor(colorBackground)
 
         binding.btnGoToSchedule.setOnClickListener {
             (parentFragment as SportFragment).changeView(2)

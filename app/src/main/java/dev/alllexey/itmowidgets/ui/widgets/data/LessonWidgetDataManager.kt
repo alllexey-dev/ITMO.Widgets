@@ -79,7 +79,7 @@ class LessonWidgetDataManager(
                 teacher = if (hideTeacher) null else lesson.teacherName,
                 workTypeId = lesson.workTypeId,
                 room = ScheduleUtils.shortenRoom(lesson.room) ?: "нет кабинета",
-                building = ScheduleUtils.shortenBuildingName(lesson.building),
+                building = ScheduleUtils.shortenBuildingName(lesson.building, force = true),
                 moreLessonsText = moreLessonsText,
                 layoutId = layoutId
             )
@@ -118,7 +118,7 @@ class LessonWidgetDataManager(
                     teacher = if (hideTeacher) null else lesson.teacherName,
                     workTypeId = lesson.workTypeId,
                     room = ScheduleUtils.shortenRoom(lesson.room) ?: "нет кабинета",
-                    building = ScheduleUtils.shortenBuildingName(lesson.building),
+                    building = ScheduleUtils.shortenBuildingName(lesson.building, force = true),
                     layoutId = layoutId
                 )
             } + LessonListWidgetEntry.LessonListEnd(isTomorrow)

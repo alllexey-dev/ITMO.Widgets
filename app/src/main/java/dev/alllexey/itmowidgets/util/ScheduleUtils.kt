@@ -74,18 +74,20 @@ object ScheduleUtils {
         return room
     }
 
-    fun shortenBuildingName(building: String?): String? {
+    fun shortenBuildingName(building: String?, force: Boolean = false): String? {
         if (building == null) return null
         val name = building.lowercase()
         if (name.contains("кронв")) return "Кронва"
         if (name.contains("ломо")) return "Ломо"
         if (name.contains("гривц")) return "Гривцова"
         if (name.contains("бирж")) return "Биржевая"
-
+        if (name.contains("песоч")) return "Песочка"
+        if (name.contains("чайк")) return "Чайка"
         if (name.contains("вязем")) return "Вязьма"
 
-        return building.substring(0, 6)
+        return if (force) building.substring(0, 10) else building
     }
+
 
     fun getRuDayOfWeek(dayOfWeek: DayOfWeek): String {
         return when (dayOfWeek) {
@@ -116,9 +118,24 @@ object ScheduleUtils {
             2 -> R.color.lab_color
             3 -> R.color.practice_color
             4,5,6,7,8,9 -> R.color.red_lesson_color // idk what is this meant for
-            10 -> R.color.sport_color
+            10 -> R.color.consultation_color
             11 -> R.color.free_sport_color
             else -> R.color.subtext_color
+        }
+    }
+
+    fun getWorkTypeName(workTypeId: Int): String {
+        return when (workTypeId) {
+            -1 -> "Нет пар"
+            1 -> "Лекция"
+            2 -> "Лабораторная"
+            3 -> "Практика"
+            5 -> "Экзамен"
+            6 -> "Зачёт"
+            7,8,9 -> "Пара" // idk what is this meant for
+            10 -> "Консультация"
+            11 -> "Спорт"
+            else -> "Пара"
         }
     }
 }

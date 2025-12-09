@@ -52,10 +52,10 @@
                 android:visibility="gone">
 
                 <ImageView
-                    android:layout_width="10dp"
+                    android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:layout_marginEnd="4dp"
-                    android:src="@drawable/ic_user"
+                    android:src="@drawable/ic_person"
                     android:tint="?attr/colorOnSurfaceVariant" />
 
                 <TextView
@@ -84,7 +84,7 @@
                     android:visibility="gone">
 
                     <ImageView
-                        android:layout_width="10dp"
+                        android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:layout_marginEnd="4dp"
                         android:src="@drawable/ic_location"
@@ -120,10 +120,10 @@
                     android:visibility="gone">
 
                     <ImageView
-                        android:layout_width="10dp"
+                        android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:layout_marginEnd="4dp"
-                        android:src="@drawable/ic_clock"
+                        android:src="@drawable/ic_schedule"
                         android:tint="?attr/colorOnSurfaceVariant" />
 
                     <TextView

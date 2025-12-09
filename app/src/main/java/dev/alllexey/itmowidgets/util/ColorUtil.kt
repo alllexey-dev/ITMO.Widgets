@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.util
 
 import android.content.Context
+import android.util.TypedValue
 import android.view.ContextThemeWrapper
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
@@ -58,4 +59,11 @@ fun Int.withLightness(factor: Float): Int {
     ColorUtils.colorToHSL(this, hsl)
     hsl[2] = (hsl[2] * factor).coerceIn(0f, 1f)
     return ColorUtils.HSLToColor(hsl)
+}
+
+@ColorInt
+fun Context.getColorFromAttr(@AttrRes attrColor: Int): Int {
+    val typedValue = TypedValue()
+    theme.resolveAttribute(attrColor, typedValue, true)
+    return typedValue.data
 }

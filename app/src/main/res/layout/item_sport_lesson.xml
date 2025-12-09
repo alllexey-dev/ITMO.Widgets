@@ -81,6 +81,7 @@
                     android:layout_marginEnd="8dp"
                     android:visibility="visible"
                     app:cardBackgroundColor="?attr/colorSecondaryContainer"
+                    app:cardCornerRadius="8dp"
                     tools:visibility="visible">
 
                     <LinearLayout
@@ -115,6 +116,7 @@
                     android:layout_marginEnd="8dp"
                     android:visibility="gone"
                     app:cardBackgroundColor="?attr/colorTertiaryContainer"
+                    app:cardCornerRadius="8dp"
                     tools:visibility="visible">
 
                     <LinearLayout
@@ -149,6 +151,7 @@
                     android:layout_marginEnd="8dp"
                     android:visibility="gone"
                     app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                    app:cardCornerRadius="8dp"
                     tools:visibility="visible">
 
                     <LinearLayout
@@ -181,6 +184,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:orientation="vertical"
+                app:cardCornerRadius="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/badges_layout">
@@ -193,10 +197,10 @@
                     android:ellipsize="end"
                     android:gravity="center_vertical"
                     android:maxLines="1"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textColor="?attr/colorOnSurfaceVariant"
-                    app:drawableStartCompat="@drawable/ic_user"
-                    app:drawableTint="?attr/colorOutline"
+                    app:drawableStartCompat="@drawable/ic_person"
+                    app:drawableTint="?attr/colorOnSurfaceVariant"
                     tools:text="Иванов Иван Иванович" />
 
                 <TextView
@@ -208,10 +212,10 @@
                     android:ellipsize="end"
                     android:gravity="center_vertical"
                     android:maxLines="1"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     app:drawableStartCompat="@drawable/ic_location"
-                    app:drawableTint="?attr/colorOutline"
+                    app:drawableTint="?attr/colorOnSurfaceVariant"
                     tools:text="Кронверкский пр., д.49, Тренажерный зал" />
             </LinearLayout>
 
@@ -240,7 +244,7 @@
                         android:id="@+id/sign_up_button"
                         style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="40dp"
                         android:minWidth="100dp"
                         android:text="Записаться" />
 

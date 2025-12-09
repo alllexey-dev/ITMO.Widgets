@@ -44,7 +44,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
             val apiLesson = lessonData.apiData
 
             binding.sectionNameTextView.text = SportUtils.shortenSectionName(apiLesson.sectionName)
-            binding.timeTextView.text = "${apiLesson.timeSlotStart}-${apiLesson.timeSlotEnd}"
+            binding.timeTextView.text = "${apiLesson.date.toLocalTime()}-${apiLesson.dateEnd.toLocalTime()}"
             binding.teacherTextView.text = apiLesson.teacherFio
             binding.locationTextView.text = apiLesson.roomName
             binding.intersectionIndicator.isVisible = apiLesson.intersection == true

@@ -1,18 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="20dp"
-    android:paddingBottom="14dp">
+    android:minHeight="48dp">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/timeline_guide_break"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="50dp" />
+
+    <View
+        android:id="@+id/break_line"
+        android:layout_width="2dp"
+        android:layout_height="0dp"
+        android:background="?attr/colorOutlineVariant"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@id/timeline_guide_break"
+        app:layout_constraintEnd_toEndOf="@id/timeline_guide_break"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/break_text"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Большой перерыв"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:textSize="14sp"
-        android:textStyle="italic" />
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="16dp"
+        android:textColor="?attr/colorOutline"
+        android:textSize="12sp"
+        android:textStyle="italic"
+        tools:text="Перерыв с 11:20 по 13:30"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/timeline_guide_break"
+        app:layout_constraintTop_toTopOf="parent" />
 
-</FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

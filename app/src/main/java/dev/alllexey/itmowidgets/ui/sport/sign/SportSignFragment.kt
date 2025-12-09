@@ -22,6 +22,7 @@ import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.FragmentSportSignBinding
 import dev.alllexey.itmowidgets.ui.misc.SelectableItem
+import dev.alllexey.itmowidgets.util.getColorFromAttr
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.time.LocalDate
@@ -53,6 +54,11 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        val colorPrimary = requireContext().getColorFromAttr(android.R.attr.colorPrimary)
+        binding.swipeRefreshLayout.setColorSchemeColors(colorPrimary)
+
+        val colorBackground = requireContext().getColorFromAttr(com.google.android.material.R.attr.colorSurfaceContainerHigh)
+        binding.swipeRefreshLayout.setProgressBackgroundColorSchemeColor(colorBackground)
         setupUIListeners()
         observeViewModel()
     }

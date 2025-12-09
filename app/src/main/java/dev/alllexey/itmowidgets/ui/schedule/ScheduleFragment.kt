@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.util.getColorFromAttr
 import java.time.Duration
 import java.time.LocalDate
 
@@ -33,6 +34,12 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout)
         outerRecyclerView = view.findViewById(R.id.outerRecyclerView)
 
+        val colorPrimary = requireContext().getColorFromAttr(android.R.attr.colorPrimary)
+        swipeRefreshLayout.setColorSchemeColors(colorPrimary)
+
+        val colorBackground = requireContext().getColorFromAttr(com.google.android.material.R.attr.colorSurfaceContainerHigh)
+        swipeRefreshLayout.setProgressBackgroundColorSchemeColor(colorBackground)
+
         setupRecyclerView()
         observeUiState()
 
@@ -40,7 +47,9 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
             scheduleViewModel.fetchScheduleData()
         }
 
-        scheduleViewModel.fetchScheduleData()
+        if (savedInstanceState == null) {
+            scheduleViewModel.fetchScheduleData()
+        }
     }
 
     override fun onResume() {
@@ -54,77 +63,70 @@ class ScheduleFragment : Fragment(R.layout.fragment_schedule) {
     }
 
     private fun setupRecyclerView() {
-        outerRecyclerView.layoutManager =
-            LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
-
+        outerRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         dayScheduleAdapter = DayScheduleAdapter()
         outerRecyclerView.adapter = dayScheduleAdapter
 
         outerRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
                 val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
-                val totalItemCount = dayScheduleAdapter.itemCount
-
-                if (totalItemCount > 0) {
-                    if (lastVisibleItemPosition > totalItemCount - 3 && dy > 0) {
-                        scheduleViewModel.fetchNextDays()
-                    }
+                val lastVisible = layoutManager.findLastVisibleItemPosition()
+                val total = dayScheduleAdapter.itemCount
+                if (total > 0 && lastVisible > total - 3) {
+                    scheduleViewModel.fetchNextDays()
                 }
             }
         })
     }
 
-    private var isInitialLoad = true
-
     private fun observeUiState() {
         scheduleViewModel.uiState.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is ScheduleUiState.Loading -> {
-                    swipeRefreshLayout.isRefreshing = true
-                    outerRecyclerView.visibility = View.VISIBLE
+                    if (dayScheduleAdapter.itemCount == 0) swipeRefreshLayout.isRefreshing = true
                 }
-
                 is ScheduleUiState.Success -> {
-                    val scheduleList = state.schedule
-                    val layoutManager = outerRecyclerView.layoutManager as LinearLayoutManager
-
-                    if (isInitialLoad && scheduleList.isNotEmpty()) {
-                        dayScheduleAdapter.submitList(scheduleList) {
-                            val todayIndex = scheduleList.indexOfFirst { it.date == LocalDate.now() }
-                            if (todayIndex != -1) {
-                                layoutManager.scrollToPosition(todayIndex)
-                            }
-                        }
-                        isInitialLoad = false
-                    } else {
-                        dayScheduleAdapter.submitList(scheduleList)
-                    }
-
                     swipeRefreshLayout.isRefreshing = state.isStillUpdating
-                    outerRecyclerView.visibility = View.VISIBLE
+                    dayScheduleAdapter.submitList(state.schedule) {
+                        if (dayScheduleAdapter.itemCount > 0 && state.schedule.isNotEmpty()) {
+                            scrollToToday(state.schedule)
+                        }
+                    }
                 }
-
                 is ScheduleUiState.Error -> {
                     swipeRefreshLayout.isRefreshing = false
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+    }
+
+    private var hasScrolledToToday = false
+
+    private fun scrollToToday(schedule: List<api.myitmo.model.schedule.Schedule>) {
+        if (hasScrolledToToday) return
+
+        val today = LocalDate.now()
+        val index = schedule.indexOfFirst { it.date >= today }
+        if (index != -1) {
+            (outerRecyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(index, 20)
+            hasScrolledToToday = true
         }
     }
 
     private fun startLessonStateUpdater() {
         updateTimeRunnable = object : Runnable {
             override fun run() {
-                handler.postDelayed(this, Duration.ofMinutes(5).toMillis())
                 dayScheduleAdapter.updateLessonStates()
+                handler.postDelayed(this, 60_000)
             }
         }
         handler.post(updateTimeRunnable)
     }
 
     private fun stopLessonStateUpdater() {
-        handler.removeCallbacks(updateTimeRunnable)
+        if(::updateTimeRunnable.isInitialized) {
+            handler.removeCallbacks(updateTimeRunnable)
+        }
     }
 }

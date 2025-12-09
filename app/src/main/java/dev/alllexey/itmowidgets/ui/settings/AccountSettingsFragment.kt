@@ -57,6 +57,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
         val allowBackend = findPreference<SwitchPreference>(CUSTOM_SERVICES_ALLOW_KEY)
         allowBackend?.setOnPreferenceChangeListener { preference, newValue ->
+            appContainer.storage.itmoWidgets.clearTokens()
             val firebaseToken = appContainer.storage.utility.getFirebaseToken()
             if (firebaseToken != null && newValue as Boolean) {
                 CoroutineScope(Dispatchers.IO).launch {

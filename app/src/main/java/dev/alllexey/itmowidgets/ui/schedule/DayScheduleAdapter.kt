@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.ui.schedule
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,9 +11,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import api.myitmo.model.schedule.Lesson
 import api.myitmo.model.schedule.Schedule
+import com.google.android.material.card.MaterialCardView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.appContainer
-import dev.alllexey.itmowidgets.util.ColorUtil
 import dev.alllexey.itmowidgets.util.ScheduleUtils
 import java.time.Duration
 import java.time.LocalDate
@@ -27,8 +25,6 @@ class DayScheduleAdapter :
 
     private val viewPool = RecyclerView.RecycledViewPool()
 
-    private lateinit var colorUtil: ColorUtil
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_day_schedule, parent, false)
@@ -40,28 +36,31 @@ class DayScheduleAdapter :
         val date = daySchedule.date
         val lessons = daySchedule.lessons
         val context = holder.itemView.context
-        if (!this::colorUtil.isInitialized) colorUtil = context.appContainer().colorUtil
 
-        holder.dayTitle.text = ScheduleUtils.getRuDayOfWeek(date.dayOfWeek)
-        holder.dayDate.text =
-            "${date.dayOfMonth} ${ScheduleUtils.getRussianMonthInGenitiveCase(date.monthValue)}"
-        val numberOfLessonsText = if (lessons.isEmpty()) {
-            "нет пар"
-        } else {
-            "${lessons.size} ${ScheduleUtils.lessonDeclension(lessons.size)}"
-        }
-        holder.numberOfLessons.text = numberOfLessonsText
+        holder.dayTitle.text = ScheduleUtils.getRuDayOfWeek(date.dayOfWeek).replaceFirstChar { it.uppercase() }
+        holder.dayDate.text = "${date.dayOfMonth} ${ScheduleUtils.getRussianMonthInGenitiveCase(date.monthValue)}"
+
+        holder.numberOfLessons.text = if (lessons.isEmpty()) "Нет пар" else "${lessons.size} ${ScheduleUtils.lessonDeclension(lessons.size)}"
 
         val today = LocalDate.now()
-        if (date.isBefore(today) || lessons.isEmpty()) {
-            val color = if (date.equals(today)) colorUtil.getTertiaryColor(Color.WHITE)
-            else colorUtil.getSecondaryColor(Color.GRAY)
-            holder.dayTitle.setTextColor(color)
-            holder.itemRoot.alpha = 0.6f
+        val isToday = date.equals(today)
+
+        if (isToday) {
+            holder.card.strokeWidth = 3
+            holder.card.strokeColor = context.getColorFromAttr(android.R.attr.colorPrimary)
+            holder.dayTitle.setTextColor(context.getColorFromAttr(android.R.attr.colorPrimary))
+            holder.card.elevation = 8f
+            holder.numberOfLessons.setBackgroundResource(R.drawable.shape_pill_outline_selected)
         } else {
-            val color = if (date.equals(today)) colorUtil.getTertiaryColor(Color.WHITE)
-            else colorUtil.getPrimaryColor(Color.GRAY)
-            holder.dayTitle.setTextColor(color)
+            holder.card.strokeWidth = 0
+            holder.dayTitle.setTextColor(context.getColorFromAttr(com.google.android.material.R.attr.colorOnSurface))
+            holder.card.elevation = 0f
+            holder.numberOfLessons.setBackgroundResource(R.drawable.shape_pill_outline)
+        }
+
+        if (date.isBefore(today)) {
+            holder.itemRoot.alpha = 0.5f
+        } else {
             holder.itemRoot.alpha = 1.0f
         }
 
@@ -73,7 +72,6 @@ class DayScheduleAdapter :
 
         val processed = processLessonsWithBreaks(lessons, date)
         layoutManager.initialPrefetchItemCount = processed.size
-
         val lessonAdapter = LessonAdapter(processed)
 
         holder.innerRecyclerView.layoutManager = layoutManager
@@ -81,24 +79,20 @@ class DayScheduleAdapter :
         holder.innerRecyclerView.setRecycledViewPool(viewPool)
     }
 
-    // this definitely could be improved
     fun updateLessonStates() {
-        notifyDataSetChanged()
+        notifyItemRangeChanged(0, itemCount, "PAYLOAD_UPDATE_TIME")
     }
 
     inner class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val itemRoot: LinearLayout = itemView.findViewById(R.id.dayItemRoot)
+        val card: MaterialCardView = itemView.findViewById(R.id.day_card)
+        val itemRoot: LinearLayout = itemView.findViewById(R.id.day_card_root)
         val dayTitle: TextView = itemView.findViewById(R.id.day_title)
         val numberOfLessons: TextView = itemView.findViewById(R.id.number_of_lessons)
         val dayDate: TextView = itemView.findViewById(R.id.day_date)
         val innerRecyclerView: RecyclerView = itemView.findViewById(R.id.inner_recycler_view)
     }
 
-    private fun processLessonsWithBreaks(
-        lessons: List<Lesson>,
-        date: LocalDate
-    ): List<ScheduleItem> {
-        val BIG_BREAK_THRESHOLD = Duration.ofMinutes(60)
+    private fun processLessonsWithBreaks(lessons: List<Lesson>, date: LocalDate): List<ScheduleItem> {
         val now = LocalDateTime.now()
         val processedList = mutableListOf<ScheduleItem>()
         val sortedLessons = lessons.sortedBy { it.timeStart }
@@ -106,11 +100,13 @@ class DayScheduleAdapter :
         sortedLessons.forEachIndexed { index, currentLesson ->
             val lessonStartTime = ScheduleUtils.parseTime(date, currentLesson.timeStart)
             val lessonEndTime = ScheduleUtils.parseTime(date, currentLesson.timeEnd)
+
             val lessonState = when {
                 lessonEndTime < now -> ScheduleItem.LessonState.COMPLETED
-                lessonStartTime < now -> ScheduleItem.LessonState.CURRENT
+                lessonStartTime <= now && lessonEndTime >= now -> ScheduleItem.LessonState.CURRENT
                 else -> ScheduleItem.LessonState.UPCOMING
             }
+
             processedList.add(ScheduleItem.LessonItem(currentLesson, lessonState))
 
             if (index < sortedLessons.size - 1) {
@@ -121,7 +117,7 @@ class DayScheduleAdapter :
                     val nextStartTime =
                         LocalTime.parse(nextLesson.timeStart, DateTimeFormatter.ofPattern("HH:mm"))
                     val breakDuration = Duration.between(currentEndTime, nextStartTime)
-                    if (breakDuration.abs() > BIG_BREAK_THRESHOLD) {
+                    if (breakDuration > BIG_BREAK_THRESHOLD) {
                         processedList.add(ScheduleItem.BreakItem(currentEndTime, nextStartTime))
                     }
                 } catch (e: Exception) {
@@ -131,27 +127,23 @@ class DayScheduleAdapter :
         }
 
         if (processedList.isEmpty()) {
-            val nowDate = now.toLocalDate()
-            val lessonState = when {
-                date < nowDate -> ScheduleItem.LessonState.COMPLETED
-                date > nowDate -> ScheduleItem.LessonState.UPCOMING
-                else -> ScheduleItem.LessonState.CURRENT
-            }
-            return listOf(ScheduleItem.NoLessonsItem(lessonState))
+            return listOf(ScheduleItem.NoLessonsItem(ScheduleItem.LessonState.COMPLETED))
         }
 
         return processedList
     }
 
     companion object {
+        private val BIG_BREAK_THRESHOLD = Duration.ofMinutes(60)
         private val ScheduleDiffCallback = object : DiffUtil.ItemCallback<Schedule>() {
-            override fun areItemsTheSame(oldItem: Schedule, newItem: Schedule): Boolean {
-                return oldItem.date == newItem.date
-            }
-
-            override fun areContentsTheSame(oldItem: Schedule, newItem: Schedule): Boolean {
-                return oldItem == newItem
-            }
+            override fun areItemsTheSame(oldItem: Schedule, newItem: Schedule) = oldItem.date == newItem.date
+            override fun areContentsTheSame(oldItem: Schedule, newItem: Schedule) = oldItem == newItem
         }
+    }
+
+    private fun android.content.Context.getColorFromAttr(attr: Int): Int {
+        val typedValue = android.util.TypedValue()
+        theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 }

@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.Material3.CardView.Elevated"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="6dp"
-    app:cardElevation="2dp"
     app:cardCornerRadius="16dp"
-    style="@style/Widget.Material3.CardView.Elevated">
+    app:cardElevation="2dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -23,9 +22,9 @@
             app:cardBackgroundColor="?attr/colorSurfaceVariant"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
-            app:strokeWidth="0dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -37,18 +36,18 @@
                     android:id="@+id/dateDayTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textStyle="bold"
-                    android:textSize="20sp"
                     android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
                     tools:text="15" />
 
                 <TextView
                     android:id="@+id/dateMonthTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="11sp"
                     android:textAllCaps="true"
                     android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="11sp"
                     tools:text="НОЯ" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -59,12 +58,12 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginEnd="8dp"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-            android:textStyle="bold"
-            android:maxLines="2"
             android:ellipsize="end"
-            app:layout_constraintStart_toEndOf="@id/dateBadgeCard"
+            android:maxLines="2"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@+id/optionsMenu"
+            app:layout_constraintStart_toEndOf="@id/dateBadgeCard"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Фитнес (функциональный)" />
 
@@ -72,27 +71,27 @@
             android:id="@+id/optionsMenu"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:padding="4dp"
-            android:src="@drawable/ic_more_vert"
-            app:tint="?attr/colorOnSurfaceVariant"
+            android:layout_marginTop="-4dp"
+            android:layout_marginEnd="-4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
-            android:focusable="true"
             android:contentDescription="Опции"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_more_vert"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginEnd="-4dp"
-            android:layout_marginTop="-4dp" />
+            app:tint="?attr/colorOnSurfaceVariant" />
 
         <TextView
             android:id="@+id/timeTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?android:attr/textColorSecondary"
-            app:layout_constraintStart_toStartOf="@id/recordTitleTextView"
             app:layout_constraintEnd_toEndOf="@id/optionsMenu"
+            app:layout_constraintStart_toStartOf="@id/recordTitleTextView"
             app:layout_constraintTop_toBottomOf="@id/recordTitleTextView"
             tools:text="Сегодня • 19:00 - 20:30" />
 
@@ -101,13 +100,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:visibility="visible"
             app:cardBackgroundColor="?attr/colorSecondaryContainer"
             app:cardCornerRadius="8dp"
             app:cardElevation="0dp"
-            app:strokeWidth="0dp"
-            android:visibility="visible"
             app:layout_constraintStart_toStartOf="@id/recordTitleTextView"
-            app:layout_constraintTop_toBottomOf="@id/timeTextView">
+            app:layout_constraintTop_toBottomOf="@id/timeTextView"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -118,9 +117,9 @@
 
                 <ImageView
                     android:id="@+id/statusIcon"
-                    android:layout_marginTop="1dp"
                     android:layout_width="16dp"
                     android:layout_height="16dp"
+                    android:layout_marginTop="1dp"
                     android:src="@drawable/ic_group"
                     app:tint="?attr/colorOnSurface" />
 
@@ -129,7 +128,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
                     android:textColor="?attr/colorOnSurface"
                     tools:text="В очереди: 5 из 20" />
             </LinearLayout>
@@ -142,13 +141,13 @@
             android:layout_marginTop="8dp"
             android:drawablePadding="6dp"
             android:gravity="center_vertical"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            app:drawableStartCompat="@drawable/ic_user"
-            app:drawableTint="?colorOnSurfaceVariant"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:drawableStartCompat="@drawable/ic_person"
+            app:drawableTint="?attr/colorOnSurfaceVariant"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/statusChipCard"
-            app:tint="?attr/colorControlNormal"
             tools:text="Иванов Иван Иванович" />
 
         <TextView
@@ -156,20 +155,20 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:drawablePadding="6dp"
-            android:ellipsize="end"
-            android:gravity="center_vertical"
-            android:maxLines="2"
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
+            android:drawablePadding="6dp"
+            android:ellipsize="end"
             android:focusable="true"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:gravity="center_vertical"
+            android:maxLines="2"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
             app:drawableStartCompat="@drawable/ic_location"
-            app:drawableTint="?colorOnSurfaceVariant"
+            app:drawableTint="?attr/colorOnSurfaceVariant"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/recordTeacherTextView"
-            app:tint="?attr/colorControlNormal"
             tools:text="Кронверкский пр-т, д. 49" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

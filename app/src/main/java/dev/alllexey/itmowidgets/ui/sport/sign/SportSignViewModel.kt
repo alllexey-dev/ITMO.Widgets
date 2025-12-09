@@ -210,10 +210,10 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
             val todayRealLessons = finalFilteredLessons
                 .filter { lesson ->
                     val isToday = lesson.date.toLocalDate().isEqual(selectedDate)
-                    val isAvailable = lesson.available > 0 || lesson.canSignIn.isCanSignIn
+                    val isAvailable = lesson.available > 0 && lesson.canSignIn.isCanSignIn
                     // If "Show Only Available" is on, we hide full lessons, unless Auto Sign is ON (which might show them)
                     // or if the user is already signed up.
-                    val shouldShow = lesson.signed || !state.showOnlyAvailable || isAvailable || state.showAutoSign
+                    val shouldShow = lesson.signed || !state.showOnlyAvailable || isAvailable || (state.showAutoSign && lesson.canSignIn.isCanSignIn)
 
                     isToday && shouldShow
                 }
