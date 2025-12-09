@@ -1,4 +1,5 @@
-package dev.alllexey.itmowidgets.ui.sport.sign
+package dev.alllexey.itmowidgets.ui.misc
+
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -6,8 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.checkbox.MaterialCheckBox
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.ui.misc.SelectableItem
-import java.util.*
+import java.util.Locale
 
 class MultiSelectSearchableAdapter(
     private val allItems: List<SelectableItem>

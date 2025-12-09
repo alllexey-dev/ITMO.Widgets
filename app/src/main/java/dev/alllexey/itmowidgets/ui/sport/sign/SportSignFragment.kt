@@ -21,6 +21,7 @@ import com.google.android.material.textfield.TextInputEditText
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.FragmentSportSignBinding
+import dev.alllexey.itmowidgets.ui.misc.MultiSelectSearchableAdapter
 import dev.alllexey.itmowidgets.ui.misc.SelectableItem
 import dev.alllexey.itmowidgets.util.getColorFromAttr
 import kotlinx.coroutines.flow.launchIn
