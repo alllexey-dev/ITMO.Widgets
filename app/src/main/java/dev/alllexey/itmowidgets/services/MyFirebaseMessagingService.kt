@@ -58,7 +58,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                                         ?.let { e -> appContainer.itmoWidgets.api().markSportFreeSignEntrySatisfied(e.id) }
                                     sendNotification("Автозапись (при освобождении)", "Вы успешно записаны на занятие!")
                                 } catch (e: Exception) {
-                                    appContainer.errorLogRepository.logThrowable(e, javaClass.name)
+                                    appContainer.errorLogRepository.logThrowable(e,
+                                        MyFirebaseMessagingService::class.java.name)
                                 }
                             }
                         }
@@ -74,7 +75,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                                         ?.let { e -> appContainer.itmoWidgets.api().markSportAutoSignEntrySatisfied(e.id) }
                                     sendNotification("Автозапись (на прогнозируемое занятие)", "Вы успешно записаны на занятие!")
                                 } catch (e: Exception) {
-                                    appContainer.errorLogRepository.logThrowable(e, javaClass.name)
+                                    appContainer.errorLogRepository.logThrowable(e,
+                                        MyFirebaseMessagingService::class.java.name)
                                 }
                             }
                         }
@@ -83,10 +85,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             } catch (e: Exception) {
                 try {
                     sendNotification("FCM", "Ошибка обработки события, посмотрите логи")
-                    appContainer.errorLogRepository.logThrowable(e, javaClass.name)
+                    appContainer.errorLogRepository.logThrowable(e, MyFirebaseMessagingService::class.java.name)
                 } catch (e: Exception) {
-                    appContainer.errorLogRepository.logThrowable(e, javaClass.name)
-                    e.printStackTrace()
+                    appContainer.errorLogRepository.logThrowable(e, MyFirebaseMessagingService::class.java.name)
                 }
             }
         }

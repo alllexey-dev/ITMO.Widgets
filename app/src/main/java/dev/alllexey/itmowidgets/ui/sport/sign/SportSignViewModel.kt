@@ -138,8 +138,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
                     updateFiltersAndLessons()
                 }
             } catch (e: Exception) {
-                appContainer.errorLogRepository.logThrowable(e, javaClass.name)
-                e.printStackTrace()
+                appContainer.errorLogRepository.logThrowable(e, SportSignViewModel::class.java.name)
                 _events.send(SportSignEvent.ShowError("Ошибка загрузки данных"))
             } finally {
                 _uiState.update { it.copy(isLoading = false) }

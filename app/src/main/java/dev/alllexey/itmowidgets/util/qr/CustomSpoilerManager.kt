@@ -13,6 +13,7 @@ import android.net.Uri
 import java.io.File
 import java.io.FileOutputStream
 import androidx.core.graphics.createBitmap
+import dev.alllexey.itmowidgets.appContainer
 
 class CustomSpoilerManager(private val context: Context) {
 
@@ -41,7 +42,7 @@ class CustomSpoilerManager(private val context: Context) {
             }
             true
         } catch (e: Exception) {
-            e.printStackTrace()
+            context.appContainer().errorLogRepository.logThrowable(e, CustomSpoilerManager::class.java.name)
             false
         }
     }

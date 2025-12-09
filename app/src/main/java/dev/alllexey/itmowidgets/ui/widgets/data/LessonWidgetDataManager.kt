@@ -38,7 +38,7 @@ class LessonWidgetDataManager(
 
             nextUpdateAt = getNextUpdateAt(lessons)
         } catch (e: Exception) {
-            appContainer.errorLogRepository.logThrowable(e, javaClass.name)
+            appContainer.errorLogRepository.logThrowable(e, LessonWidgetDataManager::class.java.name)
             singleDataResult = SingleLessonWidgetData.Error(getSingleLessonWidgetLayout())
 
             listDataResult = LessonListWidgetData(

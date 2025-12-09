@@ -98,8 +98,7 @@ class SportMeViewModel(
                     }
                 }
             } catch (e: Exception) {
-                appContainer.errorLogRepository.logThrowable(e, javaClass.name)
-                e.printStackTrace()
+                appContainer.errorLogRepository.logThrowable(e, SportMeViewModel::class.java.name)
                 _uiState.update { it.copy(errorMessage = "Ошибка загрузки данных") }
             } finally {
                 _uiState.update { it.copy(isLoading = false) }

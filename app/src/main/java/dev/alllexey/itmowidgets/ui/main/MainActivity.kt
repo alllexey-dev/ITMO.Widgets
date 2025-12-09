@@ -15,6 +15,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.appContainer
 import dev.alllexey.itmowidgets.ui.qr.QrCodeFragment
 import dev.alllexey.itmowidgets.ui.schedule.ScheduleFragment
 import dev.alllexey.itmowidgets.ui.settings.SettingsFragment
@@ -93,11 +94,26 @@ class MainActivity : AppCompatActivity() {
             bottomNavView.selectedItemId = R.id.navigation_schedule
         }
 
+        resendFcmTokens()
         checkVersion()
     }
 
+    fun resendFcmTokens() {
+        val appContainer = applicationContext.appContainer()
+        val firebaseToken = appContainer.storage.utility.getFirebaseToken()
+        if (firebaseToken != null && appContainer.storage.settings.getCustomServicesState()) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    appContainer.itmoWidgets.sendFirebaseToken(firebaseToken)
+                } catch (e: Exception) {
+                    appContainer.errorLogRepository.logThrowable(e, MainActivity::class.java.name + " [FCM]")
+                }
+            }
+        }
+    }
+
     fun checkVersion() {
-        val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
+        val appContainer = applicationContext.appContainer()
         CoroutineScope(Dispatchers.IO).launch {
             if (!appContainer.storage.settings.getCustomServicesState()) return@launch
             try {
@@ -109,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                appContainer.errorLogRepository.logThrowable(e, MainActivity::class.java.name + " [VER]")
             }
         }
     }
@@ -124,7 +140,11 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton("Пропустить версию") { dialog, which ->
                 val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
                 appContainer.storage.utility.setSkippedVersion(latestVersion)
-                Toast.makeText(applicationContext, "Хорошо, пропустим версию \uD83D\uDC4C", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    applicationContext,
+                    "Хорошо, пропустим версию \uD83D\uDC4C",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
             .setPositiveButton("Обновить") { dialog, which ->
                 val url = getString(applicationContext, R.string.latest_release_url)

@@ -68,8 +68,7 @@ class LessonWidgetUpdateWorker(
 
             scheduleNextUpdate(appContext, widgetsState.nextUpdateAt.plusSeconds(3))
         } catch (e: Exception) {
-            e.printStackTrace()
-            appContainer.errorLogRepository.logThrowable(e, javaClass.name)
+            appContainer.errorLogRepository.logThrowable(e, LessonWidgetUpdateWorker::class.java.name)
             lessonListRepository.setData(LessonListWidgetData(listOf(LessonListWidgetEntry.Error)))
             scheduleNextUpdate(appContext, null)
         }

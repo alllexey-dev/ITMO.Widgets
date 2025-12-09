@@ -64,6 +64,7 @@ class ErrorLogRepository(val context: Context) {
     }
 
     fun logThrowable(throwable: Throwable, module: String) {
+        throwable.printStackTrace()
         val entry = ErrorLogEntry(Log.getStackTraceString(throwable), LocalDateTime.now(), module)
         runBlocking { addLogEntry(entry) }
     }
@@ -85,7 +86,7 @@ class ErrorLogRepository(val context: Context) {
                             stacktrace = stack,
                             time = try {
                                 LocalDateTime.parse(timeStr)
-                            } catch (e: Exception) {
+                            } catch (_: Exception) {
                                 LocalDateTime.now()
                             },
                             module = "Crash"
