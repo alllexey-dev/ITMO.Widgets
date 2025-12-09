@@ -124,27 +124,28 @@ class WebViewManager(
         cookieManager.setAcceptCookie(true)
         cookieManager.removeAllCookies(null)
 
-        val authStrategyCookie = "auth.strategy=itmoId; domain=my.itmo.ru; path=/;"
+        val commonAttributes = "domain=my.itmo.ru; path=/; SameSite=None; Secure"
+        val authStrategyCookie = "auth.strategy=itmoId; $commonAttributes"
         cookieManager.setCookie(siteUrl, authStrategyCookie)
 
         if (accessToken != null) {
-            val accessTokenCookie = "auth._token.itmoId=Bearer%20$accessToken; domain=my.itmo.ru; path=/;"
+            val accessTokenCookie = "auth._token.itmoId=Bearer%20$accessToken; $commonAttributes"
             cookieManager.setCookie(siteUrl, accessTokenCookie)
-            val accessExpireCookie = "auth._token_expiration.itmoId=$accessTokenExpiration; domain=my.itmo.ru; path=/;"
+            val accessExpireCookie = "auth._token_expiration.itmoId=$accessTokenExpiration; $commonAttributes"
             cookieManager.setCookie(siteUrl, accessExpireCookie)
         }
 
         if (idToken != null) {
-            val idTokenCookie = "auth._id_token.itmoId=$idToken; domain=my.itmo.ru; path=/;"
+            val idTokenCookie = "auth._id_token.itmoId=$idToken; $commonAttributes"
             cookieManager.setCookie(siteUrl, idTokenCookie)
-            val idExpireCookie = "auth._id_token_expiration.itmoId=$idTokenExpiration; domain=my.itmo.ru; path=/;"
+            val idExpireCookie = "auth._id_token_expiration.itmoId=$idTokenExpiration; $commonAttributes"
             cookieManager.setCookie(siteUrl, idExpireCookie)
         }
 
         if (refreshToken != null) {
-            val refreshTokenCookie = "auth._refresh_token.itmoId=$refreshToken; domain=my.itmo.ru; path=/;"
+            val refreshTokenCookie = "auth._refresh_token.itmoId=$refreshToken; $commonAttributes"
             cookieManager.setCookie(siteUrl, refreshTokenCookie)
-            val refreshExpireCookie = "auth._refresh_token_expiration.itmoId=$refreshTokenExpiration; domain=my.itmo.ru; path=/;"
+            val refreshExpireCookie = "auth._refresh_token_expiration.itmoId=$refreshTokenExpiration; $commonAttributes"
             cookieManager.setCookie(siteUrl, refreshExpireCookie)
         }
 
