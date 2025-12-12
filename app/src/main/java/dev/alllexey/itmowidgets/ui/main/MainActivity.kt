@@ -43,8 +43,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
-        if (!appContainer.storage.utility.getOnboardingCompleted()) {
+        if (!appContainer().storage.utility.getOnboardingCompleted()) {
             startActivity(Intent(this, OnboardingActivity::class.java))
             finish()
             return
@@ -107,8 +106,8 @@ class MainActivity : AppCompatActivity() {
 
         if (intent.getBooleanExtra("onboarding", false)) {
             MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme_FilledButton)
-                .setTitle("И напоследок...")
-                .setMessage("Крайне советую посмотреть остальные настройки приложения в самой правой вкладке.\nВероятно, там есть что-то интересное для тебя.")
+                .setTitle("А ещё...")
+                .setMessage("Обязательно посмотри остальные настройки приложения в правой вкладке\n\nТам точно есть что-то интересное для тебя \uD83D\uDC40")
                 .setPositiveButton("Хорошо") { dialog, which -> }
                 .show()
         } else {
@@ -117,33 +116,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun resendFcmTokens() {
-        val appContainer = applicationContext.appContainer()
-        val firebaseToken = appContainer.storage.utility.getFirebaseToken()
-        if (firebaseToken != null && appContainer.storage.settings.getCustomServicesState()) {
+        val firebaseToken = appContainer().storage.utility.getFirebaseToken()
+        if (firebaseToken != null && appContainer().storage.settings.getCustomServicesState()) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    appContainer.itmoWidgets.sendFirebaseToken(firebaseToken)
+                    appContainer().itmoWidgets.sendFirebaseToken(firebaseToken)
                 } catch (e: Exception) {
-                    appContainer.errorLogRepository.logThrowable(e, MainActivity::class.java.name + " [FCM]")
+                    appContainer().errorLogRepository.logThrowable(e, MainActivity::class.java.name + " [FCM]")
                 }
             }
         }
     }
 
     fun checkVersion() {
-        val appContainer = applicationContext.appContainer()
         CoroutineScope(Dispatchers.IO).launch {
-            if (!appContainer.storage.settings.getCustomServicesState()) return@launch
+            if (!appContainer().storage.settings.getCustomServicesState()) return@launch
+            val delta = System.currentTimeMillis() - appContainer().storage.utility.getVersionNotifiedAt()
+            if (delta < 1000 * 60 * 60 * 24) return@launch // once every day
             try {
-                val latestVersion = appContainer.itmoWidgets.api().latestAppVersion().data!!
+                val latestVersion = appContainer().itmoWidgets.api().latestAppVersion().data!!
                 val currentVersion = getString(applicationContext, R.string.app_version)
                 withContext(Dispatchers.Main) {
-                    if (latestVersion > currentVersion && latestVersion > appContainer.storage.utility.getSkippedVersion()) {
+                    if (latestVersion > currentVersion && latestVersion > appContainer().storage.utility.getSkippedVersion()) {
                         showVersionPopup(latestVersion, currentVersion)
                     }
                 }
             } catch (e: Exception) {
-                appContainer.errorLogRepository.logThrowable(e, MainActivity::class.java.name + " [VER]")
+                appContainer().errorLogRepository.logThrowable(e, MainActivity::class.java.name + " [VER]")
             }
         }
     }
@@ -153,7 +152,12 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Новая версия \uD83D\uDE80")
             .setMessage("У приложения вышло обновление! Возможно, там будет что-то интересное для тебя \uD83D\uDC40\n${currentVersion} ➜ ${latestVersion} ")
             .setNeutralButton("Напомнить позже") { dialog, which ->
-
+                appContainer().storage.utility.setVersionNotifiedAd(System.currentTimeMillis())
+                Toast.makeText(
+                    applicationContext,
+                    "Хорошо, напомним позже \uD83D\uDC4C",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
             .setNegativeButton("Пропустить версию") { dialog, which ->
                 val appContainer = (applicationContext as ItmoWidgetsApp).appContainer

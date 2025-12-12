@@ -15,6 +15,7 @@ class UtilityStorage(val prefs: SharedPreferences, val context: Context) {
         const val QR_WIDGET_STATE_PREFIX = "qr_widget_state_"
         const val LESSON_WIDGET_STYLE_CHANGED_KEY = "lesson_widget_style_changed"
         const val SKIPPED_VERSION_KEY = "skipped_version"
+        const val VERSION_NOTIFIED_AT_KEY = "version_notified_at_key"
         const val ONBOARDING_COMPLETED_KEY = "onboarding_completed"
     }
 
@@ -33,6 +34,10 @@ class UtilityStorage(val prefs: SharedPreferences, val context: Context) {
     fun getQrWidgetState(appWidgetId: Int): QrWidgetState {
         val stateName = prefs.getString("$QR_WIDGET_STATE_PREFIX$appWidgetId", QrWidgetState.SPOILER.name)
         return QrWidgetState.valueOf(stateName ?: QrWidgetState.SPOILER.name)
+    }
+
+    fun getVersionNotifiedAt(): Long {
+        return prefs.getLong(VERSION_NOTIFIED_AT_KEY, 0L)
     }
 
     fun getSkippedVersion(): String {
@@ -76,6 +81,12 @@ class UtilityStorage(val prefs: SharedPreferences, val context: Context) {
     fun setOnboardingCompleted(completed: Boolean) {
         prefs.edit(commit = true) {
             putBoolean(ONBOARDING_COMPLETED_KEY, completed)
+        }
+    }
+
+    fun setVersionNotifiedAd(notifiedAt: Long) {
+        prefs.edit(commit = true) {
+            putLong(VERSION_NOTIFIED_AT_KEY, notifiedAt)
         }
     }
 }
