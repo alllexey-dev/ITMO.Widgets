@@ -18,7 +18,7 @@
             android:id="@+id/tv_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Кастомные сервисы"
+            android:text="Пользовательские сервисы"
             android:textAlignment="center"
             android:textAppearance="?attr/textAppearanceTitleLargeEmphasized"
             app:layout_constraintTop_toTopOf="parent" />
@@ -96,7 +96,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Кастомные сервисы"
+                        android:text="Пользовательские сервисы"
                         android:textAppearance="?attr/textAppearanceTitleMedium" />
 
                     <com.google.android.material.materialswitch.MaterialSwitch

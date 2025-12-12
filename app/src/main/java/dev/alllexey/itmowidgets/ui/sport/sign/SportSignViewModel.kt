@@ -28,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -212,13 +213,13 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
                     val isAvailable = lesson.available > 0 && lesson.canSignIn.isCanSignIn
                     // If "Show Only Available" is on, we hide full lessons, unless Auto Sign is ON (which might show them)
                     // or if the user is already signed up.
-                    val shouldShow = lesson.signed || !state.showOnlyAvailable || isAvailable || (state.showAutoSign && lesson.canSignIn.isCanSignIn)
+                    val shouldShow = !state.showOnlyAvailable || (lesson.dateEnd > OffsetDateTime.now() && (lesson.signed || isAvailable || (state.showAutoSign && lesson.canSignIn.isCanSignIn)))
 
                     isToday && shouldShow
                 }
                 .map { createSportLessonData(it, isReal = true) }
                 // Filter again after mapping because createSportLessonData calculates precise unavailability reasons
-                .filter { item -> !state.showOnlyAvailable || item.canSignIn || item.apiData.signed || (state.showAutoSign && item.apiData.available <= 0) }
+                .filter { item -> !state.showOnlyAvailable || (item.apiData.dateEnd > OffsetDateTime.now() && (item.canSignIn || item.apiData.signed || (state.showAutoSign && item.apiData.available <= 0))) }
 
             // B. Phantom Lessons (Auto Sign suggestions based on history)
             val phantomLessons = if (state.showAutoSign) {
@@ -278,6 +279,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
     private fun createSportLessonData(lesson: SportLesson, isReal: Boolean): SportLessonData {
         val reasons = if (isReal) UnavailableReason.getSortedUnavailableReasons(lesson) else {
             val allowed = setOf(
+                UnavailableReason.LessonInPast::class,
                 UnavailableReason.SelectionFailed::class,
                 UnavailableReason.HealthGroupMismatch::class,
                 UnavailableReason.Other::class,

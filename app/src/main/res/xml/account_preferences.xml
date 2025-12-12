@@ -33,13 +33,13 @@
         <SwitchPreference
             app:defaultValue="false"
             app:key="custom_services_allow"
-            app:summary="Добавляет в приложение уникальные инструменты"
+            app:summary="Добавляет в приложение уникальные инструменты. Ваш токен MyITMO будет отправлен на сервер приложения для аутентификации."
             app:title="Пользовательские сервисы" />
 
-        <Preference
-            app:icon="@drawable/ic_outline_help"
-            app:key="custom_services_info"
-            app:summary="Подробное описание новых функций"
-            app:title="Что это дает?" />
+<!--        <Preference-->
+<!--            app:icon="@drawable/ic_outline_help"-->
+<!--            app:key="custom_services_info"-->
+<!--            app:summary="Подробное описание уникальных функций"-->
+<!--            app:title="Что это такое?" />-->
     </PreferenceCategory>
 </PreferenceScreen>
