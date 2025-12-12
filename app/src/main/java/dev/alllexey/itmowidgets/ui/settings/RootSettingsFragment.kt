@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.data.UtilityStorage.KEYS.LAST_UPDATE_TIMESTAMP_KEY
 import dev.alllexey.itmowidgets.ui.error.ErrorLogActivity
+import dev.alllexey.itmowidgets.ui.onboarding.OnboardingActivity
 import dev.alllexey.itmowidgets.ui.widgets.WidgetUtils
 import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
@@ -33,6 +34,13 @@ class RootSettingsFragment : PreferenceFragmentCompat() {
         val errorLogButton = findPreference<Preference>("error_log")
         errorLogButton?.setOnPreferenceClickListener { preference ->
             val intent = Intent(context, ErrorLogActivity::class.java)
+            startActivity(intent)
+            true
+        }
+
+        val launchOnboardingButton = findPreference<Preference>("launch_onboarding")
+        launchOnboardingButton?.setOnPreferenceClickListener { preference ->
+            val intent = Intent(context, OnboardingActivity::class.java)
             startActivity(intent)
             true
         }

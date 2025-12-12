@@ -15,6 +15,7 @@ class UtilityStorage(val prefs: SharedPreferences, val context: Context) {
         const val QR_WIDGET_STATE_PREFIX = "qr_widget_state_"
         const val LESSON_WIDGET_STYLE_CHANGED_KEY = "lesson_widget_style_changed"
         const val SKIPPED_VERSION_KEY = "skipped_version"
+        const val ONBOARDING_COMPLETED_KEY = "onboarding_completed"
     }
 
     fun getFirebaseToken(): String? {
@@ -36,6 +37,10 @@ class UtilityStorage(val prefs: SharedPreferences, val context: Context) {
 
     fun getSkippedVersion(): String {
         return prefs.getString(SKIPPED_VERSION_KEY, null) ?: ContextCompat.getString(context, R.string.app_version)
+    }
+
+    fun getOnboardingCompleted(): Boolean {
+        return prefs.getBoolean(ONBOARDING_COMPLETED_KEY, false)
     }
 
     fun setQrWidgetState(appWidgetId: Int, state: QrWidgetState) {
@@ -65,6 +70,12 @@ class UtilityStorage(val prefs: SharedPreferences, val context: Context) {
     fun setSkippedVersion(skippedVersion: String) {
         prefs.edit(commit = true) {
             putString(SKIPPED_VERSION_KEY, skippedVersion)
+        }
+    }
+
+    fun setOnboardingCompleted(completed: Boolean) {
+        prefs.edit(commit = true) {
+            putBoolean(ONBOARDING_COMPLETED_KEY, completed)
         }
     }
 }

@@ -16,6 +16,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.appContainer
+import dev.alllexey.itmowidgets.ui.onboarding.OnboardingActivity
 import dev.alllexey.itmowidgets.ui.qr.QrCodeFragment
 import dev.alllexey.itmowidgets.ui.schedule.ScheduleFragment
 import dev.alllexey.itmowidgets.ui.settings.SettingsFragment
@@ -41,6 +42,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val appContainer = (applicationContext as ItmoWidgetsApp).appContainer
+        if (!appContainer.storage.utility.getOnboardingCompleted()) {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+            finish()
+            return
+        }
+
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
@@ -95,7 +104,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         resendFcmTokens()
-        checkVersion()
+
+        if (intent.getBooleanExtra("onboarding", false)) {
+            MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme_FilledButton)
+                .setTitle("И напоследок...")
+                .setMessage("Крайне советую посмотреть остальные настройки приложения в самой правой вкладке.\nВероятно, там есть что-то интересное для тебя.")
+                .setPositiveButton("Хорошо") { dialog, which -> }
+                .show()
+        } else {
+            checkVersion()
+        }
     }
 
     fun resendFcmTokens() {

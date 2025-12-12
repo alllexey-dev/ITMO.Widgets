@@ -140,6 +140,12 @@ class UserSettingsStorage(val prefs: SharedPreferences) {
         }
     }
 
+    fun setQrSpoilerState(qrSpoilerState: Boolean) {
+        prefs.edit(commit = true) {
+            putBoolean(QR_SPOILER_KEY, qrSpoilerState)
+        }
+    }
+
     fun setDynamicQrColorsState(dynamicQrColors: Boolean) {
         prefs.edit(commit = true) {
             putBoolean(DYNAMIC_QR_COLORS_KEY, dynamicQrColors)

@@ -46,5 +46,11 @@
             app:summary="Для быстрой диагностики"
             app:title="Журнал ошибок"
             app:useSimpleSummaryProvider="false" />
+
+        <Preference
+            app:key="launch_onboarding"
+            app:summary="Если хотите повторить настройку приложения"
+            app:title="Запустить экран первой настройки"
+            app:useSimpleSummaryProvider="false" />
     </PreferenceCategory>
 </PreferenceScreen>

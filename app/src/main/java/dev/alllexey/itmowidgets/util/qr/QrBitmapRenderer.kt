@@ -215,7 +215,7 @@ class QrBitmapRenderer() {
         val minSquareRelSide = 0.02
         val maxSquareRelSide = 0.03
 
-        val random = Random.Default
+        val random = Random(System.currentTimeMillis() / 1000 / 60 / 60)
         for (i in 1..numberOfSquares) {
             val side =
                 (random.nextDouble(minSquareRelSide, maxSquareRelSide) * qrSidePixels).toFloat()

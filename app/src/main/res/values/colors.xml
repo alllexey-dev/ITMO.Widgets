@@ -2,6 +2,7 @@
 <resources>
     <color name="primary_color">#FF1743BD</color>
     <color name="primary_variant_color">#3A8AFF</color>
+    <color name="green">#46C118</color>
 
     <color name="practice_color">#CDA634</color>
     <color name="lab_color">#8A5BE1</color>

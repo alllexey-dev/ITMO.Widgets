@@ -18,4 +18,6 @@
     <string name="title_sport_me">Мой спорт</string>
     <string name="title_sport_sign">Запись</string>
     <string name="title_sport_notifications">Уведомления</string>
+
+    <string name="onboarding_services_disclaimer">Чтобы работали уведомления и автозапись, серверу нужно подтвердить вашу личность. Мы используем ваш токен только для проверки и <b>не сохраняем его</b> — запоминаем только шестизачный номер ИСУ. Исходный код открыт, так что всё честно.\n\n<b>Включая эту опцию, вы соглашаетесь на передачу токена для авторизации.</b></string>
 </resources>
