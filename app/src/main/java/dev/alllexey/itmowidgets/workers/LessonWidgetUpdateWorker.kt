@@ -99,7 +99,7 @@ class LessonWidgetUpdateWorker(
     }
 
     companion object {
-        private const val WIDGET_UPDATE_WORK_NAME = "me.alllexey123.itmowidgets.LessonWidgetUpdate"
+        private const val WIDGET_UPDATE_WORK_NAME = "dev.alllexey.itmowidgets.LessonWidgetUpdate"
 
         fun enqueueImmediateUpdate(context: Context) {
             val request = OneTimeWorkRequestBuilder<LessonWidgetUpdateWorker>().build()

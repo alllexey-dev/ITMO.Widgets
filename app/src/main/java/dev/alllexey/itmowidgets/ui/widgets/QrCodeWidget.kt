@@ -126,7 +126,7 @@ class QrCodeWidget : AppWidgetProvider() {
 
     companion object {
 
-        const val ACTION_WIDGET_CLICK: String = "me.alllexey123.itmowidgets.action.QR_WIDGET_CLICK"
+        const val ACTION_WIDGET_CLICK: String = "dev.alllexey.itmowidgets.action.QR_WIDGET_CLICK"
 
         fun updateAppWidget(
             context: Context,

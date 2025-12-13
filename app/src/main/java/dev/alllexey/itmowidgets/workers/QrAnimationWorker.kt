@@ -25,7 +25,7 @@ class QrAnimationWorker(appContext: Context, workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
 
     companion object {
-        const val WORK_NAME = "me.alllexey123.itmowidgets.QrWidgetAnimation"
+        const val WORK_NAME = "dev.alllexey.itmowidgets.QrWidgetAnimation"
         const val KEY_APP_WIDGET_ID = "app_widget_id"
 
         fun easeInOut(fraction: Float): Float {

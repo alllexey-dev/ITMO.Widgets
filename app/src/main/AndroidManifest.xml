@@ -55,7 +55,7 @@
             android:label="@string/qr_widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="me.alllexey123.itmowidgets.action.QR_WIDGET_CLICK" />
+                <action android:name="dev.alllexey.itmowidgets.action.QR_WIDGET_CLICK" />
             </intent-filter>
 
             <meta-data

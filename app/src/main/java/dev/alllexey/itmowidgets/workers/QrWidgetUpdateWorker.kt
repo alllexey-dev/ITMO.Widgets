@@ -30,10 +30,21 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
             return Result.success()
         }
 
-        val bitmap: Bitmap = if (storage.settings.getQrSpoilerState()) {
+        val qrHex = try {
+            qrToolkit.getQrHex(allowCached = false) // update
+        } catch (e1: Exception) {
+            appContainer.errorLogRepository.logThrowable(e1, QrWidgetUpdateWorker::class.java.name)
+            try {
+                qrToolkit.getQrHex(allowCached = true)
+            } catch (e2: Exception) {
+                appContainer.errorLogRepository.logThrowable(e2, QrWidgetUpdateWorker::class.java.name)
+                null
+            }
+        }
+
+        val bitmap: Bitmap = if (qrHex == null || storage.settings.getQrSpoilerState()) {
             qrToolkit.generateSpoilerBitmap()
         } else {
-            val qrHex = qrToolkit.getQrHex(allowCached = false)
             qrToolkit.generateQrBitmap(qrHex)
         }
 
@@ -57,7 +68,7 @@ class QrWidgetUpdateWorker(val appContext: Context, workerParams: WorkerParamete
     }
 
     companion object {
-        const val WIDGET_UPDATE_WORK_NAME = "me.alllexey123.itmowidgets.QrWidgetUpdate"
+        const val WIDGET_UPDATE_WORK_NAME = "dev.alllexey.itmowidgets.QrWidgetUpdate"
 
         fun enqueueImmediateUpdate(context: Context) {
             val immediateWorkRequest = OneTimeWorkRequestBuilder<QrWidgetUpdateWorker>()
