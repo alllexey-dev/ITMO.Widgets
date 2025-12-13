@@ -254,7 +254,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
             }
 
             val displayedLessons = (todayRealLessons + phantomLessons).sortedWith(
-                compareBy<SportLessonData> { it.apiData.signed || it.autoSignStatus != null || it.freeSignStatus != null }
+                compareBy<SportLessonData> { !(it.apiData.signed || it.autoSignStatus != null || it.freeSignStatus != null) }
                     .thenBy { it.apiData.date }
                     .thenBy { it.apiData.sectionName }
             )
