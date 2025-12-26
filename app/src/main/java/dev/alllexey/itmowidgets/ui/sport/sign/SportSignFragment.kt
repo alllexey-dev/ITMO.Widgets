@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.TextInputEditText
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
@@ -27,6 +28,7 @@ import dev.alllexey.itmowidgets.util.getColorFromAttr
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.time.LocalDate
+
 
 class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsListener,
     SportSignActionsListener {
@@ -133,11 +135,15 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
     override fun onUnAutoSignClick(lesson: SportLessonData) = viewModel.handleAutoSignClick(lesson)
 
     private fun showConfirmDialog(event: SportSignEvent.ShowAutoSignConfirmDialog) {
+        val view = layoutInflater.inflate(R.layout.dialog_free_sign, null)
+
+        val toggle = view.findViewById<MaterialSwitch>(R.id.free_sign_switch)
         MaterialAlertDialogBuilder(requireContext())
+            .setView(view)
             .setTitle(event.title)
             .setMessage(event.message)
             .setNegativeButton("Назад", null)
-            .setPositiveButton("Автозапись") { _, _ -> event.action() }
+            .setPositiveButton("Автозапись") { _, _ -> event.action(toggle.isChecked) }
             .show()
     }
 

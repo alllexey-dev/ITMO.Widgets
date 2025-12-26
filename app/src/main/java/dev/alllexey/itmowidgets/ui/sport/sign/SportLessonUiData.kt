@@ -69,7 +69,7 @@ sealed interface SportSignEvent {
     data class ShowToast(val message: String) : SportSignEvent
     data class ShowError(val message: String) : SportSignEvent
 
-    data class ShowAutoSignConfirmDialog(val title: String, val message: String, val action: () -> Unit) : SportSignEvent
+    data class ShowAutoSignConfirmDialog(val title: String, val message: String, val action: (forceSign: Boolean) -> Unit) : SportSignEvent
     data class ShowAutoSignDeleteDialog(val message: String, val action: () -> Unit) : SportSignEvent
     data class ShowInfoDialog(val title: String? = null, val message: String) : SportSignEvent
 }

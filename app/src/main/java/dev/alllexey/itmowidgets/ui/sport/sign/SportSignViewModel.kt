@@ -462,7 +462,7 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
                     _events.send(SportSignEvent.ShowAutoSignConfirmDialog(
                         title = "Автозапись",
                         message = "Вы можете встать в очередь на автозапись.\n\nПриложение попробует вас записать, когда место освободится.",
-                        action = { createFreeSignEntry(lesson.apiData.id) }
+                        action = { forceSign -> createFreeSignEntry(lesson.apiData.id, forceSign) }
                     ))
                 }
             } else {
@@ -495,9 +495,9 @@ class SportSignViewModel(private val myItmo: MyItmoApi, context: Context) : View
         }
     }
 
-    private fun createFreeSignEntry(lessonId: Long) {
+    private fun createFreeSignEntry(lessonId: Long, forceSign: Boolean) {
         launchAutoSignAction("Добавляю в очередь...") {
-            appContainer.itmoWidgets.api().createSportFreeSignEntry(SportFreeSignRequest(lessonId))
+            appContainer.itmoWidgets.api().createSportFreeSignEntry(SportFreeSignRequest(lessonId, forceSign))
         }
     }
 
