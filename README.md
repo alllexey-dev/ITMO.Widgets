@@ -39,6 +39,16 @@
 ### 🔔 Сервисы
 *   **My ITMO Web:** Встроенный браузер для доступа к полному функционалу личного кабинета без повторного ввода пароля. <br>*Замечание: пока работает не на всех устройствах.*
 
+## 📸 Скриншоты приложения
+
+<p>
+  <img height="256" alt="image" src="https://github.com/user-attachments/assets/45ffd030-f6af-4dc1-b0eb-677d2a641bba" />
+  <img height="256" alt="image" src="https://github.com/user-attachments/assets/4147ea57-cbb1-4724-b1b6-d94da2773d1c" />
+  <img height="256" alt="image" src="https://github.com/user-attachments/assets/d8e9ae81-7960-4805-9925-58353623d080" />
+  <img height="256" alt="image" src="https://github.com/user-attachments/assets/ae1c9b1d-3ea2-4f9a-bdc5-b612085e05d4" />
+  <img height="256" alt="image" src="https://github.com/user-attachments/assets/7610f55c-0e57-48fb-81e6-4a2b34d5d5d4" />
+</p>
+
 ## 📸 Скриншоты виджетов
 
 <p>
