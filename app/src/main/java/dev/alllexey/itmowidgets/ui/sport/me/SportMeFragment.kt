@@ -122,9 +122,9 @@ class SportMeFragment : Fragment(R.layout.fragment_sport_me), SportRecordListene
                         is RecordType.Signed -> appContainer.myItmo.api().signOutLessons(listOf(model.lessonId)).execute()
                         is RecordType.Queue -> {
                             if (model.type.isPrediction) {
-                                appContainer.itmoWidgets.api().deleteSportAutoSignEntry(model.type.entryId)
+                                appContainer.itmoWidgets.api.deleteSportAutoSignEntry(model.type.entryId)
                             } else {
-                                appContainer.itmoWidgets.api().deleteSportFreeSignEntry(model.type.entryId)
+                                appContainer.itmoWidgets.api.deleteSportFreeSignEntry(model.type.entryId)
                             }
                         }
                     }

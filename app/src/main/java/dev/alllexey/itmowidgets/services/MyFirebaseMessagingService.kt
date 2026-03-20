@@ -34,7 +34,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private val gson by lazy { appContainer.gson }
     private val errorLogRepository by lazy { appContainer.errorLogRepository }
     private val myItmoApi by lazy { appContainer.myItmo.api() }
-    private val widgetsApi by lazy { appContainer.itmoWidgets.api() }
+    private val widgetsApi by lazy { appContainer.itmoWidgets.api }
 
     override fun onNewToken(token: String) {
         Log.d(TAG, "Refreshed token: $token")

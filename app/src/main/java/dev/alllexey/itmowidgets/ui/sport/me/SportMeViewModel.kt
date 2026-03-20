@@ -53,7 +53,7 @@ class SportMeViewModel(
 ) : ViewModel() {
 
     private val appContainer = context.appContainer()
-    private val widgetsApi by lazy { appContainer.itmoWidgets.api() }
+    private val widgetsApi by lazy { appContainer.itmoWidgets.api }
     private val settings by lazy { appContainer.storage.settings }
 
     private val _uiState = MutableStateFlow(SportMeUiState())
@@ -135,7 +135,7 @@ class SportMeViewModel(
             .filter { it.status == QueueEntryStatus.WAITING }
             .filter { !chosenModels.any { c -> c.lessonId == it.lessonId } }
             .map { entry ->
-            entry.lessonData.toUiModel(
+            entry.targetLesson.toUiModel(
                 idPrefix = "free_${entry.id}",
                 type = RecordType.Queue(entry.position, entry.total, isPrediction = false, entry.id),
                 twoWeeksForward = false
@@ -148,7 +148,7 @@ class SportMeViewModel(
             .filter { it.status == QueueEntryStatus.WAITING }
             .filter { !chosenModels.any { c -> c.lessonId == it.realLessonId } }
             .map { entry ->
-            entry.prototypeLessonData.toUiModel(
+            entry.targetLesson.toUiModel(
                 idPrefix = "auto_${entry.id}",
                 type = RecordType.Queue(entry.position, entry.total, isPrediction = true, entry.id),
                 twoWeeksForward = true

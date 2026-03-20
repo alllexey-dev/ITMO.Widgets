@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
             val delta = System.currentTimeMillis() - appContainer().storage.utility.getVersionNotifiedAt()
             if (delta < 1000 * 60 * 60 * 24) return@launch // once every day
             try {
-                val latestVersion = appContainer().itmoWidgets.api().latestAppVersion().data!!
+                val latestVersion = appContainer().itmoWidgets.api.latestAppVersion().data!!
                 val currentVersion = getString(applicationContext, R.string.app_version)
                 withContext(Dispatchers.Main) {
                     if (latestVersion > currentVersion && latestVersion > appContainer().storage.utility.getSkippedVersion()) {

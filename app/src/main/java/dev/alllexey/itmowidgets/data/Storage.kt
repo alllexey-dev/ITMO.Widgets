@@ -13,10 +13,6 @@ class Storage(val prefs: SharedPreferences, val context: Context) {
         MyItmoStorage(prefs)
     }
 
-    val itmoWidgets: ItmoWidgetsStorage by lazy {
-        ItmoWidgetsStorage(prefs)
-    }
-
     val utility: UtilityStorage by lazy {
         UtilityStorage(prefs, context)
     }

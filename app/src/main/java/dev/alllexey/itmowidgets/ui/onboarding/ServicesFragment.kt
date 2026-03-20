@@ -40,7 +40,6 @@ class ServicesFragment : Fragment(R.layout.fragment_onboarding_services) {
 
         switchServices.setOnCheckedChangeListener { _, isChecked ->
             settings.setCustomServicesState(isChecked)
-            if (!isChecked) appContainer.storage.itmoWidgets.clearTokens()
             updateFeaturesUI(isChecked, featuresText)
             updateAuthUI(isAuthenticatedBlocking())
         }
@@ -48,7 +47,7 @@ class ServicesFragment : Fragment(R.layout.fragment_onboarding_services) {
 
     fun isAuthenticatedBlocking(): Boolean {
         return try {
-            requireContext().appContainer().itmoWidgets.getValidTokens()
+            requireContext().appContainer().itmoWidgets.getValidToken() ?: return false
             true
         } catch (e: Exception) {
             false

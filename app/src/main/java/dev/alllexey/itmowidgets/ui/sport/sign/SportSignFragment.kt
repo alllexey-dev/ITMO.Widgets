@@ -81,7 +81,7 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
 
     private fun setupUIListeners() {
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.loadInitialData()
+            viewModel.loadAllData()
         }
     }
 
