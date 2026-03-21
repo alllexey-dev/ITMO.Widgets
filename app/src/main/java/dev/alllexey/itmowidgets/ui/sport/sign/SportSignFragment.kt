@@ -43,8 +43,13 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
     private val viewModel: SportSignViewModel by viewModels {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val myItmo = (requireActivity().application as ItmoWidgetsApp).appContainer.myItmo
-                return SportSignViewModel(myItmo.api(), requireContext()) as T
+                val app = requireActivity().application as ItmoWidgetsApp
+                val myItmo = app.appContainer.myItmo
+                return SportSignViewModel(
+                    myItmo = myItmo.api,
+                    sharedRepository = app.appContainer.sportSharedRepository,
+                    context = requireContext()
+                ) as T
             }
         }
     }
@@ -122,12 +127,10 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
     override fun onNextWeekClick() = viewModel.nextWeek()
 
     override fun onSignUpClick(lesson: SportLessonData) {
-        Toast.makeText(requireContext(), "Выполняем запись...", Toast.LENGTH_SHORT).show()
         viewModel.signUpForLesson(lesson)
     }
 
     override fun onUnSignClick(lesson: SportLessonData) {
-        Toast.makeText(requireContext(), "Отменяем запись...", Toast.LENGTH_SHORT).show()
         viewModel.unSignForLesson(lesson)
     }
 
@@ -138,6 +141,8 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
         val view = layoutInflater.inflate(R.layout.dialog_free_sign, null)
 
         val toggle = view.findViewById<MaterialSwitch>(R.id.free_sign_switch)
+        if (event.showForceSignButton) view.visibility = View.VISIBLE
+        else view.visibility = View.GONE
         MaterialAlertDialogBuilder(requireContext())
             .setView(view)
             .setTitle(event.title)

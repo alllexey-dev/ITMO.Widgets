@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.appContainer
+import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
 import dev.alllexey.itmowidgets.databinding.ItemSportRecordBinding
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -69,14 +70,15 @@ class SportRecordAdapter(val listener: SportRecordListener) : ListAdapter<SportR
             val appContainer = context.appContainer()
             val colorUtil = appContainer.colorUtil
 
-            when (item.type) {
+            val type = item.type
+            when (type) {
                 is RecordType.Signed -> {
                     val bgColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorSecondaryContainer, Color.WHITE)
                     val contentColor =
                         colorUtil.getDynamicColor(com.google.android.material.R.attr.colorOnSecondaryContainer, Color.WHITE)
 
                     val text =
-                        if (item.type.thoughAutoSign) "Успешная автозапись" else "Вы записаны"
+                        if (type.thoughAutoSign) "Успешная автозапись" else "Вы записаны"
 
                     setupChip(
                         text = text,
@@ -87,27 +89,45 @@ class SportRecordAdapter(val listener: SportRecordListener) : ListAdapter<SportR
                 }
 
                 is RecordType.Queue -> {
-                    val pos = item.type.position
-                    val total = item.type.total
+                    val entry = type.entry
+                    val pos = entry.position
+                    val total = entry.total
+                    val status = entry.status
+                    val retryText = if (status == QueueEntryStatus.NOTIFIED) " (попыток: ${entry.notificationAttempts} / ${entry.maxNotificationAttempts})" else ""
 
-                    if (item.type.isPrediction) {
-                        val bgColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorTertiaryContainer, Color.WHITE)
+                    if (status == QueueEntryStatus.WAITING || status == QueueEntryStatus.NOTIFIED) {
+                        if (type.isPrediction) {
+                            val bgColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorTertiaryContainer, Color.WHITE)
+                            val contentColor =
+                                colorUtil.getDynamicColor(com.google.android.material.R.attr.colorOnTertiaryContainer, Color.BLACK)
+
+                            setupChip(
+                                text = "Прогноз: $pos из $total$retryText",
+                                iconRes = R.drawable.ic_wand_stars,
+                                bgColor = bgColor,
+                                contentColor = contentColor
+                            )
+                        } else {
+                            val bgColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorPrimaryContainer, Color.WHITE)
+                            val contentColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorOnPrimaryContainer, Color.WHITE)
+
+                            setupChip(
+                                text = "Очередь: $pos из $total$retryText",
+                                iconRes = R.drawable.ic_group,
+                                bgColor = bgColor,
+                                contentColor = contentColor
+                            )
+                        }
+                    }
+
+                    if (status == QueueEntryStatus.GAVE_UP_NOTIFYING) {
+                        val bgColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorErrorContainer, Color.WHITE)
                         val contentColor =
-                            colorUtil.getDynamicColor(com.google.android.material.R.attr.colorOnTertiaryContainer, Color.BLACK)
+                            colorUtil.getDynamicColor(com.google.android.material.R.attr.colorOnErrorContainer, Color.BLACK)
 
                         setupChip(
-                            text = "Прогноз: $pos из $total",
-                            iconRes = R.drawable.ic_wand_stars,
-                            bgColor = bgColor,
-                            contentColor = contentColor
-                        )
-                    } else {
-                        val bgColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorPrimaryContainer, Color.WHITE)
-                        val contentColor = colorUtil.getDynamicColor(com.google.android.material.R.attr.colorOnPrimaryContainer, Color.WHITE)
-
-                        setupChip(
-                            text = "Очередь: $pos из $total",
-                            iconRes = R.drawable.ic_group,
+                            text = "Не удалось записать :(",
+                            iconRes = R.drawable.ic_error,
                             bgColor = bgColor,
                             contentColor = contentColor
                         )

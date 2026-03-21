@@ -1,25 +1,23 @@
 package dev.alllexey.itmowidgets.ui.sport.me
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import api.myitmo.MyItmoApi
 import api.myitmo.model.sport.ChosenSportSection
 import api.myitmo.model.sport.SportScore
-import dev.alllexey.itmowidgets.appContainer
 import dev.alllexey.itmowidgets.core.model.BasicSportLessonData
+import dev.alllexey.itmowidgets.core.model.QueueEntry
 import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
 import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry
+import dev.alllexey.itmowidgets.data.repository.SportSharedRepository
 import dev.alllexey.itmowidgets.util.SportUtils
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -33,7 +31,7 @@ data class SportMeUiState(
 
 sealed class RecordType {
     data class Signed(val thoughAutoSign: Boolean) : RecordType()
-    data class Queue(val position: Int, val total: Int, val isPrediction: Boolean, val entryId: Long) : RecordType()
+    data class Queue(val entry: QueueEntry, val isPrediction: Boolean) : RecordType()
 }
 
 data class SportRecordUiModel(
@@ -48,13 +46,8 @@ data class SportRecordUiModel(
 )
 
 class SportMeViewModel(
-    private val myItmo: MyItmoApi,
-    context: Context
+    private val sharedRepository: SportSharedRepository
 ) : ViewModel() {
-
-    private val appContainer = context.appContainer()
-    private val widgetsApi by lazy { appContainer.itmoWidgets.api }
-    private val settings by lazy { appContainer.storage.settings }
 
     private val _uiState = MutableStateFlow(SportMeUiState())
     val uiState: StateFlow<SportMeUiState> = _uiState.asStateFlow()
@@ -62,51 +55,63 @@ class SportMeViewModel(
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     init {
+        observeSharedData()
         loadData()
     }
 
     fun loadData() {
         viewModelScope.launch(Dispatchers.IO) {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                supervisorScope {
-                    val scoreDeferred = async { myItmo.getSportScore(null).execute().body()!!.result }
-                    val signedDeferred = async { myItmo.chosenSportSections.execute().body()!!.result }
-
-                    val customServicesEnabled = settings.getCustomServicesState()
-                    val freeSignDeferred = if (customServicesEnabled) async { widgetsApi.mySportFreeSignEntries() } else null
-                    val autoSignDeferred = if (customServicesEnabled) async { widgetsApi.mySportAutoSignEntries() } else null
-
-                    val score = scoreDeferred.await()
-                    val signedLessons = signedDeferred.await()
-                    val freeSignEntries = freeSignDeferred?.await()?.data ?: emptyList()
-                    val autoSignEntries = autoSignDeferred?.await()?.data ?: emptyList()
-
-                    val signedModels = mapSignedLessons(signedLessons, freeSignEntries, autoSignEntries)
-                    val freeSignModels = mapFreeSignEntries(freeSignEntries, signedModels)
-                    val autoSignModels = mapAutoSignEntries(autoSignEntries, signedModels)
-
-                    val allItems = (signedModels + freeSignModels + autoSignModels)
-                        .filter { it.dateTime.isAfter(OffsetDateTime.now().minusHours(1)) }
-                        .sortedBy { it.dateTime }
-
-                    _uiState.update {
-                        it.copy(
-                            score = score,
-                            listItems = allItems
-                        )
-                    }
-                }
+                sharedRepository.reloadAll()
             } catch (e: Exception) {
-                appContainer.errorLogRepository.logThrowable(e, SportMeViewModel::class.java.name)
-                _uiState.update { it.copy(errorMessage = "Ошибка загрузки данных") }
-            } finally {
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Ошибка загрузки данных"
+                    )
+                }
             }
         }
     }
 
-    private fun mapSignedLessons(sections: List<ChosenSportSection>, freeSignEntries: List<SportFreeSignEntry>, autoSignEntries: List<SportAutoSignEntry>): List<SportRecordUiModel> {
+    private fun observeSharedData() {
+        viewModelScope.launch {
+            sharedRepository.state.collectLatest { shared ->
+                if (shared.isLoading) {
+                    _uiState.update { it.copy(isLoading = true) }
+                    return@collectLatest
+                }
+
+                val signedModels = mapSignedLessons(
+                    shared.chosenSportSections,
+                    shared.freeSignEntries,
+                    shared.autoSignEntries
+                )
+
+                val freeSignModels = mapFreeSignEntries(shared.freeSignEntries, signedModels)
+                val autoSignModels = mapAutoSignEntries(shared.autoSignEntries, signedModels)
+
+                val allItems = (signedModels + freeSignModels + autoSignModels)
+                    .filter { it.dateTime.isAfter(OffsetDateTime.now().minusHours(1)) }
+                    .sortedBy { it.dateTime }
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        score = shared.score,
+                        listItems = allItems,
+                        errorMessage = null
+                    )
+                }
+            }
+        }
+    }
+
+    private fun mapSignedLessons(
+        sections: List<ChosenSportSection>,
+        freeSignEntries: List<SportFreeSignEntry>,
+        autoSignEntries: List<SportAutoSignEntry>
+    ): List<SportRecordUiModel> {
         return sections.flatMap { section ->
             section.lessonGroups.flatMap { group ->
                 group.lessons.map { lesson ->
@@ -121,42 +126,64 @@ class SportMeViewModel(
                         timeString = "${localStart.format(timeFormatter)} - ${localEnd.format(timeFormatter)}",
                         location = lesson.roomName ?: "Место не указано",
                         teacher = lesson.teacherFio ?: "",
-                        type = RecordType.Signed(thoughAutoSign = freeSignEntries.filter { it.status == QueueEntryStatus.SATISFIED }
-                            .any { it.lessonId == lesson.id } || autoSignEntries.filter { it.status == QueueEntryStatus.SATISFIED }
-                            .any { it.realLessonId == lesson.id }),
+                        type = RecordType.Signed(
+                            thoughAutoSign = freeSignEntries.any {
+                                it.status == QueueEntryStatus.SATISFIED && it.lessonId == lesson.id
+                            } || autoSignEntries.any {
+                                it.status == QueueEntryStatus.SATISFIED && it.realLessonId == lesson.id
+                            }
+                        ),
                     )
                 }
             }
         }
     }
 
-    private fun mapFreeSignEntries(entries: List<SportFreeSignEntry>, chosenModels: List<SportRecordUiModel>): List<SportRecordUiModel> {
+    private fun mapFreeSignEntries(
+        entries: List<SportFreeSignEntry>,
+        chosenModels: List<SportRecordUiModel>
+    ): List<SportRecordUiModel> {
         return entries
-            .filter { it.status == QueueEntryStatus.WAITING }
+            .asSequence()
+            .filter { it.status != QueueEntryStatus.EXPIRED && it.status != QueueEntryStatus.SATISFIED }
             .filter { !chosenModels.any { c -> c.lessonId == it.lessonId } }
+            .groupBy { it.targetLesson.id }
+            .map { it.value.maxBy { entry -> entry.createdAt } }
             .map { entry ->
-            entry.targetLesson.toUiModel(
-                idPrefix = "free_${entry.id}",
-                type = RecordType.Queue(entry.position, entry.total, isPrediction = false, entry.id),
-                twoWeeksForward = false
-            )
-        }
+                entry.targetLesson.toUiModel(
+                    idPrefix = "free_${entry.id}",
+                    type = RecordType.Queue(entry, isPrediction = false),
+                    twoWeeksForward = false
+                )
+            }
+            .toList()
     }
 
-    private fun mapAutoSignEntries(entries: List<SportAutoSignEntry>, chosenModels: List<SportRecordUiModel>): List<SportRecordUiModel> {
+    private fun mapAutoSignEntries(
+        entries: List<SportAutoSignEntry>,
+        chosenModels: List<SportRecordUiModel>
+    ): List<SportRecordUiModel> {
         return entries
-            .filter { it.status == QueueEntryStatus.WAITING }
-            .filter { !chosenModels.any { c -> c.lessonId == it.realLessonId } }
+            .asSequence()
+            .filter { it.status != QueueEntryStatus.EXPIRED && it.status != QueueEntryStatus.SATISFIED }
+            .filter { !chosenModels.any { c -> c.lessonId == it.realLessonId }}
+            .groupBy { it.targetLesson.id }
+            .map { it.value.maxBy { entry -> entry.createdAt } }
             .map { entry ->
-            entry.targetLesson.toUiModel(
-                idPrefix = "auto_${entry.id}",
-                type = RecordType.Queue(entry.position, entry.total, isPrediction = true, entry.id),
-                twoWeeksForward = true
-            )
-        }
+                entry.targetLesson.toUiModel(
+                    idPrefix = "auto_${entry.id}",
+                    type = RecordType.Queue(entry, isPrediction = true),
+                    twoWeeksForward = true
+                )
+            }
+            .toList()
     }
 
-    private fun BasicSportLessonData.toUiModel(idPrefix: String, type: RecordType, twoWeeksForward: Boolean): SportRecordUiModel {
+    private fun BasicSportLessonData.toUiModel(
+        idPrefix: String,
+        type: RecordType,
+        twoWeeksForward: Boolean
+    ): SportRecordUiModel {
         val weeksToAdd = if (twoWeeksForward) 2L else 0L
         val localStart = dateStart.atZoneSameInstant(ZoneId.systemDefault()).plusWeeks(weeksToAdd)
         val localEnd = dateEnd.atZoneSameInstant(ZoneId.systemDefault()).plusWeeks(weeksToAdd)

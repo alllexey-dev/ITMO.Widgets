@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.data.local.ScheduleLocalDataSourceImpl
 import dev.alllexey.itmowidgets.data.remote.ScheduleRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.data.repository.ErrorLogRepository
 import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
+import dev.alllexey.itmowidgets.data.repository.SportSharedRepository
 import dev.alllexey.itmowidgets.ui.widgets.data.LessonListRepository
 import dev.alllexey.itmowidgets.util.ColorUtil
 import dev.alllexey.itmowidgets.util.qr.QrToolkit
@@ -47,8 +48,15 @@ class AppContainer(val context: Context) {
                 cacheDir = File(context.cacheDir, "schedule_cache").apply { mkdirs() }
             ),
             remoteDataSource = ScheduleRemoteDataSourceImpl(
-                myItmoApi = myItmo.api()
+                myItmoApi = myItmo.api
             )
+        )
+    }
+
+    val sportSharedRepository by lazy {
+        SportSharedRepository(
+            context = context,
+            myItmo = myItmo.api
         )
     }
 

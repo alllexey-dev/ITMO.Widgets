@@ -6,24 +6,26 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import api.myitmo.utils.ApiException
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.JsonElement
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.QueueEntry
-import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
+import dev.alllexey.itmowidgets.core.model.BasicSportLessonData
 import dev.alllexey.itmowidgets.core.model.fcm.FcmJsonWrapper
 import dev.alllexey.itmowidgets.core.model.fcm.impl.SportAutoSignLessonsPayload
 import dev.alllexey.itmowidgets.core.model.fcm.impl.SportFreeSignLessonsPayload
-import dev.alllexey.itmowidgets.core.model.fcm.impl.SportNewLessonsPayload
 import dev.alllexey.itmowidgets.ui.main.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 import kotlin.random.Random
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
@@ -33,7 +35,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private val appContainer by lazy { (applicationContext as ItmoWidgetsApp).appContainer }
     private val gson by lazy { appContainer.gson }
     private val errorLogRepository by lazy { appContainer.errorLogRepository }
-    private val myItmoApi by lazy { appContainer.myItmo.api() }
+    private val myItmoApi by lazy { appContainer.myItmo.api }
     private val widgetsApi by lazy { appContainer.itmoWidgets.api }
 
     override fun onNewToken(token: String) {
@@ -63,7 +65,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         try {
             val wrapper = gson.fromJson(jsonPayload, FcmJsonWrapper::class.java)
             when (wrapper.type) {
-                SportNewLessonsPayload.TYPE -> handleNewLessons(wrapper.payload)
                 SportFreeSignLessonsPayload.TYPE -> handleFreeSign(wrapper.payload)
                 SportAutoSignLessonsPayload.TYPE -> handleAutoSign(wrapper.payload)
                 else -> Log.w(TAG, "Unknown payload type: ${wrapper.type}")
@@ -73,21 +74,15 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun handleNewLessons(payloadJson: JsonElement) {
-        // unused
-//        val data = gson.fromJson(payloadJson, SportNewLessonsPayload::class.java)
-//        sendNotification("Уведомление фильтра", "${data.sportLessonIds.size} new lessons")
-    }
-
     private fun handleFreeSign(payloadJson: JsonElement) {
         val data = gson.fromJson(payloadJson, SportFreeSignLessonsPayload::class.java)
 
         serviceScope.launch {
             processLessonSignUp(
-                lessonIds = data.sportLessonIds,
+                lessons = data.sportLessons,
                 notificationTitle = "Автозапись (при освобождении)",
-                fetchEntries = { widgetsApi.mySportFreeSignEntries() },
-                markSatisfied = { id -> widgetsApi.markSportFreeSignEntrySatisfied(id) }
+                markSatisfiedByLesson = { lessonId -> widgetsApi.markSportFreeSignEntrySatisfiedByLesson(lessonId) },
+                cancelByLesson = { lessonId -> widgetsApi.cancelSportFreeSignEntryByLesson(lessonId)}
             )
         }
     }
@@ -97,41 +92,47 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         serviceScope.launch {
             processLessonSignUp(
-                lessonIds = data.sportLessonIds,
+                lessons = data.sportLessons,
                 notificationTitle = "Автозапись (на прогнозируемое занятие)",
-                fetchEntries = { widgetsApi.mySportAutoSignEntries() },
-                markSatisfied = { id -> widgetsApi.markSportAutoSignEntrySatisfied(id) }
+                markSatisfiedByLesson = { lessonId -> widgetsApi.markSportAutoSignEntrySatisfiedByLesson(lessonId) },
+                cancelByLesson = { lessonId -> widgetsApi.cancelSportAutoSignEntryByLesson(lessonId)}
             )
         }
     }
 
-    private suspend fun <T : QueueEntry> processLessonSignUp(
-        lessonIds: List<Long>,
+    private suspend fun processLessonSignUp(
+        lessons: List<BasicSportLessonData>,
         notificationTitle: String,
-        fetchEntries: suspend () -> ApiResponse<List<T>>,
-        markSatisfied: suspend (Long) -> Unit
+        markSatisfiedByLesson: suspend (Long) -> Unit,
+        cancelByLesson: suspend (Long) -> Unit
     ) {
-        val entriesResponse = try {
-            fetchEntries()
-        } catch (e: Exception) {
-            errorLogRepository.logThrowable(e, TAG)
-            return
-        }
+        val formatter = DateTimeFormatter
+            .ofLocalizedDateTime(FormatStyle.SHORT)
+            .withLocale(Locale.getDefault())
 
-        lessonIds.forEach { lessonId ->
+        lessons.forEach { lesson ->
+            val localDateTime = lesson.dateStart
+                .atZoneSameInstant(ZoneId.systemDefault())
+            val dateFormat = localDateTime.format(formatter)
+
             try {
-                val body = myItmoApi.signInLessons(listOf(lessonId)).execute().body()
+                val body = appContainer.myItmo.execute(myItmoApi.signInLessons(listOf(lesson.id)))
 
                 if (body?.result != null) {
-                    entriesResponse.data
-                        ?.firstOrNull { e -> e.status == QueueEntryStatus.NOTIFIED }
-                        ?.let { entry ->
-                            markSatisfied(entry.id)
-                        }
-
-                    sendNotification(notificationTitle, "Вы успешно записаны на занятие!")
+                    sendNotification(notificationTitle, "Вы успешно записаны на занятие!\n${lesson.sectionName}, $dateFormat")
+                    markSatisfiedByLesson(lesson.id)
                 } else {
                     throw RuntimeException("Could not sign in sport lesson: ${body?.errorMessage}")
+                }
+            } catch (e: ApiException) {
+                val limitsErrMsg = "нельзя записать студента: нет свободных мест на занятии"
+                errorLogRepository.logThrowable(e, TAG)
+
+                val dueToLimits = e.errorMessage.contains(limitsErrMsg)
+                        && e.errorMessage.replace(limitsErrMsg, "").length > 20
+                if (!dueToLimits && e.cause == null) {
+                    sendNotification(notificationTitle, "Невозможно записать на занятие!\n${lesson.sectionName}, $dateFormat")
+                    cancelByLesson(lesson.id)
                 }
             } catch (e: Exception) {
                 errorLogRepository.logThrowable(e, TAG)

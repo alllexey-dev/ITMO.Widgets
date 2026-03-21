@@ -11,11 +11,11 @@ class QrCodeRemoteDataSourceImpl(
 
     override suspend fun getQrHex(): String? {
         return withContext(Dispatchers.IO) {
-            var response = myItmo.api().getQrCode().awaitResponse()
+            var response = myItmo.api.getQrCode().awaitResponse()
             // try to refresh tokens if null (possible fix)
             if (response.body()?.response?.qrHex == null) {
                 myItmo.forceRefreshTokens()
-                response = myItmo.api().getQrCode().awaitResponse()
+                response = myItmo.api.getQrCode().awaitResponse()
             }
 
             response.body()?.response?.qrHex

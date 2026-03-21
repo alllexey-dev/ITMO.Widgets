@@ -1,6 +1,6 @@
 [versions]
-itmoWidgetsCore = "1.1.7"
-myItmoApi = "1.4.3"
+itmoWidgetsCore = "1.1.8"
+myItmoApi = "1.5.0"
 agp = "8.12.3"
 androidImageCropper = "4.6.0"
 datastorePreferences = "1.1.7"

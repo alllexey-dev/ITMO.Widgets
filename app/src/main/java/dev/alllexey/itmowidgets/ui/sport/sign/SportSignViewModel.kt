@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import api.myitmo.MyItmoApi
 import api.myitmo.model.sport.SportLesson
 import dev.alllexey.itmowidgets.appContainer
+import dev.alllexey.itmowidgets.core.model.QueueEntry
 import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
 import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.core.model.SportAutoSignLimits
@@ -14,14 +15,16 @@ import dev.alllexey.itmowidgets.core.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.core.model.SportFreeSignQueue
 import dev.alllexey.itmowidgets.core.model.SportFreeSignRequest
+import dev.alllexey.itmowidgets.data.repository.SportSharedData
+import dev.alllexey.itmowidgets.data.repository.SportSharedRepository
 import dev.alllexey.itmowidgets.util.SportUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -36,20 +39,17 @@ fun Long.isFreeSection(): Boolean = this == 1L
 
 class SportSignViewModel(
     private val myItmo: MyItmoApi,
+    private val sharedRepository: SportSharedRepository,
     context: Context
 ) : ViewModel() {
 
     private val appContainer = context.appContainer()
 
-    // State
     private val _uiState = MutableStateFlow(SportSignUiState())
     val uiState: StateFlow<SportSignUiState> = _uiState.asStateFlow()
 
-    // Events (Toasts/Dialogs)
     private val _events = Channel<SportSignEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
-
-    // region Cache
 
     var allSportsMap = mapOf<Long, SelectableSport>()
     var allBuildingsMap = mapOf<Long, String>()
@@ -68,8 +68,6 @@ class SportSignViewModel(
     private var selectedDate = today
     private var weekOffset = 0
 
-    // endregion Cache
-
     companion object {
         const val MAX_WEEKS_FORWARD = 5
         const val ANY_BUILDING_KEY = "Любой корпус"
@@ -78,30 +76,33 @@ class SportSignViewModel(
     }
 
     init {
+        observeSharedData()
         loadAllData()
+    }
+
+    private fun observeSharedData() {
+        viewModelScope.launch {
+            sharedRepository.state.collectLatest { shared ->
+                applySharedData(shared)
+
+                if (!shared.isLoading && allScheduleLessons.isNotEmpty()) {
+                    allScheduleLessons = shared.scheduleLessons
+                    rebuildUsedSportNames()
+                    updateFiltersAndLessons()
+                }
+            }
+        }
     }
 
     fun loadOnlyCustomData() {
         _uiState.update { it.copy(isLoading = true) }
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 supervisorScope {
-                    if (appContainer.storage.settings.getCustomServicesState()) {
-                        val api = appContainer.itmoWidgets.api
-                        val freeEntriesDef = async { api.mySportFreeSignEntries() }
-                        val freeQueuesDef = async { api.currentSportFreeSignQueues() }
-                        val autoLimitsDef = async { api.sportAutoSignLimits() }
-                        val autoEntriesDef = async { api.mySportAutoSignEntries() }
-                        val autoQueuesDef = async { api.currentSportAutoSignQueues() }
-
-                        freeSignEntries = freeEntriesDef.await().data.orEmpty()
-                            .filter { it.status == QueueEntryStatus.WAITING }
-                        freeSignQueues = freeQueuesDef.await().data.orEmpty()
-                        autoSignLimits = autoLimitsDef.await().data
-                        autoSignEntries = autoEntriesDef.await().data.orEmpty()
-                            .filter { it.status == QueueEntryStatus.WAITING }
-                        autoSignQueues = autoQueuesDef.await().data.orEmpty()
-                    }
+                    val sharedDeferred = async { sharedRepository.reloadAll(onlyCustom = true) }
+                    sharedDeferred.await()
+                    applySharedData(sharedRepository.state.value)
 
                     _uiState.update { it.copy() }
                     updateFiltersAndLessons()
@@ -117,40 +118,19 @@ class SportSignViewModel(
 
     fun loadAllData() {
         _uiState.update { it.copy(isLoading = true) }
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 supervisorScope {
                     val filtersDeferred = async { myItmo.sportFilters.execute().body()!!.result }
                     val timeSlotsDeferred = async { myItmo.timeSlots.execute().body()!!.data }
-                    val scheduleDeferred = async {
-                        myItmo.getSportSchedule(
-                            LocalDate.now(), LocalDate.now().plusDays(21),
-                            null, null, null
-                        ).execute().body()!!.result
-                    }
-
-                    if (appContainer.storage.settings.getCustomServicesState()) {
-                        val api = appContainer.itmoWidgets.api
-                        val freeEntriesDef = async { api.mySportFreeSignEntries() }
-                        val freeQueuesDef = async { api.currentSportFreeSignQueues() }
-                        val autoLimitsDef = async { api.sportAutoSignLimits() }
-                        val autoEntriesDef = async { api.mySportAutoSignEntries() }
-                        val autoQueuesDef = async { api.currentSportAutoSignQueues() }
-
-                        freeSignEntries = freeEntriesDef.await().data.orEmpty()
-                            .filter { it.status == QueueEntryStatus.WAITING }
-                        freeSignQueues = freeQueuesDef.await().data.orEmpty()
-                        autoSignLimits = autoLimitsDef.await().data
-                        autoSignEntries = autoEntriesDef.await().data.orEmpty()
-                            .filter { it.status == QueueEntryStatus.WAITING }
-                        autoSignQueues = autoQueuesDef.await().data.orEmpty()
-                    }
+                    val sharedDeferred = async { sharedRepository.reloadAll() }
 
                     val filters = filtersDeferred.await()
                     val timeSlots = timeSlotsDeferred.await()
-                    val schedule = scheduleDeferred.await()
 
-                    allScheduleLessons = schedule.flatMap { it.lessons ?: emptyList() }
+                    sharedDeferred.await()
+                    applySharedData(sharedRepository.state.value)
 
                     allSportsMap = allScheduleLessons
                         .distinctBy { it.sectionId }
@@ -164,14 +144,9 @@ class SportSignViewModel(
 
                     allBuildingsMap = filters.buildingId.associate { it.id to it.value }
                     allTeachersMap = filters.teacherIsu.associate { it.id to it.value }
-                    allTimeSlotsMap =
-                        timeSlots.associate { it.id to "${it.timeStart}-${it.timeEnd}" }
+                    allTimeSlotsMap = timeSlots.associate { it.id to "${it.timeStart}-${it.timeEnd}" }
 
-                    usedSportNames = allScheduleLessons.filter { it.signed }
-                        .mapNotNull { it.sectionName }
-                        .plus(freeSignEntries.map { it.targetLesson.sectionName })
-                        .plus(autoSignEntries.map { it.targetLesson.sectionName })
-                        .toSet()
+                    rebuildUsedSportNames()
 
                     _uiState.update { it.copy(allLessons = allScheduleLessons) }
                     updateFiltersAndLessons()
@@ -185,21 +160,41 @@ class SportSignViewModel(
         }
     }
 
-    // region Complex logic
+    private fun applySharedData(shared: SportSharedData) {
+        allScheduleLessons = shared.scheduleLessons
+
+        freeSignEntries = shared.freeSignEntries
+            .filter { it.status in QueueEntryStatus.notifiableStatuses }
+
+        freeSignQueues = shared.freeSignQueues
+
+        autoSignLimits = shared.autoSignLimits
+
+        autoSignEntries = shared.autoSignEntries
+            .filter { it.status in QueueEntryStatus.notifiableStatuses }
+
+        autoSignQueues = shared.autoSignQueues
+    }
+
+    private fun rebuildUsedSportNames() {
+        usedSportNames = allScheduleLessons
+            .filter { it.signed }
+            .mapNotNull { it.sectionName }
+            .plus(freeSignEntries.map { it.targetLesson.sectionName })
+            .plus(autoSignEntries.map { it.targetLesson.sectionName })
+            .toSet()
+    }
 
     private fun updateFiltersAndLessons() {
         viewModelScope.launch(Dispatchers.Default) {
             val state = _uiState.value
 
-            // 1. Filter by attendance type
             val lessonsBySport = allScheduleLessons.filter { lesson ->
                 val matchesType = lesson.sectionLevel.isFreeSection() == state.isFreeAttendance
-                val matchesName =
-                    state.selectedSportNames.isEmpty() || lesson.sectionName in state.selectedSportNames
+                val matchesName = state.selectedSportNames.isEmpty() || lesson.sectionName in state.selectedSportNames
                 matchesType && matchesName
             }
 
-            // 2. Validate and apply building filter
             val validBuildingName = state.selectedBuildingName?.takeIf { name ->
                 lessonsBySport.any { allBuildingsMap[it.getRealBuildingId()] == name }
             }
@@ -211,7 +206,6 @@ class SportSignViewModel(
                 lessonsBySport
             }
 
-            // 3. Validate teacher filter
             val availableTeacherNames = lessonsByBuilding
                 .mapNotNull { allTeachersMap[it.teacherIsu] }
                 .distinct()
@@ -219,9 +213,7 @@ class SportSignViewModel(
             val validTeacherName = state.selectedTeacherName?.takeIf { it in availableTeacherNames }
             val teacherId = allTeachersMap.entries.find { it.value == validTeacherName }?.key
 
-            // 4. Apply time slot and teacher filter
-            val timeSlotId =
-                allTimeSlotsMap.entries.find { it.value == state.selectedTimeSlot }?.key
+            val timeSlotId = allTimeSlotsMap.entries.find { it.value == state.selectedTimeSlot }?.key
 
             val finalFilteredLessons = lessonsByBuilding.filter { lesson ->
                 val matchesTime = state.selectedTimeSlot == null || lesson.timeSlotId == timeSlotId
@@ -229,18 +221,10 @@ class SportSignViewModel(
                 matchesTime && matchesTeacher
             }
 
-            // 5. Generate dropdown lists (filters)
-
             val availableSports = allScheduleLessons
                 .filter { it.sectionLevel.isFreeSection() == state.isFreeAttendance }
                 .distinctBy { it.sectionName }
-                .map {
-                    SelectableSport(
-                        it.sectionName,
-                        it.sectionLevel.isFreeSection(),
-                        it.sectionId
-                    )
-                }
+                .map { SelectableSport(it.sectionName, it.sectionLevel.isFreeSection(), it.sectionId) }
                 .sortedBy { it.name }
 
             val availableBuildings = lessonsBySport
@@ -250,34 +234,37 @@ class SportSignViewModel(
 
             val availableTeachers = availableTeacherNames.sorted()
 
-            // 6. Generate displayed lessons list
-
-            // A. Real lessons (for the selected date)
             val todayRealLessons = finalFilteredLessons
                 .filter { lesson ->
                     val isToday = lesson.date.toLocalDate().isEqual(selectedDate)
                     val isAvailable = lesson.available > 0 && lesson.canSignIn.isCanSignIn
-                    // If "Show Only Available" is on, we hide full lessons, unless Auto Sign is ON (which might show them)
-                    // or if the user is already signed up.
                     val shouldShow =
-                        !state.showOnlyAvailable || (lesson.dateEnd > OffsetDateTime.now() && (lesson.signed || isAvailable || (state.showAutoSign && lesson.canSignIn.isCanSignIn)))
+                        !state.showOnlyAvailable || (lesson.dateEnd > OffsetDateTime.now() && (
+                                lesson.signed ||
+                                        isAvailable ||
+                                        (state.showAutoSign && lesson.canSignIn.isCanSignIn)
+                                ))
 
                     isToday && shouldShow
                 }
                 .map { createSportLessonData(it, isReal = true) }
-                // Filter again after mapping because createSportLessonData calculates precise unavailability reasons
-                .filter { item -> !state.showOnlyAvailable || (item.apiData.dateEnd > OffsetDateTime.now() && (item.canSignIn || item.apiData.signed || (state.showAutoSign && item.apiData.available <= 0))) }
+                .filter { item ->
+                    !state.showOnlyAvailable || (
+                            item.apiData.dateEnd > OffsetDateTime.now() && (
+                                    item.canSignIn ||
+                                            item.apiData.signed ||
+                                            (state.showAutoSign && item.apiData.available <= 0)
+                                    )
+                            )
+                }
 
-            // B. Phantom Lessons (Auto Sign suggestions based on history)
             val phantomLessons = if (state.showAutoSign) {
                 val twoWeeksAgoDate = selectedDate.minusWeeks(2)
 
-                // Find lessons from 2 weeks ago that match current filters
                 val historicalLessons = finalFilteredLessons.filter {
                     it.date.toLocalDate().isEqual(twoWeeksAgoDate)
                 }
 
-                // Check upcoming schedule (2 weeks from now) to see if these lessons exist
                 val futureDateStart = selectedDate.plusWeeks(2).atStartOfDay()
                 val futureDateEnd = selectedDate.plusWeeks(2).plusDays(1).atStartOfDay()
 
@@ -324,7 +311,9 @@ class SportSignViewModel(
     }
 
     private fun createSportLessonData(lesson: SportLesson, isReal: Boolean): SportLessonData {
-        val reasons = if (isReal) UnavailableReason.getSortedUnavailableReasons(lesson) else {
+        val reasons = if (isReal) {
+            UnavailableReason.getSortedUnavailableReasons(lesson)
+        } else {
             val allowed = setOf(
                 UnavailableReason.LessonInPast::class,
                 UnavailableReason.SelectionFailed::class,
@@ -353,8 +342,10 @@ class SportSignViewModel(
         val days = (0..6).map { startOfWeek.plusDays(it.toLong()) }
 
         val datesWithLessons = _uiState.value.filteredLessons.map { it.date.toLocalDate() }.toSet()
-        val datesAvailable = _uiState.value.filteredLessons.filter { it.canSignIn.isCanSignIn }
-            .map { it.date.toLocalDate() }.toSet()
+        val datesAvailable = _uiState.value.filteredLessons
+            .filter { it.canSignIn.isCanSignIn }
+            .map { it.date.toLocalDate() }
+            .toSet()
 
         val calendarDays = days.map { date ->
             CalendarDay(
@@ -380,8 +371,6 @@ class SportSignViewModel(
             )
         }
     }
-
-    // region Filter actions
 
     fun selectDate(date: LocalDate) {
         selectedDate = date
@@ -453,10 +442,6 @@ class SportSignViewModel(
         updateFiltersAndLessons()
     }
 
-    // endregion Filter actions
-
-    // region Lesson actions
-
     fun signUpForLesson(lesson: SportLessonData) {
         performLessonAction(
             action = { myItmo.signInLessons(listOf(lesson.apiData.id)).execute() },
@@ -471,28 +456,16 @@ class SportSignViewModel(
         )
     }
 
-    // endregion Lesson Actions
-
     private fun performLessonAction(action: () -> Unit, successMessage: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 _uiState.update { it.copy(isLoading = true) }
                 action()
                 _events.send(SportSignEvent.ShowToast(successMessage))
-                val schedule = myItmo.getSportSchedule(
-                    LocalDate.now(),
-                    LocalDate.now().plusDays(21),
-                    null,
-                    null,
-                    null
-                ).execute().body()!!.result
-                allScheduleLessons = schedule.flatMap { it.lessons ?: emptyList() }
-                _uiState.update { it.copy(allLessons = allScheduleLessons) }
-                updateFiltersAndLessons()
+                loadAllData()
             } catch (e: Exception) {
                 e.printStackTrace()
                 _events.send(SportSignEvent.ShowError("Ошибка выполнения операции"))
-            } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
@@ -501,7 +474,11 @@ class SportSignViewModel(
     fun handleAutoSignClick(lesson: SportLessonData) {
         viewModelScope.launch {
             if (!appContainer.storage.settings.getCustomServicesState()) {
-                _events.send(SportSignEvent.ShowInfoDialog(message = "У вас выключены неофициальные сервисы \uD83D\uDE1D\n\nИх можно включить в настройках"))
+                _events.send(
+                    SportSignEvent.ShowInfoDialog(
+                        message = "У вас выключены неофициальные сервисы 😝\n\nИх можно включить в настройках"
+                    )
+                )
                 return@launch
             }
 
@@ -510,53 +487,55 @@ class SportSignViewModel(
                 if (entry != null) {
                     _events.send(
                         SportSignEvent.ShowAutoSignDeleteDialog(
-                        message = "У вас уже есть автозапись на это занятие. Позиция в очереди: ${entry.position} из ${entry.total}",
-                        action = { deleteFreeSignEntry(entry.id) }
-                    ))
+                            message = "У вас уже есть автозапись на это занятие. Позиция в очереди: ${entry.position} из ${entry.total}",
+                            action = { deleteFreeSignEntry(entry.id) }
+                        )
+                    )
                 } else {
                     _events.send(
                         SportSignEvent.ShowAutoSignConfirmDialog(
-                        title = "Автозапись",
-                        message = "Вы можете встать в очередь на автозапись.\n\nПриложение попробует вас записать, когда место освободится.",
-                        action = { forceSign ->
-                            createFreeSignEntry(
-                                lesson.apiData.id,
-                                forceSign
-                            )
-                        }
-                    ))
+                            title = "Автозапись",
+                            message = "Вы можете встать в очередь на автозапись.\n\nПриложение попробует вас записать, когда место освободится.",
+                            showForceSignButton = true,
+                            action = { forceSign -> createFreeSignEntry(lesson.apiData.id, forceSign) }
+                        )
+                    )
                 }
             } else {
                 val entry = autoSignEntries.find { it.prototypeLessonId == lesson.apiData.id }
                 val thisDayEntry = autoSignEntries.find {
-                    it.targetLesson.dateStart.toLocalDate()
-                        .isEqual(lesson.apiData.date.toLocalDate())
+                    it.targetLesson.dateStart.toLocalDate().isEqual(lesson.apiData.date.toLocalDate())
                 }
 
                 if (entry != null) {
                     _events.send(
                         SportSignEvent.ShowAutoSignDeleteDialog(
-                        message = "У вас уже есть автозапись на это занятие. Позиция в очереди: ${entry.position} из ${entry.total}",
-                        action = { deleteAutoSignEntry(entry.id) }
-                    ))
+                            message = "У вас уже есть автозапись на это занятие. Позиция в очереди: ${entry.position} из ${entry.total}",
+                            action = { deleteAutoSignEntry(entry.id) }
+                        )
+                    )
                 } else if (thisDayEntry != null) {
                     val lessonData = thisDayEntry.targetLesson
-                    val msg = "У вас уже есть автозапись на этот день: \n${
-                        SportUtils.shortenSectionName(lessonData.sectionName)
-                    }\n${lessonData.teacherFio}"
+                    val msg = "У вас уже есть автозапись на этот день: \n${SportUtils.shortenSectionName(lessonData.sectionName)}\n${lessonData.teacherFio}"
                     _events.send(SportSignEvent.ShowInfoDialog(message = msg))
                 } else {
                     val available = autoSignLimits?.available ?: 1
                     if (available > 0) {
                         _events.send(
                             SportSignEvent.ShowAutoSignConfirmDialog(
-                            title = "Автозапись",
-                            message = "Вы можете встать в очередь на автозапись.\n\nПриложение попробует вас записать, когда на это занятие откроется запись.",
-                            action = { createAutoSignEntry(lesson.apiData.id) }
-                        ))
+                                title = "Автозапись",
+                                message = "Вы можете встать в очередь на автозапись.\n\nПриложение попробует вас записать, когда на это занятие откроется запись.",
+                                showForceSignButton = false,
+                                action = { createAutoSignEntry(lesson.apiData.id) }
+                            )
+                        )
                     } else {
                         val nextDate = autoSignLimits?.nextAvailableAt
-                        _events.send(SportSignEvent.ShowInfoDialog(message = "Вы достигли месячного лимита автозаписи.\n\nВ следующий раз можно будет записаться $nextDate"))
+                        _events.send(
+                            SportSignEvent.ShowInfoDialog(
+                                message = "Вы достигли месячного лимита автозаписи.\n\nВ следующий раз можно будет записаться $nextDate"
+                            )
+                        )
                     }
                 }
             }
@@ -565,34 +544,27 @@ class SportSignViewModel(
 
     private fun createFreeSignEntry(lessonId: Long, forceSign: Boolean) {
         launchAutoSignAction {
-            appContainer.itmoWidgets.api.createSportFreeSignEntry(
-                SportFreeSignRequest(
-                    lessonId,
-                    forceSign
-                )
-            )
+            appContainer.itmoWidgets.api.createSportFreeSignEntry(SportFreeSignRequest(lessonId, forceSign))
         }
     }
 
     private fun deleteFreeSignEntry(entryId: Long) {
         launchAutoSignAction {
-            appContainer.itmoWidgets.api.deleteSportFreeSignEntry(entryId)
+            appContainer.itmoWidgets.api.cancelSportFreeSignEntry(entryId)
         }
     }
 
     private fun createAutoSignEntry(prototypeId: Long) {
         launchAutoSignAction {
             appContainer.itmoWidgets.api.createSportAutoSignEntry(
-                SportAutoSignRequest(
-                    prototypeLessonId = prototypeId
-                )
+                SportAutoSignRequest(prototypeLessonId = prototypeId)
             )
         }
     }
 
     private fun deleteAutoSignEntry(entryId: Long) {
         launchAutoSignAction {
-            appContainer.itmoWidgets.api.deleteSportAutoSignEntry(entryId)
+            appContainer.itmoWidgets.api.cancelSportAutoSignEntry(entryId)
         }
     }
 
@@ -608,9 +580,6 @@ class SportSignViewModel(
         }
     }
 
-    // endregion Lesson actions
-
-    // helper
     private fun SportLesson.getRealBuildingId(): Long {
         return if (roomId == -1L) -1L
         else if (allBuildingsMap.contains(buildingId)) buildingId else 0L

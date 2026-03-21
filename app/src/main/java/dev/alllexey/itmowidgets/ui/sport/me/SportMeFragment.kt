@@ -39,8 +39,8 @@ class SportMeFragment : Fragment(R.layout.fragment_sport_me), SportRecordListene
     private val viewModel: SportMeViewModel by viewModels {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val myItmo = (requireActivity().application as ItmoWidgetsApp).appContainer.myItmo
-                return SportMeViewModel(myItmo.api(), requireContext()) as T
+                val app = requireActivity().application as ItmoWidgetsApp
+                return SportMeViewModel(app.appContainer.sportSharedRepository) as T
             }
         }
     }
@@ -119,12 +119,12 @@ class SportMeFragment : Fragment(R.layout.fragment_sport_me), SportRecordListene
                 val appContainer = (requireContext().applicationContext as ItmoWidgetsApp).appContainer
                 CoroutineScope(Dispatchers.IO).launch {
                     when (model.type) {
-                        is RecordType.Signed -> appContainer.myItmo.api().signOutLessons(listOf(model.lessonId)).execute()
+                        is RecordType.Signed -> appContainer.myItmo.api.signOutLessons(listOf(model.lessonId)).execute()
                         is RecordType.Queue -> {
                             if (model.type.isPrediction) {
-                                appContainer.itmoWidgets.api.deleteSportAutoSignEntry(model.type.entryId)
+                                appContainer.itmoWidgets.api.cancelSportAutoSignEntry(model.type.entry.id)
                             } else {
-                                appContainer.itmoWidgets.api.deleteSportFreeSignEntry(model.type.entryId)
+                                appContainer.itmoWidgets.api.cancelSportFreeSignEntry(model.type.entry.id)
                             }
                         }
                     }
