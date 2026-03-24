@@ -59,10 +59,10 @@ class SportMeViewModel(
         loadData()
     }
 
-    fun loadData() {
+    fun loadData(onlyCustom: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                sharedRepository.reloadAll()
+                if (onlyCustom) sharedRepository.reloadCustom() else sharedRepository.reloadAll()
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(

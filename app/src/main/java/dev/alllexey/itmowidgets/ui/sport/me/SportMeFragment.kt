@@ -130,7 +130,7 @@ class SportMeFragment : Fragment(R.layout.fragment_sport_me), SportRecordListene
                     }
 
                     delay(200)
-                    viewModel.loadData()
+                    viewModel.loadData(onlyCustom = model.type is RecordType.Queue)
                 }
             }
             .show()

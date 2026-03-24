@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import api.myitmo.MyItmoApi
 import api.myitmo.model.sport.SportLesson
 import dev.alllexey.itmowidgets.appContainer
-import dev.alllexey.itmowidgets.core.model.QueueEntry
 import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
 import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.core.model.SportAutoSignLimits
@@ -95,12 +94,10 @@ class SportSignViewModel(
     }
 
     fun loadOnlyCustomData() {
-        _uiState.update { it.copy(isLoading = true) }
-
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 supervisorScope {
-                    val sharedDeferred = async { sharedRepository.reloadAll(onlyCustom = true) }
+                    val sharedDeferred = async { sharedRepository.reloadCustom() }
                     sharedDeferred.await()
                     applySharedData(sharedRepository.state.value)
 
@@ -224,7 +221,13 @@ class SportSignViewModel(
             val availableSports = allScheduleLessons
                 .filter { it.sectionLevel.isFreeSection() == state.isFreeAttendance }
                 .distinctBy { it.sectionName }
-                .map { SelectableSport(it.sectionName, it.sectionLevel.isFreeSection(), it.sectionId) }
+                .map {
+                    SelectableSport(
+                        it.sectionName,
+                        it.sectionLevel.isFreeSection(),
+                        it.sectionId
+                    )
+                }
                 .sortedBy { it.name }
 
             val availableBuildings = lessonsBySport
@@ -497,14 +500,20 @@ class SportSignViewModel(
                             title = "Автозапись",
                             message = "Вы можете встать в очередь на автозапись.\n\nПриложение попробует вас записать, когда место освободится.",
                             showForceSignButton = true,
-                            action = { forceSign -> createFreeSignEntry(lesson.apiData.id, forceSign) }
+                            action = { forceSign ->
+                                createFreeSignEntry(
+                                    lesson.apiData.id,
+                                    forceSign
+                                )
+                            }
                         )
                     )
                 }
             } else {
                 val entry = autoSignEntries.find { it.prototypeLessonId == lesson.apiData.id }
                 val thisDayEntry = autoSignEntries.find {
-                    it.targetLesson.dateStart.toLocalDate().isEqual(lesson.apiData.date.toLocalDate())
+                    it.targetLesson.dateStart.toLocalDate()
+                        .isEqual(lesson.apiData.date.toLocalDate())
                 }
 
                 if (entry != null) {
@@ -516,7 +525,9 @@ class SportSignViewModel(
                     )
                 } else if (thisDayEntry != null) {
                     val lessonData = thisDayEntry.targetLesson
-                    val msg = "У вас уже есть автозапись на этот день: \n${SportUtils.shortenSectionName(lessonData.sectionName)}\n${lessonData.teacherFio}"
+                    val msg = "У вас уже есть автозапись на этот день: \n${
+                        SportUtils.shortenSectionName(lessonData.sectionName)
+                    }\n${lessonData.teacherFio}"
                     _events.send(SportSignEvent.ShowInfoDialog(message = msg))
                 } else {
                     val available = autoSignLimits?.available ?: 1
@@ -544,7 +555,12 @@ class SportSignViewModel(
 
     private fun createFreeSignEntry(lessonId: Long, forceSign: Boolean) {
         launchAutoSignAction {
-            appContainer.itmoWidgets.api.createSportFreeSignEntry(SportFreeSignRequest(lessonId, forceSign))
+            appContainer.itmoWidgets.api.createSportFreeSignEntry(
+                SportFreeSignRequest(
+                    lessonId,
+                    forceSign
+                )
+            )
         }
     }
 

@@ -49,78 +49,51 @@ class SportSharedRepository(
     private val _state = MutableStateFlow(SportSharedData())
     val state: StateFlow<SportSharedData> = _state.asStateFlow()
 
-    suspend fun reloadAll(onlyCustom: Boolean = false) {
-        mutex.withLock {
-            _state.update { it.copy(isLoading = true) }
+    suspend fun reloadCustom() {
+        val customEnabled = settings.getCustomServicesState()
+        if (!customEnabled) {
+            return
+        }
 
+        mutex.withLock {
             try {
                 supervisorScope {
-                    val customEnabled = settings.getCustomServicesState()
+                    async(Dispatchers.IO) {
+                        widgetsApi.syncSportLessons(state.value.chosenSportSections.flatMap { it.lessonGroups }.flatMap { it.lessons }.map { it.id })
+                    }.await()
 
-                    val freeEntriesDeferred = if (customEnabled) async(Dispatchers.IO) {
+                    val freeEntriesDeferred = async(Dispatchers.IO) {
                         widgetsApi.mySportFreeSignEntries().data.orEmpty()
-                    } else null
-
-                    val freeQueuesDeferred = if (customEnabled) async(Dispatchers.IO) {
-                        widgetsApi.currentSportFreeSignQueues().data.orEmpty()
-                    } else null
-
-                    val autoEntriesDeferred = if (customEnabled) async(Dispatchers.IO) {
-                        widgetsApi.mySportAutoSignEntries().data.orEmpty()
-                    } else null
-
-                    val autoQueuesDeferred = if (customEnabled) async(Dispatchers.IO) {
-                        widgetsApi.currentSportAutoSignQueues().data.orEmpty()
-                    } else null
-
-                    val autoLimitsDeferred = if (customEnabled) async(Dispatchers.IO) {
-                        widgetsApi.sportAutoSignLimits().data
-                    } else null
-
-                    val newState = if (onlyCustom) {
-                        SportSharedData(
-                            isLoading = false,
-                            revision = ++revisionCounter,
-                            score = state.value.score,
-                            chosenSportSections = state.value.chosenSportSections,
-                            scheduleLessons = state.value.scheduleLessons,
-                            freeSignEntries = freeEntriesDeferred?.await().orEmpty(),
-                            freeSignQueues = freeQueuesDeferred?.await().orEmpty(),
-                            autoSignEntries = autoEntriesDeferred?.await().orEmpty(),
-                            autoSignQueues = autoQueuesDeferred?.await().orEmpty(),
-                            autoSignLimits = autoLimitsDeferred?.await()
-                        )
-                    } else {
-
-                        val scoreDeferred = async(Dispatchers.IO) {
-                            myItmo.getSportScore(null).execute().body()!!.result
-                        }
-                        val chosenDeferred = async(Dispatchers.IO) {
-                            myItmo.chosenSportSections.execute().body()!!.result
-                        }
-
-                        val scheduleDeferred = async(Dispatchers.IO) {
-                            myItmo.getSportSchedule(
-                                LocalDate.now(),
-                                LocalDate.now().plusDays(21),
-                                null, null, null
-                            ).execute().body()!!.result
-                        }
-
-                        SportSharedData(
-                            isLoading = false,
-                            revision = ++revisionCounter,
-                            score = scoreDeferred.await(),
-                            chosenSportSections = chosenDeferred.await(),
-                            scheduleLessons = scheduleDeferred.await()
-                                .flatMap { it.lessons ?: emptyList() },
-                            freeSignEntries = freeEntriesDeferred?.await().orEmpty(),
-                            freeSignQueues = freeQueuesDeferred?.await().orEmpty(),
-                            autoSignEntries = autoEntriesDeferred?.await().orEmpty(),
-                            autoSignQueues = autoQueuesDeferred?.await().orEmpty(),
-                            autoSignLimits = autoLimitsDeferred?.await()
-                        )
                     }
+
+                    val freeQueuesDeferred = async(Dispatchers.IO) {
+                        widgetsApi.currentSportFreeSignQueues().data.orEmpty()
+                    }
+
+                    val autoEntriesDeferred = async(Dispatchers.IO) {
+                        widgetsApi.mySportAutoSignEntries().data.orEmpty()
+                    }
+
+                    val autoQueuesDeferred = async(Dispatchers.IO) {
+                        widgetsApi.currentSportAutoSignQueues().data.orEmpty()
+                    }
+
+                    val autoLimitsDeferred = async(Dispatchers.IO) {
+                        widgetsApi.sportAutoSignLimits().data
+                    }
+
+                    val newState = SportSharedData(
+                        isLoading = false,
+                        revision = ++revisionCounter,
+                        score = state.value.score,
+                        chosenSportSections = state.value.chosenSportSections,
+                        scheduleLessons = state.value.scheduleLessons,
+                        freeSignEntries = freeEntriesDeferred.await(),
+                        freeSignQueues = freeQueuesDeferred.await(),
+                        autoSignEntries = autoEntriesDeferred.await(),
+                        autoSignQueues = autoQueuesDeferred.await(),
+                        autoSignLimits = autoLimitsDeferred.await()
+                    )
 
                     _state.value = newState
                 }
@@ -128,5 +101,49 @@ class SportSharedRepository(
                 _state.update { it.copy(isLoading = false) }
             }
         }
+    }
+
+    suspend fun reloadAll() {
+        mutex.withLock {
+            _state.update { it.copy(isLoading = true) }
+
+            try {
+                supervisorScope {
+                    val scoreDeferred = async(Dispatchers.IO) {
+                        myItmo.getSportScore(null).execute().body()!!.result
+                    }
+                    val chosenDeferred = async(Dispatchers.IO) {
+                        myItmo.chosenSportSections.execute().body()!!.result
+                    }
+
+                    val scheduleDeferred = async(Dispatchers.IO) {
+                        myItmo.getSportSchedule(
+                            LocalDate.now(),
+                            LocalDate.now().plusDays(21),
+                            null, null, null
+                        ).execute().body()!!.result
+                    }
+
+                    val newState = SportSharedData(
+                        isLoading = false,
+                        revision = ++revisionCounter,
+                        score = scoreDeferred.await(),
+                        chosenSportSections = chosenDeferred.await(),
+                        scheduleLessons = scheduleDeferred.await()
+                            .flatMap { it.lessons ?: emptyList() },
+                        freeSignEntries = state.value.freeSignEntries,
+                        freeSignQueues = state.value.freeSignQueues,
+                        autoSignEntries = state.value.autoSignEntries,
+                        autoSignQueues = state.value.autoSignQueues,
+                        autoSignLimits = state.value.autoSignLimits
+                    )
+
+                    _state.value = newState
+                }
+            } finally {
+                _state.update { it.copy(isLoading = false) }
+            }
+        }
+        reloadCustom()
     }
 }
