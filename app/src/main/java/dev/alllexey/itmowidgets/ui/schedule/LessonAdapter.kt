@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -64,7 +65,7 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
         private val locationBuilding: TextView = itemView.findViewById(R.id.location_building)
         private val noteLayout: View = itemView.findViewById(R.id.note_layout)
         private val noteText: TextView = itemView.findViewById(R.id.note)
-        private val card: MaterialCardView = itemView.findViewById(R.id.card_container)
+        private val card: LinearLayout = itemView.findViewById(R.id.card_container)
         private val timelineDot: ImageView = itemView.findViewById(R.id.timeline_dot)
         private val typeBadge: MaterialCardView = itemView.findViewById(R.id.type_badge)
         private val typeLabel: TextView = itemView.findViewById(R.id.type_label)
@@ -111,10 +112,9 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
             val colorOnSurface = context.getColorFromAttr(com.google.android.material.R.attr.colorOnSurface)
             val colorPrimary = context.getColorFromAttr(android.R.attr.colorPrimary)
             val colorOutline = context.getColorFromAttr(com.google.android.material.R.attr.colorOutlineVariant)
-
             when (item.lessonState) {
                 ScheduleItem.LessonState.CURRENT -> {
-                    card.setCardBackgroundColor(colorPrimaryContainer)
+//                    card.setCardBackgroundColor(colorPrimaryContainer)
                     title.setTextColor(colorOnPrimaryContainer)
 
                     timelineDot.setColorFilter(colorPrimary)
@@ -124,7 +124,7 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
                     timeStart.setTextColor(colorPrimary)
                 }
                 ScheduleItem.LessonState.COMPLETED -> {
-                    card.setCardBackgroundColor(context.getColorFromAttr(com.google.android.material.R.attr.colorSurfaceContainerLowest))
+//                    card.setCardBackgroundColor(context.getColorFromAttr(com.google.android.material.R.attr.colorSurfaceContainerLowest))
                     title.setTextColor(context.getColorFromAttr(com.google.android.material.R.attr.colorOnSurfaceVariant))
                     card.alpha = 0.7f
 
@@ -135,7 +135,7 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
                     timeStart.setTextColor(context.getColorFromAttr(com.google.android.material.R.attr.colorOnSurfaceVariant))
                 }
                 ScheduleItem.LessonState.UPCOMING -> {
-                    card.setCardBackgroundColor(colorSurface)
+//                    card.setCardBackgroundColor(colorSurface)
                     title.setTextColor(colorOnSurface)
                     card.alpha = 1.0f
 

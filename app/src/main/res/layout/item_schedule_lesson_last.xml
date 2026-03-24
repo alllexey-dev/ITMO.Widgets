@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+    <!-- Timeline guideline -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/timeline_guide"
         android:layout_width="wrap_content"
@@ -13,6 +14,7 @@
         android:orientation="vertical"
         app:layout_constraintGuide_begin="50dp" />
 
+    <!-- Start time -->
     <TextView
         android:id="@+id/time_start"
         android:layout_width="wrap_content"
@@ -25,6 +27,7 @@
         app:layout_constraintTop_toTopOf="@id/card_container"
         tools:text="08:20" />
 
+    <!-- End time -->
     <TextView
         android:id="@+id/time_end"
         android:layout_width="wrap_content"
@@ -37,6 +40,7 @@
         app:layout_constraintTop_toBottomOf="@id/time_start"
         tools:text="09:50" />
 
+    <!-- Timeline line -->
     <View
         android:id="@+id/timeline_line"
         android:layout_width="2dp"
@@ -47,6 +51,7 @@
         app:layout_constraintStart_toStartOf="@id/timeline_guide"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Timeline dot -->
     <ImageView
         android:id="@+id/timeline_dot"
         android:layout_width="10dp"
@@ -58,140 +63,141 @@
         app:layout_constraintTop_toTopOf="@id/time_start"
         app:tint="?attr/colorOutlineVariant" />
 
-    <com.google.android.material.card.MaterialCardView
+    <!-- Main container (replacing MaterialCardView) -->
+    <LinearLayout
         android:id="@+id/card_container"
-        style="@style/Widget.Material3.CardView.Filled"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        app:cardBackgroundColor="?attr/colorSurface"
-        app:cardElevation="0dp"
+        android:layout_marginBottom="0dp"
+        android:background="@android:color/transparent"
+        android:orientation="vertical"
+        android:padding="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/timeline_guide"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
+        <!-- Title -->
+        <TextView
+            android:id="@+id/title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp">
+            android:ellipsize="end"
+            android:maxLines="3"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Математический анализ" />
+
+        <!-- Teacher -->
+        <LinearLayout
+            android:id="@+id/teacher_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_person"
+                app:tint="?attr/colorSecondary" />
 
             <TextView
-                android:id="@+id/title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="3"
-                android:textAppearance="?attr/textAppearanceTitleSmall"
-                android:textColor="?attr/colorOnSurface"
-                tools:text="Математический анализ" />
-
-            <LinearLayout
-                android:id="@+id/teacher_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginEnd="8dp"
-                    android:src="@drawable/ic_person"
-                    app:tint="?attr/colorSecondary" />
-
-                <TextView
-                    android:id="@+id/teacher"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    tools:text="Некий Д.К." />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/note_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginEnd="8dp"
-                    android:src="@drawable/ic_pin"
-                    app:tint="?attr/colorPrimary" />
-
-                <TextView
-                    android:id="@+id/note"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    tools:text="Консультация" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/location_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginEnd="8dp"
-                    android:src="@drawable/ic_location"
-                    app:tint="?attr/colorTertiary" />
-
-                <TextView
-                    android:id="@+id/location_room"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="4dp"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    tools:text="404" />
-
-                <TextView
-                    android:id="@+id/location_building"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:alpha="0.7"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    tools:text="Кронва" />
-            </LinearLayout>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/type_badge"
-                style="@style/Widget.Material3.CardView.Filled"
+                android:id="@+id/teacher"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:visibility="visible"
-                app:cardCornerRadius="8dp"
-                tools:visibility="visible">
-
-                <TextView
-                    android:id="@+id/type_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="6dp"
-                    android:paddingVertical="2dp"
-                    android:text="Практика"
-                    android:textAppearance="?attr/textAppearanceLabelSmall"
-                    android:textColor="?attr/colorOnSecondaryContainer" />
-            </com.google.android.material.card.MaterialCardView>
-
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Некий Д.К." />
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+
+        <!-- Note -->
+        <LinearLayout
+            android:id="@+id/note_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_pin"
+                app:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:id="@+id/note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Консультация" />
+        </LinearLayout>
+
+        <!-- Location -->
+        <LinearLayout
+            android:id="@+id/location_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_location"
+                app:tint="?attr/colorTertiary" />
+
+            <TextView
+                android:id="@+id/location_room"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="404" />
+
+            <TextView
+                android:id="@+id/location_building"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.7"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Кронва" />
+        </LinearLayout>
+
+        <!-- Type badge -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/type_badge"
+            style="@style/Widget.Material3.CardView.Filled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:visibility="visible"
+            app:cardCornerRadius="8dp"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/type_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:text="Практика"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:textColor="?attr/colorOnSecondaryContainer" />
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
