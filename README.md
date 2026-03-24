@@ -9,6 +9,7 @@
 <p align="center">
   <img src="https://img.shields.io/github/v/release/alllexey-dev/ITMO.Widgets?style=flat-square&color=blue" alt="Latest Release" />
   <img src="https://img.shields.io/github/downloads/alllexey-dev/ITMO.Widgets/total?style=flat-square&color=orange" alt="Downloads" />
+[![Hypercommit](https://img.shields.io/badge/Hypercommit-DB2475)](https://hypercommit.com/itmo-widgets)
 </p>
 
 **ITMO.Widgets** — это больше не просто виджеты. Это набор утилит, который автоматизирует рутину, позволяет записываться на спорт "в один клик" (или вообще без кликов) и держит расписание под рукой.
