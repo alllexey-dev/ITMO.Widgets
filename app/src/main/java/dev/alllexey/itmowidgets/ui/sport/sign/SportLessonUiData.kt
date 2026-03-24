@@ -32,7 +32,7 @@ data class SportSignUiState(
     val selectedBuildingName: String? = null,
     val selectedTeacherName: String? = null,
     val selectedTimeSlot: String? = null,
-    val isFreeAttendance: Boolean = true, // true by default
+    val isFreeAttendance: Boolean = true, // true by default, non-free attendance is not supported
     val showOnlyAvailable: Boolean = true, // true by default
     val showAutoSign: Boolean = true, // true by default
 

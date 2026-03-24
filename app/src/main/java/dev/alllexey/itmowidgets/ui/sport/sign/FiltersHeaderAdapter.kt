@@ -15,7 +15,7 @@ import kotlin.concurrent.thread
 
 interface FilterActionsListener {
     fun onSportClick()
-    fun onFreeAttendanceChanged(isChecked: Boolean)
+//    fun onFreeAttendanceChanged(isChecked: Boolean)
     fun onShowOnlyAvailableChanged(isChecked: Boolean)
     fun onShowAutoSignChanged(isChecked: Boolean)
     fun onBuildingSelected(building: String)
@@ -76,9 +76,9 @@ class FiltersHeaderAdapter(
                 binding.timeInputLayout.visibility = View.VISIBLE
             }
 
-            binding.freeSportChip.setOnCheckedChangeListener { _, isChecked ->
-                listener.onFreeAttendanceChanged(isChecked)
-            }
+//            binding.freeSportChip.setOnCheckedChangeListener { _, isChecked ->
+//                listener.onFreeAttendanceChanged(isChecked)
+//            }
             binding.availableSportChip.setOnCheckedChangeListener { _, isChecked ->
                 listener.onShowOnlyAvailableChanged(isChecked)
             }

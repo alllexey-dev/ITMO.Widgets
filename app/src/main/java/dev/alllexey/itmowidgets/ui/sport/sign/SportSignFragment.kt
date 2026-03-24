@@ -116,7 +116,7 @@ class SportSignFragment : Fragment(R.layout.fragment_sport_sign), FilterActionsL
         showMultiSelectSearchableDialog(viewModel.uiState.value)
     }
 
-    override fun onFreeAttendanceChanged(isChecked: Boolean) = viewModel.setFreeAttendance(isChecked)
+//    override fun onFreeAttendanceChanged(isChecked: Boolean) = viewModel.setFreeAttendance(isChecked)
     override fun onShowOnlyAvailableChanged(isChecked: Boolean) = viewModel.setShowOnlyAvailable(isChecked)
     override fun onShowAutoSignChanged(isChecked: Boolean) = viewModel.setShowAutoSign(isChecked)
     override fun onBuildingSelected(building: String) = viewModel.selectBuilding(building)

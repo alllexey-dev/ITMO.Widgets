@@ -399,21 +399,21 @@ class SportSignViewModel(
         }
     }
 
-    fun setFreeAttendance(isFree: Boolean) {
-        val currentSelectedSports = _uiState.value.selectedSportNames
-        val availableSportsInNewMode = allScheduleLessons
-            .filter { it.sectionLevel.isFreeSection() == isFree }
-            .mapNotNull { it.sectionName }
-            .toSet()
-
-        _uiState.update {
-            it.copy(
-                isFreeAttendance = isFree,
-                selectedSportNames = currentSelectedSports.intersect(availableSportsInNewMode)
-            )
-        }
-        updateFiltersAndLessons()
-    }
+//    fun setFreeAttendance(isFree: Boolean) {
+//        val currentSelectedSports = _uiState.value.selectedSportNames
+//        val availableSportsInNewMode = allScheduleLessons
+//            .filter { it.sectionLevel.isFreeSection() == isFree }
+//            .mapNotNull { it.sectionName }
+//            .toSet()
+//
+//        _uiState.update {
+//            it.copy(
+//                isFreeAttendance = isFree,
+//                selectedSportNames = currentSelectedSports.intersect(availableSportsInNewMode)
+//            )
+//        }
+//        updateFiltersAndLessons()
+//    }
 
     fun setShowOnlyAvailable(show: Boolean) {
         _uiState.update { it.copy(showOnlyAvailable = show) }
