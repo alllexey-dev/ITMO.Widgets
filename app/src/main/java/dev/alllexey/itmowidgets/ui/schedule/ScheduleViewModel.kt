@@ -7,14 +7,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import api.myitmo.model.schedule.Schedule
 import dev.alllexey.itmowidgets.appContainer
+import dev.alllexey.itmowidgets.core.model.LessonSyncRequest
+import dev.alllexey.itmowidgets.core.utils.toDto
 import dev.alllexey.itmowidgets.data.repository.ScheduleRepository
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDate
 
 sealed class ScheduleUiState {
     object Loading : ScheduleUiState()
-    data class Success(val schedule: List<Schedule>, val isStillUpdating: Boolean) : ScheduleUiState()
+    data class Success(val schedule: List<Schedule>, val isStillUpdating: Boolean) :
+        ScheduleUiState()
+
     data class Error(val message: String) : ScheduleUiState()
 }
 
@@ -34,18 +39,32 @@ class ScheduleViewModel(
         isLoading = true
 
         viewModelScope.launch {
+            val appContainer = context.appContainer()
             try {
                 val startDate = dateRange?.start ?: LocalDate.now().minusDays(1)
                 val endDate = dateRange?.endInclusive ?: LocalDate.now().plusDays(14)
 
-                val cachedSchedule = scheduleRepository.getCachedScheduleForRange(startDate, endDate)
+                val cachedSchedule =
+                    scheduleRepository.getCachedScheduleForRange(startDate, endDate)
 
                 _uiState.postValue(ScheduleUiState.Success(cachedSchedule, true))
                 val remoteSchedule = scheduleRepository.getScheduleForRange(startDate, endDate)
                 _uiState.postValue(ScheduleUiState.Success(remoteSchedule, false))
                 dateRange = startDate..endDate
+                isLoading = false
+
+                if (appContainer.storage.settings.getCustomServicesState()) {
+                    async {
+                        appContainer.itmoWidgets.api.syncLessons(
+                            LessonSyncRequest(
+                                remoteSchedule.flatMap { d -> d.lessons.map { it.toDto(d.date) } },
+                                startDate, endDate
+                            )
+                        )
+                    }.await()
+                }
             } catch (e: Exception) {
-                context.appContainer().errorLogRepository.logThrowable(e, ScheduleViewModel::class.java.name)
+                appContainer.errorLogRepository.logThrowable(e, ScheduleViewModel::class.java.name)
                 val errorMessage = "Ошибка загрузки данных"
                 _uiState.postValue(ScheduleUiState.Error(errorMessage))
             } finally {

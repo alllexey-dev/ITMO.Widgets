@@ -16,6 +16,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.ItmoWidgetsApp
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.appContainer
+import dev.alllexey.itmowidgets.core.model.IdTokenRequest
 import dev.alllexey.itmowidgets.ui.onboarding.OnboardingActivity
 import dev.alllexey.itmowidgets.ui.qr.QrCodeFragment
 import dev.alllexey.itmowidgets.ui.schedule.ScheduleFragment
@@ -102,6 +103,7 @@ class MainActivity : AppCompatActivity() {
             bottomNavView.selectedItemId = R.id.navigation_schedule
         }
 
+        resendIdToken()
         resendFcmTokens()
 
         if (intent.getBooleanExtra("onboarding", false)) {
@@ -121,6 +123,19 @@ class MainActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     appContainer().itmoWidgets.sendFirebaseToken(firebaseToken)
+                } catch (e: Exception) {
+                    appContainer().errorLogRepository.logThrowable(e, MainActivity::class.java.name + " [FCM]")
+                }
+            }
+        }
+    }
+
+    fun resendIdToken() {
+        if (appContainer().storage.settings.getCustomServicesState()) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val validTokens = appContainer().myItmo.validTokens
+                    appContainer().itmoWidgets.api.updateIdTokenData(IdTokenRequest(validTokens.idToken))
                 } catch (e: Exception) {
                     appContainer().errorLogRepository.logThrowable(e, MainActivity::class.java.name + " [FCM]")
                 }
