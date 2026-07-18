@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.net.toUri
-import androidx.core.view.doOnLayout
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -24,7 +23,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.util.color
-import dev.alllexey.itmowidgets.core.util.dp
 import dev.alllexey.itmowidgets.databinding.FragmentSportSignBinding
 import dev.alllexey.itmowidgets.domain.model.sport.SectionName
 import dev.alllexey.itmowidgets.domain.model.sport.SportLesson
@@ -114,9 +112,6 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
             adapter = concatAdapter
             layoutManager = LinearLayoutManager(requireContext())
             (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
-            doOnLayout {
-                headerAdapter.setCalendarWidth(width - 32.dp)
-            }
         }
     }
 

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.data.repository
 
 import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
 import dev.alllexey.itmowidgets.core.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.core.model.SportQueue
 import dev.alllexey.itmowidgets.core.model.SportQueueEntry
@@ -26,7 +27,8 @@ class SportDataRepositoryImpl @Inject constructor(
     val friendRepository: FriendRepository,
     val settings: AppSettingsStorage,
     val myItmoApi: MyItmoApi,
-    val widgetsApi: ItmoWidgetsApi
+    val widgetsApi: ItmoWidgetsApi,
+    private val sportScoreOverrideProvider: SportScoreOverrideProvider
 ) : SportDataRepository {
 
     private val attemptsFlow = MutableSharedFlow<DataState<SportAttempts>>(replay = 1)
@@ -56,7 +58,7 @@ class SportDataRepositoryImpl @Inject constructor(
         try {
             val result = withContext(Dispatchers.IO) {
                 val response = myItmoApi.getSportScore(null).execute()
-                response.body()?.result?.toModel()
+                response.body()?.result?.toModel()?.let(sportScoreOverrideProvider::apply)
             }
 
             if (result != null) {

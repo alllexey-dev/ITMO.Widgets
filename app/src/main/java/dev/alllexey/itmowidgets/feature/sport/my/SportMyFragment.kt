@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -20,7 +21,6 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.CircularProgressBar
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.color
-import dev.alllexey.itmowidgets.core.util.withSaturation
 import dev.alllexey.itmowidgets.databinding.FragmentSportMyBinding
 import dev.alllexey.itmowidgets.domain.model.sport.SportBooking
 import dev.alllexey.itmowidgets.domain.model.sport.SportScore
@@ -182,8 +182,8 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     private fun updateScoreUi(score: SportScore) {
         val color = requireContext().color
-        val attendanceColor = color.tertiary.withSaturation(4f)
-        val bonusColor = color.secondary.withSaturation(4f)
+        val attendanceColor = ContextCompat.getColor(requireContext(), R.color.sport_score_attendance)
+        val bonusColor = ContextCompat.getColor(requireContext(), R.color.sport_score_bonus)
 
         binding.attendancePointsTextView.text = score.attendances.toString()
         binding.bonusPointsTextView.text = if (score.other > score.otherCapped) {
@@ -196,18 +196,19 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
         val need = score.need
         val enough = need == 0
-        binding.needPointsTextView.text = if (enough) {
-            getString(R.string.sport_score_passed)
+        if (enough) {
+            binding.scoreStatusCard.setCardBackgroundColor(color.primaryContainer)
+            binding.scoreStatusIcon.setImageResource(R.drawable.ic_check)
+            binding.scoreStatusIcon.imageTintList = ColorStateList.valueOf(color.onPrimaryContainer)
+            binding.scoreStatusText.setText(R.string.sport_score_passed_status)
+            binding.scoreStatusText.setTextColor(color.onPrimaryContainer)
         } else {
-            getString(R.string.sport_score_need_value, need)
+            binding.scoreStatusCard.setCardBackgroundColor(color.secondaryContainer)
+            binding.scoreStatusIcon.setImageResource(R.drawable.ic_history)
+            binding.scoreStatusIcon.imageTintList = ColorStateList.valueOf(color.onSecondaryContainer)
+            binding.scoreStatusText.text = getString(R.string.sport_score_remaining_status, need)
+            binding.scoreStatusText.setTextColor(color.onSecondaryContainer)
         }
-        binding.needLabelTextView.text = if (enough) "" else getString(R.string.sport_score_needed)
-        binding.needIndicator.setImageResource(
-            if (enough) R.drawable.ic_check else R.drawable.indicator_circle
-        )
-        binding.needIndicator.imageTintList = ColorStateList.valueOf(
-            if (enough) color.primary else color.outline
-        )
 
         val total = score.total
         binding.progressCircle.progressTextView.text = total.toString()

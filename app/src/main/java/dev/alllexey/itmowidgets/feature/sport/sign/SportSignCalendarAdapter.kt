@@ -62,8 +62,10 @@ class SportSignCalendarAdapter(
         fun bind(day: CalendarDay, itemWidthPx: Int) {
             val context = itemView.context
 
-            binding.root.layoutParams = binding.root.layoutParams.apply {
-                width = itemWidthPx
+            if (itemWidthPx > 0) {
+                binding.root.layoutParams = binding.root.layoutParams.apply {
+                    width = itemWidthPx
+                }
             }
 
             binding.dayOfMonthText.alpha = 1f

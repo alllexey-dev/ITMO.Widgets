@@ -31,11 +31,11 @@
     <string name="sport_score_title">Баллы за семестр</string>
     <string name="sport_score_attendance">за посещение</string>
     <string name="sport_score_bonus">бонусы</string>
-    <string name="sport_score_needed">до зачёта</string>
-    <string name="sport_score_passed">Зачёт</string>
     <string name="sport_score_bonus_value">%1$d</string>
     <string name="sport_score_bonus_over_limit">%1$d (%2$d)</string>
-    <string name="sport_score_need_value">%1$d</string>
+    <string name="sport_score_goal">из 100</string>
+    <string name="sport_score_passed_status">Зачёт</string>
+    <string name="sport_score_remaining_status">Ещё %1$d баллов</string>
     <string name="sport_bookings_empty_title">Активных записей нет</string>
     <string name="sport_bookings_empty_description">Выбери подходящее занятие в расписании спорта.</string>
     <string name="sport_bookings_open_schedule">Открыть расписание</string>
@@ -76,6 +76,16 @@
     <string name="debug_academic_time_value">Тестовая дата: %1$s</string>
     <string name="debug_academic_time_select">Выбрать дату</string>
     <string name="debug_academic_time_reset">Сбросить</string>
+
+    <string name="debug_sport_score_title">Тестовые спортивные баллы</string>
+    <string name="debug_sport_score_description">Подменяет баллы за посещения и бонусы на экране «Мой спорт».</string>
+    <string name="debug_sport_score_server">Используются данные сервера</string>
+    <string name="debug_sport_score_value">Тестовые баллы: %1$d за посещения + %2$d бонусных</string>
+    <string name="debug_sport_score_configure">Настроить</string>
+    <string name="debug_sport_score_dialog_title">Подменить спортивные баллы</string>
+    <string name="debug_sport_score_attendance_hint">Баллы за посещения</string>
+    <string name="debug_sport_score_bonus_hint">Бонусные баллы</string>
+    <string name="debug_sport_score_invalid_value">Введи целое число от 0 до 9999</string>
 
     <string name="onboarding_services_disclaimer">Чтобы работали уведомления и автозапись, серверу нужно подтвердить вашу личность. Мы используем ваш токен только для проверки и <b>не сохраняем его</b> — запоминаем только шестизачный номер ИСУ. Исходный код открыт, так что всё честно.\n\n<b>Включая эту опцию, вы соглашаетесь на передачу токена для авторизации.</b></string>
 </resources>

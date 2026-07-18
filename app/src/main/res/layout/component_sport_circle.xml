@@ -8,27 +8,44 @@
 
     <dev.alllexey.itmowidgets.core.ui.CircularProgressBar
         android:id="@+id/circularProgressBar"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="112dp"
+        android:layout_height="112dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:bgColor="?colorSurfaceVariant"
-        app:progressBarThickness="16dp" />
+        app:bgColor="?attr/colorSurfaceContainerHighest"
+        app:progressBarThickness="12dp"
+        app:sectorGapAngle="4" />
 
-    <TextView
-        android:id="@+id/progressTextView"
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="32sp"
-        android:textColor="?colorOnSurface"
-        android:textAppearance="@style/TextAppearance.Material3.HeadlineLarge.Emphasized"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="@id/circularProgressBar"
         app:layout_constraintEnd_toEndOf="@id/circularProgressBar"
         app:layout_constraintStart_toStartOf="@id/circularProgressBar"
-        app:layout_constraintTop_toTopOf="@id/circularProgressBar"
-        tools:text="35" />
+        app:layout_constraintTop_toTopOf="@id/circularProgressBar">
+
+        <TextView
+            android:id="@+id/progressTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFeatureSettings="tnum"
+            android:textAppearance="@style/TextAppearance.Material3.HeadlineLarge.Emphasized"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="120" />
+
+        <TextView
+            android:id="@+id/progressGoalTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-2dp"
+            android:text="@string/sport_score_goal"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

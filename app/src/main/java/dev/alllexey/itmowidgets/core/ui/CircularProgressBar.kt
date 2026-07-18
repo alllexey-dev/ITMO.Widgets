@@ -10,9 +10,9 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.animation.PathInterpolator
 import dev.alllexey.itmowidgets.R
-import kotlin.math.cos
+import kotlin.math.asin
+import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sin
 
 class CircularProgressBar @JvmOverloads constructor(
     context: Context,
@@ -26,6 +26,7 @@ class CircularProgressBar @JvmOverloads constructor(
         style = Paint.Style.STROKE
     }
     private val bounds = RectF()
+    private val sectorGapAngle: Float
 
     private var currentSectors = emptyList<Sector>()
 
@@ -45,7 +46,12 @@ class CircularProgressBar @JvmOverloads constructor(
         val bgColor = typedArray.getColor(
             R.styleable.CircularProgressBar_bgColor, Color.LTGRAY
         )
+        sectorGapAngle = typedArray.getFloat(
+            R.styleable.CircularProgressBar_sectorGapAngle, 0f
+        ).coerceAtLeast(0f)
         paint.strokeWidth = thickness
+        paint.style = Paint.Style.STROKE
+        paint.strokeCap = Paint.Cap.ROUND
         backgroundPaint.strokeWidth = thickness
         backgroundPaint.color = bgColor
         typedArray.recycle()
@@ -57,6 +63,7 @@ class CircularProgressBar @JvmOverloads constructor(
         val strokeWidth = paint.strokeWidth
         val radius = (diameter - strokeWidth) / 2f
         bounds.set((w / 2f) - radius, (h / 2f) - radius, (w / 2f) + radius, (h / 2f) + radius)
+        prepareRenderData()
     }
 
     data class Sector(val color: Int, val percentage: Float)
@@ -100,40 +107,48 @@ class CircularProgressBar @JvmOverloads constructor(
 
     private fun prepareRenderData() {
         var currentAngle = -90f
-        renderDataList = currentSectors.map { sector ->
-            val sweepAngle = 360 * sector.percentage / 100
-            val data = RenderData(sector.color, currentAngle, sweepAngle)
-            currentAngle += sweepAngle
+        var remainingPercentage = 100f
+        renderDataList = currentSectors.mapNotNull { sector ->
+            val percentage = sector.percentage.coerceIn(0f, remainingPercentage)
+            remainingPercentage -= percentage
+
+            val rawSweepAngle = 360f * percentage / 100f
+            if (rawSweepAngle <= 0f) return@mapNotNull null
+
+            val gap = min(
+                sectorGapAngle + roundedCapCompensationAngle(),
+                rawSweepAngle * MAX_GAP_FRACTION
+            )
+            val sweepAngle = max(0f, rawSweepAngle - gap)
+            val data = RenderData(
+                color = sector.color,
+                startAngle = currentAngle + gap / 2f,
+                sweepAngle = sweepAngle
+            )
+            currentAngle += rawSweepAngle
             data
         }
+    }
+
+    private fun roundedCapCompensationAngle(): Float {
+        val radius = bounds.width() / 2f
+        if (radius <= 0f) return 0f
+
+        val capRadius = paint.strokeWidth / 2f
+        val capAngle = Math.toDegrees(asin((capRadius / radius).coerceIn(0f, 1f)).toDouble())
+        return (capAngle * 2).toFloat()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawArc(bounds, 0f, 360f, false, backgroundPaint)
-        if (renderDataList.isEmpty()) return
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.BUTT
         for (data in renderDataList) {
             paint.color = data.color
             canvas.drawArc(bounds, data.startAngle, data.sweepAngle, false, paint)
         }
-        paint.style = Paint.Style.FILL
-        val radius = bounds.width() / 2f
-        val capRadius = paint.strokeWidth / 2f
-        for (data in renderDataList) {
-            paint.color = data.color
-            val startAngleRad = Math.toRadians(data.startAngle.toDouble())
-            val startX = bounds.centerX() + radius * cos(startAngleRad).toFloat()
-            val startY = bounds.centerY() + radius * sin(startAngleRad).toFloat()
-            canvas.drawCircle(startX, startY, capRadius, paint)
-        }
-        for (data in renderDataList) {
-            paint.color = data.color
-            val endAngleRad = Math.toRadians((data.startAngle + data.sweepAngle).toDouble())
-            val endX = bounds.centerX() + radius * cos(endAngleRad).toFloat()
-            val endY = bounds.centerY() + radius * sin(endAngleRad).toFloat()
-            canvas.drawCircle(endX, endY, capRadius, paint)
-        }
+    }
+
+    private companion object {
+        const val MAX_GAP_FRACTION = 0.35f
     }
 }

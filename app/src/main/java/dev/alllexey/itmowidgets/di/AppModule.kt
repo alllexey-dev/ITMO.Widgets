@@ -13,6 +13,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
+import dev.alllexey.itmowidgets.core.debug.DefaultSportScoreOverrideProvider
+import dev.alllexey.itmowidgets.core.debug.SharedPreferencesSportScoreOverrideStore
+import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
+import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
+import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideStore
 import dev.alllexey.itmowidgets.core.network.WidgetsClient
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
@@ -71,6 +76,28 @@ object AppModule {
     fun provideAcademicTimeOverrideController(
         provider: DefaultAcademicTimeProvider
     ): AcademicTimeOverrideController = provider
+
+    @Provides
+    @Singleton
+    fun provideSportScoreOverrideStore(
+        preferences: SharedPreferences
+    ): SportScoreOverrideStore = SharedPreferencesSportScoreOverrideStore(preferences)
+
+    @Provides
+    @Singleton
+    fun provideDefaultSportScoreOverrideProvider(
+        overrideStore: SportScoreOverrideStore
+    ): DefaultSportScoreOverrideProvider = DefaultSportScoreOverrideProvider(overrideStore)
+
+    @Provides
+    fun provideSportScoreOverrideProvider(
+        provider: DefaultSportScoreOverrideProvider
+    ): SportScoreOverrideProvider = provider
+
+    @Provides
+    fun provideSportScoreOverrideController(
+        provider: DefaultSportScoreOverrideProvider
+    ): SportScoreOverrideController = provider
 
     @Provides
     @Singleton

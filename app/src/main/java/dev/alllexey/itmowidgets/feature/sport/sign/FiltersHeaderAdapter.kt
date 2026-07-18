@@ -42,11 +42,6 @@ class FiltersHeaderAdapter(
         notifyItemChanged(0)
     }
 
-    fun setCalendarWidth(containerWidthPx: Int, horizontalPaddingPx: Int = 0) {
-        val itemWidth = (containerWidthPx - horizontalPaddingPx) / 7
-        calendarAdapter.setItemWidth(itemWidth)
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeaderViewHolder {
         val binding = ItemSportFiltersHeaderBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
@@ -67,6 +62,9 @@ class FiltersHeaderAdapter(
             binding.calendarRecyclerView.adapter = calendarAdapter
             binding.calendarRecyclerView.layoutManager =
                 LinearLayoutManager(itemView.context, LinearLayoutManager.HORIZONTAL, false)
+            binding.calendarRecyclerView.doOnLayout { calendar ->
+                calendarAdapter.setItemWidth(calendar.width / DAYS_IN_WEEK)
+            }
 
             val animator = binding.calendarRecyclerView.itemAnimator
             if (animator is SimpleItemAnimator) {
@@ -157,5 +155,9 @@ class FiltersHeaderAdapter(
                 }
             }
         }
+    }
+
+    private companion object {
+        const val DAYS_IN_WEEK = 7
     }
 }

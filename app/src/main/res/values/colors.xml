@@ -13,6 +13,8 @@
 
     <color name="red_sport_color">#ED3E6F</color>
     <color name="blue_sport_color">#3D67DE</color>
+    <color name="sport_score_attendance">#345BD1</color>
+    <color name="sport_score_bonus">#C93672</color>
 
     <color name="subtext_color">#FF5C5C5C</color>
     <color name="subtext_color_lighter">#7A7A7A</color>

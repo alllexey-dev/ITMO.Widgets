@@ -25,137 +25,162 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:padding="20dp">
 
-                <TextView
-                    android:id="@+id/score_title"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/sport_score_title"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textStyle="bold"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <include
-                    android:id="@+id/progress_circle"
-                    layout="@layout/component_sport_circle"
-                    android:layout_width="wrap_content"
+                    <TextView
+                        android:id="@+id/score_title"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/sport_score_title"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/score_status_card"
+                        style="@style/Widget.Material3.CardView.Filled"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="0dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="7dp">
+
+                            <ImageView
+                                android:id="@+id/score_status_icon"
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_check"
+                                app:tint="?attr/colorOnPrimaryContainer" />
+
+                            <TextView
+                                android:id="@+id/score_status_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="7dp"
+                                android:text="@string/sport_score_passed_status"
+                                android:textAppearance="?attr/textAppearanceLabelLarge"
+                                android:textColor="?attr/colorOnPrimaryContainer"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/score_title" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <ImageView
-                    android:id="@+id/attendance_indicator"
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginTop="20dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/indicator_circle"
-                    app:layout_constraintStart_toEndOf="@id/progress_circle"
-                    app:layout_constraintTop_toBottomOf="@id/score_title"
-                    app:tint="?attr/colorTertiary" />
+                    <include
+                        android:id="@+id/progress_circle"
+                        layout="@layout/component_sport_circle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
 
-                <TextView
-                    android:id="@+id/attendance_points_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:textAppearance="?attr/textAppearanceTitleLarge"
-                    android:textStyle="bold"
-                    app:layout_constraintBaseline_toBaselineOf="@id/attendance_label_text_view"
-                    app:layout_constraintStart_toEndOf="@id/attendance_indicator"
-                    tools:text="100" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/attendance_label_text_view"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="@string/sport_score_attendance"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/attendance_points_text_view"
-                    app:layout_constraintTop_toTopOf="@id/attendance_indicator" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
-                <ImageView
-                    android:id="@+id/bonus_indicator"
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
-                    android:layout_marginTop="20dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/indicator_circle"
-                    app:layout_constraintStart_toStartOf="@id/attendance_indicator"
-                    app:layout_constraintTop_toBottomOf="@id/attendance_label_text_view"
-                    app:tint="?attr/colorSecondary" />
+                            <ImageView
+                                android:id="@+id/attendance_indicator"
+                                android:layout_width="12dp"
+                                android:layout_height="12dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/indicator_circle"
+                                app:tint="@color/sport_score_attendance" />
 
-                <TextView
-                    android:id="@+id/bonus_points_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:textAppearance="?attr/textAppearanceTitleLarge"
-                    android:textStyle="bold"
-                    app:layout_constraintBaseline_toBaselineOf="@id/bonus_label_text_view"
-                    app:layout_constraintStart_toEndOf="@id/bonus_indicator"
-                    tools:text="20" />
+                            <TextView
+                                android:id="@+id/attendance_points_text_view"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:textAppearance="?attr/textAppearanceTitleLarge"
+                                android:textStyle="bold"
+                                tools:text="100" />
 
-                <TextView
-                    android:id="@+id/bonus_label_text_view"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="@string/sport_score_bonus"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/bonus_points_text_view"
-                    app:layout_constraintTop_toTopOf="@id/bonus_indicator" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="@string/sport_score_attendance"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
 
-                <ImageView
-                    android:id="@+id/need_indicator"
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
-                    android:layout_marginTop="20dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_check"
-                    app:layout_constraintStart_toStartOf="@id/bonus_indicator"
-                    app:layout_constraintTop_toBottomOf="@id/bonus_label_text_view"
-                    app:tint="?attr/colorPrimary" />
+                        </LinearLayout>
 
-                <TextView
-                    android:id="@+id/need_points_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:textAppearance="?attr/textAppearanceTitleLarge"
-                    android:textStyle="bold"
-                    app:layout_constraintBaseline_toBaselineOf="@id/need_label_text_view"
-                    app:layout_constraintStart_toEndOf="@id/need_indicator"
-                    tools:text="Зачёт" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/need_label_text_view"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="@string/sport_score_needed"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/need_points_text_view" />
+                            <ImageView
+                                android:id="@+id/bonus_indicator"
+                                android:layout_width="12dp"
+                                android:layout_height="12dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/indicator_circle"
+                                app:tint="@color/sport_score_bonus" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                            <TextView
+                                android:id="@+id/bonus_points_text_view"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:textAppearance="?attr/textAppearanceTitleLarge"
+                                android:textStyle="bold"
+                                tools:text="20" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="@string/sport_score_bonus"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
