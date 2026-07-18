@@ -18,13 +18,14 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:hint="Вид спорта"
-            app:boxCornerRadiusBottomEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusTopStart="12dp"
+            android:layout_marginBottom="8dp"
+            android:hint="@string/sport_filter_type"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp"
             app:endIconDrawable="@drawable/ic_search"
+            app:endIconContentDescription="@string/sport_filter_select_type"
             app:endIconMode="custom">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -41,12 +42,18 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Корпус">
+            android:layout_marginBottom="8dp"
+            android:hint="@string/sport_filter_building"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp">
 
             <AutoCompleteTextView
                 android:id="@+id/building_auto_complete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:hint="@string/sport_filter_building"
                 android:inputType="none"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -56,13 +63,19 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Преподаватель">
+            android:layout_marginBottom="8dp"
+            android:hint="@string/sport_filter_teacher"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp">
 
             <AutoCompleteTextView
                 android:id="@+id/teacher_auto_complete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
+                android:hint="@string/sport_filter_teacher"
                 android:inputType="none"
                 android:maxLines="1"
                 android:textSize="14sp" />
@@ -73,12 +86,18 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Время">
+            android:layout_marginBottom="8dp"
+            android:hint="@string/sport_filter_time"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp">
 
             <AutoCompleteTextView
                 android:id="@+id/time_auto_complete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:hint="@string/sport_filter_time"
                 android:inputType="none"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -100,7 +119,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"
-                    android:text="Доступные" />
+                    android:text="@string/sport_filter_available" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/auto_sign_sport_chip"
@@ -108,7 +127,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"
-                    android:text="Автозапись" />
+                    android:text="@string/sport_filter_auto_sign" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/friends_sport_chip"
@@ -116,7 +135,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="false"
-                    android:text="Друзья" />
+                    android:text="@string/sport_filter_friends" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/reset_filters_chip"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/common_reset"
+                    android:visibility="gone"
+                    app:chipIcon="@drawable/ic_close"
+                    tools:visibility="visible" />
             </com.google.android.material.chip.ChipGroup>
 
 
@@ -124,7 +153,6 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="16dp"
             android:paddingTop="12dp"
             android:paddingBottom="4dp">
 
@@ -132,7 +160,7 @@
                 android:id="@+id/month_name_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -150,29 +178,29 @@
 
                 <ImageButton
                     android:id="@+id/prev_week_button"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:scaleType="fitCenter"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Предыдущая неделя"
+                    android:contentDescription="@string/sport_previous_week"
                     android:src="@drawable/ic_chevron_left"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/space"
                     app:layout_constraintTop_toTopOf="parent" />
                 <Space
                     android:id="@+id/space"
-                    android:layout_width="12dp"
+                    android:layout_width="4dp"
                     android:layout_height="wrap_content"
                     app:layout_constraintTop_toTopOf="@id/prev_week_button"
                     app:layout_constraintEnd_toStartOf="@id/next_week_button"/>
 
                 <ImageButton
                     android:id="@+id/next_week_button"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:scaleType="fitCenter"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Следующая неделя"
+                    android:contentDescription="@string/sport_next_week"
                     android:src="@drawable/ic_chevron_right"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"

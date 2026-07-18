@@ -1,12 +1,12 @@
 package dev.alllexey.itmowidgets.feature.sport.sign
 
-import android.R
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import androidx.core.view.doOnLayout
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -25,6 +25,7 @@ interface FilterActionsListener {
     fun onPrevWeekClick()
     fun onNextWeekClick()
     fun onDateSelected(date: LocalDate)
+    fun onResetFiltersClick()
 }
 
 class FiltersHeaderAdapter(
@@ -110,6 +111,7 @@ class FiltersHeaderAdapter(
 
             binding.prevWeekButton.setOnClickListener { listener.onPrevWeekClick() }
             binding.nextWeekButton.setOnClickListener { listener.onNextWeekClick() }
+            binding.resetFiltersChip.setOnClickListener { listener.onResetFiltersClick() }
         }
 
         fun bind(state: SportSignUiState.Success) {
@@ -124,6 +126,11 @@ class FiltersHeaderAdapter(
             binding.teacherAutoComplete.setText(state.selectedTeacherName ?: "", false)
             binding.timeAutoComplete.setText(state.selectedTimeSlot ?: "", false)
 
+            binding.availableSportChip.isChecked = state.showOnlyAvailable
+            binding.autoSignSportChip.isChecked = state.showAutoSign
+            binding.friendsSportChip.isChecked = state.showOnlyFriends
+            binding.resetFiltersChip.isVisible = state.hasActiveFilters
+
             binding.monthNameTextView.text = state.currentMonthName
 
             binding.prevWeekButton.isEnabled = state.canGoToPrevWeek
@@ -137,7 +144,7 @@ class FiltersHeaderAdapter(
 
         private fun <T> updateAdapter(autoCompleteTextView: AutoCompleteTextView, data: List<T>) {
             val adapter =
-                ArrayAdapter(itemView.context, R.layout.simple_spinner_dropdown_item, data)
+                ArrayAdapter(itemView.context, android.R.layout.simple_spinner_dropdown_item, data)
             autoCompleteTextView.setAdapter(adapter)
         }
 

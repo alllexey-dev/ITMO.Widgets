@@ -67,6 +67,7 @@ sealed class SportSignUiState {
         val currentMonthName: String = "",
         val canGoToPrevWeek: Boolean = false,
         val canGoToNextWeek: Boolean = true,
+        val hasActiveFilters: Boolean = false,
 
         // endregion filters
 
@@ -400,6 +401,11 @@ class SportSignViewModel @Inject constructor(
                 currentMonthName = monthName,
                 canGoToPrevWeek = weekOffset > 0,
                 canGoToNextWeek = weekOffset < MAX_WEEKS_FORWARD,
+                hasActiveFilters = selectedSportNames.isNotEmpty() ||
+                    selectedBuildingName != null ||
+                    selectedTeacherName != null ||
+                    selectedTimeSlot != null ||
+                    !showOnlyAvailable || !showAutoSign || showOnlyFriends,
                 displayedLessons = displayedLessons,
                 hasPartialError = hasPartialError
             )
@@ -410,6 +416,12 @@ class SportSignViewModel @Inject constructor(
 
     fun selectDate(date: LocalDate) {
         _userFilters.value = _userFilters.value.copy(selectedDate = date)
+    }
+
+    fun resetFilters() {
+        _userFilters.value = SportSignFilters(
+            selectedDate = _userFilters.value.selectedDate
+        )
     }
 
     fun nextWeek() {

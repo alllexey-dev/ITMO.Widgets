@@ -22,6 +22,54 @@
     <string name="title_sport_sign">Запись</string>
     <string name="title_sport_notifications">Уведомления</string>
 
+    <string name="common_retry">Повторить</string>
+    <string name="common_reset">Сбросить</string>
+    <string name="common_load_error_title">Не удалось загрузить данные</string>
+    <string name="common_options">Дополнительные действия</string>
+    <string name="common_friends">Друзья</string>
+
+    <string name="sport_score_title">Баллы за семестр</string>
+    <string name="sport_score_attendance">за посещение</string>
+    <string name="sport_score_bonus">бонусы</string>
+    <string name="sport_score_needed">до зачёта</string>
+    <string name="sport_score_passed">Зачёт</string>
+    <string name="sport_score_bonus_value">%1$d</string>
+    <string name="sport_score_bonus_over_limit">%1$d (%2$d)</string>
+    <string name="sport_score_need_value">%1$d</string>
+    <string name="sport_bookings_empty_title">Активных записей нет</string>
+    <string name="sport_bookings_empty_description">Выбери подходящее занятие в расписании спорта.</string>
+    <string name="sport_bookings_open_schedule">Открыть расписание</string>
+    <string name="sport_lessons_empty_title">На этот день занятий нет</string>
+    <string name="sport_lessons_empty_description">Выбери другой день или измени фильтры.</string>
+    <string name="sport_filter_type">Вид спорта</string>
+    <string name="sport_filter_select_type">Выбрать виды спорта</string>
+    <string name="sport_filter_building">Корпус</string>
+    <string name="sport_filter_teacher">Преподаватель</string>
+    <string name="sport_filter_time">Время</string>
+    <string name="sport_filter_available">Доступные</string>
+    <string name="sport_filter_auto_sign">Автозапись</string>
+    <string name="sport_filter_friends">Друзья</string>
+    <string name="sport_previous_week">Предыдущая неделя</string>
+    <string name="sport_next_week">Следующая неделя</string>
+    <string name="sport_calendar_today">%1$s, сегодня</string>
+    <string name="sport_calendar_available">%1$s, есть доступные занятия</string>
+    <string name="sport_calendar_has_lessons">%1$s, есть занятия</string>
+    <string name="sport_calendar_empty">%1$s, занятий нет</string>
+    <string name="sport_intersection_description">Пересекается с другим занятием</string>
+    <string name="sport_lesson_open">Открытое занятие</string>
+    <string name="sport_lesson_prediction">Прогноз</string>
+    <string name="sport_lesson_full">Нет мест</string>
+    <string name="sport_lesson_sign_up">Записаться</string>
+    <string name="sport_lesson_booking_label">Запись:</string>
+
+    <string name="schedule_friends_action">Расписание друзей</string>
+    <string name="schedule_empty_title">В расписании пока пусто</string>
+    <string name="schedule_empty_description">На выбранный период занятий нет.</string>
+    <string name="schedule_scroll_to_top">Прокрутить к началу</string>
+    <string name="schedule_date_format">%1$d %2$s</string>
+    <string name="schedule_no_lessons">Нет пар</string>
+    <string name="schedule_lesson_count">%1$d %2$s</string>
+
     <string name="debug_academic_time_title">Тестовое академическое время</string>
     <string name="debug_academic_time_description">Подменяет текущую дату только для расписания и спорта. Авторизация, кэш и QR используют системное время.</string>
     <string name="debug_academic_time_system">Используется системная дата</string>

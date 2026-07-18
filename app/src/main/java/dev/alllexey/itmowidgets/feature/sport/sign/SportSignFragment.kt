@@ -56,6 +56,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     private lateinit var headerAdapter: FiltersHeaderAdapter
     private lateinit var lessonsAdapter: SportLessonsAdapter
+    private lateinit var contentStateAdapter: ContentStateAdapter
     private lateinit var concatAdapter: ConcatAdapter
 
     private val viewModel: SportSignViewModel by activityViewModels()
@@ -106,7 +107,8 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
             hideTimeSelector = settings.getSportSignHideTimeSelectorEnabled()
         )
         lessonsAdapter = SportLessonsAdapter(this)
-        concatAdapter = ConcatAdapter(headerAdapter, lessonsAdapter)
+        contentStateAdapter = ContentStateAdapter { viewModel.refreshAllData() }
+        concatAdapter = ConcatAdapter(headerAdapter, lessonsAdapter, contentStateAdapter)
 
         binding.mainRecyclerView.apply {
             adapter = concatAdapter
@@ -152,12 +154,24 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     private fun showLoading() {
         swipe.isRefreshing = true
+        contentStateAdapter.submitState(null)
     }
 
     private fun onSuccess(state: SportSignUiState.Success) {
         swipe.isRefreshing = false
         headerAdapter.updateState(state)
         lessonsAdapter.submitList(state.displayedLessons)
+        contentStateAdapter.submitState(
+            if (state.displayedLessons.isEmpty()) {
+                ContentState(
+                    iconRes = R.drawable.ic_event_note,
+                    title = getString(R.string.sport_lessons_empty_title),
+                    description = getString(R.string.sport_lessons_empty_description)
+                )
+            } else {
+                null
+            }
+        )
         if (state.hasPartialError) {
             Toast.makeText(requireContext(), "Не удалось загрузить некоторые данные", Toast.LENGTH_SHORT).show()
         }
@@ -165,7 +179,15 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     private fun showError(state: SportSignUiState.Error) {
         swipe.isRefreshing = false
-        Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+        lessonsAdapter.submitList(emptyList())
+        contentStateAdapter.submitState(
+            ContentState(
+                iconRes = R.drawable.ic_error,
+                title = getString(R.string.common_load_error_title),
+                description = state.message,
+                action = getString(R.string.common_retry)
+            )
+        )
     }
 
     override fun onSportClick() {
@@ -206,6 +228,10 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     override fun onDateSelected(date: LocalDate) {
         viewModel.selectDate(date)
+    }
+
+    override fun onResetFiltersClick() {
+        viewModel.resetFilters()
     }
 
     override fun onSignUpClick(lesson: SportLesson) {

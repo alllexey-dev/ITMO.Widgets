@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.ScheduleUtil
 import dev.alllexey.itmowidgets.core.util.color
+import dev.alllexey.itmowidgets.core.util.dp
 import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
 import dev.alllexey.itmowidgets.domain.model.schedule.Lesson
 import java.time.Duration
@@ -39,29 +40,46 @@ class DayScheduleAdapter(
         val context = holder.itemView.context
 
         holder.dayTitle.text = ScheduleUtil.getRuDayOfWeek(date.dayOfWeek).replaceFirstChar { it.uppercase() }
-        holder.dayDate.text = "${date.dayOfMonth} ${ScheduleUtil.getRussianMonthInGenitiveCase(date.monthValue)}"
+        holder.dayDate.text = context.getString(
+            R.string.schedule_date_format,
+            date.dayOfMonth,
+            ScheduleUtil.getRussianMonthInGenitiveCase(date.monthValue)
+        )
 
-        holder.numberOfLessons.text = if (lessons.isEmpty()) "Нет пар" else "${lessons.size} ${ScheduleUtil.lessonDeclension(lessons.size)}"
+        holder.numberOfLessons.text = if (lessons.isEmpty()) {
+            context.getString(R.string.schedule_no_lessons)
+        } else {
+            context.getString(
+                R.string.schedule_lesson_count,
+                lessons.size,
+                ScheduleUtil.lessonDeclension(lessons.size)
+            )
+        }
 
         val today = timeProvider.today()
         val isToday = date.equals(today)
 
-        val hightlightColor = context.color.primary
         if (isToday) {
-            holder.card.strokeWidth = 3
-            holder.card.strokeColor = hightlightColor
-            holder.dayTitle.setTextColor(hightlightColor)
-            holder.card.elevation = 8f
+            holder.card.strokeWidth = 2.dp
+            holder.card.strokeColor = context.color.primary
+            holder.card.setCardBackgroundColor(
+                context.color.resolve(com.google.android.material.R.attr.colorSurfaceContainerLow)
+            )
+            holder.dayTitle.setTextColor(context.color.primary)
+            holder.card.elevation = 0f
             holder.numberOfLessons.setBackgroundResource(R.drawable.shape_pill_outline_selected)
         } else {
             holder.card.strokeWidth = 0
+            holder.card.setCardBackgroundColor(
+                context.color.resolve(com.google.android.material.R.attr.colorSurfaceContainerLow)
+            )
             holder.dayTitle.setTextColor(context.color.onSurface)
             holder.card.elevation = 0f
             holder.numberOfLessons.setBackgroundResource(R.drawable.shape_pill_outline)
         }
 
         if (date.isBefore(today)) {
-            holder.itemRoot.alpha = 0.5f
+            holder.itemRoot.alpha = 0.72f
         } else {
             holder.itemRoot.alpha = 1.0f
         }

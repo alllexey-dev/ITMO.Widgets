@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.flowWithLifecycle
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.Gson
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.CircularProgressBar
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.color
@@ -23,6 +25,7 @@ import dev.alllexey.itmowidgets.databinding.FragmentSportMyBinding
 import dev.alllexey.itmowidgets.domain.model.sport.SportBooking
 import dev.alllexey.itmowidgets.domain.model.sport.SportScore
 import dev.alllexey.itmowidgets.feature.sport.common.SportCommonDetailsBottomSheet
+import dev.alllexey.itmowidgets.feature.sport.common.SportFragment
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -47,6 +50,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
     // region State
 
     private lateinit var adapter: SportBookingAdapter
+    private var hasRenderedContent = false
 
     private val viewModel: SportMyViewModel by activityViewModels()
 
@@ -107,6 +111,9 @@ class SportMyFragment : Fragment(), SportBookingListener {
         swipe.setOnRefreshListener {
             viewModel.refreshAllData()
         }
+        binding.buttonGoToSchedule.setOnClickListener {
+            (parentFragment as? SportFragment)?.changeView(1)
+        }
     }
 
     private fun setupObservers() {
@@ -126,12 +133,24 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     private fun showLoading() {
         swipe.isRefreshing = true
+        binding.emptyStateLayout.isVisible = false
+        if (!hasRenderedContent) {
+            binding.pointsCard.isVisible = false
+            recycler.isVisible = false
+        }
     }
 
     private fun onSuccess(state: SportMyUiState.Success) {
         swipe.isRefreshing = false
+        hasRenderedContent = true
+        binding.pointsCard.isVisible = true
         updateScoreUi(state.score)
         adapter.submitList(state.bookings)
+        recycler.isVisible = state.bookings.isNotEmpty()
+        binding.emptyStateLayout.isVisible = state.bookings.isEmpty()
+        if (state.bookings.isEmpty()) {
+            showEmptyState()
+        }
         if (state.hasPartialError) {
             Toast.makeText(requireContext(), "Не удалось загрузить некоторые данные", Toast.LENGTH_SHORT).show()
         }
@@ -139,7 +158,26 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     private fun showError(state: SportMyUiState.Error) {
         swipe.isRefreshing = false
-        Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+        recycler.isVisible = false
+        if (!hasRenderedContent) {
+            binding.pointsCard.isVisible = false
+        }
+        binding.emptyStateLayout.isVisible = true
+        binding.stateIcon.setImageResource(R.drawable.ic_error)
+        binding.stateTitle.setText(R.string.common_load_error_title)
+        binding.stateDescription.text = state.message
+        binding.buttonGoToSchedule.setText(R.string.common_retry)
+        binding.buttonGoToSchedule.setOnClickListener { viewModel.refreshAllData() }
+    }
+
+    private fun showEmptyState() {
+        binding.stateIcon.setImageResource(R.drawable.ic_calendar_add)
+        binding.stateTitle.setText(R.string.sport_bookings_empty_title)
+        binding.stateDescription.setText(R.string.sport_bookings_empty_description)
+        binding.buttonGoToSchedule.setText(R.string.sport_bookings_open_schedule)
+        binding.buttonGoToSchedule.setOnClickListener {
+            (parentFragment as? SportFragment)?.changeView(1)
+        }
     }
 
     private fun updateScoreUi(score: SportScore) {
@@ -148,14 +186,28 @@ class SportMyFragment : Fragment(), SportBookingListener {
         val bonusColor = color.secondary.withSaturation(4f)
 
         binding.attendancePointsTextView.text = score.attendances.toString()
-        binding.bonusPointsTextView.text = "${score.otherCapped}${if (score.other > score.otherCapped) " (${score.other})" else ""}"
+        binding.bonusPointsTextView.text = if (score.other > score.otherCapped) {
+            getString(R.string.sport_score_bonus_over_limit, score.otherCapped, score.other)
+        } else {
+            getString(R.string.sport_score_bonus_value, score.otherCapped)
+        }
         binding.attendanceIndicator.imageTintList = ColorStateList.valueOf(attendanceColor)
         binding.bonusIndicator.imageTintList = ColorStateList.valueOf(bonusColor)
 
         val need = score.need
         val enough = need == 0
-        binding.needPointsTextView.text = if (enough) "Зачёт" else "$need"
-        binding.needLabelTextView.text = if (enough) "" else "до зачёта"
+        binding.needPointsTextView.text = if (enough) {
+            getString(R.string.sport_score_passed)
+        } else {
+            getString(R.string.sport_score_need_value, need)
+        }
+        binding.needLabelTextView.text = if (enough) "" else getString(R.string.sport_score_needed)
+        binding.needIndicator.setImageResource(
+            if (enough) R.drawable.ic_check else R.drawable.indicator_circle
+        )
+        binding.needIndicator.imageTintList = ColorStateList.valueOf(
+            if (enough) color.primary else color.outline
+        )
 
         val total = score.total
         binding.progressCircle.progressTextView.text = total.toString()

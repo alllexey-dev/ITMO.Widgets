@@ -5,7 +5,6 @@ import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -14,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentScheduleBinding
@@ -104,7 +104,6 @@ class ScheduleFragment : Fragment() {
         val color = requireContext().color
         swipe.setColorSchemeColors(color.primary)
         swipe.setProgressBackgroundColorSchemeColor(color.background)
-        // should be tested in future
         fabFriend.visibility = if (userIsu == null) View.VISIBLE else View.GONE
     }
 
@@ -153,6 +152,10 @@ class ScheduleFragment : Fragment() {
             swipe.isRefreshing = true
             viewModel.loadInitialSchedule()
         }
+
+        binding.scheduleStateAction.setOnClickListener {
+            viewModel.loadInitialSchedule(forceRefresh = true)
+        }
     }
 
     private fun setupObservers() {
@@ -198,12 +201,21 @@ class ScheduleFragment : Fragment() {
 
     private fun showLoading() {
         swipe.isRefreshing = true
+        if (adapter.itemCount == 0) {
+            binding.scheduleStateContainer.isVisible = false
+        }
     }
 
     private fun renderSchedule(state: ScheduleUiState.Success) {
         swipe.isRefreshing = state.isLoadingMore
 
-        if (state.schedule.isEmpty()) return
+        if (state.schedule.isEmpty()) {
+            adapter.submitList(emptyList())
+            showEmptySchedule()
+            return
+        }
+
+        binding.scheduleStateContainer.isVisible = false
 
         adapter.submitList(state.schedule) {
             restoreScrollState()
@@ -213,12 +225,27 @@ class ScheduleFragment : Fragment() {
 
     private fun showError(state: ScheduleUiState.Error) {
         swipe.isRefreshing = false
-        Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+        if (adapter.itemCount > 0) return
+
+        binding.scheduleStateContainer.isVisible = true
+        binding.scheduleStateIcon.setImageResource(R.drawable.ic_error)
+        binding.scheduleStateTitle.setText(R.string.common_load_error_title)
+        binding.scheduleStateDescription.text = state.message
+        binding.scheduleStateAction.isVisible = true
     }
 
     private fun renderSelectedUser(user: SelectedUser?) {
         chipUser.isVisible = user != null
         chipUser.text = user?.name
+    }
+
+    private fun showEmptySchedule() {
+        binding.scheduleStateContainer.isVisible = true
+        binding.scheduleStateIcon.setImageResource(R.drawable.ic_event_note)
+        binding.scheduleStateTitle.setText(R.string.schedule_empty_title)
+        binding.scheduleStateDescription.setText(R.string.schedule_empty_description)
+        binding.scheduleStateAction.isVisible = false
+        hideFabScrollToTop()
     }
 
     // endregion

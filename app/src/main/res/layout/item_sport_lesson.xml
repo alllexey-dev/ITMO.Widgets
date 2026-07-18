@@ -7,12 +7,13 @@
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/sportLessonCardView"
-        style="@style/Widget.Material3.CardView.Elevated"
+        style="@style/Widget.Material3.CardView.Filled"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginVertical="6dp"
-        app:cardElevation="2dp">
+        app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+        app:cardElevation="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -46,6 +47,7 @@
                     android:layout_width="14dp"
                     android:layout_height="14dp"
                     android:layout_gravity="center_vertical"
+                    android:contentDescription="@string/sport_intersection_description"
                     android:src="@drawable/ic_error"
                     app:tint="?attr/colorError" />
 
@@ -94,6 +96,7 @@
                         <ImageView
                             android:layout_width="14dp"
                             android:layout_height="14dp"
+                            android:contentDescription="@null"
                             android:src="@drawable/ic_exercise"
                             app:tint="?attr/colorOnSecondaryContainer" />
 
@@ -102,7 +105,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="4dp"
-                            android:text="Открытое занятие"
+                            android:text="@string/sport_lesson_open"
                             android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                             android:textColor="?attr/colorOnSecondaryContainer" />
                     </LinearLayout>
@@ -129,6 +132,7 @@
                         <ImageView
                             android:layout_width="14dp"
                             android:layout_height="14dp"
+                            android:contentDescription="@null"
                             android:src="@drawable/ic_wand_stars"
                             app:tint="?attr/colorOnTertiaryContainer" />
 
@@ -136,7 +140,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="4dp"
-                            android:text="Прогноз"
+                            android:text="@string/sport_lesson_prediction"
                             android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                             android:textColor="?attr/colorOnTertiaryContainer" />
                     </LinearLayout>
@@ -163,6 +167,7 @@
                         <ImageView
                             android:layout_width="14dp"
                             android:layout_height="14dp"
+                            android:contentDescription="@null"
                             android:src="@drawable/ic_group"
                             app:tint="?attr/colorOnPrimaryContainer" />
 
@@ -170,7 +175,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="4dp"
-                            android:text="Нет мест"
+                            android:text="@string/sport_lesson_full"
                             android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                             android:textColor="?attr/colorOnPrimaryContainer" />
                     </LinearLayout>
@@ -202,6 +207,7 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:layout_marginEnd="8dp"
+                        android:contentDescription="@null"
                         android:src="@drawable/ic_person"
                         app:tint="?attr/colorSecondary" />
 
@@ -229,6 +235,7 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:layout_marginEnd="8dp"
+                        android:contentDescription="@null"
                         android:src="@drawable/ic_location"
                         app:tint="?attr/colorTertiary" />
 
@@ -295,7 +302,7 @@
                         android:layout_marginStart="8dp"
                         android:textAppearance="?attr/textAppearanceBodySmall"
                         android:textColor="?attr/colorOnSurfaceVariant"
-                        android:text="Друзья"/>
+                    android:text="@string/common_friends"/>
 
                 </LinearLayout>
             </LinearLayout>
@@ -325,9 +332,9 @@
                         android:id="@+id/sign_up_button"
                         style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:minWidth="100dp"
-                        android:text="Записаться" />
+                        android:text="@string/sport_lesson_sign_up" />
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/status_chip"
@@ -343,7 +350,7 @@
                     android:id="@+id/signed_up_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Запись:"
+                    android:text="@string/sport_lesson_booking_label"
                     android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />

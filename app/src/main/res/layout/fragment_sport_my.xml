@@ -13,125 +13,145 @@
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/points_card"
-            android:layout_width="match_parent"
+            style="@style/Widget.Material3.CardView.Filled"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
             app:cardCornerRadius="24dp"
-            app:cardElevation="4dp"
+            app:cardElevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:strokeColor="?attr/colorOutline">
+            app:layout_constraintTop_toTopOf="parent">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/score_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sport_score_title"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <include
                     android:id="@+id/progress_circle"
                     layout="@layout/component_sport_circle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@id/score_title" />
 
                 <ImageView
                     android:id="@+id/attendance_indicator"
-                    android:layout_width="8dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="16dp"
-                    android:paddingTop="12dp"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="20dp"
+                    android:contentDescription="@null"
                     android:src="@drawable/indicator_circle"
                     app:layout_constraintStart_toEndOf="@id/progress_circle"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:tint="?colorTertiary" />
+                    app:layout_constraintTop_toBottomOf="@id/score_title"
+                    app:tint="?attr/colorTertiary" />
 
                 <TextView
                     android:id="@+id/attendance_points_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                    android:layout_marginStart="8dp"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
                     android:textStyle="bold"
+                    app:layout_constraintBaseline_toBaselineOf="@id/attendance_label_text_view"
                     app:layout_constraintStart_toEndOf="@id/attendance_indicator"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:text="30" />
+                    tools:text="100" />
 
                 <TextView
                     android:id="@+id/attendance_label_text_view"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="за посещение"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    app:layout_constraintBaseline_toBaselineOf="@id/attendance_points_text_view"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/sport_score_attendance"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/attendance_points_text_view" />
+                    app:layout_constraintStart_toEndOf="@id/attendance_points_text_view"
+                    app:layout_constraintTop_toTopOf="@id/attendance_indicator" />
 
                 <ImageView
                     android:id="@+id/bonus_indicator"
-                    android:layout_width="8dp"
-                    android:layout_height="26dp"
-                    android:paddingTop="18dp"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginTop="20dp"
+                    android:contentDescription="@null"
                     android:src="@drawable/indicator_circle"
                     app:layout_constraintStart_toStartOf="@id/attendance_indicator"
-                    app:layout_constraintTop_toBottomOf="@id/attendance_points_text_view"
-                    app:tint="?colorSecondary" />
+                    app:layout_constraintTop_toBottomOf="@id/attendance_label_text_view"
+                    app:tint="?attr/colorSecondary" />
 
                 <TextView
                     android:id="@+id/bonus_points_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                    android:layout_marginStart="8dp"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
                     android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="@id/attendance_points_text_view"
-                    app:layout_constraintTop_toBottomOf="@id/attendance_points_text_view"
+                    app:layout_constraintBaseline_toBaselineOf="@id/bonus_label_text_view"
+                    app:layout_constraintStart_toEndOf="@id/bonus_indicator"
                     tools:text="20" />
 
                 <TextView
                     android:id="@+id/bonus_label_text_view"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="бонусы"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    app:layout_constraintBaseline_toBaselineOf="@id/bonus_points_text_view"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/sport_score_bonus"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/bonus_points_text_view" />
+                    app:layout_constraintStart_toEndOf="@id/bonus_points_text_view"
+                    app:layout_constraintTop_toTopOf="@id/bonus_indicator" />
 
                 <ImageView
                     android:id="@+id/need_indicator"
-                    android:layout_width="8dp"
-                    android:layout_height="26dp"
-                    android:paddingTop="18dp"
-                    android:src="@drawable/indicator_circle"
-                    android:visibility="invisible"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginTop="20dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_check"
                     app:layout_constraintStart_toStartOf="@id/bonus_indicator"
-                    app:layout_constraintTop_toBottomOf="@id/bonus_points_text_view"
-                    app:tint="?colorSurfaceVariant" />
+                    app:layout_constraintTop_toBottomOf="@id/bonus_label_text_view"
+                    app:tint="?attr/colorPrimary" />
 
                 <TextView
                     android:id="@+id/need_points_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                    android:layout_marginStart="8dp"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
                     android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="@id/bonus_points_text_view"
-                    app:layout_constraintTop_toBottomOf="@id/bonus_points_text_view"
-                    tools:text="20" />
+                    app:layout_constraintBaseline_toBaselineOf="@id/need_label_text_view"
+                    app:layout_constraintStart_toEndOf="@id/need_indicator"
+                    tools:text="Зачёт" />
 
                 <TextView
                     android:id="@+id/need_label_text_view"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="до зачёта"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    app:layout_constraintBaseline_toBaselineOf="@id/need_points_text_view"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/sport_score_needed"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/need_points_text_view" />
 
@@ -143,56 +163,65 @@
             android:id="@+id/main_recycler_view"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="80dp"
+            android:layout_marginTop="8dp"
             android:clipToPadding="false"
-            android:paddingTop="80dp"
             android:paddingBottom="16dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/points_card"
             tools:listitem="@layout/item_sport_booking" />
 
         <LinearLayout
             android:id="@+id/empty_state_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:gravity="center"
+            android:orientation="vertical"
             android:padding="32dp"
             android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/points_card"
-            app:layout_constraintBottom_toBottomOf="parent">
+            tools:visibility="visible">
 
             <ImageView
-                android:layout_width="120dp"
-                android:layout_height="120dp"
+                android:id="@+id/state_icon"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:contentDescription="@null"
                 android:src="@drawable/ic_calendar_add"
-                app:tint="?attr/colorOutline" />
+                app:tint="?attr/colorPrimary" />
 
             <TextView
+                android:id="@+id/state_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Нет записей"
-                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+                android:gravity="center"
+                android:text="@string/sport_bookings_empty_title"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
 
             <TextView
+                android:id="@+id/state_description"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:gravity="center"
-                android:text="У вас нет активных записей на занятия. Самое время выбрать что-то полезное!"
-                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                android:textColor="?android:attr/textColorSecondary" />
+                android:text="@string/sport_bookings_empty_description"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_go_to_schedule"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="Открыть расписание" />
+                android:minHeight="48dp"
+                android:text="@string/sport_bookings_open_schedule" />
+
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

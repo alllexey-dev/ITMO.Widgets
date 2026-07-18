@@ -23,4 +23,10 @@
         <item name="textAllCaps">false</item>
     </style>
 
+    <style name="Widget.ItmoWidgets.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:minHeight">64dp</item>
+        <item name="itemPaddingTop">4dp</item>
+        <item name="itemPaddingBottom">4dp</item>
+    </style>
+
 </resources>

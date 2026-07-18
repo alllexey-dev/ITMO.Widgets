@@ -21,10 +21,11 @@
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav_view"
-        style="@style/Widget.Design.BottomNavigationView"
-        app:itemHorizontalTranslationEnabled="false"
+        style="@style/Widget.ItmoWidgets.BottomNavigationView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        app:itemHorizontalTranslationEnabled="false"
+        app:labelVisibilityMode="selected"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

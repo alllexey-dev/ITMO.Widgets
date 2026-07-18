@@ -7,34 +7,25 @@
     android:layout_height="match_parent"
     tools:context=".feature.sport.common.SportFragment">
 
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/sport_tab_layout"
+        style="@style/Widget.Material3.TabLayout.Secondary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tabGravity="fill"
+        app:tabMode="fixed"
+        app:tabTextAppearance="@style/SportTabTextAppearance" />
+
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/sport_view_pager"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/sport_tab_layout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/sport_tab_layout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:tabTextAppearance="@style/SportTabTextAppearance"
-        android:background="?attr/colorSurfaceContainer"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/title_sport_me" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/title_sport_sign" />
-
-    </com.google.android.material.tabs.TabLayout>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/sport_tab_layout" />
 </androidx.constraintlayout.widget.ConstraintLayout>

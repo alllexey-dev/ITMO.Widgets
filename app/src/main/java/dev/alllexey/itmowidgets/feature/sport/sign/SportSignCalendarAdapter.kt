@@ -6,8 +6,11 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.R
 import com.google.android.material.color.MaterialColors
+import dev.alllexey.itmowidgets.R as AppR
 import dev.alllexey.itmowidgets.databinding.ItemCalendarDayBinding
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 class SportSignCalendarAdapter(
     private val onDateClick: (LocalDate) -> Unit
@@ -68,6 +71,23 @@ class SportSignCalendarAdapter(
 
             binding.dayOfWeekText.text = day.dayOfWeek
             binding.dayOfMonthText.text = day.dayOfMonth
+            itemView.isSelected = day.isSelected
+            val formattedDate = day.date.format(
+                DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
+            )
+            val dateDescription = if (day.isToday) {
+                context.getString(AppR.string.sport_calendar_today, formattedDate)
+            } else {
+                formattedDate
+            }
+            itemView.contentDescription = context.getString(
+                when {
+                    day.hasAvailableLessons -> AppR.string.sport_calendar_available
+                    day.hasLessons -> AppR.string.sport_calendar_has_lessons
+                    else -> AppR.string.sport_calendar_empty
+                },
+                dateDescription
+            )
 
             val textColor: Int
             val cardColor: Int
