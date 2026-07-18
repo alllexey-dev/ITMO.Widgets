@@ -40,7 +40,6 @@ class ScheduleFragment : Fragment() {
     private val swipe get() = binding.swipeRefreshLayout
     private val fabTop get() = binding.fabScrollToTop
     private val fabFriend get() = binding.fabOpenFriendSelector
-    private val chipUser get() = binding.chipSelectedUser
 
     // endregion
 
@@ -144,13 +143,15 @@ class ScheduleFragment : Fragment() {
         }
 
         fabFriend.setOnClickListener {
-            FriendSelectorDialogFragment.show(parentFragmentManager)
+            openFriendSelector()
         }
 
-        chipUser.setOnCloseIconClickListener {
-            viewModel.setSelectedUser(null)
-            swipe.isRefreshing = true
-            viewModel.loadInitialSchedule()
+        binding.selectedUserChangeButton.setOnClickListener {
+            openFriendSelector()
+        }
+
+        binding.selectedUserClearButton.setOnClickListener {
+            selectUser(null)
         }
 
         binding.scheduleStateAction.setOnClickListener {
@@ -182,17 +183,35 @@ class ScheduleFragment : Fragment() {
             viewLifecycleOwner
         ) { _, bundle ->
 
-            val isu = bundle.getInt(FriendSelectorDialogFragment.RESULT_USER_ISU)
-            val name = bundle.getString(FriendSelectorDialogFragment.RESULT_USER_NAME)
-            val avatar = bundle.getString(FriendSelectorDialogFragment.RESULT_USER_PICTURE_URL)
-
-            viewModel.setSelectedUser(
-                SelectedUser(isu, name, avatar)
-            )
-
-            swipe.isRefreshing = true
-            viewModel.loadInitialSchedule()
+            if (bundle.getBoolean(FriendSelectorDialogFragment.RESULT_USE_MY_SCHEDULE)) {
+                selectUser(null)
+            } else {
+                selectUser(
+                    SelectedUser(
+                        isu = bundle.getInt(FriendSelectorDialogFragment.RESULT_USER_ISU),
+                        name = bundle.getString(
+                            FriendSelectorDialogFragment.RESULT_USER_NAME
+                        ).orEmpty(),
+                        avatar = bundle.getString(
+                            FriendSelectorDialogFragment.RESULT_USER_PICTURE_URL
+                        )
+                    )
+                )
+            }
         }
+    }
+
+    private fun openFriendSelector() {
+        FriendSelectorDialogFragment.show(
+            parentFragmentManager,
+            viewModel.selectedUser.value?.isu
+        )
+    }
+
+    private fun selectUser(user: SelectedUser?) {
+        viewModel.setSelectedUser(user)
+        swipe.isRefreshing = true
+        viewModel.loadInitialSchedule()
     }
 
     // endregion
@@ -235,8 +254,10 @@ class ScheduleFragment : Fragment() {
     }
 
     private fun renderSelectedUser(user: SelectedUser?) {
-        chipUser.isVisible = user != null
-        chipUser.text = user?.name
+        binding.selectedUserCard.isVisible = user != null
+        binding.selectedUserName.text = user?.name
+        binding.selectedUserAvatar.setUser(user?.name, user?.avatar)
+        fabFriend.isVisible = user == null && userIsu == null
     }
 
     private fun showEmptySchedule() {

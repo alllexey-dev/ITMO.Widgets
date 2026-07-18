@@ -30,26 +30,30 @@ class AvatarView @JvmOverloads constructor(
     }
 
     fun setUser(user: UserData?) {
-        if (user == null) {
+        setUser(user?.name, user?.pictureUrl)
+    }
+
+    fun setUser(name: String?, pictureUrl: String?) {
+        if (name == null) {
+            Glide.with(this).clear(image)
             image.visibility = GONE
             text.visibility = GONE
             return
         }
 
-        val url = user.pictureUrl
-
-        if (!url.isNullOrBlank()) {
+        if (!pictureUrl.isNullOrBlank()) {
             image.visibility = VISIBLE
             text.visibility = GONE
 
             Glide.with(this)
-                .load(url)
+                .load(pictureUrl)
                 .circleCrop()
                 .into(image)
         } else {
+            Glide.with(this).clear(image)
             image.visibility = GONE
             text.visibility = VISIBLE
-            text.text = initials(user.name)
+            text.text = initials(name)
         }
     }
 

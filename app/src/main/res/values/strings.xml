@@ -27,6 +27,7 @@
     <string name="common_load_error_title">Не удалось загрузить данные</string>
     <string name="common_options">Дополнительные действия</string>
     <string name="common_friends">Друзья</string>
+    <string name="common_close">Закрыть</string>
 
     <string name="sport_score_title">Баллы за семестр</string>
     <string name="sport_score_attendance">за посещение</string>
@@ -69,6 +70,22 @@
     <string name="schedule_date_format">%1$d %2$s</string>
     <string name="schedule_no_lessons">Нет пар</string>
     <string name="schedule_lesson_count">%1$d %2$s</string>
+    <string name="schedule_selected_friend_label">Расписание друга</string>
+    <string name="schedule_change_friend">Сменить</string>
+    <string name="schedule_return_to_mine">Вернуться к моему расписанию</string>
+
+    <string name="friend_picker_title">Чьё расписание?</string>
+    <string name="friend_picker_subtitle">Выбери друга и подтверди переключение</string>
+    <string name="friend_picker_recent">Недавние</string>
+    <string name="friend_picker_search_hint">Имя, ИСУ или группа</string>
+    <string name="friend_picker_my_schedule_short">Моё</string>
+    <string name="friend_picker_apply_my">Показать моё расписание</string>
+    <string name="friend_picker_apply_friend">Показать расписание: %1$s</string>
+    <string name="friend_picker_schedule_open">Расписание открыто</string>
+    <string name="friend_picker_schedule_hidden">Расписание скрыто</string>
+    <string name="friend_picker_empty_title">Никого не найдено</string>
+    <string name="friend_picker_empty_description">Попробуй изменить запрос</string>
+    <string name="friend_picker_disabled">Сервис друзей выключен</string>
 
     <string name="debug_academic_time_title">Тестовое академическое время</string>
     <string name="debug_academic_time_description">Подменяет текущую дату только для расписания и спорта. Авторизация, кэш и QR используют системное время.</string>

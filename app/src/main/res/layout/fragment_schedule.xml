@@ -8,6 +8,94 @@
     android:orientation="vertical"
     tools:context=".feature.schedule.ui.ScheduleFragment">
 
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/selected_user_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="?attr/colorSecondaryContainer"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="64dp"
+            android:paddingStart="12dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="4dp"
+            android:paddingBottom="8dp">
+
+            <dev.alllexey.itmowidgets.core.ui.AvatarView
+                android:id="@+id/selected_user_avatar"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/selected_user_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="@string/schedule_selected_friend_label"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorOnSecondaryContainer"
+                app:layout_constraintEnd_toStartOf="@id/selected_user_change_button"
+                app:layout_constraintStart_toEndOf="@id/selected_user_avatar"
+                app:layout_constraintTop_toTopOf="@id/selected_user_avatar" />
+
+            <TextView
+                android:id="@+id/selected_user_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorOnSecondaryContainer"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/selected_user_avatar"
+                app:layout_constraintEnd_toStartOf="@id/selected_user_change_button"
+                app:layout_constraintStart_toStartOf="@id/selected_user_label"
+                app:layout_constraintTop_toBottomOf="@id/selected_user_label"
+                tools:text="Алексей Петров" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/selected_user_change_button"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:minWidth="0dp"
+                android:text="@string/schedule_change_friend"
+                android:textColor="?attr/colorOnSecondaryContainer"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/selected_user_clear_button"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageButton
+                android:id="@+id/selected_user_clear_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/schedule_return_to_mine"
+                android:padding="12dp"
+                android:src="@drawable/ic_close"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="?attr/colorOnSecondaryContainer" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe_refresh_layout"
         android:layout_width="0dp"
@@ -15,7 +103,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/selected_user_card">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/outerRecyclerView"
@@ -55,21 +143,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_group" />
 
-    <com.google.android.material.chip.Chip
-        android:id="@+id/chip_selected_user"
-        style="@style/Widget.Material3.Chip.Assist"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        android:text="@string/title_schedule"
-        android:visibility="gone"
-        app:chipIcon="@drawable/ic_group"
-        app:closeIconVisible="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:visibility="visible" />
-
     <LinearLayout
         android:id="@+id/schedule_state_container"
         android:layout_width="0dp"
@@ -81,7 +154,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/selected_user_card"
         tools:visibility="visible">
 
         <ImageView

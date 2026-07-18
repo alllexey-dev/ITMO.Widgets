@@ -27,7 +27,7 @@ sealed class ScheduleUiState {
 }
 
 data class SelectedUser(
-    val isu: Int?, val name: String?, val avatar: String?
+    val isu: Int, val name: String, val avatar: String?
 )
 
 @HiltViewModel

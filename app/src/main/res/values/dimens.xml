@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="friend_picker_selection_stroke">2dp</dimen>
+</resources>
