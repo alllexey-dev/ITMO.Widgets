@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.core.model.SportFreeSignRequest
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.core.util.throwableOrNull
 import dev.alllexey.itmowidgets.domain.model.sport.SectionName
@@ -35,7 +36,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
@@ -62,7 +62,6 @@ sealed class SportSignUiState {
         val showOnlyAvailable: Boolean = true, // true by default
         val showAutoSign: Boolean = true, // true by default
         val showOnlyFriends: Boolean = false,
-        val selectedDate: LocalDate = LocalDate.now(),
 
         val displayedWeek: List<CalendarDay> = emptyList(),
         val currentMonthName: String = "",
@@ -87,7 +86,7 @@ data class SportSignFilters(
     val showOnlyAvailable: Boolean = true,
     val showAutoSign: Boolean = true,
     val showOnlyFriends: Boolean = false,
-    val selectedDate: LocalDate = LocalDate.now()
+    val selectedDate: LocalDate
 )
 
 sealed interface SportSignEvent {
@@ -124,7 +123,8 @@ class SportSignViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val sportBookingRepository: SportBookingRepository,
     private val sportScheduleRepository: SportScheduleRepository,
-    private val sportDataRepository: SportDataRepository
+    private val sportDataRepository: SportDataRepository,
+    private val timeProvider: AcademicTimeProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<SportSignUiState>(SportSignUiState.Loading)
@@ -136,7 +136,9 @@ class SportSignViewModel @Inject constructor(
     var sportSections: List<SectionName> = listOf()
     var usedSportNames: List<SectionName> = listOf()
 
-    private val _userFilters = MutableStateFlow(SportSignFilters())
+    private val _userFilters = MutableStateFlow(
+        SportSignFilters(selectedDate = timeProvider.today())
+    )
     val userFiltersFlow = _userFilters.asStateFlow()
 
     private val isRefreshing = MutableStateFlow(false)
@@ -253,7 +255,7 @@ class SportSignViewModel @Inject constructor(
     ): SportSignUiState.Success {
         userFilters.apply {
 
-            val today = LocalDate.now()
+            val today = timeProvider.today()
 
             val allBuildingsMap = filters.buildingId.associate { it.id to it.value }
             val allTeachersMap = filters.teacherIsu.associate { it.id to it.value }
@@ -322,7 +324,7 @@ class SportSignViewModel @Inject constructor(
 
             // today lessons
 
-            val now = OffsetDateTime.now()
+            val now = timeProvider.now()
 
             val finalFilteredLessons = filteredLessons
                 .filter { it.end > now }
@@ -373,7 +375,7 @@ class SportSignViewModel @Inject constructor(
                 days[3].month.getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 
-            val currentMonday = LocalDate.now().with(DayOfWeek.MONDAY)
+            val currentMonday = today.with(DayOfWeek.MONDAY)
             val weekOffset = ChronoUnit.WEEKS
                 .between(currentMonday, startOfWeek)
                 .toInt()
@@ -412,13 +414,14 @@ class SportSignViewModel @Inject constructor(
 
     fun nextWeek() {
         val startOfWeek = _userFilters.value.selectedDate.with(DayOfWeek.MONDAY)
-        val currentMonday = LocalDate.now().with(DayOfWeek.MONDAY)
+        val today = timeProvider.today()
+        val currentMonday = today.with(DayOfWeek.MONDAY)
         val weekOffset = ChronoUnit.WEEKS
             .between(currentMonday, startOfWeek)
             .toInt()
         if (weekOffset < MAX_WEEKS_FORWARD) {
             _userFilters.value = _userFilters.value.copy(
-                selectedDate = LocalDate.now().plusWeeks(weekOffset + 1L)
+                selectedDate = today.plusWeeks(weekOffset + 1L)
                     .with(DayOfWeek.MONDAY)
             )
         }
@@ -426,14 +429,15 @@ class SportSignViewModel @Inject constructor(
 
     fun prevWeek() {
         val startOfWeek = _userFilters.value.selectedDate.with(DayOfWeek.MONDAY)
-        val currentMonday = LocalDate.now().with(DayOfWeek.MONDAY)
+        val today = timeProvider.today()
+        val currentMonday = today.with(DayOfWeek.MONDAY)
         val weekOffset = ChronoUnit.WEEKS
             .between(currentMonday, startOfWeek)
             .toInt()
 
         if (weekOffset > 0) {
             _userFilters.value = _userFilters.value.copy(
-                selectedDate = LocalDate.now().plusWeeks(weekOffset - 1L)
+                selectedDate = today.plusWeeks(weekOffset - 1L)
                     .with(DayOfWeek.MONDAY)
             )
         }

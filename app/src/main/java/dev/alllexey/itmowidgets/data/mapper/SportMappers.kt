@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.domain.model.sport.SportBooking
 import dev.alllexey.itmowidgets.domain.model.sport.SportLesson
 import dev.alllexey.itmowidgets.domain.model.sport.SportScore
 import dev.alllexey.itmowidgets.domain.model.sport.UnavailableReason
+import java.time.OffsetDateTime
 
 fun api.myitmo.model.sport.SportScore.toModel(): SportScore {
     return SportScore(
@@ -42,8 +43,8 @@ fun api.myitmo.model.sport.SportAttempts.toModel(): SportAttempts {
     )
 }
 
-fun api.myitmo.model.sport.SportLesson.toModel(): SportLesson {
-    val unavailableReasons = UnavailableReason.getSortedUnavailableReasons(this)
+fun api.myitmo.model.sport.SportLesson.toModel(now: OffsetDateTime): SportLesson {
+    val unavailableReasons = UnavailableReason.getSortedUnavailableReasons(this, now)
     return SportLesson(
         isLessonReal = true,
         lessonId = id,

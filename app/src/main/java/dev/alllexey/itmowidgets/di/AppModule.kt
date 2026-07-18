@@ -16,6 +16,12 @@ import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
 import dev.alllexey.itmowidgets.core.network.WidgetsClient
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
+import dev.alllexey.itmowidgets.core.time.AcademicClock
+import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
+import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideStore
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.DefaultAcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.SharedPreferencesAcademicTimeOverrideStore
 import dev.alllexey.itmowidgets.core.util.OffsetDateTimeAdapter
 import dev.alllexey.itmowidgets.core.utils.RuntimeTypeAdapterFactory
 import dev.alllexey.itmowidgets.domain.model.sport.SportBooking
@@ -23,7 +29,9 @@ import dev.alllexey.itmowidgets.domain.model.sport.SportCommon
 import dev.alllexey.itmowidgets.domain.model.sport.SportLesson
 import dev.alllexey.itmowidgets.domain.model.sport.UnavailableReason
 import dev.alllexey.itmowidgets.domain.model.sport.UnavailableReasonTypeAdapter
+import java.time.Clock
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import javax.inject.Singleton
 
 @Module
@@ -35,6 +43,34 @@ object AppModule {
     fun provideSharedPreferences(
         @ApplicationContext context: Context
     ): SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+
+    @Provides
+    @Singleton
+    @AcademicClock
+    fun provideAcademicClock(): Clock = Clock.system(ZoneId.of("Europe/Moscow"))
+
+    @Provides
+    @Singleton
+    fun provideAcademicTimeOverrideStore(
+        preferences: SharedPreferences
+    ): AcademicTimeOverrideStore = SharedPreferencesAcademicTimeOverrideStore(preferences)
+
+    @Provides
+    @Singleton
+    fun provideDefaultAcademicTimeProvider(
+        @AcademicClock clock: Clock,
+        overrideStore: AcademicTimeOverrideStore
+    ): DefaultAcademicTimeProvider = DefaultAcademicTimeProvider(clock, overrideStore)
+
+    @Provides
+    fun provideAcademicTimeProvider(
+        provider: DefaultAcademicTimeProvider
+    ): AcademicTimeProvider = provider
+
+    @Provides
+    fun provideAcademicTimeOverrideController(
+        provider: DefaultAcademicTimeProvider
+    ): AcademicTimeOverrideController = provider
 
     @Provides
     @Singleton

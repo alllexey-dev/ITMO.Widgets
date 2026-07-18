@@ -13,14 +13,15 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import dagger.hilt.android.AndroidEntryPoint
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentScheduleBinding
 import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
 import dev.alllexey.itmowidgets.feature.friendselector.FriendSelectorDialogFragment
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import java.time.LocalDate
+import javax.inject.Inject
 import kotlin.getValue
 
 @AndroidEntryPoint
@@ -52,6 +53,9 @@ class ScheduleFragment : Fragment() {
     private val KEY_LIST_STATE = "list_state"
 
     private val viewModel: ScheduleViewModel by viewModels()
+
+    @Inject
+    lateinit var timeProvider: AcademicTimeProvider
 
     // endregion
 
@@ -106,7 +110,7 @@ class ScheduleFragment : Fragment() {
 
     private fun setupRecycler() {
 
-        adapter = DayScheduleAdapter()
+        adapter = DayScheduleAdapter(timeProvider)
 
         recycler.layoutManager = LinearLayoutManager(requireContext())
         recycler.adapter = adapter
@@ -238,7 +242,7 @@ class ScheduleFragment : Fragment() {
 
         if (hasScrolledToToday) return
 
-        val today = LocalDate.now()
+        val today = timeProvider.today()
         val index = schedule.indexOfFirst { it.date >= today }
 
         if (index != -1) {

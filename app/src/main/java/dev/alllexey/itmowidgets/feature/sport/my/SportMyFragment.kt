@@ -16,6 +16,7 @@ import com.google.gson.Gson
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.core.ui.CircularProgressBar
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.core.util.withSaturation
 import dev.alllexey.itmowidgets.databinding.FragmentSportMyBinding
@@ -51,6 +52,9 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     @Inject
     lateinit var gson: Gson
+
+    @Inject
+    lateinit var timeProvider: AcademicTimeProvider
 
     // endregion
 
@@ -93,7 +97,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     private fun setupRecycler() {
 
-        adapter = SportBookingAdapter(this)
+        adapter = SportBookingAdapter(timeProvider, this)
 
         recycler.layoutManager = LinearLayoutManager(requireContext())
         recycler.adapter = adapter

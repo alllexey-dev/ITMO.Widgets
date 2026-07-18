@@ -3,16 +3,16 @@ package dev.alllexey.itmowidgets.feature.schedule.ui
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
 import dev.alllexey.itmowidgets.domain.repository.ScheduleRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import javax.inject.Inject
 
 sealed class ScheduleUiState {
@@ -33,6 +33,7 @@ data class SelectedUser(
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(
     private val repository: ScheduleRepository,
+    private val timeProvider: AcademicTimeProvider,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -52,8 +53,8 @@ class ScheduleViewModel @Inject constructor(
 
     // region Schedule state
 
-    private var currentStart = LocalDate.now().minusDays(1)
-    private var currentEnd = LocalDate.now().plusDays(14)
+    private var currentStart = timeProvider.today().minusDays(1)
+    private var currentEnd = timeProvider.today().plusDays(14)
 
     private var currentDays = listOf<DaySchedule>()
 
@@ -124,8 +125,9 @@ class ScheduleViewModel @Inject constructor(
     }
 
     private fun resetRange() {
-        currentStart = LocalDate.now().minusDays(1)
-        currentEnd = LocalDate.now().plusDays(14)
+        val today = timeProvider.today()
+        currentStart = today.minusDays(1)
+        currentEnd = today.plusDays(14)
     }
 
     @OptIn(FlowPreview::class)

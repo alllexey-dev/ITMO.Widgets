@@ -23,14 +23,17 @@ sealed class UnavailableReason(val shortDescription: String, val weight: Int) {
     class Other(reason: String) : UnavailableReason(reason, 100)
 
     companion object {
-        fun getSortedUnavailableReasons(lesson: SportLesson): List<UnavailableReason> {
+        fun getSortedUnavailableReasons(
+            lesson: SportLesson,
+            now: OffsetDateTime
+        ): List<UnavailableReason> {
             val reasons = mutableSetOf<UnavailableReason>()
 
             if (lesson.signed == true) {
                 reasons.add(AlreadyEnrolled)
             }
 
-            if (lesson.date.isBefore(OffsetDateTime.now())) {
+            if (lesson.date.isBefore(now)) {
                 reasons.add(LessonInPast)
             }
 

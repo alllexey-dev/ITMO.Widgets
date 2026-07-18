@@ -11,15 +11,17 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.ScheduleUtil
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
 import dev.alllexey.itmowidgets.domain.model.schedule.Lesson
 import java.time.Duration
 import java.time.LocalDate
-import java.time.LocalDateTime
 
-class DayScheduleAdapter :
+class DayScheduleAdapter(
+    private val timeProvider: AcademicTimeProvider
+) :
     ListAdapter<DaySchedule, DayScheduleAdapter.DayViewHolder>(ScheduleDiffCallback) {
 
     private val viewPool = RecyclerView.RecycledViewPool()
@@ -41,7 +43,7 @@ class DayScheduleAdapter :
 
         holder.numberOfLessons.text = if (lessons.isEmpty()) "Нет пар" else "${lessons.size} ${ScheduleUtil.lessonDeclension(lessons.size)}"
 
-        val today = LocalDate.now()
+        val today = timeProvider.today()
         val isToday = date.equals(today)
 
         val hightlightColor = context.color.primary
@@ -94,7 +96,7 @@ class DayScheduleAdapter :
     }
 
     private fun processLessonsWithBreaks(lessons: List<Lesson>, date: LocalDate): List<ScheduleItem> {
-        val now = LocalDateTime.now()
+        val now = timeProvider.now().toLocalDateTime()
         val processedList = mutableListOf<ScheduleItem>()
         val sortedLessons = lessons.sortedBy { it.start }
 

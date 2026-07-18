@@ -14,9 +14,8 @@ import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
 import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemSportBookingBinding
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.domain.model.sport.SportBooking
-import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -27,7 +26,10 @@ interface SportBookingListener {
     fun onBookingClick(booking: SportBooking)
 }
 
-class SportBookingAdapter(val listener: SportBookingListener) : ListAdapter<SportBooking, SportBookingAdapter.SportBookingViewHolder>(DiffCallback()) {
+class SportBookingAdapter(
+    private val timeProvider: AcademicTimeProvider,
+    private val listener: SportBookingListener
+) : ListAdapter<SportBooking, SportBookingAdapter.SportBookingViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SportBookingViewHolder {
         val binding =
@@ -51,13 +53,13 @@ class SportBookingAdapter(val listener: SportBookingListener) : ListAdapter<Spor
             teacherTextView.text = item.teacherFio
 
             val localDate = item.start.toLocalDate()
-            val today = LocalDate.now()
+            val today = timeProvider.today()
             val tomorrow = today.plusDays(1)
 
             dateDayTextView.text = item.start.format(dayFormatter)
             dateMonthTextView.text = item.start.format(monthFormatter)
-            val localStart = item.start.atZoneSameInstant(ZoneId.systemDefault())
-            val localEnd = item.end.atZoneSameInstant(ZoneId.systemDefault())
+            val localStart = item.start.atZoneSameInstant(timeProvider.zoneId)
+            val localEnd = item.end.atZoneSameInstant(timeProvider.zoneId)
 
             val timeRange = "${localStart.format(timeFormatter)} - ${localEnd.format(timeFormatter)}"
             val timeString = when (localDate) {

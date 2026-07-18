@@ -14,14 +14,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
 import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.core.model.SportQueueEntry
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.ThemeColors
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportCommonDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportBookingFriendStatusBinding
 import dev.alllexey.itmowidgets.domain.model.sport.SportCommon
 import dev.alllexey.itmowidgets.domain.model.sport.SportLesson
-import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
@@ -36,6 +35,9 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
 
     @Inject
     lateinit var gson: Gson
+
+    @Inject
+    lateinit var timeProvider: AcademicTimeProvider
 
     private val item: SportCommon by lazy {
         val json = requireArguments().getString(ARG_COMMON_JSON)
@@ -79,7 +81,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         bookingHeader.friendsLayout.visibility = View.GONE
 
         val date = item.start.toLocalDate()
-        val today = LocalDate.now()
+        val today = timeProvider.today()
         val tomorrow = today.plusDays(1)
 
         val dayFormatter = DateTimeFormatter.ofPattern("d")
@@ -89,8 +91,8 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         bookingHeader.dateDayTextView.text = item.start.format(dayFormatter)
         bookingHeader.dateMonthTextView.text = item.start.format(monthFormatter)
 
-        val localStart = item.start.atZoneSameInstant(ZoneId.systemDefault())
-        val localEnd = item.end.atZoneSameInstant(ZoneId.systemDefault())
+        val localStart = item.start.atZoneSameInstant(timeProvider.zoneId)
+        val localEnd = item.end.atZoneSameInstant(timeProvider.zoneId)
         val timeRange = "${localStart.format(timeFormatter)} - ${localEnd.format(timeFormatter)}"
 
         bookingHeader.timeTextView.text = when (date) {
