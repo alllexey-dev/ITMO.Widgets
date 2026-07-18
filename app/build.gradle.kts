@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.hilt.android)
+    kotlin("kapt")
 }
 
 android {
@@ -40,6 +42,7 @@ android {
 }
 
 dependencies {
+    implementation("com.github.bumptech.glide:glide:5.0.5")
     implementation(libs.android.image.cropper)
     implementation(libs.itmo.widgets.core)
     implementation(libs.my.itmo.api)
@@ -56,6 +59,8 @@ dependencies {
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.firebase.messaging)
     implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

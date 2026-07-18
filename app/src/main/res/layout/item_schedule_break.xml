@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="48dp">
+    android:minHeight="36dp">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/timeline_guide_break"
@@ -15,9 +15,10 @@
 
     <View
         android:id="@+id/break_line"
-        android:layout_width="2dp"
+        android:layout_width="3dp"
         android:layout_height="0dp"
         android:background="?attr/colorOutlineVariant"
+        android:alpha="0.6"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@id/timeline_guide_break"
         app:layout_constraintEnd_toEndOf="@id/timeline_guide_break"

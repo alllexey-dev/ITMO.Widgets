@@ -1,93 +1,122 @@
 package dev.alllexey.itmowidgets.data.local
 
-import api.myitmo.model.schedule.Schedule
+import android.content.Context
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.util.ScheduleUtil
+import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.time.LocalDate
+import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
+import javax.inject.Inject
 
-private const val CACHE_EXPIRATION_MS = 3 * 24 * 60 * 60 * 1000L // 3 days
+private const val SCHEDULE_CACHE_EXPIRATION_MS = 24 * 60 * 60 * 1000L
 
-class ScheduleLocalDataSourceImpl(
+class ScheduleLocalDataSourceImpl @Inject constructor(
     private val gson: Gson,
-    private val cacheDir: File
+    @ApplicationContext context: Context
 ) : ScheduleLocalDataSource {
 
-    private data class CacheEntry(val timestamp: Long, val data: String?)
+    val cacheDir = File(context.cacheDir, "schedule_cache")
 
-    override fun getSchedule(date: LocalDate): Pair<Schedule, Long>? {
-        val entry = readCache(date.toString()) ?: return null
-        val schedule = gson.fromJson(entry.data, Schedule::class.java)
-        return schedule to entry.timestamp
-    }
+    private val memoryCache = ConcurrentHashMap<String, MutableSharedFlow<CacheEntry?>>()
 
-    override fun saveSchedule(schedule: Schedule) {
-        val stringData = gson.toJson(schedule)
-        writeCache(stringData, schedule.date.toString())
-        clearOldCache()
-    }
-
-    override fun isExpired(timestamp: Long): Boolean {
-        return (System.currentTimeMillis() - timestamp) > CACHE_EXPIRATION_MS
-    }
-
-    override fun clearCache() {
-        cacheDir.deleteRecursively()
+    init {
         cacheDir.mkdirs()
     }
 
-    override fun getSchedulesForRange(startDate: LocalDate, endDate: LocalDate): List<Schedule> {
-        val cachedSchedules = mutableListOf<Schedule>()
-        var currentDate = startDate
-        while (!currentDate.isAfter(endDate)) {
-            getSchedule(currentDate)?.let { (schedule, _) ->
-                cachedSchedules.add(schedule)
-            }
-            currentDate = currentDate.plusDays(1)
-        }
-        return cachedSchedules
-    }
+    override fun observeRange(
+        userIsu: Int?,
+        start: LocalDate,
+        end: LocalDate
+    ): Flow<List<DaySchedule>> {
 
-    private fun readCache(name: String): CacheEntry? {
-        val file = File(cacheDir, "$name.json")
-        try {
-            GZIPInputStream(FileInputStream(file)).use { gzipIs ->
-                val buffer = gzipIs.readBytes()
-                return gson.fromJson(String(buffer), CacheEntry::class.java)
-            }
-        } catch (_: Exception) {
-            return null
+        val keys = ScheduleUtil.generateDates(start, end).map { key(userIsu, it) }
+
+        return combineFlows(keys).map { entries ->
+            entries.mapNotNull { it?.let { deserialize(it) } }
         }
     }
 
-    private fun writeCache(data: String, name: String) {
-        val file = File(cacheDir, "$name.json")
-        val entry = CacheEntry(System.currentTimeMillis(), data)
+    override suspend fun save(schedule: DaySchedule, userIsu: Int?) {
+        val entry = CacheEntry(
+            userIsu = userIsu,
+            date = schedule.date,
+            timestamp = System.currentTimeMillis(),
+            data = gson.toJson(schedule)
+        )
+
+        val key = key(userIsu, schedule.date)
+
+        writeToDisk(key, entry)
+
+        memoryCache.getOrPut(key) { MutableStateFlow(null) }.emit(entry)
+    }
+
+    override fun get(userIsu: Int?, date: LocalDate): CacheEntry? {
+        val key = key(userIsu, date)
+        return readFromDisk(key)
+    }
+
+    override fun clear() {
+        cacheDir.deleteRecursively()
+        cacheDir.mkdirs()
+        memoryCache.clear()
+    }
+
+    fun isExpired(entry: CacheEntry): Boolean {
+        return System.currentTimeMillis() - entry.timestamp > SCHEDULE_CACHE_EXPIRATION_MS
+    }
+
+    // helpers
+    private fun key(userIsu: Int?, date: LocalDate) =
+        "${userIsu ?: "default"}_$date"
+
+    private fun deserialize(entry: CacheEntry): DaySchedule {
+        return gson.fromJson(entry.data, DaySchedule::class.java)
+    }
+
+    private fun combineFlows(keys: List<String>): Flow<List<CacheEntry?>> {
+        val flows = keys.map { key ->
+            memoryCache.getOrPut(key) {
+                MutableStateFlow(readFromDisk(key))
+            }
+        }
+        return combine(flows) { it.toList() }
+    }
+
+    private fun file(key: String) = File(cacheDir, "$key.json")
+
+    private fun writeToDisk(key: String, entry: CacheEntry) {
         try {
             val json = gson.toJson(entry)
-            GZIPOutputStream(FileOutputStream(file)).use { gzipOs ->
-                val buffer = json.toByteArray()
-                gzipOs.write(buffer)
+            GZIPOutputStream(file(key).outputStream()).use {
+                it.write(json.toByteArray())
+            }
+        } catch (_: Exception) {}
+    }
+
+    private fun readFromDisk(key: String): CacheEntry? {
+        return try {
+            GZIPInputStream(file(key).inputStream()).use {
+                gson.fromJson(String(it.readBytes()), CacheEntry::class.java)
             }
         } catch (_: Exception) {
+            null
         }
     }
-
-    private fun clearOldCache() {
-        val removeBefore = LocalDate.now().minusDays(30) // 1 month
-        cacheDir.listFiles()?.forEach { file ->
-            try {
-                if (LocalDate.parse(file.name.substringBefore('.')) < removeBefore) {
-                    file.delete()
-                }
-            } catch (_: Exception) {
-                file.delete()
-            }
-        }
-    }
-
-
 }
+
+data class CacheEntry(
+    val userIsu: Int?,
+    val date: LocalDate,
+    val timestamp: Long,
+    val data: String
+)

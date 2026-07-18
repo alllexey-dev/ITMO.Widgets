@@ -48,7 +48,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="1 Января"
-                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
                         android:textColor="?attr/colorOnSurfaceVariant" />
                 </LinearLayout>
 
@@ -58,7 +58,7 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/shape_pill_outline"
                     android:paddingHorizontal="10dp"
-                    android:paddingVertical="4dp"
+                    android:paddingVertical="6dp"
                     android:text="4 пары"
                     android:textAppearance="?attr/textAppearanceLabelMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />

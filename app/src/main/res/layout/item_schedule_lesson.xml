@@ -19,7 +19,7 @@
         android:id="@+id/time_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="10dp"
         android:textAppearance="?attr/textAppearanceTitleSmall"
         android:textColor="?attr/colorOnSurface"
         android:textStyle="bold"
@@ -33,7 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="10dp"
         android:textAppearance="?attr/textAppearanceLabelSmall"
         android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintEnd_toStartOf="@id/timeline_guide"
@@ -43,13 +43,14 @@
     <!-- Timeline line -->
     <View
         android:id="@+id/timeline_line"
-        android:layout_width="2dp"
+        android:layout_width="3dp"
         android:layout_height="0dp"
         android:background="?attr/colorOutlineVariant"
+        android:alpha="0.6"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@id/timeline_guide"
         app:layout_constraintStart_toStartOf="@id/timeline_guide"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="@id/timeline_guide" />
 
     <!-- Timeline dot -->
     <ImageView
@@ -63,16 +64,16 @@
         app:layout_constraintTop_toTopOf="@id/time_start"
         app:tint="?attr/colorOutlineVariant" />
 
-    <!-- Main container (replacing MaterialCardView) -->
+    <!-- Main container -->
     <LinearLayout
         android:id="@+id/card_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="16dp"
         android:background="@android:color/transparent"
         android:orientation="vertical"
-        android:padding="6dp"
+        android:paddingHorizontal="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/timeline_guide"
@@ -83,18 +84,47 @@
             android:id="@+id/title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="3"
-            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textStyle="bold"
+            android:letterSpacing="0.01"
             android:textColor="?attr/colorOnSurface"
-            tools:text="Математический анализ" />
+            android:lineSpacingExtra="2dp"
+            tools:text="Математический анализ (продвинутый уровень)" />
+
+        <!-- Type -->
+        <LinearLayout
+            android:id="@+id/type_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="8dp"
+                android:scaleX="0.7"
+                android:scaleY="0.7"
+                android:src="@drawable/indicator_circle"
+                android:id="@+id/type_indicator"
+                app:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:id="@+id/type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="Консультация" />
+        </LinearLayout>
 
         <!-- Teacher -->
         <LinearLayout
             android:id="@+id/teacher_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="4dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -106,7 +136,7 @@
                 app:tint="?attr/colorSecondary" />
 
             <TextView
-                android:id="@+id/teacher"
+                android:id="@+id/teacher_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?attr/textAppearanceBodySmall"
@@ -175,28 +205,6 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="Кронва" />
         </LinearLayout>
-
-        <!-- Type badge -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/type_badge"
-            style="@style/Widget.Material3.CardView.Filled"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:visibility="visible"
-            app:cardCornerRadius="8dp"
-            tools:visibility="visible">
-
-            <TextView
-                android:id="@+id/type_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="2dp"
-                android:text="Практика"
-                android:textAppearance="?attr/textAppearanceLabelSmall"
-                android:textColor="?attr/colorOnSecondaryContainer" />
-        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 

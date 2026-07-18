@@ -61,7 +61,7 @@
                     android:tint="?attr/colorOnSurfaceVariant" />
 
                 <TextView
-                    android:id="@+id/teacher"
+                    android:id="@+id/teacher_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif"

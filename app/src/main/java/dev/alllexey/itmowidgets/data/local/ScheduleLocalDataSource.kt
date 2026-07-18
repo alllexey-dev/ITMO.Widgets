@@ -1,18 +1,16 @@
 package dev.alllexey.itmowidgets.data.local
 
-import api.myitmo.model.schedule.Schedule
+import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 interface ScheduleLocalDataSource {
 
-    fun getSchedule(date: LocalDate): Pair<Schedule, Long>?
+    fun observeRange(userIsu: Int?, start: LocalDate, end: LocalDate): Flow<List<DaySchedule>>
 
-    fun saveSchedule(schedule: Schedule)
+    suspend fun save(schedule: DaySchedule, userIsu: Int?)
 
-    fun isExpired(timestamp: Long): Boolean
+    fun get(userIsu: Int?, date: LocalDate): CacheEntry?
 
-    fun clearCache()
-
-    // all schedules found for given range
-    fun getSchedulesForRange(startDate: LocalDate, endDate: LocalDate): List<Schedule>
+    fun clear()
 }

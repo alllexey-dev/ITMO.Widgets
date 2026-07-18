@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/swipeRefreshLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".feature.sport.my.SportMyFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/points_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeColor="?attr/colorOutline">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <include
+                    android:id="@+id/progress_circle"
+                    layout="@layout/component_sport_circle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/attendance_indicator"
+                    android:layout_width="8dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="16dp"
+                    android:paddingTop="12dp"
+                    android:src="@drawable/indicator_circle"
+                    app:layout_constraintStart_toEndOf="@id/progress_circle"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="?colorTertiary" />
+
+                <TextView
+                    android:id="@+id/attendance_points_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toEndOf="@id/attendance_indicator"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="30" />
+
+                <TextView
+                    android:id="@+id/attendance_label_text_view"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="за посещение"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    app:layout_constraintBaseline_toBaselineOf="@id/attendance_points_text_view"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/attendance_points_text_view" />
+
+                <ImageView
+                    android:id="@+id/bonus_indicator"
+                    android:layout_width="8dp"
+                    android:layout_height="26dp"
+                    android:paddingTop="18dp"
+                    android:src="@drawable/indicator_circle"
+                    app:layout_constraintStart_toStartOf="@id/attendance_indicator"
+                    app:layout_constraintTop_toBottomOf="@id/attendance_points_text_view"
+                    app:tint="?colorSecondary" />
+
+                <TextView
+                    android:id="@+id/bonus_points_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="@id/attendance_points_text_view"
+                    app:layout_constraintTop_toBottomOf="@id/attendance_points_text_view"
+                    tools:text="20" />
+
+                <TextView
+                    android:id="@+id/bonus_label_text_view"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="бонусы"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    app:layout_constraintBaseline_toBaselineOf="@id/bonus_points_text_view"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/bonus_points_text_view" />
+
+                <ImageView
+                    android:id="@+id/need_indicator"
+                    android:layout_width="8dp"
+                    android:layout_height="26dp"
+                    android:paddingTop="18dp"
+                    android:src="@drawable/indicator_circle"
+                    android:visibility="invisible"
+                    app:layout_constraintStart_toStartOf="@id/bonus_indicator"
+                    app:layout_constraintTop_toBottomOf="@id/bonus_points_text_view"
+                    app:tint="?colorSurfaceVariant" />
+
+                <TextView
+                    android:id="@+id/need_points_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="@id/bonus_points_text_view"
+                    app:layout_constraintTop_toBottomOf="@id/bonus_points_text_view"
+                    tools:text="20" />
+
+                <TextView
+                    android:id="@+id/need_label_text_view"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="до зачёта"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    app:layout_constraintBaseline_toBaselineOf="@id/need_points_text_view"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/need_points_text_view" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/main_recycler_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="80dp"
+            android:clipToPadding="false"
+            android:paddingTop="80dp"
+            android:paddingBottom="16dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:listitem="@layout/item_sport_booking" />
+
+        <LinearLayout
+            android:id="@+id/empty_state_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/points_card"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/ic_calendar_add"
+                app:tint="?attr/colorOutline" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Нет записей"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="У вас нет активных записей на занятия. Самое время выбрать что-то полезное!"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textColor="?android:attr/textColorSecondary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_go_to_schedule"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Открыть расписание" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

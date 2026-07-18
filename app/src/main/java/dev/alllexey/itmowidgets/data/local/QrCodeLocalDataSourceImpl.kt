@@ -1,33 +1,85 @@
 package dev.alllexey.itmowidgets.data.local
 
 import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.mapNotNull
 import java.io.File
-import java.nio.file.Files
+import javax.inject.Inject
 
-class QrCodeLocalDataSourceImpl(
-    private val context: Context
+private const val QR_CACHE_EXPIRATION_MS = 60 * 60 * 1000L
+data class QrCacheEntry(
+    val hex: String,
+    val timestamp: Long
+)
+
+class QrCodeLocalDataSourceImpl @Inject constructor(
+    @ApplicationContext context: Context
 ) : QrCodeLocalDataSource {
 
-    private fun cacheFile(): File {
-        return File(context.cacheDir, "qr_hex").apply { parentFile?.mkdirs() }
+    private val file = File(context.cacheDir, "qr_hex")
+
+    private val _flow = MutableStateFlow(readFromDisk())
+    val flow = _flow.asStateFlow()
+
+    override fun observe(): Flow<String> {
+        return flow.mapNotNull { entry ->
+            if (entry == null) return@mapNotNull null
+            if (isExpired(entry)) return@mapNotNull null
+            entry.hex
+        }
     }
 
-    override fun getQrHex(): String? {
+    override fun get(): String? {
+        val entry = _flow.value ?: return null
+        return if (isExpired(entry)) null else entry.hex
+    }
+
+    override fun save(hex: String) {
+        val entry = QrCacheEntry(
+            hex = hex,
+            timestamp = System.currentTimeMillis()
+        )
+
+        try {
+            file.writeText(serialize(entry))
+            _flow.value = entry
+        } catch (_: Exception) {}
+    }
+
+    override fun clear() {
+        file.delete()
+        _flow.value = null
+    }
+
+    fun isExpired(entry: QrCacheEntry): Boolean {
+        return System.currentTimeMillis() - entry.timestamp > QR_CACHE_EXPIRATION_MS
+    }
+
+    private fun serialize(entry: QrCacheEntry): String {
+        return "${entry.timestamp}|${entry.hex}"
+    }
+
+    private fun deserialize(raw: String): QrCacheEntry? {
         return try {
-            Files.readAllLines(cacheFile().toPath()).firstOrNull()?.takeIf { it.length >= 6 }
+            val parts = raw.split("|")
+            QrCacheEntry(
+                timestamp = parts[0].toLong(),
+                hex = parts[1]
+            )
         } catch (_: Exception) {
             null
         }
     }
 
-    override fun saveQrHex(hex: String) {
-        try {
-            Files.write(cacheFile().toPath(), listOf(hex))
+    private fun readFromDisk(): QrCacheEntry? {
+        return try {
+            if (!file.exists()) return null
+            deserialize(file.readText())
         } catch (_: Exception) {
+            null
         }
-    }
-
-    override fun clearCache() {
-        cacheFile().delete()
     }
 }

@@ -14,10 +14,10 @@
     </item>
 
     <item
-        android:left="8dp"
-        android:right="8dp"
-        android:top="8dp"
-        android:bottom="8dp">
+        android:left="9dp"
+        android:right="9dp"
+        android:top="9dp"
+        android:bottom="9dp">
         <shape android:shape="oval">
             <solid android:color="@color/subtext_color" />
         </shape>

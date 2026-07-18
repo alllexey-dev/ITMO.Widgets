@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/navigation_web"
-        android:icon="@drawable/ic_myitmo_half_outline"
-        android:title="@string/title_web" />
-    <item
-        android:id="@+id/navigation_qr_code"
-        android:icon="@drawable/ic_qr_code"
-        android:title="@string/title_qr" />
+        android:id="@+id/navigation_recordbook"
+        android:icon="@drawable/ic_menu_book"
+        android:title="@string/title_recordbook" />
     <item
         android:id="@+id/navigation_schedule"
         android:icon="@drawable/ic_schedule"
         android:title="@string/title_schedule" />
     <item
+        android:id="@+id/navigation_home"
+        android:icon="@drawable/ic_home"
+        android:title="@string/title_home" />
+    <item
         android:id="@+id/navigation_sport"
         android:icon="@drawable/ic_exercise"
         android:title="@string/title_sport" />
     <item
-        android:id="@+id/navigation_settings"
-        android:icon="@drawable/ic_settings"
-        android:title="@string/title_settings" />
+        android:id="@+id/navigation_me"
+        android:icon="@drawable/ic_account_circle"
+        android:title="@string/title_me" />
 </menu>

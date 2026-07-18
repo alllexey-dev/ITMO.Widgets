@@ -1,10 +1,15 @@
 package dev.alllexey.itmowidgets.data.local
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+
 interface QrCodeLocalDataSource {
 
-    fun getQrHex(): String?
+    fun observe(): Flow<String>
 
-    fun saveQrHex(hex: String)
+    fun get(): String?
 
-    fun clearCache()
+    fun save(hex: String)
+
+    fun clear()
 }

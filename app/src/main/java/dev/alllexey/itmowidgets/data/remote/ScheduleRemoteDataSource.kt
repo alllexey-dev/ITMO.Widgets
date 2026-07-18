@@ -1,11 +1,13 @@
 package dev.alllexey.itmowidgets.data.remote
 
-import api.myitmo.model.schedule.Schedule
+import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
 import java.time.LocalDate
 
 interface ScheduleRemoteDataSource {
 
-    suspend fun getScheduleForRange(startDate: LocalDate, endDate: LocalDate): List<Schedule>?
-
-    suspend fun getSchedule(date: LocalDate): Schedule?
+    suspend fun getSchedule(
+        userIsu: Int?,
+        start: LocalDate,
+        end: LocalDate
+    ): List<DaySchedule>
 }

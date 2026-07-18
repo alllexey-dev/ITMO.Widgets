@@ -11,6 +11,9 @@
     <string name="latest_release_url">https://github.com/alllexey-dev/ITMO.Widgets/releases/latest</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
     <string name="title_web">My ITMO</string>
+    <string name="title_me">Профиль</string>
+    <string name="title_recordbook">Зачетка</string>
+    <string name="title_home">Главная</string>
     <string name="title_qr">Пропуск</string>
     <string name="title_schedule">Расписание</string>
     <string name="title_sport">Спорт</string>

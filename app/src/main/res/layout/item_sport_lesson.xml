@@ -142,7 +142,6 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/full_badge"
                     style="@style/Widget.Material3.CardView.Filled"
@@ -189,34 +188,116 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/badges_layout">
 
-                <TextView
-                    android:id="@+id/teacher_text_view"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/teacher_layout"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawablePadding="6dp"
-                    android:ellipsize="end"
                     android:gravity="center_vertical"
-                    android:maxLines="1"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    app:drawableStartCompat="@drawable/ic_person"
-                    app:drawableTint="?attr/colorOnSurfaceVariant"
-                    tools:text="Иванов Иван Иванович" />
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/status_chip_card">
 
-                <TextView
-                    android:id="@+id/location_text_view"
-                    android:layout_width="wrap_content"
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_person"
+                        app:tint="?attr/colorSecondary" />
+
+                    <TextView
+                        android:id="@+id/teacher_text_view"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        tools:text="Иванов Иван Иванович" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/location_layout"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:drawablePadding="6dp"
-                    android:ellipsize="end"
                     android:gravity="center_vertical"
-                    android:maxLines="1"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    app:drawableStartCompat="@drawable/ic_location"
-                    app:drawableTint="?attr/colorOnSurfaceVariant"
-                    tools:text="Кронверкский пр., д.49, Тренажерный зал" />
+                    android:orientation="horizontal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/teacher_layout">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_location"
+                        app:tint="?attr/colorTertiary" />
+
+                    <TextView
+                        android:id="@+id/location_text_view"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        tools:text="404" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/friends_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@id/location_layout"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+                    <FrameLayout
+                        android:id="@+id/avatars_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp">
+
+                        <dev.alllexey.itmowidgets.core.ui.AvatarView
+                            android:id="@+id/avatar_1"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"/>
+
+                        <dev.alllexey.itmowidgets.core.ui.AvatarView
+                            android:id="@+id/avatar_2"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_marginStart="16dp"/>
+
+                        <dev.alllexey.itmowidgets.core.ui.AvatarView
+                            android:id="@+id/avatar_3"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_marginStart="32dp"/>
+
+                        <TextView
+                            android:id="@+id/more_friends_text"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_marginStart="48dp"
+                            android:gravity="center"
+                            android:background="@drawable/bg_avatar_circle_more"
+                            android:textAppearance="?attr/textAppearanceLabelSmall"
+                            android:textColor="?attr/colorOnSurface"
+                            tools:text="+3" />
+
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/friends_hint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:text="Друзья"/>
+
+                </LinearLayout>
             </LinearLayout>
 
             <com.google.android.material.divider.MaterialDivider

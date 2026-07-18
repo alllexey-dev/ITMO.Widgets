@@ -4,8 +4,9 @@ import api.myitmo.MyItmo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.awaitResponse
+import javax.inject.Inject
 
-class QrCodeRemoteDataSourceImpl(
+class QrCodeRemoteDataSourceImpl @Inject constructor(
     private val myItmo: MyItmo
 ) : QrCodeRemoteDataSource {
 

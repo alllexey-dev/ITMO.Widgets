@@ -3,34 +3,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_nav_graph"
-    app:startDestination="@id/navigation_schedule">
+    app:startDestination="@id/navigation_home">
 
     <fragment
-        android:id="@+id/navigation_web"
-        android:name="dev.alllexey.itmowidgets.ui.web.WebFragment"
-        android:label="Web page"
-        tools:layout="@layout/fragment_web" />
-
-    <fragment
-        android:id="@+id/navigation_qr_code"
-        android:name="dev.alllexey.itmowidgets.ui.qr.QrCodeFragment"
-        android:label="Qr code"
-        tools:layout="@layout/fragment_qr" />
+        android:id="@+id/navigation_recordbook"
+        android:name="dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookFragment"
+        android:label="Record book"
+        tools:layout="@layout/fragment_recordbook" />
 
     <fragment
         android:id="@+id/navigation_schedule"
-        android:name="dev.alllexey.itmowidgets.ui.schedule.ScheduleFragment"
+        android:name="dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleFragment"
         android:label="Schedule"
         tools:layout="@layout/fragment_schedule" />
 
     <fragment
-        android:id="@+id/navigation_sport"
-        android:name="dev.alllexey.itmowidgets.ui.settings.RootSettingsFragment"
-        android:label="Settings" />
+        android:id="@+id/navigation_home"
+        android:name="dev.alllexey.itmowidgets.feature.home.ui.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_settings"
-        android:name="dev.alllexey.itmowidgets.ui.settings.RootSettingsFragment"
-        android:label="Settings" />
+        android:id="@+id/navigation_sport"
+        android:name="dev.alllexey.itmowidgets.feature.sport.common.SportFragment"
+        android:label="Sport"
+        tools:layout="@layout/fragment_sport" />
+
+    <fragment
+        android:id="@+id/navigation_me"
+        android:name="dev.alllexey.itmowidgets.feature.me.ui.MeFragment"
+        android:label="Me"
+        tools:layout="@layout/fragment_me" />
 
 </navigation>

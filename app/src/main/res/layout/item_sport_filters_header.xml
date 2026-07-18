@@ -102,14 +102,6 @@
                     android:checked="true"
                     android:text="Доступные" />
 
-<!--                <com.google.android.material.chip.Chip-->
-<!--                    android:id="@+id/free_sport_chip"-->
-<!--                    style="@style/Widget.Material3.Chip.Filter"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:checked="true"-->
-<!--                    android:text="Открытые" />-->
-
                 <com.google.android.material.chip.Chip
                     android:id="@+id/auto_sign_sport_chip"
                     style="@style/Widget.Material3.Chip.Filter"
@@ -117,6 +109,14 @@
                     android:layout_height="wrap_content"
                     android:checked="true"
                     android:text="Автозапись" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/friends_sport_chip"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    android:text="Друзья" />
             </com.google.android.material.chip.ChipGroup>
 
 
