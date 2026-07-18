@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.core.model.SportAutoSignQueue
 import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.core.model.SportFreeSignQueue
+import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.util.MergedDataState
@@ -28,7 +29,8 @@ import javax.inject.Inject
 class SportScheduleRepositoryImpl @Inject constructor(
     sportDataRepository: SportDataRepository,
     val myItmoApi: MyItmoApi,
-    private val timeProvider: AcademicTimeProvider
+    private val timeProvider: AcademicTimeProvider,
+    private val sportLessonTemplateProvider: SportLessonTemplateProvider
 ) : SportScheduleRepository {
 
     private val scheduleFlow = MutableSharedFlow<DataState<Map<LocalDate, List<SportLesson>>>>(replay = 1)
@@ -152,6 +154,11 @@ class SportScheduleRepositoryImpl @Inject constructor(
     override fun observeSportTimeSlots() = timeSlotsFlow
 
     override suspend fun refreshSportSchedule() {
+        sportLessonTemplateProvider.getSchedule()?.let { templates ->
+            scheduleFlow.emit(DataState.Success(templates))
+            return
+        }
+
         try {
             val result = withContext(Dispatchers.IO) {
                 val from = timeProvider.today()

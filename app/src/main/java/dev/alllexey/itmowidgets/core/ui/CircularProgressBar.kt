@@ -11,8 +11,9 @@ import android.view.View
 import android.view.animation.PathInterpolator
 import dev.alllexey.itmowidgets.R
 import kotlin.math.asin
-import kotlin.math.max
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
 class CircularProgressBar @JvmOverloads constructor(
     context: Context,
@@ -29,8 +30,14 @@ class CircularProgressBar @JvmOverloads constructor(
     private val sectorGapAngle: Float
 
     private var currentSectors = emptyList<Sector>()
+    private var renderAsClosedRing = false
 
-    private data class RenderData(val color: Int, val startAngle: Float, val sweepAngle: Float)
+    private data class RenderData(
+        val color: Int,
+        val startAngle: Float,
+        val sweepAngle: Float,
+        val dotAngle: Float? = null
+    )
 
     private var renderDataList = emptyList<RenderData>()
 
@@ -70,6 +77,7 @@ class CircularProgressBar @JvmOverloads constructor(
 
     fun setSectors(newSectors: List<Sector>) {
         animator?.cancel()
+        renderAsClosedRing = newSectors.isClosedRingTarget()
         currentSectors = newSectors
         prepareRenderData()
         invalidate()
@@ -81,6 +89,7 @@ class CircularProgressBar @JvmOverloads constructor(
         startDelay: Long = 0L
     ) {
         animator?.cancel()
+        renderAsClosedRing = newSectors.isClosedRingTarget()
 
         val oldSectors = currentSectors
 
@@ -106,37 +115,88 @@ class CircularProgressBar @JvmOverloads constructor(
     }
 
     private fun prepareRenderData() {
-        var currentAngle = -90f
+        val sanitizedSectors = mutableListOf<Pair<Sector, Float>>()
         var remainingPercentage = 100f
-        renderDataList = currentSectors.mapNotNull { sector ->
+        currentSectors.forEach { sector ->
             val percentage = sector.percentage.coerceIn(0f, remainingPercentage)
             remainingPercentage -= percentage
+            if (percentage > 0f) sanitizedSectors += sector to percentage
+        }
 
+        val isClosedRing = renderAsClosedRing &&
+            sanitizedSectors.size > 1
+        val capAngle = roundedCapAngle()
+        val dotVisibleAngle = capAngle * 2f
+        val visibleAngles = sanitizedSectors.mapIndexed { index, (_, percentage) ->
             val rawSweepAngle = 360f * percentage / 100f
-            if (rawSweepAngle <= 0f) return@mapNotNull null
+            val hasGapBefore = index > 0 || isClosedRing
+            val hasGapAfter = index < sanitizedSectors.lastIndex || isClosedRing
+            val gapShare = (if (hasGapBefore) sectorGapAngle / 2f else 0f) +
+                (if (hasGapAfter) sectorGapAngle / 2f else 0f)
+            (rawSweepAngle - gapShare).coerceAtLeast(dotVisibleAngle)
+        }.toMutableList()
+        if (isClosedRing) {
+            fitClosedRing(visibleAngles, dotVisibleAngle)
+        }
 
-            val gap = min(
-                sectorGapAngle + roundedCapCompensationAngle(),
-                rawSweepAngle * MAX_GAP_FRACTION
-            )
-            val sweepAngle = max(0f, rawSweepAngle - gap)
-            val data = RenderData(
-                color = sector.color,
-                startAngle = currentAngle + gap / 2f,
-                sweepAngle = sweepAngle
-            )
-            currentAngle += rawSweepAngle
+        var visibleCursor = -90f
+        renderDataList = sanitizedSectors.mapIndexed { index, (sector, _) ->
+            val visibleAngle = visibleAngles[index]
+            val drawableSweep = visibleAngle - dotVisibleAngle
+
+            val data = if (drawableSweep > MIN_ARC_SWEEP_ANGLE) {
+                RenderData(
+                    color = sector.color,
+                    startAngle = visibleCursor + capAngle,
+                    sweepAngle = drawableSweep
+                )
+            } else {
+                RenderData(
+                    color = sector.color,
+                    startAngle = visibleCursor,
+                    sweepAngle = 0f,
+                    dotAngle = visibleCursor + visibleAngle / 2f
+                )
+            }
+            visibleCursor += visibleAngle
+            if (index < sanitizedSectors.lastIndex || isClosedRing) {
+                visibleCursor += sectorGapAngle
+            }
             data
         }
     }
 
-    private fun roundedCapCompensationAngle(): Float {
+    private fun fitClosedRing(visibleAngles: MutableList<Float>, minimumVisibleAngle: Float) {
+        val availableAngle = 360f - sectorGapAngle * visibleAngles.size
+        val excessAngle = (visibleAngles.sum() - availableAngle).coerceAtLeast(0f)
+        if (excessAngle <= CLOSED_RING_EPSILON) return
+
+        val reducibleAngles = visibleAngles.map {
+            (it - minimumVisibleAngle).coerceAtLeast(0f)
+        }
+        val totalReducibleAngle = reducibleAngles.sum()
+        if (totalReducibleAngle <= 0f) return
+
+        visibleAngles.indices.forEach { index ->
+            val reduction = excessAngle * reducibleAngles[index] / totalReducibleAngle
+            visibleAngles[index] =
+                (visibleAngles[index] - reduction).coerceAtLeast(minimumVisibleAngle)
+        }
+    }
+
+    private fun roundedCapAngle(): Float {
         val radius = bounds.width() / 2f
         if (radius <= 0f) return 0f
 
         val capRadius = paint.strokeWidth / 2f
-        val capAngle = Math.toDegrees(asin((capRadius / radius).coerceIn(0f, 1f)).toDouble())
-        return (capAngle * 2).toFloat()
+        return Math.toDegrees(
+            asin((capRadius / radius).coerceIn(0f, 1f)).toDouble()
+        ).toFloat()
+    }
+
+    private fun List<Sector>.isClosedRingTarget(): Boolean {
+        return sumOf { it.percentage.coerceAtLeast(0f).toDouble() } >=
+            100.0 - CLOSED_RING_TARGET_EPSILON
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -144,11 +204,24 @@ class CircularProgressBar @JvmOverloads constructor(
         canvas.drawArc(bounds, 0f, 360f, false, backgroundPaint)
         for (data in renderDataList) {
             paint.color = data.color
-            canvas.drawArc(bounds, data.startAngle, data.sweepAngle, false, paint)
+            val dotAngle = data.dotAngle
+            if (dotAngle == null) {
+                canvas.drawArc(bounds, data.startAngle, data.sweepAngle, false, paint)
+            } else {
+                val angleRadians = Math.toRadians(dotAngle.toDouble())
+                val radius = bounds.width() / 2f
+                val x = bounds.centerX() + radius * cos(angleRadians).toFloat()
+                val y = bounds.centerY() + radius * sin(angleRadians).toFloat()
+                paint.style = Paint.Style.FILL
+                canvas.drawCircle(x, y, paint.strokeWidth / 2f, paint)
+                paint.style = Paint.Style.STROKE
+            }
         }
     }
 
     private companion object {
-        const val MAX_GAP_FRACTION = 0.35f
+        const val CLOSED_RING_EPSILON = 0.001f
+        const val CLOSED_RING_TARGET_EPSILON = 0.01
+        const val MIN_ARC_SWEEP_ANGLE = 0.5f
     }
 }

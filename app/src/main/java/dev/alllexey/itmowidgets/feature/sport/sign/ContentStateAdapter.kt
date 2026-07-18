@@ -21,13 +21,9 @@ class ContentStateAdapter(
     private var state: ContentState? = null
 
     fun submitState(newState: ContentState?) {
-        val hadState = state != null
+        if (state == newState) return
         state = newState
-        when {
-            hadState && newState == null -> notifyItemRemoved(0)
-            !hadState && newState != null -> notifyItemInserted(0)
-            hadState && newState != null -> notifyItemChanged(0)
-        }
+        notifyItemChanged(0)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StateViewHolder {
@@ -40,16 +36,19 @@ class ContentStateAdapter(
     }
 
     override fun onBindViewHolder(holder: StateViewHolder, position: Int) {
-        holder.bind(checkNotNull(state))
+        holder.bind(state)
     }
 
-    override fun getItemCount(): Int = if (state == null) 0 else 1
+    override fun getItemCount(): Int = 1
 
     inner class StateViewHolder(
         private val binding: ItemContentStateBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(state: ContentState) {
+        fun bind(state: ContentState?) {
+            binding.root.isVisible = state != null
+            if (state == null) return
+
             binding.stateIcon.setImageResource(state.iconRes)
             binding.stateTitle.text = state.title
             binding.stateDescription.text = state.description

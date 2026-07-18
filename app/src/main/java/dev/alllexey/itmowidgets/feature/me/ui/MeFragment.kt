@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
+import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.databinding.DialogSportScoreOverrideBinding
@@ -37,6 +38,9 @@ class MeFragment : Fragment() {
     @Inject
     lateinit var sportScoreOverrideController: SportScoreOverrideController
 
+    @Inject
+    lateinit var sportLessonTemplateController: SportLessonTemplateController
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -49,6 +53,7 @@ class MeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.debugTimeContainer.isVisible = BuildConfig.DEBUG
         binding.debugSportScoreContainer.isVisible = BuildConfig.DEBUG
+        binding.debugSportLessonsContainer.isVisible = BuildConfig.DEBUG
         if (!BuildConfig.DEBUG) return
 
         renderDebugDate()
@@ -63,6 +68,11 @@ class MeFragment : Fragment() {
         }
         binding.debugSportScoreResetButton.setOnClickListener {
             sportScoreOverrideController.setOverride(null)
+            requireActivity().recreate()
+        }
+        binding.debugSportLessonsSwitch.isChecked = sportLessonTemplateController.isEnabled()
+        binding.debugSportLessonsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            sportLessonTemplateController.setEnabled(isChecked)
             requireActivity().recreate()
         }
     }

@@ -14,7 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.gson.Gson
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
@@ -111,7 +110,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         binding.mainRecyclerView.apply {
             adapter = concatAdapter
             layoutManager = LinearLayoutManager(requireContext())
-            (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+            itemAnimator = null
         }
     }
 
@@ -155,18 +154,16 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     private fun onSuccess(state: SportSignUiState.Success) {
         swipe.isRefreshing = false
         headerAdapter.updateState(state)
-        lessonsAdapter.submitList(state.displayedLessons)
-        contentStateAdapter.submitState(
-            if (state.displayedLessons.isEmpty()) {
-                ContentState(
-                    iconRes = R.drawable.ic_event_note,
-                    title = getString(R.string.sport_lessons_empty_title),
-                    description = getString(R.string.sport_lessons_empty_description)
-                )
-            } else {
-                null
-            }
-        )
+        val contentState = if (state.displayedLessons.isEmpty()) {
+            ContentState(
+                iconRes = R.drawable.ic_event_note,
+                title = getString(R.string.sport_lessons_empty_title),
+                description = getString(R.string.sport_lessons_empty_description)
+            )
+        } else {
+            null
+        }
+        submitLessonsWithState(state.displayedLessons, contentState)
         if (state.hasPartialError) {
             Toast.makeText(requireContext(), "Не удалось загрузить некоторые данные", Toast.LENGTH_SHORT).show()
         }
@@ -174,15 +171,23 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     private fun showError(state: SportSignUiState.Error) {
         swipe.isRefreshing = false
-        lessonsAdapter.submitList(emptyList())
-        contentStateAdapter.submitState(
-            ContentState(
-                iconRes = R.drawable.ic_error,
-                title = getString(R.string.common_load_error_title),
-                description = state.message,
-                action = getString(R.string.common_retry)
-            )
+        val contentState = ContentState(
+            iconRes = R.drawable.ic_error,
+            title = getString(R.string.common_load_error_title),
+            description = state.message,
+            action = getString(R.string.common_retry)
         )
+        submitLessonsWithState(emptyList(), contentState)
+    }
+
+    private fun submitLessonsWithState(
+        lessons: List<SportLesson>,
+        contentState: ContentState?
+    ) {
+        contentStateAdapter.submitState(null)
+        lessonsAdapter.submitList(lessons) {
+            contentStateAdapter.submitState(contentState)
+        }
     }
 
     override fun onSportClick() {
@@ -230,18 +235,22 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     }
 
     override fun onSignUpClick(lesson: SportLesson) {
+        if (handleTemplateAction(lesson)) return
         viewModel.signUpForLesson(lesson)
     }
 
     override fun onUnSignClick(lesson: SportLesson) {
+        if (handleTemplateAction(lesson)) return
         viewModel.unSignForLesson(lesson)
     }
 
     override fun onAutoSignClick(lesson: SportLesson) {
+        if (handleTemplateAction(lesson)) return
         viewModel.handleAutoSignClick(lesson)
     }
 
     override fun onUnAutoSignClick(lesson: SportLesson) {
+        if (handleTemplateAction(lesson)) return
         viewModel.handleAutoSignClick(lesson)
     }
 
@@ -311,6 +320,16 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     override fun onLessonClick(lesson: SportLesson) {
         SportCommonDetailsBottomSheet.newInstance(lesson, gson)
             .show(parentFragmentManager, SportCommonDetailsBottomSheet.TAG)
+    }
+
+    private fun handleTemplateAction(lesson: SportLesson): Boolean {
+        if (lesson.lessonId >= 0) return false
+        Toast.makeText(
+            requireContext(),
+            R.string.debug_sport_lesson_action_disabled,
+            Toast.LENGTH_SHORT
+        ).show()
+        return true
     }
 
     // endregion

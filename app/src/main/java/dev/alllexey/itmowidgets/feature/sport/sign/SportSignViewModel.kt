@@ -64,6 +64,8 @@ sealed class SportSignUiState {
         val showOnlyFriends: Boolean = false,
 
         val displayedWeek: List<CalendarDay> = emptyList(),
+        val calendarWeeks: List<List<CalendarDay>> = emptyList(),
+        val selectedWeekIndex: Int = 0,
         val currentMonthName: String = "",
         val canGoToPrevWeek: Boolean = false,
         val canGoToNextWeek: Boolean = true,
@@ -353,33 +355,43 @@ class SportSignViewModel @Inject constructor(
             // calendar
 
             val startOfWeek = selectedDate.with(DayOfWeek.MONDAY)
-            val days = (0..6).map { startOfWeek.plusDays(it.toLong()) }
+            val currentMonday = today.with(DayOfWeek.MONDAY)
+            val weekOffset = ChronoUnit.WEEKS
+                .between(currentMonday, startOfWeek)
+                .toInt()
             val datesWithLessons = finalFilteredLessons.map { it.start.toLocalDate() }.toSet()
             val datesWithAvailableLessons = finalFilteredLessons
                 .filter { it.canSignIn }
                 .map { it.start.toLocalDate() }
                 .toSet()
 
-            val calendarDays = days.map { date ->
-                CalendarDay(
-                    date = date,
-                    dayOfWeek = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
-                    dayOfMonth = date.dayOfMonth.toString(),
-                    hasLessons = datesWithLessons.contains(date),
-                    hasAvailableLessons = datesWithAvailableLessons.contains(date),
-                    isSelected = date.isEqual(selectedDate),
-                    isToday = date.isEqual(today)
-                )
+            val calendarWeeks = (0..MAX_WEEKS_FORWARD).map { calendarWeekIndex ->
+                val weekStart = currentMonday.plusWeeks(calendarWeekIndex.toLong())
+                (0..6).map { dayOffset ->
+                    val date = weekStart.plusDays(dayOffset.toLong())
+                    CalendarDay(
+                        date = date,
+                        dayOfWeek = date.dayOfWeek.getDisplayName(
+                            TextStyle.SHORT,
+                            Locale.getDefault()
+                        ),
+                        dayOfMonth = date.dayOfMonth.toString(),
+                        hasLessons = datesWithLessons.contains(date),
+                        hasAvailableLessons = datesWithAvailableLessons.contains(date),
+                        isSelected = date.isEqual(selectedDate),
+                        isToday = date.isEqual(today)
+                    )
+                }
             }
+            val selectedWeekIndex = weekOffset.coerceIn(0, MAX_WEEKS_FORWARD)
+            val calendarDays = calendarWeeks[selectedWeekIndex]
 
             val monthName =
-                days[3].month.getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
+                calendarDays[3].date.month.getDisplayName(
+                    TextStyle.FULL_STANDALONE,
+                    Locale.getDefault()
+                )
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-
-            val currentMonday = today.with(DayOfWeek.MONDAY)
-            val weekOffset = ChronoUnit.WEEKS
-                .between(currentMonday, startOfWeek)
-                .toInt()
 
             sportSections = availableSports
             usedSportNames =
@@ -398,6 +410,8 @@ class SportSignViewModel @Inject constructor(
                 showAutoSign = showAutoSign,
                 showOnlyFriends = showOnlyFriends,
                 displayedWeek = calendarDays,
+                calendarWeeks = calendarWeeks,
+                selectedWeekIndex = selectedWeekIndex,
                 currentMonthName = monthName,
                 canGoToPrevWeek = weekOffset > 0,
                 canGoToNextWeek = weekOffset < MAX_WEEKS_FORWARD,

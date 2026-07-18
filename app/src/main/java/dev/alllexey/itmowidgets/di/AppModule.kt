@@ -13,8 +13,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
+import dev.alllexey.itmowidgets.core.debug.DefaultSportLessonTemplateProvider
 import dev.alllexey.itmowidgets.core.debug.DefaultSportScoreOverrideProvider
+import dev.alllexey.itmowidgets.core.debug.SharedPreferencesSportLessonTemplateStore
 import dev.alllexey.itmowidgets.core.debug.SharedPreferencesSportScoreOverrideStore
+import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
+import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateProvider
+import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateStore
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideStore
@@ -98,6 +103,30 @@ object AppModule {
     fun provideSportScoreOverrideController(
         provider: DefaultSportScoreOverrideProvider
     ): SportScoreOverrideController = provider
+
+    @Provides
+    @Singleton
+    fun provideSportLessonTemplateStore(
+        preferences: SharedPreferences
+    ): SportLessonTemplateStore = SharedPreferencesSportLessonTemplateStore(preferences)
+
+    @Provides
+    @Singleton
+    fun provideDefaultSportLessonTemplateProvider(
+        timeProvider: AcademicTimeProvider,
+        templateStore: SportLessonTemplateStore
+    ): DefaultSportLessonTemplateProvider =
+        DefaultSportLessonTemplateProvider(timeProvider, templateStore)
+
+    @Provides
+    fun provideSportLessonTemplateProvider(
+        provider: DefaultSportLessonTemplateProvider
+    ): SportLessonTemplateProvider = provider
+
+    @Provides
+    fun provideSportLessonTemplateController(
+        provider: DefaultSportLessonTemplateProvider
+    ): SportLessonTemplateController = provider
 
     @Provides
     @Singleton

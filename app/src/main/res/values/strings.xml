@@ -86,6 +86,9 @@
     <string name="debug_sport_score_attendance_hint">Баллы за посещения</string>
     <string name="debug_sport_score_bonus_hint">Бонусные баллы</string>
     <string name="debug_sport_score_invalid_value">Введи целое число от 0 до 9999</string>
+    <string name="debug_sport_lessons_title">Шаблонные занятия спорта</string>
+    <string name="debug_sport_lessons_description">Заменяет расписание спорта тестовыми занятиями на ближайшие дни.</string>
+    <string name="debug_sport_lesson_action_disabled">Это шаблонное занятие — запрос на сервер не отправлен</string>
 
     <string name="onboarding_services_disclaimer">Чтобы работали уведомления и автозапись, серверу нужно подтвердить вашу личность. Мы используем ваш токен только для проверки и <b>не сохраняем его</b> — запоминаем только шестизачный номер ИСУ. Исходный код открыт, так что всё честно.\n\n<b>Включая эту опцию, вы соглашаетесь на передачу токена для авторизации.</b></string>
 </resources>

@@ -3,13 +3,12 @@ package dev.alllexey.itmowidgets.feature.sport.sign
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.PathInterpolator
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
-import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.SimpleItemAnimator
+import androidx.viewpager2.widget.ViewPager2
 import dev.alllexey.itmowidgets.databinding.ItemSportFiltersHeaderBinding
 import java.time.LocalDate
 import kotlin.concurrent.thread
@@ -35,7 +34,7 @@ class FiltersHeaderAdapter(
 ) : RecyclerView.Adapter<FiltersHeaderAdapter.HeaderViewHolder>() {
 
     private var uiState: SportSignUiState.Success = SportSignUiState.Success()
-    private val calendarAdapter = SportSignCalendarAdapter { listener.onDateSelected(it) }
+    private val weekPagerAdapter = SportSignWeekPagerAdapter { listener.onDateSelected(it) }
 
     fun updateState(newState: SportSignUiState.Success) {
         this.uiState = newState
@@ -58,18 +57,36 @@ class FiltersHeaderAdapter(
     inner class HeaderViewHolder(private val binding: ItemSportFiltersHeaderBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        init {
-            binding.calendarRecyclerView.adapter = calendarAdapter
-            binding.calendarRecyclerView.layoutManager =
-                LinearLayoutManager(itemView.context, LinearLayoutManager.HORIZONTAL, false)
-            binding.calendarRecyclerView.doOnLayout { calendar ->
-                calendarAdapter.setItemWidth(calendar.width / DAYS_IN_WEEK)
-            }
+        private var boundState = SportSignUiState.Success()
+        private var pendingPage = 0
 
-            val animator = binding.calendarRecyclerView.itemAnimator
-            if (animator is SimpleItemAnimator) {
-                animator.supportsChangeAnimations = false
+        init {
+            binding.calendarWeekPager.adapter = weekPagerAdapter
+            binding.calendarWeekPager.isUserInputEnabled = false
+            binding.calendarWeekPager.addOnLayoutChangeListener {
+                    pager, left, _, right, _, oldLeft, _, oldRight, _ ->
+                val width = right - left
+                val oldWidth = oldRight - oldLeft
+                if (width > 0 && width != oldWidth) {
+                    pager.post { weekPagerAdapter.setPageWidth(width) }
+                }
             }
+            binding.calendarWeekPager.registerOnPageChangeCallback(
+                object : ViewPager2.OnPageChangeCallback() {
+                    override fun onPageSelected(position: Int) {
+                        pendingPage = position
+                    }
+
+                    override fun onPageScrollStateChanged(state: Int) {
+                        if (state != ViewPager2.SCROLL_STATE_IDLE) return
+                        if (pendingPage == boundState.selectedWeekIndex) return
+                        boundState.calendarWeeks.getOrNull(pendingPage)
+                            ?.firstOrNull()
+                            ?.date
+                            ?.let(listener::onDateSelected)
+                    }
+                }
+            )
 
             if (hideTeacherSelector) {
                 binding.teacherInputLayout.visibility = View.GONE
@@ -107,12 +124,20 @@ class FiltersHeaderAdapter(
             }
             binding.timeAutoComplete.setupDismissWorkaround()
 
-            binding.prevWeekButton.setOnClickListener { listener.onPrevWeekClick() }
-            binding.nextWeekButton.setOnClickListener { listener.onNextWeekClick() }
+            binding.prevWeekButton.setOnClickListener {
+                val target = (binding.calendarWeekPager.currentItem - 1).coerceAtLeast(0)
+                binding.calendarWeekPager.setCurrentItem(target, true)
+            }
+            binding.nextWeekButton.setOnClickListener {
+                val lastPage = (weekPagerAdapter.itemCount - 1).coerceAtLeast(0)
+                val target = (binding.calendarWeekPager.currentItem + 1).coerceAtMost(lastPage)
+                binding.calendarWeekPager.setCurrentItem(target, true)
+            }
             binding.resetFiltersChip.setOnClickListener { listener.onResetFiltersClick() }
         }
 
         fun bind(state: SportSignUiState.Success) {
+            boundState = state
             binding.sportEditText.setText(state.selectedSportNames.joinToString(", ") { it.shorten() }
                 .ifEmpty { null })
 
@@ -129,7 +154,7 @@ class FiltersHeaderAdapter(
             binding.friendsSportChip.isChecked = state.showOnlyFriends
             binding.resetFiltersChip.isVisible = state.hasActiveFilters
 
-            binding.monthNameTextView.text = state.currentMonthName
+            updateMonthName(state.currentMonthName)
 
             binding.prevWeekButton.isEnabled = state.canGoToPrevWeek
             binding.prevWeekButton.alpha = if (state.canGoToPrevWeek) 1.0f else 0.5f
@@ -137,7 +162,29 @@ class FiltersHeaderAdapter(
             binding.nextWeekButton.isEnabled = state.canGoToNextWeek
             binding.nextWeekButton.alpha = if (state.canGoToNextWeek) 1.0f else 0.5f
 
-            calendarAdapter.submitList(state.displayedWeek)
+            weekPagerAdapter.submitWeeks(state.calendarWeeks)
+            if (binding.calendarWeekPager.currentItem != state.selectedWeekIndex) {
+                binding.calendarWeekPager.setCurrentItem(state.selectedWeekIndex, false)
+            }
+        }
+
+        private fun updateMonthName(monthName: String) {
+            val monthView = binding.monthNameTextView
+            if (monthView.text.toString() == monthName) return
+
+            val shouldAnimate = monthView.text.isNotEmpty() && monthView.isLaidOut
+            monthView.animate().cancel()
+            monthView.text = monthName
+            if (!shouldAnimate) {
+                monthView.alpha = 1f
+                return
+            }
+            monthView.alpha = MONTH_START_ALPHA
+            monthView.animate()
+                .alpha(1f)
+                .setDuration(MONTH_ANIMATION_DURATION)
+                .setInterpolator(MOTION_INTERPOLATOR)
+                .start()
         }
 
         private fun <T> updateAdapter(autoCompleteTextView: AutoCompleteTextView, data: List<T>) {
@@ -158,6 +205,8 @@ class FiltersHeaderAdapter(
     }
 
     private companion object {
-        const val DAYS_IN_WEEK = 7
+        const val MONTH_ANIMATION_DURATION = 180L
+        const val MONTH_START_ALPHA = 0.45f
+        val MOTION_INTERPOLATOR = PathInterpolator(0.2f, 0f, 0f, 1f)
     }
 }

@@ -1,10 +1,12 @@
 package dev.alllexey.itmowidgets.feature.sport.my
 
+import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.PathInterpolator
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -51,6 +53,11 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     private lateinit var adapter: SportBookingAdapter
     private var hasRenderedContent = false
+    private var scoreAnimator: ValueAnimator? = null
+    private var lastRenderedScore: SportScore? = null
+    private var displayedAttendances = 0
+    private var displayedBonus = 0
+    private var displayedTotal = 0
 
     private val viewModel: SportMyViewModel by activityViewModels()
 
@@ -85,6 +92,12 @@ class SportMyFragment : Fragment(), SportBookingListener {
     }
 
     override fun onDestroyView() {
+        scoreAnimator?.cancel()
+        scoreAnimator = null
+        lastRenderedScore = null
+        displayedAttendances = 0
+        displayedBonus = 0
+        displayedTotal = 0
         super.onDestroyView()
         _binding = null
     }
@@ -185,12 +198,6 @@ class SportMyFragment : Fragment(), SportBookingListener {
         val attendanceColor = ContextCompat.getColor(requireContext(), R.color.sport_score_attendance)
         val bonusColor = ContextCompat.getColor(requireContext(), R.color.sport_score_bonus)
 
-        binding.attendancePointsTextView.text = score.attendances.toString()
-        binding.bonusPointsTextView.text = if (score.other > score.otherCapped) {
-            getString(R.string.sport_score_bonus_over_limit, score.otherCapped, score.other)
-        } else {
-            getString(R.string.sport_score_bonus_value, score.otherCapped)
-        }
         binding.attendanceIndicator.imageTintList = ColorStateList.valueOf(attendanceColor)
         binding.bonusIndicator.imageTintList = ColorStateList.valueOf(bonusColor)
 
@@ -211,8 +218,6 @@ class SportMyFragment : Fragment(), SportBookingListener {
         }
 
         val total = score.total
-        binding.progressCircle.progressTextView.text = total.toString()
-
         val sectors = mutableListOf<CircularProgressBar.Sector>()
         if (total > 0) {
             val (attPct, bonPct) = if (total > 100) {
@@ -221,10 +226,97 @@ class SportMyFragment : Fragment(), SportBookingListener {
                 score.attendances.toFloat() to score.otherCapped.toFloat()
             }
 
-            if (attPct > 0) sectors.add(CircularProgressBar.Sector(attendanceColor, attPct))
-            if (bonPct > 0) sectors.add(CircularProgressBar.Sector(bonusColor, bonPct))
+            sectors += CircularProgressBar.Sector(attendanceColor, attPct)
+            sectors += CircularProgressBar.Sector(bonusColor, bonPct)
         }
-        binding.progressCircle.circularProgressBar.animateSectors(sectors, duration = 800L, startDelay = 300L)
+
+        val previousScore = lastRenderedScore
+        val pointsChanged = previousScore == null ||
+            previousScore.attendances != score.attendances ||
+            previousScore.other != score.other
+        if (pointsChanged) {
+            animateScoreValues(score)
+            binding.progressCircle.circularProgressBar.animateSectors(
+                sectors,
+                duration = SCORE_ANIMATION_DURATION
+            )
+            val statusChanged = previousScore == null ||
+                (previousScore.need == 0) != (score.need == 0)
+            if (statusChanged) {
+                animateStatusChip()
+            } else {
+                resetStatusChipAnimation()
+            }
+        } else {
+            renderScoreValues(score.attendances, score.otherCapped, total)
+            renderFinalBonusValue(score)
+            binding.progressCircle.circularProgressBar.setSectors(sectors)
+        }
+        lastRenderedScore = score
+    }
+
+    private fun animateScoreValues(score: SportScore) {
+        scoreAnimator?.cancel()
+        val startAttendances = displayedAttendances
+        val startBonus = displayedBonus
+        val startTotal = displayedTotal
+
+        scoreAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = SCORE_ANIMATION_DURATION
+            interpolator = MOTION_INTERPOLATOR
+            addUpdateListener { animator ->
+                val fraction = animator.animatedFraction
+                val attendances = lerp(startAttendances, score.attendances, fraction)
+                val bonus = lerp(startBonus, score.otherCapped, fraction)
+                val total = lerp(startTotal, score.total, fraction)
+                renderScoreValues(attendances, bonus, total)
+                if (fraction >= 1f) renderFinalBonusValue(score)
+            }
+            start()
+        }
+    }
+
+    private fun renderScoreValues(attendances: Int, bonus: Int, total: Int) {
+        displayedAttendances = attendances
+        displayedBonus = bonus
+        displayedTotal = total
+        binding.attendancePointsTextView.text = attendances.toString()
+        binding.bonusPointsTextView.text = getString(R.string.sport_score_bonus_value, bonus)
+        binding.progressCircle.progressTextView.text = total.toString()
+    }
+
+    private fun renderFinalBonusValue(score: SportScore) {
+        binding.bonusPointsTextView.text = if (score.other > score.otherCapped) {
+            getString(R.string.sport_score_bonus_over_limit, score.otherCapped, score.other)
+        } else {
+            getString(R.string.sport_score_bonus_value, score.otherCapped)
+        }
+    }
+
+    private fun animateStatusChip() {
+        binding.scoreStatusCard.animate().cancel()
+        binding.scoreStatusCard.alpha = 0f
+        binding.scoreStatusCard.scaleX = STATUS_START_SCALE
+        binding.scoreStatusCard.scaleY = STATUS_START_SCALE
+        binding.scoreStatusCard.animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setStartDelay(STATUS_ANIMATION_DELAY)
+            .setDuration(STATUS_ANIMATION_DURATION)
+            .setInterpolator(MOTION_INTERPOLATOR)
+            .start()
+    }
+
+    private fun resetStatusChipAnimation() {
+        binding.scoreStatusCard.animate().cancel()
+        binding.scoreStatusCard.alpha = 1f
+        binding.scoreStatusCard.scaleX = 1f
+        binding.scoreStatusCard.scaleY = 1f
+    }
+
+    private fun lerp(start: Int, end: Int, fraction: Float): Int {
+        return (start + (end - start) * fraction).toInt()
     }
 
     // endregion
@@ -254,5 +346,11 @@ class SportMyFragment : Fragment(), SportBookingListener {
         }
     }
 
-
+    private companion object {
+        val MOTION_INTERPOLATOR = PathInterpolator(0.2f, 0f, 0f, 1f)
+        const val SCORE_ANIMATION_DURATION = 700L
+        const val STATUS_ANIMATION_DELAY = 380L
+        const val STATUS_ANIMATION_DURATION = 260L
+        const val STATUS_START_SCALE = 0.84f
+    }
 }

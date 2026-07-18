@@ -1,7 +1,10 @@
 package dev.alllexey.itmowidgets.feature.sport.sign
 
+import android.animation.ArgbEvaluator
+import android.animation.ValueAnimator
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.animation.PathInterpolator
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.R
@@ -20,8 +23,22 @@ class SportSignCalendarAdapter(
     private var itemWidthPx: Int = 0
 
     fun submitList(newDays: List<CalendarDay>) {
+        val oldDays = days
         days = newDays
-        notifyDataSetChanged()
+        val representsSameWeek = oldDays.size == newDays.size &&
+            oldDays.indices.all { oldDays[it].date == newDays[it].date }
+        if (!representsSameWeek) {
+            notifyDataSetChanged()
+            return
+        }
+
+        newDays.indices.forEach { index ->
+            val selectionChanged = oldDays[index].isSelected != newDays[index].isSelected
+            notifyItemChanged(
+                index,
+                if (selectionChanged) SELECTION_PAYLOAD else CONTENT_PAYLOAD
+            )
+        }
     }
 
     fun setItemWidth(widthPx: Int) {
@@ -41,7 +58,23 @@ class SportSignCalendarAdapter(
     }
 
     override fun onBindViewHolder(holder: CalendarViewHolder, position: Int) {
-        holder.bind(days[position], itemWidthPx)
+        holder.bind(days[position], itemWidthPx, animateSelection = false)
+    }
+
+    override fun onBindViewHolder(
+        holder: CalendarViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads)
+            return
+        }
+        holder.bind(
+            days[position],
+            itemWidthPx,
+            animateSelection = payloads.contains(SELECTION_PAYLOAD)
+        )
     }
 
     override fun getItemCount(): Int = days.size
@@ -49,6 +82,8 @@ class SportSignCalendarAdapter(
     inner class CalendarViewHolder(
         private val binding: ItemCalendarDayBinding
     ) : RecyclerView.ViewHolder(binding.root) {
+
+        private var colorAnimator: ValueAnimator? = null
 
         init {
             itemView.setOnClickListener {
@@ -59,7 +94,7 @@ class SportSignCalendarAdapter(
             }
         }
 
-        fun bind(day: CalendarDay, itemWidthPx: Int) {
+        fun bind(day: CalendarDay, itemWidthPx: Int, animateSelection: Boolean) {
             val context = itemView.context
 
             if (itemWidthPx > 0) {
@@ -119,9 +154,58 @@ class SportSignCalendarAdapter(
                 }
             }
 
+            colorAnimator?.cancel()
+            binding.dayCard.animate().cancel()
+            if (animateSelection) {
+                animateSelection(day, cardColor, textColor)
+            } else {
+                binding.dayCard.scaleX = 1f
+                binding.dayCard.scaleY = 1f
+                applyColors(cardColor, textColor)
+            }
+        }
+
+        private fun animateSelection(day: CalendarDay, cardColor: Int, textColor: Int) {
+            val startCardColor = binding.dayCard.cardBackgroundColor.defaultColor
+            val startTextColor = binding.dayOfMonthText.currentTextColor
+            val evaluator = ArgbEvaluator()
+            colorAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+                duration = SELECTION_ANIMATION_DURATION
+                interpolator = MOTION_INTERPOLATOR
+                addUpdateListener { animator ->
+                    val fraction = animator.animatedFraction
+                    applyColors(
+                        evaluator.evaluate(fraction, startCardColor, cardColor) as Int,
+                        evaluator.evaluate(fraction, startTextColor, textColor) as Int
+                    )
+                }
+                start()
+            }
+
+            if (day.isSelected) {
+                binding.dayCard.scaleX = SELECTED_START_SCALE
+                binding.dayCard.scaleY = SELECTED_START_SCALE
+            }
+            binding.dayCard.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(SELECTION_ANIMATION_DURATION)
+                .setInterpolator(MOTION_INTERPOLATOR)
+                .start()
+        }
+
+        private fun applyColors(cardColor: Int, textColor: Int) {
             binding.dayCard.setCardBackgroundColor(cardColor)
             binding.dayOfMonthText.setTextColor(textColor)
             binding.dayOfWeekText.setTextColor(textColor)
         }
+    }
+
+    private companion object {
+        val CONTENT_PAYLOAD = Any()
+        val SELECTION_PAYLOAD = Any()
+        val MOTION_INTERPOLATOR = PathInterpolator(0.2f, 0f, 0f, 1f)
+        const val SELECTED_START_SCALE = 0.82f
+        const val SELECTION_ANIMATION_DURATION = 220L
     }
 }

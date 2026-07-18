@@ -208,16 +208,13 @@
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/calendar_recycler_view"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/calendar_week_pager"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="82dp"
             android:clipToPadding="false"
-            android:orientation="horizontal"
             android:overScrollMode="never"
-            android:paddingBottom="12dp"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:listitem="@layout/item_calendar_day" />
+            tools:orientation="horizontal" />
 
     </LinearLayout>
 </LinearLayout>
