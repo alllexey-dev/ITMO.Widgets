@@ -87,6 +87,40 @@
     <string name="friend_picker_empty_description">Попробуй изменить запрос</string>
     <string name="friend_picker_disabled">Сервис друзей выключен</string>
 
+    <string name="recordbook_filter">Фильтр зачётки</string>
+    <string name="recordbook_period_button">%1$d курс · %2$d семестр · %3$s</string>
+    <string name="recordbook_period_title">Учебный период</string>
+    <string name="recordbook_period_value">%1$d курс · %2$d семестр</string>
+    <string name="recordbook_current_period">%1$s · текущий</string>
+    <string name="recordbook_summary_title">Успеваемость</string>
+    <string name="recordbook_closed">закрыто</string>
+    <string name="recordbook_closed_value">%1$d из %2$d</string>
+    <string name="recordbook_average_score">средний балл</string>
+    <string name="recordbook_score_value">%1$s / 100</string>
+    <string name="recordbook_subject_meta">%1$s · %2$s балла</string>
+    <string name="recordbook_no_score">Нет баллов</string>
+    <string name="recordbook_empty_title">Здесь пока пусто</string>
+    <string name="recordbook_empty_description">Для выбранного периода дисциплины не найдены.</string>
+    <string name="recordbook_back">Назад к зачётке</string>
+    <string name="recordbook_control_score">%1$s / %2$s</string>
+    <string name="recordbook_control_minimum">минимум %1$s</string>
+    <string name="recordbook_required">обязательная</string>
+    <string name="recordbook_details_empty_title">Детализация недоступна</string>
+    <string name="recordbook_details_empty_description">My ITMO не вернул контрольные работы по этой дисциплине.</string>
+    <string name="recordbook_attention_section">Требуют внимания</string>
+    <string name="recordbook_disciplines_section">Дисциплины</string>
+    <string name="recordbook_final_section">Итог и дополнительные баллы</string>
+    <string name="recordbook_homework_section">Домашние задания</string>
+    <string name="recordbook_tests_section">Контрольные и практика</string>
+    <string name="recordbook_other_section">Другие работы</string>
+
+    <string-array name="recordbook_filter_options">
+        <item>Все дисциплины</item>
+        <item>Экзамены</item>
+        <item>Зачёты</item>
+        <item>Требуют внимания</item>
+    </string-array>
+
     <string name="debug_academic_time_title">Тестовое академическое время</string>
     <string name="debug_academic_time_description">Подменяет текущую дату только для расписания и спорта. Авторизация, кэш и QR используют системное время.</string>
     <string name="debug_academic_time_system">Используется системная дата</string>

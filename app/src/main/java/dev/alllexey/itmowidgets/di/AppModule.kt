@@ -34,6 +34,8 @@ import dev.alllexey.itmowidgets.core.time.DefaultAcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.SharedPreferencesAcademicTimeOverrideStore
 import dev.alllexey.itmowidgets.core.util.OffsetDateTimeAdapter
 import dev.alllexey.itmowidgets.core.utils.RuntimeTypeAdapterFactory
+import dev.alllexey.itmowidgets.data.repository.RecordbookRepositoryImpl
+import dev.alllexey.itmowidgets.domain.repository.RecordbookRepository
 import dev.alllexey.itmowidgets.domain.model.sport.SportBooking
 import dev.alllexey.itmowidgets.domain.model.sport.SportCommon
 import dev.alllexey.itmowidgets.domain.model.sport.SportLesson
@@ -136,6 +138,12 @@ object AppModule {
 
     @Provides
     fun provideMyItmoApi(myItmo: MyItmo): MyItmoApi = myItmo.api
+
+    @Provides
+    @Singleton
+    fun provideRecordbookRepository(
+        myItmo: MyItmo
+    ): RecordbookRepository = RecordbookRepositoryImpl(myItmo)
 
     @Provides
     @Singleton

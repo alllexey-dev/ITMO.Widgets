@@ -39,7 +39,7 @@ fun api.myitmo.model.sport.SportAttempts.toModel(): SportAttempts {
         total = totalAttempts,
         used = usedAttempts,
         free = freeAttempts,
-        canSignIn = canSignIn.toBooleanStrict()
+        canSignIn = isCanSignIn
     )
 }
 

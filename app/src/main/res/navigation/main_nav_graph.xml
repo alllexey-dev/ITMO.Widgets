@@ -9,7 +9,19 @@
         android:id="@+id/navigation_recordbook"
         android:name="dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookFragment"
         android:label="Record book"
-        tools:layout="@layout/fragment_recordbook" />
+        tools:layout="@layout/fragment_recordbook">
+
+        <action
+            android:id="@+id/action_recordbook_to_recordbook_subject"
+            app:destination="@id/recordbook_subject" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/recordbook_subject"
+        android:name="dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookSubjectFragment"
+        android:label="Record book subject"
+        tools:layout="@layout/fragment_recordbook_subject" />
 
     <fragment
         android:id="@+id/navigation_schedule"
