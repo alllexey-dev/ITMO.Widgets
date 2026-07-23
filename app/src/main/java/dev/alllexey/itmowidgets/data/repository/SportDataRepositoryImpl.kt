@@ -3,16 +3,16 @@ package dev.alllexey.itmowidgets.data.repository
 import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
-import dev.alllexey.itmowidgets.core.model.SportAutoSignLimits
-import dev.alllexey.itmowidgets.core.model.SportQueue
-import dev.alllexey.itmowidgets.core.model.SportQueueEntry
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.data.mapper.toModel
 import dev.alllexey.itmowidgets.domain.model.sport.FriendSportBooking
+import dev.alllexey.itmowidgets.domain.model.sport.SportAutoSignLimits
 import dev.alllexey.itmowidgets.domain.model.sport.SportAttempts
+import dev.alllexey.itmowidgets.domain.model.sport.SportQueue
+import dev.alllexey.itmowidgets.domain.model.sport.SportQueueEntry
 import dev.alllexey.itmowidgets.domain.model.sport.SportScore
 import dev.alllexey.itmowidgets.domain.repository.FriendRepository
 import dev.alllexey.itmowidgets.domain.repository.SportDataRepository
@@ -24,10 +24,10 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class SportDataRepositoryImpl @Inject constructor(
-    val friendRepository: FriendRepository,
-    val settings: AppSettingsStorage,
-    val myItmoApi: MyItmoApi,
-    val widgetsApi: ItmoWidgetsApi,
+    private val friendRepository: FriendRepository,
+    private val settings: AppSettingsStorage,
+    private val myItmoApi: MyItmoApi,
+    private val widgetsApi: ItmoWidgetsApi,
     private val sportScoreOverrideProvider: SportScoreOverrideProvider
 ) : SportDataRepository {
 
@@ -98,7 +98,7 @@ class SportDataRepositoryImpl @Inject constructor(
 
         try {
             val result = withContext(Dispatchers.IO) {
-                widgetsApi.sportAutoSignLimits().data
+                widgetsApi.sportAutoSignLimits().data?.toModel()
             }
 
             if (result != null) {
@@ -128,8 +128,13 @@ class SportDataRepositoryImpl @Inject constructor(
                         widgetsApi.mySportAutoSignEntries().data
                     }
 
-                    (freeSign.await() ?: throw RuntimeException("FreeSignEntries response is null")) +
-                            (autoSign.await() ?: throw RuntimeException("AutoSignEntries response is null"))
+                    (
+                        freeSign.await()
+                            ?: throw RuntimeException("FreeSignEntries response is null")
+                    ).map { it.toModel() } + (
+                        autoSign.await()
+                            ?: throw RuntimeException("AutoSignEntries response is null")
+                    ).map { it.toModel() }
                 }
             }
 
@@ -156,8 +161,13 @@ class SportDataRepositoryImpl @Inject constructor(
                         widgetsApi.currentSportAutoSignQueues().data
                     }
 
-                    (freeSign.await() ?: throw RuntimeException("FreeSignQueues response is null")) +
-                            (autoSign.await() ?: throw RuntimeException("AutoSignQueues response is null"))
+                    (
+                        freeSign.await()
+                            ?: throw RuntimeException("FreeSignQueues response is null")
+                    ).map { it.toModel() } + (
+                        autoSign.await()
+                            ?: throw RuntimeException("AutoSignQueues response is null")
+                    ).map { it.toModel() }
                 }
             }
 
@@ -184,7 +194,11 @@ class SportDataRepositoryImpl @Inject constructor(
                 return bookings.mapNotNull { booking ->
                     val friend = friends.find { it.isu == booking.isu }
                     friend?.let {
-                        FriendSportBooking(it, booking.lessonId, booking.entry)
+                        FriendSportBooking(
+                            friend = it,
+                            lessonId = booking.lessonId,
+                            entry = booking.entry?.toModel()
+                        )
                     }
                 }
             }

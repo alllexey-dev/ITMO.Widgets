@@ -1,13 +1,6 @@
 package dev.alllexey.itmowidgets.data.repository
 
 import api.myitmo.MyItmoApi
-import api.myitmo.model.sport.SportFilters
-import api.myitmo.model.sport.TimeSlot
-import dev.alllexey.itmowidgets.core.model.QueueEntryStatus.Companion.notifiableStatuses
-import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
-import dev.alllexey.itmowidgets.core.model.SportAutoSignQueue
-import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry
-import dev.alllexey.itmowidgets.core.model.SportFreeSignQueue
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.DataState
@@ -15,7 +8,14 @@ import dev.alllexey.itmowidgets.core.util.MergedDataState
 import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.core.util.throwableOrNull
 import dev.alllexey.itmowidgets.data.mapper.toModel
+import dev.alllexey.itmowidgets.domain.model.sport.SportAutoSignEntry
+import dev.alllexey.itmowidgets.domain.model.sport.SportAutoSignQueue
+import dev.alllexey.itmowidgets.domain.model.sport.SportFilterCatalog
+import dev.alllexey.itmowidgets.domain.model.sport.SportFreeSignEntry
+import dev.alllexey.itmowidgets.domain.model.sport.SportFreeSignQueue
 import dev.alllexey.itmowidgets.domain.model.sport.SportLesson
+import dev.alllexey.itmowidgets.domain.model.sport.SportQueueEntryStatus.Companion.notifiableStatuses
+import dev.alllexey.itmowidgets.domain.model.sport.SportTimeSlot
 import dev.alllexey.itmowidgets.domain.model.sport.UnavailableReason
 import dev.alllexey.itmowidgets.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.domain.repository.SportScheduleRepository
@@ -28,16 +28,16 @@ import javax.inject.Inject
 
 class SportScheduleRepositoryImpl @Inject constructor(
     sportDataRepository: SportDataRepository,
-    val myItmoApi: MyItmoApi,
+    private val myItmoApi: MyItmoApi,
     private val timeProvider: AcademicTimeProvider,
     private val sportLessonTemplateProvider: SportLessonTemplateProvider
 ) : SportScheduleRepository {
 
     private val scheduleFlow = MutableSharedFlow<DataState<Map<LocalDate, List<SportLesson>>>>(replay = 1)
 
-    private val filtersFlow = MutableSharedFlow<DataState<SportFilters>>(replay = 1)
+    private val filtersFlow = MutableSharedFlow<DataState<SportFilterCatalog>>(replay = 1)
 
-    private val timeSlotsFlow = MutableSharedFlow<DataState<List<TimeSlot>>>(replay = 1)
+    private val timeSlotsFlow = MutableSharedFlow<DataState<List<SportTimeSlot>>>(replay = 1)
 
     private val combined = combine(
         scheduleFlow,
@@ -194,7 +194,7 @@ class SportScheduleRepositoryImpl @Inject constructor(
                     .sportFilters
                     .execute()
 
-                response.body()?.result
+                response.body()?.result?.toModel()
             }
 
             if (result != null) {
@@ -215,7 +215,7 @@ class SportScheduleRepositoryImpl @Inject constructor(
                     .sportTimeSlots
                     .execute()
 
-                response.body()?.result
+                response.body()?.result?.map { it.toModel() }
             }
 
             if (result != null) {

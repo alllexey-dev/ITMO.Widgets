@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.domain.model.sport
 
-import dev.alllexey.itmowidgets.core.model.SportQueue
-import dev.alllexey.itmowidgets.core.model.SportQueueEntry
 import java.time.OffsetDateTime
 
 data class SportLesson(

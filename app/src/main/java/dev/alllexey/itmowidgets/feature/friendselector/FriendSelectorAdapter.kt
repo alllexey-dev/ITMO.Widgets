@@ -9,21 +9,21 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.model.UserData
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemFriendSelectorBinding
+import dev.alllexey.itmowidgets.domain.model.user.UserSummary
 
 class FriendSelectorAdapter(
     private var selectedIsu: Int? = null,
-    private val onClick: (UserData) -> Unit
-) : ListAdapter<UserData, FriendSelectorAdapter.VH>(Diff) {
+    private val onClick: (UserSummary) -> Unit
+) : ListAdapter<UserSummary, FriendSelectorAdapter.VH>(Diff) {
 
-    object Diff : DiffUtil.ItemCallback<UserData>() {
-        override fun areItemsTheSame(oldItem: UserData, newItem: UserData): Boolean {
+    object Diff : DiffUtil.ItemCallback<UserSummary>() {
+        override fun areItemsTheSame(oldItem: UserSummary, newItem: UserSummary): Boolean {
             return oldItem.isu == newItem.isu
         }
 
-        override fun areContentsTheSame(oldItem: UserData, newItem: UserData): Boolean {
+        override fun areContentsTheSame(oldItem: UserSummary, newItem: UserSummary): Boolean {
             return oldItem == newItem
         }
     }
@@ -43,10 +43,10 @@ class FriendSelectorAdapter(
         private val binding: ItemFriendSelectorBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: UserData) {
+        fun bind(item: UserSummary) {
             binding.name.text = item.name
             binding.subtitle.text = buildSubtitle(item)
-            val canViewSchedule = item.settings.scheduleSharing
+            val canViewSchedule = item.sharing.schedule
             val isSelected = item.isu == selectedIsu
 
             binding.root.alpha = if (canViewSchedule) 1f else 0.52f
@@ -87,15 +87,24 @@ class FriendSelectorAdapter(
             } else null)
         }
 
-        private fun buildSubtitle(item: UserData): String {
+        private fun buildSubtitle(item: UserSummary): String {
+            val context = binding.root.context
             val groupsText = when {
-                item.groups.isEmpty() -> "Нет группы"
+                item.groups.isEmpty() -> context.getString(R.string.friend_picker_no_group)
                 item.groups.size == 1 -> item.groups.first().name
                 item.groups.size <= 2 -> item.groups.joinToString(" • ") { it.name }
-                else -> "${item.groups.first().name} • и ещё ${item.groups.size - 1}"
+                else -> context.getString(
+                    R.string.friend_picker_more_groups,
+                    item.groups.first().name,
+                    item.groups.size - 1
+                )
             }
 
-            return "${item.isu} • $groupsText"
+            return context.getString(
+                R.string.friend_picker_user_subtitle,
+                item.isu,
+                groupsText
+            )
         }
     }
 

@@ -5,9 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.alllexey.itmowidgets.core.model.UserData
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.storage.FriendSelectionHistory
 import dev.alllexey.itmowidgets.core.util.fold
+import dev.alllexey.itmowidgets.domain.model.user.UserSummary
 import dev.alllexey.itmowidgets.domain.repository.FriendRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -17,10 +18,10 @@ sealed class FriendSelectorUiState {
     data object Loading : FriendSelectorUiState()
     data object Disabled : FriendSelectorUiState()
     data class Success(
-        val friends: List<UserData>,
-        val recentFriends: List<UserData>
+        val friends: List<UserSummary>,
+        val recentFriends: List<UserSummary>
     ) : FriendSelectorUiState()
-    data class Error(val message: String) : FriendSelectorUiState()
+    data class Error(val error: AppError) : FriendSelectorUiState()
 }
 
 @HiltViewModel
@@ -46,11 +47,11 @@ class FriendSelectorViewModel @Inject constructor(
                 _uiState.value = state.fold(
                     onDisabled = { FriendSelectorUiState.Disabled },
                     onSuccess = { friends ->
-                        val friendsByIsu = friends.associateBy(UserData::isu)
+                        val friendsByIsu = friends.associateBy(UserSummary::isu)
                         val recentFriends = history.getRecentIsu().mapNotNull(friendsByIsu::get)
                         FriendSelectorUiState.Success(friends, recentFriends)
                     },
-                    onError = { FriendSelectorUiState.Error(it.message ?: "Произошла ошибка") }
+                    onError = { FriendSelectorUiState.Error(AppError.Unknown(it)) }
                 )
             }
         }
@@ -62,9 +63,7 @@ class FriendSelectorViewModel @Inject constructor(
             try {
                 repository.refreshFriendList()
             } catch (e: Exception) {
-                _uiState.value = FriendSelectorUiState.Error(
-                    e.message ?: "Failed to load friends"
-                )
+                _uiState.value = FriendSelectorUiState.Error(AppError.Unknown(e))
             }
         }
     }

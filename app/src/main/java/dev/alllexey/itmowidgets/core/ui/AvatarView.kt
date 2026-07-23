@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.model.UserData
+import dev.alllexey.itmowidgets.domain.model.user.UserSummary
 
 class AvatarView @JvmOverloads constructor(
     context: Context,
@@ -29,7 +29,7 @@ class AvatarView @JvmOverloads constructor(
         clipToOutline = true
     }
 
-    fun setUser(user: UserData?) {
+    fun setUser(user: UserSummary?) {
         setUser(user?.name, user?.pictureUrl)
     }
 

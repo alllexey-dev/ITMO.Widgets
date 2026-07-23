@@ -5,12 +5,12 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.model.UserData
 import dev.alllexey.itmowidgets.databinding.ItemRecentFriendBinding
+import dev.alllexey.itmowidgets.domain.model.user.UserSummary
 
 sealed interface RecentFriendItem {
     data object MySchedule : RecentFriendItem
-    data class Friend(val user: UserData) : RecentFriendItem
+    data class Friend(val user: UserSummary) : RecentFriendItem
 }
 
 class RecentFriendAdapter(
@@ -20,7 +20,7 @@ class RecentFriendAdapter(
     private var items: List<RecentFriendItem> = listOf(RecentFriendItem.MySchedule)
     private var selectedIsu: Int? = null
 
-    fun submitItems(recentFriends: List<UserData>, selectedIsu: Int?) {
+    fun submitItems(recentFriends: List<UserSummary>, selectedIsu: Int?) {
         items = listOf(RecentFriendItem.MySchedule) +
             recentFriends.map(RecentFriendItem::Friend)
         this.selectedIsu = selectedIsu

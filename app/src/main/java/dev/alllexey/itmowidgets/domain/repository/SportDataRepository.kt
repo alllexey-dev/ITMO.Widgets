@@ -1,38 +1,38 @@
 package dev.alllexey.itmowidgets.domain.repository
 
-import dev.alllexey.itmowidgets.core.model.SportAutoSignLimits
-import dev.alllexey.itmowidgets.core.model.SportQueue
-import dev.alllexey.itmowidgets.core.model.SportQueueEntry
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.domain.model.sport.FriendSportBooking
+import dev.alllexey.itmowidgets.domain.model.sport.SportAutoSignLimits
 import dev.alllexey.itmowidgets.domain.model.sport.SportAttempts
+import dev.alllexey.itmowidgets.domain.model.sport.SportQueue
+import dev.alllexey.itmowidgets.domain.model.sport.SportQueueEntry
 import dev.alllexey.itmowidgets.domain.model.sport.SportScore
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.Flow
 
 interface SportDataRepository {
 
-    fun observeSportScore(): MutableSharedFlow<DataState<SportScore>>
+    fun observeSportScore(): Flow<DataState<SportScore>>
 
     suspend fun refreshSportScore()
 
-    fun observeSportAttempts(): MutableSharedFlow<DataState<SportAttempts>>
+    fun observeSportAttempts(): Flow<DataState<SportAttempts>>
 
     suspend fun refreshSportAttempts()
 
-    fun observeSportAutoSignLimits(): MutableSharedFlow<CustomDataState<SportAutoSignLimits>>
+    fun observeSportAutoSignLimits(): Flow<CustomDataState<SportAutoSignLimits>>
 
     suspend fun refreshSportAutoSignLimits()
 
-    fun observeSportQueueEntries(): MutableSharedFlow<CustomDataState<List<SportQueueEntry>>>
+    fun observeSportQueueEntries(): Flow<CustomDataState<List<SportQueueEntry>>>
 
     suspend fun refreshSportQueueEntries()
 
-    fun observeSportQueues(): MutableSharedFlow<CustomDataState<List<SportQueue>>>
+    fun observeSportQueues(): Flow<CustomDataState<List<SportQueue>>>
 
     suspend fun refreshSportQueues()
 
-    fun observeFriendsBookings(): MutableSharedFlow<CustomDataState<List<FriendSportBooking>>>
+    fun observeFriendsBookings(): Flow<CustomDataState<List<FriendSportBooking>>>
 
     suspend fun refreshFriendsBookings()
 }

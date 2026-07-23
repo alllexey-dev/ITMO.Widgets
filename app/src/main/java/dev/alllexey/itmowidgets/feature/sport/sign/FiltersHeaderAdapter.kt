@@ -9,18 +9,18 @@ import android.widget.AutoCompleteTextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.ItemSportFiltersHeaderBinding
 import java.time.LocalDate
-import kotlin.concurrent.thread
 
 interface FilterActionsListener {
     fun onSportClick()
     fun onShowOnlyAvailableChanged(isChecked: Boolean)
     fun onShowOnlyFriendsChanged(isChecked: Boolean)
     fun onShowAutoSignChanged(isChecked: Boolean)
-    fun onBuildingSelected(building: String)
-    fun onTeacherSelected(teacher: String)
-    fun onTimeSelected(time: String)
+    fun onBuildingSelected(building: String?)
+    fun onTeacherSelected(teacher: String?)
+    fun onTimeSelected(time: String?)
     fun onPrevWeekClick()
     fun onNextWeekClick()
     fun onDateSelected(date: LocalDate)
@@ -112,15 +112,24 @@ class FiltersHeaderAdapter(
 
             binding.sportEditText.setOnClickListener { listener.onSportClick() }
             binding.buildingAutoComplete.setOnItemClickListener { parent, _, position, _ ->
-                listener.onBuildingSelected(parent.adapter.getItem(position) as String)
+                val value = parent.adapter.getItem(position) as String
+                listener.onBuildingSelected(
+                    value.takeUnless { it == itemView.context.getString(R.string.sport_any_building) }
+                )
             }
             binding.buildingAutoComplete.setupDismissWorkaround()
             binding.teacherAutoComplete.setOnItemClickListener { parent, _, position, _ ->
-                listener.onTeacherSelected(parent.adapter.getItem(position) as String)
+                val value = parent.adapter.getItem(position) as String
+                listener.onTeacherSelected(
+                    value.takeUnless { it == itemView.context.getString(R.string.sport_any_teacher) }
+                )
             }
             binding.teacherAutoComplete.setupDismissWorkaround()
             binding.timeAutoComplete.setOnItemClickListener { parent, _, position, _ ->
-                listener.onTimeSelected(parent.adapter.getItem(position) as String)
+                val value = parent.adapter.getItem(position) as String
+                listener.onTimeSelected(
+                    value.takeUnless { it == itemView.context.getString(R.string.sport_any_time) }
+                )
             }
             binding.timeAutoComplete.setupDismissWorkaround()
 
@@ -141,13 +150,31 @@ class FiltersHeaderAdapter(
             binding.sportEditText.setText(state.selectedSportNames.joinToString(", ") { it.shorten() }
                 .ifEmpty { null })
 
-            updateAdapter(binding.buildingAutoComplete, state.availableBuildings)
-            updateAdapter(binding.teacherAutoComplete, state.availableTeachers)
-            updateAdapter(binding.timeAutoComplete, state.availableTimeSlots)
+            val anyBuilding = itemView.context.getString(R.string.sport_any_building)
+            val anyTeacher = itemView.context.getString(R.string.sport_any_teacher)
+            val anyTime = itemView.context.getString(R.string.sport_any_time)
+            updateAdapter(
+                binding.buildingAutoComplete,
+                listOf(anyBuilding) + state.availableBuildings
+            )
+            updateAdapter(
+                binding.teacherAutoComplete,
+                listOf(anyTeacher) + state.availableTeachers
+            )
+            updateAdapter(
+                binding.timeAutoComplete,
+                listOf(anyTime) + state.availableTimeSlots
+            )
 
-            binding.buildingAutoComplete.setText(state.selectedBuildingName ?: "", false)
-            binding.teacherAutoComplete.setText(state.selectedTeacherName ?: "", false)
-            binding.timeAutoComplete.setText(state.selectedTimeSlot ?: "", false)
+            binding.buildingAutoComplete.setText(
+                state.selectedBuildingName ?: anyBuilding,
+                false
+            )
+            binding.teacherAutoComplete.setText(
+                state.selectedTeacherName ?: anyTeacher,
+                false
+            )
+            binding.timeAutoComplete.setText(state.selectedTimeSlot ?: anyTime, false)
 
             binding.availableSportChip.isChecked = state.showOnlyAvailable
             binding.autoSignSportChip.isChecked = state.showAutoSign
@@ -196,10 +223,7 @@ class FiltersHeaderAdapter(
         private fun AutoCompleteTextView.setupDismissWorkaround() {
             setOnDismissListener {
                 dismissDropDown()
-                thread {
-                    Thread.sleep(50)
-                    post { clearFocus() }
-                }
+                postDelayed(::clearFocus, DISMISS_FOCUS_DELAY)
             }
         }
     }
@@ -207,6 +231,7 @@ class FiltersHeaderAdapter(
     private companion object {
         const val MONTH_ANIMATION_DURATION = 180L
         const val MONTH_START_ALPHA = 0.45f
+        const val DISMISS_FOCUS_DELAY = 50L
         val MOTION_INTERPOLATOR = PathInterpolator(0.2f, 0f, 0f, 1f)
     }
 }

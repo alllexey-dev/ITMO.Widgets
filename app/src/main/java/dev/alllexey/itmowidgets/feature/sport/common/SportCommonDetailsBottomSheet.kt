@@ -11,16 +11,16 @@ import com.google.android.material.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
-import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
-import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
-import dev.alllexey.itmowidgets.core.model.SportQueueEntry
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.ThemeColors
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportCommonDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportBookingFriendStatusBinding
+import dev.alllexey.itmowidgets.domain.model.sport.SportAutoSignEntry
 import dev.alllexey.itmowidgets.domain.model.sport.SportCommon
 import dev.alllexey.itmowidgets.domain.model.sport.SportLesson
+import dev.alllexey.itmowidgets.domain.model.sport.SportQueueEntry
+import dev.alllexey.itmowidgets.domain.model.sport.SportQueueEntryStatus
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
@@ -124,7 +124,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
             )
         } else if (entry != null) {
             when (entry.status) {
-                QueueEntryStatus.WAITING, QueueEntryStatus.NOTIFIED -> {
+                SportQueueEntryStatus.WAITING, SportQueueEntryStatus.NOTIFIED -> {
                     if (entry is SportAutoSignEntry) {
                         setupChip(
                             text = "Автозапись • ${entry.position} из ${entry.total}",
@@ -142,7 +142,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
                     }
                 }
 
-                QueueEntryStatus.GAVE_UP_NOTIFYING, QueueEntryStatus.EXPIRED -> {
+                SportQueueEntryStatus.GAVE_UP_NOTIFYING, SportQueueEntryStatus.EXPIRED -> {
                     setupChip(
                         text = "Не удалось записать",
                         iconRes = dev.alllexey.itmowidgets.R.drawable.ic_error,
@@ -151,7 +151,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
                     )
                 }
 
-                QueueEntryStatus.SATISFIED -> {
+                SportQueueEntryStatus.SATISFIED -> {
                     setupChip(
                         text = "Успешная автозапись",
                         iconRes = dev.alllexey.itmowidgets.R.drawable.ic_check,
@@ -288,7 +288,10 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     private fun friendMetaLabel(entry: SportQueueEntry?): String {
         return when {
             entry == null -> "Без очереди"
-            (entry.status == QueueEntryStatus.GAVE_UP_NOTIFYING || entry.status == QueueEntryStatus.EXPIRED) -> "Не записан :("
+            (
+                entry.status == SportQueueEntryStatus.GAVE_UP_NOTIFYING ||
+                    entry.status == SportQueueEntryStatus.EXPIRED
+            ) -> "Не записан :("
             else -> "Позиция: ${entry.position} из ${entry.total}"
         }
     }
@@ -298,17 +301,17 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     private fun friendStatusColors(entry: SportQueueEntry?): FriendColors {
         val c = requireContext().color
         return when (entry?.status) {
-            null, QueueEntryStatus.SATISFIED -> FriendColors(
+            null, SportQueueEntryStatus.SATISFIED -> FriendColors(
                 c.primaryContainer,
                 c.onPrimaryContainer
             )
 
-            QueueEntryStatus.WAITING, QueueEntryStatus.NOTIFIED -> FriendColors(
+            SportQueueEntryStatus.WAITING, SportQueueEntryStatus.NOTIFIED -> FriendColors(
                 c.tertiaryContainer,
                 c.onTertiaryContainer
             )
 
-            QueueEntryStatus.GAVE_UP_NOTIFYING, QueueEntryStatus.EXPIRED -> FriendColors(
+            SportQueueEntryStatus.GAVE_UP_NOTIFYING, SportQueueEntryStatus.EXPIRED -> FriendColors(
                 c.errorContainer,
                 c.onErrorContainer
             )

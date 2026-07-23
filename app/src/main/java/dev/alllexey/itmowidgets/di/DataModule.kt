@@ -11,15 +11,9 @@ import dev.alllexey.itmowidgets.data.remote.QrCodeRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.data.repository.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.data.repository.QrBitmapCacheImpl
 import dev.alllexey.itmowidgets.data.repository.QrCodeRepositoryImpl
-import dev.alllexey.itmowidgets.data.repository.SportBookingRepositoryImpl
-import dev.alllexey.itmowidgets.data.repository.SportDataRepositoryImpl
-import dev.alllexey.itmowidgets.data.repository.SportScheduleRepositoryImpl
 import dev.alllexey.itmowidgets.domain.repository.FriendRepository
 import dev.alllexey.itmowidgets.domain.repository.QrBitmapCache
 import dev.alllexey.itmowidgets.domain.repository.QrCodeRepository
-import dev.alllexey.itmowidgets.domain.repository.SportBookingRepository
-import dev.alllexey.itmowidgets.domain.repository.SportDataRepository
-import dev.alllexey.itmowidgets.domain.repository.SportScheduleRepository
 import javax.inject.Singleton
 
 @Module
@@ -55,22 +49,4 @@ abstract class DataModule {
     abstract fun bindFriendRepository(
         impl: FriendRepositoryImpl
     ): FriendRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindSportDataRepository(
-        impl: SportDataRepositoryImpl
-    ): SportDataRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindSportBookingRepository(
-        impl: SportBookingRepositoryImpl
-    ): SportBookingRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindSportScheduleRepository(
-        impl: SportScheduleRepositoryImpl
-    ): SportScheduleRepository
 }

@@ -21,6 +21,8 @@ import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportSignBinding
 import dev.alllexey.itmowidgets.domain.model.sport.SectionName
@@ -137,8 +139,16 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach { event ->
                 when (event) {
-                    is SportSignEvent.ShowToast -> Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                    is SportSignEvent.ShowError -> Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                    is SportSignEvent.ShowToast -> Toast.makeText(
+                        context,
+                        event.message.resolve(requireContext()),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    is SportSignEvent.ShowError -> Toast.makeText(
+                        context,
+                        event.error.messageRes(),
+                        Toast.LENGTH_LONG
+                    ).show()
                     is SportSignEvent.ShowAutoSignConfirmDialog -> showConfirmDialog(event)
                     is SportSignEvent.ShowAutoSignDeleteDialog -> showDeleteDialog(event)
                     is SportSignEvent.ShowInfoDialog -> showInfoDialog(event)
@@ -165,7 +175,11 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         }
         submitLessonsWithState(state.displayedLessons, contentState)
         if (state.hasPartialError) {
-            Toast.makeText(requireContext(), "Не удалось загрузить некоторые данные", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                R.string.common_partial_load_error,
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -174,7 +188,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         val contentState = ContentState(
             iconRes = R.drawable.ic_error,
             title = getString(R.string.common_load_error_title),
-            description = state.message,
+            description = getString(state.error.messageRes()),
             action = getString(R.string.common_retry)
         )
         submitLessonsWithState(emptyList(), contentState)
@@ -206,15 +220,15 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         viewModel.showAutoSign(isChecked)
     }
 
-    override fun onBuildingSelected(building: String) {
+    override fun onBuildingSelected(building: String?) {
         viewModel.selectBuilding(building)
     }
 
-    override fun onTeacherSelected(teacher: String) {
+    override fun onTeacherSelected(teacher: String?) {
         viewModel.selectTeacher(teacher)
     }
 
-    override fun onTimeSelected(time: String) {
+    override fun onTimeSelected(time: String?) {
         viewModel.selectTime(time)
     }
 
@@ -257,12 +271,14 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     private fun showMultiSelectSearchableDialog() {
         val selectableItems = viewModel.sportSections.map { sport ->
             SelectableItem(
-                name = sport.shorten() + if (viewModel.usedSportNames.contains(sport)) " \uD83D\uDD25" else "",
+                name = sport.shorten(),
                 isSelected = viewModel.userFiltersFlow.value.selectedSportNames.contains(sport)
             )
         }.sortedWith(
             compareBy<SelectableItem> { !it.isSelected }
-                .thenBy { !it.name.contains("\uD83D\uDD25") }
+                .thenBy { item ->
+                    SectionName.deshorten(item.name) !in viewModel.usedSportNames
+                }
                 .thenBy { it.name }
         )
 
@@ -278,9 +294,9 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
         MaterialAlertDialogBuilder(requireContext())
             .setView(dialogView)
-            .setNegativeButton("Отмена", null)
-            .setPositiveButton("Готово") { _, _ ->
-                val selectedNames = adapter.getSelectedItems().map { it.name.replace(" \uD83D\uDD25", "") }
+            .setNegativeButton(R.string.common_cancel, null)
+            .setPositiveButton(R.string.common_done) { _, _ ->
+                val selectedNames = adapter.getSelectedItems().map(SelectableItem::name)
                 viewModel.selectSports(selectedNames.map { SectionName.deshorten(it) }.toSet())
             }
             .show()
@@ -294,26 +310,32 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         else view.visibility = View.GONE
         MaterialAlertDialogBuilder(requireContext())
             .setView(view)
-            .setTitle(event.title)
-            .setMessage(event.message)
-            .setNegativeButton("Назад", null)
-            .setPositiveButton("Автозапись") { _, _ -> event.action(toggle.isChecked) }
+            .setTitle(event.title.resolve(requireContext()))
+            .setMessage(event.message.resolve(requireContext()))
+            .setNegativeButton(R.string.common_back, null)
+            .setPositiveButton(R.string.sport_auto_sign_title) { _, _ ->
+                viewModel.executeAutoSignCommand(event.command, toggle.isChecked)
+            }
             .show()
     }
 
     private fun showDeleteDialog(event: SportSignEvent.ShowAutoSignDeleteDialog) {
         MaterialAlertDialogBuilder(requireContext())
-            .setMessage(event.message)
-            .setNegativeButton("Назад", null)
-            .setPositiveButton("Отписаться") { _, _ -> event.action() }
+            .setMessage(event.message.resolve(requireContext()))
+            .setNegativeButton(R.string.common_back, null)
+            .setPositiveButton(R.string.sport_auto_sign_unsubscribe) { _, _ ->
+                viewModel.executeAutoSignCommand(event.command)
+            }
             .show()
     }
 
     private fun showInfoDialog(event: SportSignEvent.ShowInfoDialog) {
         MaterialAlertDialogBuilder(requireContext())
-            .apply { if (event.title != null) setTitle(event.title) }
-            .setMessage(event.message)
-            .setPositiveButton("Хорошо", null)
+            .apply {
+                event.title?.let { setTitle(it.resolve(requireContext())) }
+            }
+            .setMessage(event.message.resolve(requireContext()))
+            .setPositiveButton(R.string.common_ok, null)
             .show()
     }
 

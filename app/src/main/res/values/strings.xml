@@ -91,6 +91,9 @@
     <string name="friend_picker_empty_title">Никого не найдено</string>
     <string name="friend_picker_empty_description">Попробуй изменить запрос</string>
     <string name="friend_picker_disabled">Сервис друзей выключен</string>
+    <string name="friend_picker_no_group">Нет группы</string>
+    <string name="friend_picker_more_groups">%1$s • и ещё %2$d</string>
+    <string name="friend_picker_user_subtitle">%1$d • %2$s</string>
 
     <string name="recordbook_filter">Фильтр зачётки</string>
     <string name="recordbook_period_button">%1$d курс · %2$d семестр · %3$s</string>
@@ -145,6 +148,25 @@
     <string name="debug_sport_lessons_title">Шаблонные занятия спорта</string>
     <string name="debug_sport_lessons_description">Заменяет расписание спорта тестовыми занятиями на ближайшие дни.</string>
     <string name="debug_sport_lesson_action_disabled">Это шаблонное занятие — запрос на сервер не отправлен</string>
+
+    <string name="common_back">Назад</string>
+    <string name="common_cancel">Отмена</string>
+    <string name="common_done">Готово</string>
+    <string name="common_ok">Хорошо</string>
+    <string name="common_partial_load_error">Не удалось загрузить некоторые данные</string>
+    <string name="sport_sign_success">Вы успешно записались</string>
+    <string name="sport_unsign_success">Запись отменена</string>
+    <string name="sport_community_services_disabled">Неофициальные сервисы выключены.\n\nИх можно включить в настройках.</string>
+    <string name="sport_auto_sign_title">Автозапись</string>
+    <string name="sport_auto_sign_existing_entry">У вас уже есть автозапись на это занятие. Позиция в очереди: %1$d из %2$d</string>
+    <string name="sport_auto_sign_free_description">Вы можете встать в очередь на автозапись.\n\nПриложение попробует вас записать, когда место освободится.</string>
+    <string name="sport_auto_sign_future_description">Вы можете встать в очередь на автозапись.\n\nПриложение попробует вас записать, когда на это занятие откроется запись.</string>
+    <string name="sport_auto_sign_existing_day">У вас уже есть автозапись на этот день:\n%1$s\n%2$s</string>
+    <string name="sport_auto_sign_limit_reached">Вы достигли месячного лимита автозаписи.\n\nВ следующий раз можно будет записаться %1$s</string>
+    <string name="sport_auto_sign_unsubscribe">Отписаться</string>
+    <string name="sport_any_building">Любой корпус</string>
+    <string name="sport_any_teacher">Любой преподаватель</string>
+    <string name="sport_any_time">Любое время</string>
 
     <string name="onboarding_services_disclaimer">Чтобы работали уведомления и автозапись, серверу нужно подтвердить вашу личность. Мы используем ваш токен только для проверки и <b>не сохраняем его</b> — запоминаем только шестизачный номер ИСУ. Исходный код открыт, так что всё честно.\n\n<b>Включая эту опцию, вы соглашаетесь на передачу токена для авторизации.</b></string>
 </resources>

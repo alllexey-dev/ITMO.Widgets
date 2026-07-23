@@ -31,6 +31,17 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `sport presentation does not depend on transport clients or DTOs`() {
+        productionScope.files
+            .filter { it.packagee?.name?.startsWith("$SPORT_PACKAGE_PREFIX.") == true }
+            .assertFalse { file ->
+                file.imports.any { import ->
+                    forbiddenPresentationImportPrefixes.any(import.name::startsWith)
+                }
+            }
+    }
+
+    @Test
     fun `features do not gain new cross feature dependencies`() {
         productionScope.files
             .filter { it.packagee?.name?.startsWith(FEATURE_PACKAGE_PREFIX) == true }
@@ -95,6 +106,8 @@ class ArchitectureTest {
     private companion object {
         const val FEATURE_PACKAGE_PREFIX =
             "dev.alllexey.itmowidgets.feature."
+        const val SPORT_PACKAGE_PREFIX =
+            "dev.alllexey.itmowidgets.feature.sport"
 
         val forbiddenDomainImportPrefixes = listOf(
             "android.",
@@ -103,15 +116,14 @@ class ArchitectureTest {
         )
 
         val legacyDomainLeakAllowlist = setOf(
-            "dev/alllexey/itmowidgets/domain/model/sport/FriendSportBooking.kt",
-            "dev/alllexey/itmowidgets/domain/model/sport/SportBooking.kt",
-            "dev/alllexey/itmowidgets/domain/model/sport/SportCommon.kt",
-            "dev/alllexey/itmowidgets/domain/model/sport/SportLesson.kt",
-            "dev/alllexey/itmowidgets/domain/model/sport/UnavailableReason.kt",
-            "dev/alllexey/itmowidgets/domain/repository/FriendRepository.kt",
-            "dev/alllexey/itmowidgets/domain/repository/QrBitmapCache.kt",
-            "dev/alllexey/itmowidgets/domain/repository/SportDataRepository.kt",
-            "dev/alllexey/itmowidgets/domain/repository/SportScheduleRepository.kt"
+            "dev/alllexey/itmowidgets/domain/repository/QrBitmapCache.kt"
+        )
+
+        val forbiddenPresentationImportPrefixes = listOf(
+            "api.myitmo.",
+            "dev.alllexey.itmowidgets.core.model.",
+            "dev.alllexey.itmowidgets.core.network.",
+            "dev.alllexey.itmowidgets.data."
         )
 
         val legacyCrossFeatureAllowlist = setOf(

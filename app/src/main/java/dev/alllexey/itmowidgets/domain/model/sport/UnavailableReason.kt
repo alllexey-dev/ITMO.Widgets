@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.domain.model.sport
 
-import api.myitmo.model.sport.SportLesson
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -20,28 +19,31 @@ sealed class UnavailableReason(val shortDescription: String, val weight: Int) {
     object ExternatOnly : UnavailableReason("Занятие для экстерната", 65)
     object HealthGroupMismatch : UnavailableReason("Другая группа здоровья", 70)
     object LessonInPast : UnavailableReason("Занятие в прошлом", 90)
-    class Other(reason: String) : UnavailableReason(reason, 100)
+    data class Other(val reason: String) : UnavailableReason(reason, 100)
 
     companion object {
         fun getSortedUnavailableReasons(
-            lesson: SportLesson,
+            signed: Boolean,
+            startsAt: OffsetDateTime,
+            available: Int,
+            serverReasons: List<String>,
             now: OffsetDateTime
         ): List<UnavailableReason> {
             val reasons = mutableSetOf<UnavailableReason>()
 
-            if (lesson.signed == true) {
+            if (signed) {
                 reasons.add(AlreadyEnrolled)
             }
 
-            if (lesson.date.isBefore(now)) {
+            if (startsAt.isBefore(now)) {
                 reasons.add(LessonInPast)
             }
 
-            if ((lesson.available ?: 1) <= 0 && lesson.signed != true) {
+            if (available <= 0 && !signed) {
                 reasons.add(Full)
             }
 
-            lesson.canSignIn?.unavailableReasons?.mapTo(reasons) { parseReasonFromString(it) }
+            serverReasons.mapTo(reasons, ::parseReasonFromString)
             return reasons.sortedBy { it.weight }.distinct()
         }
 

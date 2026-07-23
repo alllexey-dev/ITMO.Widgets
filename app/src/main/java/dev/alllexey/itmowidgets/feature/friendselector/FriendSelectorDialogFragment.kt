@@ -16,8 +16,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.model.UserData
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.databinding.DialogFriendSelectorBinding
+import dev.alllexey.itmowidgets.domain.model.user.UserSummary
 import kotlin.math.roundToInt
 
 @AndroidEntryPoint
@@ -30,9 +31,9 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
 
     private lateinit var friendsAdapter: FriendSelectorAdapter
     private lateinit var recentAdapter: RecentFriendAdapter
-    private var allFriends: List<UserData> = emptyList()
+    private var allFriends: List<UserSummary> = emptyList()
     private var initialSelectedIsu: Int? = null
-    private var pendingFriend: UserData? = null
+    private var pendingFriend: UserSummary? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -108,7 +109,10 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
             when (state) {
                 FriendSelectorUiState.Loading -> renderLoading()
                 is FriendSelectorUiState.Success -> renderSuccess(state)
-                is FriendSelectorUiState.Error -> renderError(state.message, canRetry = true)
+                is FriendSelectorUiState.Error -> renderError(
+                    getString(state.error.messageRes()),
+                    canRetry = true
+                )
                 FriendSelectorUiState.Disabled -> renderError(
                     getString(R.string.friend_picker_disabled),
                     canRetry = false
@@ -132,12 +136,12 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
 
         allFriends = state.friends
         pendingFriend = initialSelectedIsu?.let { isu ->
-            allFriends.firstOrNull { it.isu == isu && it.settings.scheduleSharing }
+            allFriends.firstOrNull { it.isu == isu && it.sharing.schedule }
         }
 
         val recentFriends = (listOfNotNull(pendingFriend) + state.recentFriends)
-            .filter { it.settings.scheduleSharing }
-            .distinctBy(UserData::isu)
+            .filter { it.sharing.schedule }
+            .distinctBy(UserSummary::isu)
             .take(MAX_RECENT_FRIENDS)
         recentAdapter.submitItems(recentFriends, pendingFriend?.isu)
         friendsAdapter.setSelectedIsu(pendingFriend?.isu)
@@ -178,7 +182,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         binding.recyclerView.isVisible = !isEmpty
     }
 
-    private fun selectFriend(friend: UserData) {
+    private fun selectFriend(friend: UserSummary) {
         pendingFriend = friend
         friendsAdapter.setSelectedIsu(friend.isu)
         updateRecentSelection()
@@ -195,8 +199,8 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     private fun updateRecentSelection() {
         val state = viewModel.uiState.value as? FriendSelectorUiState.Success ?: return
         val items = (listOfNotNull(pendingFriend) + state.recentFriends)
-            .filter { it.settings.scheduleSharing }
-            .distinctBy(UserData::isu)
+            .filter { it.sharing.schedule }
+            .distinctBy(UserSummary::isu)
             .take(MAX_RECENT_FRIENDS)
         recentAdapter.submitItems(items, pendingFriend?.isu)
     }

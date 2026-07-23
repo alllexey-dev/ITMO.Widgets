@@ -10,12 +10,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
-import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemSportBookingBinding
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.domain.model.sport.SportAutoSignEntry
 import dev.alllexey.itmowidgets.domain.model.sport.SportBooking
+import dev.alllexey.itmowidgets.domain.model.sport.SportQueueEntryStatus
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -93,9 +93,16 @@ class SportBookingAdapter(
                     val total = sign.total
                     val tries = sign.notificationAttempts
                     val maxTries = sign.maxNotificationAttempts
-                    val triesText = if (status == QueueEntryStatus.NOTIFIED) " (попыток: ${tries} / ${maxTries})" else ""
+                    val triesText = if (status == SportQueueEntryStatus.NOTIFIED) {
+                        " (попыток: $tries / $maxTries)"
+                    } else {
+                        ""
+                    }
 
-                    if (status == QueueEntryStatus.WAITING || status == QueueEntryStatus.NOTIFIED) {
+                    if (
+                        status == SportQueueEntryStatus.WAITING ||
+                        status == SportQueueEntryStatus.NOTIFIED
+                    ) {
                         if (sign is SportAutoSignEntry) {
                             setupChip(
                                 text = "Прогноз: $position из $total$triesText",
@@ -113,7 +120,10 @@ class SportBookingAdapter(
                         }
                     }
 
-                    if (status == QueueEntryStatus.GAVE_UP_NOTIFYING || status == QueueEntryStatus.EXPIRED) {
+                    if (
+                        status == SportQueueEntryStatus.GAVE_UP_NOTIFYING ||
+                        status == SportQueueEntryStatus.EXPIRED
+                    ) {
                         setupChip(
                             text = "Не удалось записать :(",
                             iconRes = R.drawable.ic_error,

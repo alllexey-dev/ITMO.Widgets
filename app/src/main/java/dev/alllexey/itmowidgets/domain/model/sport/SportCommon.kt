@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.domain.model.sport
 
-import dev.alllexey.itmowidgets.core.model.SportQueueEntry
 import java.time.OffsetDateTime
 
 sealed interface SportCommon {

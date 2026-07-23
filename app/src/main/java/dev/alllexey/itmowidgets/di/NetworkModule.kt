@@ -14,9 +14,15 @@ import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
 import dev.alllexey.itmowidgets.core.util.OffsetDateTimeAdapter
 import dev.alllexey.itmowidgets.core.utils.RuntimeTypeAdapterFactory
+import dev.alllexey.itmowidgets.domain.model.sport.SportAutoSignEntry
+import dev.alllexey.itmowidgets.domain.model.sport.SportAutoSignQueue
 import dev.alllexey.itmowidgets.domain.model.sport.SportBooking
 import dev.alllexey.itmowidgets.domain.model.sport.SportCommon
+import dev.alllexey.itmowidgets.domain.model.sport.SportFreeSignEntry
+import dev.alllexey.itmowidgets.domain.model.sport.SportFreeSignQueue
 import dev.alllexey.itmowidgets.domain.model.sport.SportLesson
+import dev.alllexey.itmowidgets.domain.model.sport.SportQueue
+import dev.alllexey.itmowidgets.domain.model.sport.SportQueueEntry
 import dev.alllexey.itmowidgets.domain.model.sport.UnavailableReason
 import dev.alllexey.itmowidgets.domain.model.sport.UnavailableReasonTypeAdapter
 import java.time.OffsetDateTime
@@ -64,15 +70,25 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideGson(client: WidgetsClient): Gson {
-        val factory = RuntimeTypeAdapterFactory
+        val commonFactory = RuntimeTypeAdapterFactory
             .of(SportCommon::class.java, "type", true)
             .registerSubtype(SportBooking::class.java, "booking")
             .registerSubtype(SportLesson::class.java, "lesson")
+        val entryFactory = RuntimeTypeAdapterFactory
+            .of(SportQueueEntry::class.java, "type", true)
+            .registerSubtype(SportFreeSignEntry::class.java, "free")
+            .registerSubtype(SportAutoSignEntry::class.java, "auto")
+        val queueFactory = RuntimeTypeAdapterFactory
+            .of(SportQueue::class.java, "type", true)
+            .registerSubtype(SportFreeSignQueue::class.java, "free")
+            .registerSubtype(SportAutoSignQueue::class.java, "auto")
 
         return client.gson.newBuilder()
             .registerTypeAdapter(UnavailableReason::class.java, UnavailableReasonTypeAdapter())
             .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter())
-            .registerTypeAdapterFactory(factory)
+            .registerTypeAdapterFactory(commonFactory)
+            .registerTypeAdapterFactory(entryFactory)
+            .registerTypeAdapterFactory(queueFactory)
             .create()
     }
 }

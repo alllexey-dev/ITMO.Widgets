@@ -20,8 +20,9 @@ import com.google.gson.Gson
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.ui.CircularProgressBar
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.ui.CircularProgressBar
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportMyBinding
 import dev.alllexey.itmowidgets.domain.model.sport.SportBooking
@@ -138,6 +139,17 @@ class SportMyFragment : Fragment(), SportBookingListener {
                     is SportMyUiState.Error -> showError(state)
                 }
             }.launchIn(viewLifecycleOwner.lifecycleScope)
+
+        viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .onEach { event ->
+                when (event) {
+                    is SportMyEvent.ShowError -> Toast.makeText(
+                        requireContext(),
+                        event.error.messageRes(),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     // endregion
@@ -165,7 +177,11 @@ class SportMyFragment : Fragment(), SportBookingListener {
             showEmptyState()
         }
         if (state.hasPartialError) {
-            Toast.makeText(requireContext(), "Не удалось загрузить некоторые данные", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                R.string.common_partial_load_error,
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -178,7 +194,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
         binding.emptyStateLayout.isVisible = true
         binding.stateIcon.setImageResource(R.drawable.ic_error)
         binding.stateTitle.setText(R.string.common_load_error_title)
-        binding.stateDescription.text = state.message
+        binding.stateDescription.setText(state.error.messageRes())
         binding.buttonGoToSchedule.setText(R.string.common_retry)
         binding.buttonGoToSchedule.setOnClickListener { viewModel.refreshAllData() }
     }

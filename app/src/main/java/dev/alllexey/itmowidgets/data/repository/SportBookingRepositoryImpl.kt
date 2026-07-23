@@ -2,8 +2,6 @@ package dev.alllexey.itmowidgets.data.repository
 
 import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
-import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.util.MergedDataState
@@ -11,22 +9,22 @@ import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.core.util.throwableOrNull
 import dev.alllexey.itmowidgets.data.mapper.toBooking
 import dev.alllexey.itmowidgets.data.mapper.toBookings
+import dev.alllexey.itmowidgets.domain.model.sport.SportAutoSignEntry
 import dev.alllexey.itmowidgets.domain.model.sport.SportBooking
+import dev.alllexey.itmowidgets.domain.model.sport.SportFreeSignEntry
 import dev.alllexey.itmowidgets.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.domain.repository.SportDataRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class SportBookingRepositoryImpl @Inject constructor(
-    val settings: AppSettingsStorage,
-    val sportDataRepository: SportDataRepository,
-    val myItmoApi: MyItmoApi,
-    val widgetsApi: ItmoWidgetsApi
+    private val settings: AppSettingsStorage,
+    private val sportDataRepository: SportDataRepository,
+    private val myItmoApi: MyItmoApi,
+    private val widgetsApi: ItmoWidgetsApi
 ) : SportBookingRepository {
 
     private val bookingsFlow = MutableSharedFlow<DataState<List<SportBooking>>>(replay = 1)
@@ -87,15 +85,10 @@ class SportBookingRepositoryImpl @Inject constructor(
                 response.body()?.result?.flatMap { it.toBookings() }
             } ?: emptyList()
 
-            // sync bookings
             if (settings.getCustomServicesEnabled()) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    try {
+                runCatching {
+                    withContext(Dispatchers.IO) {
                         widgetsApi.syncSportLessons(result.map { it.lessonId })
-                    } catch (e: Exception) {
-                        // todo: proper exception handling
-                        println("couldn't sync lessons")
-                        e.printStackTrace()
                     }
                 }
             }
