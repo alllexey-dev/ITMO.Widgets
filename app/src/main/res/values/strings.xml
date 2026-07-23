@@ -25,6 +25,11 @@
     <string name="common_retry">Повторить</string>
     <string name="common_reset">Сбросить</string>
     <string name="common_load_error_title">Не удалось загрузить данные</string>
+    <string name="common_error_network">Проверь подключение к интернету и попробуй снова.</string>
+    <string name="common_error_unauthorized">Сессия истекла. Войди в аккаунт снова.</string>
+    <string name="common_error_forbidden">У тебя нет доступа к этим данным.</string>
+    <string name="common_error_not_found">Запрошенные данные не найдены.</string>
+    <string name="common_error_unknown">Что-то пошло не так. Попробуй снова.</string>
     <string name="common_options">Дополнительные действия</string>
     <string name="common_friends">Друзья</string>
     <string name="common_close">Закрыть</string>

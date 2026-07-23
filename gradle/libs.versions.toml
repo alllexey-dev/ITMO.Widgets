@@ -21,6 +21,8 @@ googleGmsGoogleServices = "4.4.4"
 firebaseMessaging = "25.0.1"
 navigationFragmentKtx = "2.9.5"
 hilt = "2.57.2"
+konsist = "0.17.3"
+coroutines = "1.9.0"
 
 [libraries]
 android-image-cropper = { module = "com.vanniktech:android-image-cropper", version.ref = "androidImageCropper" }
@@ -44,6 +46,8 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
+konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

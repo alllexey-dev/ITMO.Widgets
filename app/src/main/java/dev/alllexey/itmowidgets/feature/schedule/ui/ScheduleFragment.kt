@@ -12,13 +12,19 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentScheduleBinding
 import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
 import dev.alllexey.itmowidgets.feature.friendselector.FriendSelectorDialogFragment
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleEvent
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleUiState
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
+import dev.alllexey.itmowidgets.feature.schedule.presentation.SelectedUser
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -163,16 +169,24 @@ class ScheduleFragment : Fragment() {
 
         viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach { state ->
+                renderSelectedUser(state.selectedUser)
                 when (state) {
                     is ScheduleUiState.Loading -> showLoading()
-                    is ScheduleUiState.Success -> renderSchedule(state)
+                    is ScheduleUiState.Content -> renderSchedule(state)
+                    is ScheduleUiState.Empty -> showEmptySchedule()
                     is ScheduleUiState.Error -> showError(state)
                 }
             }.launchIn(viewLifecycleOwner.lifecycleScope)
 
-        viewModel.selectedUser.flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach {
-                renderSelectedUser(it)
+        viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .onEach { event ->
+                when (event) {
+                    is ScheduleEvent.ShowError -> Snackbar.make(
+                        binding.root,
+                        event.error.messageRes(),
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
             }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
@@ -204,7 +218,7 @@ class ScheduleFragment : Fragment() {
     private fun openFriendSelector() {
         FriendSelectorDialogFragment.show(
             parentFragmentManager,
-            viewModel.selectedUser.value?.isu
+            viewModel.uiState.value.selectedUser?.isu
         )
     }
 
@@ -225,14 +239,8 @@ class ScheduleFragment : Fragment() {
         }
     }
 
-    private fun renderSchedule(state: ScheduleUiState.Success) {
-        swipe.isRefreshing = state.isLoadingMore
-
-        if (state.schedule.isEmpty()) {
-            adapter.submitList(emptyList())
-            showEmptySchedule()
-            return
-        }
+    private fun renderSchedule(state: ScheduleUiState.Content) {
+        swipe.isRefreshing = state.loadingMore
 
         binding.scheduleStateContainer.isVisible = false
 
@@ -249,7 +257,7 @@ class ScheduleFragment : Fragment() {
         binding.scheduleStateContainer.isVisible = true
         binding.scheduleStateIcon.setImageResource(R.drawable.ic_error)
         binding.scheduleStateTitle.setText(R.string.common_load_error_title)
-        binding.scheduleStateDescription.text = state.message
+        binding.scheduleStateDescription.setText(state.error.messageRes())
         binding.scheduleStateAction.isVisible = true
     }
 
@@ -261,6 +269,8 @@ class ScheduleFragment : Fragment() {
     }
 
     private fun showEmptySchedule() {
+        swipe.isRefreshing = false
+        adapter.submitList(emptyList())
         binding.scheduleStateContainer.isVisible = true
         binding.scheduleStateIcon.setImageResource(R.drawable.ic_event_note)
         binding.scheduleStateTitle.setText(R.string.schedule_empty_title)

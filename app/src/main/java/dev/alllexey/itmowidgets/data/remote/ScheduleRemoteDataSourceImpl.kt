@@ -8,10 +8,10 @@ import dev.alllexey.itmowidgets.core.util.ScheduleUtil
 import dev.alllexey.itmowidgets.core.utils.toDto
 import dev.alllexey.itmowidgets.data.mapper.toModel
 import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import retrofit2.awaitResponse
 import java.time.LocalDate
 import javax.inject.Inject
@@ -34,25 +34,26 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
                 .awaitResponse()
 
             if (!response.isSuccessful) {
-                throw RuntimeException("API error ${response.code()}")
+                throw HttpException(response)
             }
 
             val days = response.body()?.data ?: return@withContext emptyList()
 
-            // sync lessons
             if (settings.getCustomServicesEnabled()) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        widgetsApi.syncLessons(LessonSyncRequest(
-                            lessons = days.flatMap { it.lessons.map { lesson -> lesson.toDto(it.date) } },
+                try {
+                    widgetsApi.syncLessons(
+                        LessonSyncRequest(
+                            lessons = days.flatMap { day ->
+                                day.lessons.map { lesson -> lesson.toDto(day.date) }
+                            },
                             from = start,
                             to = end
-                        ))
-                    } catch (e: Exception) {
-                        // todo: proper exception handling
-                        println("couldn't sync lessons")
-                        e.printStackTrace()
-                    }
+                        )
+                    )
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (_: Exception) {
+                    // Backend synchronization is best-effort and must not hide MyITMO schedule data.
                 }
             }
 
