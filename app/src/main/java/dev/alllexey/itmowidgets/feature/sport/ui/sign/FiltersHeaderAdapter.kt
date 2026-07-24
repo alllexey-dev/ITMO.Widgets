@@ -62,14 +62,6 @@ class FiltersHeaderAdapter(
         init {
             binding.calendarWeekPager.adapter = weekPagerAdapter
             binding.calendarWeekPager.isUserInputEnabled = false
-            binding.calendarWeekPager.addOnLayoutChangeListener {
-                    pager, left, _, right, _, oldLeft, _, oldRight, _ ->
-                val width = right - left
-                val oldWidth = oldRight - oldLeft
-                if (width > 0 && width != oldWidth) {
-                    pager.post { weekPagerAdapter.setPageWidth(width) }
-                }
-            }
             binding.calendarWeekPager.registerOnPageChangeCallback(
                 object : ViewPager2.OnPageChangeCallback() {
                     override fun onPageSelected(position: Int) {

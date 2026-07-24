@@ -192,7 +192,16 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         lessons: List<SportLesson>,
         contentState: ContentState?
     ) {
-        contentStateAdapter.submitState(null)
+        if (contentState == null) {
+            // Hide the placeholder up front so it never shows up underneath a fresh list.
+            contentStateAdapter.submitState(null)
+            lessonsAdapter.submitList(lessons)
+            return
+        }
+
+        // Keep whatever is on screen until the new list is committed. Clearing the
+        // placeholder first would hide and re-show an unchanged one, which reads as a
+        // flicker when moving between two days that both have no lessons.
         lessonsAdapter.submitList(lessons) {
             contentStateAdapter.submitState(contentState)
         }

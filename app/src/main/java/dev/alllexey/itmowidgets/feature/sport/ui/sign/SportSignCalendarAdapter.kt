@@ -21,7 +21,6 @@ class SportSignCalendarAdapter(
 ) : RecyclerView.Adapter<SportSignCalendarAdapter.CalendarViewHolder>() {
 
     private var days: List<CalendarDay> = emptyList()
-    private var itemWidthPx: Int = 0
 
     fun submitList(newDays: List<CalendarDay>) {
         val oldDays = days
@@ -42,13 +41,6 @@ class SportSignCalendarAdapter(
         }
     }
 
-    fun setItemWidth(widthPx: Int) {
-        if (itemWidthPx != widthPx && widthPx > 0) {
-            itemWidthPx = widthPx
-            notifyDataSetChanged()
-        }
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CalendarViewHolder {
         val binding = ItemCalendarDayBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -59,7 +51,7 @@ class SportSignCalendarAdapter(
     }
 
     override fun onBindViewHolder(holder: CalendarViewHolder, position: Int) {
-        holder.bind(days[position], itemWidthPx, animateSelection = false)
+        holder.bind(days[position], animateSelection = false)
     }
 
     override fun onBindViewHolder(
@@ -73,7 +65,6 @@ class SportSignCalendarAdapter(
         }
         holder.bind(
             days[position],
-            itemWidthPx,
             animateSelection = payloads.contains(SELECTION_PAYLOAD)
         )
     }
@@ -95,14 +86,8 @@ class SportSignCalendarAdapter(
             }
         }
 
-        fun bind(day: CalendarDay, itemWidthPx: Int, animateSelection: Boolean) {
+        fun bind(day: CalendarDay, animateSelection: Boolean) {
             val context = itemView.context
-
-            if (itemWidthPx > 0) {
-                binding.root.layoutParams = binding.root.layoutParams.apply {
-                    width = itemWidthPx
-                }
-            }
 
             binding.dayOfMonthText.alpha = 1f
             binding.dayOfWeekText.alpha = 1f
