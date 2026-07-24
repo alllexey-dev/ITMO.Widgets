@@ -66,6 +66,11 @@ class AppSettingsStorage(
     suspend fun getSportSignHideTimeSelectorEnabled(): Boolean =
         read()[SPORT_SIGN_TIME_SELECTOR_ENABLED] ?: true
 
+    fun observeCustomServicesEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[CUSTOM_SERVICES_ENABLED] ?: false }
+            .distinctUntilChanged()
+
     fun observeSportSignHideTeacherSelectorEnabled(): Flow<Boolean> =
         preferences
             .map { it[SPORT_SIGN_TEACHER_SELECTOR_ENABLED] ?: true }

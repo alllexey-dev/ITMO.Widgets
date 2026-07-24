@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.feature.me.domain.CustomServicesRepository
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -18,6 +19,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
@@ -28,7 +31,8 @@ sealed interface MeUiState {
         val scoreOverride: SportScoreOverride?,
         val lessonTemplatesEnabled: Boolean,
         val refreshTokenConfigured: Boolean,
-        val refreshTokenUpdateInProgress: Boolean
+        val refreshTokenUpdateInProgress: Boolean,
+        val customServicesEnabled: Boolean
     ) : MeUiState
 }
 
@@ -44,14 +48,30 @@ class MeViewModel @Inject constructor(
     private val timeOverrideController: AcademicTimeOverrideController,
     private val sportScoreOverrideController: SportScoreOverrideController,
     private val sportLessonTemplateController: SportLessonTemplateController,
-    private val refreshTokenController: DebugRefreshTokenController
+    private val refreshTokenController: DebugRefreshTokenController,
+    private val customServicesRepository: CustomServicesRepository
 ) : ViewModel() {
 
-    private val mutableUiState = MutableStateFlow<MeUiState>(readState())
+    private val mutableUiState =
+        MutableStateFlow<MeUiState>(readState(customServicesEnabled = false))
     val uiState: StateFlow<MeUiState> = mutableUiState.asStateFlow()
 
     private val eventChannel = Channel<MeEvent>(Channel.BUFFERED)
     val events: Flow<MeEvent> = eventChannel.receiveAsFlow()
+
+    init {
+        customServicesRepository.observeEnabled()
+            .onEach { enabled ->
+                mutableUiState.value = currentState().copy(customServicesEnabled = enabled)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun setCustomServicesEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            customServicesRepository.setEnabled(enabled)
+        }
+    }
 
     fun setDateOverride(date: LocalDate?) {
         timeOverrideController.setOverrideDate(date)
@@ -99,14 +119,19 @@ class MeViewModel @Inject constructor(
         eventChannel.trySend(MeEvent.RecreateActivity)
     }
 
-    private fun readState(): MeUiState.Content {
+    private fun currentState(): MeUiState.Content = mutableUiState.value as MeUiState.Content
+
+    private fun readState(
+        customServicesEnabled: Boolean = currentState().customServicesEnabled
+    ): MeUiState.Content {
         return MeUiState.Content(
             effectiveDate = timeProvider.today(),
             dateOverride = timeOverrideController.getOverrideDate(),
             scoreOverride = sportScoreOverrideController.getOverride(),
             lessonTemplatesEnabled = sportLessonTemplateController.isEnabled(),
             refreshTokenConfigured = refreshTokenController.hasRefreshToken(),
-            refreshTokenUpdateInProgress = false
+            refreshTokenUpdateInProgress = false,
+            customServicesEnabled = customServicesEnabled
         )
     }
 }

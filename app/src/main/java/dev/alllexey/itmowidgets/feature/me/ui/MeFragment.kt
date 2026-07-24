@@ -46,6 +46,7 @@ class MeFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.debugCustomServicesContainer.isVisible = BuildConfig.DEBUG
         binding.debugRefreshTokenContainer.isVisible = BuildConfig.DEBUG
         binding.debugTimeContainer.isVisible = BuildConfig.DEBUG
         binding.debugSportScoreContainer.isVisible = BuildConfig.DEBUG
@@ -133,6 +134,11 @@ class MeFragment : Fragment() {
         binding.debugSportLessonsSwitch.isChecked = state.lessonTemplatesEnabled
         binding.debugSportLessonsSwitch.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setLessonTemplatesEnabled(isChecked)
+        }
+        binding.debugCustomServicesSwitch.setOnCheckedChangeListener(null)
+        binding.debugCustomServicesSwitch.isChecked = state.customServicesEnabled
+        binding.debugCustomServicesSwitch.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setCustomServicesEnabled(isChecked)
         }
     }
 

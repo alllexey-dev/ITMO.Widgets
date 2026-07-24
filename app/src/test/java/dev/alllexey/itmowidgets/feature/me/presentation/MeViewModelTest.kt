@@ -8,11 +8,14 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.feature.me.domain.CustomServicesRepository
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -30,16 +33,20 @@ class MeViewModelTest {
     private val scoreController = FakeScoreOverrideController()
     private val lessonController = FakeLessonTemplateController()
     private val refreshTokenController = FakeRefreshTokenController()
-    private val viewModel = MeViewModel(
+    private val customServicesRepository = FakeCustomServicesRepository()
+
+    private fun createViewModel(): MeViewModel = MeViewModel(
         timeProvider = FixedTimeProvider,
         timeOverrideController = timeController,
         sportScoreOverrideController = scoreController,
         sportLessonTemplateController = lessonController,
-        refreshTokenController = refreshTokenController
+        refreshTokenController = refreshTokenController,
+        customServicesRepository = customServicesRepository
     )
 
     @Test
     fun `publishes debug values through state`() {
+        val viewModel = createViewModel()
         val date = LocalDate.of(2026, 2, 1)
 
         viewModel.setDateOverride(date)
@@ -53,15 +60,48 @@ class MeViewModelTest {
                 scoreOverride = SportScoreOverride(120, 10),
                 lessonTemplatesEnabled = true,
                 refreshTokenConfigured = false,
-                refreshTokenUpdateInProgress = false
+                refreshTokenUpdateInProgress = false,
+                customServicesEnabled = false
             ),
             viewModel.uiState.value
         )
     }
 
     @Test
+    fun `enables custom services through the repository`() =
+        runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setCustomServicesEnabled(true)
+        advanceUntilIdle()
+
+        assertEquals(true, customServicesRepository.enabled.value)
+        assertEquals(
+            true,
+            (viewModel.uiState.value as MeUiState.Content).customServicesEnabled
+        )
+    }
+
+    @Test
+    fun `keeps custom services state across debug changes`() =
+        runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setCustomServicesEnabled(true)
+        advanceUntilIdle()
+
+        viewModel.setLessonTemplatesEnabled(true)
+
+        assertEquals(
+            true,
+            (viewModel.uiState.value as MeUiState.Content).customServicesEnabled
+        )
+    }
+
+    @Test
     fun `emits recreation event after a change`() =
         runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
         val event = async { viewModel.events.first() }
 
         viewModel.clearScoreOverride()
@@ -72,6 +112,7 @@ class MeViewModelTest {
     @Test
     fun `replaces refresh token without exposing it in state`() =
         runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
         val event = async { viewModel.events.first() }
 
         viewModel.replaceRefreshToken("  secret-refresh-token  ")
@@ -123,6 +164,16 @@ class MeViewModelTest {
 
         override fun setEnabled(enabled: Boolean) {
             this.enabled = enabled
+        }
+    }
+
+    private class FakeCustomServicesRepository : CustomServicesRepository {
+        val enabled = MutableStateFlow(false)
+
+        override fun observeEnabled(): Flow<Boolean> = enabled
+
+        override suspend fun setEnabled(enabled: Boolean) {
+            this.enabled.value = enabled
         }
     }
 
