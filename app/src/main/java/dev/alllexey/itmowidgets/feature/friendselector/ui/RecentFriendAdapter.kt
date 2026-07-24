@@ -19,11 +19,17 @@ class RecentFriendAdapter(
 
     private var items: List<RecentFriendItem> = listOf(RecentFriendItem.MySchedule)
     private var selectedIsu: Int? = null
+    private var currentUser: UserSummary? = null
 
-    fun submitItems(recentFriends: List<UserSummary>, selectedIsu: Int?) {
+    fun submitItems(
+        recentFriends: List<UserSummary>,
+        selectedIsu: Int?,
+        currentUser: UserSummary?
+    ) {
         items = listOf(RecentFriendItem.MySchedule) +
             recentFriends.map(RecentFriendItem::Friend)
         this.selectedIsu = selectedIsu
+        this.currentUser = currentUser
         notifyDataSetChanged()
     }
 
@@ -53,9 +59,15 @@ class RecentFriendAdapter(
                 is RecentFriendItem.Friend -> selectedIsu == item.user.isu
             }
 
-            binding.avatar.isVisible = friend != null
-            binding.myScheduleIcon.isVisible = friend == null
-            binding.avatar.setUser(friend)
+            // Own entry falls back to the generic icon until the profile is known.
+            val avatarUser = when (item) {
+                RecentFriendItem.MySchedule -> currentUser
+                is RecentFriendItem.Friend -> item.user
+            }
+
+            binding.avatar.isVisible = avatarUser != null
+            binding.myScheduleIcon.isVisible = avatarUser == null
+            binding.avatar.setUser(avatarUser)
             binding.name.text = friend?.name?.substringBefore(" ")
                 ?: binding.root.context.getString(R.string.friend_picker_my_schedule_short)
             binding.selectionIndicator.isVisible = isSelected

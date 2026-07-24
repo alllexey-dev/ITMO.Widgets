@@ -156,7 +156,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
             .filter { it.sharing.schedule }
             .distinctBy(UserSummary::isu)
             .take(MAX_RECENT_FRIENDS)
-        recentAdapter.submitItems(recentFriends, pendingFriend?.isu)
+        recentAdapter.submitItems(recentFriends, pendingFriend?.isu, state.currentUser)
         friendsAdapter.setSelectedIsu(pendingFriend?.isu)
         filterFriends(binding.searchInput.text?.toString().orEmpty())
         updateApplyButton()
@@ -170,7 +170,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         binding.applyButton.isEnabled = true
         allFriends = emptyList()
         pendingFriend = null
-        recentAdapter.submitItems(emptyList(), null)
+        recentAdapter.submitItems(emptyList(), null, currentUser())
         friendsAdapter.submitList(emptyList())
         updateApplyButton()
     }
@@ -228,7 +228,11 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
             .filter { it.sharing.schedule }
             .distinctBy(UserSummary::isu)
             .take(MAX_RECENT_FRIENDS)
-        recentAdapter.submitItems(items, pendingFriend?.isu)
+        recentAdapter.submitItems(items, pendingFriend?.isu, state.currentUser)
+    }
+
+    private fun currentUser(): UserSummary? {
+        return (viewModel.uiState.value as? FriendSelectorUiState.Content)?.currentUser
     }
 
     private fun updateApplyButton() {

@@ -113,6 +113,46 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
+    fun `exposes the signed-in user for the own-schedule entry`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val me = user(7, "Я Сам")
+            val friend = user(1, "Первый")
+            val viewModel = FriendSelectorViewModel(
+                FakeFriendRepository(
+                    initialState = FriendListState.Content(listOf(friend)),
+                    initialUser = me
+                ),
+                FakeHistory()
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(
+                me,
+                (viewModel.uiState.value as FriendSelectorUiState.Content).currentUser
+            )
+        }
+
+    @Test
+    fun `keeps friends visible when the profile is unavailable`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val friend = user(1, "Первый")
+            val viewModel = FriendSelectorViewModel(
+                FakeFriendRepository(
+                    initialState = FriendListState.Content(listOf(friend)),
+                    initialUser = null
+                ),
+                FakeHistory()
+            )
+
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value as FriendSelectorUiState.Content
+            assertEquals(listOf(friend), state.friends)
+            assertEquals(null, state.currentUser)
+        }
+
+    @Test
     fun `records confirmed selection`() =
         runTest(mainDispatcherRule.dispatcher) {
             val history = FakeHistory()
@@ -137,11 +177,17 @@ class FriendSelectorViewModelTest {
         )
     }
 
-    private class FakeFriendRepository(initialState: FriendListState) : FriendRepository {
+    private class FakeFriendRepository(
+        initialState: FriendListState,
+        initialUser: UserSummary? = null
+    ) : FriendRepository {
         val state = MutableStateFlow(initialState)
+        val user = MutableStateFlow(initialUser)
         var refreshRequests = 0
 
         override fun observeFriendList(): Flow<FriendListState> = state
+
+        override fun observeCurrentUser(): Flow<UserSummary?> = user
 
         override suspend fun refreshFriendList() {
             refreshRequests += 1

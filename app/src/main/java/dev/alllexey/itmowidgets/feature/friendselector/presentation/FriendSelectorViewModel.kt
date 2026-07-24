@@ -22,7 +22,8 @@ sealed class FriendSelectorUiState {
     data object Empty : FriendSelectorUiState()
     data class Content(
         val friends: List<UserSummary>,
-        val recentFriends: List<UserSummary>
+        val recentFriends: List<UserSummary>,
+        val currentUser: UserSummary? = null
     ) : FriendSelectorUiState()
     data class Error(val error: AppError) : FriendSelectorUiState()
 }
@@ -57,9 +58,10 @@ class FriendSelectorViewModel @Inject constructor(
         observeJob = viewModelScope.launch {
             combine(
                 repository.observeFriendList(),
+                repository.observeCurrentUser(),
                 refreshing
-            ) { state, isRefreshing ->
-                toUiState(state, isRefreshing)
+            ) { state, user, isRefreshing ->
+                toUiState(state, user, isRefreshing)
             }.collect { state ->
                 _uiState.value = state
             }
@@ -80,6 +82,7 @@ class FriendSelectorViewModel @Inject constructor(
 
     private suspend fun toUiState(
         state: FriendListState,
+        currentUser: UserSummary?,
         isRefreshing: Boolean
     ): FriendSelectorUiState {
         val friends = (state as? FriendListState.Content)?.friends
@@ -98,7 +101,11 @@ class FriendSelectorViewModel @Inject constructor(
                     val friendsByIsu = state.friends.associateBy(UserSummary::isu)
                     val recentFriends = history.getRecentIsu()
                         .mapNotNull(friendsByIsu::get)
-                    FriendSelectorUiState.Content(state.friends, recentFriends)
+                    FriendSelectorUiState.Content(
+                        friends = state.friends,
+                        recentFriends = recentFriends,
+                        currentUser = currentUser
+                    )
                 }
             }
             is FriendListState.Error -> FriendSelectorUiState.Error(state.error)

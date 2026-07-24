@@ -15,6 +15,12 @@ interface FriendRepository {
 
     fun observeFriendList(): Flow<FriendListState>
 
+    /**
+     * The signed-in user, or `null` while it is unknown — for example when custom
+     * services are disabled or the profile request failed.
+     */
+    fun observeCurrentUser(): Flow<UserSummary?>
+
     suspend fun refreshFriendList()
 
     val currentFriends: List<UserSummary>?

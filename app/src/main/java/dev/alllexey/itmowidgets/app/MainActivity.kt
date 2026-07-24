@@ -6,14 +6,21 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
+import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var backendIdentitySync: BackendIdentitySync
 
     private lateinit var binding: ActivityMainBinding
 
@@ -44,5 +51,9 @@ class MainActivity : AppCompatActivity() {
 
         val navController = navHostFragment.navController
         navView.setupWithNavController(navController)
+
+        if (savedInstanceState == null) {
+            lifecycleScope.launch { backendIdentitySync.sync() }
+        }
     }
 }
