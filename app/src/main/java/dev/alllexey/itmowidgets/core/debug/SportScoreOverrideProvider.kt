@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.core.debug
 
-import dev.alllexey.itmowidgets.domain.model.sport.SportScore
-
 data class SportScoreOverride(
     val attendances: Int,
     val bonus: Int
@@ -13,7 +11,7 @@ data class SportScoreOverride(
 }
 
 interface SportScoreOverrideProvider {
-    fun apply(score: SportScore): SportScore
+    fun getOverride(): SportScoreOverride?
 }
 
 interface SportScoreOverrideController {

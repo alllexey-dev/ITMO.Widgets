@@ -7,8 +7,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
-import dev.alllexey.itmowidgets.domain.repository.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow

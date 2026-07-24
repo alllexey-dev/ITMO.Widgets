@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.presentation
 
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 
 data class SelectedUser(
     val isu: Int,

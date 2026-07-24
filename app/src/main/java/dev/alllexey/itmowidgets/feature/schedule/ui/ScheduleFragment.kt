@@ -10,17 +10,18 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentScheduleBinding
-import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
-import dev.alllexey.itmowidgets.feature.friendselector.FriendSelectorDialogFragment
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleEvent
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleUiState
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
@@ -193,21 +194,21 @@ class ScheduleFragment : Fragment() {
     private fun setupFriendSelector() {
 
         parentFragmentManager.setFragmentResultListener(
-            FriendSelectorDialogFragment.RESULT_KEY,
+            FriendSelectionContract.RESULT_KEY,
             viewLifecycleOwner
         ) { _, bundle ->
 
-            if (bundle.getBoolean(FriendSelectorDialogFragment.RESULT_USE_MY_SCHEDULE)) {
+            if (bundle.getBoolean(FriendSelectionContract.RESULT_USE_MY_SCHEDULE)) {
                 selectUser(null)
             } else {
                 selectUser(
                     SelectedUser(
-                        isu = bundle.getInt(FriendSelectorDialogFragment.RESULT_USER_ISU),
+                        isu = bundle.getInt(FriendSelectionContract.RESULT_USER_ISU),
                         name = bundle.getString(
-                            FriendSelectorDialogFragment.RESULT_USER_NAME
+                            FriendSelectionContract.RESULT_USER_NAME
                         ).orEmpty(),
                         avatar = bundle.getString(
-                            FriendSelectorDialogFragment.RESULT_USER_PICTURE_URL
+                            FriendSelectionContract.RESULT_USER_PICTURE_URL
                         )
                     )
                 )
@@ -216,9 +217,15 @@ class ScheduleFragment : Fragment() {
     }
 
     private fun openFriendSelector() {
-        FriendSelectorDialogFragment.show(
-            parentFragmentManager,
-            viewModel.uiState.value.selectedUser?.isu
+        findNavController().navigate(
+            R.id.friend_selector,
+            Bundle().apply {
+                putInt(
+                    FriendSelectionContract.ARG_SELECTED_ISU,
+                    viewModel.uiState.value.selectedUser?.isu
+                        ?: FriendSelectionContract.NO_USER_ISU
+                )
+            }
         )
     }
 

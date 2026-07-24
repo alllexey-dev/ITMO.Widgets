@@ -15,10 +15,13 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.ScheduleUtil
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.core.util.dp
-import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
-import dev.alllexey.itmowidgets.domain.model.schedule.Lesson
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import java.time.Duration
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 class DayScheduleAdapter(
     private val timeProvider: AcademicTimeProvider
@@ -39,20 +42,18 @@ class DayScheduleAdapter(
         val lessons = daySchedule.lessons
         val context = holder.itemView.context
 
-        holder.dayTitle.text = ScheduleUtil.getRuDayOfWeek(date.dayOfWeek).replaceFirstChar { it.uppercase() }
-        holder.dayDate.text = context.getString(
-            R.string.schedule_date_format,
-            date.dayOfMonth,
-            ScheduleUtil.getRussianMonthInGenitiveCase(date.monthValue)
-        )
+        holder.dayTitle.text = date.dayOfWeek
+            .getDisplayName(TextStyle.FULL, RUSSIAN_LOCALE)
+            .replaceFirstChar { it.uppercase(RUSSIAN_LOCALE) }
+        holder.dayDate.text = date.format(DATE_FORMATTER)
 
         holder.numberOfLessons.text = if (lessons.isEmpty()) {
             context.getString(R.string.schedule_no_lessons)
         } else {
-            context.getString(
-                R.string.schedule_lesson_count,
+            context.resources.getQuantityString(
+                R.plurals.schedule_lesson_count,
                 lessons.size,
-                ScheduleUtil.lessonDeclension(lessons.size)
+                lessons.size
             )
         }
 
@@ -132,15 +133,11 @@ class DayScheduleAdapter(
 
             if (index < sortedLessons.size - 1) {
                 val nextLesson = sortedLessons[index + 1]
-                try {
-                    val currentEndTime = currentLesson.end
-                    val nextStartTime = nextLesson.start
-                    val breakDuration = Duration.between(currentEndTime, nextStartTime)
-                    if (breakDuration > BIG_BREAK_THRESHOLD) {
-                        processedList.add(ScheduleItem.BreakItem(currentEndTime, nextStartTime))
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                val currentEndTime = currentLesson.end
+                val nextStartTime = nextLesson.start
+                val breakDuration = Duration.between(currentEndTime, nextStartTime)
+                if (breakDuration > BIG_BREAK_THRESHOLD) {
+                    processedList.add(ScheduleItem.BreakItem(currentEndTime, nextStartTime))
                 }
             }
         }
@@ -154,6 +151,8 @@ class DayScheduleAdapter(
 
     companion object {
         private val BIG_BREAK_THRESHOLD = Duration.ofMinutes(60)
+        private val RUSSIAN_LOCALE = Locale.forLanguageTag("ru")
+        private val DATE_FORMATTER = DateTimeFormatter.ofPattern("d MMMM", RUSSIAN_LOCALE)
         private val ScheduleDiffCallback = object : DiffUtil.ItemCallback<DaySchedule>() {
             override fun areItemsTheSame(oldItem: DaySchedule, newItem: DaySchedule) = oldItem.date == newItem.date
             override fun areContentsTheSame(oldItem: DaySchedule, newItem: DaySchedule) = oldItem == newItem

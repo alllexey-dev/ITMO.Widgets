@@ -73,7 +73,9 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
 
             (card.layoutParams as? ViewGroup.MarginLayoutParams?)?.bottomMargin = if (item.isLastLesson) 0 else 16.dp
 
-            title.text = lesson.subjectName
+            title.text = lesson.subjectName.ifBlank {
+                itemView.context.getString(R.string.schedule_unknown_subject)
+            }
             timeStart.text = lesson.start.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
             timeEnd.text = lesson.end.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
 
@@ -92,16 +94,19 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
             }
 
             if (lesson.hasLocation()) {
-                locationRoom.text = lesson.room?.shorten() ?: ""
-                locationBuilding.text = lesson.building?.shorten(forceLength = 10) ?: ""
+                locationRoom.text = lesson.room?.shortTitle(itemView.context) ?: ""
+                locationBuilding.text = lesson.building?.shortTitle(
+                    context = itemView.context,
+                    maxLength = 10
+                ) ?: ""
                 locationLayout.visibility = View.VISIBLE
             } else {
                 locationLayout.visibility = View.GONE
             }
 
-            val typeColor = ContextCompat.getColor(itemView.context, lesson.typeId.color())
+            val typeColor = ContextCompat.getColor(itemView.context, lesson.typeId.colorRes())
             typeIndicator.imageTintList = ColorStateList.valueOf(typeColor)
-            typeLabel.text = lesson.typeId.name()
+            typeLabel.setText(lesson.typeId.nameRes())
             val context = itemView.context
             val color = context.color
 
@@ -143,7 +148,11 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
         private val breakText: TextView = itemView.findViewById(R.id.break_text)
 
         fun bind(item: ScheduleItem.BreakItem) {
-            breakText.text = "Перерыв с ${item.from} по ${item.to}"
+            breakText.text = itemView.context.getString(
+                R.string.schedule_break_range,
+                item.from,
+                item.to
+            )
         }
     }
 

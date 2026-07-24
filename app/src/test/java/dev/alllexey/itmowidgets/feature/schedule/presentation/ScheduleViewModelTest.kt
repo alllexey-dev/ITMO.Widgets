@@ -5,8 +5,8 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.domain.model.schedule.DaySchedule
-import dev.alllexey.itmowidgets.domain.repository.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow

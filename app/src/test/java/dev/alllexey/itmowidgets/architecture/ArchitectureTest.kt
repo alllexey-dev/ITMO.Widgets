@@ -10,39 +10,58 @@ class ArchitectureTest {
     private val productionScope = Konsist.scopeFromProduction()
 
     @Test
-    fun `domain does not gain new Android or transport dependencies`() {
+    fun `domain is independent from Android and transport details`() {
         productionScope.files
             .filter { it.packagee?.name?.contains(".domain") == true }
-            .filterNot { it.sourcePath() in legacyDomainLeakAllowlist }
             .assertFalse { file ->
                 file.imports.any { import ->
-                    forbiddenDomainImportPrefixes.any(import.name::startsWith)
+                    forbiddenDomainImports.any(import.name::startsWith) ||
+                        (
+                            import.name.startsWith(CORE_TRANSPORT_MODELS) &&
+                                import.name != SHARED_USER_MODEL
+                        )
                 }
             }
     }
 
     @Test
-    fun `ui does not depend on data implementations`() {
+    fun `ui depends on presentation and domain instead of infrastructure`() {
         productionScope.files
             .filter { it.packagee?.name?.contains(".ui") == true }
             .assertFalse { file ->
-                file.imports.any { it.name.contains(".data.") }
-            }
-    }
-
-    @Test
-    fun `sport presentation does not depend on transport clients or DTOs`() {
-        productionScope.files
-            .filter { it.packagee?.name?.startsWith("$SPORT_PACKAGE_PREFIX.") == true }
-            .assertFalse { file ->
                 file.imports.any { import ->
-                    forbiddenPresentationImportPrefixes.any(import.name::startsWith)
+                    forbiddenUiImports.any(import.name::startsWith)
                 }
             }
     }
 
     @Test
-    fun `features do not gain new cross feature dependencies`() {
+    fun `presentation does not depend on data or transport`() {
+        productionScope.files
+            .filter { it.packagee?.name?.contains(".presentation") == true }
+            .assertFalse { file ->
+                file.imports.any { import ->
+                    forbiddenPresentationImports.any(import.name::startsWith)
+                } ||
+                    "Throwable" in file.text ||
+                    ".message" in file.text
+            }
+    }
+
+    @Test
+    fun `data does not depend on ui or presentation`() {
+        productionScope.files
+            .filter { it.packagee?.name?.contains(".data") == true }
+            .assertFalse { file ->
+                file.imports.any { import ->
+                    import.name.contains(".ui.") ||
+                        import.name.contains(".presentation.")
+                }
+            }
+    }
+
+    @Test
+    fun `features do not depend directly on other features`() {
         productionScope.files
             .filter { it.packagee?.name?.startsWith(FEATURE_PACKAGE_PREFIX) == true }
             .assertFalse { file ->
@@ -59,9 +78,51 @@ class ArchitectureTest {
                         ?.substringBefore(".")
                         ?: return@any false
 
-                    sourceFeature != targetFeature &&
-                        "$sourceFeature->$targetFeature" !in legacyCrossFeatureAllowlist
+                    sourceFeature != targetFeature
                 }
+            }
+    }
+
+    @Test
+    fun `core does not depend on features`() {
+        productionScope.files
+            .filter { it.packagee?.name?.startsWith(CORE_PACKAGE_PREFIX) == true }
+            .assertFalse { file ->
+                file.imports.any { it.name.startsWith(FEATURE_PACKAGE_PREFIX) }
+            }
+    }
+
+    @Test
+    fun `legacy global data and domain buckets stay empty`() {
+        productionScope.files.assertFalse { file ->
+            val packageName = file.packagee?.name.orEmpty()
+            packageName == LEGACY_DATA_PACKAGE ||
+                packageName.startsWith("$LEGACY_DATA_PACKAGE.") ||
+                packageName == LEGACY_DOMAIN_PACKAGE ||
+                packageName.startsWith("$LEGACY_DOMAIN_PACKAGE.")
+        }
+    }
+
+    @Test
+    fun `view models live in presentation packages`() {
+        productionScope.classes()
+            .filter { declaration ->
+                declaration.name.endsWith("ViewModel") &&
+                    declaration.text.contains(": ViewModel")
+            }
+            .assertTrue { declaration ->
+                declaration.packagee?.name?.contains(".presentation") == true
+            }
+    }
+
+    @Test
+    fun `repository implementations stay in data and implement matching contracts`() {
+        productionScope.classes()
+            .filter { it.name.endsWith("RepositoryImpl") }
+            .assertTrue { repository ->
+                val contractName = repository.name.removeSuffix("Impl")
+                repository.packagee?.name?.contains(".data") == true &&
+                    ": $contractName" in repository.text
             }
     }
 
@@ -77,63 +138,80 @@ class ArchitectureTest {
     }
 
     @Test
-    fun `academic code does not gain direct system time calls`() {
+    fun `feature and storage code use injected time`() {
         productionScope.files
             .filter { file ->
                 val packageName = file.packagee?.name.orEmpty()
-                packageName.contains(".feature.") || packageName.contains(".data.")
+                packageName.startsWith(FEATURE_PACKAGE_PREFIX) ||
+                    packageName.startsWith(CORE_STORAGE_PACKAGE)
             }
-            .filterNot { it.sourcePath() in legacyDirectTimeAllowlist }
             .assertFalse { file ->
                 directSystemTimeCalls.any(file.text::contains)
             }
     }
 
     @Test
-    fun `repository implementations stay in data and implement contracts`() {
-        productionScope.classes()
-            .filter { it.name.endsWith("RepositoryImpl") }
-            .assertTrue { repository ->
-                repository.packagee?.name?.contains(".data.") == true &&
-                    repository.hasParent { it.name.endsWith("Repository") }
-            }
+    fun `production code does not use legacy preferences`() {
+        productionScope.files.assertFalse { file ->
+            "SharedPreferences" in file.text ||
+                "PreferenceManager" in file.text ||
+                "SharedPreferencesMigration" in file.text
+        }
     }
 
-    private fun com.lemonappdev.konsist.api.declaration.KoFileDeclaration.sourcePath(): String {
-        return path.substringAfter("app/src/main/java/")
+    @Test
+    fun `settings utility and friend history use DataStore`() {
+        productionScope.files
+            .filter {
+                it.name == "AppSettingsStorage.kt" ||
+                    it.name == "UtilityStorage.kt" ||
+                    it.name == "DataStoreFriendSelectionHistory.kt"
+            }
+            .assertTrue { file ->
+                "DataStore<Preferences>" in file.text
+            }
     }
 
     private companion object {
         const val FEATURE_PACKAGE_PREFIX =
             "dev.alllexey.itmowidgets.feature."
-        const val SPORT_PACKAGE_PREFIX =
-            "dev.alllexey.itmowidgets.feature.sport"
-
-        val forbiddenDomainImportPrefixes = listOf(
-            "android.",
-            "api.myitmo.",
+        const val CORE_PACKAGE_PREFIX =
+            "dev.alllexey.itmowidgets.core."
+        const val CORE_STORAGE_PACKAGE =
+            "dev.alllexey.itmowidgets.core.storage"
+        const val CORE_TRANSPORT_MODELS =
             "dev.alllexey.itmowidgets.core.model."
-        )
+        const val SHARED_USER_MODEL =
+            "dev.alllexey.itmowidgets.core.model.UserSummary"
+        const val LEGACY_DATA_PACKAGE =
+            "dev.alllexey.itmowidgets.data"
+        const val LEGACY_DOMAIN_PACKAGE =
+            "dev.alllexey.itmowidgets.domain"
 
-        val legacyDomainLeakAllowlist = setOf(
-            "dev/alllexey/itmowidgets/domain/repository/QrBitmapCache.kt"
-        )
-
-        val forbiddenPresentationImportPrefixes = listOf(
+        val forbiddenDomainImports = listOf(
+            "android.",
+            "androidx.",
             "api.myitmo.",
-            "dev.alllexey.itmowidgets.core.model.",
+            "com.google.gson.",
+            "dev.alllexey.itmowidgets.R",
             "dev.alllexey.itmowidgets.core.network.",
+            "dev.alllexey.itmowidgets.core.storage.",
+            "dev.alllexey.itmowidgets.core.ui."
+        )
+
+        val forbiddenUiImports = listOf(
+            "api.myitmo.",
+            "dev.alllexey.itmowidgets.core.network.",
+            "dev.alllexey.itmowidgets.core.storage.",
             "dev.alllexey.itmowidgets.data."
         )
 
-        val legacyCrossFeatureAllowlist = setOf(
-            "schedule->friendselector"
-        )
-
-        val legacyDirectTimeAllowlist = setOf(
-            "dev/alllexey/itmowidgets/data/local/QrCodeLocalDataSourceImpl.kt",
-            "dev/alllexey/itmowidgets/data/local/ScheduleLocalDataSourceImpl.kt",
-            "dev/alllexey/itmowidgets/feature/qr/util/QrBitmapRenderer.kt"
+        val forbiddenPresentationImports = listOf(
+            "android.",
+            "api.myitmo.",
+            "dev.alllexey.itmowidgets.core.network.",
+            "dev.alllexey.itmowidgets.core.storage.",
+            "dev.alllexey.itmowidgets.data."
         )
 
         val directSystemTimeCalls = listOf(

@@ -1,106 +1,102 @@
 package dev.alllexey.itmowidgets.core.storage
 
-import android.content.Context
-import android.content.SharedPreferences
-import androidx.core.content.ContextCompat
-import androidx.core.content.edit
-import dev.alllexey.itmowidgets.R
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.alllexey.itmowidgets.core.model.settings.QrWidgetState
 import dev.alllexey.itmowidgets.core.util.safeEnumOf
-import dev.alllexey.itmowidgets.feature.qr.ui.QrWidgetState
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
+import java.io.IOException
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 
-class UtilityStorage @Inject constructor(
-    val prefs: SharedPreferences,
-    @param:ApplicationContext val context: Context
+class UtilityStorage(
+    private val dataStore: DataStore<Preferences>,
+    private val appVersionName: String
 ) {
 
-    companion object KEYS {
-        const val FIREBASE_TOKEN_KEY = "firebase_token"
-        const val LAST_UPDATE_TIMESTAMP_KEY = "last_update_timestamp"
-        const val QR_WIDGET_STATE_PREFIX = "qr_widget_state_"
-        const val LESSON_WIDGET_STYLE_CHANGED_KEY = "lesson_widget_style_changed"
-        const val SKIPPED_VERSION_KEY = "skipped_version"
-        const val VERSION_NOTIFICATION_TIMESTAMP_KEY = "version_notification_timestamp"
-        const val ONBOARDING_COMPLETED_KEY = "onboarding_completed"
+    suspend fun getFirebaseToken(): String? = read()[FIREBASE_TOKEN]
+
+    suspend fun getLastUpdateTimestamp(): Long =
+        read()[LAST_UPDATE_TIMESTAMP] ?: 0L
+
+    suspend fun getLessonWidgetStyleChanged(): Boolean =
+        read()[LESSON_WIDGET_STYLE_CHANGED] ?: true
+
+    suspend fun getQrWidgetState(appWidgetId: Int): QrWidgetState {
+        val state = read()[stringPreferencesKey("$QR_WIDGET_STATE_PREFIX$appWidgetId")]
+        return safeEnumOf(state, QrWidgetState.HIDDEN)
     }
 
-    // region getters
+    suspend fun getVersionNotificationTimestamp(): Long =
+        read()[VERSION_NOTIFICATION_TIMESTAMP] ?: 0L
 
-    fun getFirebaseToken(): String? {
-        return prefs.getString(FIREBASE_TOKEN_KEY, null)
+    suspend fun getSkippedVersion(): String {
+        return read()[SKIPPED_VERSION] ?: appVersionName
     }
 
-    fun getLastUpdateTimestamp(): Long {
-        return prefs.getLong(LAST_UPDATE_TIMESTAMP_KEY, 0)
+    suspend fun getOnboardingCompleted(): Boolean =
+        read()[ONBOARDING_COMPLETED] ?: false
+
+    suspend fun setQrWidgetState(appWidgetId: Int, state: QrWidgetState) {
+        write(stringPreferencesKey("$QR_WIDGET_STATE_PREFIX$appWidgetId"), state.name)
     }
 
-    fun getLessonWidgetStyleChanged(): Boolean {
-        return prefs.getBoolean(LESSON_WIDGET_STYLE_CHANGED_KEY, true)
+    suspend fun setFirebaseToken(token: String?) {
+        updateNullable(FIREBASE_TOKEN, token)
     }
 
-    fun getQrWidgetState(appWidgetId: Int): QrWidgetState {
-        val stateName = prefs.getString("$QR_WIDGET_STATE_PREFIX$appWidgetId", QrWidgetState.HIDDEN.name)
-        return safeEnumOf(stateName, QrWidgetState.HIDDEN)
+    suspend fun setLastUpdateTimestamp(timestamp: Long) {
+        write(LAST_UPDATE_TIMESTAMP, timestamp)
     }
 
-    fun getVersionNotificationTimestamp(): Long {
-        return prefs.getLong(VERSION_NOTIFICATION_TIMESTAMP_KEY, 0L)
+    suspend fun setLessonWidgetStyleChanged(changed: Boolean) {
+        write(LESSON_WIDGET_STYLE_CHANGED, changed)
     }
 
-    fun getSkippedVersion(): String {
-        return prefs.getString(SKIPPED_VERSION_KEY, null) ?: ContextCompat.getString(context, R.string.app_version)
+    suspend fun setSkippedVersion(version: String) {
+        write(SKIPPED_VERSION, version)
     }
 
-    fun getOnboardingCompleted(): Boolean {
-        return prefs.getBoolean(ONBOARDING_COMPLETED_KEY, false)
+    suspend fun setOnboardingCompleted(completed: Boolean) {
+        write(ONBOARDING_COMPLETED, completed)
     }
 
-    // endregion getters
+    suspend fun setVersionNotificationTimestamp(notifiedAt: Long) {
+        write(VERSION_NOTIFICATION_TIMESTAMP, notifiedAt)
+    }
 
-    // region setters
+    private suspend fun read(): Preferences {
+        return dataStore.data
+            .catch { error ->
+                if (error is IOException) emit(emptyPreferences()) else throw error
+            }
+            .first()
+    }
 
-    fun setQrWidgetState(appWidgetId: Int, state: QrWidgetState) {
-        prefs.edit(commit = true) {
-            putString("$QR_WIDGET_STATE_PREFIX$appWidgetId", state.name)
+    private suspend fun <T> write(key: Preferences.Key<T>, value: T) {
+        dataStore.edit { preferences -> preferences[key] = value }
+    }
+
+    private suspend fun <T> updateNullable(key: Preferences.Key<T>, value: T?) {
+        dataStore.edit { preferences ->
+            if (value == null) preferences.remove(key) else preferences[key] = value
         }
     }
 
-    fun setFirebaseToken(token: String?) {
-        prefs.edit(commit = true) {
-            putString(FIREBASE_TOKEN_KEY, token)
-        }
+    companion object {
+        private const val QR_WIDGET_STATE_PREFIX = "qr_widget_state_"
+        private val FIREBASE_TOKEN = stringPreferencesKey("firebase_token")
+        private val LAST_UPDATE_TIMESTAMP = longPreferencesKey("last_update_timestamp")
+        private val LESSON_WIDGET_STYLE_CHANGED =
+            booleanPreferencesKey("lesson_widget_style_changed")
+        private val SKIPPED_VERSION = stringPreferencesKey("skipped_version")
+        private val VERSION_NOTIFICATION_TIMESTAMP =
+            longPreferencesKey("version_notification_timestamp")
+        private val ONBOARDING_COMPLETED =
+            booleanPreferencesKey("onboarding_completed")
     }
-
-    fun setLastUpdateTimestamp(timestamp: Long) {
-        prefs.edit(commit = true) {
-            putLong(LAST_UPDATE_TIMESTAMP_KEY, timestamp)
-        }
-    }
-
-    fun setLessonWidgetStyleChanged(lessonWidgetStyleChanged: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(LESSON_WIDGET_STYLE_CHANGED_KEY, lessonWidgetStyleChanged)
-        }
-    }
-
-    fun setSkippedVersion(skippedVersion: String) {
-        prefs.edit(commit = true) {
-            putString(SKIPPED_VERSION_KEY, skippedVersion)
-        }
-    }
-
-    fun setOnboardingCompleted(completed: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(ONBOARDING_COMPLETED_KEY, completed)
-        }
-    }
-
-    fun setVersionNotificationTimestamp(notifiedAt: Long) {
-        prefs.edit(commit = true) {
-            putLong(VERSION_NOTIFICATION_TIMESTAMP_KEY, notifiedAt)
-        }
-    }
-
-    // endregion setters
 }

@@ -12,8 +12,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookSubjectBinding
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.text.NumberFormat
@@ -97,28 +100,28 @@ class RecordbookSubjectFragment : Fragment() {
                         binding.swipeRefreshLayout.isRefreshing = true
                         binding.stateContainer.isVisible = false
                     }
-                    is RecordbookSubjectUiState.Success -> {
+                    is RecordbookSubjectUiState.Content -> {
                         binding.swipeRefreshLayout.isRefreshing = false
-                        if (state.controls.isEmpty()) {
-                            binding.swipeRefreshLayout.isVisible = false
-                            binding.stateContainer.isVisible = true
-                            binding.stateTitle.setText(R.string.recordbook_details_empty_title)
-                            binding.stateDescription.setText(
-                                R.string.recordbook_details_empty_description
-                            )
-                            binding.stateAction.isVisible = false
-                        } else {
-                            binding.swipeRefreshLayout.isVisible = true
-                            binding.stateContainer.isVisible = false
-                            adapter.submitControls(state.controls)
-                        }
+                        binding.swipeRefreshLayout.isVisible = true
+                        binding.stateContainer.isVisible = false
+                        adapter.submitControls(state.controls)
+                    }
+                    RecordbookSubjectUiState.Empty -> {
+                        binding.swipeRefreshLayout.isRefreshing = false
+                        binding.swipeRefreshLayout.isVisible = false
+                        binding.stateContainer.isVisible = true
+                        binding.stateTitle.setText(R.string.recordbook_details_empty_title)
+                        binding.stateDescription.setText(
+                            R.string.recordbook_details_empty_description
+                        )
+                        binding.stateAction.isVisible = false
                     }
                     is RecordbookSubjectUiState.Error -> {
                         binding.swipeRefreshLayout.isVisible = false
                         binding.swipeRefreshLayout.isRefreshing = false
                         binding.stateContainer.isVisible = true
                         binding.stateTitle.setText(R.string.common_load_error_title)
-                        binding.stateDescription.text = state.message
+                        binding.stateDescription.setText(state.error.messageRes())
                         binding.stateAction.isVisible = true
                     }
                 }

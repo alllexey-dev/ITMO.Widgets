@@ -1,156 +1,165 @@
 package dev.alllexey.itmowidgets.core.storage
 
-import android.content.SharedPreferences
-import androidx.core.content.edit
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.alllexey.itmowidgets.core.model.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.model.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.util.safeEnumOf
-import dev.alllexey.itmowidgets.feature.qr.ui.QrAnimationType
-import dev.alllexey.itmowidgets.feature.widget.schedule.LessonStyle
-import javax.inject.Inject
+import java.io.IOException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
-class AppSettingsStorage @Inject constructor(val prefs: SharedPreferences) {
+class AppSettingsStorage(
+    private val dataStore: DataStore<Preferences>
+) {
 
-    companion object KEYS {
-        const val CUSTOM_SERVICES_ENABLED_KEY = "custom_services_enabled"
-        const val SINGLE_LESSON_WIDGET_STYLE_KEY = "single_lesson_widget_style"
-        const val LIST_LESSON_WIDGET_STYLE_KEY = "list_lesson_widget_style"
-        const val WIDGET_SMART_SCHEDULING_ENABLED_KEY = "widget_smart_scheduling_enabled"
-        const val WIDGET_FORWARD_SCHEDULING_ENABLED_KEY = "widget_forward_scheduling_enabled"
-        const val WIDGET_HIDE_TEACHER_ENABLED_KEY = "widget_hide_teacher_enabled"
-        const val WIDGET_HIDE_PREVIOUS_LESSONS_ENABLED_KEY = "widget_hide_previous_lessons_enabled"
-        const val WIDGET_FUTURE_SCHEDULE_ENABLED_KEY = "widget_future_schedule_enabled"
-        const val QR_DYNAMIC_COLORS_ENABLED_KEY = "qr_dynamic_colors_enabled"
-        const val QR_SPOILER_ENABLED_KEY = "qr_spoiler_enabled"
-        const val QR_SPOILER_ANIMATION_TYPE_KEY = "qr_spoiler_animation_type"
-        const val SPORT_SIGN_TEACHER_SELECTOR_ENABLED_KEY = "sport_sign_teacher_selector_enabled"
-        const val SPORT_SIGN_TIME_SELECTOR_ENABLED_KEY = "sport_sign_hide_time_selector_enabled"
+    private val preferences = dataStore.data.catch { error ->
+        if (error is IOException) emit(emptyPreferences()) else throw error
     }
 
-    // region getters
+    suspend fun getCustomServicesEnabled(): Boolean =
+        read()[CUSTOM_SERVICES_ENABLED] ?: false
 
-    fun getCustomServicesEnabled(): Boolean {
-        return prefs.getBoolean(CUSTOM_SERVICES_ENABLED_KEY, false)
+    suspend fun getWidgetSmartSchedulingEnabled(): Boolean =
+        read()[WIDGET_SMART_SCHEDULING_ENABLED] ?: true
+
+    suspend fun getWidgetForwardSchedulingEnabled(): Boolean =
+        read()[WIDGET_FORWARD_SCHEDULING_ENABLED] ?: true
+
+    suspend fun getSingleLessonWidgetStyle(): LessonStyle {
+        return safeEnumOf(read()[SINGLE_LESSON_WIDGET_STYLE], LessonStyle.DOT)
     }
 
-    fun getWidgetSmartSchedulingEnabled(): Boolean {
-        return prefs.getBoolean(WIDGET_SMART_SCHEDULING_ENABLED_KEY, true)
+    suspend fun getLessonListWidgetStyle(): LessonStyle {
+        return safeEnumOf(read()[LIST_LESSON_WIDGET_STYLE], LessonStyle.DOT)
     }
 
-    fun getWidgetForwardSchedulingEnabled(): Boolean {
-        return prefs.getBoolean(WIDGET_FORWARD_SCHEDULING_ENABLED_KEY, true)
+    suspend fun getWidgetHideTeacherEnabled(): Boolean =
+        read()[WIDGET_HIDE_TEACHER_ENABLED] ?: false
+
+    suspend fun getWidgetHidePreviousLessonsEnabled(): Boolean =
+        read()[WIDGET_HIDE_PREVIOUS_LESSONS_ENABLED] ?: false
+
+    suspend fun getWidgetFutureScheduleEnabled(): Boolean =
+        read()[WIDGET_FUTURE_SCHEDULE_ENABLED] ?: false
+
+    suspend fun getQrDynamicColorsEnabled(): Boolean =
+        read()[QR_DYNAMIC_COLORS_ENABLED] ?: true
+
+    suspend fun getQrSpoilerEnabled(): Boolean =
+        read()[QR_SPOILER_ENABLED] ?: true
+
+    suspend fun getQrSpoilerAnimationType(): QrAnimationType {
+        return safeEnumOf(read()[QR_SPOILER_ANIMATION_TYPE], QrAnimationType.CIRCLE)
     }
 
-    fun getSingleLessonWidgetStyle(): LessonStyle {
-        val styleName = prefs.getString(SINGLE_LESSON_WIDGET_STYLE_KEY, null)
-        return safeEnumOf(styleName, LessonStyle.DOT)
+    suspend fun getSportSignHideTeacherSelectorEnabled(): Boolean =
+        read()[SPORT_SIGN_TEACHER_SELECTOR_ENABLED] ?: true
+
+    suspend fun getSportSignHideTimeSelectorEnabled(): Boolean =
+        read()[SPORT_SIGN_TIME_SELECTOR_ENABLED] ?: true
+
+    fun observeSportSignHideTeacherSelectorEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[SPORT_SIGN_TEACHER_SELECTOR_ENABLED] ?: true }
+            .distinctUntilChanged()
+
+    fun observeSportSignHideTimeSelectorEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[SPORT_SIGN_TIME_SELECTOR_ENABLED] ?: true }
+            .distinctUntilChanged()
+
+    suspend fun setCustomServicesEnabled(enabled: Boolean) {
+        write(CUSTOM_SERVICES_ENABLED, enabled)
     }
 
-    fun getLessonListWidgetStyle(): LessonStyle {
-        val styleName = prefs.getString(LIST_LESSON_WIDGET_STYLE_KEY, null)
-        return safeEnumOf(styleName, LessonStyle.DOT)
+    suspend fun setWidgetSmartSchedulingEnabled(enabled: Boolean) {
+        write(WIDGET_SMART_SCHEDULING_ENABLED, enabled)
     }
 
-    fun getWidgetHideTeacherEnabled(): Boolean {
-        return prefs.getBoolean(WIDGET_HIDE_TEACHER_ENABLED_KEY, false)
+    suspend fun setWidgetForwardSchedulingEnabled(enabled: Boolean) {
+        write(WIDGET_FORWARD_SCHEDULING_ENABLED, enabled)
     }
 
-    fun getWidgetHidePreviousLessonsEnabled(): Boolean {
-        return prefs.getBoolean(WIDGET_HIDE_PREVIOUS_LESSONS_ENABLED_KEY, false)
+    suspend fun setSingleLessonWidgetStyle(style: LessonStyle) {
+        write(SINGLE_LESSON_WIDGET_STYLE, style.name)
     }
 
-    fun getWidgetFutureScheduleEnabled(): Boolean {
-        return prefs.getBoolean(WIDGET_FUTURE_SCHEDULE_ENABLED_KEY, false)
+    suspend fun setListLessonWidgetStyle(style: LessonStyle) {
+        write(LIST_LESSON_WIDGET_STYLE, style.name)
     }
 
-    fun getQrDynamicColorsEnabled(): Boolean {
-        return prefs.getBoolean(QR_DYNAMIC_COLORS_ENABLED_KEY, true)
+    suspend fun setWidgetHideTeacherEnabled(enabled: Boolean) {
+        write(WIDGET_HIDE_TEACHER_ENABLED, enabled)
     }
 
-    fun getQrSpoilerEnabled(): Boolean {
-        return prefs.getBoolean(QR_SPOILER_ENABLED_KEY, true)
+    suspend fun setWidgetHidePreviousLessonsEnabled(enabled: Boolean) {
+        write(WIDGET_HIDE_PREVIOUS_LESSONS_ENABLED, enabled)
     }
 
-    fun getQrSpoilerAnimationType(): QrAnimationType {
-        val animationTypeName = prefs.getString(QR_SPOILER_ANIMATION_TYPE_KEY, null)
-        return safeEnumOf(animationTypeName, QrAnimationType.CIRCLE)
+    suspend fun setWidgetFutureScheduleEnabled(enabled: Boolean) {
+        write(WIDGET_FUTURE_SCHEDULE_ENABLED, enabled)
     }
 
-    fun getSportSignHideTeacherSelectorEnabled(): Boolean {
-        return prefs.getBoolean(SPORT_SIGN_TEACHER_SELECTOR_ENABLED_KEY, true)
+    suspend fun setQrSpoilerEnabled(enabled: Boolean) {
+        write(QR_SPOILER_ENABLED, enabled)
     }
 
-    fun getSportSignHideTimeSelectorEnabled(): Boolean {
-        return prefs.getBoolean(SPORT_SIGN_TIME_SELECTOR_ENABLED_KEY, true)
+    suspend fun setQrDynamicColorsEnabled(enabled: Boolean) {
+        write(QR_DYNAMIC_COLORS_ENABLED, enabled)
     }
 
-    // endregion getters
-
-    // region setters
-
-    fun setCustomServicesEnabled(enabled: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(CUSTOM_SERVICES_ENABLED_KEY, enabled)
-        }
+    suspend fun setQrSpoilerAnimationType(type: QrAnimationType) {
+        write(QR_SPOILER_ANIMATION_TYPE, type.name)
     }
 
-    fun setWidgetSmartSchedulingEnabled(smartScheduling: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(WIDGET_SMART_SCHEDULING_ENABLED_KEY, smartScheduling)
-        }
+    suspend fun setSportSignHideTeacherSelectorEnabled(enabled: Boolean) {
+        write(SPORT_SIGN_TEACHER_SELECTOR_ENABLED, enabled)
     }
 
-    fun setWidgetForwardSchedulingEnabled(forwardScheduling: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(WIDGET_FORWARD_SCHEDULING_ENABLED_KEY, forwardScheduling)
-        }
+    suspend fun setSportSignHideTimeSelectorEnabled(enabled: Boolean) {
+        write(SPORT_SIGN_TIME_SELECTOR_ENABLED, enabled)
     }
 
-    fun setSingleLessonWidgetStyle(style: LessonStyle) {
-        prefs.edit(commit = true) {
-            putString(SINGLE_LESSON_WIDGET_STYLE_KEY, style.name)
-        }
+    private suspend fun read(): Preferences = preferences.first()
+
+    private suspend fun <T> write(key: Preferences.Key<T>, value: T) {
+        dataStore.edit { preferences -> preferences[key] = value }
     }
 
-    fun setListLessonWidgetStyle(style: LessonStyle) {
-        prefs.edit(commit = true) {
-            putString(LIST_LESSON_WIDGET_STYLE_KEY, style.name)
-        }
+    companion object {
+        private val CUSTOM_SERVICES_ENABLED =
+            booleanPreferencesKey("custom_services_enabled")
+        private val SINGLE_LESSON_WIDGET_STYLE =
+            stringPreferencesKey("single_lesson_widget_style")
+        private val LIST_LESSON_WIDGET_STYLE =
+            stringPreferencesKey("list_lesson_widget_style")
+        private val WIDGET_SMART_SCHEDULING_ENABLED =
+            booleanPreferencesKey("widget_smart_scheduling_enabled")
+        private val WIDGET_FORWARD_SCHEDULING_ENABLED =
+            booleanPreferencesKey("widget_forward_scheduling_enabled")
+        private val WIDGET_HIDE_TEACHER_ENABLED =
+            booleanPreferencesKey("widget_hide_teacher_enabled")
+        private val WIDGET_HIDE_PREVIOUS_LESSONS_ENABLED =
+            booleanPreferencesKey("widget_hide_previous_lessons_enabled")
+        private val WIDGET_FUTURE_SCHEDULE_ENABLED =
+            booleanPreferencesKey("widget_future_schedule_enabled")
+        private val QR_DYNAMIC_COLORS_ENABLED =
+            booleanPreferencesKey("qr_dynamic_colors_enabled")
+        private val QR_SPOILER_ENABLED =
+            booleanPreferencesKey("qr_spoiler_enabled")
+        private val QR_SPOILER_ANIMATION_TYPE =
+            stringPreferencesKey("qr_spoiler_animation_type")
+        private val SPORT_SIGN_TEACHER_SELECTOR_ENABLED =
+            booleanPreferencesKey("sport_sign_teacher_selector_enabled")
+        private val SPORT_SIGN_TIME_SELECTOR_ENABLED =
+            booleanPreferencesKey("sport_sign_hide_time_selector_enabled")
     }
-
-    fun setWidgetHideTeacherEnabled(hideTeacher: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(WIDGET_HIDE_TEACHER_ENABLED_KEY, hideTeacher)
-        }
-    }
-
-    fun setWidgetHidePreviousLessonsEnabled(hidePreviousLessons: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(WIDGET_HIDE_PREVIOUS_LESSONS_ENABLED_KEY, hidePreviousLessons)
-        }
-    }
-
-    fun setWidgetFutureScheduleEnabled(futureSchedule: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(WIDGET_FUTURE_SCHEDULE_ENABLED_KEY, futureSchedule)
-        }
-    }
-
-    fun setQrSpoilerEnabled(qrSpoilerEnabled: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(QR_SPOILER_ENABLED_KEY, qrSpoilerEnabled)
-        }
-    }
-
-    fun setQrDynamicColorsEnabled(qrDynamicColors: Boolean) {
-        prefs.edit(commit = true) {
-            putBoolean(QR_DYNAMIC_COLORS_ENABLED_KEY, qrDynamicColors)
-        }
-    }
-
-    fun setQrSpoilerAnimationType(qrAnimationType: QrAnimationType) {
-        prefs.edit(commit = true) {
-            putString(QR_SPOILER_ANIMATION_TYPE_KEY, qrAnimationType.name)
-        }
-    }
-
-    // endregion setters
 }

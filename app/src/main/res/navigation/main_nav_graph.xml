@@ -29,6 +29,18 @@
         android:label="Schedule"
         tools:layout="@layout/fragment_schedule" />
 
+    <dialog
+        android:id="@+id/friend_selector"
+        android:name="dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment"
+        android:label="@string/friend_picker_title">
+
+        <argument
+            android:name="arg_selected_isu"
+            android:defaultValue="-1"
+            app:argType="integer" />
+
+    </dialog>
+
     <fragment
         android:id="@+id/navigation_home"
         android:name="dev.alllexey.itmowidgets.feature.home.ui.HomeFragment"
@@ -37,7 +49,7 @@
 
     <fragment
         android:id="@+id/navigation_sport"
-        android:name="dev.alllexey.itmowidgets.feature.sport.common.SportFragment"
+        android:name="dev.alllexey.itmowidgets.feature.sport.ui.common.SportFragment"
         android:label="Sport"
         tools:layout="@layout/fragment_sport" />
 

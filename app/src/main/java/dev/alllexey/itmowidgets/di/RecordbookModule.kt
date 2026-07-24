@@ -4,8 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dev.alllexey.itmowidgets.data.repository.RecordbookRepositoryImpl
-import dev.alllexey.itmowidgets.domain.repository.RecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import javax.inject.Singleton
 
 @Module

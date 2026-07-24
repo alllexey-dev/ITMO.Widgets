@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.domain.model.user.UserSummary
+import dev.alllexey.itmowidgets.core.model.UserSummary
 
 class AvatarView @JvmOverloads constructor(
     context: Context,

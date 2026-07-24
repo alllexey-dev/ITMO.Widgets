@@ -10,8 +10,8 @@ import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookSectionBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookSubjectBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookSummaryBinding
-import dev.alllexey.itmowidgets.domain.model.recordbook.RecordbookSubject
-import dev.alllexey.itmowidgets.domain.model.recordbook.RecordbookSubjectStatus
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
 import java.text.NumberFormat
 
 sealed interface RecordbookListItem {
@@ -120,7 +120,7 @@ class RecordbookAdapter(
             }
             binding.name.text = subject.name.trim()
             binding.type.text = subject.controlType.trim()
-            binding.rate.text = subject.displayRate
+            binding.rate.text = subject.displayRate(binding.root.context)
             binding.rate.setTextColor(
                 if (subject.status == RecordbookSubjectStatus.ATTENTION) {
                     colors.error

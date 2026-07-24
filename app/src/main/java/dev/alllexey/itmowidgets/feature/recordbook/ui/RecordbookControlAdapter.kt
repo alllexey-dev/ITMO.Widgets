@@ -9,7 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookControlBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookSectionBinding
-import dev.alllexey.itmowidgets.domain.model.recordbook.RecordbookControl
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControlCategory
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -23,18 +24,18 @@ class RecordbookControlAdapter :
     ListAdapter<ControlListItem, RecyclerView.ViewHolder>(Diff) {
 
     fun submitControls(controls: List<RecordbookControl>) {
-        val grouped = controls.groupBy(::category)
+        val grouped = controls.groupBy(RecordbookControl::category)
         val order = listOf(
-            ControlCategory.FINAL,
-            ControlCategory.HOMEWORK,
-            ControlCategory.TESTS,
-            ControlCategory.OTHER
+            RecordbookControlCategory.FINAL,
+            RecordbookControlCategory.HOMEWORK,
+            RecordbookControlCategory.TESTS,
+            RecordbookControlCategory.OTHER
         )
         submitList(buildList {
             order.forEach { category ->
                 val values = grouped[category].orEmpty()
                 if (values.isNotEmpty()) {
-                    add(ControlListItem.Section(category.titleRes))
+                    add(ControlListItem.Section(category.titleRes()))
                     addAll(values.map(ControlListItem::Control))
                 }
             }
@@ -101,13 +102,6 @@ class RecordbookControlAdapter :
         }
     }
 
-    private enum class ControlCategory(val titleRes: Int) {
-        FINAL(R.string.recordbook_final_section),
-        HOMEWORK(R.string.recordbook_homework_section),
-        TESTS(R.string.recordbook_tests_section),
-        OTHER(R.string.recordbook_other_section)
-    }
-
     private object Diff : DiffUtil.ItemCallback<ControlListItem>() {
         override fun areItemsTheSame(
             oldItem: ControlListItem,
@@ -136,20 +130,17 @@ class RecordbookControlAdapter :
             Locale.forLanguageTag("ru")
         )
 
-        fun category(control: RecordbookControl): ControlCategory {
-            val name = control.name.lowercase()
-            return when {
-                name.contains("дополнитель") || name == "зачет" || name == "зачёт" ||
-                    name.contains("экзамен") -> ControlCategory.FINAL
-                name.contains("homework") || name.contains("домаш") -> ControlCategory.HOMEWORK
-                name.contains("test") || name.contains("practice") ||
-                    name.contains("контроль") -> ControlCategory.TESTS
-                else -> ControlCategory.OTHER
-            }
-        }
-
         fun formatNumber(value: Double): String = NumberFormat.getNumberInstance().apply {
             maximumFractionDigits = 1
         }.format(value)
+    }
+}
+
+private fun RecordbookControlCategory.titleRes(): Int {
+    return when (this) {
+        RecordbookControlCategory.FINAL -> R.string.recordbook_final_section
+        RecordbookControlCategory.HOMEWORK -> R.string.recordbook_homework_section
+        RecordbookControlCategory.TESTS -> R.string.recordbook_tests_section
+        RecordbookControlCategory.OTHER -> R.string.recordbook_other_section
     }
 }

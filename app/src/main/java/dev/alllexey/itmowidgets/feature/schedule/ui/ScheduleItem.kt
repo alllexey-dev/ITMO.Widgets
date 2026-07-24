@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.ui
 
-import dev.alllexey.itmowidgets.domain.model.schedule.Lesson
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import java.time.LocalTime
 
 sealed interface ScheduleItem {

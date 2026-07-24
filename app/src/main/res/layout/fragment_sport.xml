@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".feature.sport.common.SportFragment">
+    tools:context=".feature.sport.ui.common.SportFragment">
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/sport_tab_layout"

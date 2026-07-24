@@ -1,71 +1,72 @@
 package dev.alllexey.itmowidgets.core.util
 
+import dev.alllexey.itmowidgets.core.result.AppError
+
 sealed interface DataState<out T> {
     data class Success<out T>(val data: T) : DataState<T>
-    data class Error(val throwable: Throwable) : DataState<Nothing>
+    data class Error(val error: AppError) : DataState<Nothing>
 }
 
 sealed interface CustomDataState<out T> {
     data object Disabled : CustomDataState<Nothing>
     data class Success<out T>(val data: T) : CustomDataState<T>
-    data class Error(val throwable: Throwable) : CustomDataState<Nothing>
+    data class Error(val error: AppError) : CustomDataState<Nothing>
 }
 
 sealed interface MergedDataState<out T> {
     data class Success<out T>(val data: T) : MergedDataState<T>
     data class PartialSuccess<out T>(
         val data: T,
-        val throwable: Throwable
+        val error: AppError
     ) : MergedDataState<T>
-    data class Error(val throwable: Throwable) : MergedDataState<Nothing>
-
+    data class Error(val error: AppError) : MergedDataState<Nothing>
 
     companion object {
-        fun <T> of(data: T, throwable: Throwable?): MergedDataState<T> {
-            return throwable?.let { PartialSuccess(data, it) } ?: Success(data)
+        fun <T> of(data: T, error: AppError?): MergedDataState<T> {
+            return error?.let { PartialSuccess(data, it) } ?: Success(data)
         }
     }
 }
 
 inline fun <T, R> DataState<T>.fold(
     onSuccess: (T) -> R,
-    onError: (Throwable) -> R
+    onError: (AppError) -> R
 ): R = when (this) {
     is DataState.Success -> onSuccess(data)
-    is DataState.Error -> onError(throwable)
+    is DataState.Error -> onError(error)
 }
 
 inline fun <T, R> CustomDataState<T>.fold(
     onDisabled: () -> R,
     onSuccess: (T) -> R,
-    onError: (Throwable) -> R
+    onError: (AppError) -> R
 ): R = when (this) {
     CustomDataState.Disabled -> onDisabled()
     is CustomDataState.Success -> onSuccess(data)
-    is CustomDataState.Error -> onError(throwable)
+    is CustomDataState.Error -> onError(error)
 }
 
 inline fun <T, R> MergedDataState<T>.fold(
     onSuccess: (T) -> R,
-    onPartialSuccess: (T, Throwable) -> R,
-    onError: (Throwable) -> R
+    onPartialSuccess: (T, AppError) -> R,
+    onError: (AppError) -> R
 ): R = when (this) {
     is MergedDataState.Success -> onSuccess(data)
-    is MergedDataState.PartialSuccess -> onPartialSuccess(data, throwable)
-    is MergedDataState.Error -> onError(throwable)
+    is MergedDataState.PartialSuccess -> onPartialSuccess(data, error)
+    is MergedDataState.Error -> onError(error)
 }
 
 fun <T> DataState<T>.dataOrNull(): T? =
     (this as? DataState.Success)?.data
 
-fun DataState<*>.throwableOrNull(): Throwable? =
-    (this as? DataState.Error)?.throwable
+fun DataState<*>.errorOrNull(): AppError? =
+    (this as? DataState.Error)?.error
 
 fun <T> CustomDataState<T>.dataOrNull(): T? =
     (this as? CustomDataState.Success)?.data
 
-fun CustomDataState<*>.throwableOrNull(): Throwable? =
-    (this as? CustomDataState.Error)?.throwable
+fun CustomDataState<*>.errorOrNull(): AppError? =
+    (this as? CustomDataState.Error)?.error
 
 fun <T> MergedDataState<T>.dataOrNull(): T? = when (this) {
     is MergedDataState.Success -> data
@@ -73,10 +74,10 @@ fun <T> MergedDataState<T>.dataOrNull(): T? = when (this) {
     is MergedDataState.Error -> null
 }
 
-fun MergedDataState<*>.throwableOrNull(): Throwable? = when (this) {
+fun MergedDataState<*>.errorOrNull(): AppError? = when (this) {
     is MergedDataState.Success -> null
-    is MergedDataState.PartialSuccess -> throwable
-    is MergedDataState.Error -> throwable
+    is MergedDataState.PartialSuccess -> error
+    is MergedDataState.Error -> error
 }
 
 val DataState<*>.isSuccess get() = this is DataState.Success

@@ -5,7 +5,7 @@
     android:id="@+id/swipeRefreshLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".feature.sport.my.SportMyFragment">
+    tools:context=".feature.sport.ui.my.SportMyFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

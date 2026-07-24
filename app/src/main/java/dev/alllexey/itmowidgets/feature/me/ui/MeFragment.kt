@@ -5,23 +5,28 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
-import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
-import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
-import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.databinding.DialogSportScoreOverrideBinding
+import dev.alllexey.itmowidgets.databinding.DialogDebugRefreshTokenBinding
 import dev.alllexey.itmowidgets.databinding.FragmentMeBinding
+import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.feature.me.presentation.MeEvent
+import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
+import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import javax.inject.Inject
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 @AndroidEntryPoint
 class MeFragment : Fragment() {
@@ -29,17 +34,7 @@ class MeFragment : Fragment() {
     private var _binding: FragmentMeBinding? = null
     private val binding get() = _binding!!
 
-    @Inject
-    lateinit var timeProvider: AcademicTimeProvider
-
-    @Inject
-    lateinit var timeOverrideController: AcademicTimeOverrideController
-
-    @Inject
-    lateinit var sportScoreOverrideController: SportScoreOverrideController
-
-    @Inject
-    lateinit var sportLessonTemplateController: SportLessonTemplateController
+    private val viewModel: MeViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,29 +46,23 @@ class MeFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.debugRefreshTokenContainer.isVisible = BuildConfig.DEBUG
         binding.debugTimeContainer.isVisible = BuildConfig.DEBUG
         binding.debugSportScoreContainer.isVisible = BuildConfig.DEBUG
         binding.debugSportLessonsContainer.isVisible = BuildConfig.DEBUG
         if (!BuildConfig.DEBUG) return
 
-        renderDebugDate()
-        renderDebugSportScore()
-        binding.debugTimeSelectButton.setOnClickListener { showDatePicker() }
-        binding.debugTimeResetButton.setOnClickListener {
-            timeOverrideController.setOverrideDate(null)
-            requireActivity().recreate()
+        observeState()
+        binding.debugRefreshTokenConfigureButton.setOnClickListener {
+            showRefreshTokenDialog()
         }
+        binding.debugTimeSelectButton.setOnClickListener { showDatePicker() }
+        binding.debugTimeResetButton.setOnClickListener { viewModel.setDateOverride(null) }
         binding.debugSportScoreConfigureButton.setOnClickListener {
             showSportScoreOverrideDialog()
         }
         binding.debugSportScoreResetButton.setOnClickListener {
-            sportScoreOverrideController.setOverride(null)
-            requireActivity().recreate()
-        }
-        binding.debugSportLessonsSwitch.isChecked = sportLessonTemplateController.isEnabled()
-        binding.debugSportLessonsSwitch.setOnCheckedChangeListener { _, isChecked ->
-            sportLessonTemplateController.setEnabled(isChecked)
-            requireActivity().recreate()
+            viewModel.clearScoreOverride()
         }
     }
 
@@ -83,14 +72,14 @@ class MeFragment : Fragment() {
     }
 
     private fun showDatePicker() {
-        val initialDate = timeOverrideController.getOverrideDate() ?: timeProvider.today()
+        val state = viewModel.uiState.value as MeUiState.Content
+        val initialDate = state.dateOverride ?: state.effectiveDate
         DatePickerDialog(
             requireContext(),
             { _, year, month, dayOfMonth ->
-                timeOverrideController.setOverrideDate(
+                viewModel.setDateOverride(
                     LocalDate.of(year, month + 1, dayOfMonth)
                 )
-                requireActivity().recreate()
             },
             initialDate.year,
             initialDate.monthValue - 1,
@@ -98,8 +87,104 @@ class MeFragment : Fragment() {
         ).show()
     }
 
-    private fun renderDebugDate() {
-        val overrideDate = timeOverrideController.getOverrideDate()
+    private fun observeState() {
+        viewModel.uiState
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .onEach { state ->
+                when (state) {
+                    is MeUiState.Content -> renderContent(state)
+                }
+            }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+
+        viewModel.events
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .onEach { event ->
+                when (event) {
+                    MeEvent.RecreateActivity -> requireActivity().recreate()
+                    MeEvent.RefreshTokenUpdated -> {
+                        Toast.makeText(
+                            requireContext(),
+                            R.string.debug_refresh_token_updated,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        requireActivity().recreate()
+                    }
+                    is MeEvent.RefreshTokenUpdateFailed -> {
+                        Toast.makeText(
+                            requireContext(),
+                            getString(
+                                R.string.debug_refresh_token_failed,
+                                getString(event.error.messageRes())
+                            ),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    private fun renderContent(state: MeUiState.Content) {
+        renderDebugRefreshToken(state)
+        renderDebugDate(state)
+        renderDebugSportScore(state)
+        binding.debugSportLessonsSwitch.setOnCheckedChangeListener(null)
+        binding.debugSportLessonsSwitch.isChecked = state.lessonTemplatesEnabled
+        binding.debugSportLessonsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setLessonTemplatesEnabled(isChecked)
+        }
+    }
+
+    private fun showRefreshTokenDialog() {
+        val dialogBinding = DialogDebugRefreshTokenBinding.inflate(layoutInflater)
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.debug_refresh_token_dialog_title)
+            .setView(dialogBinding.root)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.debug_refresh_token_save, null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val token = dialogBinding.refreshTokenInput.text?.toString().orEmpty()
+                if (token.isBlank()) {
+                    dialogBinding.refreshTokenLayout.error =
+                        getString(R.string.debug_refresh_token_required)
+                } else {
+                    dialogBinding.refreshTokenInput.text?.clear()
+                    viewModel.replaceRefreshToken(token)
+                    dialog.dismiss()
+                }
+            }
+        }
+        dialog.show()
+    }
+
+    private fun renderDebugRefreshToken(state: MeUiState.Content) {
+        binding.debugRefreshTokenValue.setText(
+            if (state.refreshTokenConfigured) {
+                R.string.debug_refresh_token_configured
+            } else {
+                R.string.debug_refresh_token_not_configured
+            }
+        )
+        binding.debugRefreshTokenConfigureButton.isEnabled =
+            !state.refreshTokenUpdateInProgress
+        binding.debugRefreshTokenConfigureButton.setText(
+            when {
+                state.refreshTokenUpdateInProgress ->
+                    R.string.debug_refresh_token_checking
+                state.refreshTokenConfigured ->
+                    R.string.debug_refresh_token_replace
+                else ->
+                    R.string.debug_refresh_token_add
+            }
+        )
+    }
+
+    private fun renderDebugDate(state: MeUiState.Content) {
+        val overrideDate = state.dateOverride
         binding.debugTimeValue.text = if (overrideDate == null) {
             getString(R.string.debug_academic_time_system)
         } else {
@@ -115,7 +200,7 @@ class MeFragment : Fragment() {
 
     private fun showSportScoreOverrideDialog() {
         val dialogBinding = DialogSportScoreOverrideBinding.inflate(layoutInflater)
-        val currentOverride = sportScoreOverrideController.getOverride()
+        val currentOverride = (viewModel.uiState.value as MeUiState.Content).scoreOverride
         dialogBinding.attendancePointsInput.setText(
             (currentOverride?.attendances ?: DEFAULT_ATTENDANCE_POINTS).toString()
         )
@@ -153,22 +238,19 @@ class MeFragment : Fragment() {
                 }
 
                 if (attendancesValid && bonusValid) {
-                    sportScoreOverrideController.setOverride(
-                        SportScoreOverride(
-                            attendances = requireNotNull(attendances),
-                            bonus = requireNotNull(bonus)
-                        )
+                    viewModel.setScoreOverride(
+                        attendances = requireNotNull(attendances),
+                        bonus = requireNotNull(bonus)
                     )
                     dialog.dismiss()
-                    requireActivity().recreate()
                 }
             }
         }
         dialog.show()
     }
 
-    private fun renderDebugSportScore() {
-        val override = sportScoreOverrideController.getOverride()
+    private fun renderDebugSportScore(state: MeUiState.Content) {
+        val override = state.scoreOverride
         binding.debugSportScoreValue.text = if (override == null) {
             getString(R.string.debug_sport_score_server)
         } else {

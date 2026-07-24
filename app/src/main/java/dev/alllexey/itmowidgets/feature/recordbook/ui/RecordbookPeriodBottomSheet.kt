@@ -15,6 +15,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookPeriodBinding
 import dev.alllexey.itmowidgets.databinding.SheetRecordbookPeriodBinding
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSelection
 import kotlin.math.roundToInt
 
 data class RecordbookPeriodOption(
@@ -166,7 +168,7 @@ class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
 
         fun show(
             manager: FragmentManager,
-            programs: List<dev.alllexey.itmowidgets.domain.model.recordbook.RecordbookProgram>,
+            programs: List<RecordbookProgram>,
             selection: RecordbookSelection
         ) {
             val options = programs.flatMap { program ->

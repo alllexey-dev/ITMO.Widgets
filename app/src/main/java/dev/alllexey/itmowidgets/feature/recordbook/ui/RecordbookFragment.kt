@@ -14,9 +14,14 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookBinding
-import dev.alllexey.itmowidgets.domain.model.recordbook.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookFilter
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -28,7 +33,7 @@ class RecordbookFragment : Fragment() {
 
     private val viewModel: RecordbookViewModel by viewModels()
     private lateinit var adapter: RecordbookAdapter
-    private var lastState: RecordbookUiState.Success? = null
+    private var lastState: RecordbookUiState.Content? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -93,8 +98,8 @@ class RecordbookFragment : Fragment() {
             .onEach { state ->
                 when (state) {
                     RecordbookUiState.Loading -> renderLoading()
-                    is RecordbookUiState.Success -> renderSuccess(state)
-                    is RecordbookUiState.Error -> renderError(state.message)
+                    is RecordbookUiState.Content -> renderContent(state)
+                    is RecordbookUiState.Error -> renderError(state.error.messageRes())
                 }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
@@ -106,7 +111,7 @@ class RecordbookFragment : Fragment() {
         binding.stateContainer.isVisible = false
     }
 
-    private fun renderSuccess(state: RecordbookUiState.Success) {
+    private fun renderContent(state: RecordbookUiState.Content) {
         lastState = state
         binding.swipeRefreshLayout.isRefreshing = false
         binding.periodButton.text = getString(
@@ -131,13 +136,13 @@ class RecordbookFragment : Fragment() {
         }
     }
 
-    private fun renderError(message: String) {
+    private fun renderError(messageRes: Int) {
         binding.swipeRefreshLayout.isVisible = false
         binding.swipeRefreshLayout.isRefreshing = false
         binding.stateContainer.isVisible = true
         binding.stateIcon.setImageResource(R.drawable.ic_error)
         binding.stateTitle.setText(R.string.common_load_error_title)
-        binding.stateDescription.text = message
+        binding.stateDescription.setText(messageRes)
         binding.stateAction.isVisible = true
     }
 
@@ -165,7 +170,7 @@ class RecordbookFragment : Fragment() {
                 RecordbookSubjectFragment.ARG_NAME to subject.name,
                 RecordbookSubjectFragment.ARG_CONTROL_TYPE to subject.controlType,
                 RecordbookSubjectFragment.ARG_SCORE to (subject.score ?: Double.NaN),
-                RecordbookSubjectFragment.ARG_RATE to subject.displayRate,
+                RecordbookSubjectFragment.ARG_RATE to subject.displayRate(requireContext()),
                 RecordbookSubjectFragment.ARG_TEACHER to subject.teacherName.orEmpty()
             )
         )
