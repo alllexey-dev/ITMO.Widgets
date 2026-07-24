@@ -12,6 +12,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,6 +33,8 @@ class FriendSelectorViewModel @Inject constructor(
     private val history: FriendSelectionHistory
 ) : ViewModel() {
 
+    private val refreshing = MutableStateFlow(false)
+
     private val _uiState = MutableStateFlow<FriendSelectorUiState>(
         FriendSelectorUiState.Loading
     )
@@ -44,34 +47,61 @@ class FriendSelectorViewModel @Inject constructor(
         refresh()
     }
 
+    /**
+     * The screen state is derived purely from the repository state and the in-flight
+     * flag. Writing `Loading` directly would strand the UI whenever a refresh ends on
+     * the value the repository already held, because its flow conflates equal states.
+     */
     private fun observeFriends() {
         observeJob?.cancel()
         observeJob = viewModelScope.launch {
-            repository.observeFriendList().collect { state ->
-                _uiState.value = when (state) {
-                    FriendListState.Loading -> FriendSelectorUiState.Loading
-                    FriendListState.Disabled -> FriendSelectorUiState.Disabled
-                    is FriendListState.Content -> {
-                        val friends = state.friends
-                        if (friends.isEmpty()) {
-                            FriendSelectorUiState.Empty
-                        } else {
-                            val friendsByIsu = friends.associateBy(UserSummary::isu)
-                            val recentFriends = history.getRecentIsu()
-                                .mapNotNull(friendsByIsu::get)
-                            FriendSelectorUiState.Content(friends, recentFriends)
-                        }
-                    }
-                    is FriendListState.Error -> FriendSelectorUiState.Error(state.error)
-                }
+            combine(
+                repository.observeFriendList(),
+                refreshing
+            ) { state, isRefreshing ->
+                toUiState(state, isRefreshing)
+            }.collect { state ->
+                _uiState.value = state
             }
         }
     }
 
     fun refresh() {
-        _uiState.value = FriendSelectorUiState.Loading
+        if (refreshing.value) return
+        refreshing.value = true
         viewModelScope.launch {
-            repository.refreshFriendList()
+            try {
+                repository.refreshFriendList()
+            } finally {
+                refreshing.value = false
+            }
+        }
+    }
+
+    private suspend fun toUiState(
+        state: FriendListState,
+        isRefreshing: Boolean
+    ): FriendSelectorUiState {
+        val friends = (state as? FriendListState.Content)?.friends
+        // Keep an existing list on screen while reloading; otherwise show progress.
+        if (isRefreshing && friends.isNullOrEmpty()) {
+            return FriendSelectorUiState.Loading
+        }
+
+        return when (state) {
+            FriendListState.Loading -> FriendSelectorUiState.Loading
+            FriendListState.Disabled -> FriendSelectorUiState.Disabled
+            is FriendListState.Content -> {
+                if (state.friends.isEmpty()) {
+                    FriendSelectorUiState.Empty
+                } else {
+                    val friendsByIsu = state.friends.associateBy(UserSummary::isu)
+                    val recentFriends = history.getRecentIsu()
+                        .mapNotNull(friendsByIsu::get)
+                    FriendSelectorUiState.Content(state.friends, recentFriends)
+                }
+            }
+            is FriendListState.Error -> FriendSelectorUiState.Error(state.error)
         }
     }
 

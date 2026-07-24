@@ -77,6 +77,42 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
+    fun `settles on a terminal state when a repeated refresh does not change the repository`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val repository = FakeFriendRepository(FriendListState.Disabled)
+            val viewModel = FriendSelectorViewModel(repository, FakeHistory())
+            advanceUntilIdle()
+            assertEquals(FriendSelectorUiState.Disabled, viewModel.uiState.value)
+
+            // Reopening the selector refreshes again; the repository keeps its
+            // conflated state, so nothing new is emitted from its flow.
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            assertEquals(FriendSelectorUiState.Disabled, viewModel.uiState.value)
+            assertEquals(2, repository.refreshRequests)
+        }
+
+    @Test
+    fun `keeps the loaded list visible while refreshing`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val first = user(1, "Первый")
+            val repository = FakeFriendRepository(FriendListState.Content(listOf(first)))
+            val viewModel = FriendSelectorViewModel(repository, FakeHistory())
+            advanceUntilIdle()
+
+            viewModel.refresh()
+
+            assertEquals(
+                FriendSelectorUiState.Content(
+                    friends = listOf(first),
+                    recentFriends = emptyList()
+                ),
+                viewModel.uiState.value
+            )
+        }
+
+    @Test
     fun `records confirmed selection`() =
         runTest(mainDispatcherRule.dispatcher) {
             val history = FakeHistory()
