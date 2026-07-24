@@ -10,7 +10,7 @@ interface ScheduleLocalDataSource {
 
     suspend fun save(schedule: DaySchedule, userIsu: Int?)
 
-    fun get(userIsu: Int?, date: LocalDate): CacheEntry?
+    suspend fun get(userIsu: Int?, date: LocalDate): CacheEntry?
 
-    fun clear()
+    suspend fun clear()
 }

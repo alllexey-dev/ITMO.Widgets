@@ -7,7 +7,9 @@ import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSource
 import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSource
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class QrCodeRepositoryImpl @Inject constructor(
@@ -37,7 +39,7 @@ class QrCodeRepositoryImpl @Inject constructor(
         local.clear()
     }
 
-    override fun clearSessionData() {
-        clearCache()
+    override suspend fun clearSessionData() {
+        withContext(Dispatchers.IO) { clearCache() }
     }
 }

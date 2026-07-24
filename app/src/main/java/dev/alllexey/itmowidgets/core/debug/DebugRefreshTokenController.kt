@@ -54,13 +54,13 @@ class DefaultDebugRefreshTokenController(
         }
     }
 
-    private fun clearSessionData() {
-        dataCleaners.forEach(SessionDataCleaner::clearSessionData)
+    private suspend fun clearSessionData() {
+        dataCleaners.forEach { cleaner -> cleaner.clearSessionData() }
     }
 
-    private fun clearSessionDataIgnoringFailures() {
+    private suspend fun clearSessionDataIgnoringFailures() {
         dataCleaners.forEach { cleaner ->
-            runCatching(cleaner::clearSessionData)
+            runCatching { cleaner.clearSessionData() }
         }
     }
 }

@@ -29,5 +29,5 @@ interface ScheduleRepository : ScheduleRefreshGateway {
         endDate = endDate
     )
 
-    fun clearCaches()
+    suspend fun clearCaches()
 }

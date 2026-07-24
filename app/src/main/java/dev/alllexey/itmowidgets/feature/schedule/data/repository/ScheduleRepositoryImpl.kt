@@ -45,11 +45,11 @@ class ScheduleRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun clearCaches() {
+    override suspend fun clearCaches() {
         local.clear()
     }
 
-    override fun clearSessionData() {
+    override suspend fun clearSessionData() {
         clearCaches()
     }
 }

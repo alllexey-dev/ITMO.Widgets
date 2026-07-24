@@ -67,7 +67,7 @@ class DefaultDebugRefreshTokenControllerTest {
     private class CountingCleaner : SessionDataCleaner {
         var clearRequests = 0
 
-        override fun clearSessionData() {
+        override suspend fun clearSessionData() {
             clearRequests += 1
         }
     }

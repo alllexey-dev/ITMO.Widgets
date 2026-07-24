@@ -6,11 +6,15 @@ import dev.alllexey.itmowidgets.core.util.ScheduleUtil
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.Clock
 import java.time.LocalDate
@@ -29,12 +33,16 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
 
     val cacheDir = File(context.cacheDir, "schedule_cache")
 
-    private val memoryCache = ConcurrentHashMap<String, MutableSharedFlow<CacheEntry?>>()
+    private val memoryCache = ConcurrentHashMap<String, MutableStateFlow<CacheEntry?>>()
 
     init {
         cacheDir.mkdirs()
     }
 
+    /**
+     * Reading the cache touches the disk, so the whole upstream — including the
+     * lazy [combineFlows] set-up and JSON deserialization — runs on [Dispatchers.IO].
+     */
     override fun observeRange(
         userIsu: Int?,
         start: LocalDate,
@@ -43,37 +51,49 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
 
         val keys = ScheduleUtil.generateDates(start, end).map { key(userIsu, it) }
 
-        return combineFlows(keys).map { entries ->
-            entries.mapNotNull { entry ->
-                entry?.takeUnless(::isExpired)?.let(::deserialize)
-            }
-        }
+        return flow {
+            emitAll(
+                combineFlows(keys).map { entries ->
+                    entries.mapNotNull { entry ->
+                        entry?.takeUnless(::isExpired)?.let(::deserialize)
+                    }
+                }
+            )
+        }.flowOn(Dispatchers.IO)
     }
 
     override suspend fun save(schedule: DaySchedule, userIsu: Int?) {
-        val entry = CacheEntry(
-            userIsu = userIsu,
-            date = schedule.date,
-            timestamp = clock.millis(),
-            data = gson.toJson(schedule)
-        )
-
         val key = key(userIsu, schedule.date)
 
-        writeToDisk(key, entry)
+        val entry = withContext(Dispatchers.IO) {
+            CacheEntry(
+                userIsu = userIsu,
+                date = schedule.date,
+                timestamp = clock.millis(),
+                data = gson.toJson(schedule)
+            ).also { writeToDisk(key, it) }
+        }
 
-        memoryCache.getOrPut(key) { MutableStateFlow(null) }.emit(entry)
+        cacheFlow(key).value = entry
     }
 
-    override fun get(userIsu: Int?, date: LocalDate): CacheEntry? {
+    override suspend fun get(userIsu: Int?, date: LocalDate): CacheEntry? {
         val key = key(userIsu, date)
-        return readFromDisk(key)?.takeUnless(::isExpired)
+        return withContext(Dispatchers.IO) {
+            readFromDisk(key)?.takeUnless(::isExpired)
+        }
     }
 
-    override fun clear() {
-        cacheDir.deleteRecursively()
-        cacheDir.mkdirs()
-        memoryCache.clear()
+    /**
+     * Keeps the per-date flow instances so that collectors started before the
+     * cache was dropped keep observing the same keys instead of being orphaned.
+     */
+    override suspend fun clear() {
+        withContext(Dispatchers.IO) {
+            cacheDir.deleteRecursively()
+            cacheDir.mkdirs()
+        }
+        memoryCache.values.forEach { it.value = null }
     }
 
     fun isExpired(entry: CacheEntry): Boolean {
@@ -87,6 +107,9 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
     private fun deserialize(entry: CacheEntry): DaySchedule {
         return gson.fromJson(entry.data, DaySchedule::class.java)
     }
+
+    private fun cacheFlow(key: String): MutableStateFlow<CacheEntry?> =
+        memoryCache.getOrPut(key) { MutableStateFlow(null) }
 
     private fun combineFlows(keys: List<String>): Flow<List<CacheEntry?>> {
         val flows = keys.map { key ->

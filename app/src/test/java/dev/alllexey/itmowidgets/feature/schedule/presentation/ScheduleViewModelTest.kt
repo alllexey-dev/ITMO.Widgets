@@ -165,7 +165,7 @@ class ScheduleViewModelTest {
             endDate: LocalDate
         ): AppResult<Unit> = refreshResult
 
-        override fun clearCaches() {
+        override suspend fun clearCaches() {
             cachesCleared = true
         }
     }
