@@ -10,6 +10,9 @@ sealed interface AppError {
 
     data object NotFound : AppError
 
+    /** Requested data lives on the project backend, which the user has not opted into. */
+    data object CustomServicesDisabled : AppError
+
     data class Unknown(val cause: Throwable? = null) : AppError
 }
 

@@ -172,6 +172,8 @@ class DebugToolsViewModelTest {
 
         override fun observeEnabled(): Flow<Boolean> = enabled
 
+        override suspend fun isEnabled(): Boolean = enabled.value
+
         override suspend fun setEnabled(enabled: Boolean) {
             this.enabled.value = enabled
         }

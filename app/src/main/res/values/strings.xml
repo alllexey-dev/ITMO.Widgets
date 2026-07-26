@@ -182,6 +182,8 @@
     <string name="debug_sport_lessons_description">Заменяет расписание спорта тестовыми занятиями на ближайшие дни.</string>
     <string name="debug_sport_lesson_action_disabled">Это шаблонное занятие — запрос на сервер не отправлен</string>
 
+    <string name="common_error_services_disabled">Включите пользовательские сервисы, чтобы смотреть расписание друзей</string>
+
     <string name="me_group_app">Приложение</string>
     <string name="me_unknown_user">Профиль недоступен</string>
     <string name="me_isu">ИСУ %1$d</string>

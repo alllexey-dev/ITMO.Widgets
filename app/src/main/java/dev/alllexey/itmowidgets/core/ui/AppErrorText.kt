@@ -10,5 +10,6 @@ fun AppError.messageRes(): Int = when (this) {
     AppError.Unauthorized -> R.string.common_error_unauthorized
     AppError.Forbidden -> R.string.common_error_forbidden
     AppError.NotFound -> R.string.common_error_not_found
+    AppError.CustomServicesDisabled -> R.string.common_error_services_disabled
     is AppError.Unknown -> R.string.common_error_unknown
 }

@@ -15,6 +15,10 @@ class CustomServicesRepositoryImpl @Inject constructor(
         return settings.observeCustomServicesEnabled()
     }
 
+    override suspend fun isEnabled(): Boolean {
+        return settings.getCustomServicesEnabled()
+    }
+
     override suspend fun setEnabled(enabled: Boolean) {
         settings.setCustomServicesEnabled(enabled)
         if (enabled) {

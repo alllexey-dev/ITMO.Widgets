@@ -12,5 +12,8 @@ interface CustomServicesRepository {
 
     fun observeEnabled(): Flow<Boolean>
 
+    /** One-shot read for data-layer gates that must not touch the backend. */
+    suspend fun isEnabled(): Boolean
+
     suspend fun setEnabled(enabled: Boolean)
 }
