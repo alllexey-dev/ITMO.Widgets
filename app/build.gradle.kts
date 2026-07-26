@@ -51,6 +51,10 @@ android {
         buildConfig = true
         viewBinding = true
     }
+    testOptions {
+        // Lets JVM tests exercise classes that log through android.util.Log.
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 kotlin {

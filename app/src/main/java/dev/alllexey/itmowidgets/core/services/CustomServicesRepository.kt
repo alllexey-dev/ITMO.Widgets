@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.me.domain
+package dev.alllexey.itmowidgets.core.services
 
 import kotlinx.coroutines.flow.Flow
 

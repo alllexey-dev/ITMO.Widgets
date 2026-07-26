@@ -1,8 +1,8 @@
-package dev.alllexey.itmowidgets.feature.me.data
+package dev.alllexey.itmowidgets.feature.settings.data
 
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
-import dev.alllexey.itmowidgets.feature.me.domain.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 

@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.me.presentation
+package dev.alllexey.itmowidgets.feature.debug.presentation
 
 import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.feature.me.domain.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -24,7 +24,7 @@ import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class MeViewModelTest {
+class DebugToolsViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
@@ -35,7 +35,7 @@ class MeViewModelTest {
     private val refreshTokenController = FakeRefreshTokenController()
     private val customServicesRepository = FakeCustomServicesRepository()
 
-    private fun createViewModel(): MeViewModel = MeViewModel(
+    private fun createViewModel(): DebugToolsViewModel = DebugToolsViewModel(
         timeProvider = FixedTimeProvider,
         timeOverrideController = timeController,
         sportScoreOverrideController = scoreController,
@@ -54,7 +54,7 @@ class MeViewModelTest {
         viewModel.setLessonTemplatesEnabled(true)
 
         assertEquals(
-            MeUiState.Content(
+            DebugToolsUiState.Content(
                 effectiveDate = FixedTimeProvider.today(),
                 dateOverride = date,
                 scoreOverride = SportScoreOverride(120, 10),
@@ -78,7 +78,7 @@ class MeViewModelTest {
         assertEquals(true, customServicesRepository.enabled.value)
         assertEquals(
             true,
-            (viewModel.uiState.value as MeUiState.Content).customServicesEnabled
+            (viewModel.uiState.value as DebugToolsUiState.Content).customServicesEnabled
         )
     }
 
@@ -94,7 +94,7 @@ class MeViewModelTest {
 
         assertEquals(
             true,
-            (viewModel.uiState.value as MeUiState.Content).customServicesEnabled
+            (viewModel.uiState.value as DebugToolsUiState.Content).customServicesEnabled
         )
     }
 
@@ -106,7 +106,7 @@ class MeViewModelTest {
 
         viewModel.clearScoreOverride()
 
-        assertEquals(MeEvent.RecreateActivity, event.await())
+        assertEquals(DebugToolsEvent.RecreateActivity, event.await())
     }
 
     @Test
@@ -119,10 +119,10 @@ class MeViewModelTest {
         advanceUntilIdle()
 
         assertEquals("secret-refresh-token", refreshTokenController.lastToken)
-        assertEquals(MeEvent.RefreshTokenUpdated, event.await())
+        assertEquals(DebugToolsEvent.RefreshTokenUpdated, event.await())
         assertEquals(
             true,
-            (viewModel.uiState.value as MeUiState.Content).refreshTokenConfigured
+            (viewModel.uiState.value as DebugToolsUiState.Content).refreshTokenConfigured
         )
     }
 

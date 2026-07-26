@@ -55,6 +55,8 @@ class DefaultDebugRefreshTokenControllerTest {
 
         override fun hasRefreshToken(): Boolean = refreshToken != null
 
+        override fun getIdToken(): String? = null
+
         override fun replaceWithRefreshToken(refreshToken: String) {
             this.refreshToken = refreshToken
         }
