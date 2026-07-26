@@ -6,7 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.AttrRes
 import androidx.core.view.isVisible
+import android.graphics.drawable.Drawable
 import androidx.recyclerview.widget.DiffUtil
+import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
+import com.google.android.material.progressindicator.IndeterminateDrawable
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.R as MaterialR
@@ -25,8 +28,14 @@ interface SportSignActionsListener {
     fun onLessonClick(lesson: SportLesson)
 }
 
+/** Lesson plus the transient UI state that does not belong to the domain model. */
+data class SportLessonItem(
+    val lesson: SportLesson,
+    val isBusy: Boolean = false
+)
+
 class SportLessonsAdapter(val listener: SportSignActionsListener) :
-    ListAdapter<SportLesson, SportLessonsAdapter.LessonViewHolder>(LessonDiffCallback()) {
+    ListAdapter<SportLessonItem, SportLessonsAdapter.LessonViewHolder>(LessonDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
         val binding = ItemSportLessonBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -34,13 +43,14 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
     }
 
     override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val item = getItem(position)
+        holder.bind(item.lesson, item.isBusy)
     }
 
     inner class LessonViewHolder(private val binding: ItemSportLessonBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: SportLesson) {
+        fun bind(item: SportLesson, isBusy: Boolean) {
             binding.sectionNameTextView.text = item.sectionName.shorten()
             binding.timeTextView.text = "${item.start.toLocalTime()}-${item.end.toLocalTime()}"
             binding.teacherTextView.text = item.teacherFio
@@ -53,7 +63,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
 
             bindBadges(item)
             bindProgress(item)
-            bindActions(item)
+            bindActions(item, isBusy)
             setupFriends(item)
         }
 
@@ -83,7 +93,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
             }
         }
 
-        private fun bindActions(item: SportLesson) {
+        private fun bindActions(item: SportLesson, isBusy: Boolean) {
             val canSignIn = item.canSignIn
             val reason = item.unavailableReasons.lastOrNull()
 
@@ -99,7 +109,8 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
                             text = root.context.getString(R.string.sport_lesson_sign_out),
                             colorAttr = MaterialR.attr.colorErrorContainer,
                             textColorAttr = MaterialR.attr.colorOnErrorContainer,
-                            onClick = { listener.onUnSignClick(item) }
+                            onClick = { listener.onUnSignClick(item) },
+                            isBusy = isBusy
                         )
                     }
 
@@ -108,7 +119,8 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
                             text = root.context.getString(R.string.sport_lesson_sign_up),
                             colorAttr = MaterialR.attr.colorSecondaryContainer,
                             textColorAttr = MaterialR.attr.colorOnSecondaryContainer,
-                            onClick = { listener.onSignUpClick(item) }
+                            onClick = { listener.onSignUpClick(item) },
+                            isBusy = isBusy
                         )
                     }
 
@@ -137,7 +149,8 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
                             onClick = {
                                 if (entry != null) listener.onUnAutoSignClick(item)
                                 else listener.onAutoSignClick(item)
-                            }
+                            },
+                            isBusy = isBusy
                         )
                     }
 
@@ -151,15 +164,36 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
             }
         }
 
-        private fun setupButton(text: String, @AttrRes colorAttr: Int, @AttrRes textColorAttr: Int, onClick: () -> Unit) {
+        private fun setupButton(
+            text: String,
+            @AttrRes colorAttr: Int,
+            @AttrRes textColorAttr: Int,
+            onClick: () -> Unit,
+            isBusy: Boolean
+        ) {
             with(binding) {
                 signUpButton.isVisible = true
-                signUpButton.isEnabled = true
+                signUpButton.isEnabled = !isBusy
                 signUpButton.text = text
                 signUpButton.backgroundTintList = ColorStateList.valueOf(color.resolve(colorAttr))
                 signUpButton.setTextColor(color.resolve(textColorAttr))
-                signUpButton.setOnClickListener { onClick() }
+                signUpButton.icon = if (isBusy) busyIndicator(textColorAttr) else null
+                signUpButton.setOnClickListener(if (isBusy) null else View.OnClickListener { onClick() })
             }
+        }
+
+        /** Material's own indeterminate drawable, tinted like the button label. */
+        private fun busyIndicator(@AttrRes textColorAttr: Int): Drawable {
+            val context = itemView.context
+            val spec = CircularProgressIndicatorSpec(
+                context,
+                null,
+                0,
+                com.google.android.material.R.style
+                    .Widget_Material3_CircularProgressIndicator_ExtraSmall
+            )
+            spec.indicatorColors = intArrayOf(color.resolve(textColorAttr))
+            return IndeterminateDrawable.createCircularDrawable(context, spec)
         }
 
         private fun setupFriends(item: SportLesson) {
@@ -223,12 +257,12 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
     }
 }
 
-class LessonDiffCallback : DiffUtil.ItemCallback<SportLesson>() {
-    override fun areItemsTheSame(oldItem: SportLesson, newItem: SportLesson): Boolean {
-        return oldItem.lessonId == newItem.lessonId
+class LessonDiffCallback : DiffUtil.ItemCallback<SportLessonItem>() {
+    override fun areItemsTheSame(oldItem: SportLessonItem, newItem: SportLessonItem): Boolean {
+        return oldItem.lesson.lessonId == newItem.lesson.lessonId
     }
 
-    override fun areContentsTheSame(oldItem: SportLesson, newItem: SportLesson): Boolean {
+    override fun areContentsTheSame(oldItem: SportLessonItem, newItem: SportLessonItem): Boolean {
         return oldItem == newItem
     }
 }

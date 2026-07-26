@@ -58,8 +58,10 @@ class SportSignViewModel @Inject constructor(
         get() = (uiState.value as? SportSignUiState.Content)?.usedSportNames.orEmpty()
 
     private val activeOperations = MutableStateFlow(0)
+    private val inFlightLessons = InFlightLessons()
     private var refreshJob: Job? = null
     private var autoSignJob: Job? = null
+    private var autoSignCommandJob: Job? = null
 
     init {
         observeData()
@@ -129,6 +131,7 @@ class SportSignViewModel @Inject constructor(
 
     fun signUpForLesson(lesson: SportLesson) {
         performLessonAction(
+            lessonId = lesson.lessonId,
             action = { bookingDelegate.signIn(lesson) },
             successMessage = R.string.sport_sign_success
         )
@@ -136,6 +139,7 @@ class SportSignViewModel @Inject constructor(
 
     fun unSignForLesson(lesson: SportLesson) {
         performLessonAction(
+            lessonId = lesson.lessonId,
             action = { bookingDelegate.signOut(lesson) },
             successMessage = R.string.sport_unsign_success
         )
@@ -178,7 +182,8 @@ class SportSignViewModel @Inject constructor(
     }
 
     fun executeAutoSignCommand(command: SportSignCommand, forceSign: Boolean = false) {
-        viewModelScope.launch {
+        if (autoSignCommandJob?.isActive == true) return
+        autoSignCommandJob = viewModelScope.launch {
             val result = when (command) {
                 is SportSignCommand.CreateFreeSign ->
                     bookingDelegate.createFreeSign(command.lessonId, forceSign)
@@ -233,12 +238,14 @@ class SportSignViewModel @Inject constructor(
 
             combine(
                 contentState,
-                preferencesRepository.observeDisplayOptions()
-            ) { state, displayOptions ->
+                preferencesRepository.observeDisplayOptions(),
+                inFlightLessons.ids
+            ) { state, displayOptions, busyLessonIds ->
                 if (state is SportSignUiState.Content) {
                     state.copy(
                         hideTeacherSelector = displayOptions.hideTeacherSelector,
-                        hideTimeSelector = displayOptions.hideTimeSelector
+                        hideTimeSelector = displayOptions.hideTimeSelector,
+                        busyLessonIds = busyLessonIds
                     )
                 } else {
                     state
@@ -254,12 +261,20 @@ class SportSignViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Booking actions mark only their own lesson as busy instead of going through
+     * [trackOperation]: a screen-wide loading state would hide the list the user is
+     * working with and still leave the tapped button clickable.
+     */
     private fun performLessonAction(
+        lessonId: Long,
         action: suspend () -> AppResult<Unit>,
         successMessage: Int
     ) {
+        if (!inFlightLessons.tryStart(lessonId)) return
+
         viewModelScope.launch {
-            trackOperation {
+            try {
                 when (val result = action()) {
                     is AppResult.Success -> {
                         eventChannel.send(
@@ -271,6 +286,8 @@ class SportSignViewModel @Inject constructor(
                         eventChannel.send(SportSignEvent.ShowError(result.error))
                     }
                 }
+            } finally {
+                inFlightLessons.finish(lessonId)
             }
         }
     }

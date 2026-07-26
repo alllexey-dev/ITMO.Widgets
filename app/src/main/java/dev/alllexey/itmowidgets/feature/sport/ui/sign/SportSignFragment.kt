@@ -167,7 +167,15 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         } else {
             null
         }
-        submitLessonsWithState(state.displayedLessons, contentState)
+        submitLessonsWithState(
+            state.displayedLessons.map { lesson ->
+                SportLessonItem(
+                    lesson = lesson,
+                    isBusy = lesson.lessonId in state.busyLessonIds
+                )
+            },
+            contentState
+        )
         if (state.hasPartialError) {
             Toast.makeText(
                 requireContext(),
@@ -189,7 +197,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     }
 
     private fun submitLessonsWithState(
-        lessons: List<SportLesson>,
+        lessons: List<SportLessonItem>,
         contentState: ContentState?
     ) {
         if (contentState == null) {
