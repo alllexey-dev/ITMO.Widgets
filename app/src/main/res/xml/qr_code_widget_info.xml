@@ -9,5 +9,4 @@
     android:description="@string/qr_widget_description"
 
     android:widgetCategory="home_screen"
-    android:initialKeyguardLayout="@layout/qr_code_widget"
-/>
+    android:initialKeyguardLayout="@layout/qr_code_widget" />

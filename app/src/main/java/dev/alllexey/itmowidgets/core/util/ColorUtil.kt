@@ -1,9 +1,11 @@
 package dev.alllexey.itmowidgets.core.util
 
 import android.content.Context
+import android.graphics.Color
 import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import com.google.android.material.color.MaterialColors
 
@@ -23,11 +25,30 @@ fun Int.withLightness(factor: Float): Int {
     return ColorUtils.HSLToColor(hsl)
 }
 
+/**
+ * Resolves a theme colour attribute.
+ *
+ * Resolution can fail — most notably against the application context, whose theme
+ * carries no Material attributes — and [TypedValue.data] is then left at zero, which
+ * is a fully transparent colour rather than an obvious error. Callers outside an
+ * activity must get [fallback] instead.
+ */
 @ColorInt
-fun Context.resolveColor(@AttrRes attrColor: Int): Int {
+fun Context.resolveColor(
+    @AttrRes attrColor: Int,
+    @ColorInt fallback: Int = Color.TRANSPARENT
+): Int {
     val typedValue = TypedValue()
-    theme.resolveAttribute(attrColor, typedValue, true)
-    return typedValue.data
+    if (!theme.resolveAttribute(attrColor, typedValue, true)) return fallback
+
+    return when {
+        typedValue.type in TypedValue.TYPE_FIRST_COLOR_INT..TypedValue.TYPE_LAST_COLOR_INT ->
+            typedValue.data
+
+        typedValue.resourceId != 0 -> ContextCompat.getColor(this, typedValue.resourceId)
+
+        else -> fallback
+    }
 }
 
 val Context.color: ThemeColors

@@ -52,18 +52,34 @@ class QrCodeRepositoryImplTest {
         assertTrue((result as AppResult.Failure).error is AppError.Unknown)
     }
 
+    @Test
+    fun `expired cache remains available for widget fallback`() = runTest {
+        val local = FakeLocalDataSource(cached = "last-working-code", expired = true)
+        val repository = QrCodeRepositoryImpl(local, FakeRemoteDataSource())
+
+        assertEquals(null, repository.currentQrHex())
+        assertEquals(
+            "last-working-code",
+            repository.currentQrHex(allowExpired = true)
+        )
+    }
+
     private class FakeLocalDataSource(
-        private var cached: String? = null
+        private var cached: String? = null,
+        private var expired: Boolean = false
     ) : QrCodeLocalDataSource {
 
         val savedValues = mutableListOf<String>()
 
         override fun observe(): Flow<String> = flowOf(cached.orEmpty())
 
-        override fun get(): String? = cached
+        override fun get(allowExpired: Boolean): String? {
+            return cached.takeIf { allowExpired || !expired }
+        }
 
         override fun save(hex: String) {
             cached = hex
+            expired = false
             savedValues += hex
         }
 

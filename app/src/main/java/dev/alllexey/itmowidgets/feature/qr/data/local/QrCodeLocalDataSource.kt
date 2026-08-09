@@ -6,7 +6,7 @@ interface QrCodeLocalDataSource {
 
     fun observe(): Flow<String>
 
-    fun get(): String?
+    fun get(allowExpired: Boolean = false): String?
 
     fun save(hex: String)
 

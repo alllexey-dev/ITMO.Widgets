@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.core.storage
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import dev.alllexey.itmowidgets.core.model.settings.QrWidgetState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -22,18 +21,15 @@ class UtilityStorageTest {
 
         assertFalse(storage.getOnboardingCompleted())
         assertEquals("2.0.1-test", storage.getSkippedVersion())
-        assertEquals(QrWidgetState.HIDDEN, storage.getQrWidgetState(42))
     }
 
     @Test
-    fun `persists utility and widget values in DataStore`() = runTest {
+    fun `persists utility values in DataStore`() = runTest {
         val storage = createStorage()
 
         storage.setOnboardingCompleted(true)
-        storage.setQrWidgetState(42, QrWidgetState.VISIBLE)
 
         assertEquals(true, storage.getOnboardingCompleted())
-        assertEquals(QrWidgetState.VISIBLE, storage.getQrWidgetState(42))
     }
 
     private fun kotlinx.coroutines.test.TestScope.createStorage(): UtilityStorage {

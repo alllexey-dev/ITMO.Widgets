@@ -19,34 +19,35 @@ class QrColorResolver @Inject constructor(
 
     // [background, foreground]
     fun getQrColors(dynamic: Boolean): Pair<Int, Int> {
-        var darkModule: Int
-        var lightBg: Int
+        if (!dynamic) return Color.WHITE to Color.BLACK
 
-        if (dynamic) {
-            val color = context.color
+        val color = context.color
 
-            lightBg = color.surface
-            darkModule = color.onSurfaceVariant
+        var lightBg = color.surface
+        var darkModule = color.onSurfaceVariant
+        val darkModuleVariant = color.onSurface
 
-            val darkModuleVariant = color.onSurface
+        // swap
+        if (lightBg.isDark()) {
+            lightBg = darkModule.also { darkModule = lightBg }
+        }
 
-            // swap
-            if (lightBg.isDark()) {
-                lightBg = darkModule.also { darkModule = lightBg }
-            }
+        darkModule = maxOf(
+            darkModule,
+            darkModuleVariant,
+            Comparator.comparingDouble { value -> value.darkness() }
+        )
 
-            darkModule = maxOf(
-                darkModule,
-                darkModuleVariant,
-                Comparator.comparingDouble { value -> value.darkness() }
-            )
-        } else {
-            darkModule = Color.BLACK
-            lightBg = Color.WHITE
+        // Theme attributes do not resolve outside an activity, and a translucent code
+        // is unreadable for a scanner. Plain black on white always works.
+        if (!lightBg.isOpaque() || !darkModule.isOpaque()) {
+            return Color.WHITE to Color.BLACK
         }
 
         return lightBg to darkModule
     }
+
+    private fun Int.isOpaque(): Boolean = Color.alpha(this) == OPAQUE_ALPHA
 
     fun Int.isDark(): Boolean {
         return darkness() >= 0.5
@@ -54,5 +55,9 @@ class QrColorResolver @Inject constructor(
 
     fun Int.darkness(): Double {
         return 1 - (0.299 * Color.red(this) + 0.587 * Color.green(this) + 0.114 * Color.blue(this)) / 255
+    }
+
+    private companion object {
+        const val OPAQUE_ALPHA = 255
     }
 }

@@ -35,9 +35,9 @@ class QrCodeLocalDataSourceImpl @Inject constructor(
         }
     }
 
-    override fun get(): String? {
+    override fun get(allowExpired: Boolean): String? {
         val entry = _flow.value ?: return null
-        return if (isExpired(entry)) null else entry.hex
+        return if (allowExpired || !isExpired(entry)) entry.hex else null
     }
 
     override fun save(hex: String) {
@@ -67,7 +67,15 @@ class QrCodeLocalDataSourceImpl @Inject constructor(
 
     private fun deserialize(raw: String): QrCacheEntry? {
         return try {
-            val parts = raw.split("|")
+            val value = raw.trim()
+            val parts = value.split("|", limit = 2)
+            if (parts.size == 1) {
+                // v2.0 stored only the QR payload. Keep it during the refactor so an
+                // app update does not blank an otherwise working home-screen pass.
+                return value.takeIf { it.length >= MIN_QR_LENGTH }?.let { legacyHex ->
+                    QrCacheEntry(hex = legacyHex, timestamp = clock.millis())
+                }
+            }
             QrCacheEntry(
                 timestamp = parts[0].toLong(),
                 hex = parts[1]
@@ -84,5 +92,9 @@ class QrCodeLocalDataSourceImpl @Inject constructor(
         } catch (_: Exception) {
             null
         }
+    }
+
+    private companion object {
+        const val MIN_QR_LENGTH = 6
     }
 }

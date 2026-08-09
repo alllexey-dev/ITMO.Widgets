@@ -21,6 +21,11 @@ class QrCodeRepositoryImpl @Inject constructor(
         return local.observe()
     }
 
+    override suspend fun currentQrHex(allowExpired: Boolean): String? =
+        withContext(Dispatchers.IO) {
+            local.get(allowExpired)
+        }
+
     override suspend fun refreshQrHex(force: Boolean): AppResult<Unit> {
         val cached = local.get()
         if (!force && cached != null) return AppResult.Success(Unit)

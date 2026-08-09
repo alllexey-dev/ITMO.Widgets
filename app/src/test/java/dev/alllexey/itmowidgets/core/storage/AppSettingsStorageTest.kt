@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.core.storage
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import dev.alllexey.itmowidgets.core.model.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async

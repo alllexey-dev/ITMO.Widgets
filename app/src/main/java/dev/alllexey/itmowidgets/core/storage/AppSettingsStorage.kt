@@ -6,8 +6,8 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import dev.alllexey.itmowidgets.core.model.settings.LessonStyle
-import dev.alllexey.itmowidgets.core.model.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.util.safeEnumOf
 import java.io.IOException
 import kotlinx.coroutines.flow.Flow

@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.core.model.settings
+package dev.alllexey.itmowidgets.feature.qr.domain
 
 enum class QrWidgetState {
     HIDDEN,
