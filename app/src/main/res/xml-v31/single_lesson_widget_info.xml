@@ -4,10 +4,11 @@
     android:initialKeyguardLayout="@layout/single_lesson_widget_dash"
     android:initialLayout="@layout/single_lesson_widget_dash"
     android:minWidth="250dp"
-    android:minHeight="80dp"
+    android:minHeight="56dp"
     android:previewImage="@drawable/single_lesson_widget_preview"
+    android:previewLayout="@layout/single_lesson_widget_preview"
 
-    android:resizeMode="horizontal"
+    android:resizeMode="horizontal|vertical"
     android:maxResizeWidth="340dp"
     android:widgetCategory="home_screen"
     android:targetCellWidth="4"

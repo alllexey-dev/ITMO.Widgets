@@ -40,6 +40,14 @@ sealed interface SettingItem {
         val destinationId: Int
     ) : SettingItem
 
+    /** Runs an immediate command without leaving the settings screen. */
+    data class Action(
+        override val key: String,
+        val title: UiText,
+        val description: UiText? = null,
+        val trailingIconRes: Int? = null
+    ) : SettingItem
+
     /** Read-only fact, such as the application version. */
     data class Info(
         override val key: String,

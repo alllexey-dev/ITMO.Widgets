@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/lesson_list_widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@drawable/widget_background_rounded"
-    android:padding="4dp"
-    android:backgroundTint="?attr/colorSurface"
-    android:theme="@style/AppTheme">
+    android:orientation="vertical"
+    android:padding="4dp">
 
     <ListView
         android:id="@+id/lesson_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:divider="@null"
-        android:dividerHeight="0dp" />
+        android:dividerHeight="0dp"
+        android:fadingEdge="none"
+        android:scrollbars="none" />
 
 </LinearLayout>
-

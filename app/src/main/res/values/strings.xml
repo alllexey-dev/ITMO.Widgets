@@ -7,6 +7,29 @@
     <string name="list_lesson_widget_description">Список пар на сегодня</string>
     <string name="qr_widget_name">QR-код</string>
     <string name="qr_widget_description">QR-пропуск в корпус</string>
+    <string name="schedule_widget_loading">Обновляем расписание</string>
+    <string name="schedule_widget_error">Не удалось обновить расписание</string>
+    <string name="schedule_widget_empty_today">Сегодня нет пар</string>
+    <string name="schedule_widget_empty_today_and_tomorrow">Сегодня и завтра нет пар</string>
+    <string name="schedule_widget_no_more_today">На сегодня пары закончились</string>
+    <string name="schedule_widget_open_app_hint">Нажмите, чтобы открыть расписание</string>
+    <string name="schedule_widget_status_now">Сейчас</string>
+    <string name="schedule_widget_status_next">Далее</string>
+    <string name="schedule_widget_last_lesson">последняя пара на сегодня</string>
+    <string name="schedule_widget_last_lesson_compact">последняя</string>
+    <string name="schedule_widget_more_lessons_compact">ещё %1$d</string>
+    <string name="schedule_widget_supporting_text">%1$s · %2$s</string>
+    <string name="schedule_widget_today">Сегодня</string>
+    <string name="schedule_widget_tomorrow">Завтра</string>
+    <string name="schedule_widget_day_header">%1$s · %2$s</string>
+    <string name="schedule_widget_end_today">На сегодня всё</string>
+    <string name="schedule_widget_end_tomorrow">На завтра всё</string>
+    <plurals name="schedule_widget_more_lessons">
+        <item quantity="one">ещё %1$d пара</item>
+        <item quantity="few">ещё %1$d пары</item>
+        <item quantity="many">ещё %1$d пар</item>
+        <item quantity="other">ещё %1$d пары</item>
+    </plurals>
     <string name="refresh_token_help_url">https://github.com/alllexey-dev/ITMO.Widgets?tab=readme-ov-file#использование</string>
     <string name="latest_release_url">https://github.com/alllexey-dev/ITMO.Widgets/releases/latest</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
@@ -190,6 +213,10 @@
 
     <string name="settings_title">Настройки</string>
     <string name="settings_back">Назад</string>
+    <string name="settings_group_widgets">Виджеты</string>
+    <string name="settings_refresh_widgets_title">Обновить все виджеты</string>
+    <string name="settings_refresh_widgets_description">Загрузить заново QR-код и расписание.</string>
+    <string name="settings_refresh_widgets_started">Обновление виджетов запущено</string>
     <string name="settings_group_sport">Спорт</string>
     <string name="settings_sport_teacher_filter_title">Фильтр по преподавателю</string>
     <string name="settings_sport_teacher_filter_description">Показывать выбор преподавателя на экране записи.</string>

@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/item_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:id="@+id/item_root">
+    android:gravity="center"
+    android:minHeight="88dp">
 
     <TextView
         android:id="@+id/empty_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:padding="16dp"
-        android:text="Ошибка загрузки данных"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="?attr/colorOnSurface" />
+        android:padding="12dp"
+        android:textColor="@color/widget_on_surface"
+        android:textSize="14sp"
+        android:textStyle="bold" />
 
 </LinearLayout>

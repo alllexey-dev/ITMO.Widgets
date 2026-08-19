@@ -12,7 +12,9 @@ import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSou
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import javax.inject.Singleton
 
 @Module
@@ -49,4 +51,17 @@ abstract class ScheduleModule {
     abstract fun bindScheduleRefreshGateway(
         impl: ScheduleRepositoryImpl
     ): ScheduleRefreshGateway
+
+    @Binds
+    @Singleton
+    abstract fun bindScheduleWidgetSnapshotStore(
+        impl: ScheduleWidgetSnapshotStoreImpl
+    ): ScheduleWidgetSnapshotStore
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindScheduleWidgetSnapshotCleaner(
+        impl: ScheduleWidgetSnapshotStoreImpl
+    ): SessionDataCleaner
 }

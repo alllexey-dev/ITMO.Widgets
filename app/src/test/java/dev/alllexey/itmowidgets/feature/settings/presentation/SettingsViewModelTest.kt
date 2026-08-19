@@ -5,9 +5,11 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SportDisplaySettings
+import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -40,7 +42,11 @@ class SettingsViewModelTest {
             val repository = FakeSettingsRepository(
                 SportDisplaySettings(hideTeacherSelector = true, hideTimeSelector = true)
             )
-            val viewModel = SettingsViewModel(repository, AppVersion("2.0.1"))
+            val viewModel = SettingsViewModel(
+                repository,
+                FakeWidgetRefreshRequester(),
+                AppVersion("2.0.1")
+            )
             advanceUntilIdle()
 
             viewModel.onToggleChanged(SettingsViewModel.KEY_SPORT_TEACHER_FILTER, true)
@@ -79,6 +85,7 @@ class SettingsViewModelTest {
             val sections = viewModel.sections.value
             assertEquals(
                 listOf(
+                    UiText.Resource(R.string.settings_group_widgets),
                     UiText.Resource(R.string.settings_group_sport),
                     UiText.Resource(R.string.settings_group_about)
                 ),
@@ -87,8 +94,36 @@ class SettingsViewModelTest {
             assertTrue(sections.all { it.items.isNotEmpty() })
         }
 
-    private fun createViewModel(sport: SportDisplaySettings): SettingsViewModel {
-        return SettingsViewModel(FakeSettingsRepository(sport), AppVersion("2.0.1"))
+    @Test
+    fun `refresh action updates all widgets and emits confirmation`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val refresher = FakeWidgetRefreshRequester()
+            val viewModel = createViewModel(
+                sport = SportDisplaySettings(),
+                widgetRefreshRequester = refresher
+            )
+            advanceUntilIdle()
+
+            val action = viewModel.sections
+                .value
+                .flatMap(SettingSection::items)
+                .filterIsInstance<SettingItem.Action>()
+                .single()
+            viewModel.onAction(action.key)
+
+            assertEquals(1, refresher.refreshCount)
+            assertEquals(SettingsEvent.WidgetsRefreshStarted, viewModel.events.first())
+        }
+
+    private fun createViewModel(
+        sport: SportDisplaySettings,
+        widgetRefreshRequester: WidgetRefreshRequester = FakeWidgetRefreshRequester(),
+    ): SettingsViewModel {
+        return SettingsViewModel(
+            FakeSettingsRepository(sport),
+            widgetRefreshRequester,
+            AppVersion("2.0.1")
+        )
     }
 
     private fun toggle(viewModel: SettingsViewModel, key: String): SettingItem.Toggle {
@@ -112,6 +147,14 @@ class SettingsViewModelTest {
 
         override suspend fun setTimeSelectorHidden(hidden: Boolean) {
             settings.value = settings.value.copy(hideTimeSelector = hidden)
+        }
+    }
+
+    private class FakeWidgetRefreshRequester : WidgetRefreshRequester {
+        var refreshCount = 0
+
+        override fun refreshAll() {
+            refreshCount += 1
         }
     }
 }

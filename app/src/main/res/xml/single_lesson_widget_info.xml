@@ -4,9 +4,9 @@
     android:initialKeyguardLayout="@layout/single_lesson_widget_dash"
     android:initialLayout="@layout/single_lesson_widget_dash"
     android:minWidth="250dp"
-    android:minHeight="80dp"
+    android:minHeight="56dp"
     android:previewImage="@drawable/single_lesson_widget_preview"
 
     android:updatePeriodMillis="3600000"
-    android:resizeMode="horizontal"
+    android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />

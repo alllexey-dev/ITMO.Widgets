@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -42,18 +43,37 @@ class MainActivity : AppCompatActivity() {
         }
 
         val navView = binding.bottomNavView
-        if (savedInstanceState == null) {
-            navView.selectedItemId = R.id.navigation_home
-        }
-
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
 
         val navController = navHostFragment.navController
         navView.setupWithNavController(navController)
 
+        when {
+            intent.action == ACTION_OPEN_SCHEDULE -> {
+                navView.selectedItemId = R.id.navigation_schedule
+            }
+
+            savedInstanceState == null -> {
+                navView.selectedItemId = R.id.navigation_home
+            }
+        }
+
         if (savedInstanceState == null) {
             lifecycleScope.launch { backendIdentitySync.sync() }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.action == ACTION_OPEN_SCHEDULE) {
+            binding.bottomNavView.selectedItemId = R.id.navigation_schedule
+        }
+    }
+
+    companion object {
+        const val ACTION_OPEN_SCHEDULE =
+            "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE"
     }
 }

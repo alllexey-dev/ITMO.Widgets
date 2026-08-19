@@ -8,11 +8,13 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
+import dev.alllexey.itmowidgets.app.WidgetRefreshCoordinator
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
+import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
+import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import javax.inject.Singleton
 
 @Module
@@ -30,6 +32,12 @@ abstract class SettingsModule {
     abstract fun bindCustomServicesRepository(
         impl: CustomServicesRepositoryImpl
     ): CustomServicesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindWidgetRefreshRequester(
+        impl: WidgetRefreshCoordinator
+    ): WidgetRefreshRequester
 
     companion object {
 

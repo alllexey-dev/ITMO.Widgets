@@ -27,7 +27,8 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 class SettingsRenderer(
     private val container: LinearLayout,
     private val onToggle: (key: String, checked: Boolean) -> Unit,
-    private val onNavigate: (destinationId: Int) -> Unit
+    private val onNavigate: (destinationId: Int) -> Unit,
+    private val onAction: (key: String) -> Unit,
 ) {
 
     private val inflater = LayoutInflater.from(container.context)
@@ -82,6 +83,7 @@ class SettingsRenderer(
         return when (item) {
             is SettingItem.Toggle -> createToggle(item, parent)
             is SettingItem.Navigation -> createNavigation(item, parent)
+            is SettingItem.Action -> createAction(item, parent)
             is SettingItem.Info -> createInfo(item, parent)
         }
     }
@@ -121,6 +123,19 @@ class SettingsRenderer(
         return binding.root
     }
 
+    private fun createAction(item: SettingItem.Action, parent: ViewGroup): View {
+        val binding = ItemSettingRowBinding.inflate(inflater, parent, false)
+        rowBindings[item.key] = binding
+
+        binding.settingChevron.isVisible = item.trailingIconRes != null
+        item.trailingIconRes?.let(binding.settingChevron::setImageResource)
+        binding.root.setOnClickListener { onAction(item.key) }
+        binding.root.isClickable = true
+        binding.root.setBackgroundResource(selectableItemBackground())
+
+        return binding.root
+    }
+
     private fun update(item: SettingItem) {
         when (item) {
             is SettingItem.Toggle -> updateToggle(item)
@@ -129,6 +144,12 @@ class SettingsRenderer(
                 binding.settingTitle.text = item.title.resolve(container.context)
                 bindOptionalText(binding.settingDescription, item.description)
                 bindOptionalText(binding.settingValue, item.value)
+            }
+            is SettingItem.Action -> {
+                val binding = rowBindings[item.key] ?: return
+                binding.settingTitle.text = item.title.resolve(container.context)
+                bindOptionalText(binding.settingDescription, item.description)
+                binding.settingValue.isVisible = false
             }
             is SettingItem.Info -> {
                 val binding = rowBindings[item.key] ?: return

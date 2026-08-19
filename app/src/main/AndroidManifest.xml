@@ -28,7 +28,8 @@
 
         <receiver
             android:name=".feature.qr.ui.widget.QrCodeWidgetProvider"
-            android:exported="false">
+            android:exported="false"
+            android:label="@string/qr_widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="dev.alllexey.itmowidgets.action.QR_WIDGET_CLICK" />
@@ -37,6 +38,48 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/qr_code_widget_info" />
         </receiver>
+
+        <receiver
+            android:name=".feature.schedule.ui.widget.SingleLessonWidgetProvider"
+            android:exported="false"
+            android:label="@string/single_lesson_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/single_lesson_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".feature.schedule.ui.widget.DayScheduleWidgetProvider"
+            android:exported="false"
+            android:label="@string/list_lesson_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/lesson_list_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".feature.schedule.work.ScheduleWidgetRefreshReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".app.WidgetBootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".feature.schedule.ui.widget.ScheduleWidgetRemoteViewsService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
 
     </application>
 

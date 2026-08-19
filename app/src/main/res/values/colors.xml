@@ -21,4 +21,12 @@
     <color name="free_color">#7A7A7A</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- App-widget palette for launchers that cannot resolve the activity theme. -->
+    <color name="widget_surface">#FFFDFBFF</color>
+    <color name="widget_surface_container">#FFF3EDF7</color>
+    <color name="widget_on_surface">#FF1C1B1F</color>
+    <color name="widget_on_surface_variant">#FF49454F</color>
+    <color name="widget_outline_variant">#FFCAC4D0</color>
+    <color name="widget_primary">#FF6750A4</color>
 </resources>
