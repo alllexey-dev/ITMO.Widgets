@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
@@ -12,7 +13,7 @@ import javax.inject.Inject
 
 class QrBitmapCacheImpl @Inject constructor(
     @param:ApplicationContext private val context: Context
-) : QrBitmapCache {
+) : QrBitmapCache, SessionDataCleaner {
 
     private val cacheDir: File by lazy {
         File(context.cacheDir, "bitmap_cache")
@@ -61,5 +62,9 @@ class QrBitmapCacheImpl @Inject constructor(
         } else {
             File(cacheDir, type).deleteRecursively()
         }
+    }
+
+    override suspend fun clearSessionData() {
+        clearCache(type = null)
     }
 }

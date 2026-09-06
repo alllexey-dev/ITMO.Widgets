@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -13,7 +14,7 @@ import kotlinx.coroutines.flow.first
 @Singleton
 class DataStoreFriendSelectionHistory @Inject constructor(
     @param:AppPreferences private val dataStore: DataStore<Preferences>
-) : FriendSelectionHistory {
+) : FriendSelectionHistory, SessionDataCleaner {
 
     override suspend fun getRecentIsu(): List<Int> {
         return dataStore.data.first()[RECENT_FRIENDS]
@@ -33,6 +34,10 @@ class DataStoreFriendSelectionHistory @Inject constructor(
                 .take(MAX_RECENT_FRIENDS)
                 .joinToString(SEPARATOR)
         }
+    }
+
+    override suspend fun clearSessionData() {
+        dataStore.edit { preferences -> preferences.remove(RECENT_FRIENDS) }
     }
 
     private companion object {

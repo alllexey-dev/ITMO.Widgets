@@ -75,6 +75,8 @@ class IdTokenCurrentUserProviderTest {
 
         override fun replaceWithRefreshToken(refreshToken: String) = Unit
 
+        override fun replaceWithTokens(tokens: SessionTokens) = Unit
+
         override fun clearTokens() = Unit
     }
 }

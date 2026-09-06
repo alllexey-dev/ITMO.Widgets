@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.friend.FriendListState
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +20,7 @@ import javax.inject.Inject
 class FriendRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
     private val widgetsApi: ItmoWidgetsApi
-) : FriendRepository {
+) : FriendRepository, SessionDataCleaner {
 
     private val state = MutableStateFlow<FriendListState>(FriendListState.Loading)
     private val currentUser = MutableStateFlow<UserSummary?>(null)
@@ -46,6 +47,11 @@ class FriendRepositoryImpl @Inject constructor(
             currentUser.value = profile.await()
             friends
         }
+    }
+
+    override suspend fun clearSessionData() {
+        currentUser.value = null
+        state.value = FriendListState.Loading
     }
 
     private suspend fun fetchFriends(): FriendListState {

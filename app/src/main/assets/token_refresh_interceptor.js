@@ -7,9 +7,8 @@
         try {
             const data = JSON.parse(responseText);
 
-            if (window.AndroidApp) {
-                console.log('Intercepted tokens response. Sending to Android app.');
-                window.AndroidApp.postTokens(responseText);
+            if (window.ItmoAuthBridge && data.access_token && data.refresh_token && data.id_token) {
+                window.ItmoAuthBridge.postTokens(responseText);
             }
         } catch (e) {
             console.error('Interceptor: Error processing response text.', e);
@@ -27,7 +26,6 @@
     XMLHttpRequest.prototype.send = function(...args) {
         this.addEventListener('load', function() {
             if (this._url === tokenUrl) {
-                console.log('Interceptor: Matched XMLHttpRequest to:', this._url);
                 processResponse(this.responseText);
             }
         });
@@ -35,5 +33,4 @@
         return originalXhrSend.apply(this, args);
     };
 
-    console.log('XHR Interceptor is now active.');
 })();

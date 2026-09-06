@@ -63,6 +63,10 @@ object ScheduleWidgetWork {
     fun cancelIfUnused(context: Context) {
         if (ScheduleWidgetProviders.hasAnyWidget(context)) return
 
+        cancelAll(context)
+    }
+
+    fun cancelAll(context: Context) {
         alarmManager(context).cancel(refreshIntent(context))
         WorkManager.getInstance(context).cancelUniqueWork(UPDATE_WORK)
         WorkManager.getInstance(context).cancelUniqueWork(PERIODIC_WORK)

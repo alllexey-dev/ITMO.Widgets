@@ -65,6 +65,13 @@ object QrWidgetWork {
         alarmManager(context).cancel(autoHideIntent(context, appWidgetId))
     }
 
+    fun cancelAll(context: Context) {
+        WorkManager.getInstance(context).cancelUniqueWork(UPDATE_WORK)
+        QrCodeWidgetProvider.widgetIds(context).forEach { appWidgetId ->
+            cancelAutoHide(context, appWidgetId)
+        }
+    }
+
     private fun alarmManager(context: Context): AlarmManager {
         return context.getSystemService(AlarmManager::class.java)
     }

@@ -32,6 +32,7 @@ data class ScheduleWidgetLesson(
 
 enum class SingleLessonWidgetKind {
     LOADING,
+    SIGNED_OUT,
     LESSON,
     EMPTY_TODAY,
     NO_MORE_TODAY,
@@ -46,6 +47,7 @@ data class SingleLessonWidgetContent(
 
 enum class ScheduleListWidgetItemKind {
     LOADING,
+    SIGNED_OUT,
     HEADER,
     LESSON,
     EMPTY_TODAY,
@@ -103,6 +105,20 @@ data class ScheduleWidgetSnapshot(
                 singleLesson = SingleLessonWidgetContent(SingleLessonWidgetKind.ERROR),
                 lessonList = listOf(
                     ScheduleListWidgetItem(ScheduleListWidgetItemKind.ERROR)
+                ),
+                singleLessonStyle = singleLessonStyle,
+                lessonListStyle = lessonListStyle
+            )
+        }
+
+        fun signedOut(
+            singleLessonStyle: LessonStyle = LessonStyle.DOT,
+            lessonListStyle: LessonStyle = LessonStyle.DOT,
+        ): ScheduleWidgetSnapshot {
+            return ScheduleWidgetSnapshot(
+                singleLesson = SingleLessonWidgetContent(SingleLessonWidgetKind.SIGNED_OUT),
+                lessonList = listOf(
+                    ScheduleListWidgetItem(ScheduleListWidgetItemKind.SIGNED_OUT)
                 ),
                 singleLessonStyle = singleLessonStyle,
                 lessonListStyle = lessonListStyle

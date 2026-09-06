@@ -4,6 +4,7 @@ import android.util.Log
 import api.myitmo.model.other.TokenResponse
 import api.myitmo.storage.Storage
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
+import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.time.WallClock
 import java.io.File
 import java.time.Clock
@@ -63,22 +64,35 @@ class MyItmoStorage @Inject constructor(
 
     @Synchronized
     override fun update(tokenResponse: TokenResponse) {
-        val now = clock.millis()
-        updateState {
-            TokenState(
+        replaceWithTokens(
+            SessionTokens(
                 accessToken = tokenResponse.accessToken,
-                accessExpiresAt = calculateTokenExpiration(
-                    now,
-                    tokenResponse.expiresIn.toLong()
-                ),
+                accessExpiresInSeconds = tokenResponse.expiresIn,
                 refreshToken = tokenResponse.refreshToken,
-                refreshExpiresAt = calculateTokenExpiration(
-                    now,
-                    tokenResponse.refreshExpiresIn.toLong()
-                ),
+                refreshExpiresInSeconds = tokenResponse.refreshExpiresIn,
                 idToken = tokenResponse.idToken
             )
-        }
+        )
+    }
+
+    @Synchronized
+    override fun replaceWithTokens(tokens: SessionTokens) {
+        val now = clock.millis()
+        persist(
+            TokenState(
+                accessToken = tokens.accessToken,
+                accessExpiresAt = calculateTokenExpiration(
+                    now,
+                    tokens.accessExpiresInSeconds
+                ),
+                refreshToken = tokens.refreshToken,
+                refreshExpiresAt = calculateTokenExpiration(
+                    now,
+                    tokens.refreshExpiresInSeconds
+                ),
+                idToken = tokens.idToken
+            )
+        )
     }
 
     @Synchronized

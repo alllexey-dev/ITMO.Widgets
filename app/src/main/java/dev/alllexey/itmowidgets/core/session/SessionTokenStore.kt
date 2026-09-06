@@ -9,5 +9,15 @@ interface SessionTokenStore {
 
     fun replaceWithRefreshToken(refreshToken: String)
 
+    fun replaceWithTokens(tokens: SessionTokens)
+
     fun clearTokens()
 }
+
+data class SessionTokens(
+    val accessToken: String,
+    val accessExpiresInSeconds: Long,
+    val refreshToken: String,
+    val refreshExpiresInSeconds: Long,
+    val idToken: String
+)

@@ -159,6 +159,9 @@ object ScheduleWidgetRenderer {
             dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind.LOADING ->
                 R.string.schedule_widget_loading
 
+            dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind.SIGNED_OUT ->
+                R.string.schedule_widget_signed_out
+
             dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind.EMPTY_TODAY ->
                 R.string.schedule_widget_empty_today
 

@@ -82,6 +82,12 @@ class ScheduleWidgetRemoteViewsService : RemoteViewsService() {
                     R.string.schedule_widget_error
                 )
 
+                ScheduleListWidgetItemKind.SIGNED_OUT -> message(
+                    R.layout.item_lesson_list_error,
+                    R.id.empty_view,
+                    R.string.schedule_widget_signed_out
+                )
+
                 ScheduleListWidgetItemKind.LOADING -> message(
                     R.layout.item_lesson_list_updating,
                     R.id.empty_view,
@@ -132,7 +138,7 @@ class ScheduleWidgetRemoteViewsService : RemoteViewsService() {
         override fun onDestroy() = Unit
 
         private companion object {
-            const val VIEW_TYPE_COUNT = 8
+            const val VIEW_TYPE_COUNT = 9
             val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern(
                 "d MMMM",
                 Locale.forLanguageTag("ru")

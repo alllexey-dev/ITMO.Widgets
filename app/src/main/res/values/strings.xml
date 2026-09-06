@@ -210,6 +210,10 @@
     <string name="me_group_app">Приложение</string>
     <string name="me_unknown_user">Профиль недоступен</string>
     <string name="me_isu">ИСУ %1$d</string>
+    <string name="me_group_account">Аккаунт</string>
+    <string name="me_sign_out">Выйти</string>
+    <string name="me_sign_out_confirm_title">Выйти из аккаунта?</string>
+    <string name="me_sign_out_confirm_message">Данные аккаунта и содержимое виджетов будут удалены с устройства. Настройки приложения сохранятся.</string>
 
     <string name="settings_title">Настройки</string>
     <string name="settings_back">Назад</string>
@@ -299,4 +303,24 @@
     <string name="sport_friends_more">%1$s, и др.</string>
 
     <string name="onboarding_services_disclaimer">Чтобы работали уведомления и автозапись, серверу нужно подтвердить вашу личность. Мы используем ваш токен только для проверки и <b>не сохраняем его</b> — запоминаем только шестизачный номер ИСУ. Исходный код открыт, так что всё честно.\n\n<b>Включая эту опцию, вы соглашаетесь на передачу токена для авторизации.</b></string>
+
+    <string name="auth_title">Вход в ITMO.Widgets</string>
+    <string name="auth_description">Авторизуйтесь, чтобы загрузить расписание, зачётную книжку и спорт.</string>
+    <string name="auth_reauthentication_description">Срок действия сессии закончился. Войдите снова, чтобы продолжить.</string>
+    <string name="auth_login_itmo_id">Войти через ITMO.ID</string>
+    <string name="auth_login_refresh_token">Другой способ входа</string>
+    <string name="auth_official_page_notice">Логин и пароль вводятся только на официальной странице ITMO.ID.</string>
+    <string name="auth_initializing">Проверяем сессию</string>
+    <string name="auth_signing_in">Выполняется вход</string>
+    <string name="auth_sign_in">Войти</string>
+    <string name="auth_manual_dialog_title">Вход по Refresh token</string>
+    <string name="auth_manual_dialog_description">Используйте этот способ только если обычный вход через ITMO.ID недоступен. Токен останется только на устройстве.</string>
+    <string name="auth_manual_token_hint">Refresh token</string>
+    <string name="auth_manual_token_required">Вставьте Refresh token</string>
+    <string name="auth_error_network">Не удалось связаться с ITMO.ID. Проверьте интернет и попробуйте ещё раз.</string>
+    <string name="auth_error_invalid_credentials">Не удалось подтвердить сессию. Войдите ещё раз или проверьте Refresh token.</string>
+    <string name="auth_error_unknown">Не удалось завершить вход. Попробуйте ещё раз.</string>
+    <string name="auth_web_title">Вход через ITMO.ID</string>
+    <string name="auth_web_error">Не удалось открыть страницу ITMO.ID.</string>
+    <string name="schedule_widget_signed_out">Войдите в приложение</string>
 </resources>

@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.di
 
+import android.os.Build
 import api.myitmo.MyItmo
 import com.google.gson.Gson
 import dagger.Module
@@ -7,12 +8,21 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.session.DefaultBackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.DefaultBackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.IdTokenCurrentUserProvider
+import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
+import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.UtilityStorage
+import dev.alllexey.itmowidgets.app.AndroidSessionLifecycleEffects
+import dev.alllexey.itmowidgets.feature.auth.data.DefaultRefreshTokenAuthenticator
+import dev.alllexey.itmowidgets.feature.auth.data.RefreshTokenAuthenticator
+import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
 import javax.inject.Singleton
 
 @Module
@@ -40,4 +50,40 @@ object SessionModule {
         tokenStore = tokenStore,
         gson = gson
     )
+
+    @Provides
+    @Singleton
+    fun provideBackendDeviceSession(
+        settings: AppSettingsStorage,
+        utilityStorage: UtilityStorage,
+        widgetsApi: ItmoWidgetsApi
+    ): BackendDeviceSession = DefaultBackendDeviceSession(
+        settings = settings,
+        utilityStorage = utilityStorage,
+        widgetsApi = widgetsApi,
+        deviceName = listOf(Build.MANUFACTURER, Build.MODEL)
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+            .distinct()
+            .joinToString(" ")
+            .ifBlank { "Android" }
+    )
+
+    @Provides
+    @Singleton
+    fun provideRefreshTokenAuthenticator(
+        impl: DefaultRefreshTokenAuthenticator
+    ): RefreshTokenAuthenticator = impl
+
+    @Provides
+    @Singleton
+    fun provideSessionLifecycleEffects(
+        impl: AndroidSessionLifecycleEffects
+    ): SessionLifecycleEffects = impl
+
+    @Provides
+    @Singleton
+    fun provideSessionRepository(
+        impl: SessionRepositoryImpl
+    ): SessionRepository = impl
 }

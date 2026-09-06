@@ -121,6 +121,37 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <TextView
+            style="@style/Widget.ItmoWidgets.SettingsGroupLabel"
+            android:text="@string/me_group_account" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.ItmoWidgets.SettingsCard">
+
+            <LinearLayout
+                android:id="@+id/sign_out_row"
+                style="@style/Widget.ItmoWidgets.SettingsRow"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.SettingsRowText"
+                    android:text="@string/me_sign_out"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="?attr/colorError" />
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_logout"
+                    app:tint="?attr/colorError" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
     </LinearLayout>
 
 </ScrollView>

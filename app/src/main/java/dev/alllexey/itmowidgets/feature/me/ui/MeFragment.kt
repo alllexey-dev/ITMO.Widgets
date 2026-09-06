@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
@@ -48,6 +49,9 @@ class MeFragment : Fragment() {
         binding.debugToolsRow.setOnClickListener {
             findNavController().navigate(R.id.action_me_to_debug_tools)
         }
+        binding.signOutRow.setOnClickListener {
+            showSignOutConfirmation()
+        }
 
         viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
@@ -66,5 +70,16 @@ class MeFragment : Fragment() {
         binding.profileName.text = user?.name ?: getString(R.string.me_unknown_user)
         binding.profileMeta.isVisible = user?.isu != null
         binding.profileMeta.text = user?.isu?.let { getString(R.string.me_isu, it) }
+        binding.signOutRow.isEnabled = !state.signOutInProgress
+        binding.signOutRow.alpha = if (state.signOutInProgress) 0.6f else 1f
+    }
+
+    private fun showSignOutConfirmation() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.me_sign_out_confirm_title)
+            .setMessage(R.string.me_sign_out_confirm_message)
+            .setNegativeButton(R.string.common_cancel, null)
+            .setPositiveButton(R.string.me_sign_out) { _, _ -> viewModel.signOut() }
+            .show()
     }
 }

@@ -3,7 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_nav_graph"
-    app:startDestination="@id/navigation_home">
+    app:startDestination="@id/auth">
+
+    <fragment
+        android:id="@+id/auth"
+        android:name="dev.alllexey.itmowidgets.feature.auth.ui.AuthFragment"
+        android:label="@string/auth_title"
+        tools:layout="@layout/fragment_auth" />
 
     <fragment
         android:id="@+id/navigation_recordbook"

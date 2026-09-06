@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
+import dev.alllexey.itmowidgets.core.session.SessionTokens
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -59,6 +60,10 @@ class DefaultDebugRefreshTokenControllerTest {
 
         override fun replaceWithRefreshToken(refreshToken: String) {
             this.refreshToken = refreshToken
+        }
+
+        override fun replaceWithTokens(tokens: SessionTokens) {
+            refreshToken = tokens.refreshToken
         }
 
         override fun clearTokens() {

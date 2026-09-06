@@ -62,6 +62,13 @@ abstract class QrModule {
     ): QrBitmapCache
 
     @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindQrBitmapSessionDataCleaner(
+        impl: QrBitmapCacheImpl
+    ): SessionDataCleaner
+
+    @Binds
     @Singleton
     abstract fun bindQrWidgetStateStore(
         impl: QrWidgetStateStoreImpl
