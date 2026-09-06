@@ -35,7 +35,7 @@ fun api.myitmo.model.sport.SportScore.toModel(): SportScore {
     return SportScore(
         attendances = sum.attendances.toInt(),
         other = sum.other.toInt(),
-        attendancesData = attendances.map { it.toModel() }
+        attendancesData = attendances.orEmpty().map { it.toModel() }
     )
 }
 
