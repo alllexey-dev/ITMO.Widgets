@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.transition.MaterialSharedAxis
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
@@ -25,13 +26,13 @@ class SettingsNavigationTest {
     @Test
     fun categoryRowsRemainTouchableAfterForwardAndBackwardTransitions() {
         ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
-            scenario.onActivity { it.host.navController.navigate(R.id.settings) }
+            scenario.onActivity { it.openScreen(AppScreen.SETTINGS) }
             settle()
             repeat(2) {
                 onView(withText(R.string.settings_qr_short_title)).perform(click())
                 settle()
                 scenario.onActivity { activity ->
-                    val fragment = activity.host.childFragmentManager.primaryNavigationFragment as SettingsFragment
+                    val fragment = activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment as SettingsFragment
                     assertEquals(
                         SettingsPage.QR_WIDGET.name,
                         fragment.requireArguments().getString(SettingsPage.ARGUMENT)
@@ -47,23 +48,30 @@ class SettingsNavigationTest {
     fun offlinePagesEnterWithCompleteContentAndNoSpinnerFrames() {
         ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
             for (page in SettingsPage.entries.filter { it != SettingsPage.PRIVACY }) {
-                scenario.onActivity { it.host.navController.navigate(R.id.settings, Bundle().apply { putString(SettingsPage.ARGUMENT, page.name) }) }
+                scenario.onActivity { it.openScreen(AppScreen.SETTINGS, Bundle().apply { putString(SettingsPage.ARGUMENT, page.name) }) }
                 settle()
                 scenario.onActivity { activity ->
-                    val fragment = activity.host.childFragmentManager.primaryNavigationFragment as SettingsFragment
+                    val fragment = activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment as SettingsFragment
                     assertEquals(View.GONE, fragment.requireView().findViewById<View>(R.id.settings_progress).visibility)
-                    assertEquals(220L, (fragment.enterTransition as MaterialSharedAxis).duration)
+                    if (page != SettingsPage.ROOT) {
+                        assertEquals(220L, (fragment.enterTransition as MaterialSharedAxis).duration)
+                    }
                     assertTrue(fragment.returnTransition is MaterialSharedAxis)
                     if (page == SettingsPage.QR_WIDGET) {
                         assertNotNull(fragment.requireView().findViewById<ImageView>(R.id.qr_code_image).drawable)
                     }
-                    assertTrue("A real forward transition must start for $page", activity.entered.any { it.first == page })
+                    if (page == SettingsPage.ROOT) {
+                        assertTrue(activity.overlayEnteredReady.isNotEmpty())
+                        assertTrue(activity.overlayEnteredReady.all { it })
+                    } else {
+                        assertTrue("A real forward transition must start for $page", activity.entered.any { it.first == page })
+                    }
                     assertTrue("First transition frame must be ready", activity.entered.all { it.second })
                     assertTrue("Local screens must never display a spinner", activity.offlineLoadingFrames.isEmpty())
                 }
             }
             repeat(SettingsPage.entries.size - 2) {
-                scenario.onActivity { assertTrue(it.host.navController.popBackStack()) }
+                scenario.onActivity { assertTrue(it.navigation.overlayHost!!.navController.popBackStack()) }
                 settle()
             }
             scenario.recreate()

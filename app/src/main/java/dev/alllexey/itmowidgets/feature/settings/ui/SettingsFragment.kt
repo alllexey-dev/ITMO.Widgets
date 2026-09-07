@@ -25,6 +25,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.navigation.ScreenTransitionHost
+import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.ui.SettingsLevelMotion
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -75,7 +77,8 @@ class SettingsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enterTransition = SettingsLevelMotion.transition(forward = true)
+        enterTransition = if (arguments?.getBoolean(ScreenTransitionHost.ARG_OVERLAY_ROOT) == true) null
+        else SettingsLevelMotion.transition(forward = true)
         exitTransition = SettingsLevelMotion.transition(forward = true)
         returnTransition = SettingsLevelMotion.transition(forward = false)
         reenterTransition = SettingsLevelMotion.transition(forward = false)
@@ -103,7 +106,7 @@ class SettingsFragment : Fragment() {
 
         previewState = savedInstanceState?.getBundle(PREVIEW_STATE) ?: previewState
         binding.settingsTitle.text = viewModel.page.title.resolve(requireContext())
-        binding.backButton.setOnClickListener { findNavController().navigateUp() }
+        binding.backButton.setOnClickListener { closeScreen() }
         val initialBottomPadding = binding.sectionsContainer.paddingBottom
         ViewCompat.setOnApplyWindowInsetsListener(binding.sectionsContainer) { content, insets ->
             content.updatePadding(
@@ -148,7 +151,10 @@ class SettingsFragment : Fragment() {
                 renderPreview(viewModel.previewSettings.filterNotNull().first()).awaitReady()
             }
             // Enter with final local values and an already drawn QR image, not a loading frame.
-            view.doOnPreDraw { startPostponedEnterTransition() }
+            view.doOnPreDraw {
+                startPostponedEnterTransition()
+                (parentFragment as? ScreenTransitionHost)?.onContentReady()
+            }
         }
 
         viewModel.events

@@ -10,14 +10,13 @@ import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
-import androidx.navigation.navOptions
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupWithNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
@@ -25,130 +24,118 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), AppNavigator {
 
     @Inject
     lateinit var sessionRepository: SessionRepository
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var navigation: MainNavigationCoordinator
+    private var pendingRootDestination: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pendingRootDestination = if (savedInstanceState != null) {
+            savedInstanceState.getInt(PENDING_ROOT).takeIf { it != 0 }
+        } else {
+            intent.rootDestination()
+        }
         binding = ActivityMainBinding.inflate(layoutInflater)
-        val view = binding.root
         enableEdgeToEdge()
-        setContentView(view)
+        setContentView(binding.root)
 
         val navView = binding.bottomNavView
         val initialBottomNavPadding = navView.paddingBottom
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updatePadding(
-                left = systemBars.left,
-                top = systemBars.top,
-                right = systemBars.right,
-                bottom = 0
-            )
+            view.updatePadding(left = systemBars.left, top = systemBars.top, right = systemBars.right)
             navView.updatePadding(bottom = initialBottomNavPadding + systemBars.bottom)
             insets
         }
 
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-
-        val navController = navHostFragment.navController
-        navView.setupWithNavController(navController)
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            if (sessionRepository.state.value is SessionState.SignedIn) {
-                navView.isVisible = destination.id !in destinationsWithoutBottomNavigation
-            }
-        }
+        val rootHost = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navigation = MainNavigationCoordinator(binding, supportFragmentManager, rootHost)
 
         lifecycleScope.launch { sessionRepository.initialize() }
         sessionRepository.state
             .flowWithLifecycle(lifecycle)
-            .onEach { state -> renderSession(navController, state) }
+            .onEach(::renderSession)
             .launchIn(lifecycleScope)
+    }
+
+    override fun openScreen(screen: AppScreen, arguments: Bundle?) {
+        if (sessionRepository.state.value is SessionState.SignedIn) navigation.openScreen(screen, arguments)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (
-            intent.action == ACTION_OPEN_SCHEDULE &&
-            sessionRepository.state.value is SessionState.SignedIn
-        ) {
-            binding.bottomNavView.selectedItemId = R.id.navigation_schedule
-        }
+        pendingRootDestination = intent.rootDestination()
+        renderSession(sessionRepository.state.value)
     }
 
-    private fun renderSession(navController: NavController, state: SessionState) {
+    override fun onResumeFragments() {
+        super.onResumeFragments()
+        // An intent can arrive after onSaveInstanceState. Apply it only once transactions are safe.
+        renderSession(sessionRepository.state.value)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(PENDING_ROOT, pendingRootDestination ?: 0)
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun renderSession(state: SessionState) {
+        if (supportFragmentManager.isStateSaved) return
+        val controller = navigation.rootHost.navController
         when (state) {
             SessionState.Initializing -> {
                 binding.bottomNavView.isVisible = false
                 binding.navHostFragment.isVisible = false
+                binding.overlayContainer.isVisible = false
                 binding.sessionProgress.isVisible = true
             }
 
             SessionState.SigningOut,
             SessionState.SignedOut,
             SessionState.ReauthenticationRequired -> {
+                navigation.dismissOverlays()
+                binding.overlayContainer.isVisible = false
                 binding.bottomNavView.isVisible = false
-                if (navController.currentDestination?.id != R.id.auth) {
-                    navController.setGraph(R.navigation.main_nav_graph)
+                if (controller.currentDestination?.id != R.id.auth) {
+                    controller.setGraph(R.navigation.main_nav_graph)
                 }
                 revealResolvedGraph()
             }
 
             is SessionState.SignedIn -> {
-                val destination = if (intent.action == ACTION_OPEN_SCHEDULE) {
-                    R.id.navigation_schedule
-                } else {
-                    R.id.navigation_home
-                }
-                when (navController.currentDestination?.id) {
-                    null -> {
-                        val graph = navController.navInflater.inflate(
-                            R.navigation.main_nav_graph
-                        )
-                        graph.setStartDestination(destination)
-                        navController.graph = graph
+                if (controller.currentDestination == null || controller.currentDestination?.id == R.id.auth) {
+                    controller.graph = controller.navInflater.inflate(R.navigation.main_nav_graph).apply {
+                        setStartDestination(R.id.navigation_home)
                     }
-
-                    R.id.auth -> navController.navigate(
-                        destination,
-                        null,
-                        navOptions {
-                            popUpTo(R.id.auth) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    )
                 }
-                binding.bottomNavView.isVisible = navController.currentDestination
-                    ?.id
-                    ?.let { destinationId ->
-                        destinationId !in destinationsWithoutBottomNavigation
-                    }
-                    ?: false
+                pendingRootDestination?.let { destination ->
+                    if (navigation.selectRoot(destination)) pendingRootDestination = null
+                }
+                // Contextual navigation covers this surface instead of resizing it.
+                binding.bottomNavView.isVisible = true
+                binding.overlayContainer.isVisible = true
                 revealResolvedGraph()
             }
         }
     }
 
     private fun revealResolvedGraph() {
-        supportFragmentManager.executePendingTransactions()
+        navigation.rootHost.childFragmentManager.executePendingTransactions()
         binding.sessionProgress.isVisible = false
         binding.navHostFragment.isVisible = true
     }
 
-    companion object {
-        const val ACTION_OPEN_SCHEDULE =
-            "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE"
+    private fun Intent.rootDestination(): Int? =
+        if (action == ACTION_OPEN_SCHEDULE) R.id.navigation_schedule else null
 
-        private val destinationsWithoutBottomNavigation = setOf(
-            R.id.settings,
-            R.id.debug_tools,
-            R.id.recordbook_subject
-        )
+    companion object {
+        const val ACTION_OPEN_SCHEDULE = "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE"
+        private const val PENDING_ROOT = "pending_root_destination"
     }
 }

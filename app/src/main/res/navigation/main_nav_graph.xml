@@ -15,19 +15,7 @@
         android:id="@+id/navigation_recordbook"
         android:name="dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookFragment"
         android:label="Record book"
-        tools:layout="@layout/fragment_recordbook">
-
-        <action
-            android:id="@+id/action_recordbook_to_recordbook_subject"
-            app:destination="@id/recordbook_subject" />
-
-    </fragment>
-
-    <fragment
-        android:id="@+id/recordbook_subject"
-        android:name="dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookSubjectFragment"
-        android:label="Record book subject"
-        tools:layout="@layout/fragment_recordbook_subject" />
+        tools:layout="@layout/fragment_recordbook" />
 
     <fragment
         android:id="@+id/navigation_schedule"
@@ -63,30 +51,6 @@
         android:id="@+id/navigation_me"
         android:name="dev.alllexey.itmowidgets.feature.me.ui.MeFragment"
         android:label="Me"
-        tools:layout="@layout/fragment_me">
-        <action
-            android:id="@+id/action_me_to_settings"
-            app:destination="@id/settings" />
-        <action
-            android:id="@+id/action_me_to_debug_tools"
-            app:destination="@id/debug_tools" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/settings"
-        android:name="dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment"
-        android:label="Settings"
-        tools:layout="@layout/fragment_settings">
-        <argument
-            android:name="settings_page"
-            android:defaultValue="ROOT"
-            app:argType="string" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/debug_tools"
-        android:name="dev.alllexey.itmowidgets.feature.debug.ui.DebugToolsFragment"
-        android:label="Debug tools"
-        tools:layout="@layout/fragment_debug_tools" />
+        tools:layout="@layout/fragment_me" />
 
 </navigation>

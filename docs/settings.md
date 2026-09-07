@@ -18,12 +18,16 @@ permission; multi-option categories do not summarize one arbitrarily chosen togg
 Explanations shared by several controls appear once below their group.
 
 The root and offline categories enter with persisted local values already rendered;
-they never display a loading indicator. Profile → settings → category uses a
-220 ms horizontal shared-axis transition, reversed on back navigation and governed
-by the system animation scale. Only privacy has a network-loading state.
-The profile remains one transition target after view recreation and during back
-gestures: identity fields and the avatar never slide independently inside their
-clipping parents.
+they never display a loading indicator. Settings open as a full-screen surface
+sliding above the unchanged profile and bottom bar in 220 ms. Categories use a
+220 ms horizontal shared-axis transition inside that surface; Back reverses one
+level at a time. Motion follows system animation scale. Only privacy has a
+network-loading state. Identity fields and the avatar underneath remain stationary.
+
+Every contextual section opened from Profile follows this overlay flow. Selecting
+or reselecting a root destination, including opening Schedule from a widget, closes
+the entire overlay stack. Returning to Profile then shows its menu, not old settings
+history. Rotation restores the current level; it does not act as a root switch.
 
 Navigation rows have a minimum 48 dp touch target and expand for large text.
 Settings use quiet surface-container cards without a stroke or elevation. The

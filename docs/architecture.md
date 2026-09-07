@@ -66,6 +66,7 @@ core/                   cross-cutting; knows nothing about features
   text/                 UiText
   time/                 AcademicTimeProvider, WallClock
   ui/                   AvatarView, CircularProgressBar, AppErrorText, UiTextResolver
+    navigation/         AppNavigator UI port for contextual screens
   util/                 small shared helpers
 di/                     Hilt modules, one per feature or concern
 feature/
@@ -201,9 +202,25 @@ growing module. Workers use `@HiltWorker`. The backend base URL comes from
 
 ### Navigation
 
-A single Nav graph. Root destinations keep their own back stacks; contextual screens
-(settings, debug tools, subject, and later user/teacher/review) are ordinary
-destinations with an in-layout back button, because the application has no app bar.
+One Activity owns two navigation surfaces. `main_nav_graph` contains authentication,
+the five bottom destinations, and the schedule friend-selector dialog. The root
+host and bottom bar retain their geometry while a full-screen `AppOverlayHostFragment`
+slides above them. `overlay_nav_graph` owns settings, debug tools, and subject details;
+future contextual user/teacher/review screens belong there too. Features open these
+screens through `core/ui/navigation.AppNavigator`, implemented in the app layer.
+
+`MainNavigationCoordinator` makes the overlay host the primary navigation Fragment
+in one reversible parent transaction. The covered root remains STARTED with its
+view intact; only the overlay handles Back and accessibility. Nested Back pops one
+level; Back at the overlay root removes the surface without animating profile children.
+Root selection/reselection discards the entire overlay and any root dialog before
+switching tabs. Overlay history is never saved as part of a bottom tab's back stack.
+Activity recreation restores the current overlay level, unlike explicit root selection.
+
+Widget intents use the same root-selection path. `MainActivity` queues an intent
+received after state saving until `onResumeFragments`, saves that pending destination,
+and consumes it once so rotation does not replay an old widget intent. Sign-out
+removes overlays before revealing authentication. No navigation commits allow state loss.
 
 `ScheduleFragment` snapshots its list position before destroying its view. State
 saving must also work for viewless back-stack Fragments; pending scroll restoration
@@ -229,9 +246,10 @@ unknown switches. Disabling services bypasses the delay immediately.
 enter transition until persisted sections and any initial QR image are ready,
 then start on pre-draw; offline pages never show a progress indicator. Shared-axis
 transitions use explicit forward/backward directions and a 220 ms duration.
-Profile transition grouping lives in its XML root, not in the outgoing click
-handler: Navigation recreates that view on return. Cached profile identity is
-bound before transition capture, and reenter motion is configured in `onCreate`.
+The first settings page signals `ScreenTransitionHost` on ready pre-draw, releasing
+the parent surface's postponed 220 ms slide. Only deeper settings levels use
+shared-axis motion; the profile underneath never exits or animates its children.
+Cached profile identity is bound before its first draw, including activity recreation.
 
 Widget settings values and `WidgetPreviewSettings` live in `core/settings`.
 `SettingsViewModel.previewSettings` emits only persisted values for QR/schedule

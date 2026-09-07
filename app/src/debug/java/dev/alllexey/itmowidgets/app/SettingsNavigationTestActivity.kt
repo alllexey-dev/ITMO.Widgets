@@ -3,23 +3,28 @@ package dev.alllexey.itmowidgets.app
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.descendants
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.FragmentNavigator
 import androidx.transition.Transition
 import androidx.transition.TransitionListenerAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUser
@@ -37,7 +42,12 @@ import kotlinx.coroutines.flow.onStart
 
 /** Actual settings/NavHost lifecycle, backed only by in-memory settings and no credentials. */
 @AndroidEntryPoint
-class SettingsNavigationTestActivity : AppCompatActivity() {
+class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
+    lateinit var binding: ActivityMainBinding
+        private set
+    lateinit var navigation: MainNavigationCoordinator
+        private set
+    val overlayEnteredReady = mutableListOf<Boolean>()
     val entered = mutableListOf<Pair<SettingsPage, Boolean>>()
     val offlineLoadingFrames = mutableListOf<SettingsPage>()
     val groupedProfileFrames = mutableListOf<Boolean>()
@@ -74,6 +84,14 @@ class SettingsNavigationTestActivity : AppCompatActivity() {
             }
 
             override fun onFragmentViewCreated(fm: FragmentManager, f: Fragment, v: View, state: Bundle?) {
+                if (f is AppOverlayHostFragment) {
+                    (f.enterTransition as? Transition)?.addListener(object : TransitionListenerAdapter() {
+                        override fun onTransitionStart(transition: Transition) {
+                            val content = f.childFragmentManager.primaryNavigationFragment?.view
+                            overlayEnteredReady += content?.findViewById<View>(R.id.settings_scroll)?.visibility == View.VISIBLE
+                        }
+                    })
+                }
                 if (f is MeFragment && v is ViewGroup) {
                     val initialAlphas = v.descendants.associateWith { it.alpha }
                     v.viewTreeObserver.addOnPreDrawListener {
@@ -92,7 +110,7 @@ class SettingsNavigationTestActivity : AppCompatActivity() {
                     }
                     true
                 }
-                (f.enterTransition as Transition).addListener(object : TransitionListenerAdapter() {
+                (f.enterTransition as? Transition)?.addListener(object : TransitionListenerAdapter() {
                     override fun onTransitionStart(transition: Transition) {
                         val contentReady = if (page == SettingsPage.PRIVACY) true else {
                             v.findViewById<View>(R.id.settings_scroll).visibility == View.VISIBLE &&
@@ -104,26 +122,37 @@ class SettingsNavigationTestActivity : AppCompatActivity() {
             }
         }, true)
         super.onCreate(savedInstanceState)
-        setContentView(FrameLayout(this).apply {
-            id = R.id.settings_test_container
-            ViewCompat.setOnApplyWindowInsetsListener(this) { view, insets ->
-                view.updatePadding(top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top)
-                insets
-            }
-        })
-        if (savedInstanceState == null) {
-            val navHost = NavHostFragment()
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.settings_test_container, navHost, "settings-nav")
-                .setPrimaryNavigationFragment(navHost)
-                .commitNow()
-            navHost.navController.graph = navHost.navController.navInflater.inflate(R.navigation.main_nav_graph).apply {
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        enableEdgeToEdge()
+        setContentView(binding.root)
+        val bottomPadding = binding.bottomNavView.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updatePadding(left = bars.left, top = bars.top, right = bars.right)
+            binding.bottomNavView.updatePadding(bottom = bottomPadding + bars.bottom)
+            insets
+        }
+        if (host.navController.currentDestination == null) {
+            host.navController.graph = host.navController.navInflater.inflate(R.navigation.main_nav_graph).apply {
                 setStartDestination(R.id.navigation_home)
+                // Root routing is real; unrelated roots use the static Home view to avoid API calls.
+                listOf(R.id.navigation_schedule, R.id.navigation_recordbook, R.id.navigation_sport).forEach {
+                    (findNode(it) as FragmentNavigator.Destination).setClassName(
+                        "dev.alllexey.itmowidgets.feature.home.ui.HomeFragment"
+                    )
+                }
             }
         }
+        binding.sessionProgress.isVisible = false
+        binding.navHostFragment.isVisible = true
+        binding.bottomNavView.isVisible = true
+        navigation = MainNavigationCoordinator(binding, supportFragmentManager, host)
     }
 
-    val host: NavHostFragment get() = supportFragmentManager.findFragmentByTag("settings-nav") as NavHostFragment
+    override fun openScreen(screen: AppScreen, arguments: Bundle?) = navigation.openScreen(screen, arguments)
+
+    val host: NavHostFragment
+        get() = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
 
     private class FixtureRepository : SettingsRepository {
         private val local = MutableStateFlow(LocalSettings(customServicesEnabled = true))

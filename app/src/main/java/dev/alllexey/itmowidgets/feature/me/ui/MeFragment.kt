@@ -10,12 +10,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.ui.SettingsLevelMotion
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.databinding.FragmentMeBinding
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
@@ -29,11 +29,6 @@ class MeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: MeViewModel by viewModels()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        reenterTransition = SettingsLevelMotion.transition(forward = false)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,18 +44,17 @@ class MeFragment : Fragment() {
 
         binding.debugToolsRow.isVisible = BuildConfig.DEBUG
         binding.debugDivider.isVisible = BuildConfig.DEBUG
-        // The view is recreated on back navigation; render cached identity before motion starts.
+        // Bind cached identity before the first frame, including activity recreation.
         render(viewModel.uiState.value)
 
         listOf(binding.settingsRow, binding.debugToolsRow).forEach {
             ViewCompat.setScreenReaderFocusable(it, true)
         }
         binding.settingsRow.setOnClickListener {
-            exitTransition = SettingsLevelMotion.transition(forward = true)
-            findNavController().navigate(R.id.action_me_to_settings)
+            openScreen(AppScreen.SETTINGS)
         }
         binding.debugToolsRow.setOnClickListener {
-            findNavController().navigate(R.id.action_me_to_debug_tools)
+            openScreen(AppScreen.DEBUG_TOOLS)
         }
         binding.signOutRow.setOnClickListener {
             showSignOutConfirmation()
@@ -70,12 +64,6 @@ class MeFragment : Fragment() {
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Settings motion is opt-in per navigation, not an animation for bottom-tab changes.
-        exitTransition = null
     }
 
     override fun onDestroyView() {

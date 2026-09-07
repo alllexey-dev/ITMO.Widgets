@@ -20,7 +20,7 @@ import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import java.io.File
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,7 +29,7 @@ import org.junit.runner.RunWith
 @SdkSuppress(minSdkVersion = 34)
 class ProfileBackMotionTest {
     @Test
-    fun recreatedProfileMovesAsOneSurfaceDuringCompletedAndCancelledBackGestures() {
+    fun profileStaysMountedAndStationaryDuringCompletedAndCancelledOverlayBackGestures() {
         ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
             scenario.onActivity { it.host.navController.navigate(R.id.navigation_me) }
             settle()
@@ -41,7 +41,7 @@ class ProfileBackMotionTest {
             }
             onView(withId(R.id.settings_row)).perform(click())
             settle()
-            scenario.onActivity { assertEquals(null, originalFragment.view) }
+            scenario.onActivity { assertSame(originalView, originalFragment.requireView()) }
 
             // Exercise both gesture edges, including cancellation and a subsequent successful pop.
             for ((edge, cancel) in listOf(BackEventCompat.EDGE_LEFT to true, BackEventCompat.EDGE_RIGHT to false)) {
@@ -51,9 +51,9 @@ class ProfileBackMotionTest {
                     scenario.onActivity { it.onBackPressedDispatcher.dispatchOnBackProgressed(event(progress, edge)) }
                     settle(80)
                     scenario.onActivity { activity ->
-                        // Non-seekable transitions may defer the incoming view until commit.
+                        // The root view stays mounted even during an interactive overlay gesture.
                         (originalFragment.view as? ViewGroup)?.let { root ->
-                            assertNotSame(originalView, root)
+                            assertSame(originalView, root)
                             assertGroupedProfile(root)
                             capture(activity, "edge-$edge-$progress")
                         }
@@ -65,12 +65,13 @@ class ProfileBackMotionTest {
                 }
                 settle()
                 scenario.onActivity {
-                    assertEquals(if (cancel) R.id.settings else R.id.navigation_me, it.host.navController.currentDestination?.id)
+                    assertEquals(R.id.navigation_me, it.host.navController.currentDestination?.id)
+                    assertEquals(cancel, it.navigation.overlayHost != null)
                 }
             }
             scenario.onActivity {
                 val root = profile(it).requireView() as ViewGroup
-                assertNotSame(originalView, root)
+                assertSame(originalView, root)
                 assertGroupedProfile(root)
                 capture(it, "completed")
             }
@@ -93,7 +94,7 @@ class ProfileBackMotionTest {
         activity.host.childFragmentManager.fragments.filterIsInstance<MeFragment>().single()
 
     private fun assertGroupedProfile(root: ViewGroup) {
-        assertTrue("A recreated profile must remain one transition target", root.isTransitionGroup)
+        assertTrue("The profile must remain a stationary surface", root.isTransitionGroup)
         root.descendants.forEach {
             assertEquals("Profile children must not slide inside their clipping parents", 0f, it.translationX, 0.01f)
             assertEquals(0f, it.translationY, 0.01f)
@@ -108,7 +109,7 @@ class ProfileBackMotionTest {
     )
 
     private fun capture(activity: SettingsNavigationTestActivity, name: String) {
-        val root = activity.findViewById<View>(R.id.settings_test_container)
+        val root = activity.findViewById<View>(R.id.main)
         val bitmap = Bitmap.createBitmap(root.width, root.height, Bitmap.Config.ARGB_8888)
         root.draw(Canvas(bitmap))
         val folder = File(activity.externalCacheDir, "profile-back-screenshots").apply { mkdirs() }

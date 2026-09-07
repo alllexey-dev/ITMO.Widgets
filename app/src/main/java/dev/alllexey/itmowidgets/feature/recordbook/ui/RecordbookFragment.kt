@@ -10,10 +10,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookBinding
@@ -163,8 +164,8 @@ class RecordbookFragment : Fragment() {
     }
 
     private fun openSubject(subject: RecordbookSubject) {
-        findNavController().navigate(
-            R.id.action_recordbook_to_recordbook_subject,
+        openScreen(
+            AppScreen.RECORDBOOK_SUBJECT,
             bundleOf(
                 RecordbookSubjectViewModel.ARG_ENTRY_ID to subject.entryId,
                 RecordbookSubjectFragment.ARG_NAME to subject.name,

@@ -9,9 +9,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookSubjectBinding
@@ -86,7 +86,7 @@ class RecordbookSubjectFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        binding.backButton.setOnClickListener { findNavController().navigateUp() }
+        binding.backButton.setOnClickListener { closeScreen() }
         binding.swipeRefreshLayout.setOnRefreshListener(viewModel::refresh)
         binding.stateAction.setOnClickListener { viewModel.refresh() }
     }

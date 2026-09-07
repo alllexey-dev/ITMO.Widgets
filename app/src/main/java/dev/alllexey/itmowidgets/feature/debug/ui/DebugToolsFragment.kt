@@ -11,11 +11,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.databinding.DialogSportScoreOverrideBinding
 import dev.alllexey.itmowidgets.databinding.DialogDebugRefreshTokenBinding
 import dev.alllexey.itmowidgets.databinding.FragmentDebugToolsBinding
@@ -47,7 +47,7 @@ class DebugToolsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.backButton.setOnClickListener { findNavController().navigateUp() }
+        binding.backButton.setOnClickListener { closeScreen() }
         // This user-facing opt-in now lives in the regular settings screen.
         binding.debugCustomServicesContainer.isVisible = false
         binding.debugRefreshTokenContainer.isVisible = BuildConfig.DEBUG
