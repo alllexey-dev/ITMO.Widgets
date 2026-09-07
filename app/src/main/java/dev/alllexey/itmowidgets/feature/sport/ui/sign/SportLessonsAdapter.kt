@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -75,6 +76,12 @@ class SportLessonsAdapter(val listener: SportSignActionsListener, private val ti
             bindBadges(item)
             bindProgress(item)
             bindActions(item, isBusy)
+            with(binding) {
+                // The 48 dp touch target contains a vertically inset outline. Align that visible
+                // outline with the card's end padding, not the button's invisible touch bounds.
+                val buttonInset = if (signUpButton.isVisible) signUpButton.insetBottom else 0
+                lessonCardContent.updatePadding(bottom = lessonCardContent.paddingEnd - buttonInset)
+            }
             binding.friendsPreview.bind(item.friendsBookings)
         }
 

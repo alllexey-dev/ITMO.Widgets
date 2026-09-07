@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.sport.cards
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import dev.alllexey.itmowidgets.R
@@ -78,7 +80,11 @@ class SportCardsVisualTest {
                 scenario.onActivity { it.showLessons(listOf(SportLessonItem(lesson), SportLessonItem(full))) }
                 settle()
                 screenshot("lessons-$index")
-                scenario.onActivity { assertTextFits(it.list, allowEllipsis = true); it.list.findViewById<View>(R.id.sportLessonCardView).performClick() }
+                scenario.onActivity {
+                    assertLessonActionInsets(it.list)
+                    assertTextFits(it.list, allowEllipsis = true)
+                    it.list.findViewById<View>(R.id.sportLessonCardView).performClick()
+                }
                 settle()
                 scenario.onActivity {
                     assertTextFits(sheet(it).requireView())
@@ -133,6 +139,7 @@ class SportCardsVisualTest {
                 settle()
                 scenario.onActivity {
                     assertTouchTargets(it.list)
+                    assertLessonActionInsets(it.list)
                     it.findViewById<MaterialButton>(R.id.sign_up_button).performClick()
                     assertEquals(expected, it.lastAction)
                     val progress = it.findViewById<LinearProgressIndicator>(R.id.occupancy_progress)
@@ -150,13 +157,18 @@ class SportCardsVisualTest {
                 val before = it.actionCount
                 val button = it.findViewById<MaterialButton>(R.id.sign_up_button)
                 assertFalse(button.isEnabled)
+                assertLessonActionInsets(it.list)
                 button.performClick()
                 assertEquals(before, it.actionCount)
             }
             screenshot("busy")
             scenario.onActivity { it.showLessons(listOf(SportLessonItem(original.copy(canSignIn = false, unavailableReasons = listOf(UnavailableReason.LessonInPast))))) }
             settle()
-            scenario.onActivity { assertEquals(View.GONE, it.findViewById<View>(R.id.sign_up_button).visibility) }
+            scenario.onActivity {
+                assertEquals(View.GONE, it.findViewById<View>(R.id.sign_up_button).visibility)
+                val content = it.findViewById<View>(R.id.lesson_card_content)
+                assertEquals("Cards without a button retain regular padding", content.paddingEnd, content.paddingBottom)
+            }
             screenshot("unavailable")
             scenario.onActivity { it.showLessons(emptyList()) }
             settle()
@@ -294,6 +306,20 @@ class SportCardsVisualTest {
         val min = 48 * root.resources.displayMetrics.density - 1
         root.descendants().filter { it.isShown && it.isClickable }.forEach {
             assertTrue("Touch target: ${it.javaClass.simpleName}", it.width >= min && it.height >= min)
+        }
+    }
+
+    private fun assertLessonActionInsets(root: View) {
+        root.descendants().filterIsInstance<MaterialCardView>().filter { it.id == R.id.sportLessonCardView }.forEach { card ->
+            val button = card.findViewById<MaterialButton>(R.id.sign_up_button)
+            if (!button.isShown) return@forEach
+            val bounds = Rect().also(button::getDrawingRect)
+            card.offsetDescendantRectToMyCoords(button, bounds)
+            val endGap = card.width - bounds.right
+            val bottomGap = card.height - bounds.bottom + button.insetBottom
+            assertEquals("Visible button outline must have equal end and bottom gaps", endGap, bottomGap)
+            val minTarget = 48 * root.resources.displayMetrics.density - 1
+            assertTrue("Button must retain its touch target", button.height >= minTarget && button.width >= minTarget)
         }
     }
 
