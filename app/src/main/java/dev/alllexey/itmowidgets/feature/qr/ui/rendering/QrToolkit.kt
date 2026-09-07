@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.qr.ui.rendering
 
 import android.graphics.Bitmap
 import androidx.core.graphics.scale
+import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCache.Companion.bitmapMeta
 import kotlinx.coroutines.flow.Flow

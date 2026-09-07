@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="spoiler_crop_title">Спойлер</string>
+    <string name="spoiler_crop_done">Готово</string>
+    <string name="spoiler_crop_rotate">Повернуть</string>
+</resources>

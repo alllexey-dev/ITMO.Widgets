@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.ItmoWidgets.CompactSettingsSectionFooter"
+    android:id="@+id/setting_section_footer"
+    tools:text="Настройки применяются ко всем виджетам расписания." />

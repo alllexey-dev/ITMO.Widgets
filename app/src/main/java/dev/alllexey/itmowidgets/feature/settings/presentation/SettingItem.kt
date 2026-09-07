@@ -10,7 +10,8 @@ import dev.alllexey.itmowidgets.core.text.UiText
  */
 data class SettingSection(
     val title: UiText?,
-    val items: List<SettingItem>
+    val items: List<SettingItem>,
+    val footer: UiText? = null
 )
 
 sealed interface SettingItem {
@@ -21,7 +22,21 @@ sealed interface SettingItem {
         override val key: String,
         val title: UiText,
         val description: UiText? = null,
-        val checked: Boolean
+        val checked: Boolean,
+        val enabled: Boolean = true,
+        /** False while an asynchronous source has not provided the real value yet. */
+        val stateKnown: Boolean = true
+    ) : SettingItem
+
+    /** Opens a single-choice Material dialog and displays the current value. */
+    data class Choice(
+        override val key: String,
+        val title: UiText,
+        val value: UiText,
+        val options: List<ChoiceOption>,
+        val selectedOptionKey: String,
+        val description: UiText? = null,
+        val enabled: Boolean = true
     ) : SettingItem
 
     /**
@@ -37,7 +52,8 @@ sealed interface SettingItem {
         val title: UiText,
         val value: UiText? = null,
         val description: UiText? = null,
-        val destinationId: Int
+        val page: SettingsPage,
+        val enabled: Boolean = true
     ) : SettingItem
 
     /** Runs an immediate command without leaving the settings screen. */
@@ -45,7 +61,9 @@ sealed interface SettingItem {
         override val key: String,
         val title: UiText,
         val description: UiText? = null,
-        val trailingIconRes: Int? = null
+        val value: UiText? = null,
+        val trailingIconRes: Int? = null,
+        val enabled: Boolean = true
     ) : SettingItem
 
     /** Read-only fact, such as the application version. */
@@ -55,3 +73,8 @@ sealed interface SettingItem {
         val value: UiText
     ) : SettingItem
 }
+
+data class ChoiceOption(
+    val key: String,
+    val label: UiText
+)

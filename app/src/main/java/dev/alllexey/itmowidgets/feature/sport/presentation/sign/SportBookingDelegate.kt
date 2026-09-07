@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
+import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.core.util.errorOrNull
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
@@ -31,7 +32,8 @@ class SportBookingDelegate @Inject constructor(
     private val scheduleRefreshGateway: ScheduleRefreshGateway,
     private val sportBookingRepository: SportBookingRepository,
     private val sportScheduleRepository: SportScheduleRepository,
-    private val sportDataRepository: SportDataRepository
+    private val sportDataRepository: SportDataRepository,
+    private val scheduleWidgetRefreshRequester: ScheduleWidgetRefreshRequester
 ) {
 
     suspend fun areCommunityServicesEnabled(): Boolean {
@@ -134,6 +136,9 @@ class SportBookingDelegate @Inject constructor(
         startDate: java.time.LocalDate,
         endDate: java.time.LocalDate
     ) {
+        // The booking has succeeded. Enqueue before UI refreshes so their failure/cancellation
+        // cannot leave installed widgets stale; the worker fetches its own fresh schedule.
+        scheduleWidgetRefreshRequester.refreshScheduleWidgets()
         coroutineScope {
             awaitAll(
                 async { sportBookingRepository.refreshSportBookings() },

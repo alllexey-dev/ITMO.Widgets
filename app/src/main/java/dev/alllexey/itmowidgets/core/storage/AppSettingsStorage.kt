@@ -27,19 +27,14 @@ class AppSettingsStorage(
     suspend fun getCustomServicesEnabled(): Boolean =
         read()[CUSTOM_SERVICES_ENABLED] ?: false
 
-    suspend fun getWidgetSmartSchedulingEnabled(): Boolean =
-        read()[WIDGET_SMART_SCHEDULING_ENABLED] ?: true
+    suspend fun getWidgetSmartSchedulingEnabled(): Boolean = true
 
     suspend fun getWidgetForwardSchedulingEnabled(): Boolean =
         read()[WIDGET_FORWARD_SCHEDULING_ENABLED] ?: true
 
-    suspend fun getSingleLessonWidgetStyle(): LessonStyle {
-        return safeEnumOf(read()[SINGLE_LESSON_WIDGET_STYLE], LessonStyle.DOT)
-    }
+    suspend fun getSingleLessonWidgetStyle(): LessonStyle = LessonStyle.DOT
 
-    suspend fun getLessonListWidgetStyle(): LessonStyle {
-        return safeEnumOf(read()[LIST_LESSON_WIDGET_STYLE], LessonStyle.DOT)
-    }
+    suspend fun getLessonListWidgetStyle(): LessonStyle = LessonStyle.DOT
 
     suspend fun getWidgetHideTeacherEnabled(): Boolean =
         read()[WIDGET_HIDE_TEACHER_ENABLED] ?: false
@@ -71,6 +66,43 @@ class AppSettingsStorage(
             .map { it[CUSTOM_SERVICES_ENABLED] ?: false }
             .distinctUntilChanged()
 
+    fun observeWidgetForwardSchedulingEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[WIDGET_FORWARD_SCHEDULING_ENABLED] ?: true }
+            .distinctUntilChanged()
+
+    fun observeWidgetHideTeacherEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[WIDGET_HIDE_TEACHER_ENABLED] ?: false }
+            .distinctUntilChanged()
+
+    fun observeWidgetHidePreviousLessonsEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[WIDGET_HIDE_PREVIOUS_LESSONS_ENABLED] ?: false }
+            .distinctUntilChanged()
+
+    fun observeWidgetFutureScheduleEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[WIDGET_FUTURE_SCHEDULE_ENABLED] ?: false }
+            .distinctUntilChanged()
+
+    fun observeQrDynamicColorsEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[QR_DYNAMIC_COLORS_ENABLED] ?: true }
+            .distinctUntilChanged()
+
+    fun observeQrSpoilerEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[QR_SPOILER_ENABLED] ?: true }
+            .distinctUntilChanged()
+
+    fun observeQrSpoilerAnimationType(): Flow<QrAnimationType> =
+        preferences
+            .map { stored ->
+                safeEnumOf(stored[QR_SPOILER_ANIMATION_TYPE], QrAnimationType.CIRCLE)
+            }
+            .distinctUntilChanged()
+
     fun observeSportSignHideTeacherSelectorEnabled(): Flow<Boolean> =
         preferences
             .map { it[SPORT_SIGN_TEACHER_SELECTOR_ENABLED] ?: true }
@@ -85,20 +117,8 @@ class AppSettingsStorage(
         write(CUSTOM_SERVICES_ENABLED, enabled)
     }
 
-    suspend fun setWidgetSmartSchedulingEnabled(enabled: Boolean) {
-        write(WIDGET_SMART_SCHEDULING_ENABLED, enabled)
-    }
-
     suspend fun setWidgetForwardSchedulingEnabled(enabled: Boolean) {
         write(WIDGET_FORWARD_SCHEDULING_ENABLED, enabled)
-    }
-
-    suspend fun setSingleLessonWidgetStyle(style: LessonStyle) {
-        write(SINGLE_LESSON_WIDGET_STYLE, style.name)
-    }
-
-    suspend fun setListLessonWidgetStyle(style: LessonStyle) {
-        write(LIST_LESSON_WIDGET_STYLE, style.name)
     }
 
     suspend fun setWidgetHideTeacherEnabled(enabled: Boolean) {
@@ -142,12 +162,6 @@ class AppSettingsStorage(
     companion object {
         private val CUSTOM_SERVICES_ENABLED =
             booleanPreferencesKey("custom_services_enabled")
-        private val SINGLE_LESSON_WIDGET_STYLE =
-            stringPreferencesKey("single_lesson_widget_style")
-        private val LIST_LESSON_WIDGET_STYLE =
-            stringPreferencesKey("list_lesson_widget_style")
-        private val WIDGET_SMART_SCHEDULING_ENABLED =
-            booleanPreferencesKey("widget_smart_scheduling_enabled")
         private val WIDGET_FORWARD_SCHEDULING_ENABLED =
             booleanPreferencesKey("widget_forward_scheduling_enabled")
         private val WIDGET_HIDE_TEACHER_ENABLED =

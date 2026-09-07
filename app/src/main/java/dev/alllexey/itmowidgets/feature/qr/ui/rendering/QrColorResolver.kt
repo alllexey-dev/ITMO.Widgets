@@ -18,10 +18,12 @@ class QrColorResolver @Inject constructor(
     }
 
     // [background, foreground]
-    fun getQrColors(dynamic: Boolean): Pair<Int, Int> {
+    fun getQrColors(dynamic: Boolean): Pair<Int, Int> = getQrColors(context, dynamic)
+
+    fun getQrColors(themeContext: Context, dynamic: Boolean): Pair<Int, Int> {
         if (!dynamic) return Color.WHITE to Color.BLACK
 
-        val color = context.color
+        val color = themeContext.color
 
         var lightBg = color.surface
         var darkModule = color.onSurfaceVariant

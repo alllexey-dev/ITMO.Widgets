@@ -48,7 +48,8 @@ class DebugToolsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.backButton.setOnClickListener { findNavController().navigateUp() }
-        binding.debugCustomServicesContainer.isVisible = BuildConfig.DEBUG
+        // This user-facing opt-in now lives in the regular settings screen.
+        binding.debugCustomServicesContainer.isVisible = false
         binding.debugRefreshTokenContainer.isVisible = BuildConfig.DEBUG
         binding.debugTimeContainer.isVisible = BuildConfig.DEBUG
         binding.debugSportScoreContainer.isVisible = BuildConfig.DEBUG

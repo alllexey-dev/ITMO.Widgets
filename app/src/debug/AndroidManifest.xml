@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name=".app.SettingsNavigationTestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".feature.schedule.ui.ScheduleLifecycleTestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".feature.settings.ui.SettingsPreviewActivity"
+            android:exported="false" />
+    </application>
+
+</manifest>

@@ -29,20 +29,25 @@ object ScheduleWidgetRenderer {
         appWidgetId: Int,
         snapshot: ScheduleWidgetSnapshot,
     ) {
-        val content = snapshot.singleLesson
-        val views = RemoteViews(
-            context.packageName,
-            singleLessonLayout(snapshot.singleLessonStyle)
-        )
+        val views = singleLessonViews(context, snapshot)
         views.setOnClickPendingIntent(
             R.id.lesson_widget_root,
             openSchedulePendingIntent(context, appWidgetId)
         )
+        appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
 
+    /** Builds the exact widget layout without registering a host or issuing an update. */
+    fun singleLessonViews(context: Context, snapshot: ScheduleWidgetSnapshot): RemoteViews {
+        val content = snapshot.singleLesson
+        val views = RemoteViews(context.packageName, singleLessonLayout(snapshot.singleLessonStyle))
         val lesson = content.lesson
         if (lesson == null) {
             bindSingleMessage(context, views, content.kind)
         } else {
+            views.setViewVisibility(R.id.widget_message, View.GONE)
+            views.setViewVisibility(R.id.lesson_content, View.VISIBLE)
+            views.setFloat(R.id.lesson_content, "setAlpha", lessonAlpha(lesson))
             bindLesson(context, views, lesson)
             views.setViewVisibility(R.id.more_lessons_layout, View.VISIBLE)
             views.setTextViewText(
@@ -50,8 +55,7 @@ object ScheduleWidgetRenderer {
                 supportingText(context, lesson.state, content.remainingLessons)
             )
         }
-
-        appWidgetManager.updateAppWidget(appWidgetId, views)
+        return views
     }
 
     fun renderListShell(
@@ -87,6 +91,10 @@ object ScheduleWidgetRenderer {
     ): RemoteViews {
         return RemoteViews(context.packageName, lessonListLayout(style)).apply {
             bindLesson(context, this, lesson)
+            // Fade the complete row, including its time column, exactly once.
+            // Reset alpha left by older widget views that only faded lesson_content.
+            setFloat(R.id.lesson_content, "setAlpha", 1f)
+            setFloat(R.id.item_root, "setAlpha", lessonAlpha(lesson))
             setOnClickFillInIntent(R.id.item_root, Intent())
         }
     }
@@ -141,14 +149,10 @@ object ScheduleWidgetRenderer {
             if (details.isBlank()) View.GONE else View.VISIBLE
         )
         views.setTextViewText(R.id.secondary_text, details)
-
-        val alpha = if (lesson.state == ScheduleWidgetLessonState.COMPLETED) {
-            COMPLETED_ALPHA
-        } else {
-            1f
-        }
-        views.setFloat(R.id.lesson_content, "setAlpha", alpha)
     }
+
+    private fun lessonAlpha(lesson: ScheduleWidgetLesson): Float =
+        if (lesson.state == ScheduleWidgetLessonState.COMPLETED) COMPLETED_ALPHA else 1f
 
     private fun bindSingleMessage(
         context: Context,
@@ -174,17 +178,9 @@ object ScheduleWidgetRenderer {
             dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind.LESSON ->
                 R.string.schedule_unknown_subject
         }
-        views.setTextViewText(R.id.title, context.getString(title))
-        views.setViewVisibility(R.id.time_column, View.GONE)
-        views.setViewVisibility(R.id.type_layout, View.GONE)
-        views.setViewVisibility(R.id.type_indicator, View.GONE)
-        views.setViewVisibility(R.id.secondary_text, View.GONE)
-        views.setViewVisibility(R.id.more_lessons_layout, View.VISIBLE)
-        views.setTextViewText(
-            R.id.more_lessons_text,
-            context.getString(R.string.schedule_widget_open_app_hint)
-        )
-        views.setFloat(R.id.lesson_content, "setAlpha", 1f)
+        views.setViewVisibility(R.id.lesson_content, View.GONE)
+        views.setViewVisibility(R.id.widget_message, View.VISIBLE)
+        views.setTextViewText(R.id.widget_message_title, context.getString(title))
     }
 
     private fun supportingText(

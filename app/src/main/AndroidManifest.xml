@@ -30,6 +30,14 @@
             android:name=".feature.auth.ui.LoginActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".feature.settings.ui.SpoilerCropActivity"
+            android:exported="false" />
+
+        <activity
+            android:name="com.canhub.cropper.CropImageActivity"
+            tools:node="remove" />
+
         <receiver
             android:name=".feature.qr.ui.widget.QrCodeWidgetProvider"
             android:exported="false"

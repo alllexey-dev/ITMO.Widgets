@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
+    android:transitionGroup="true"
     tools:context=".feature.me.ui.MeFragment">
 
     <LinearLayout
@@ -20,12 +21,12 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingVertical="20dp">
+            android:paddingVertical="16dp">
 
             <dev.alllexey.itmowidgets.core.ui.AvatarView
                 android:id="@+id/profile_avatar"
-                android:layout_width="64dp"
-                android:layout_height="64dp" />
+                android:layout_width="56dp"
+                android:layout_height="56dp" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -38,7 +39,7 @@
                     android:id="@+id/profile_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceTitleLarge"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
                     tools:text="Иванов Иван Иванович" />
 
                 <TextView
@@ -54,13 +55,8 @@
 
         </LinearLayout>
 
-        <TextView
-            style="@style/Widget.ItmoWidgets.SettingsGroupLabel"
-            android:layout_marginTop="0dp"
-            android:text="@string/me_group_app" />
-
         <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.ItmoWidgets.SettingsCard">
+            style="@style/Widget.ItmoWidgets.CompactSettingsCard">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -69,15 +65,24 @@
 
                 <LinearLayout
                     android:id="@+id/settings_row"
-                    style="@style/Widget.ItmoWidgets.SettingsRow"
+                    style="@style/Widget.ItmoWidgets.CompactSettingsRow"
                     android:background="?attr/selectableItemBackground"
                     android:clickable="true"
                     android:focusable="true">
 
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_settings"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+
                     <TextView
                         style="@style/Widget.ItmoWidgets.SettingsRowText"
                         android:text="@string/settings_title"
-                        android:textAppearance="?attr/textAppearanceBodyLarge" />
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?attr/colorOnSurface" />
 
                     <ImageView
                         android:layout_width="24dp"
@@ -90,23 +95,33 @@
 
                 <View
                     android:id="@+id/debug_divider"
-                    style="@style/Widget.ItmoWidgets.SettingsDivider"
+                    style="@style/Widget.ItmoWidgets.CompactSettingsDivider"
+                    android:layout_marginStart="56dp"
                     android:visibility="gone"
                     tools:visibility="visible" />
 
                 <LinearLayout
                     android:id="@+id/debug_tools_row"
-                    style="@style/Widget.ItmoWidgets.SettingsRow"
+                    style="@style/Widget.ItmoWidgets.CompactSettingsRow"
                     android:background="?attr/selectableItemBackground"
                     android:clickable="true"
                     android:focusable="true"
                     android:visibility="gone"
                     tools:visibility="visible">
 
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_outline_code_blocks"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+
                     <TextView
                         style="@style/Widget.ItmoWidgets.SettingsRowText"
                         android:text="@string/debug_tools_title"
-                        android:textAppearance="?attr/textAppearanceBodyLarge" />
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?attr/colorOnSurface" />
 
                     <ImageView
                         android:layout_width="24dp"
@@ -121,36 +136,18 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            style="@style/Widget.ItmoWidgets.SettingsGroupLabel"
-            android:text="@string/me_group_account" />
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.ItmoWidgets.SettingsCard">
-
-            <LinearLayout
-                android:id="@+id/sign_out_row"
-                style="@style/Widget.ItmoWidgets.SettingsRow"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    style="@style/Widget.ItmoWidgets.SettingsRowText"
-                    android:text="@string/me_sign_out"
-                    android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorError" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_logout"
-                    app:tint="?attr/colorError" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sign_out_row"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginTop="12dp"
+            android:minHeight="48dp"
+            android:text="@string/me_sign_out"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:icon="@drawable/ic_logout"
+            app:iconTint="?attr/colorOnSurfaceVariant" />
 
     </LinearLayout>
 

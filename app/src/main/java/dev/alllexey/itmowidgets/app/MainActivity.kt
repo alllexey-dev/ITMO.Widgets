@@ -58,6 +58,11 @@ class MainActivity : AppCompatActivity() {
 
         val navController = navHostFragment.navController
         navView.setupWithNavController(navController)
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            if (sessionRepository.state.value is SessionState.SignedIn) {
+                navView.isVisible = destination.id !in destinationsWithoutBottomNavigation
+            }
+        }
 
         lifecycleScope.launch { sessionRepository.initialize() }
         sessionRepository.state
@@ -119,7 +124,12 @@ class MainActivity : AppCompatActivity() {
                         }
                     )
                 }
-                binding.bottomNavView.isVisible = true
+                binding.bottomNavView.isVisible = navController.currentDestination
+                    ?.id
+                    ?.let { destinationId ->
+                        destinationId !in destinationsWithoutBottomNavigation
+                    }
+                    ?: false
                 revealResolvedGraph()
             }
         }
@@ -134,5 +144,11 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val ACTION_OPEN_SCHEDULE =
             "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE"
+
+        private val destinationsWithoutBottomNavigation = setOf(
+            R.id.settings,
+            R.id.debug_tools,
+            R.id.recordbook_subject
+        )
     }
 }

@@ -6,6 +6,8 @@ import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
+import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
+import dev.alllexey.itmowidgets.app.WidgetRefreshCoordinator
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSourceImpl
@@ -20,6 +22,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScheduleModule {
+
+    @Binds
+    abstract fun bindScheduleWidgetRefreshRequester(
+        impl: WidgetRefreshCoordinator
+    ): ScheduleWidgetRefreshRequester
 
     @Binds
     @Singleton

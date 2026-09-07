@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.ItmoWidgets.SettingsCard">
+    style="@style/Widget.ItmoWidgets.CompactSettingsCard">
 
     <LinearLayout
         android:id="@+id/section_rows"

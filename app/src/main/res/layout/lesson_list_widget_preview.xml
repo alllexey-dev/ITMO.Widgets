@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="4dp"
+        android:gravity="center_horizontal"
         android:text="Сегодня · 10 августа"
         android:textColor="@color/widget_on_surface_variant"
         android:textSize="11sp"

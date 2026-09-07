@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
+import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.util.MergedDataState
@@ -37,12 +38,14 @@ class SportBookingDelegateTest {
     private val bookingRepository = FakeSportBookingRepository()
     private val sportScheduleRepository = FakeSportScheduleRepository()
     private val dataRepository = FakeSportDataRepository()
+    private var widgetRefreshCount = 0
     private val delegate = SportBookingDelegate(
         actionRepository = actionRepository,
         scheduleRefreshGateway = scheduleRefreshGateway,
         sportBookingRepository = bookingRepository,
         sportScheduleRepository = sportScheduleRepository,
-        sportDataRepository = dataRepository
+        sportDataRepository = dataRepository,
+        scheduleWidgetRefreshRequester = ScheduleWidgetRefreshRequester { widgetRefreshCount++ }
     )
 
     @Test
@@ -54,6 +57,7 @@ class SportBookingDelegateTest {
         assertEquals(1, bookingRepository.refreshCount)
         assertEquals(1, scheduleRefreshGateway.refreshCount)
         assertEquals(1, sportScheduleRepository.scheduleRefreshCount)
+        assertEquals(1, widgetRefreshCount)
     }
 
     @Test
@@ -66,6 +70,64 @@ class SportBookingDelegateTest {
         assertEquals(0, bookingRepository.refreshCount)
         assertEquals(0, scheduleRefreshGateway.refreshCount)
         assertEquals(0, sportScheduleRepository.scheduleRefreshCount)
+        assertEquals(0, widgetRefreshCount)
+    }
+
+    @Test
+    fun `successful sign out refreshes schedule widgets`() = runTest {
+        assertTrue(delegate.signOut(lesson()) is AppResult.Success)
+        assertEquals(1, widgetRefreshCount)
+        assertEquals(1, scheduleRefreshGateway.refreshCount)
+    }
+
+    @Test
+    fun `cancel from my sport refreshes schedule widgets`() = runTest {
+        assertTrue(delegate.cancel(booking()) is AppResult.Success)
+        assertEquals(1, widgetRefreshCount)
+        assertEquals(1, scheduleRefreshGateway.refreshCount)
+    }
+
+    @Test
+    fun `failed sign out and booking cancellation leave widgets unchanged`() = runTest {
+        actionRepository.result = AppResult.Failure(AppError.Network)
+        assertTrue(delegate.signOut(lesson()) is AppResult.Failure)
+        assertTrue(delegate.cancel(booking()) is AppResult.Failure)
+        assertEquals(0, widgetRefreshCount)
+        assertEquals(0, scheduleRefreshGateway.refreshCount)
+    }
+
+    @Test
+    fun `queue subscriptions do not claim that the actual schedule changed`() = runTest {
+        delegate.createFreeSign(1, false)
+        delegate.cancelFreeSign(1)
+        delegate.createAutoSign(1)
+        delegate.cancelAutoSign(1)
+        delegate.cancel(booking().copy(signed = false))
+        assertEquals(0, widgetRefreshCount)
+        assertEquals(0, scheduleRefreshGateway.refreshCount)
+    }
+
+    @Test
+    fun `successful booking enqueues widget update even when screen schedule refresh fails`() = runTest {
+        scheduleRefreshGateway.result = AppResult.Failure(AppError.Network)
+        assertTrue(delegate.signIn(lesson()) is AppResult.Success)
+        assertEquals(1, widgetRefreshCount)
+    }
+
+    @Test
+    fun `back to back booking and cancellation each request a fresh widget snapshot`() = runTest {
+        delegate.signIn(lesson())
+        delegate.signOut(lesson())
+        assertEquals(2, widgetRefreshCount)
+    }
+
+    private fun booking(): SportBooking = lesson().let {
+        SportBooking(
+            isLessonReal = it.isLessonReal, lessonId = it.lessonId, sectionName = it.sectionName,
+            start = it.start, end = it.end, roomName = it.roomName, teacherFio = it.teacherFio,
+            teacherIsu = it.teacherIsu, sectionLevel = it.sectionLevel, lessonLevel = it.lessonLevel,
+            signed = true, signEntry = null, friendsBookings = emptyList()
+        )
     }
 
     @Test
@@ -141,13 +203,14 @@ class SportBookingDelegateTest {
 
     private class FakeScheduleRefreshGateway : ScheduleRefreshGateway {
         var refreshCount = 0
+        var result: AppResult<Unit> = AppResult.Success(Unit)
 
         override suspend fun refreshOwnSchedule(
             startDate: LocalDate,
             endDate: LocalDate
         ): AppResult<Unit> {
             refreshCount += 1
-            return AppResult.Success(Unit)
+            return result
         }
     }
 

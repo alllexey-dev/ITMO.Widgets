@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/Widget.ItmoWidgets.SettingsRow">
+    style="@style/Widget.ItmoWidgets.CompactSettingsRow"
+    android:focusable="true"
+    android:importantForAccessibility="yes">
 
     <LinearLayout
-        style="@style/Widget.ItmoWidgets.SettingsRowText">
+        style="@style/Widget.ItmoWidgets.CompactSettingsRowText"
+        android:importantForAccessibility="noHideDescendants">
 
         <TextView
             android:id="@+id/setting_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurface"
             tools:text="Фильтр по преподавателю" />
 
         <TextView
             android:id="@+id/setting_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="4dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant"
             tools:text="Показывать выбор преподавателя на экране записи." />
@@ -27,6 +31,10 @@
     <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/setting_switch"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:minHeight="0dp" />
 
 </LinearLayout>

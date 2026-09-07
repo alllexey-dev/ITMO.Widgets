@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -14,6 +15,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.SettingsLevelMotion
 import dev.alllexey.itmowidgets.databinding.FragmentMeBinding
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
@@ -27,6 +29,11 @@ class MeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: MeViewModel by viewModels()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        reenterTransition = SettingsLevelMotion.transition(forward = false)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,8 +49,14 @@ class MeFragment : Fragment() {
 
         binding.debugToolsRow.isVisible = BuildConfig.DEBUG
         binding.debugDivider.isVisible = BuildConfig.DEBUG
+        // The view is recreated on back navigation; render cached identity before motion starts.
+        render(viewModel.uiState.value)
 
+        listOf(binding.settingsRow, binding.debugToolsRow).forEach {
+            ViewCompat.setScreenReaderFocusable(it, true)
+        }
         binding.settingsRow.setOnClickListener {
+            exitTransition = SettingsLevelMotion.transition(forward = true)
             findNavController().navigate(R.id.action_me_to_settings)
         }
         binding.debugToolsRow.setOnClickListener {
@@ -59,19 +72,19 @@ class MeFragment : Fragment() {
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Settings motion is opt-in per navigation, not an animation for bottom-tab changes.
+        exitTransition = null
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
     private fun render(state: MeUiState) {
-        val user = state.user
-        binding.profileAvatar.setUser(user?.name, user?.pictureUrl)
-        binding.profileName.text = user?.name ?: getString(R.string.me_unknown_user)
-        binding.profileMeta.isVisible = user?.isu != null
-        binding.profileMeta.text = user?.isu?.let { getString(R.string.me_isu, it) }
-        binding.signOutRow.isEnabled = !state.signOutInProgress
-        binding.signOutRow.alpha = if (state.signOutInProgress) 0.6f else 1f
+        MeRenderer.render(binding, state)
     }
 
     private fun showSignOutConfirmation() {

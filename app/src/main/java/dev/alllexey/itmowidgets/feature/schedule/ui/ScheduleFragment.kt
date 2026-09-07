@@ -52,11 +52,10 @@ class ScheduleFragment : Fragment() {
 
     // region State
 
-    private lateinit var adapter: DayScheduleAdapter
+    private var scheduleAdapter: DayScheduleAdapter? = null
+    private val adapter get() = checkNotNull(scheduleAdapter)
     private var listState: Parcelable? = null
     private var hasScrolledToToday = false
-
-    private val KEY_LIST_STATE = "list_state"
 
     private val viewModel: ScheduleViewModel by viewModels()
 
@@ -90,15 +89,20 @@ class ScheduleFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        listState = currentScrollState() ?: listState
+        _binding?.outerRecyclerView?.apply {
+            clearOnScrollListeners()
+            stopScroll()
+            adapter = null
+        }
+        scheduleAdapter = null
         _binding = null
         super.onDestroyView()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putParcelable(
-            KEY_LIST_STATE,
-            recycler.layoutManager?.onSaveInstanceState()
-        )
+        // A back-stack Fragment can be saved after its view has been destroyed.
+        outState.putParcelable(KEY_LIST_STATE, currentScrollState() ?: listState)
         super.onSaveInstanceState(outState)
     }
 
@@ -115,7 +119,9 @@ class ScheduleFragment : Fragment() {
 
     private fun setupRecycler() {
 
-        adapter = DayScheduleAdapter(timeProvider)
+        scheduleAdapter = DayScheduleAdapter(timeProvider).apply {
+            stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+        }
 
         recycler.layoutManager = LinearLayoutManager(requireContext())
         recycler.adapter = adapter
@@ -251,7 +257,10 @@ class ScheduleFragment : Fragment() {
 
         binding.scheduleStateContainer.isVisible = false
 
+        val renderedBinding = binding
         adapter.submitList(state.schedule) {
+            // AsyncListDiffer may finish after navigation or even after a new view exists.
+            if (_binding !== renderedBinding) return@submitList
             restoreScrollState()
             tryScrollToToday(state.schedule)
         }
@@ -322,9 +331,16 @@ class ScheduleFragment : Fragment() {
 
     // region State
 
+    private fun currentScrollState(): Parcelable? {
+        val currentRecycler = _binding?.outerRecyclerView ?: return null
+        // Keep a pending restored anchor while data has not reached the new adapter.
+        if (currentRecycler.adapter?.itemCount == 0) return null
+        return currentRecycler.layoutManager?.onSaveInstanceState()
+    }
+
     private fun restoreState(savedInstanceState: Bundle?) {
         @Suppress("DEPRECATION")
-        listState = savedInstanceState?.getParcelable(KEY_LIST_STATE)
+        listState = listState ?: savedInstanceState?.getParcelable(KEY_LIST_STATE)
     }
 
     private fun restoreScrollState() {
@@ -338,6 +354,8 @@ class ScheduleFragment : Fragment() {
     // endregion
 
     companion object {
+
+        private const val KEY_LIST_STATE = "list_state"
 
         fun newInstance(userIsu: Int?): ScheduleFragment {
             return ScheduleFragment().apply {

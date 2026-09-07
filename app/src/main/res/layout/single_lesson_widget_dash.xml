@@ -151,4 +151,6 @@
 
     </LinearLayout>
 
+    <include layout="@layout/single_lesson_widget_message" />
+
 </LinearLayout>

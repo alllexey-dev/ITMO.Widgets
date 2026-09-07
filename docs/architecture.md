@@ -17,6 +17,8 @@ It is scoped to *structure*. It deliberately does not repeat what already lives 
 Read it together with `AGENTS.md` (engineering constraints and design language) and
 `vibe/itmo-widgets-social-learning-plan.md` (delivery order). Where the two overlap
 on dependency direction they must stay consistent; this file is the detailed version.
+The user-facing v2.1 settings surface and product invariants are defined separately
+in `docs/settings.md`.
 
 Unless stated otherwise, everything below is **implemented**, not planned. Rules
 marked as enforced are checked by `ArchitectureTest` and fail the build when broken.
@@ -56,7 +58,7 @@ core/                   cross-cutting; knows nothing about features
   navigation/           navigation contracts between features
   network/              WidgetsClient, AppErrorMapper, serialization adapters
   result/               AppError, AppResult
-  schedule/             ScheduleRefreshGateway — cross-feature refresh contract
+  schedule/             Schedule refresh and widget-update cross-feature contracts
   services/             CustomServicesRepository — the backend opt-in
   session/              SessionTokenStore, SessionDataCleaner, CurrentUserProvider,
                         BackendIdentitySync
@@ -203,12 +205,66 @@ A single Nav graph. Root destinations keep their own back stacks; contextual scr
 (settings, debug tools, subject, and later user/teacher/review) are ordinary
 destinations with an in-layout back button, because the application has no app bar.
 
+`ScheduleFragment` snapshots its list position before destroying its view. State
+saving must also work for viewless back-stack Fragments; pending scroll restoration
+waits for list data, and asynchronous adapter callbacks cannot touch an old view.
+
 ## Settings as data
 
 Settings screens are **declarative**: a ViewModel emits `List<SettingSection>` built
-from `SettingItem.Toggle | Navigation | Info`, and `SettingsRenderer` inflates it.
+from `SettingItem.Toggle | Choice | Navigation | Action | Info`, and `SettingsRenderer` inflates it.
 Adding a section means writing a list, not a Fragment and a layout. Screens therefore
 look identical by construction and can be asserted in plain JVM tests.
+
+`SettingsPage` is a typed presentation destination. Each page uses the same
+`SettingsFragment` with a `settings_page` navigation argument, read by its own
+ViewModel through `SavedStateHandle`. The root lists categories; only the privacy
+page requests remote sharing values. Section footers hold shared explanations,
+and dynamic rows do not save view-hierarchy values over repository state.
+The privacy page holds its bounded loading area for at least 300 ms on entry and
+retry; network work and the minimum duration run concurrently in the ViewModel.
+Only final content or error rows replace the loader, avoiding a transient set of
+unknown switches. Disabling services bypasses the delay immediately.
+`localSettingsLoaded` is independent of privacy refresh. Settings postpone their
+enter transition until persisted sections and any initial QR image are ready,
+then start on pre-draw; offline pages never show a progress indicator. Shared-axis
+transitions use explicit forward/backward directions and a 220 ms duration.
+Profile transition grouping lives in its XML root, not in the outgoing click
+handler: Navigation recreates that view on return. Cached profile identity is
+bound before transition capture, and reenter motion is configured in `onCreate`.
+
+Widget settings values and `WidgetPreviewSettings` live in `core/settings`.
+`SettingsViewModel.previewSettings` emits only persisted values for QR/schedule
+pages. `core/ui/widget.WidgetPreviewFactory` is the UI contract; app-layer
+`DefaultWidgetPreviewFactory` composes the feature-owned implementations without
+cross-feature imports. Previews are scoped to the Fragment view and release bitmap
+work/animations on teardown. The schedule preview saves its page and example time
+through the Fragment's saved state.
+
+The app factory warms QR sample images while the root settings page is open.
+`QrPreviewBitmapCache` retains at most four bitmap pairs, keyed by resolved palette,
+custom-spoiler revision, and invalidation generation. Disk reads and rendering stay
+off the main thread; the cache retains no Activity or view. Atomic image save/reset
+increments the shared image-store revision, so stale custom images are not reused.
+
+Schedule preview data is deterministic and goes through `ScheduleWidgetSelector`,
+`ScheduleWidgetRenderer`, and `ScheduleListRowRenderer`, shared with the real
+widgets. QR uses its production bitmap/animation renderers with a sample payload.
+Previews never register an AppWidget host, create PendingIntents, request network
+data, write widget snapshots, or display a real QR pass.
+
+After an actual sport booking succeeds, `SportBookingDelegate` requests a schedule
+widget update through `core/schedule.ScheduleWidgetRefreshRequester` before awaiting
+screen refreshes. The app-level `WidgetRefreshCoordinator` enqueues forced schedule
+work, bypassing the routine throttle without touching QR widgets. Failed actions
+and queue subscriptions do not signal an actual schedule change; the worker loads
+fresh schedule data and updates both installed schedule-widget types.
+
+`CustomSpoilerViewModel` owns local image save/reset operations and widget refresh.
+`CustomSpoilerRepository` keeps URI strings at the domain boundary; its data
+implementation performs disk work on IO through the shared `core/qr` image store.
+The picker and crop UI return only a selected URI, cancellation, or a safe failure;
+view recreation does not cancel an in-flight save.
 
 Two conventions matter here:
 
