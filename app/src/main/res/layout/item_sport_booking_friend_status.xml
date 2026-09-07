@@ -1,72 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardBackgroundColor="?attr/colorSurfaceContainer"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="0dp"
-    app:strokeColor="?attr/colorOutlineVariant"
-    app:strokeWidth="1dp">
-
+    android:paddingVertical="12dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+    <dev.alllexey.itmowidgets.core.ui.AvatarView
+        android:id="@+id/friend_avatar"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:importantForAccessibility="no" />
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="12dp">
-
-        <dev.alllexey.itmowidgets.core.ui.AvatarView
-            android:id="@+id/friendAvatar"
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
-
-        <LinearLayout
-            android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/friend_name_text_view"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/friendNameTextView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textStyle="bold"
-                tools:text="Иванов Иван" />
-
-            <TextView
-                android:id="@+id/friendMetaTextView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                tools:text="Позиция: 5 из 20" />
-        </LinearLayout>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/friendStatusChip"
-            android:layout_width="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+        <TextView
+            android:id="@+id/friend_status_text_view"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="999dp"
-            app:cardElevation="0dp"
-            app:strokeWidth="0dp">
-
-            <TextView
-                android:id="@+id/friendStatusTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="6dp"
-                android:textAppearance="?attr/textAppearanceLabelSmall"
-                android:textStyle="bold"
-                tools:text="Автозапись" />
-        </com.google.android.material.card.MaterialCardView>
-
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:layout_marginTop="4dp" />
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+</LinearLayout>

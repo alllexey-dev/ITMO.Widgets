@@ -19,6 +19,7 @@ import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.util.color
@@ -30,14 +31,16 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignEvent
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignUiState
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.getValue
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 @AndroidEntryPoint
 class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsListener {
+
+    @Inject lateinit var timeProvider: AcademicTimeProvider
 
     // region Binding
 
@@ -99,7 +102,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         headerAdapter = FiltersHeaderAdapter(
             listener = this
         )
-        lessonsAdapter = SportLessonsAdapter(this)
+        lessonsAdapter = SportLessonsAdapter(this, timeProvider)
         contentStateAdapter = ContentStateAdapter { viewModel.refreshAllData() }
         concatAdapter = ConcatAdapter(headerAdapter, lessonsAdapter, contentStateAdapter)
 

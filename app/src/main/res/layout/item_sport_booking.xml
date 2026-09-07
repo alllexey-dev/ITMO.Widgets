@@ -1,341 +1,180 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingHorizontal="16dp"
-    android:paddingVertical="6dp">
-
+    android:paddingVertical="4dp">
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/sport_record_card"
-        style="@style/Widget.Material3.CardView.Filled"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
         app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-        app:cardCornerRadius="18dp"
+        app:cardCornerRadius="20dp"
         app:cardElevation="0dp"
-        app:strokeWidth="0dp">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/sport_record_root"
+        app:strokeWidth="1dp"
+        app:strokeColor="?attr/colorOutlineVariant">
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp">
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/date_badge_card"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                app:cardBackgroundColor="?attr/colorSecondaryContainer"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:strokeWidth="0dp">
-
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/title_text_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:breakStrategy="balanced"
+                    android:layout_marginEnd="56dp" />
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/date_day_text_view"
-                        android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="top"
+                    android:layout_marginTop="8dp">
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="56dp"
                         android:layout_height="wrap_content"
-                        android:includeFontPadding="false"
-                        android:textAppearance="?attr/textAppearanceTitleLarge"
-                        android:textColor="?attr/colorOnSecondaryContainer"
-                        android:textStyle="bold"
-                        tools:text="15" />
-
-                    <TextView
-                        android:id="@+id/date_month_text_view"
-                        android:layout_width="wrap_content"
+                        android:minHeight="56dp"
+                        android:layout_gravity="center_vertical"
+                        android:importantForAccessibility="noHideDescendants"
+                        app:cardBackgroundColor="?attr/colorSecondaryContainer"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingVertical="8dp"
+                            android:gravity="center"
+                            android:orientation="vertical">
+                            <TextView
+                                android:id="@+id/date_day_text_view"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="?attr/textAppearanceTitleLarge"
+                                android:textColor="?attr/colorOnSecondaryContainer"
+                                android:includeFontPadding="false" />
+                            <TextView
+                                android:id="@+id/date_month_text_view"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textAppearance="?attr/textAppearanceLabelSmall"
+                                android:textAllCaps="true"
+                                android:textColor="?attr/colorOnSecondaryContainer"
+                                android:includeFontPadding="false" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:includeFontPadding="false"
-                        android:textAllCaps="true"
-                        android:textAppearance="?attr/textAppearanceLabelSmall"
-                        android:textColor="?attr/colorOnSecondaryContainer"
-                        tools:text="НОЯ" />
+                        android:layout_weight="1"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="12dp"
+                        android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/date_text_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?attr/textAppearanceLabelMedium"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:maxLines="1"
+                            android:ellipsize="end" />
+                        <TextView
+                            android:id="@+id/time_text_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textAppearance="?attr/textAppearanceTitleSmall"
+                            android:textColor="?attr/colorOnSurface" />
+                        <TextView
+                            android:id="@+id/status_text_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:textAppearance="?attr/textAppearanceLabelMedium"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:drawablePadding="8dp" />
+                    </LinearLayout>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <TextView
-                android:id="@+id/title_text_view"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="8dp"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toStartOf="@+id/options_menu"
-                app:layout_constraintStart_toEndOf="@id/date_badge_card"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Фитнес (функциональный)" />
-
-            <ImageView
+                <LinearLayout
+                    android:id="@+id/teacher_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    tools:ignore="UseCompoundDrawables">
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_person_rounded"
+                        android:contentDescription="@null"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                    <TextView
+                        android:id="@+id/teacher_text_view"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_weight="1"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/location_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    tools:ignore="UseCompoundDrawables">
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_location_on_rounded"
+                        android:contentDescription="@null"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                    <TextView
+                        android:id="@+id/location_text_view"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_weight="1"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                </LinearLayout>
+                <include
+                    android:id="@+id/friends_preview"
+                    layout="@layout/item_sport_friends" />
+            </LinearLayout>
+            <ImageButton
                 android:id="@+id/options_menu"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_marginTop="-8dp"
-                android:layout_marginEnd="-8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
                 android:contentDescription="@string/common_options"
-                android:focusable="true"
-                android:padding="4dp"
-                android:src="@drawable/ic_more_vert"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="?attr/colorOnSurfaceVariant" />
-
-            <TextView
-                android:id="@+id/time_text_view"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?android:attr/textColorSecondary"
-                app:layout_constraintEnd_toEndOf="@id/options_menu"
-                app:layout_constraintStart_toStartOf="@id/title_text_view"
-                app:layout_constraintTop_toBottomOf="@id/title_text_view"
-                tools:text="Сегодня • 19:00 - 20:30" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/status_chip_card"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:visibility="visible"
-                app:cardBackgroundColor="?attr/colorSecondaryContainer"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="0dp"
-                app:layout_constraintStart_toStartOf="@id/title_text_view"
-                app:layout_constraintTop_toBottomOf="@id/time_text_view"
-                app:strokeWidth="0dp">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="4dp">
-
-                    <ImageView
-                        android:id="@+id/status_icon"
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:layout_marginTop="1dp"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_group"
-                        app:tint="?attr/colorOnSurface" />
-
-                    <TextView
-                        android:id="@+id/status_text_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:textAppearance="?attr/textAppearanceLabelMedium"
-                        android:textColor="?attr/colorOnSurface"
-                        tools:text="В очереди: 5 из 20" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <LinearLayout
-                android:id="@+id/teacher_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/status_chip_card">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginEnd="8dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_person"
-                    app:tint="?attr/colorSecondary" />
-
-                <TextView
-                    android:id="@+id/teacher_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    tools:text="Иванов Иван Иванович" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/location_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/teacher_layout">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginEnd="8dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_location"
-                    app:tint="?attr/colorTertiary" />
-
-                <TextView
-                    android:id="@+id/location_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="4dp"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    tools:text="404" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/friends_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/location_layout"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
-
-                <FrameLayout
-                    android:id="@+id/avatars_container"
-                    android:layout_width="wrap_content"
-                    android:layout_height="28dp">
-
-                    <dev.alllexey.itmowidgets.core.ui.AvatarView
-                        android:id="@+id/avatar_1"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"/>
-
-                    <dev.alllexey.itmowidgets.core.ui.AvatarView
-                        android:id="@+id/avatar_2"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_marginStart="16dp"/>
-
-                    <dev.alllexey.itmowidgets.core.ui.AvatarView
-                        android:id="@+id/avatar_3"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_marginStart="32dp"/>
-
-                    <TextView
-                        android:id="@+id/more_friends_text"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_marginStart="48dp"
-                        android:gravity="center"
-                        android:background="@drawable/bg_avatar_circle_more"
-                        android:textAppearance="?attr/textAppearanceLabelSmall"
-                        android:textColor="?attr/colorOnSurface"
-                        tools:text="+3" />
-
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/friends_hint"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:text="@string/common_friends"/>
-
-            </LinearLayout>
-
-            <com.google.android.material.divider.MaterialDivider
-                android:id="@+id/divider"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                app:layout_constraintTop_toBottomOf="@id/friends_layout"
-                android:visibility="gone"/>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/action_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                app:layout_constraintTop_toBottomOf="@id/divider"
-                android:visibility="gone">
-
-                <FrameLayout
-                    android:id="@+id/action_container"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/sign_up_button"
-                        style="@style/Widget.Material3.Button.TonalButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="48dp"
-                        android:minWidth="100dp"
-                        android:text="@string/sport_lesson_sign_up" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/status_chip"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        app:chipBackgroundColor="?attr/colorSurfaceVariant"
-                        app:chipStrokeWidth="0dp"
-                        tools:text="Нет мест" />
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/signed_up_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/sport_lesson_booking_label"
-                    android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/signed_up_text_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                    app:layout_constraintBottom_toBottomOf="@id/signed_up_label"
-                    app:layout_constraintStart_toEndOf="@id/signed_up_label"
-                    app:layout_constraintTop_toTopOf="@id/signed_up_label"
-                    tools:text="15 / 20" />
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/occupancy_progress"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginEnd="12dp"
-                    app:layout_constraintEnd_toStartOf="@+id/action_container"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/signed_up_label"
-                    app:trackCornerRadius="4dp"
-                    tools:progress="75"
-                    tools:max="100"/>
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                android:padding="12dp"
+                android:src="@drawable/ic_more_vert_rounded"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:layout_gravity="top|end" />
+        </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
 </FrameLayout>

@@ -9,4 +9,8 @@
     <color name="widget_on_surface_variant">#FFCAC4D0</color>
     <color name="widget_outline_variant">#FF49454F</color>
     <color name="widget_primary">#FFD0BCFF</color>
+    <color name="sport_condition_allowed">#86D9A3</color>
+    <color name="sport_condition_waiting">#9BBEFF</color>
+    <color name="sport_condition_warning">#F4C16F</color>
+    <color name="sport_condition_blocked">#FFB3B9</color>
 </resources>

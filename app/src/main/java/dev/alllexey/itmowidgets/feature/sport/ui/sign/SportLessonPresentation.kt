@@ -19,3 +19,12 @@ fun SportLessonKind.titleRes(): Int {
         SportLessonKind.UNKNOWN -> R.string.sport_lesson_unknown
     }
 }
+
+@StringRes
+fun SportLessonKind.compactTitleRes(): Int = when (this) {
+    SportLessonKind.FREE_ATTENDANCE -> R.string.sport_kind_free_short
+    SportLessonKind.TRAINING_SECTION -> R.string.sport_kind_training_short
+    SportLessonKind.INTERMEDIATE_SECTION -> R.string.sport_kind_intermediate_short
+    SportLessonKind.TEAM_SECTION -> R.string.sport_kind_team_short
+    else -> titleRes()
+}

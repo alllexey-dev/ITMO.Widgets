@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.core.util.errorOrNull
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFreeSignEntry
@@ -157,7 +158,7 @@ class SportSignViewModel @Inject constructor(
                 return@launch
             }
 
-            when (val entry = lesson.signEntry) {
+            when (val entry = lesson.signEntry.takeIf { lesson.bookingConditions().hasActiveQueue }) {
                 is SportFreeSignEntry -> showDeleteDialog(
                     position = entry.position,
                     total = entry.total,

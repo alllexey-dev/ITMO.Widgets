@@ -3,7 +3,11 @@ package dev.alllexey.itmowidgets.feature.sport.ui.common
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLessonKind
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingConditions
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
 import java.io.Serializable
 
 data class SportCommonDetailsArgs(
@@ -15,10 +19,16 @@ data class SportCommonDetailsArgs(
     val signed: Boolean,
     val signEntry: SportQueueEntryArgs?,
     val friends: List<SportFriendDetailsArgs>,
-    val unavailableReasons: List<String>,
+    val bookingConditions: SportBookingConditions?,
     val comment: String?,
     val intersectsSchedule: Boolean,
-    val isLesson: Boolean
+    val isLesson: Boolean,
+    val isReal: Boolean,
+    val kind: SportLessonKind?,
+    val available: Int?,
+    val limit: Int?,
+    val mapAddress: String?,
+    val registrationStatus: SportRegistrationStatus
 ) : Serializable
 
 data class SportQueueEntryArgs(
@@ -29,19 +39,23 @@ data class SportQueueEntryArgs(
     val expiredAt: String?,
     val notificationAttempts: Int,
     val maxNotificationAttempts: Int,
-    val isAutoSign: Boolean
+    val isAutoSign: Boolean,
+    val createdAt: String,
+    val lastNotifiedAt: String?,
+    val cancelledAt: String?
 ) : Serializable
 
 data class SportFriendDetailsArgs(
     val name: String,
     val pictureUrl: String?,
-    val entry: SportQueueEntryArgs?
+    val entry: SportQueueEntryArgs?,
+    val registrationStatus: SportRegistrationStatus
 ) : Serializable
 
 fun SportCommon.toDetailsArgs(): SportCommonDetailsArgs {
     val lesson = this as? SportLesson
     return SportCommonDetailsArgs(
-        sectionName = sectionName.shorten(),
+        sectionName = sectionName.raw,
         start = start.toString(),
         end = end.toString(),
         teacherFio = teacherFio,
@@ -52,16 +66,25 @@ fun SportCommon.toDetailsArgs(): SportCommonDetailsArgs {
             SportFriendDetailsArgs(
                 name = booking.friend.name,
                 pictureUrl = booking.friend.pictureUrl,
-                entry = booking.entry?.toDetailsArgs()
+                entry = booking.entry?.toDetailsArgs(),
+                registrationStatus = SportRegistrationStatus.from(booking.entry == null, booking.entry)
             )
         },
-        unavailableReasons = lesson
-            ?.unavailableReasons
-            .orEmpty()
-            .map { it.shortDescription },
+        bookingConditions = lesson?.bookingConditions(),
         comment = lesson?.comment,
         intersectsSchedule = lesson?.intersection == true,
-        isLesson = lesson != null
+        isLesson = lesson != null,
+        isReal = isLessonReal,
+        kind = lesson?.kind ?: when (lessonLevel) {
+            2 -> SportLessonKind.TRAINING_SECTION
+            3 -> SportLessonKind.INTERMEDIATE_SECTION
+            4 -> SportLessonKind.TEAM_SECTION
+            else -> null
+        },
+        available = lesson?.available,
+        limit = lesson?.limit,
+        mapAddress = extractBuildingAddress(),
+        registrationStatus = SportRegistrationStatus.from(signed, signEntry)
     )
 }
 
@@ -74,6 +97,9 @@ private fun SportQueueEntry.toDetailsArgs(): SportQueueEntryArgs {
         expiredAt = expiredAt?.toString(),
         notificationAttempts = notificationAttempts,
         maxNotificationAttempts = maxNotificationAttempts,
-        isAutoSign = this is SportAutoSignEntry
+        isAutoSign = this is SportAutoSignEntry,
+        createdAt = createdAt.toString(),
+        lastNotifiedAt = lastNotifiedAt?.toString(),
+        cancelledAt = cancelledAt?.toString()
     )
 }

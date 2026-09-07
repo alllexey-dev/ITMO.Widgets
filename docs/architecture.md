@@ -213,6 +213,91 @@ cancel superseded period requests. Details reload the official subject rather th
 trusting a navigation snapshot, preserve control hierarchy, and respect `have_tree`.
 API observations and limitations are recorded in `docs/recordbook-api.md`.
 
+### Sport session cards and details
+
+The My Sport and registration lists share the same restrained card language and
+friend preview. Cards keep a compact title/time header, fixed-size metadata icons
+and a small outlined 48 dp action target (36 dp visual button). Start time is the
+scanning anchor and is the only card metadata drawn on `colorOnSurface`; the class
+kind is a filled chip on `colorSurfaceContainerHighest` so it stays legible against
+the card's own surface. A full-width 6 dp occupancy bar separates session
+information from booking controls, and its label carries the same occupancy tone as
+the bar. The
+details use a 100 dp occupied-capacity ring beside a free-place stat. Each number is
+stated once: the ring owns occupied and limit, the column beside it owns the free
+count (`нет` when full), so no figure is repeated in a derived form. Bookings
+retain their date tile beside the weekday, time and registration status, with the
+tile centred against that column. A wider gap below it separates *when + status* from
+the teacher/location rail, so the two groups read as groups. Weekday and month names
+are capitalised on the way out: `DateTimeFormatter` renders Russian ones in lower
+case, so every sport date string goes through the helpers in `SportCardPresentation`
+rather than being formatted at the call site. Full names and queue history belong in
+the details sheet.
+Sport registration status and capacity are derived by the pure
+presentation helpers in `feature/sport/presentation/common`. Capacity bars
+represent **occupied** places, matching their label; invalid/unknown capacity and
+predicted lessons never appear as zero-capacity real sessions.
+
+The contextual bottom sheet is a separate layout, not an included list item. It
+retains the full section title and separates date/duration, teacher/location,
+registration, queue metrics/history, notices, comments and friends. Session facts
+(when, who, where) share one icon rail directly under the title; registration state,
+conditions, comment and friends follow as divider-separated sections. Rail rows carry
+no visible category label — the icon already states it, and the label survives as the
+value's `contentDescription`. Rail icons are a fixed dp size while the text line box
+grows with the font scale, so `alignRailIcon` recentres them at bind time instead of
+using a constant margin. Rail values are `colorOnSurfaceVariant`, matching the list
+cards: the section title and the start time are the only text on `colorOnSurface`,
+so the facts read as a hierarchy instead of a wall of same-sized lines. A wider gap,
+not a divider, separates *when* from *who/where*. Queue history is a label/value
+table without icons. It renders the
+selected domain snapshot; opening it does not make another booking request.
+Booking-only responses do not contain capacity or comments, so those fields are
+not invented. Queue notification counts describe requests, not guaranteed
+successful booking attempts. All timestamps use `AcademicTimeProvider.zoneId`.
+Location hand-off uses a generic `geo:` intent; booking/cancellation continues
+through the existing list actions and ViewModels.
+
+`SportBookingConditions` is the shared, deterministic local offer policy for cards
+and details. Academic schedule intersections only warn; official sport booking
+conflicts, quotas, selection, credit and health-group restrictions block a new
+offer. A full or unpublished lesson can be waited for, subject to the existing
+community-services and future-auto-sign rolling-30-day checks at confirmation.
+Explicit MyITMO denial (including debt-only classes) is a definite restriction,
+even when its text has no known enum mapping. Only a missing explanation is
+labelled unknown. The class type alone never invents personal ineligibility. Existing active queues can still
+be cancelled when new restrictions appear. Starting time uses the academic clock,
+both when rendering and when a card action is tapped.
+
+The details distinguish permission, waiting, non-blocking warnings and restrictions
+that auto-sign cannot bypass. This does **not** claim Backend rejects creating a
+queue for every MyITMO restriction: the queue services do not preflight all those
+rules. The official submission must still satisfy MyITMO. Predictions carry
+inferred restrictions, explicitly marked as coming from the previous lesson.
+Backend's `SportAutoSignEntryRepository.findMatchingWaitingEntries` matches section,
+teacher, section/lesson level, type, time-slot ID and exact start two weeks later.
+Auto-sign does not substitute another teacher or time. Room/building is not in
+that matcher; the UI does not promise location immutability. No server matching
+behavior changed in this revision.
+
+Condition categories use stable semantic accents with deliberate day/night colors:
+green permission, blue waiting, amber warning/unknown, red denial. Each also has a
+label and icon; color is not the only cue. Registration status reuses those accents
+for its label and icon through `SportRegistrationStatus.tone()`; statuses with no
+outcome yet (not signed, cancelled) stay neutral instead of borrowing an accent.
+Compact tinted condition panels replace
+generic explanations plus duplicate reason rows. Neutral card outlines and the
+sheet's lowest surface separate the remaining content without saturated slabs.
+For real lessons the ordinary queue stops within one hour of start; the existing
+force-sign confirmation only relaxes that deadline, not eligibility. The sheet
+does not claim the account has available auto-sign quota without refreshing it.
+No Backend/Core/MyItmoApi contract or minimum version changed in this UI revision.
+
+`SportCardsVisualTest` runs real adapters and the real bottom sheet in an isolated
+debug host, with synthetic data and no network actions. It covers both themes,
+two dynamic palettes, a 320 dp content width, font scale 1.0/1.3, queue states,
+busy-action protection, re-binding, full detail text and recreation.
+
 ### Dependency injection
 
 `@Binds` with constructor injection is the default; `@Provides` is for types the

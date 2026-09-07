@@ -1,24 +1,31 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.sign
 
 import android.content.res.ColorStateList
+import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.AttrRes
 import androidx.core.view.isVisible
-import android.graphics.drawable.Drawable
 import androidx.recyclerview.widget.DiffUtil
-import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
-import com.google.android.material.progressindicator.IndeterminateDrawable
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.R as MaterialR
+import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
+import com.google.android.material.progressindicator.IndeterminateDrawable
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.ThemeColors
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemSportLessonBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
-import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
+import dev.alllexey.itmowidgets.feature.sport.ui.common.titleRes
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportOccupancy
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
+import dev.alllexey.itmowidgets.feature.sport.ui.common.SportConditionTone
+import dev.alllexey.itmowidgets.feature.sport.ui.common.occupancyTone
+import dev.alllexey.itmowidgets.feature.sport.ui.common.bind
+import dev.alllexey.itmowidgets.feature.sport.ui.common.timeText
 
 interface SportSignActionsListener {
     fun onSignUpClick(lesson: SportLesson)
@@ -34,7 +41,7 @@ data class SportLessonItem(
     val isBusy: Boolean = false
 )
 
-class SportLessonsAdapter(val listener: SportSignActionsListener) :
+class SportLessonsAdapter(val listener: SportSignActionsListener, private val timeProvider: AcademicTimeProvider) :
     ListAdapter<SportLessonItem, SportLessonsAdapter.LessonViewHolder>(LessonDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
@@ -52,10 +59,14 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
 
         fun bind(item: SportLesson, isBusy: Boolean) {
             binding.sectionNameTextView.text = item.sectionName.shorten()
-            binding.timeTextView.text = "${item.start.toLocalTime()}-${item.end.toLocalTime()}"
+            binding.timeTextView.text = SportSessionTiming(item.start, item.end, timeProvider).timeText()
+            binding.sectionNameTextView.setTextColor(binding.root.context.color.onSurface)
             binding.teacherTextView.text = item.teacherFio
             binding.locationTextView.text = item.roomName
-            binding.intersectionIndicator.isVisible = item.intersection == true
+            binding.intersectionIndicator.isVisible = item.intersection
+            binding.intersectionIndicator.imageTintList = ColorStateList.valueOf(SportConditionTone.WARNING.accent(itemView.context))
+            binding.teacherRow.isVisible = item.teacherFio.isNotBlank()
+            binding.locationRow.isVisible = item.roomName.isNotBlank()
 
             binding.sportLessonCardView.setOnClickListener {
                 listener.onLessonClick(item)
@@ -64,110 +75,92 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
             bindBadges(item)
             bindProgress(item)
             bindActions(item, isBusy)
-            setupFriends(item)
+            binding.friendsPreview.bind(item.friendsBookings)
         }
 
         private fun bindBadges(item: SportLesson) {
-            val isFull = item.isLessonReal && item.available <= 0 && !item.signed
-
-            binding.typeText.setText(item.kind.titleRes())
-            binding.predictionBadge.isVisible = !item.isLessonReal
-            binding.fullBadge.isVisible = isFull
+            val kind = binding.root.context.getString(item.kind.compactTitleRes())
+            binding.typeText.text = kind
+            binding.typeText.contentDescription = binding.root.context.getString(item.kind.titleRes())
         }
 
-        private fun bindProgress(item: SportLesson) {
-            with(binding) {
-                if (item.isLessonReal) {
-                    val signed = item.limit - item.available
-                    signedUpTextView.text = "$signed / ${item.limit}"
-                    occupancyProgress.max = item.limit
-                    occupancyProgress.progress = signed
-
-                    occupancyProgress.isVisible = true
-                    signedUpLabel.isVisible = true
-                } else {
-                    occupancyProgress.isVisible = false
-                    signedUpLabel.isVisible = false
-                    signedUpTextView.text = ""
-                }
+        private fun bindProgress(item: SportLesson) = with(binding) {
+            val occupancy = SportOccupancy.from(item.isLessonReal, item.available, item.limit)
+            signedUpTextView.isVisible = occupancy != null
+            occupancyProgress.isVisible = occupancy != null
+            occupancyProgress.max = occupancy?.limit ?: 1
+            occupancyProgress.setProgressCompat(occupancy?.occupied ?: 0, false)
+            occupancy?.let {
+                val tone = occupancyTone(it.available, it.limit)
+                occupancyProgress.setIndicatorColor(tone.accent(root.context))
+                signedUpTextView.text = root.context.getString(R.string.sport_capacity_card, it.occupied, it.limit)
+                // Only a scarce or full lesson is worth an accent; a roomy one stays quiet.
+                signedUpTextView.setTextColor(
+                    if (tone == SportConditionTone.WAITING) color.onSurfaceVariant else tone.accent(root.context)
+                )
             }
         }
 
         private fun bindActions(item: SportLesson, isBusy: Boolean) {
-            val canSignIn = item.canSignIn
-            val reason = item.unavailableReasons.lastOrNull()
-
+            val availability = item.bookingConditions().evaluate(timeProvider.now())
             with(binding) {
-                statusChip.isVisible = false
+                statusText.isVisible = false
+                statusText.setTextColor(root.context.color.onSurfaceVariant)
                 signUpButton.isVisible = false
                 signUpButton.setOnClickListener(null)
-                setMuted(false)
-
-                when {
-                    item.signed && item.isLessonReal -> {
-                        setupButton(
-                            text = root.context.getString(R.string.sport_lesson_sign_out),
-                            colorAttr = MaterialR.attr.colorErrorContainer,
-                            textColorAttr = MaterialR.attr.colorOnErrorContainer,
-                            onClick = { listener.onUnSignClick(item) },
-                            isBusy = isBusy
-                        )
-                    }
-
-                    item.isLessonReal && canSignIn && item.available > 0 -> {
-                        setupButton(
-                            text = root.context.getString(R.string.sport_lesson_sign_up),
-                            colorAttr = MaterialR.attr.colorSecondaryContainer,
-                            textColorAttr = MaterialR.attr.colorOnSecondaryContainer,
-                            onClick = { listener.onSignUpClick(item) },
-                            isBusy = isBusy
-                        )
-                    }
-
-                    (item.isLessonReal && reason is UnavailableReason.Full) || (!item.isLessonReal && (reason is UnavailableReason.Full || reason == null)) -> {
-                        val entry = item.signEntry
-                        val queue = item.signQueue
-                        val buttonText = if (entry != null) {
-                            root.context.getString(
-                                R.string.sport_auto_sign_position,
-                                entry.position,
-                                entry.total
-                            )
-                        } else if (queue != null) {
-                            root.context.getString(
-                                R.string.sport_auto_sign_queue_size,
-                                queue.total
-                            )
-                        } else {
-                            root.context.getString(R.string.sport_auto_sign_title)
+                val action = availability.action
+                if (action == SportBookingAction.NONE) {
+                    statusText.isVisible = true
+                    statusText.text = availability.restrictions.firstOrNull()?.let {
+                        it.detail ?: root.context.getString(it.kind.titleRes())
+                    } ?: root.context.getString(R.string.sport_lesson_unavailable)
+                    statusText.setTextColor(SportConditionTone.BLOCKED.accent(root.context))
+                    return
+                }
+                val label = when (action) {
+                    SportBookingAction.SIGN -> R.string.sport_lesson_sign_up
+                    SportBookingAction.CANCEL -> R.string.sport_lesson_sign_out
+                    SportBookingAction.AUTO -> R.string.sport_auto_sign_title
+                    SportBookingAction.CANCEL_AUTO -> R.string.sport_card_cancel_auto
+                    SportBookingAction.NONE -> error("Handled above")
+                }
+                if (action == SportBookingAction.CANCEL_AUTO || !item.isLessonReal) {
+                    statusText.isVisible = true
+                    if (action == SportBookingAction.CANCEL_AUTO) {
+                        statusText.text = item.signEntry?.let {
+                            root.context.getString(R.string.sport_card_queue, it.position, it.total)
                         }
-
-                        setupButton(
-                            text = buttonText,
-                            colorAttr = MaterialR.attr.colorTertiaryContainer,
-                            textColorAttr = MaterialR.attr.colorOnTertiaryContainer,
-                            onClick = {
-                                if (entry != null) listener.onUnAutoSignClick(item)
-                                else listener.onAutoSignClick(item)
-                            },
-                            isBusy = isBusy
-                        )
-                    }
-
-                    else -> {
-                        statusChip.isVisible = true
-                        statusChip.text = reason?.shortDescription
-                            ?: root.context.getString(R.string.sport_lesson_unavailable)
-                        setMuted(true)
+                        statusText.setTextColor(SportConditionTone.WAITING.accent(root.context))
+                    } else {
+                        statusText.text = root.context.getString(R.string.sport_lesson_prediction)
                     }
                 }
+                setupButton(
+                    text = root.context.getString(label),
+                    tone = when (action) {
+                        SportBookingAction.SIGN -> SportConditionTone.ALLOWED
+                        SportBookingAction.AUTO, SportBookingAction.CANCEL_AUTO -> SportConditionTone.WAITING
+                        else -> null
+                    },
+                    onClick = {
+                        if (item.bookingConditions().evaluate(timeProvider.now()).action != action) {
+                            bind(item, false)
+                        } else when (action) {
+                            SportBookingAction.SIGN -> listener.onSignUpClick(item)
+                            SportBookingAction.CANCEL -> listener.onUnSignClick(item)
+                            SportBookingAction.AUTO -> listener.onAutoSignClick(item)
+                            SportBookingAction.CANCEL_AUTO -> listener.onUnAutoSignClick(item)
+                            SportBookingAction.NONE -> Unit
+                        }
+                    },
+                    isBusy = isBusy
+                )
             }
         }
 
         private fun setupButton(
             text: String,
-            @AttrRes colorAttr: Int,
-            @AttrRes textColorAttr: Int,
+            tone: SportConditionTone?,
             onClick: () -> Unit,
             isBusy: Boolean
         ) {
@@ -175,15 +168,20 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
                 signUpButton.isVisible = true
                 signUpButton.isEnabled = !isBusy
                 signUpButton.text = text
-                signUpButton.backgroundTintList = ColorStateList.valueOf(color.resolve(colorAttr))
-                signUpButton.setTextColor(color.resolve(textColorAttr))
-                signUpButton.icon = if (isBusy) busyIndicator(textColorAttr) else null
+                val accent = tone?.accent(root.context) ?: color.onSurfaceVariant
+                signUpButton.backgroundTintList = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
+                signUpButton.strokeWidth = resourcesDensityPixel()
+                signUpButton.strokeColor = ColorStateList.valueOf(accent)
+                signUpButton.setTextColor(accent)
+                signUpButton.icon = if (isBusy) busyIndicator(accent) else null
                 signUpButton.setOnClickListener(if (isBusy) null else View.OnClickListener { onClick() })
             }
         }
 
+        private fun resourcesDensityPixel(): Int = itemView.resources.displayMetrics.density.toInt().coerceAtLeast(1)
+
         /** Material's own indeterminate drawable, tinted like the button label. */
-        private fun busyIndicator(@AttrRes textColorAttr: Int): Drawable {
+        private fun busyIndicator(accent: Int): Drawable {
             val context = itemView.context
             val spec = CircularProgressIndicatorSpec(
                 context,
@@ -192,68 +190,12 @@ class SportLessonsAdapter(val listener: SportSignActionsListener) :
                 com.google.android.material.R.style
                     .Widget_Material3_CircularProgressIndicator_ExtraSmall
             )
-            spec.indicatorColors = intArrayOf(color.resolve(textColorAttr))
+            spec.indicatorColors = intArrayOf(accent)
             return IndeterminateDrawable.createCircularDrawable(context, spec)
-        }
-
-        private fun setupFriends(item: SportLesson) {
-            with(binding) {
-                val friends = item.friendsBookings
-
-                friendsLayout.visibility = View.GONE
-                avatar1.visibility = View.GONE
-                avatar2.visibility = View.GONE
-                avatar3.visibility = View.GONE
-                moreFriendsText.visibility = View.GONE
-
-                if (friends.isNotEmpty()) {
-                    friendsLayout.visibility = View.VISIBLE
-
-                    val visibleFriends = friends.take(3)
-
-                    avatar2.translationX = -12f
-                    avatar3.translationX = -24f
-                    moreFriendsText.translationX = -36f
-
-                    if (visibleFriends.size >= 1) {
-                        avatar1.visibility = View.VISIBLE
-                        avatar1.setUser(visibleFriends[0].friend)
-                    }
-
-                    if (visibleFriends.size >= 2) {
-                        avatar2.visibility = View.VISIBLE
-                        avatar2.setUser(visibleFriends[1].friend)
-                    }
-
-                    if (visibleFriends.size >= 3) {
-                        avatar3.visibility = View.VISIBLE
-                        avatar3.setUser(visibleFriends[2].friend)
-                    }
-
-                    if (friends.size > 3) {
-                        moreFriendsText.visibility = View.VISIBLE
-                        moreFriendsText.text = "+${friends.size - 3}"
-                    }
-
-                    val names = visibleFriends.joinToString(", ") {
-                        it.friend.name.substringBefore(" ")
-                    }
-
-                    friendsHint.text =
-                        if (friends.size > 3) {
-                            root.context.getString(R.string.sport_friends_more, names)
-                        } else {
-                            names
-                        }
-                }
-            }
         }
 
         val color: ThemeColors get() = binding.root.context.color
 
-        private fun setMuted(isMuted: Boolean) {
-            binding.sportLessonCardView.alpha = if (isMuted) 0.6f else 1.0f
-        }
     }
 }
 

@@ -11,6 +11,7 @@ sealed class UnavailableReason(val shortDescription: String, val weight: Int) {
     object CreditAchieved : UnavailableReason("Зачёт достигнут", 55)
     object SelectionFailed : UnavailableReason("Не пройден отбор", 60)
     object ExternatOnly : UnavailableReason("Занятие для экстерната", 65)
+    object DebtOnly : UnavailableReason("Только для студентов с задолженностью", 67)
     object HealthGroupMismatch : UnavailableReason("Другая группа здоровья", 70)
     object LessonInPast : UnavailableReason("Занятие в прошлом", 90)
     data class Other(val reason: String) : UnavailableReason(reason, 100)
@@ -41,7 +42,8 @@ sealed class UnavailableReason(val shortDescription: String, val weight: Int) {
             return reasons.sortedBy { it.weight }.distinct()
         }
 
-        private fun parseReasonFromString(reasonString: String): UnavailableReason {
+        private fun parseReasonFromString(rawReason: String): UnavailableReason {
+            val reasonString = rawReason.trim()
             return when {
                 reasonString.startsWith("Занятие в прошлом") -> LessonInPast
                 reasonString.startsWith("Не пройден отбор") -> SelectionFailed
@@ -50,6 +52,7 @@ sealed class UnavailableReason(val shortDescription: String, val weight: Int) {
                 reasonString.startsWith("Нет необходимой группы здоровья") -> HealthGroupMismatch
                 reasonString.startsWith("Есть запись на занятия в это время") -> TimeConflict
                 reasonString.startsWith("Занятие для экстерната") -> ExternatOnly
+                reasonString.startsWith("Занятие для студентов с задолженностью") -> DebtOnly
                 reasonString.startsWith("Вы уже записаны") -> AlreadyEnrolled
                 reasonString.startsWith("Набрано необходимое количество баллов") -> CreditAchieved
                 else -> Other(reasonString)

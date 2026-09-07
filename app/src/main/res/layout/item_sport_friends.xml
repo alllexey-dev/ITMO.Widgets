@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="28dp">
+        <dev.alllexey.itmowidgets.core.ui.AvatarView
+            android:id="@+id/avatar_1"
+            android:importantForAccessibility="noHideDescendants"
+            android:layout_width="28dp"
+            android:layout_height="28dp" />
+        <dev.alllexey.itmowidgets.core.ui.AvatarView
+            android:id="@+id/avatar_2"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:importantForAccessibility="noHideDescendants"
+            android:layout_marginStart="20dp" />
+        <dev.alllexey.itmowidgets.core.ui.AvatarView
+            android:id="@+id/avatar_3"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:importantForAccessibility="noHideDescendants"
+            android:layout_marginStart="40dp" />
+    </FrameLayout>
+    <TextView
+        android:id="@+id/friends_hint"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1" />
+</LinearLayout>

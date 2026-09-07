@@ -1,24 +1,28 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.my
 
-import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
-import androidx.annotation.ColorInt
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemSportBookingBinding
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
-import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
+import dev.alllexey.itmowidgets.feature.sport.ui.common.bind
+import dev.alllexey.itmowidgets.feature.sport.ui.common.bindSportStatus
+import dev.alllexey.itmowidgets.feature.sport.ui.common.dateText
+import dev.alllexey.itmowidgets.feature.sport.ui.common.label
+import dev.alllexey.itmowidgets.feature.sport.ui.common.timeText
+import dev.alllexey.itmowidgets.feature.sport.ui.common.weekdayText
 
 interface SportBookingListener {
     fun onUnSign(booking: SportBooking)
@@ -42,207 +46,30 @@ class SportBookingAdapter(
     }
 
     inner class SportBookingViewHolder(private val binding: ItemSportBookingBinding) : RecyclerView.ViewHolder(binding.root) {
-
-        private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-        private val dayFormatter = DateTimeFormatter.ofPattern("d")
-        private val monthFormatter = DateTimeFormatter.ofPattern("MMM", Locale.getDefault())
-
         fun bind(item: SportBooking) = with(binding) {
+            val timing = SportSessionTiming(item.start, item.end, timeProvider)
+            dateTextView.text = timing.weekdayText(root.context)
+            dateTextView.contentDescription = timing.dateText(root.context)
+            dateDayTextView.text = timing.start.format(DateTimeFormatter.ofPattern("d", Locale.forLanguageTag("ru")))
+            dateMonthTextView.text = timing.start.format(DateTimeFormatter.ofPattern("MMM", Locale.forLanguageTag("ru"))).trimEnd('.')
+            timeTextView.text = timing.timeText()
             titleTextView.text = item.sectionName.shorten()
+            titleTextView.setTextColor(root.context.color.onSurface)
             locationTextView.text = item.roomName
+            locationRow.isVisible = item.roomName.isNotBlank()
             teacherTextView.text = item.teacherFio
+            teacherRow.isVisible = item.teacherFio.isNotBlank()
 
-            val localDate = item.start.toLocalDate()
-            val today = timeProvider.today()
-            val tomorrow = today.plusDays(1)
-
-            dateDayTextView.text = item.start.format(dayFormatter)
-            dateMonthTextView.text = item.start.format(monthFormatter)
-            val localStart = item.start.atZoneSameInstant(timeProvider.zoneId)
-            val localEnd = item.end.atZoneSameInstant(timeProvider.zoneId)
-            val context = root.context
-
-            val timeRange = "${localStart.format(timeFormatter)} - ${localEnd.format(timeFormatter)}"
-            val timeString = when (localDate) {
-                today -> context.getString(R.string.sport_time_today, timeRange)
-                tomorrow -> context.getString(R.string.sport_time_tomorrow, timeRange)
-                else -> context.getString(
-                    R.string.sport_time_other,
-                    item.start.dayOfWeek.getDisplayName(
-                        TextStyle.SHORT,
-                        Locale.getDefault()
-                    ),
-                    timeRange
-                )
-            }
-
-            timeTextView.text = timeString
-
-            val color = context.color
-
-            val sign = item.signEntry
-            when {
-                item.signed -> {
-                    setupChip(
-                        text = context.getString(
-                            if (sign != null) {
-                                R.string.sport_status_auto_sign_success
-                            } else {
-                                R.string.sport_status_signed
-                            }
-                        ),
-                        iconRes = R.drawable.ic_check,
-                        bgColor = color.secondaryContainer,
-                        contentColor = color.secondary
-                    )
-                }
-
-                sign != null -> {
-                    val status = sign.status
-                    val position = sign.position
-                    val total = sign.total
-                    val tries = sign.notificationAttempts
-                    val maxTries = sign.maxNotificationAttempts
-                    val triesText = if (status == SportQueueEntryStatus.NOTIFIED) {
-                        context.getString(
-                            R.string.sport_attempts_suffix,
-                            tries,
-                            maxTries
-                        )
-                    } else {
-                        ""
-                    }
-
-                    if (
-                        status == SportQueueEntryStatus.WAITING ||
-                        status == SportQueueEntryStatus.NOTIFIED
-                    ) {
-                        if (sign is SportAutoSignEntry) {
-                            setupChip(
-                                text = context.getString(
-                                    R.string.sport_prediction_position,
-                                    position,
-                                    total,
-                                    triesText
-                                ),
-                                iconRes = R.drawable.ic_wand_stars,
-                                bgColor = color.tertiaryContainer,
-                                contentColor = color.onTertiaryContainer
-                            )
-                        } else {
-                            setupChip(
-                                text = context.getString(
-                                    R.string.sport_queue_position,
-                                    position,
-                                    total,
-                                    triesText
-                                ),
-                                iconRes = R.drawable.ic_group,
-                                bgColor = color.primaryContainer,
-                                contentColor = color.onPrimaryContainer
-                            )
-                        }
-                    }
-
-                    if (
-                        status == SportQueueEntryStatus.GAVE_UP_NOTIFYING ||
-                        status == SportQueueEntryStatus.EXPIRED
-                    ) {
-                        setupChip(
-                            text = context.getString(R.string.sport_status_sign_failed),
-                            iconRes = R.drawable.ic_error,
-                            bgColor = color.errorContainer,
-                            contentColor = color.onErrorContainer
-                        )
-                    }
-                }
-            }
-
-            setupFriends(item)
-
-            sportRecordCard.setOnClickListener {
-                listener.onBookingClick(item)
-            }
-
-            optionsMenu.setOnClickListener { view ->
-                showPopupMenu(view, item)
-            }
-
-            locationTextView.setOnClickListener {
-                listener.onLocationClick(item)
-            }
-        }
-
-        private fun setupFriends(item: SportBooking) {
-            with(binding) {
-                val friends = item.friendsBookings
-
-                friendsLayout.visibility = View.GONE
-                avatar1.visibility = View.GONE
-                avatar2.visibility = View.GONE
-                avatar3.visibility = View.GONE
-                moreFriendsText.visibility = View.GONE
-
-                if (friends.isNotEmpty()) {
-                    friendsLayout.visibility = View.VISIBLE
-
-                    val visibleFriends = friends.take(3)
-
-                    avatar2.translationX = -12f
-                    avatar3.translationX = -24f
-                    moreFriendsText.translationX = -36f
-
-                    if (visibleFriends.size >= 1) {
-                        avatar1.visibility = View.VISIBLE
-                        avatar1.setUser(visibleFriends[0].friend)
-                    }
-
-                    if (visibleFriends.size >= 2) {
-                        avatar2.visibility = View.VISIBLE
-                        avatar2.setUser(visibleFriends[1].friend)
-                    }
-
-                    if (visibleFriends.size >= 3) {
-                        avatar3.visibility = View.VISIBLE
-                        avatar3.setUser(visibleFriends[2].friend)
-                    }
-
-                    if (friends.size > 3) {
-                        moreFriendsText.visibility = View.VISIBLE
-                        moreFriendsText.text = "+${friends.size - 3}"
-                    }
-
-                    val names = visibleFriends.joinToString(", ") {
-                        it.friend.name.substringBefore(" ")
-                    }
-
-                    friendsHint.text =
-                        if (friends.size > 3) {
-                            root.context.getString(
-                                R.string.sport_friends_with_user_more,
-                                names
-                            )
-                        } else {
-                            root.context.getString(
-                                R.string.sport_friends_with_user,
-                                names
-                            )
-                        }
-                }
-            }
-        }
-
-        private fun setupChip(
-            text: String,
-            iconRes: Int,
-            @ColorInt bgColor: Int,
-            @ColorInt contentColor: Int
-        ) {
-            binding.statusTextView.text = text
-            binding.statusTextView.setTextColor(contentColor)
-            binding.statusIcon.setImageResource(iconRes)
-            binding.statusIcon.setColorFilter(contentColor)
-            binding.statusChipCard.setCardBackgroundColor(ColorStateList.valueOf(bgColor))
+            val status = SportRegistrationStatus.from(item.signed, item.signEntry)
+            val entry = item.signEntry
+            val label = if (entry != null && status in setOf(SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED)) {
+                root.context.getString(R.string.sport_card_queue, entry.position, entry.total)
+            } else status.label(root.context)
+            bindSportStatus(status, statusTextView, label)
+            friendsPreview.bind(item.friendsBookings)
+            sportRecordCard.setOnClickListener { listener.onBookingClick(item) }
+            optionsMenu.setOnClickListener { showPopupMenu(it, item) }
+            optionsMenu.isVisible = item.signed || item.signEntry != null
         }
 
         private fun showPopupMenu(view: View, item: SportBooking) {
@@ -254,9 +81,15 @@ class SportBookingAdapter(
                 view.context.getString(R.string.sport_cancel_booking_action)
             )
 
+            if (item.extractBuildingAddress() != null) {
+                popup.menu.add(0, 2, 1, view.context.getString(R.string.sport_open_map))
+            }
             popup.setOnMenuItemClickListener { menuItem ->
                 if (menuItem.itemId == 1) {
                     listener.onUnSign(item)
+                    true
+                } else if (menuItem.itemId == 2) {
+                    listener.onLocationClick(item)
                     true
                 } else {
                     false
