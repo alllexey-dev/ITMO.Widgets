@@ -154,41 +154,21 @@
     <string name="friend_picker_more_groups">%1$s • и ещё %2$d</string>
     <string name="friend_picker_user_subtitle">%1$d • %2$s</string>
 
-    <string name="recordbook_filter">Фильтр зачётки</string>
-    <string name="recordbook_period_button">%1$d курс · %2$d семестр · %3$s</string>
     <string name="recordbook_period_title">Учебный период</string>
     <string name="recordbook_period_value">%1$d курс · %2$d семестр</string>
     <string name="recordbook_current_period">%1$s · текущий</string>
-    <string name="recordbook_summary_title">Успеваемость</string>
-    <string name="recordbook_closed">закрыто</string>
-    <string name="recordbook_closed_value">%1$d из %2$d</string>
-    <string name="recordbook_average_score">средний балл</string>
-    <string name="recordbook_score_value">%1$s / 100</string>
-    <string name="recordbook_subject_meta">%1$s · %2$s балла</string>
-    <string name="recordbook_no_score">Нет баллов</string>
     <string name="recordbook_rate_credit">Зачёт</string>
-    <string name="recordbook_rate_in_progress">В процессе</string>
+    <string name="recordbook_rate_in_progress">Без оценки</string>
     <string name="recordbook_empty_title">Здесь пока пусто</string>
     <string name="recordbook_empty_description">Для выбранного периода дисциплины не найдены.</string>
     <string name="recordbook_back">Назад к зачётке</string>
-    <string name="recordbook_control_score">%1$s / %2$s</string>
+    <string name="recordbook_control_score">%1$s / %2$s</string>
     <string name="recordbook_control_minimum">минимум %1$s</string>
     <string name="recordbook_required">обязательная</string>
-    <string name="recordbook_details_empty_title">Детализация недоступна</string>
-    <string name="recordbook_details_empty_description">My ITMO не вернул контрольные работы по этой дисциплине.</string>
+    <string name="recordbook_details_empty_description">В MyITMO нет детализации по этому предмету.</string>
     <string name="recordbook_attention_section">Требуют внимания</string>
     <string name="recordbook_disciplines_section">Дисциплины</string>
-    <string name="recordbook_final_section">Итог и дополнительные баллы</string>
-    <string name="recordbook_homework_section">Домашние задания</string>
-    <string name="recordbook_tests_section">Контрольные и практика</string>
-    <string name="recordbook_other_section">Другие работы</string>
 
-    <string-array name="recordbook_filter_options">
-        <item>Все дисциплины</item>
-        <item>Экзамены</item>
-        <item>Зачёты</item>
-        <item>Требуют внимания</item>
-    </string-array>
 
     <string name="debug_academic_time_title">Тестовое академическое время</string>
     <string name="debug_academic_time_description">Подменяет текущую дату только для расписания и спорта. Авторизация, кэш и QR используют системное время.</string>
@@ -386,4 +366,26 @@
     <string name="auth_web_title">Вход через ITMO.ID</string>
     <string name="auth_web_error">Не удалось открыть страницу ITMO.ID.</string>
     <string name="schedule_widget_signed_out">Войдите в приложение</string>
+    <string name="recordbook_subject_title">Предмет</string>
+    <string name="recordbook_source_title">Откуда данные</string>
+    <string name="recordbook_source_description">Оценки и контрольные мероприятия — из зачётки MyITMO. «Без оценки» означает, что итог ещё не выставлен, а не задолженность. Баллы за работы не всегда складываются в итоговую оценку.\n\nУ физкультуры отдельный источник: «Мой спорт». Показываем баллы только за совпавшие учебный год и осень/весну. Учитываем до 40 бонусных баллов, как на экране спорта. Эти баллы не заменяют официальный зачёт.\n\nПотяните список вниз, чтобы обновить данные.</string>
+    <string name="recordbook_summary_closed">Сдано %1$d из %2$d</string>
+    <string name="recordbook_summary_pending">Без оценки: %1$d · не сдано: %2$d</string>
+    <string name="recordbook_score_pending">—</string>
+    <string name="recordbook_points_missing">Баллы не выставлены</string>
+    <string name="recordbook_points_out_of">%1$s из %2$s баллов</string>
+    <string name="recordbook_result_accessibility">%1$s. %2$s</string>
+    <string name="recordbook_sport_source">Мой спорт</string>
+    <string name="recordbook_sport_attendance">Посещения</string>
+    <string name="recordbook_sport_bonus">Бонусы</string>
+    <string name="recordbook_sport_bonus_limit">Учтено %1$d из %2$d бонусных баллов</string>
+    <string name="recordbook_official_result">Результат в MyITMO</string>
+    <string name="recordbook_official_pending">Зачёт ещё не выставлен</string>
+    <string name="recordbook_sport_unavailable">Спорт: нет совпадающего периода</string>
+    <string name="recordbook_sport_error">Спортивные баллы не загрузились</string>
+    <string name="recordbook_sport_no_period">Не удалось сопоставить учебный и спортивный семестры.</string>
+    <string name="recordbook_sport_retry_description">Не удалось загрузить спортивные баллы.</string>
+    <string name="recordbook_controls_title">Контрольные мероприятия</string>
+    <string name="recordbook_refresh_error">Не удалось обновить. Показаны предыдущие данные. %1$s</string>
+    <string name="recordbook_period_program">%1$s\n%2$s</string>
 </resources>

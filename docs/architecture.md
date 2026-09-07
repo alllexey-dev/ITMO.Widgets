@@ -59,6 +59,7 @@ core/                   cross-cutting; knows nothing about features
   network/              WidgetsClient, AppErrorMapper, serialization adapters
   result/               AppError, AppResult
   schedule/             Schedule refresh and widget-update cross-feature contracts
+  sport/                SportScoreRepository, period identifiers and shared score calculation
   services/             CustomServicesRepository — the backend opt-in
   session/              SessionTokenStore, SessionDataCleaner, CurrentUserProvider,
                         BackendIdentitySync
@@ -192,6 +193,25 @@ cleaners**; cache keys do not carry account identity on their own.
 Everything that reaches the project backend is gated on the custom-services opt-in,
 and the gate belongs in the repository — the layer that chooses the source — so no
 data source can be reached without passing it.
+
+### Recordbook and sport
+
+Recordbook reads official grades independently of sport progress. The shared
+`core/sport/SportScoreRepository` returns period-specific score summaries;
+`feature/sport/data/repository/SportScoreRepositoryImpl` owns the MyItmoApi calls and supplies
+attendance history to the sport feature as well. Both screens use
+`SportScoreSummary` for the bonus cap and total, but sports progress never changes
+an official academic grade. PE rings display that period's sports progress even
+before the official credit, while their grade marker and the passed-subject count
+remain based on the recordbook. The PE detail card separates attendance/bonus
+sectors from the official result and keeps API errors distinct from a zero score.
+The resolver accepts only a unique year/season match,
+not numeric equality between unrelated semester identifiers.
+
+The compact root and scrollable subject details retain content during refresh and
+cancel superseded period requests. Details reload the official subject rather than
+trusting a navigation snapshot, preserve control hierarchy, and respect `have_tree`.
+API observations and limitations are recorded in `docs/recordbook-api.md`.
 
 ### Dependency injection
 

@@ -3,12 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:paddingHorizontal="16dp"
     android:paddingBottom="20dp">
 
-    <View
-        android:id="@+id/drag_handle"
+    <View android:id="@+id/drag_handle"
         android:layout_width="32dp"
         android:layout_height="4dp"
         android:layout_marginTop="8dp"
@@ -17,8 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/title"
+    <TextView android:id="@+id/title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -29,8 +27,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/drag_handle" />
 
-    <ImageButton
-        android:id="@+id/close_button"
+    <ImageButton android:id="@+id/close_button"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:background="?attr/selectableItemBackgroundBorderless"
@@ -42,12 +39,10 @@
         app:layout_constraintTop_toTopOf="@id/title"
         app:tint="?attr/colorOnSurfaceVariant" />
 
-    <TextView
-        android:id="@+id/program_name"
+    <TextView android:id="@+id/program_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:maxLines="2"
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintEnd_toEndOf="parent"
@@ -55,10 +50,10 @@
         app:layout_constraintTop_toBottomOf="@id/title"
         tools:text="Системное и прикладное программное обеспечение" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view"
+    <androidx.recyclerview.widget.RecyclerView android:id="@+id/recycler_view"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constrainedHeight="true"
         android:layout_marginTop="12dp"
         android:clipToPadding="false"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"

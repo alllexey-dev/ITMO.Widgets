@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="recordbook_passed">#89D995</color>
     <color name="sport_score_attendance">#85A2FF</color>
     <color name="sport_score_bonus">#FF78AE</color>
     <color name="widget_surface">#FF1C1B1F</color>

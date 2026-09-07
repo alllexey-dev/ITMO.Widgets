@@ -4,13 +4,15 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
+import dev.alllexey.itmowidgets.feature.sport.data.debug.DefaultSportLessonTemplateProvider
+import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScheduleRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScoreRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportSignPreferencesRepositoryImpl
-import dev.alllexey.itmowidgets.feature.sport.data.debug.DefaultSportLessonTemplateProvider
-import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
@@ -21,6 +23,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SportModule {
+
+    @Binds
+    abstract fun bindSportScoreRepository(
+        impl: SportScoreRepositoryImpl
+    ): SportScoreRepository
 
     @Binds
     @Singleton

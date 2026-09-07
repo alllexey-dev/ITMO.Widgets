@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="recordbook_passed">#286B39</color>
     <color name="primary_color">#FF1743BD</color>
     <color name="primary_variant_color">#3A8AFF</color>
     <color name="green">#46C118</color>

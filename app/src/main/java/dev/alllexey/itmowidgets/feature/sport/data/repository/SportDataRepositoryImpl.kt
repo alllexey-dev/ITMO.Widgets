@@ -2,10 +2,10 @@ package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.DataState
@@ -31,7 +31,7 @@ class SportDataRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
     private val myItmoApi: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi,
-    private val sportScoreOverrideProvider: SportScoreOverrideProvider
+    private val scoreRepository: SportScoreRepositoryImpl
 ) : SportDataRepository {
 
     private val attemptsFlow = MutableSharedFlow<DataState<SportAttempts>>(replay = 1)
@@ -58,31 +58,11 @@ class SportDataRepositoryImpl @Inject constructor(
     override fun observeFriendsBookings() = friendsBookingsFlow
 
     override suspend fun refreshSportScore() {
-        try {
-            val result = withContext(Dispatchers.IO) {
-                val response = myItmoApi.getSportScore(null).execute()
-                response.body()?.result?.toModel()?.applyDebugOverride()
-            }
-
-            if (result != null) {
-                scoreFlow.emit(DataState.Success(result))
-            } else {
-                scoreFlow.emit(DataState.Error(AppError.Unknown()))
-            }
-
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            scoreFlow.emit(DataState.Error(error.toAppError()))
+        val state = when (val result = scoreRepository.getSportScore()) {
+            is AppResult.Success -> DataState.Success(result.value)
+            is AppResult.Failure -> DataState.Error(result.error)
         }
-    }
-
-    private fun SportScore.applyDebugOverride(): SportScore {
-        val override = sportScoreOverrideProvider.getOverride() ?: return this
-        return copy(
-            attendances = override.attendances,
-            other = override.bonus
-        )
+        scoreFlow.emit(state)
     }
 
     override suspend fun refreshSportAttempts() {

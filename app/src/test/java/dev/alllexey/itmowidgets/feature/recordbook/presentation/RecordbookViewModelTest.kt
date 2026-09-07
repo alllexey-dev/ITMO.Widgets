@@ -4,157 +4,104 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
+import dev.alllexey.itmowidgets.feature.recordbook.FixedAcademicTime
+import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecordbookViewModelTest {
+    @get:Rule val mainDispatcherRule = MainDispatcherRule()
+    private val repository = FakeRecordbookRepository()
+    private val sport = FakeSportScoreRepository()
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private fun model(state: SavedStateHandle = SavedStateHandle(), date: String = "2026-09-07") =
+        RecordbookViewModel(repository, state, RecordbookSportResolver(sport), FixedAcademicTime(date))
 
-    @Test
-    fun `loads actual period and renders subjects`() =
-        runTest(mainDispatcherRule.dispatcher) {
-            val repository = FakeRecordbookRepository(
-                programsResult = AppResult.Success(listOf(program())),
-                subjectsResult = AppResult.Success(listOf(subject()))
-            )
-            val viewModel = RecordbookViewModel(repository, SavedStateHandle())
-
-            viewModel.ensureDataLoaded()
-            advanceUntilIdle()
-
-            val state = viewModel.uiState.value as RecordbookUiState.Content
-            assertEquals(2, state.selection.period.semester)
-            assertEquals(repository.subjectsResult.valueOrEmpty(), state.subjects)
-        }
-
-    @Test
-    fun `filters subjects without reloading repository`() =
-        runTest(mainDispatcherRule.dispatcher) {
-            val exam = subject(controlType = "Экзамен")
-            val credit = subject(entryId = 2, controlType = "Зачёт")
-            val repository = FakeRecordbookRepository(
-                programsResult = AppResult.Success(listOf(program())),
-                subjectsResult = AppResult.Success(listOf(exam, credit))
-            )
-            val viewModel = RecordbookViewModel(repository, SavedStateHandle())
-            viewModel.ensureDataLoaded()
-            advanceUntilIdle()
-
-            viewModel.setFilter(RecordbookFilter.EXAMS)
-
-            val state = viewModel.uiState.value as RecordbookUiState.Content
-            assertEquals(listOf(exam), state.subjects)
-            assertEquals(1, repository.subjectRequests)
-        }
-
-    @Test
-    fun `renders typed repository error`() =
-        runTest(mainDispatcherRule.dispatcher) {
-            val viewModel = RecordbookViewModel(
-                FakeRecordbookRepository(
-                    programsResult = AppResult.Failure(AppError.Network)
-                ),
-                SavedStateHandle()
-            )
-
-            viewModel.ensureDataLoaded()
-            advanceUntilIdle()
-
-            assertEquals(
-                RecordbookUiState.Error(AppError.Network),
-                viewModel.uiState.value
-            )
-        }
-
-    @Test
-    fun `renders not found when programs have no periods`() =
-        runTest(mainDispatcherRule.dispatcher) {
-            val repository = FakeRecordbookRepository(
-                programsResult = AppResult.Success(
-                    listOf(RecordbookProgram(1, "Программа", emptyList()))
-                )
-            )
-            val viewModel = RecordbookViewModel(repository, SavedStateHandle())
-
-            viewModel.ensureDataLoaded()
-            advanceUntilIdle()
-
-            assertEquals(
-                RecordbookUiState.Error(AppError.NotFound),
-                viewModel.uiState.value
-            )
-        }
-
-    private fun program(): RecordbookProgram {
-        return RecordbookProgram(
-            id = 1,
-            name = "Программа",
-            periods = listOf(
-                RecordbookPeriod("2024/2025", 1, 1, actual = false),
-                RecordbookPeriod("2025/2026", 2, 1, actual = true)
-            )
-        )
+    @Test fun `loads current academic period without asking sport for regular subjects`() = runTest {
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        assertEquals(3, (vm.uiState.value as RecordbookUiState.Content).selection.period.semester)
+        assertEquals(0, sport.periodRequests)
     }
 
-    private fun subject(
-        entryId: Long = 1,
-        controlType: String = "Экзамен"
-    ): RecordbookSubject {
-        return RecordbookSubject(
-            name = "Архитектура ПО",
-            disciplineId = 10,
-            entryId = entryId,
-            controlType = controlType,
-            score = 95.0,
-            rate = "5A",
-            attempt = 1,
-            examDate = null,
-            hasDetails = true,
-            teacherName = "Иванов И. И."
-        )
+    @Test fun `academic override selects spring even when server actual is autumn`() = runTest {
+        val vm = model(date = "2026-06-01"); vm.ensureDataLoaded(); advanceUntilIdle()
+        assertEquals(2, (vm.uiState.value as RecordbookUiState.Content).selection.period.semester)
     }
 
-    private fun AppResult<List<RecordbookSubject>>.valueOrEmpty(): List<RecordbookSubject> {
-        return (this as? AppResult.Success)?.value.orEmpty()
+    @Test fun `restores explicitly selected historical period`() = runTest {
+        val vm = model(SavedStateHandle(mapOf<String, Any>("recordbook_program_id" to 1L, "recordbook_semester" to 1)))
+        vm.ensureDataLoaded(); advanceUntilIdle()
+        assertEquals(1, (vm.uiState.value as RecordbookUiState.Content).selection.period.semester)
     }
 
-    private class FakeRecordbookRepository(
-        var programsResult: AppResult<List<RecordbookProgram>> =
-            AppResult.Success(emptyList()),
-        var subjectsResult: AppResult<List<RecordbookSubject>> =
-            AppResult.Success(emptyList()),
-        var controlsResult: AppResult<List<RecordbookControl>> =
-            AppResult.Success(emptyList())
-    ) : RecordbookRepository {
+    @Test fun `renders real empty catalog instead of not found error`() = runTest {
+        repository.programs = AppResult.Success(emptyList())
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        assertEquals(RecordbookUiState.Empty, vm.uiState.value)
+    }
 
-        var subjectRequests = 0
+    @Test fun `catalog failure is retryable`() = runTest {
+        repository.programs = AppResult.Failure(AppError.Network)
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        assertEquals(RecordbookUiState.Error(AppError.Network), vm.uiState.value)
+    }
 
-        override suspend fun getPrograms(): AppResult<List<RecordbookProgram>> {
-            return programsResult
-        }
+    @Test fun `refresh keeps content and ends spinner even when identical result arrives`() = runTest {
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val before = vm.uiState.value
+        vm.refresh()
+        assertTrue((vm.uiState.value as RecordbookUiState.Content).refreshing)
+        advanceUntilIdle()
+        assertEquals(before, vm.uiState.value)
+        assertEquals(2, repository.programRequests)
+    }
 
-        override suspend fun getSubjects(
-            programId: Long,
-            semester: Int
-        ): AppResult<List<RecordbookSubject>> {
-            subjectRequests += 1
-            return subjectsResult
-        }
+    @Test fun `repeated failed refresh keeps previous values and clears spinner`() = runTest {
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        repository.subjects = AppResult.Failure(AppError.Network)
+        vm.refresh(); vm.refresh(); advanceUntilIdle()
+        val state = vm.uiState.value as RecordbookUiState.Content
+        assertFalse(state.refreshing)
+        assertEquals(AppError.Network, state.refreshError)
+        assertEquals(listOf(recordbookSubject()), state.subjects)
+    }
 
-        override suspend fun getControls(entryId: Long): AppResult<List<RecordbookControl>> {
-            return controlsResult
-        }
+    @Test fun `rapid period selection cancels old result and cannot mix periods`() = runTest {
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val oldRequest = CompletableDeferred<AppResult<List<dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject>>>()
+        repository.subjectLoader = { semester -> if (semester == 1) oldRequest.await() else AppResult.Success(listOf(recordbookSubject(semester.toLong()))) }
+        vm.selectPeriod(1, 1); runCurrent()
+        vm.selectPeriod(1, 2); advanceUntilIdle()
+        oldRequest.complete(AppResult.Success(listOf(recordbookSubject(99))))
+        advanceUntilIdle()
+        val state = vm.uiState.value as RecordbookUiState.Content
+        assertEquals(2, state.selection.period.semester)
+        assertEquals(2L, state.subjects.single().entryId)
+    }
+
+    @Test fun `sport failure does not hide official grades or mark PE passed`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Физическая культура и спорт (элективная)").copy(rate = null)))
+        sport.periods = AppResult.Failure(AppError.Network)
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val state = vm.uiState.value as RecordbookUiState.Content
+        assertEquals(RecordbookSportState.Error, state.sport)
+        assertNull(state.subjects.single().rate)
+    }
+
+    @Test fun `same period does not trigger another request`() = runTest {
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        vm.selectPeriod(1, 3); advanceUntilIdle()
+        assertEquals(listOf(3), repository.subjectRequests)
     }
 }

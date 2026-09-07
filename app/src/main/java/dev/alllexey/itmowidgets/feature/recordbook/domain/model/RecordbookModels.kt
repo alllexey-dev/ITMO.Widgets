@@ -14,6 +14,7 @@ data class RecordbookPeriod(
     val course: Int,
     val actual: Boolean
 ) {
+    /** Seasonal half for academic date/sport matching only; UI displays the full [semester]. */
     val semesterInCourse: Int get() = if (semester % 2 == 0) 2 else 1
 }
 
@@ -56,26 +57,34 @@ data class RecordbookSubject(
             else -> RecordbookAssessmentKind.OTHER
         }
 
+    private val normalizedText: String
+        get() = rate.orEmpty().trim().lowercase().replace('ё', 'е')
+            .replace(Regex("\\s+"), "")
+
     val status: RecordbookSubjectStatus
         get() = when {
-            rate.isNullOrBlank() -> RecordbookSubjectStatus.IN_PROGRESS
-            rate.trim().startsWith("2") -> RecordbookSubjectStatus.ATTENTION
-            rate.contains("не зач", ignoreCase = true) -> RecordbookSubjectStatus.ATTENTION
-            else -> RecordbookSubjectStatus.PASSED
+            normalizedText.startsWith("2") || normalizedText in setOf("незачет", "незачтено") ->
+                RecordbookSubjectStatus.ATTENTION
+            normalizedText in setOf("зачет", "зачтено") ||
+                Regex("[345](/?[ABCDE])?").matches(normalizedText.uppercase()) ->
+                RecordbookSubjectStatus.PASSED
+            else -> RecordbookSubjectStatus.IN_PROGRESS
         }
 
+    /** Conservative title recognition, not an identity join with schedule or other subjects. */
+    val isPhysicalEducation: Boolean
+        get() = name.trim().lowercase().replace('ё', 'е') in setOf(
+            "физическая культура и спорт (базовая)",
+            "физическая культура и спорт (элективная)"
+        )
+
     val normalizedRate: RecordbookRate
-        get() {
-            val normalizedRate = rate?.trim()
-            return when {
-                normalizedRate.equals("зачет", ignoreCase = true) ||
-                    normalizedRate.equals("зачёт", ignoreCase = true) ->
-                    RecordbookRate.Credit
-                normalizedRate.isNullOrBlank() -> RecordbookRate.InProgress
-                else -> RecordbookRate.Grade(
-                    normalizedRate.replace("/", "").replace(" ", "").uppercase()
-                )
-            }
+        get() = when {
+            normalizedText in setOf("зачет", "зачтено") -> RecordbookRate.Credit
+            normalizedText.isBlank() -> RecordbookRate.InProgress
+            Regex("[2345]/?[A-FX]+").matches(normalizedText.uppercase()) ->
+                RecordbookRate.Grade(normalizedText.replace("/", "").uppercase())
+            else -> RecordbookRate.Grade(rate.orEmpty().trim())
         }
 }
 
@@ -83,33 +92,10 @@ data class RecordbookControl(
     val id: Long,
     val name: String,
     val score: Double?,
-    val minimum: Double,
-    val maximum: Double,
+    val minimum: Double?,
+    val maximum: Double?,
     val required: Boolean,
     val date: OffsetDateTime?,
-    val teacherName: String?
-) {
-    val category: RecordbookControlCategory
-        get() {
-            val normalizedName = name.lowercase()
-            return when {
-                normalizedName.contains("дополнитель") ||
-                    normalizedName == "зачет" ||
-                    normalizedName == "зачёт" ||
-                    normalizedName.contains("экзамен") -> RecordbookControlCategory.FINAL
-                normalizedName.contains("homework") ||
-                    normalizedName.contains("домаш") -> RecordbookControlCategory.HOMEWORK
-                normalizedName.contains("test") ||
-                    normalizedName.contains("practice") ||
-                    normalizedName.contains("контроль") -> RecordbookControlCategory.TESTS
-                else -> RecordbookControlCategory.OTHER
-            }
-        }
-}
-
-enum class RecordbookControlCategory {
-    FINAL,
-    HOMEWORK,
-    TESTS,
-    OTHER
-}
+    val teacherName: String?,
+    val parentId: Long? = null
+)

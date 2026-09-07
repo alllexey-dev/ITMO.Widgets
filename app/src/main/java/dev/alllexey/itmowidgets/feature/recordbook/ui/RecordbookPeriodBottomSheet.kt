@@ -9,10 +9,11 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookPeriodBinding
 import dev.alllexey.itmowidgets.databinding.SheetRecordbookPeriodBinding
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
@@ -24,7 +25,8 @@ data class RecordbookPeriodOption(
     val semester: Int,
     val course: Int,
     val studyYear: String,
-    val actual: Boolean
+    val actual: Boolean,
+    val programName: String
 )
 
 class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
@@ -46,6 +48,7 @@ class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
         val selectedProgram = requireArguments().getLong(ARG_SELECTED_PROGRAM)
         val selectedSemester = requireArguments().getInt(ARG_SELECTED_SEMESTER)
         binding.programName.text = requireArguments().getString(ARG_PROGRAM_NAME)
+        binding.programName.isVisible = options.map { it.programId }.distinct().size == 1
         binding.recyclerView.adapter = PeriodAdapter(
             options = options,
             selectedProgram = selectedProgram,
@@ -61,9 +64,10 @@ class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
             ?.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
             ?: return
         bottomSheet.layoutParams = bottomSheet.layoutParams.apply {
-            height = (resources.displayMetrics.heightPixels * 0.85f).roundToInt()
+            height = ViewGroup.LayoutParams.WRAP_CONTENT
         }
         BottomSheetBehavior.from(bottomSheet).apply {
+            maxHeight = (resources.displayMetrics.heightPixels * 0.85f).roundToInt()
             state = BottomSheetBehavior.STATE_EXPANDED
             skipCollapsed = true
         }
@@ -82,13 +86,15 @@ class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
         val courses = arguments.getIntArray(ARG_COURSES) ?: intArrayOf()
         val years = arguments.getStringArrayList(ARG_YEARS).orEmpty()
         val actual = arguments.getBooleanArray(ARG_ACTUAL) ?: booleanArrayOf()
+        val names = arguments.getStringArrayList(ARG_PROGRAM_NAMES).orEmpty()
         return semesters.indices.map { index ->
             RecordbookPeriodOption(
                 programId = programIds[index],
                 semester = semesters[index],
                 course = courses[index],
                 studyYear = years[index],
-                actual = actual[index]
+                actual = actual[index],
+                programName = names.getOrElse(index) { "" }
             )
         }
     }
@@ -131,11 +137,10 @@ class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
             private val binding: ItemRecordbookPeriodBinding
         ) : RecyclerView.ViewHolder(binding.root) {
             fun bind(option: RecordbookPeriodOption) {
-                val semesterInCourse = if (option.semester % 2 == 0) 2 else 1
                 binding.title.text = binding.root.context.getString(
                     R.string.recordbook_period_value,
                     option.course,
-                    semesterInCourse
+                    option.semester
                 )
                 binding.subtitle.text = if (option.actual) {
                     binding.root.context.getString(
@@ -145,8 +150,22 @@ class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
                 } else {
                     option.studyYear
                 }
-                binding.check.isVisible = option.programId == selectedProgram &&
-                    option.semester == selectedSemester
+                if (options.map { it.programId }.distinct().size > 1) {
+                    binding.subtitle.text = binding.root.context.getString(
+                        R.string.recordbook_period_program,
+                        binding.subtitle.text,
+                        option.programName
+                    )
+                }
+                val selected = option.programId == selectedProgram && option.semester == selectedSemester
+                binding.check.isVisible = selected
+                binding.root.isSelected = selected
+                val colors = binding.root.context.color
+                binding.root.setCardBackgroundColor(
+                    if (selected) colors.secondaryContainer
+                    else colors.resolve(com.google.android.material.R.attr.colorSurfaceContainerLow)
+                )
+                binding.root.contentDescription = listOf(binding.title.text, binding.subtitle.text).joinToString(". ")
                 binding.root.setOnClickListener { onClick(option) }
             }
         }
@@ -158,6 +177,7 @@ class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
         const val RESULT_SEMESTER = "recordbook_semester"
         private const val TAG = "RecordbookPeriodBottomSheet"
         private const val ARG_PROGRAM_NAME = "program_name"
+        private const val ARG_PROGRAM_NAMES = "program_names"
         private const val ARG_PROGRAM_IDS = "program_ids"
         private const val ARG_SEMESTERS = "semesters"
         private const val ARG_COURSES = "courses"
@@ -171,20 +191,23 @@ class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
             programs: List<RecordbookProgram>,
             selection: RecordbookSelection
         ) {
+            if (manager.findFragmentByTag(TAG) != null) return
             val options = programs.flatMap { program ->
-                program.periods.map { period ->
+                program.periods.sortedByDescending { it.semester }.map { period ->
                     RecordbookPeriodOption(
                         program.id,
                         period.semester,
                         period.course,
                         period.studyYear,
-                        period.actual
+                        period.actual,
+                        program.name
                     )
                 }
             }
             RecordbookPeriodBottomSheet().apply {
                 arguments = Bundle().apply {
                     putString(ARG_PROGRAM_NAME, selection.program.name)
+                    putStringArrayList(ARG_PROGRAM_NAMES, ArrayList(options.map { it.programName }))
                     putLongArray(ARG_PROGRAM_IDS, options.map { it.programId }.toLongArray())
                     putIntArray(ARG_SEMESTERS, options.map { it.semester }.toIntArray())
                     putIntArray(ARG_COURSES, options.map { it.course }.toIntArray())

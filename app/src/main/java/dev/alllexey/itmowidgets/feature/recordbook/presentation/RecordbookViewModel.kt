@@ -6,145 +6,110 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookAssessmentKind
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
+import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-enum class RecordbookFilter {
-    ALL,
-    EXAMS,
-    CREDITS,
-    ATTENTION
-}
-
-data class RecordbookSelection(
-    val program: RecordbookProgram,
-    val period: RecordbookPeriod
-)
+data class RecordbookSelection(val program: RecordbookProgram, val period: RecordbookPeriod)
 
 sealed interface RecordbookUiState {
-    data object Loading : RecordbookUiState
+    data class Loading(
+        val programs: List<RecordbookProgram> = emptyList(),
+        val selection: RecordbookSelection? = null
+    ) : RecordbookUiState
     data class Content(
         val programs: List<RecordbookProgram>,
         val selection: RecordbookSelection,
-        val allSubjects: List<RecordbookSubject>,
         val subjects: List<RecordbookSubject>,
-        val filter: RecordbookFilter
+        val sport: RecordbookSportState? = null,
+        val refreshing: Boolean = false,
+        val refreshError: AppError? = null
     ) : RecordbookUiState
-    data class Error(val error: AppError) : RecordbookUiState
+    data object Empty : RecordbookUiState
+    data class Error(
+        val error: AppError,
+        val programs: List<RecordbookProgram> = emptyList(),
+        val selection: RecordbookSelection? = null
+    ) : RecordbookUiState
 }
 
 @HiltViewModel
 class RecordbookViewModel @Inject constructor(
     private val repository: RecordbookRepository,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val sportResolver: RecordbookSportResolver,
+    private val time: AcademicTimeProvider
 ) : ViewModel() {
-
-    private val _uiState = MutableStateFlow<RecordbookUiState>(RecordbookUiState.Loading)
+    private val _uiState = MutableStateFlow<RecordbookUiState>(RecordbookUiState.Loading())
     val uiState: StateFlow<RecordbookUiState> = _uiState.asStateFlow()
-
     private var programs: List<RecordbookProgram> = emptyList()
     private var selection: RecordbookSelection? = null
-    private var subjects: List<RecordbookSubject> = emptyList()
-    private var filter = RecordbookFilter.ALL
+    private var loadJob: Job? = null
 
     fun ensureDataLoaded() {
-        if (_uiState.value is RecordbookUiState.Loading && programs.isEmpty()) {
-            refresh()
-        }
-    }
-
-    fun refresh() {
-        viewModelScope.launch {
-            _uiState.value = RecordbookUiState.Loading
-            if (programs.isEmpty()) {
-                when (val result = repository.getPrograms()) {
-                    is AppResult.Success -> programs = result.value
-                    is AppResult.Failure -> {
-                        _uiState.value = RecordbookUiState.Error(result.error)
-                        return@launch
-                    }
-                }
-            }
-
-            val selected = selection ?: restoreSelection() ?: defaultSelection()
-            if (selected == null) {
-                _uiState.value = RecordbookUiState.Error(AppError.NotFound)
-                return@launch
-            }
-            selection = selected
-            loadSubjects(selected)
-        }
+        if (_uiState.value is RecordbookUiState.Loading && loadJob?.isActive != true) refresh()
     }
 
     fun selectPeriod(programId: Long, semester: Int) {
         val program = programs.firstOrNull { it.id == programId } ?: return
         val period = program.periods.firstOrNull { it.semester == semester } ?: return
-        selection = RecordbookSelection(program, period)
+        val selected = RecordbookSelection(program, period)
+        if (selection == selected) return
+        selection = selected
         savedStateHandle[KEY_PROGRAM_ID] = programId
         savedStateHandle[KEY_SEMESTER] = semester
-        refreshSubjects()
+        refresh()
     }
 
-    fun setFilter(value: RecordbookFilter) {
-        filter = value
-        emitContent()
-    }
-
-    private fun refreshSubjects() {
-        val selected = selection ?: return
-        viewModelScope.launch {
-            _uiState.value = RecordbookUiState.Loading
-            loadSubjects(selected)
-        }
-    }
-
-    private suspend fun loadSubjects(selected: RecordbookSelection) {
-        when (
-            val result = repository.getSubjects(
-                selected.program.id,
-                selected.period.semester
-            )
-        ) {
-            is AppResult.Success -> {
-                subjects = result.value
-                emitContent()
+    fun refresh() {
+        loadJob?.cancel()
+        val previous = (_uiState.value as? RecordbookUiState.Content)
+            ?.takeIf { it.selection == selection }?.copy(refreshing = false)
+        _uiState.value = previous?.copy(refreshing = true, refreshError = null)
+            ?: RecordbookUiState.Loading(programs, selection)
+        loadJob = viewModelScope.launch {
+            // Refresh the catalog as well: MyITMO's actual flag and available periods can change.
+            when (val result = repository.getPrograms()) {
+                is AppResult.Success -> programs = result.value
+                is AppResult.Failure -> {
+                    _uiState.value = previous?.copy(refreshError = result.error)
+                        ?: RecordbookUiState.Error(result.error, programs, selection)
+                    return@launch
+                }
             }
-            is AppResult.Failure -> {
-                _uiState.value = RecordbookUiState.Error(result.error)
+            val selected = selection?.let { old ->
+                programs.firstOrNull { it.id == old.program.id }?.let { program ->
+                    program.periods.firstOrNull { it.semester == old.period.semester }
+                        ?.let { RecordbookSelection(program, it) }
+                }
+            } ?: restoreSelection() ?: defaultSelection()
+            if (selected == null) {
+                _uiState.value = RecordbookUiState.Empty
+                return@launch
             }
-        }
-    }
-
-    private fun emitContent() {
-        val selected = selection ?: return
-        val filtered = subjects.filter { subject ->
-            when (filter) {
-                RecordbookFilter.ALL -> true
-                RecordbookFilter.EXAMS ->
-                    subject.assessmentKind == RecordbookAssessmentKind.EXAM
-                RecordbookFilter.CREDITS ->
-                    subject.assessmentKind == RecordbookAssessmentKind.CREDIT
-                RecordbookFilter.ATTENTION -> {
-                    subject.status == RecordbookSubjectStatus.ATTENTION
+            selection = selected
+            when (val result = repository.getSubjects(selected.program.id, selected.period.semester)) {
+                is AppResult.Success -> {
+                    val sport = sportResolver.resolve(selected.period, result.value)
+                    _uiState.value = RecordbookUiState.Content(programs, selected, result.value, sport)
+                }
+                is AppResult.Failure -> {
+                    _uiState.value = previous?.takeIf { it.selection == selected }
+                        ?.copy(refreshError = result.error)
+                        ?: RecordbookUiState.Error(result.error, programs, selected)
                 }
             }
         }
-        _uiState.value = RecordbookUiState.Content(
-            programs = programs,
-            selection = selected,
-            allSubjects = subjects,
-            subjects = filtered,
-            filter = filter
-        )
     }
 
     private fun restoreSelection(): RecordbookSelection? {
@@ -156,11 +121,14 @@ class RecordbookViewModel @Inject constructor(
     }
 
     private fun defaultSelection(): RecordbookSelection? {
-        val program = programs.firstOrNull() ?: return null
-        val period = program.periods.firstOrNull(RecordbookPeriod::actual)
-            ?: program.periods.maxByOrNull(RecordbookPeriod::semester)
-            ?: return null
-        return RecordbookSelection(program, period)
+        val options = programs.flatMap { program -> program.periods.map { RecordbookSelection(program, it) } }
+        val today = time.today()
+        val yearStart = today.year - if (today.monthValue < 9) 1 else 0
+        val year = "$yearStart/${yearStart + 1}"
+        val half = if (today.monthValue in 2..8) 2 else 1
+        return options.firstOrNull { it.period.studyYear == year && it.period.semesterInCourse == half }
+            ?: options.firstOrNull { it.period.actual }
+            ?: options.minByOrNull { it.period.semester }
     }
 
     private companion object {

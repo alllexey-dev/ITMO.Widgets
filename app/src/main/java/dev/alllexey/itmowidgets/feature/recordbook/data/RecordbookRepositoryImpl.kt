@@ -6,6 +6,7 @@ import api.myitmo.model.recordbook.RecordBookEntry
 import api.myitmo.model.recordbook.RecordBookTeacher
 import api.myitmo.model.recordbook.Semester
 import api.myitmo.model.recordbook.Specialization
+import dev.alllexey.itmowidgets.core.network.requireResult
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
@@ -13,10 +14,10 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookContro
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 class RecordbookRepositoryImpl @Inject constructor(
     private val myItmo: MyItmo
@@ -48,14 +49,7 @@ class RecordbookRepositoryImpl @Inject constructor(
     ): AppResult<R> {
         return try {
             val result = withContext(Dispatchers.IO) {
-                val response = myItmo.execute(call())
-                if (response.errorCode != 0) {
-                    error(
-                        response.errorMessage
-                            ?: "MyITMO returned error ${response.errorCode}"
-                    )
-                }
-                response.result ?: error("MyITMO returned an empty response")
+                myItmo.execute(call()).requireResult()
             }
             AppResult.Success(transform(result))
         } catch (cancellation: CancellationException) {
@@ -99,7 +93,8 @@ class RecordbookRepositoryImpl @Inject constructor(
         maximum = maxValue,
         required = isRequired,
         date = date,
-        teacherName = teacher?.displayName()
+        teacherName = teacher?.displayName(),
+        parentId = parentId
     )
 
     private fun RecordBookTeacher.displayName(): String? {

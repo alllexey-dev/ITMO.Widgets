@@ -39,19 +39,21 @@ class RecordbookModelsTest {
     }
 
     @Test
-    fun `classifies recordbook controls by normalized source name`() {
-        val control = RecordbookControl(
-            id = 1,
-            name = "Домашнее задание",
-            score = null,
-            minimum = 0.0,
-            maximum = 10.0,
-            required = false,
-            date = null,
-            teacherName = null
-        )
+    fun `uncredited variants are not counted as passed`() {
+        listOf("Незачёт", "Не зачет", "не зачтено", " 2 / FX ").forEach {
+            assertEquals(RecordbookSubjectStatus.ATTENTION, subject(it).status)
+        }
+        assertEquals(RecordbookRate.Grade("Незачёт"), subject("Незачёт").normalizedRate)
+        assertEquals(RecordbookSubjectStatus.IN_PROGRESS, subject("неизвестно").status)
+    }
 
-        assertEquals(RecordbookControlCategory.HOMEWORK, control.category)
+    @Test
+    fun `control outline preserves parent child order without dropping orphan or cycle`() {
+        fun control(id: Long, parent: Long?) = RecordbookControl(id, "Работа $id", null, null, null, false, null, null, parent)
+        val controls = listOf(control(2, 1), control(1, null), control(3, 99), control(4, 5), control(5, 4))
+        val rows = recordbookControlOutline(controls)
+        assertEquals(listOf(1L, 2L, 3L, 4L, 5L), rows.map { it.control.id })
+        assertEquals(listOf(0, 1, 0, 0, 1), rows.map { it.depth })
     }
 
     private fun subject(rate: String?) = RecordbookSubject(
