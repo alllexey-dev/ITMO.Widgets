@@ -228,7 +228,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
             binding.scoreStatusCard.setCardBackgroundColor(color.secondaryContainer)
             binding.scoreStatusIcon.setImageResource(R.drawable.ic_history)
             binding.scoreStatusIcon.imageTintList = ColorStateList.valueOf(color.onSecondaryContainer)
-            binding.scoreStatusText.text = getString(R.string.sport_score_remaining_status, need)
+            binding.scoreStatusText.text = resources.getQuantityString(R.plurals.sport_score_remaining_status, need, need)
             binding.scoreStatusText.setTextColor(color.onSecondaryContainer)
         }
 

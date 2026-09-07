@@ -64,7 +64,12 @@
     <string name="sport_score_bonus_over_limit">%1$d (%2$d)</string>
     <string name="sport_score_goal">из 100</string>
     <string name="sport_score_passed_status">Зачёт</string>
-    <string name="sport_score_remaining_status">Ещё %1$d баллов</string>
+    <plurals name="sport_score_remaining_status">
+        <item quantity="one">Ещё %1$d балл</item>
+        <item quantity="few">Ещё %1$d балла</item>
+        <item quantity="many">Ещё %1$d баллов</item>
+        <item quantity="other">Ещё %1$d баллов</item>
+    </plurals>
     <string name="sport_bookings_empty_title">Активных записей нет</string>
     <string name="sport_bookings_empty_description">Выбери подходящее занятие в расписании спорта.</string>
     <string name="sport_bookings_open_schedule">Открыть расписание</string>
