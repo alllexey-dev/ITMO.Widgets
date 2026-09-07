@@ -55,6 +55,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
     // region State
 
     private lateinit var adapter: SportBookingAdapter
+    private var scoreCollapse: SportScoreCollapseController? = null
     private var hasRenderedContent = false
     private var scoreAnimator: ValueAnimator? = null
     private var lastRenderedScore: SportScore? = null
@@ -92,6 +93,8 @@ class SportMyFragment : Fragment(), SportBookingListener {
     }
 
     override fun onDestroyView() {
+        scoreCollapse?.detach()
+        scoreCollapse = null
         scoreAnimator?.cancel()
         scoreAnimator = null
         lastRenderedScore = null
@@ -118,6 +121,15 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
         recycler.layoutManager = LinearLayoutManager(requireContext())
         recycler.adapter = adapter
+
+        scoreCollapse = SportScoreCollapseController(
+            card = binding.pointsCard,
+            content = binding.scoreContent,
+            details = binding.scoreDetails,
+            detailsContent = binding.scoreDetailsContent,
+            scrim = binding.scoreScrim,
+            recycler = recycler
+        ).also { it.attach() }
     }
 
     private fun setupListeners() {
@@ -169,7 +181,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
         hasRenderedContent = true
         binding.pointsCard.isVisible = true
         updateScoreUi(state.score)
-        adapter.submitList(state.bookings)
+        adapter.submitList(state.bookings) { scoreCollapse?.refresh() }
         recycler.isVisible = state.bookings.isNotEmpty()
         binding.emptyStateLayout.isVisible = state.bookings.isEmpty()
         if (state.bookings.isEmpty()) {

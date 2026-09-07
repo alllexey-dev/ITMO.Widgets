@@ -11,6 +11,35 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- Declared before the card so the card draws on top: the list runs the full height and
+             reserves the expanded card as top padding, so collapsing never relayouts the list. -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/main_recycler_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:paddingBottom="16dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:listitem="@layout/item_sport_booking" />
+
+        <!-- Rows scroll under the card, so the inset strip around it needs an opaque backdrop; it
+             only earns its keep once the card starts collapsing. Its clip bounds follow the card
+             bottom with a gutter, without requesting another layout during the scroll. -->
+        <View
+            android:id="@+id/score_scrim"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:alpha="0"
+            android:background="?android:attr/colorBackground"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/points_card"
             style="@style/Widget.Material3.CardView.Filled"
@@ -26,12 +55,14 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <LinearLayout
+                android:id="@+id/score_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="20dp">
 
                 <LinearLayout
+                    android:id="@+id/score_header"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
@@ -89,10 +120,20 @@
 
                 </LinearLayout>
 
-                <LinearLayout
+                <!-- Drawing bounds shrink while the measured size stays expanded, so the details
+                     retreat under the header without remeasuring the screen during a scroll. -->
+                <FrameLayout
+                    android:id="@+id/score_details"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    tools:ignore="UselessParent">
+
+                <LinearLayout
+                    android:id="@+id/score_details_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="16dp"
+                    android:baselineAligned="false"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -180,23 +221,11 @@
 
                 </LinearLayout>
 
+                </FrameLayout>
+
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/main_recycler_view"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="8dp"
-            android:clipToPadding="false"
-            android:paddingBottom="16dp"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/points_card"
-            tools:listitem="@layout/item_sport_booking" />
 
         <LinearLayout
             android:id="@+id/empty_state_layout"

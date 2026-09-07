@@ -293,6 +293,30 @@ force-sign confirmation only relaxes that deadline, not eligibility. The sheet
 does not claim the account has available auto-sign quota without refreshing it.
 No Backend/Core/MyItmoApi contract or minimum version changed in this UI revision.
 
+The My Sport score card collapses into a compact bar as the bookings list scrolls.
+`SportScoreCollapseController` drives it from `computeVerticalScrollOffset`, which is
+exact while the first row is visible — the whole collapse range — and only has to stay
+large enough to clamp past it. The list owns its geometry: it fills the screen and
+reserves the expanded card height as top padding, so a drag moves rows one to one.
+Letting the card push the list instead would move rows twice per drag, once for the
+scroll and once for the shrinking header. Before the first draw, padding changes
+preserve the list anchor and wait for the corresponding layout; padding alone does
+not move already laid-out rows. During scrolling, all measured sizes remain expanded:
+only the card/detail drawing bounds, content translations and alpha change. Neither
+layout parameters nor padding are animated, so the screen is not remeasured on each
+frame. The details retreat under the header; title and status remain the same views,
+with a small translation for compact vertical spacing. Rows share the card's
+surface, so the collapsed card steps up a surface level and a backdrop fades in behind
+its inset strip, reaching past the card bottom to keep the same gutter the expanded
+card has. A header left half collapsed settles to the nearer edge once the list stops.
+That snap scrolls the list, not the fraction: the fraction is derived from the scroll
+offset, so moving it alone would leave the two disagreeing and the card would jump back
+on the next scroll event. A list too short to reach either edge stays put rather than
+chasing the snap. `SportScoreCollapseTest` drives the real layout and controller from a
+debug host with synthetic bookings, asserting the reserved padding never moves while
+collapsing, the first drawn booking is below the card, scrolling does not request a
+new layout, and snapping resolves both ways without looping on a short list.
+
 `SportCardsVisualTest` runs real adapters and the real bottom sheet in an isolated
 debug host, with synthetic data and no network actions. It covers both themes,
 two dynamic palettes, a 320 dp content width, font scale 1.0/1.3, queue states,
