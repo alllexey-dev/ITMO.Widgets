@@ -4,16 +4,19 @@ import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.constraintlayout.widget.Guideline
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.core.util.dp
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import java.util.Locale
+import kotlin.math.ceil
 
 class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -22,7 +25,10 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
         private const val VIEW_TYPE_LESSON = 1
         private const val VIEW_TYPE_BREAK = 2
         private const val VIEW_TYPE_NO_LESSONS = 3
+        private val TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
     }
+
+    private var timelineGuideOffset: Int? = null
 
     override fun getItemViewType(position: Int): Int {
         return when (scheduleList[position]) {
@@ -44,13 +50,36 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = scheduleList[position]) {
-            is ScheduleItem.LessonItem -> (holder as LessonViewHolder).bind(item)
-            is ScheduleItem.BreakItem -> (holder as BreakViewHolder).bind(item)
+            is ScheduleItem.LessonItem -> {
+                updateTimelineGuide(holder.itemView, R.id.timeline_guide)
+                (holder as LessonViewHolder).bind(item)
+            }
+            is ScheduleItem.BreakItem -> {
+                updateTimelineGuide(holder.itemView, R.id.timeline_guide_break)
+                (holder as BreakViewHolder).bind(item)
+            }
             is ScheduleItem.NoLessonsItem -> (holder as EmptyDayViewHolder).bind(item)
         }
     }
 
     override fun getItemCount() = scheduleList.size
+
+    private fun updateTimelineGuide(row: View, guideId: Int) {
+        val offset = timelineGuideOffset ?: run {
+            val timeLabel = row.findViewById<TextView>(R.id.time_start)
+                ?: LayoutInflater.from(row.context).inflate(R.layout.item_schedule_lesson, FrameLayout(row.context), false)
+                    .findViewById<TextView>(R.id.time_start)
+            val widestTime = scheduleList.filterIsInstance<ScheduleItem.LessonItem>()
+                .flatMap { listOf(it.lesson.start, it.lesson.end) }
+                .maxOfOrNull { ceil(timeLabel.paint.measureText(it.format(TIME_FORMATTER))).toInt() } ?: 0
+            val margin = (timeLabel.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
+            // Measure the actual themed/scaled font once, and keep breaks on the
+            // same timeline. A fixed gutter clips time labels with larger fonts.
+            maxOf(50.dp, widestTime + timeLabel.compoundPaddingLeft + timeLabel.compoundPaddingRight + margin)
+                .also { timelineGuideOffset = it }
+        }
+        row.findViewById<Guideline>(guideId).setGuidelineBegin(offset)
+    }
 
     class LessonViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val timeStart: TextView = itemView.findViewById(R.id.time_start)
@@ -76,8 +105,8 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
             title.text = lesson.subjectName.ifBlank {
                 itemView.context.getString(R.string.schedule_unknown_subject)
             }
-            timeStart.text = lesson.start.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
-            timeEnd.text = lesson.end.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+            timeStart.text = lesson.start.format(TIME_FORMATTER)
+            timeEnd.text = lesson.end.format(TIME_FORMATTER)
 
             if (lesson.teacherFio != null) {
                 teacherName.text = lesson.teacherFio
@@ -110,9 +139,15 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
             val context = itemView.context
             val color = context.color
 
+            // Completion uses semantic text colors, not nested opacity that also
+            // weakens metadata contrast or survives a recycled completed row.
+            itemView.alpha = 1f
+            card.alpha = 1f
+            timeEnd.setTextColor(color.onSurfaceVariant)
+
             when (item.lessonState) {
                 ScheduleItem.LessonState.CURRENT -> {
-                    title.setTextColor(color.onPrimaryContainer)
+                    title.setTextColor(color.onSurface)
 
                     timelineDot.setColorFilter(color.primary)
                     timelineDot.scaleX = 1.3f
@@ -122,7 +157,6 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
                 }
                 ScheduleItem.LessonState.COMPLETED -> {
                     title.setTextColor(color.onSurfaceVariant)
-                    card.alpha = 0.7f
 
                     timelineDot.setColorFilter(color.outline)
                     timelineDot.scaleX = 0.8f
@@ -132,7 +166,6 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
                 }
                 ScheduleItem.LessonState.UPCOMING -> {
                     title.setTextColor(color.onSurface)
-                    card.alpha = 1.0f
 
                     timelineDot.setColorFilter(color.outline)
                     timelineDot.scaleX = 1.0f
@@ -150,8 +183,8 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
         fun bind(item: ScheduleItem.BreakItem) {
             breakText.text = itemView.context.getString(
                 R.string.schedule_break_range,
-                item.from,
-                item.to
+                item.from.format(TIME_FORMATTER),
+                item.to.format(TIME_FORMATTER)
             )
         }
     }

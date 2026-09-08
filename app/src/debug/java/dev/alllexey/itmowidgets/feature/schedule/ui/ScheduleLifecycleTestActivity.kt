@@ -19,6 +19,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 /** Real Fragment/FragmentManager lifecycle, with no session, network, or persistent fixtures. */
 @AndroidEntryPoint
@@ -45,9 +46,12 @@ class ScheduleLifecycleTestActivity : AppCompatActivity() {
     }
 
     private class PreviewRepository : ScheduleRepository {
-        override fun observeScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) = days
-        override suspend fun refreshSchedule(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) = AppResult.Success(Unit)
-        override suspend fun clearCaches() = Unit
+        override fun observeScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) =
+            if (restrictToRequestedRange) days.map { values ->
+                values.filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) }
+            } else days
+        override suspend fun refreshSchedule(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) = refreshOutcome()
+        override suspend fun clearCaches() = clearOutcome()
     }
 
     private object FixedTime : AcademicTimeProvider {
@@ -59,5 +63,8 @@ class ScheduleLifecycleTestActivity : AppCompatActivity() {
     companion object {
         const val SCHEDULE_TAG = "schedule-under-test"
         @Volatile var days = MutableStateFlow<List<DaySchedule>>(emptyList())
+        @Volatile var refreshOutcome: suspend () -> AppResult<Unit> = { AppResult.Success(Unit) }
+        @Volatile var clearOutcome: suspend () -> Unit = {}
+        @Volatile var restrictToRequestedRange = false
     }
 }

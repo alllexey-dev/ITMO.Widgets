@@ -18,8 +18,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentScheduleBinding
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleEvent
@@ -56,6 +56,7 @@ class ScheduleFragment : Fragment() {
     private val adapter get() = checkNotNull(scheduleAdapter)
     private var listState: Parcelable? = null
     private var hasScrolledToToday = false
+    private var errorSnackbar: Snackbar? = null
 
     private val viewModel: ScheduleViewModel by viewModels()
 
@@ -89,6 +90,8 @@ class ScheduleFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        errorSnackbar?.dismiss()
+        errorSnackbar = null
         listState = currentScrollState() ?: listState
         _binding?.outerRecyclerView?.apply {
             clearOnScrollListeners()
@@ -111,13 +114,12 @@ class ScheduleFragment : Fragment() {
     // region Setup
 
     private fun setupUI() {
-        val color = requireContext().color
-        swipe.setColorSchemeColors(color.primary)
-        swipe.setProgressBackgroundColorSchemeColor(color.background)
+        swipe.applyAppRefreshColors()
         fabFriend.visibility = if (userIsu == null) View.VISIBLE else View.GONE
     }
 
     private fun setupRecycler() {
+        recycler.itemAnimator = null
 
         scheduleAdapter = DayScheduleAdapter(timeProvider).apply {
             stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
@@ -188,11 +190,12 @@ class ScheduleFragment : Fragment() {
         viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach { event ->
                 when (event) {
-                    is ScheduleEvent.ShowError -> Snackbar.make(
-                        binding.root,
-                        event.error.messageRes(),
-                        Snackbar.LENGTH_LONG
-                    ).show()
+                    is ScheduleEvent.ShowError -> {
+                        errorSnackbar?.dismiss()
+                        errorSnackbar = Snackbar.make(binding.root, event.error.messageRes(), Snackbar.LENGTH_LONG)
+                            .setAction(R.string.common_retry) { viewModel.loadInitialSchedule(forceRefresh = true) }
+                            .also(Snackbar::show)
+                    }
                 }
             }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
@@ -271,7 +274,7 @@ class ScheduleFragment : Fragment() {
         if (adapter.itemCount > 0) return
 
         binding.scheduleStateContainer.isVisible = true
-        binding.scheduleStateIcon.setImageResource(R.drawable.ic_error)
+        binding.scheduleStateIcon.setImageResource(R.drawable.ic_error_rounded)
         binding.scheduleStateTitle.setText(R.string.common_load_error_title)
         binding.scheduleStateDescription.setText(state.error.messageRes())
         binding.scheduleStateAction.isVisible = true
@@ -286,13 +289,22 @@ class ScheduleFragment : Fragment() {
 
     private fun showEmptySchedule() {
         swipe.isRefreshing = false
-        adapter.submitList(emptyList())
-        binding.scheduleStateContainer.isVisible = true
-        binding.scheduleStateIcon.setImageResource(R.drawable.ic_event_note)
-        binding.scheduleStateTitle.setText(R.string.schedule_empty_title)
-        binding.scheduleStateDescription.setText(R.string.schedule_empty_description)
-        binding.scheduleStateAction.isVisible = false
-        hideFabScrollToTop()
+        val renderedBinding = binding
+        adapter.submitList(emptyList()) {
+            if (_binding !== renderedBinding) return@submitList
+            when (val latest = viewModel.uiState.value) {
+                is ScheduleUiState.Empty -> {
+                    renderedBinding.scheduleStateIcon.setImageResource(R.drawable.ic_event_note)
+                    renderedBinding.scheduleStateTitle.setText(R.string.schedule_empty_title)
+                    renderedBinding.scheduleStateDescription.setText(R.string.schedule_empty_description)
+                    renderedBinding.scheduleStateAction.isVisible = false
+                    renderedBinding.scheduleStateContainer.isVisible = true
+                }
+                is ScheduleUiState.Error -> showError(latest)
+                else -> renderedBinding.scheduleStateContainer.isVisible = false
+            }
+            hideFabScrollToTop()
+        }
     }
 
     // endregion

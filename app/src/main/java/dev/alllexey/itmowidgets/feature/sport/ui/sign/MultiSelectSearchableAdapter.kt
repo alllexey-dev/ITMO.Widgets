@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.checkbox.MaterialCheckBox
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.bindSelectionAccessibility
 import java.util.Locale
 
 class MultiSelectSearchableAdapter(
@@ -30,10 +31,12 @@ class MultiSelectSearchableAdapter(
         val item = filteredItems[position]
         holder.textView.text = item.name
         holder.checkBox.isChecked = item.isSelected
+        holder.itemView.bindSelectionAccessibility(item.name, item.isSelected, multiple = true)
 
         holder.itemView.setOnClickListener {
             item.isSelected = !item.isSelected
             holder.checkBox.isChecked = item.isSelected
+            holder.itemView.bindSelectionAccessibility(item.name, item.isSelected, multiple = true)
         }
     }
 

@@ -9,20 +9,23 @@ import androidx.core.net.toUri
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.resolve
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportSignBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
@@ -36,6 +39,7 @@ import javax.inject.Inject
 import kotlin.getValue
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsListener {
@@ -62,6 +66,8 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     private lateinit var lessonsAdapter: SportLessonsAdapter
     private lateinit var contentStateAdapter: ContentStateAdapter
     private lateinit var concatAdapter: ConcatAdapter
+    private var feedbackSnackbar: Snackbar? = null
+    private var hasContent = false
 
     private val viewModel: SportSignViewModel by activityViewModels()
 
@@ -82,14 +88,21 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        val color = requireContext().color
-        binding.swipeRefreshLayout.setColorSchemeColors(color.primary)
-        binding.swipeRefreshLayout.setProgressBackgroundColorSchemeColor(color.background)
+        binding.swipeRefreshLayout.applyAppRefreshColors()
         setupUIListeners()
         observeViewModel()
     }
 
+    override fun onPause() {
+        feedbackSnackbar?.dismiss()
+        super.onPause()
+    }
+
     override fun onDestroyView() {
+        feedbackSnackbar?.dismiss()
+        feedbackSnackbar = null
+        hasContent = false
+        binding.mainRecyclerView.adapter = null
         super.onDestroyView()
         _binding = null
     }
@@ -121,7 +134,8 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     private fun observeViewModel() {
         viewModel.uiState
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            // Populate the adjacent page before a ViewPager swipe finishes.
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
             .onEach { state ->
                 when (state) {
                     is SportSignUiState.Error -> showError(state)
@@ -132,8 +146,27 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
                 }
             }.launchIn(viewLifecycleOwner.lifecycleScope)
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                // Only the active page reports its current error; resume starts a fresh feedback episode.
+                var lastMessage: Int? = null
+                viewModel.uiState.collect { state ->
+                    val message = when (state) {
+                        is SportSignUiState.Content -> if (state.hasPartialError) R.string.common_partial_load_error else null
+                        is SportSignUiState.Error -> state.error.messageRes().takeIf { hasContent }
+                        SportSignUiState.Loading -> null
+                    }
+                    if (message == lastMessage) return@collect
+                    lastMessage = message
+                    feedbackSnackbar?.dismiss()
+                    feedbackSnackbar = null
+                    if (message != null) showFeedback(message, retry = true)
+                }
+            }
+        }
+
         viewModel.events
-            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.RESUMED)
             .onEach { event ->
                 when (event) {
                     is SportSignEvent.ShowToast -> Toast.makeText(
@@ -141,11 +174,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
                         event.message.resolve(requireContext()),
                         Toast.LENGTH_SHORT
                     ).show()
-                    is SportSignEvent.ShowError -> Toast.makeText(
-                        context,
-                        event.error.messageRes(),
-                        Toast.LENGTH_LONG
-                    ).show()
+                    is SportSignEvent.ShowError -> showFeedback(event.error.messageRes())
                     is SportSignEvent.ShowAutoSignConfirmDialog -> showConfirmDialog(event)
                     is SportSignEvent.ShowAutoSignDeleteDialog -> showDeleteDialog(event)
                     is SportSignEvent.ShowInfoDialog -> showInfoDialog(event)
@@ -155,11 +184,12 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     private fun showLoading() {
         swipe.isRefreshing = true
-        contentStateAdapter.submitState(null)
+        if (!hasContent) contentStateAdapter.submitState(null)
     }
 
     private fun onContent(state: SportSignUiState.Content) {
         swipe.isRefreshing = false
+        hasContent = true
         headerAdapter.updateState(state)
         val contentState = if (state.displayedLessons.isEmpty()) {
             ContentState(
@@ -179,19 +209,13 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
             },
             contentState
         )
-        if (state.hasPartialError) {
-            Toast.makeText(
-                requireContext(),
-                R.string.common_partial_load_error,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
     }
 
     private fun showError(state: SportSignUiState.Error) {
         swipe.isRefreshing = false
+        if (hasContent) return
         val contentState = ContentState(
-            iconRes = R.drawable.ic_error,
+            iconRes = R.drawable.ic_error_rounded,
             title = getString(R.string.common_load_error_title),
             description = getString(state.error.messageRes()),
             action = getString(R.string.common_retry)
@@ -203,18 +227,20 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         lessons: List<SportLessonItem>,
         contentState: ContentState?
     ) {
-        if (contentState == null) {
-            // Hide the placeholder up front so it never shows up underneath a fresh list.
-            contentStateAdapter.submitState(null)
-            lessonsAdapter.submitList(lessons)
-            return
-        }
-
-        // Keep whatever is on screen until the new list is committed. Clearing the
-        // placeholder first would hide and re-show an unchanged one, which reads as a
-        // flicker when moving between two days that both have no lessons.
+        // Both directions switch after the list commit, before its next draw.
+        // Loading/error retain this latest successful content, even during a diff.
+        val renderedBinding = binding
         lessonsAdapter.submitList(lessons) {
+            if (_binding !== renderedBinding) return@submitList
             contentStateAdapter.submitState(contentState)
+        }
+    }
+
+    private fun showFeedback(@androidx.annotation.StringRes message: Int, retry: Boolean = false) {
+        feedbackSnackbar?.dismiss()
+        feedbackSnackbar = Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).apply {
+            if (retry) setAction(R.string.common_retry) { viewModel.refreshAllData() }
+            show()
         }
     }
 

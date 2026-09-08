@@ -13,9 +13,9 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookSubjectBinding
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
@@ -40,7 +40,7 @@ class RecordbookSubjectFragment : Fragment() {
         adapter = RecordbookControlAdapter(viewModel::refresh)
         binding.recyclerView.adapter = adapter
         binding.recyclerView.itemAnimator = null
-        binding.swipeRefreshLayout.setColorSchemeColors(requireContext().color.primary)
+        binding.swipeRefreshLayout.applyAppRefreshColors()
         binding.backButton.setOnClickListener { closeScreen() }
         binding.sourceButton.setOnClickListener { showRecordbookSourceInfo(requireContext()) }
         binding.swipeRefreshLayout.setOnRefreshListener(viewModel::refresh)
@@ -87,6 +87,7 @@ class RecordbookSubjectFragment : Fragment() {
             is RecordbookSubjectUiState.Error -> {
                 binding.swipeRefreshLayout.isVisible = false
                 binding.stateContainer.isVisible = true
+                binding.stateIcon.setImageResource(R.drawable.ic_error_rounded)
                 binding.stateTitle.setText(R.string.common_load_error_title)
                 binding.stateDescription.setText(state.error.messageRes())
                 binding.stateAction.isVisible = true

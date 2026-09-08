@@ -20,6 +20,10 @@ on dependency direction they must stay consistent; this file is the detailed ver
 The user-facing v2.1 settings surface and product invariants are defined separately
 in `docs/settings.md`.
 
+The [design guide](design.md) consolidates the target component language,
+intentional exceptions, and open UI consistency work; it does not imply those
+changes are already implemented.
+
 Unless stated otherwise, everything below is **implemented**, not planned. Rules
 marked as enforced are checked by `ArchitectureTest` and fail the build when broken.
 

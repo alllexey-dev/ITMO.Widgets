@@ -7,20 +7,23 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.PathInterpolator
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.CircularProgressBar
+import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportMyBinding
@@ -33,6 +36,7 @@ import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottom
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportFragment
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -57,6 +61,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
     private lateinit var adapter: SportBookingAdapter
     private var scoreCollapse: SportScoreCollapseController? = null
     private var hasRenderedContent = false
+    private var feedbackSnackbar: Snackbar? = null
     private var scoreAnimator: ValueAnimator? = null
     private var lastRenderedScore: SportScore? = null
     private var displayedAttendances = 0
@@ -92,7 +97,15 @@ class SportMyFragment : Fragment(), SportBookingListener {
         viewModel.ensureDataLoaded()
     }
 
+    override fun onPause() {
+        feedbackSnackbar?.dismiss()
+        super.onPause()
+    }
+
     override fun onDestroyView() {
+        feedbackSnackbar?.dismiss()
+        feedbackSnackbar = null
+        hasRenderedContent = false
         scoreCollapse?.detach()
         scoreCollapse = null
         scoreAnimator?.cancel()
@@ -110,9 +123,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
     // region Setup
 
     private fun setupUI() {
-        val color = requireContext().color
-        swipe.setColorSchemeColors(color.primary)
-        swipe.setProgressBackgroundColorSchemeColor(color.background)
+        swipe.applyAppRefreshColors()
     }
 
     private fun setupRecycler() {
@@ -121,6 +132,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
         recycler.layoutManager = LinearLayoutManager(requireContext())
         recycler.adapter = adapter
+        recycler.itemAnimator = null
 
         scoreCollapse = SportScoreCollapseController(
             card = binding.pointsCard,
@@ -139,10 +151,12 @@ class SportMyFragment : Fragment(), SportBookingListener {
         binding.buttonGoToSchedule.setOnClickListener {
             (parentFragment as? SportFragment)?.changeView(1)
         }
+        binding.sportStateRetry.setOnClickListener { viewModel.refreshAllData() }
     }
 
     private fun setupObservers() {
-        viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle)
+        // ViewPager keeps adjacent pages STARTED while they are visible during a swipe.
+        viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
             .onEach { state ->
                 when (state) {
                     is SportMyUiState.Loading -> showLoading()
@@ -151,14 +165,29 @@ class SportMyFragment : Fragment(), SportBookingListener {
                 }
             }.launchIn(viewLifecycleOwner.lifecycleScope)
 
-        viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                // Re-evaluate current errors when this page becomes active; don't queue hidden-page feedback.
+                var lastMessage: Int? = null
+                viewModel.uiState.collect { state ->
+                    val message = when (state) {
+                        is SportMyUiState.Content -> if (state.hasPartialError) R.string.common_partial_load_error else null
+                        is SportMyUiState.Error -> state.error.messageRes().takeIf { hasRenderedContent }
+                        SportMyUiState.Loading -> null
+                    }
+                    if (message == lastMessage) return@collect
+                    lastMessage = message
+                    feedbackSnackbar?.dismiss()
+                    feedbackSnackbar = null
+                    if (message != null) showFeedback(message, retry = true)
+                }
+            }
+        }
+
+        viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.RESUMED)
             .onEach { event ->
                 when (event) {
-                    is SportMyEvent.ShowError -> Toast.makeText(
-                        requireContext(),
-                        event.error.messageRes(),
-                        Toast.LENGTH_LONG
-                    ).show()
+                    is SportMyEvent.ShowError -> showFeedback(event.error.messageRes())
                 }
             }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
@@ -169,8 +198,8 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     private fun showLoading() {
         swipe.isRefreshing = true
-        binding.emptyStateLayout.isVisible = false
         if (!hasRenderedContent) {
+            binding.emptyStateLayout.isVisible = false
             binding.pointsCard.isVisible = false
             recycler.isVisible = false
         }
@@ -179,44 +208,50 @@ class SportMyFragment : Fragment(), SportBookingListener {
     private fun onContent(state: SportMyUiState.Content) {
         swipe.isRefreshing = false
         hasRenderedContent = true
-        binding.pointsCard.isVisible = true
-        updateScoreUi(state.score)
-        adapter.submitList(state.bookings) { scoreCollapse?.refresh() }
-        recycler.isVisible = state.bookings.isNotEmpty()
-        binding.emptyStateLayout.isVisible = state.bookings.isEmpty()
-        if (state.bookings.isEmpty()) {
-            showEmptyState()
-        }
-        if (state.hasPartialError) {
-            Toast.makeText(
-                requireContext(),
-                R.string.common_partial_load_error,
-                Toast.LENGTH_SHORT
-            ).show()
+        val renderedBinding = binding
+        adapter.submitList(state.bookings) {
+            // Loading/error retain the latest successful submission. AsyncListDiffer
+            // already discards commits superseded by a newer content submission.
+            if (_binding !== renderedBinding) return@submitList
+            renderedBinding.pointsCard.isVisible = true
+            updateScoreUi(state.score)
+            renderedBinding.mainRecyclerView.isVisible = state.bookings.isNotEmpty()
+            if (state.bookings.isEmpty()) showEmptyState()
+            renderedBinding.emptyStateLayout.isVisible = state.bookings.isEmpty()
+            scoreCollapse?.refresh()
         }
     }
 
     private fun showError(state: SportMyUiState.Error) {
         swipe.isRefreshing = false
+        if (hasRenderedContent) return
         recycler.isVisible = false
-        if (!hasRenderedContent) {
-            binding.pointsCard.isVisible = false
-        }
+        binding.pointsCard.isVisible = false
         binding.emptyStateLayout.isVisible = true
-        binding.stateIcon.setImageResource(R.drawable.ic_error)
+        binding.stateIcon.setImageResource(R.drawable.ic_error_rounded)
         binding.stateTitle.setText(R.string.common_load_error_title)
         binding.stateDescription.setText(state.error.messageRes())
-        binding.buttonGoToSchedule.setText(R.string.common_retry)
-        binding.buttonGoToSchedule.setOnClickListener { viewModel.refreshAllData() }
+        binding.buttonGoToSchedule.isVisible = false
+        binding.sportStateRetry.isVisible = true
     }
 
     private fun showEmptyState() {
+        binding.buttonGoToSchedule.isVisible = true
+        binding.sportStateRetry.isVisible = false
         binding.stateIcon.setImageResource(R.drawable.ic_calendar_add)
         binding.stateTitle.setText(R.string.sport_bookings_empty_title)
         binding.stateDescription.setText(R.string.sport_bookings_empty_description)
         binding.buttonGoToSchedule.setText(R.string.sport_bookings_open_schedule)
         binding.buttonGoToSchedule.setOnClickListener {
             (parentFragment as? SportFragment)?.changeView(1)
+        }
+    }
+
+    private fun showFeedback(@androidx.annotation.StringRes message: Int, retry: Boolean = false) {
+        feedbackSnackbar?.dismiss()
+        feedbackSnackbar = Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).apply {
+            if (retry) setAction(R.string.common_retry) { viewModel.refreshAllData() }
+            show()
         }
     }
 
@@ -232,7 +267,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
         val enough = need == 0
         if (enough) {
             binding.scoreStatusCard.setCardBackgroundColor(color.primaryContainer)
-            binding.scoreStatusIcon.setImageResource(R.drawable.ic_check)
+            binding.scoreStatusIcon.setImageResource(R.drawable.ic_check_rounded)
             binding.scoreStatusIcon.imageTintList = ColorStateList.valueOf(color.onPrimaryContainer)
             binding.scoreStatusText.setText(R.string.sport_score_passed_status)
             binding.scoreStatusText.setTextColor(color.onPrimaryContainer)

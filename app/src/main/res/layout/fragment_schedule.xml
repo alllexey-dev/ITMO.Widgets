@@ -145,11 +145,9 @@
 
     <LinearLayout
         android:id="@+id/schedule_state_container"
+        style="@style/Widget.ItmoWidgets.ContentState"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="32dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -159,38 +157,23 @@
 
         <ImageView
             android:id="@+id/schedule_state_icon"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            style="@style/Widget.ItmoWidgets.ContentState.Icon"
             android:contentDescription="@null"
-            android:src="@drawable/ic_event_note"
-            app:tint="?attr/colorPrimary" />
+            android:src="@drawable/ic_event_note" />
 
         <TextView
             android:id="@+id/schedule_state_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:text="@string/schedule_empty_title"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            style="@style/Widget.ItmoWidgets.ContentState.Title"
+            android:text="@string/schedule_empty_title" />
 
         <TextView
             android:id="@+id/schedule_state_description"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:text="@string/schedule_empty_description"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            style="@style/Widget.ItmoWidgets.ContentState.Description"
+            android:text="@string/schedule_empty_description" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/schedule_state_action"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:minHeight="48dp"
+            style="@style/Widget.ItmoWidgets.ContentState.Action"
             android:text="@string/common_retry"
             android:visibility="gone" />
 

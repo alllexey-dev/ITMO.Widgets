@@ -5,8 +5,9 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.databinding.ItemRecentFriendBinding
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.ui.bindSelectionAccessibility
+import dev.alllexey.itmowidgets.databinding.ItemRecentFriendBinding
 
 sealed interface RecentFriendItem {
     data object MySchedule : RecentFriendItem
@@ -27,7 +28,7 @@ class RecentFriendAdapter(
         currentUser: UserSummary?
     ) {
         items = listOf(RecentFriendItem.MySchedule) +
-            recentFriends.map(RecentFriendItem::Friend)
+            recentFriends.filter { it.sharing.schedule }.map(RecentFriendItem::Friend)
         this.selectedIsu = selectedIsu
         this.currentUser = currentUser
         notifyDataSetChanged()
@@ -78,6 +79,10 @@ class RecentFriendAdapter(
             } else {
                 0
             }
+            binding.root.bindSelectionAccessibility(
+                label = friend?.name ?: binding.root.context.getString(R.string.friend_picker_my_schedule_accessibility),
+                selected = isSelected
+            )
             binding.root.setOnClickListener { onClick(item) }
         }
     }

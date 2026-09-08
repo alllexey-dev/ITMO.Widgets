@@ -1,19 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.ItmoWidgets.Card.Content"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginVertical="8dp"
-    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="0dp"
-    app:strokeWidth="0dp">
+    android:layout_marginVertical="@dimen/design_spacing_compact">
 
     <LinearLayout android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/design_card_padding">
 
         <TextView android:id="@+id/title"
             android:layout_width="match_parent"
@@ -23,7 +18,7 @@
         <TextView android:id="@+id/description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/design_spacing_compact"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant" />
 

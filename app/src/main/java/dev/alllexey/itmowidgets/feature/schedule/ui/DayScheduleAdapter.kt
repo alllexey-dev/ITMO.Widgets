@@ -79,11 +79,9 @@ class DayScheduleAdapter(
             holder.numberOfLessons.setBackgroundResource(R.drawable.shape_pill_outline)
         }
 
-        if (date.isBefore(today)) {
-            holder.itemRoot.alpha = 0.72f
-        } else {
-            holder.itemRoot.alpha = 1.0f
-        }
+        // Past days keep the established fade; lesson rows remain opaque so it
+        // is applied only once. Always reset it when a holder is reused.
+        holder.itemRoot.alpha = if (date.isBefore(today)) 0.72f else 1f
 
         val layoutManager = LinearLayoutManager(
             holder.innerRecyclerView.context,

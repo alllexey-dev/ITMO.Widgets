@@ -57,6 +57,7 @@
         android:id="@+id/timeline_dot"
         android:layout_width="10dp"
         android:layout_height="10dp"
+        android:contentDescription="@null"
         android:src="@drawable/shape_circle_filled"
         app:layout_constraintBottom_toBottomOf="@id/time_start"
         app:layout_constraintEnd_toEndOf="@id/timeline_guide"
@@ -104,6 +105,7 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginEnd="8dp"
+                android:contentDescription="@null"
                 android:scaleX="0.7"
                 android:scaleY="0.7"
                 android:src="@drawable/indicator_circle"
@@ -132,8 +134,9 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginEnd="8dp"
-                android:src="@drawable/ic_person"
-                app:tint="?attr/colorSecondary" />
+                android:contentDescription="@null"
+                android:src="@drawable/ic_person_rounded"
+                app:tint="?attr/colorOnSurfaceVariant" />
 
             <TextView
                 android:id="@+id/teacher_text_view"
@@ -157,8 +160,9 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginEnd="8dp"
+                android:contentDescription="@null"
                 android:src="@drawable/ic_pin"
-                app:tint="?attr/colorPrimary" />
+                app:tint="?attr/colorOnSurfaceVariant" />
 
             <TextView
                 android:id="@+id/note"
@@ -182,8 +186,9 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginEnd="8dp"
-                android:src="@drawable/ic_location"
-                app:tint="?attr/colorTertiary" />
+                android:contentDescription="@null"
+                android:src="@drawable/ic_location_on_rounded"
+                app:tint="?attr/colorOnSurfaceVariant" />
 
             <TextView
                 android:id="@+id/location_room"
@@ -198,7 +203,6 @@
                 android:id="@+id/location_building"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:alpha="0.7"
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textAppearance="?attr/textAppearanceBodySmall"

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_placeholder_title">Всё нужное — в разделах</string>
+    <string name="home_placeholder_description">Откройте зачётку, расписание, спорт или профиль в меню внизу.</string>
+</resources>

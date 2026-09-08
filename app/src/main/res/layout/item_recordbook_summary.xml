@@ -2,20 +2,17 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.ItmoWidgets.Card.CompactSummary"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="8dp"
-    app:cardBackgroundColor="?attr/colorSurfaceContainer"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="0dp"
-    app:strokeWidth="0dp">
+    android:layout_marginTop="@dimen/design_spacing_compact"
+    android:layout_marginBottom="@dimen/design_spacing_compact">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/design_card_padding">
 
         <TextView android:id="@+id/closed_value"
             android:layout_width="match_parent"
@@ -27,8 +24,8 @@
             android:id="@+id/completion"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginTop="@dimen/design_spacing_content"
+            android:layout_marginBottom="@dimen/design_spacing_compact"
             android:importantForAccessibility="no"
             android:max="1000"
             app:trackThickness="4dp"

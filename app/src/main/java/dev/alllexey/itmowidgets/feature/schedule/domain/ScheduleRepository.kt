@@ -14,6 +14,7 @@ interface ScheduleRepository : ScheduleRefreshGateway {
         endDate: LocalDate
     ): Flow<List<DaySchedule>>
 
+    /** Fetches fresh data and replaces this user's cached range without clearing other data first. */
     suspend fun refreshSchedule(
         userIsu: Int?,
         startDate: LocalDate,
@@ -29,5 +30,6 @@ interface ScheduleRepository : ScheduleRefreshGateway {
         endDate = endDate
     )
 
+    /** Explicit cache/session cleanup, not a prerequisite for refreshing a visible schedule. */
     suspend fun clearCaches()
 }

@@ -15,10 +15,10 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookBinding
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
@@ -51,7 +51,7 @@ class RecordbookFragment : Fragment() {
         adapter = RecordbookAdapter(::openSubject)
         binding.mainRecyclerView.adapter = adapter
         binding.mainRecyclerView.itemAnimator = null
-        binding.swipeRefreshLayout.setColorSchemeColors(requireContext().color.primary)
+        binding.swipeRefreshLayout.applyAppRefreshColors()
         binding.swipeRefreshLayout.setOnRefreshListener(viewModel::refresh)
         binding.stateAction.setOnClickListener { viewModel.refresh() }
         binding.sourceButton.setOnClickListener { showRecordbookSourceInfo(requireContext()) }
@@ -113,6 +113,7 @@ class RecordbookFragment : Fragment() {
                 renderPeriod(state.programs, state.selection)
                 binding.swipeRefreshLayout.isVisible = false
                 binding.stateContainer.isVisible = true
+                binding.stateIcon.setImageResource(R.drawable.ic_error_rounded)
                 binding.stateTitle.setText(R.string.common_load_error_title)
                 binding.stateDescription.setText(state.error.messageRes())
                 binding.stateAction.isVisible = true
@@ -127,6 +128,7 @@ class RecordbookFragment : Fragment() {
     }
 
     private fun renderEmptyText() {
+        binding.stateIcon.setImageResource(R.drawable.ic_menu_book)
         binding.stateTitle.setText(R.string.recordbook_empty_title)
         binding.stateDescription.setText(R.string.recordbook_empty_description)
         binding.stateAction.isVisible = true

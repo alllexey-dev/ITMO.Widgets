@@ -87,33 +87,30 @@
             android:indeterminate="true"
             android:visibility="gone" />
 
-        <LinearLayout android:id="@+id/state_container"
+        <LinearLayout
+            android:id="@+id/state_container"
+            style="@style/Widget.ItmoWidgets.ContentState"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="24dp"
             android:visibility="gone">
 
-            <TextView android:id="@+id/state_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textAppearance="?attr/textAppearanceTitleMedium" />
+            <ImageView
+                android:id="@+id/state_icon"
+                style="@style/Widget.ItmoWidgets.ContentState.Icon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_menu_book" />
 
-            <TextView android:id="@+id/state_description"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+            <TextView
+                android:id="@+id/state_title"
+                style="@style/Widget.ItmoWidgets.ContentState.Title" />
 
-            <com.google.android.material.button.MaterialButton android:id="@+id/state_action"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+            <TextView
+                android:id="@+id/state_description"
+                style="@style/Widget.ItmoWidgets.ContentState.Description" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/state_action"
+                style="@style/Widget.ItmoWidgets.ContentState.Action"
                 android:text="@string/common_retry" />
 
         </LinearLayout>

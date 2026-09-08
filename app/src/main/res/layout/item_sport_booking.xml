@@ -5,27 +5,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="16dp"
-    android:paddingVertical="4dp">
+    android:paddingHorizontal="@dimen/design_screen_margin"
+    android:paddingVertical="@dimen/design_spacing_related">
     <com.google.android.material.card.MaterialCardView
+        style="@style/Widget.ItmoWidgets.Card.Content.Outlined"
         android:id="@+id/sport_record_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clickable="true"
         android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="0dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="?attr/colorOutlineVariant">
+        android:foreground="?attr/selectableItemBackground">
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp"
+                android:padding="@dimen/design_card_padding"
                 android:orientation="vertical">
                 <TextView
                     android:id="@+id/title_text_view"
@@ -42,7 +38,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="top"
-                    android:layout_marginTop="8dp">
+                    android:layout_marginTop="@dimen/design_spacing_compact">
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="56dp"
                         android:layout_height="wrap_content"
@@ -56,7 +52,7 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:paddingVertical="8dp"
+                            android:paddingVertical="@dimen/design_spacing_compact"
                             android:gravity="center"
                             android:orientation="vertical">
                             <TextView
@@ -82,7 +78,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="@dimen/design_spacing_content"
                         android:orientation="vertical">
                         <TextView
                             android:id="@+id/date_text_view"
@@ -113,14 +109,14 @@
                     android:id="@+id/teacher_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/design_spacing_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     tools:ignore="UseCompoundDrawables">
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:layout_marginEnd="8dp"
+                        android:layout_marginEnd="@dimen/design_spacing_compact"
                         android:src="@drawable/ic_person_rounded"
                         android:contentDescription="@null"
                         app:tint="?attr/colorOnSurfaceVariant" />
@@ -138,14 +134,14 @@
                     android:id="@+id/location_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="@dimen/design_spacing_related"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     tools:ignore="UseCompoundDrawables">
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:layout_marginEnd="8dp"
+                        android:layout_marginEnd="@dimen/design_spacing_compact"
                         android:src="@drawable/ic_location_on_rounded"
                         android:contentDescription="@null"
                         app:tint="?attr/colorOnSurfaceVariant" />
@@ -165,13 +161,13 @@
             </LinearLayout>
             <ImageButton
                 android:id="@+id/options_menu"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginTop="8dp"
+                android:layout_width="@dimen/design_touch_target"
+                android:layout_height="@dimen/design_touch_target"
+                android:layout_marginEnd="@dimen/design_spacing_compact"
+                android:layout_marginTop="@dimen/design_spacing_compact"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/common_options"
-                android:padding="12dp"
+                android:padding="@dimen/design_spacing_content"
                 android:src="@drawable/ic_more_vert_rounded"
                 app:tint="?attr/colorOnSurfaceVariant"
                 android:layout_gravity="top|end" />

@@ -2,48 +2,29 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.ItmoWidgets.ContentState"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:paddingHorizontal="32dp"
-    android:paddingTop="48dp"
-    android:paddingBottom="32dp">
+    android:layout_height="wrap_content">
 
     <ImageView
         android:id="@+id/state_icon"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        style="@style/Widget.ItmoWidgets.ContentState.InlineIcon"
         android:contentDescription="@null"
-        android:src="@drawable/ic_event_note"
-        app:tint="?attr/colorPrimary" />
+        android:src="@drawable/ic_event_note" />
 
     <TextView
         android:id="@+id/state_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:textAppearance="?attr/textAppearanceTitleMedium"
+        style="@style/Widget.ItmoWidgets.ContentState.Title"
         tools:text="Занятий нет" />
 
     <TextView
         android:id="@+id/state_description"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="center"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant"
+        style="@style/Widget.ItmoWidgets.ContentState.Description"
         tools:text="Попробуйте выбрать другой день или изменить фильтры" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/state_action"
-        style="@style/Widget.Material3.Button.TonalButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:minHeight="48dp"
+        style="@style/Widget.ItmoWidgets.ContentState.Action"
         android:visibility="gone"
         tools:text="Повторить"
         tools:visibility="visible" />

@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,25 +58,30 @@ class ScheduleViewModel @Inject constructor(
 
     fun loadInitialSchedule(forceRefresh: Boolean = false) {
         refreshJob?.cancel()
-        resetRange()
-        prepareForUser(activeUserIsu())
+        val userIsu = activeUserIsu()
+        val keepLoadedRange = forceRefresh && observedUserIsu == userIsu && observeJob != null
+        if (!keepLoadedRange) {
+            resetRange()
+        }
+        prepareForUser(userIsu)
         isLoading = true
         lastError = null
         emitCurrentState()
-        observeRange()
+        if (!keepLoadedRange) {
+            observeRange()
+        }
+
+        val startDate = currentStart
+        val endDate = currentEnd
 
         refreshJob = viewModelScope.launch {
-            if (forceRefresh) {
-                repository.clearCaches()
-            }
-
-            handleRefreshResult(
-                repository.refreshSchedule(
-                    userIsu = activeUserIsu(),
-                    startDate = currentStart,
-                    endDate = currentEnd
-                )
+            val result = repository.refreshSchedule(
+                userIsu = userIsu,
+                startDate = startDate,
+                endDate = endDate
             )
+            ensureActive()
+            handleRefreshResult(result)
         }
     }
 
@@ -90,14 +96,15 @@ class ScheduleViewModel @Inject constructor(
         emitCurrentState()
         observeRange()
 
+        val userIsu = activeUserIsu()
         refreshJob = viewModelScope.launch {
-            handleRefreshResult(
-                repository.refreshSchedule(
-                    userIsu = activeUserIsu(),
-                    startDate = newStart,
-                    endDate = newEnd
-                )
+            val result = repository.refreshSchedule(
+                userIsu = userIsu,
+                startDate = newStart,
+                endDate = newEnd
             )
+            ensureActive()
+            handleRefreshResult(result)
         }
     }
 

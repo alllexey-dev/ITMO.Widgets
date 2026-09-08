@@ -23,7 +23,7 @@
         android:layout_marginTop="16dp"
         android:text="@string/friend_picker_title"
         android:textAppearance="?attr/textAppearanceHeadlineSmall"
-        android:textStyle="bold"
+        android:textColor="?attr/colorOnSurface"
         app:layout_constraintEnd_toStartOf="@id/close_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/drag_handle" />
@@ -45,7 +45,7 @@
         android:id="@+id/subtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="4dp"
         android:text="@string/friend_picker_subtitle"
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurfaceVariant"
@@ -60,7 +60,7 @@
         android:layout_marginTop="16dp"
         android:text="@string/friend_picker_recent"
         android:textAppearance="?attr/textAppearanceTitleSmall"
-        android:textStyle="bold"
+        android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/subtitle" />
@@ -68,8 +68,8 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recent_recycler_view"
         android:layout_width="0dp"
-        android:layout_height="88dp"
-        android:layout_marginTop="6dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:clipToPadding="false"
         android:orientation="horizontal"
         android:overScrollMode="never"
@@ -98,7 +98,8 @@
             android:layout_height="wrap_content"
             android:imeOptions="actionDone"
             android:inputType="text"
-            android:maxLines="1" />
+            android:maxLines="1"
+            android:singleLine="true" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -119,6 +120,7 @@
         android:id="@+id/progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/friend_picker_loading"
         android:indeterminate="true"
         app:layout_constraintBottom_toTopOf="@id/apply_button"
         app:layout_constraintEnd_toEndOf="parent"
@@ -172,7 +174,7 @@
             android:layout_height="wrap_content"
             android:text="@string/friend_picker_empty_title"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textStyle="bold" />
+            android:textColor="?attr/colorOnSurface" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -188,11 +190,12 @@
         android:id="@+id/apply_button"
         style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="0dp"
-        android:layout_height="56dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="12dp"
+        android:minHeight="56dp"
         android:text="@string/friend_picker_apply_my"
-        app:icon="@drawable/ic_check"
+        app:icon="@drawable/ic_check_rounded"
         app:iconGravity="textStart"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

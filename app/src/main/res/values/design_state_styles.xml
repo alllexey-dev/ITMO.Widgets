@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="design_state_padding">32dp</dimen>
+    <dimen name="design_state_icon">64dp</dimen>
+    <dimen name="design_state_inline_icon">56dp</dimen>
+
+    <style name="Widget.ItmoWidgets.ContentState" parent="">
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">@dimen/design_state_padding</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.Icon" parent="">
+        <item name="android:layout_width">@dimen/design_state_icon</item>
+        <item name="android:layout_height">@dimen/design_state_icon</item>
+        <item name="android:contentDescription">@null</item>
+        <item name="tint">?attr/colorPrimary</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.InlineIcon" parent="Widget.ItmoWidgets.ContentState.Icon">
+        <item name="android:layout_width">@dimen/design_state_inline_icon</item>
+        <item name="android:layout_height">@dimen/design_state_inline_icon</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.Title" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/design_spacing_group</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.Description" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/design_spacing_compact</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.Action" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">20dp</item>
+        <item name="android:minHeight">@dimen/design_touch_target</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.PrimaryAction" parent="Widget.Material3.Button">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">20dp</item>
+        <item name="android:minHeight">@dimen/design_touch_target</item>
+    </style>
+
+</resources>

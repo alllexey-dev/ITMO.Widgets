@@ -8,12 +8,11 @@
     android:foreground="?attr/selectableItemBackgroundBorderless"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:paddingTop="2dp"
-    android:paddingBottom="4dp">
+    android:paddingVertical="4dp">
 
     <FrameLayout
         android:layout_width="60dp"
-        android:layout_height="58dp">
+        android:layout_height="60dp">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/avatar_container"
@@ -49,13 +48,13 @@
 
         <ImageView
             android:id="@+id/selection_indicator"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:layout_gravity="bottom|end"
             android:background="@drawable/bg_friend_selection_badge"
             android:contentDescription="@null"
             android:padding="4dp"
-            android:src="@drawable/ic_check"
+            android:src="@drawable/ic_check_rounded"
             app:tint="?attr/colorOnPrimary" />
 
     </FrameLayout>
@@ -64,10 +63,11 @@
         android:id="@+id/name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="4dp"
         android:ellipsize="end"
         android:gravity="center"
         android:maxLines="1"
-        android:textAppearance="?attr/textAppearanceLabelMedium" />
+        android:textAppearance="?attr/textAppearanceLabelMedium"
+        android:textColor="?attr/colorOnSurface" />
 
 </LinearLayout>

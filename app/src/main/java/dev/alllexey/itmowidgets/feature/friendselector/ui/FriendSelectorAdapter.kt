@@ -4,14 +4,15 @@ import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
+import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.ui.bindSelectionAccessibility
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemFriendSelectorBinding
-import dev.alllexey.itmowidgets.core.model.UserSummary
 
 class FriendSelectorAdapter(
     private var selectedIsu: Int? = null,
@@ -47,11 +48,10 @@ class FriendSelectorAdapter(
             binding.name.text = item.name
             binding.subtitle.text = buildSubtitle(item)
             val canViewSchedule = item.sharing.schedule
-            val isSelected = item.isu == selectedIsu
+            val isSelected = canViewSchedule && item.isu == selectedIsu
 
             binding.root.alpha = if (canViewSchedule) 1f else 0.52f
             binding.root.isEnabled = canViewSchedule
-            binding.root.isClickable = canViewSchedule
 
             val primary = binding.root.context.color.primary
             val onSurfaceVariant = binding.root.context.color.onSurfaceVariant
@@ -64,12 +64,13 @@ class FriendSelectorAdapter(
             }
             binding.root.strokeColor = primary
             binding.trailingIcon.setImageResource(
-                if (canViewSchedule) R.drawable.ic_check else R.drawable.ic_lock
+                if (canViewSchedule) R.drawable.ic_check_rounded else R.drawable.ic_lock
             )
             binding.trailingIcon.imageTintList = ColorStateList.valueOf(
                 if (canViewSchedule) primary else onSurfaceVariant
             )
-            binding.trailingIcon.isVisible = isSelected || !canViewSchedule
+            // Reserve the icon column so choosing a row never changes name wrapping.
+            binding.trailingIcon.isInvisible = !isSelected && canViewSchedule
             binding.sharingStatus.setText(
                 if (canViewSchedule) {
                     R.string.friend_picker_schedule_open
@@ -77,14 +78,19 @@ class FriendSelectorAdapter(
                     R.string.friend_picker_schedule_hidden
                 }
             )
-            binding.sharingStatus.setTextColor(
-                if (canViewSchedule) primary else onSurfaceVariant
+            binding.sharingStatus.setTextColor(onSurfaceVariant)
+            binding.root.bindSelectionAccessibility(
+                label = listOf(item.name, binding.subtitle.text, binding.sharingStatus.text).joinToString(". "),
+                selected = isSelected,
+                selectable = canViewSchedule
             )
 
             binding.avatar.setUser(item)
             binding.root.setOnClickListener(if (canViewSchedule) View.OnClickListener {
                 onClick(item)
             } else null)
+            // View.setOnClickListener makes a view clickable even when the listener is null.
+            binding.root.isClickable = canViewSchedule
         }
 
         private fun buildSubtitle(item: UserSummary): String {

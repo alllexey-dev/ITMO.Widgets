@@ -59,7 +59,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="@dimen/design_summary_padding">
 
                 <LinearLayout
                     android:id="@+id/score_header"
@@ -101,7 +101,7 @@
                                 android:layout_width="18dp"
                                 android:layout_height="18dp"
                                 android:contentDescription="@null"
-                                android:src="@drawable/ic_check"
+                                android:src="@drawable/ic_check_rounded"
                                 app:tint="?attr/colorOnPrimaryContainer" />
 
                             <TextView
@@ -229,11 +229,9 @@
 
         <LinearLayout
             android:id="@+id/empty_state_layout"
+            style="@style/Widget.ItmoWidgets.ContentState"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="32dp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -243,38 +241,30 @@
 
             <ImageView
                 android:id="@+id/state_icon"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                style="@style/Widget.ItmoWidgets.ContentState.Icon"
                 android:contentDescription="@null"
-                android:src="@drawable/ic_calendar_add"
-                app:tint="?attr/colorPrimary" />
+                android:src="@drawable/ic_calendar_add" />
 
             <TextView
                 android:id="@+id/state_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:gravity="center"
-                android:text="@string/sport_bookings_empty_title"
-                android:textAppearance="?attr/textAppearanceTitleMedium" />
+                style="@style/Widget.ItmoWidgets.ContentState.Title"
+                android:text="@string/sport_bookings_empty_title" />
 
             <TextView
                 android:id="@+id/state_description"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:text="@string/sport_bookings_empty_description"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                style="@style/Widget.ItmoWidgets.ContentState.Description"
+                android:text="@string/sport_bookings_empty_description" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_go_to_schedule"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:minHeight="48dp"
+                style="@style/Widget.ItmoWidgets.ContentState.PrimaryAction"
                 android:text="@string/sport_bookings_open_schedule" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/sport_state_retry"
+                style="@style/Widget.ItmoWidgets.ContentState.Action"
+                android:text="@string/common_retry"
+                android:visibility="gone" />
 
         </LinearLayout>
 

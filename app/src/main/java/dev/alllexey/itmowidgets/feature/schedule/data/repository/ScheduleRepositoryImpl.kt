@@ -44,9 +44,7 @@ class ScheduleRepositoryImpl @Inject constructor(
         return try {
             val remoteData = remote.getSchedule(userIsu, startDate, endDate)
 
-            remoteData.forEach {
-                local.save(it, userIsu)
-            }
+            local.replaceRange(userIsu, startDate, endDate, remoteData)
 
             AppResult.Success(Unit)
         } catch (cancellation: CancellationException) {
