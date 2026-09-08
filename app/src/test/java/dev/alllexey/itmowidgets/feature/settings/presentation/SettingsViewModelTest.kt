@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
+import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.SportDisplaySettings
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import kotlinx.coroutines.CompletableDeferred
@@ -196,7 +197,7 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `does not expose false privacy values while backend settings are loading`() =
+    fun `does not expose default privacy choices while backend settings are loading`() =
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.PRIVACY,
@@ -208,16 +209,16 @@ class SettingsViewModelTest {
             assertTrue(fixture.viewModel.sections.value.isEmpty())
 
             fixture.repository.sharing.value = SharingSettingsState.Content(
-                SharingSettings(scheduleSharing = true, sportSharing = true)
+                SharingSettings(scheduleVisibility = SharingVisibility.FRIENDS, sportVisibility = SharingVisibility.FRIENDS)
             )
             advanceUntilIdle()
 
-            val schedule = fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING)
-            val sport = fixture.viewModel.toggle(SettingsViewModel.KEY_SPORT_SHARING)
-            assertTrue(schedule.stateKnown)
-            assertTrue(schedule.checked)
-            assertTrue(sport.stateKnown)
-            assertTrue(sport.checked)
+            val schedule = fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING)
+            val sport = fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING)
+            assertEquals(SharingVisibility.FRIENDS.name, schedule.selectedOptionKey)
+            assertEquals(SharingVisibility.FRIENDS.name, sport.selectedOptionKey)
+            assertTrue(schedule.enabled)
+            assertTrue(sport.enabled)
         }
 
     @Test
@@ -333,12 +334,14 @@ class SettingsViewModelTest {
 
             advanceUntilIdle()
 
-            val schedule = fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING)
-            val sport = fixture.viewModel.toggle(SettingsViewModel.KEY_SPORT_SHARING)
+            val schedule = fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING)
+            val sport = fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING)
             assertFalse(schedule.enabled)
-            assertFalse(schedule.checked)
+            assertEquals(null, schedule.selectedOptionKey)
             assertFalse(sport.enabled)
-            assertFalse(sport.checked)
+            assertEquals(null, sport.selectedOptionKey)
+            assertEquals(UiText.Resource(R.string.settings_privacy_unknown), schedule.value)
+            assertEquals(UiText.Resource(R.string.settings_privacy_unknown), sport.value)
             assertEquals(
                 UiText.Resource(R.string.settings_privacy_services_required),
                 fixture.viewModel.sections.value.single().footer
@@ -354,54 +357,59 @@ class SettingsViewModelTest {
                 page = SettingsPage.PRIVACY,
                 local = LocalSettings(customServicesEnabled = true),
                 sharing = SharingSettingsState.Content(
-                    SharingSettings(scheduleSharing = true, sportSharing = false)
+                    SharingSettings(scheduleVisibility = SharingVisibility.FRIENDS, sportVisibility = SharingVisibility.NOBODY)
                 )
             )
             advanceUntilIdle()
 
+            assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
             assertTrue(
-                fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING).checked
+                fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled
             )
-            assertTrue(
-                fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled
-            )
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SPORT_SHARING).checked)
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SPORT_SHARING).enabled)
+            assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
+            assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).enabled)
             assertEquals(1, fixture.repository.refreshSharingCount)
 
             fixture.repository.sharing.value = SharingSettingsState.Content(
-                SharingSettings(scheduleSharing = true, sportSharing = false),
+                SharingSettings(scheduleVisibility = SharingVisibility.FRIENDS, sportVisibility = SharingVisibility.NOBODY),
                 updating = true
             )
             advanceUntilIdle()
 
             assertFalse(
-                fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled
+                fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled
             )
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SPORT_SHARING).enabled)
+            assertFalse(fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).enabled)
         }
 
     @Test
     fun `sharing update failure emits the repository error`() =
         runTest(mainDispatcherRule.dispatcher) {
-            val fixture = createFixture(
-                page = SettingsPage.PRIVACY,
-                local = LocalSettings(customServicesEnabled = true),
-                sharing = SharingSettingsState.Content(
-                    SharingSettings(scheduleSharing = true, sportSharing = true)
+            for (key in listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING)) {
+                val fixture = createFixture(
+                    page = SettingsPage.PRIVACY,
+                    local = LocalSettings(customServicesEnabled = true),
+                    sharing = SharingSettingsState.Content(SharingSettings())
                 )
-            )
-            fixture.repository.scheduleSharingResult = AppResult.Failure(AppError.Network)
-            advanceUntilIdle()
+                fixture.repository.scheduleSharingResult = AppResult.Failure(AppError.Network)
+                fixture.repository.sportSharingResult = AppResult.Failure(AppError.Network)
+                advanceUntilIdle()
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SHARING, false)
-            advanceUntilIdle()
+                fixture.viewModel.onChoiceChanged(key, SharingVisibility.NOBODY.name)
+                advanceUntilIdle()
 
-            assertEquals(listOf(false), fixture.repository.scheduleSharingRequests)
-            assertEquals(
-                SettingsEvent.ShowError(AppError.Network),
-                fixture.viewModel.events.first()
-            )
+                assertEquals(if (key == SettingsViewModel.KEY_SCHEDULE_SHARING) listOf(SharingVisibility.NOBODY) else emptyList<SharingVisibility>(), fixture.repository.scheduleSharingRequests)
+                assertEquals(if (key == SettingsViewModel.KEY_SPORT_SHARING) listOf(SharingVisibility.NOBODY) else emptyList<SharingVisibility>(), fixture.repository.sportSharingRequests)
+                assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+                assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
+                assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled)
+                assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).enabled)
+                assertEquals(0, fixture.widgetRefresher.refreshCount)
+                assertEquals(
+                    SettingsEvent.ShowError(AppError.Network),
+                    fixture.viewModel.events.first()
+                )
+            }
         }
 
     @Test
@@ -415,7 +423,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             assertFalse(
-                fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled
+                fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled
             )
             assertEquals(
                 UiText.Resource(R.string.settings_privacy_load_error),
@@ -657,7 +665,7 @@ class SettingsViewModelTest {
         val fixture = createFixture(
             page = SettingsPage.PRIVACY,
             local = LocalSettings(customServicesEnabled = true),
-            sharing = SharingSettingsState.Content(SharingSettings(true, false))
+            sharing = SharingSettingsState.Content(SharingSettings(SharingVisibility.FRIENDS, SharingVisibility.NOBODY))
         )
         runCurrent()
         assertEquals(1, fixture.repository.refreshSharingCount)
@@ -667,8 +675,8 @@ class SettingsViewModelTest {
         assertTrue(fixture.viewModel.sections.value.isEmpty())
         advanceTimeBy(1)
         runCurrent()
-        assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING).checked)
-        assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SPORT_SHARING).checked)
+        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+        assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
     }
 
     @Test
@@ -676,7 +684,7 @@ class SettingsViewModelTest {
         val fixture = createFixture(
             page = SettingsPage.PRIVACY,
             local = LocalSettings(customServicesEnabled = true),
-            sharing = SharingSettingsState.Content(SharingSettings(true, true))
+            sharing = SharingSettingsState.Content(SharingSettings())
         )
         fixture.repository.refreshDelayMs = 800
         runCurrent()
@@ -685,7 +693,7 @@ class SettingsViewModelTest {
         assertTrue(fixture.viewModel.sections.value.isEmpty())
         advanceTimeBy(1)
         runCurrent()
-        assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING).stateKnown)
+        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
     }
 
     @Test
@@ -702,14 +710,14 @@ class SettingsViewModelTest {
         assertTrue(fixture.viewModel.action(SettingsViewModel.KEY_RETRY_PRIVACY).enabled)
         fixture.viewModel.onAction(SettingsViewModel.KEY_RETRY_PRIVACY)
         runCurrent()
-        fixture.repository.sharing.value = SharingSettingsState.Content(SharingSettings(false, true))
+        fixture.repository.sharing.value = SharingSettingsState.Content(SharingSettings(SharingVisibility.NOBODY, SharingVisibility.FRIENDS))
         runCurrent()
         advanceTimeBy(299)
         runCurrent()
         assertTrue(fixture.viewModel.sections.value.isEmpty())
         advanceTimeBy(1)
         runCurrent()
-        assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SPORT_SHARING).checked)
+        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
     }
 
     @Test
@@ -717,17 +725,17 @@ class SettingsViewModelTest {
         val fixture = createFixture(
             page = SettingsPage.PRIVACY,
             local = LocalSettings(customServicesEnabled = true),
-            sharing = SharingSettingsState.Content(SharingSettings(true, true))
+            sharing = SharingSettingsState.Content(SharingSettings())
         )
         runCurrent()
         advanceTimeBy(50)
         fixture.repository.local.value = LocalSettings(customServicesEnabled = false)
         runCurrent()
         assertTrue(fixture.viewModel.sections.value.isNotEmpty())
-        assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING).stateKnown)
+        assertEquals(null, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
         assertEquals(SharingSettingsState.Disabled, fixture.repository.sharing.value)
         advanceUntilIdle()
-        assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING).stateKnown)
+        assertEquals(null, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
     }
 
     @Test
@@ -735,7 +743,7 @@ class SettingsViewModelTest {
         val fixture = createFixture(
             page = SettingsPage.PRIVACY,
             local = LocalSettings(customServicesEnabled = true),
-            sharing = SharingSettingsState.Content(SharingSettings(true, true)),
+            sharing = SharingSettingsState.Content(SharingSettings()),
             localInitiallyAvailable = false
         )
         advanceTimeBy(500)
@@ -748,8 +756,170 @@ class SettingsViewModelTest {
         assertTrue(fixture.viewModel.sections.value.isEmpty())
         advanceTimeBy(1)
         runCurrent()
-        assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SHARING).stateKnown)
+        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
     }
+
+    @Test
+    fun `privacy offers all friends nobody in order with server defaults and current values`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(
+                page = SettingsPage.PRIVACY,
+                local = LocalSettings(customServicesEnabled = true),
+                sharing = SharingSettingsState.Content(SharingSettings())
+            )
+            advanceUntilIdle()
+            val choices = fixture.viewModel.allItems().filterIsInstance<SettingItem.Choice>()
+            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING), choices.map { it.key })
+            assertEquals(listOf(UiText.Resource(R.string.settings_schedule_sharing_title), UiText.Resource(R.string.settings_sport_sharing_title)), choices.map { it.title })
+            choices.forEach { choice ->
+                assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), choice.options.map { it.key })
+                assertEquals(listOf(R.string.settings_privacy_all, R.string.settings_privacy_friends, R.string.settings_privacy_nobody).map(UiText::Resource), choice.options.map { it.label })
+                assertEquals(SharingVisibility.FRIENDS.name, choice.selectedOptionKey)
+                assertEquals(UiText.Resource(R.string.settings_privacy_friends), choice.value)
+                assertTrue(choice.enabled)
+            }
+            assertEquals(UiText.Resource(R.string.settings_privacy_footer), fixture.viewModel.sections.value.single().footer)
+
+            fixture.repository.sharing.value = SharingSettingsState.Content(
+                SharingSettings(SharingVisibility.ALL, SharingVisibility.NOBODY)
+            )
+            advanceUntilIdle()
+            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+            assertEquals(UiText.Resource(R.string.settings_privacy_all), fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).value)
+            assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
+            assertEquals(UiText.Resource(R.string.settings_privacy_nobody), fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).value)
+        }
+
+    @Test
+    fun `privacy choices independently send typed commands without changing other visibility`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(
+                page = SettingsPage.PRIVACY,
+                local = LocalSettings(customServicesEnabled = true),
+                sharing = SharingSettingsState.Content(SharingSettings())
+            )
+            advanceUntilIdle()
+            fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SCHEDULE_SHARING, SharingVisibility.ALL.name)
+            advanceUntilIdle()
+            assertEquals(listOf(SharingVisibility.ALL), fixture.repository.scheduleSharingRequests)
+            assertTrue(fixture.repository.sportSharingRequests.isEmpty())
+            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+            assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
+
+            fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SPORT_SHARING, SharingVisibility.NOBODY.name)
+            advanceUntilIdle()
+            assertEquals(listOf(SharingVisibility.ALL), fixture.repository.scheduleSharingRequests)
+            assertEquals(listOf(SharingVisibility.NOBODY), fixture.repository.sportSharingRequests)
+            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+            assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
+            assertEquals(0, fixture.widgetRefresher.refreshCount)
+        }
+
+    @Test
+    fun `privacy rejects unknown keys and options unchanged values and obsolete toggles`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(
+                page = SettingsPage.PRIVACY,
+                local = LocalSettings(customServicesEnabled = true),
+                sharing = SharingSettingsState.Content(SharingSettings())
+            )
+            advanceUntilIdle()
+            fixture.viewModel.onChoiceChanged("unknown", SharingVisibility.ALL.name)
+            for (key in listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING)) {
+                fixture.viewModel.onChoiceChanged(key, "unknown")
+                fixture.viewModel.onChoiceChanged(key, "all")
+                fixture.viewModel.onChoiceChanged(key, SharingVisibility.FRIENDS.name)
+                fixture.viewModel.onToggleChanged(key, false)
+            }
+            advanceUntilIdle()
+            assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
+            assertTrue(fixture.repository.sportSharingRequests.isEmpty())
+        }
+
+    @Test
+    fun `privacy rejects actions during loading unknown error disabled and updating states`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val states = listOf(
+                SharingSettingsState.Loading,
+                SharingSettingsState.Error,
+                SharingSettingsState.Disabled,
+                SharingSettingsState.Content(SharingSettings(), updating = true)
+            )
+            states.forEach { sharing ->
+                val fixture = createFixture(
+                    page = SettingsPage.PRIVACY,
+                    local = LocalSettings(customServicesEnabled = sharing != SharingSettingsState.Disabled),
+                    sharing = sharing
+                )
+                advanceUntilIdle()
+                for (key in listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING)) {
+                    fixture.viewModel.onChoiceChanged(key, SharingVisibility.ALL.name)
+                }
+                advanceUntilIdle()
+                assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
+                assertTrue(fixture.repository.sportSharingRequests.isEmpty())
+                if (sharing == SharingSettingsState.Loading) {
+                    assertTrue(fixture.viewModel.sections.value.isEmpty())
+                } else if (sharing !is SharingSettingsState.Content) {
+                    fixture.viewModel.allItems().filterIsInstance<SettingItem.Choice>().forEach { choice ->
+                        assertFalse(choice.enabled)
+                        assertEquals(null, choice.selectedOptionKey)
+                        assertEquals(UiText.Resource(R.string.settings_privacy_unknown), choice.value)
+                    }
+                }
+            }
+        }
+
+    @Test
+    fun `privacy ignores choices on other pages and while fresh settings are masked`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            for (page in listOf(SettingsPage.ROOT, SettingsPage.PRIVACY)) {
+                val fixture = createFixture(
+                    page = page,
+                    local = LocalSettings(customServicesEnabled = true),
+                    sharing = SharingSettingsState.Content(SharingSettings())
+                )
+                runCurrent()
+                fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SCHEDULE_SHARING, SharingVisibility.ALL.name)
+                fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SPORT_SHARING, SharingVisibility.ALL.name)
+                advanceUntilIdle()
+                assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
+                assertTrue(fixture.repository.sportSharingRequests.isEmpty())
+            }
+        }
+
+    @Test
+    fun `pending privacy command locks both rows and rejects stale dialog callbacks until saved`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(
+                page = SettingsPage.PRIVACY,
+                local = LocalSettings(customServicesEnabled = true),
+                sharing = SharingSettingsState.Content(SharingSettings())
+            )
+            val saved = CompletableDeferred<Unit>()
+            fixture.repository.sharingWrite = { saved.await() }
+            advanceUntilIdle()
+            fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SCHEDULE_SHARING, SharingVisibility.ALL.name)
+            // No collector has run yet: even a second callback in the same frame is rejected.
+            fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SPORT_SHARING, SharingVisibility.NOBODY.name)
+            runCurrent()
+            assertEquals(listOf(SharingVisibility.ALL), fixture.repository.scheduleSharingRequests)
+            assertTrue(fixture.repository.sportSharingRequests.isEmpty())
+            for (key in listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING)) {
+                assertFalse(fixture.viewModel.choice(key).enabled)
+                assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(key).selectedOptionKey)
+                fixture.viewModel.onChoiceChanged(key, SharingVisibility.NOBODY.name)
+            }
+            runCurrent()
+            assertEquals(listOf(SharingVisibility.ALL), fixture.repository.scheduleSharingRequests)
+            assertTrue(fixture.repository.sportSharingRequests.isEmpty())
+
+            saved.complete(Unit)
+            advanceUntilIdle()
+            assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled)
+            assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).enabled)
+            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+        }
 
     private fun createFixture(
         local: LocalSettings = LocalSettings(),
@@ -806,8 +976,9 @@ class SettingsViewModelTest {
         var disableSharingCount = 0
         var scheduleSharingResult: AppResult<Unit> = AppResult.Success(Unit)
         var sportSharingResult: AppResult<Unit> = AppResult.Success(Unit)
-        val scheduleSharingRequests = mutableListOf<Boolean>()
-        val sportSharingRequests = mutableListOf<Boolean>()
+        var sharingWrite: suspend () -> Unit = {}
+        val scheduleSharingRequests = mutableListOf<SharingVisibility>()
+        val sportSharingRequests = mutableListOf<SharingVisibility>()
         val nextLessonEarlyRequests = mutableListOf<Boolean>()
         val widgetTeacherHiddenRequests = mutableListOf<Boolean>()
         val pastLessonsHiddenRequests = mutableListOf<Boolean>()
@@ -843,13 +1014,23 @@ class SettingsViewModelTest {
             sharing.value = SharingSettingsState.Disabled
         }
 
-        override suspend fun setScheduleSharing(enabled: Boolean): AppResult<Unit> {
-            scheduleSharingRequests += enabled
+        override suspend fun setScheduleVisibility(visibility: SharingVisibility): AppResult<Unit> {
+            scheduleSharingRequests += visibility
+            sharingWrite()
+            if (scheduleSharingResult is AppResult.Success) {
+                val content = sharing.value as SharingSettingsState.Content
+                sharing.value = content.copy(settings = content.settings.copy(scheduleVisibility = visibility))
+            }
             return scheduleSharingResult
         }
 
-        override suspend fun setSportSharing(enabled: Boolean): AppResult<Unit> {
-            sportSharingRequests += enabled
+        override suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit> {
+            sportSharingRequests += visibility
+            sharingWrite()
+            if (sportSharingResult is AppResult.Success) {
+                val content = sharing.value as SharingSettingsState.Content
+                sharing.value = content.copy(settings = content.settings.copy(sportVisibility = visibility))
+            }
             return sportSharingResult
         }
 

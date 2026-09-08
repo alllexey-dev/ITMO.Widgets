@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">ITMO.Widgets</string>
-    <string name="app_version">2.0.1</string>
     <string name="single_lesson_widget_name">Пара</string>
     <string name="single_lesson_widget_description">Текущая или следующая</string>
     <string name="list_lesson_widget_name">Расписание</string>
@@ -210,8 +209,8 @@
     <string name="settings_notifications_allowed">Разрешены в Android</string>
     <string name="settings_notifications_blocked">Запрещены в Android</string>
     <string name="settings_notifications_checking">Проверяем разрешение…</string>
-    <string name="settings_services_footer">Друзья, общие данные и автозапись работают через сервер ITMO.Widgets. Расписание, зачётка и QR доступны без этих сервисов.\n\nОтключение сервисов на устройстве не удаляет профиль на сервере и не меняет настройки доступа для друзей.</string>
-    <string name="settings_privacy_footer">Доступ — только для взаимных друзей. Выключив обмен расписанием или спортом, вы тоже не сможете смотреть соответствующие данные друзей.\n\nИмя, группа и ИСУ доступны пользователям, вошедшим в приложение.</string>
+    <string name="settings_services_footer">Друзья, общие данные и автозапись работают через сервер ITMO.Widgets. Расписание, зачётка и QR доступны без этих сервисов.\n\nОтключение сервисов на устройстве не удаляет профиль на сервере и не меняет настройки доступа к вашим данным.</string>
+    <string name="settings_privacy_footer">«Все» — все пользователи приложения. «Друзья» — только взаимные друзья. «Никто» — только вы. Ваш выбор не ограничивает просмотр открытых вам данных других пользователей.\n\nИмя, группа и ИСУ доступны пользователям, вошедшим в приложение.</string>
     <string name="settings_schedule_widgets_footer">Эти параметры меняют только виджеты, а не расписание внутри приложения. Обновление всегда автоматическое.</string>
     <string name="settings_sport_footer">Дополнительные фильтры на экране записи. Сам выбор преподавателя и времени остаётся в разделе «Спорт».</string>
     <string name="settings_qr_custom_image_selected">Своё изображение</string>
@@ -228,9 +227,12 @@
     <string name="settings_notifications_disabled_description">Выключены. Нажмите, чтобы открыть настройки Android.</string>
     <string name="settings_notifications_checking_description">Проверяем разрешение Android…</string>
     <string name="settings_group_privacy">Друзья и приватность</string>
-    <string name="settings_schedule_sharing_title">Делиться расписанием с друзьями</string>
-    <string name="settings_sport_sharing_title">Делиться спортом с друзьями</string>
-    <string name="settings_privacy_reciprocal_description">Если выключить, вы тоже не сможете смотреть эти данные друзей.</string>
+    <string name="settings_schedule_sharing_title">Кто видит расписание</string>
+    <string name="settings_sport_sharing_title">Кто видит спорт</string>
+    <string name="settings_privacy_all">Все</string>
+    <string name="settings_privacy_friends">Друзья</string>
+    <string name="settings_privacy_nobody">Никто</string>
+    <string name="settings_privacy_unknown">Не загружено</string>
     <string name="settings_privacy_services_required">Сначала включите пользовательские сервисы.</string>
     <string name="settings_privacy_loading">Загружаем настройку…</string>
     <string name="settings_privacy_load_error">Не удалось загрузить настройку с сервера.</string>

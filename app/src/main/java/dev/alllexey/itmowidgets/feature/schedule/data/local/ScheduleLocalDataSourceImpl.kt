@@ -117,6 +117,16 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun clearUser(userIsu: Int) {
+        withContext(Dispatchers.IO) {
+            cacheMutex.withLock {
+                val prefix = "${userIsu}_"
+                cacheDir.listFiles()?.filter { it.name.startsWith(prefix) }?.forEach { it.delete() }
+                memoryCache.value = memoryCache.value.filterKeys { !it.startsWith(prefix) }
+            }
+        }
+    }
+
     /**
      * Existing observers remain attached to the same snapshot flow across a clear.
      */

@@ -19,5 +19,8 @@ interface ScheduleLocalDataSource {
 
     suspend fun get(userIsu: Int?, date: LocalDate): CacheEntry?
 
+    /** Removes every cached date for a denied foreign user, without touching own data. */
+    suspend fun clearUser(userIsu: Int)
+
     suspend fun clear()
 }

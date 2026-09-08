@@ -159,10 +159,18 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         private val sharing = MutableStateFlow<SharingSettingsState>(SharingSettingsState.Loading)
         override fun observeLocalSettings() = local.onStart { delay(80) }
         override fun observeSharingSettings() = sharing
-        override suspend fun refreshSharingSettings() { sharing.value = SharingSettingsState.Content(SharingSettings(true, true)) }
+        override suspend fun refreshSharingSettings() { sharing.value = SharingSettingsState.Content(SharingSettings()) }
         override fun disableSharingSettings() = Unit
-        override suspend fun setScheduleSharing(enabled: Boolean) = AppResult.Success(Unit)
-        override suspend fun setSportSharing(enabled: Boolean) = AppResult.Success(Unit)
+        override suspend fun setScheduleVisibility(visibility: SharingVisibility): AppResult<Unit> {
+            val content = sharing.value as SharingSettingsState.Content
+            sharing.value = content.copy(settings = content.settings.copy(scheduleVisibility = visibility))
+            return AppResult.Success(Unit)
+        }
+        override suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit> {
+            val content = sharing.value as SharingSettingsState.Content
+            sharing.value = content.copy(settings = content.settings.copy(sportVisibility = visibility))
+            return AppResult.Success(Unit)
+        }
         override suspend fun setNextLessonEarlyEnabled(enabled: Boolean) = Unit
         override suspend fun setWidgetTeacherHidden(hidden: Boolean) = Unit
         override suspend fun setPastLessonsHidden(hidden: Boolean) = Unit

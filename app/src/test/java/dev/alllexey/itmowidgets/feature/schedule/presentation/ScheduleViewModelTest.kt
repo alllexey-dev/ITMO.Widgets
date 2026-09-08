@@ -154,6 +154,34 @@ class ScheduleViewModelTest {
         }
 
     @Test
+    fun `foreign access denial immediately hides cached and late rows until a new authorized load`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val user = SelectedUser(123456, "Иван Иванов", null)
+            val repository = FakeScheduleRepository().apply {
+                schedulesFor(user.isu).value = listOf(daySchedule())
+            }
+            val viewModel = createViewModel(repository)
+            viewModel.setSelectedUser(user)
+            viewModel.loadInitialSchedule()
+            advanceUntilIdle()
+            assertTrue(viewModel.uiState.value is ScheduleUiState.Content)
+
+            repository.refreshResult = AppResult.Failure(AppError.Forbidden)
+            viewModel.loadInitialSchedule(forceRefresh = true)
+            advanceUntilIdle()
+            assertEquals(ScheduleUiState.Error(AppError.Forbidden, user), viewModel.uiState.value)
+            repository.schedulesFor(user.isu).value = listOf(daySchedule().copy(note = "Late old cache"))
+            advanceUntilIdle()
+            viewModel.updateTimeState()
+            assertEquals(ScheduleUiState.Error(AppError.Forbidden, user), viewModel.uiState.value)
+
+            repository.refreshResult = AppResult.Success(Unit)
+            viewModel.loadInitialSchedule()
+            advanceUntilIdle()
+            assertTrue(viewModel.uiState.value is ScheduleUiState.Content)
+        }
+
+    @Test
     fun `forced refresh requests the entire loaded range without restarting observation`() =
         runTest(mainDispatcherRule.dispatcher) {
             val loadedDays = daysIncludingNextPage()

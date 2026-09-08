@@ -53,16 +53,22 @@ do not incur an additional delay. Disabling services takes effect immediately.
 
 - Name, group, and ISU are always visible to authenticated users. The application
   does not offer controls that imply these official identity fields can be hidden.
-- `Делиться расписанием с друзьями` is a separate toggle, enabled by default.
-- `Делиться спортом с друзьями` is a separate toggle, enabled by default.
-- Both sharing controls apply only to mutual, non-blocked friends.
-- Sharing is reciprocal for each data type. A user who disables schedule sharing
-  cannot view friends' schedules; a user who disables sport sharing cannot view
-  friends' sport data.
-- Backend, not Android, enforces sharing, friendship, and blocking rules.
-- `Кто может отправлять заявки в друзья` offers everyone, friends of friends, or
-  nobody. Everyone is the default.
-- `Заблокированные пользователи` opens the block-management screen.
+- `Кто видит расписание` and `Кто видит спорт` are independent audience choices:
+  `Все`, `Друзья` (the default for new users), and `Никто`.
+- `Все` allows any authenticated application user, regardless of that viewer's
+  own privacy choices. `Друзья` requires mutual friendship. `Никто` allows only
+  the owner. There is no reciprocal sharing requirement.
+- Existing enabled legacy settings become `Друзья`; previously disabled settings
+  remain `Никто`. Upgrading must never silently broaden an existing audience.
+- Backend, not Android, enforces the owner audience and friendship requirements.
+  Block management is not implemented in the current Backend; it is not simulated
+  by treating a rejected friend request as a block.
+- Only the owner privacy endpoint returns audience settings. Other user responses
+  contain viewer-scoped permissions. Unavailable/unknown settings are disabled
+  and shown without an invented selected audience; saving failures restore the
+  previously confirmed values.
+- Friend-request audience and block-management controls remain planned until
+  their corresponding Backend features are implemented.
 - Public-review visibility is not shown until reviews ship in v2.2.
 
 ## Schedule widgets

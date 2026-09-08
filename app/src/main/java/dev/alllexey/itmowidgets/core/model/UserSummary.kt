@@ -14,6 +14,7 @@ data class UserGroup(
     val facultyShortName: String
 )
 
+/** Viewer-scoped permissions returned by Backend, not another user's privacy settings. */
 data class UserSharing(
     val sport: Boolean,
     val schedule: Boolean

@@ -211,7 +211,18 @@ class ScheduleViewModel @Inject constructor(
                 lastError = null
             }
             is AppResult.Failure -> {
-                if (!hasDisplayableContent(currentDisplayDays())) {
+                if (activeUserIsu() != null && result.error in setOf(
+                        AppError.Forbidden, AppError.Unauthorized, AppError.NotFound, AppError.CustomServicesDisabled
+                    )) {
+                    // A denial is not an offline refresh failure. Drop visible
+                    // foreign content immediately, even before the cache flow
+                    // delivers its invalidation, and ignore already queued rows.
+                    observeJob?.cancel()
+                    observeJob = null
+                    currentDays = emptyList()
+                    hasSuccessfulOfficialLoad = false
+                    lastError = result.error
+                } else if (!hasDisplayableContent(currentDisplayDays())) {
                     lastError = result.error
                 } else {
                     eventChannel.send(ScheduleEvent.ShowError(result.error))

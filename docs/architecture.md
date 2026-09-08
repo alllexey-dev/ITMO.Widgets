@@ -420,7 +420,40 @@ and dynamic rows do not save view-hierarchy values over repository state.
 The privacy page holds its bounded loading area for at least 300 ms on entry and
 retry; network work and the minimum duration run concurrently in the ViewModel.
 Only final content or error rows replace the loader, avoiding a transient set of
-unknown switches. Disabling services bypasses the delay immediately.
+unknown choices. Disabling services bypasses the delay immediately.
+
+Privacy uses the typed Core `GET/PUT /api/users/me/privacy` contract, with independent
+`ALL`, `FRIENDS`, and `NOBODY` audiences. Android's `SharingVisibility` is a domain
+enum mapped at the repository boundary; no transport DTO reaches presentation.
+Legacy boolean privacy endpoints are not a fallback: an older Backend must show
+a load error instead of silently ignoring an `ALL` choice. The existing
+`UserSummary.sharing` booleans are viewer-scoped capabilities, not owner audiences.
+Definitive denial of a foreign schedule removes that user's entire cache and visible
+content, without deleting own or other users' data. Generation checks prevent a
+concurrent late response from restoring a revoked cache. Ordinary network failures
+still preserve cached content.
+
+Coordinated development uses Core and Backend `1.2.0-SNAPSHOT`. Core is published
+only to MavenLocal. The privacy contract was smoke-tested on the development
+server; subsequent local changes do not imply another deployment. Neither is a
+public release or a production deployment. This privacy screen requires the new
+Backend privacy endpoint. Legacy disabled audiences remain `NOBODY`; only new
+users default to `FRIENDS`. A public non-friend profile/search entry point is not
+added here.
+
+Application update metadata has a separate public `GET /api/app/version-info`
+contract: required `minVersion`, `latestVersion`, and plain-text `note` strings.
+Both version defaults are `2.1`; an empty note means there is no additional message.
+The legacy `GET /api/app/version` still returns the latest version as a string.
+These are Android application versions, not Backend or Core artifact versions.
+The typed Core contract is available for a future update screen; this change does
+not add a popup, display the note, or enforce the minimum in Android.
+
+Android currently builds as `2.1-SNAPSHOT` with version code `4`. Gradle generates
+`R.string.app_version` from `versionName`, keeping the settings display and local
+version-dependent storage aligned with the APK metadata instead of maintaining a
+second version string in XML.
+
 `localSettingsLoaded` is independent of privacy refresh. Settings postpone their
 enter transition until persisted sections and any initial QR image are ready,
 then start on pre-draw; offline pages never show a progress indicator. Shared-axis

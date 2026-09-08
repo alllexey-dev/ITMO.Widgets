@@ -20,9 +20,12 @@ data class SportDisplaySettings(
     val hideTimeSelector: Boolean = true
 )
 
+/** The owner's audience; the viewer's own choice never restricts access. */
+enum class SharingVisibility { ALL, FRIENDS, NOBODY }
+
 data class SharingSettings(
-    val scheduleSharing: Boolean,
-    val sportSharing: Boolean
+    val scheduleVisibility: SharingVisibility = SharingVisibility.FRIENDS,
+    val sportVisibility: SharingVisibility = SharingVisibility.FRIENDS
 )
 
 sealed interface SharingSettingsState {
@@ -45,9 +48,9 @@ interface SettingsRepository {
 
     fun disableSharingSettings()
 
-    suspend fun setScheduleSharing(enabled: Boolean): AppResult<Unit>
+    suspend fun setScheduleVisibility(visibility: SharingVisibility): AppResult<Unit>
 
-    suspend fun setSportSharing(enabled: Boolean): AppResult<Unit>
+    suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit>
 
     suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean)
 

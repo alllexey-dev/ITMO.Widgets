@@ -20,6 +20,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.materialswitch.MaterialSwitch
+import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -30,6 +31,7 @@ import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
+import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import dev.alllexey.itmowidgets.feature.settings.presentation.ChoiceOption
@@ -226,6 +228,26 @@ class SettingsRendererTest {
     }
 
     @Test
+    fun displayedVersionMatchesBuildMetadataAndFitsNarrowScreen() {
+        for ((name, dark) in listOf("light" to false, "dark" to true)) {
+            ActivityScenario.launch<SettingsPreviewActivity>(
+                previewIntent(fontScale = 1.3f, widthDp = 320, dark = dark, colorSeed = 0xFF087F5B.toInt())
+            ).use { scenario ->
+                renderProductionPage(scenario, SettingsPage.MAINTENANCE)
+                scenario.onActivity { activity ->
+                    assertEquals(BuildConfig.VERSION_NAME, activity.getString(R.string.app_version))
+                    val row = rowWithTitle(activity, activity.getString(R.string.settings_version_title))
+                    val value = row.findViewById<TextView>(R.id.setting_value)
+                    assertEquals(BuildConfig.VERSION_NAME, value.text.toString())
+                    assertTextFits(value)
+                    assertTextFits(row.findViewById(R.id.setting_title))
+                }
+                saveScreenshot(scenario, "settings-version-$name-narrow-font130")
+            }
+        }
+    }
+
+    @Test
     fun captureRootAndDetailInLightDarkAndCustomDynamicPalette() {
         for ((name, dark, seed) in listOf(Triple("light", false, null), Triple("dark", true, null), Triple("green", false, 0xFF087F5B.toInt()))) {
             ActivityScenario.launch<SettingsPreviewActivity>(previewIntent(dark = dark, colorSeed = seed)).use { scenario ->
@@ -261,7 +283,95 @@ class SettingsRendererTest {
         for ((name, sharing) in listOf("loading" to SharingSettingsState.Loading, "error" to SharingSettingsState.Error, "disabled" to SharingSettingsState.Disabled)) {
             ActivityScenario.launch<SettingsPreviewActivity>(previewIntent(fontScale = 1.3f, widthDp = 320)).use { scenario ->
                 renderProductionPage(scenario, SettingsPage.PRIVACY, PreviewRepository(sharing))
+                scenario.onActivity { activity ->
+                    if (sharing == SharingSettingsState.Loading) {
+                        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.settings_progress).visibility)
+                        assertEquals(View.GONE, activity.findViewById<View>(R.id.settings_scroll).visibility)
+                    } else {
+                        listOf(R.string.settings_schedule_sharing_title, R.string.settings_sport_sharing_title).forEach { title ->
+                            val row = rowWithTitle(activity, activity.getString(title))
+                            assertFalse(row.isEnabled)
+                            assertEquals(activity.getString(R.string.settings_privacy_unknown), row.findViewById<TextView>(R.id.setting_value).text.toString())
+                            assertTextFits(row.findViewById(R.id.setting_title))
+                            assertTextFits(row.findViewById(R.id.setting_value))
+                        }
+                    }
+                    assertTrue(activity.sectionsContainer.descendants().none { it is MaterialSwitch })
+                }
                 saveScreenshot(scenario, "settings-privacy-$name-narrow")
+            }
+        }
+    }
+
+    @Test
+    fun privacyAudienceChoicesFitLightDarkAndNarrowDynamicPalettes() {
+        val appearances = listOf(
+            Triple("light", false, null),
+            Triple("dark", true, null),
+            Triple("green", false, 0xFF087F5B.toInt()),
+            Triple("dark-green", true, 0xFF087F5B.toInt())
+        )
+        for ((name, dark, seed) in appearances) {
+            ActivityScenario.launch<SettingsPreviewActivity>(
+                previewIntent(fontScale = 1.3f, widthDp = 320, dark = dark, colorSeed = seed)
+            ).use { scenario ->
+                renderProductionPage(scenario, SettingsPage.PRIVACY, PreviewRepository(
+                    SharingSettingsState.Content(SharingSettings(SharingVisibility.ALL, SharingVisibility.NOBODY))
+                ))
+                scenario.onActivity { activity ->
+                    val schedule = rowWithTitle(activity, activity.getString(R.string.settings_schedule_sharing_title))
+                    val sport = rowWithTitle(activity, activity.getString(R.string.settings_sport_sharing_title))
+                    assertEquals(activity.getString(R.string.settings_privacy_all), schedule.findViewById<TextView>(R.id.setting_value).text.toString())
+                    assertEquals(activity.getString(R.string.settings_privacy_nobody), sport.findViewById<TextView>(R.id.setting_value).text.toString())
+                    listOf(schedule, sport).forEach { row ->
+                        assertTrue(row.isEnabled)
+                        assertTrue(row.isClickable)
+                        assertTrue("Audience choice needs a 48 dp target", row.height >= 48 * activity.resources.displayMetrics.density)
+                        assertTextFits(row.findViewById(R.id.setting_title))
+                        assertTextFits(row.findViewById(R.id.setting_value))
+                        val titleBounds = Rect().also(row.findViewById<TextView>(R.id.setting_title)::getGlobalVisibleRect)
+                        val valueBounds = Rect().also(row.findViewById<TextView>(R.id.setting_value)::getGlobalVisibleRect)
+                        assertFalse(Rect.intersects(titleBounds, valueBounds))
+                    }
+                    assertTrue(activity.sectionsContainer.descendants().none { it is MaterialSwitch })
+                }
+                saveScreenshot(scenario, "settings-privacy-audience-$name-narrow-font130")
+            }
+        }
+    }
+
+    @Test
+    fun privacyRowsUseCurrentAudienceAndPreserveIdentityWhenUpdatesLockThem() {
+        ActivityScenario.launch<SettingsPreviewActivity>(previewIntent()).use { scenario ->
+            val repository = PreviewRepository(SharingSettingsState.Content(SharingSettings()))
+            val viewModel = renderProductionPage(scenario, SettingsPage.PRIVACY, repository)
+            scenario.onActivity { activity ->
+                val choices = mutableListOf<SettingItem.Choice>()
+                val renderer = renderer(activity, onChoice = choices::add)
+                renderer.render(viewModel.sections.value)
+                val schedule = rowWithTitle(activity, activity.getString(R.string.settings_schedule_sharing_title))
+                val sport = rowWithTitle(activity, activity.getString(R.string.settings_sport_sharing_title))
+                assertEquals(activity.getString(R.string.settings_privacy_friends), schedule.findViewById<TextView>(R.id.setting_value).text.toString())
+                assertEquals(activity.getString(R.string.settings_privacy_friends), sport.findViewById<TextView>(R.id.setting_value).text.toString())
+                schedule.performClick()
+                assertEquals(1, choices.size)
+                assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), choices.single().options.map { it.key })
+                assertEquals(listOf("Все", "Друзья", "Никто"), choices.single().options.map { it.label.resolve(activity) })
+                assertEquals(SharingVisibility.FRIENDS.name, choices.single().selectedOptionKey)
+                val locked = viewModel.sections.value.map { section ->
+                    section.copy(items = section.items.map { item ->
+                        if (item is SettingItem.Choice) item.copy(enabled = false) else item
+                    })
+                }
+                renderer.render(locked)
+                assertSame(schedule, rowWithTitle(activity, activity.getString(R.string.settings_schedule_sharing_title)))
+                assertSame(sport, rowWithTitle(activity, activity.getString(R.string.settings_sport_sharing_title)))
+                schedule.performClick()
+                sport.performClick()
+                assertEquals(1, choices.size)
+                assertFalse(schedule.isEnabled)
+                assertFalse(sport.isEnabled)
+                assertEquals(activity.getString(R.string.settings_privacy_friends), schedule.findViewById<TextView>(R.id.setting_value).text.toString())
             }
         }
     }
@@ -270,7 +380,7 @@ class SettingsRendererTest {
         scenario: ActivityScenario<SettingsPreviewActivity>,
         page: SettingsPage,
         repository: PreviewRepository = PreviewRepository()
-    ) {
+    ): SettingsViewModel {
         lateinit var viewModel: SettingsViewModel
         scenario.onActivity { activity ->
             viewModel = ViewModelProvider(activity, object : ViewModelProvider.Factory {
@@ -285,7 +395,7 @@ class SettingsRendererTest {
                     object : WidgetRefreshRequester {
                         override fun refreshAll() = Unit
                     },
-                    AppVersion("2.0.1"),
+                    AppVersion(activity.getString(R.string.app_version)),
                     SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
             })[page.name, SettingsViewModel::class.java]
@@ -309,6 +419,7 @@ class SettingsRendererTest {
             it.findViewById<View>(R.id.settings_progress).visibility = if (sections.isEmpty()) View.VISIBLE else View.GONE
         }
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        return viewModel
     }
 
     private fun renderer(
@@ -388,7 +499,7 @@ class SettingsRendererTest {
 
     /** Static in-memory inputs exercise the real presentation without credentials or I/O. */
     private class PreviewRepository(
-        val initialSharing: SharingSettingsState = SharingSettingsState.Content(SharingSettings(true, false))
+        val initialSharing: SharingSettingsState = SharingSettingsState.Content(SharingSettings(SharingVisibility.FRIENDS, SharingVisibility.NOBODY))
     ) : SettingsRepository {
         private val local = MutableStateFlow(LocalSettings(customServicesEnabled = initialSharing != SharingSettingsState.Disabled))
         private val sharing = MutableStateFlow(initialSharing)
@@ -396,8 +507,8 @@ class SettingsRendererTest {
         override fun observeSharingSettings() = sharing
         override suspend fun refreshSharingSettings() = Unit
         override fun disableSharingSettings() = Unit
-        override suspend fun setScheduleSharing(enabled: Boolean) = AppResult.Success(Unit)
-        override suspend fun setSportSharing(enabled: Boolean) = AppResult.Success(Unit)
+        override suspend fun setScheduleVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
+        override suspend fun setSportVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
         override suspend fun setNextLessonEarlyEnabled(enabled: Boolean) = Unit
         override suspend fun setWidgetTeacherHidden(hidden: Boolean) = Unit
         override suspend fun setPastLessonsHidden(hidden: Boolean) = Unit

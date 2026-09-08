@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
+import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -61,11 +62,16 @@ class SettingsViewModel @Inject constructor(
     private val customSpoilerBusy = MutableStateFlow(false)
     // Start masked so cached backend values cannot flash before the fresh request.
     private val privacyRefreshInProgress = MutableStateFlow(page == SettingsPage.PRIVACY)
+    private val privacyUpdateInProgress = MutableStateFlow(false)
     private val privacyRefreshMutex = Mutex()
     private val displayedSharingSettings = combine(
-        repository.observeSharingSettings(), privacyRefreshInProgress
-    ) { sharing, refreshing ->
-        if (refreshing) SharingSettingsState.Loading else sharing
+        repository.observeSharingSettings(), privacyRefreshInProgress, privacyUpdateInProgress
+    ) { sharing, refreshing, updating ->
+        when {
+            refreshing -> SharingSettingsState.Loading
+            updating && sharing is SharingSettingsState.Content -> sharing.copy(updating = true)
+            else -> sharing
+        }
     }
     private val localSettings = repository.observeLocalSettings()
         .shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
@@ -155,12 +161,6 @@ class SettingsViewModel @Inject constructor(
     fun onToggleChanged(key: String, checked: Boolean) {
         when (key) {
             KEY_CUSTOM_SERVICES -> updateCustomServices(checked)
-            KEY_SCHEDULE_SHARING -> updateSharing {
-                repository.setScheduleSharing(checked)
-            }
-            KEY_SPORT_SHARING -> updateSharing {
-                repository.setSportSharing(checked)
-            }
             KEY_SCHEDULE_SPORT_AUTO_SIGN -> updateWidgetSetting {
                 repository.setScheduleSportAutoSignEnabled(checked)
             }
@@ -192,9 +192,26 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun onChoiceChanged(key: String, optionKey: String) {
-        if (key != KEY_QR_ANIMATION) return
-        val animation = QrAnimationType.entries.firstOrNull { it.name == optionKey } ?: return
-        updateWidgetSetting { repository.setQrAnimationType(animation) }
+        when (key) {
+            KEY_QR_ANIMATION -> {
+                val animation = QrAnimationType.entries.firstOrNull { it.name == optionKey } ?: return
+                updateWidgetSetting { repository.setQrAnimationType(animation) }
+            }
+            KEY_SCHEDULE_SHARING, KEY_SPORT_SHARING -> {
+                val visibility = SharingVisibility.entries.firstOrNull { it.name == optionKey } ?: return
+                val item = sections.value.flatMap(SettingSection::items)
+                    .filterIsInstance<SettingItem.Choice>().firstOrNull { it.key == key } ?: return
+                // A dialog can outlive the state that opened it. Reject stale and duplicate actions.
+                if (!item.enabled || item.selectedOptionKey == null || privacyUpdateInProgress.value) return
+                if (item.selectedOptionKey == optionKey) return
+                updateSharing {
+                    when (key) {
+                        KEY_SCHEDULE_SHARING -> repository.setScheduleVisibility(visibility)
+                        else -> repository.setSportVisibility(visibility)
+                    }
+                }
+            }
+        }
     }
 
     fun onAction(key: String) {
@@ -226,10 +243,15 @@ class SettingsViewModel @Inject constructor(
     }
 
     private fun updateSharing(action: suspend () -> AppResult<Unit>) {
+        privacyUpdateInProgress.value = true
         viewModelScope.launch {
-            when (val result = action()) {
-                is AppResult.Success -> Unit
-                is AppResult.Failure -> eventChannel.send(SettingsEvent.ShowError(result.error))
+            try {
+                when (val result = action()) {
+                    is AppResult.Success -> Unit
+                    is AppResult.Failure -> eventChannel.send(SettingsEvent.ShowError(result.error))
+                }
+            } finally {
+                privacyUpdateInProgress.value = false
             }
         }
     }
@@ -477,19 +499,17 @@ class SettingsViewModel @Inject constructor(
             else -> null
         }?.let(UiText::Resource)
         val items = mutableListOf<SettingItem>(
-            SettingItem.Toggle(
+            sharingChoice(
                 key = KEY_SCHEDULE_SHARING,
                 title = UiText.Resource(R.string.settings_schedule_sharing_title),
-                checked = content?.settings?.scheduleSharing ?: false,
-                enabled = editable,
-                stateKnown = content != null
+                visibility = content?.settings?.scheduleVisibility,
+                enabled = editable
             ),
-            SettingItem.Toggle(
+            sharingChoice(
                 key = KEY_SPORT_SHARING,
                 title = UiText.Resource(R.string.settings_sport_sharing_title),
-                checked = content?.settings?.sportSharing ?: false,
-                enabled = editable,
-                stateKnown = content != null
+                visibility = content?.settings?.sportVisibility,
+                enabled = editable
             )
         )
         if (!local.customServicesEnabled) {
@@ -508,6 +528,28 @@ class SettingsViewModel @Inject constructor(
             )
         )
     }
+
+    private fun sharingChoice(
+        key: String,
+        title: UiText,
+        visibility: SharingVisibility?,
+        enabled: Boolean
+    ) = SettingItem.Choice(
+        key = key,
+        title = title,
+        value = visibility?.label() ?: UiText.Resource(R.string.settings_privacy_unknown),
+        options = SharingVisibility.entries.map { ChoiceOption(it.name, it.label()) },
+        selectedOptionKey = visibility?.name,
+        enabled = enabled
+    )
+
+    private fun SharingVisibility.label() = UiText.Resource(
+        when (this) {
+            SharingVisibility.ALL -> R.string.settings_privacy_all
+            SharingVisibility.FRIENDS -> R.string.settings_privacy_friends
+            SharingVisibility.NOBODY -> R.string.settings_privacy_nobody
+        }
+    )
 
     private fun navigation(
         page: SettingsPage,

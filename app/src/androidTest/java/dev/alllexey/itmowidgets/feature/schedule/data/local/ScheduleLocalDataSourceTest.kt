@@ -138,6 +138,30 @@ class ScheduleLocalDataSourceTest {
         assertEquals(peer, fixture.local().observeRange(900001, DATE, peer.last().date).first())
     }
 
+    @Test
+    fun revokedUserIsRemovedFromEveryDateAndDiskWithoutAffectingOthers() = withCache { fixture ->
+        val local = fixture.local()
+        val days = listOf(day(DATE, "private"), day(DATE.plusDays(30), "later"))
+        days.forEach { local.save(it, 900001) }
+        val own = day(DATE, "own")
+        val other = day(DATE, "other user with same ISU prefix")
+        local.save(own, null)
+        local.save(other, 9000012)
+        val snapshots = Channel<List<DaySchedule>>(Channel.UNLIMITED)
+        val collector = launch { local.observeRange(900001, DATE, DATE.plusDays(30)).collect { snapshots.send(it) } }
+        try {
+            assertEquals(days, withTimeout(5_000) { snapshots.receive() })
+            local.clearUser(900001)
+            assertEquals(emptyList<DaySchedule>(), withTimeout(5_000) { snapshots.receive() })
+            assertEquals(emptyList<DaySchedule>(), fixture.local().observeRange(900001, DATE, DATE.plusDays(30)).first())
+            assertNull(fixture.local().get(900001, DATE.plusDays(30)))
+            assertEquals(listOf(own), fixture.local().observeRange(null, DATE, DATE).first())
+            assertEquals(listOf(other), fixture.local().observeRange(9000012, DATE, DATE).first())
+        } finally {
+            collector.cancelAndJoin()
+        }
+    }
+
     private fun withCache(block: suspend CoroutineScope.(Fixture) -> Unit) = runBlocking {
         val application = ApplicationProvider.getApplicationContext<Context>()
         val directory = File(application.cacheDir, "schedule-local-test-${UUID.randomUUID()}")

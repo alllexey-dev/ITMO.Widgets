@@ -2,7 +2,8 @@ package dev.alllexey.itmowidgets.feature.settings.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.UserSettings
+import dev.alllexey.itmowidgets.core.model.UserPrivacySettings
+import dev.alllexey.itmowidgets.core.model.SharingVisibility as ApiSharingVisibility
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -13,6 +14,7 @@ import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
+import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SportDisplaySettings
 import javax.inject.Inject
@@ -112,15 +114,15 @@ class SettingsRepositoryImpl @Inject constructor(
         sharingState.value = SharingSettingsState.Disabled
     }
 
-    override suspend fun setScheduleSharing(enabled: Boolean): AppResult<Unit> {
+    override suspend fun setScheduleVisibility(visibility: SharingVisibility): AppResult<Unit> {
         return updateSharingSettings { current ->
-            current.copy(scheduleSharing = enabled)
+            current.copy(scheduleVisibility = visibility)
         }
     }
 
-    override suspend fun setSportSharing(enabled: Boolean): AppResult<Unit> {
+    override suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit> {
         return updateSharingSettings { current ->
-            current.copy(sportSharing = enabled)
+            current.copy(sportVisibility = visibility)
         }
     }
 
@@ -179,7 +181,7 @@ class SettingsRepositoryImpl @Inject constructor(
 
         try {
             val response = withContext(Dispatchers.IO) {
-                widgetsApi.updateMySettings(requested.toDto())
+                widgetsApi.updateMyPrivacySettings(requested.toDto())
             }
             val saved = response.requireData().toDomain()
             sharingState.value = SharingSettingsState.Content(saved)
@@ -195,21 +197,21 @@ class SettingsRepositoryImpl @Inject constructor(
 
     private suspend fun fetchSharingSettings(): SharingSettings {
         return withContext(Dispatchers.IO) {
-            widgetsApi.mySettings().requireData().toDomain()
+            widgetsApi.myPrivacySettings().requireData().toDomain()
         }
     }
 
-    private fun UserSettings.toDomain(): SharingSettings {
+    private fun UserPrivacySettings.toDomain(): SharingSettings {
         return SharingSettings(
-            scheduleSharing = scheduleSharing,
-            sportSharing = sportSharing
+            scheduleVisibility = SharingVisibility.valueOf(scheduleVisibility.name),
+            sportVisibility = SharingVisibility.valueOf(sportVisibility.name)
         )
     }
 
-    private fun SharingSettings.toDto(): UserSettings {
-        return UserSettings(
-            scheduleSharing = scheduleSharing,
-            sportSharing = sportSharing
+    private fun SharingSettings.toDto(): UserPrivacySettings {
+        return UserPrivacySettings(
+            scheduleVisibility = ApiSharingVisibility.valueOf(scheduleVisibility.name),
+            sportVisibility = ApiSharingVisibility.valueOf(sportVisibility.name)
         )
     }
 

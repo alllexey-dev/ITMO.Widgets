@@ -16,8 +16,9 @@ android {
         applicationId = "dev.alllexey.itmowidgets"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "2.0.1"
+        versionCode = 4
+        versionName = "2.1-SNAPSHOT"
+        resValue("string", "app_version", versionName!!)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

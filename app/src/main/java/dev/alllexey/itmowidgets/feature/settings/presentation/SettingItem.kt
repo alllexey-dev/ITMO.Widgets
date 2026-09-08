@@ -34,7 +34,8 @@ sealed interface SettingItem {
         val title: UiText,
         val value: UiText,
         val options: List<ChoiceOption>,
-        val selectedOptionKey: String,
+        /** Null until an asynchronous source has provided the real value. */
+        val selectedOptionKey: String?,
         val description: UiText? = null,
         val enabled: Boolean = true
     ) : SettingItem

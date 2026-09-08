@@ -45,6 +45,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSel
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
+import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
@@ -329,7 +330,7 @@ class WidgetPreviewTest {
                         override suspend fun setEnabled(enabled: Boolean) = Unit
                     },
                     object : WidgetRefreshRequester { override fun refreshAll() = Unit },
-                    AppVersion("2.0.1"), SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
+                    AppVersion(activity.getString(R.string.app_version)), SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
             })[SettingsViewModel::class.java]
             activity.findViewById<TextView>(R.id.settings_title).text = page.title.resolve(activity)
@@ -399,8 +400,8 @@ class WidgetPreviewTest {
         override fun observeSharingSettings() = MutableStateFlow<SharingSettingsState>(SharingSettingsState.Disabled)
         override suspend fun refreshSharingSettings() = Unit
         override fun disableSharingSettings() = Unit
-        override suspend fun setScheduleSharing(enabled: Boolean) = AppResult.Success(Unit)
-        override suspend fun setSportSharing(enabled: Boolean) = AppResult.Success(Unit)
+        override suspend fun setScheduleVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
+        override suspend fun setSportVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
         override suspend fun setNextLessonEarlyEnabled(enabled: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(showNextLessonEarly = enabled)) }
         override suspend fun setWidgetTeacherHidden(hidden: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(hideTeacher = hidden)) }
         override suspend fun setPastLessonsHidden(hidden: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(hidePastLessons = hidden)) }
