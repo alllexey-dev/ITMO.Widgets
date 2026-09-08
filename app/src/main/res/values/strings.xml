@@ -386,7 +386,7 @@
     <string name="sport_queue_expired">Срок истёк</string>
     <string name="sport_queue_future_hint">Попробуем записать, когда занятие появится в MyITMO.</string>
     <string name="sport_queue_free_hint">Попробуем записать, когда освободится место.</string>
-    <string name="sport_prediction_hint">Автозапись только при совпадении времени, преподавателя, вида и уровня занятия.</string>
+    <string name="sport_prediction_hint">Автозапись только при совпадении времени, корпуса, преподавателя, вида и уровня занятия.</string>
     <string name="sport_friends_count_label">Друзья · %1$d</string>
     <string name="sport_lesson_prediction">Прогноз</string>
     <string name="sport_card_cancel_auto">Отменить</string>
@@ -435,6 +435,5 @@
     <string name="sport_capacity_none">нет</string>
     <string name="sport_capacity_card">Занято %1$d/%2$d</string>
     <string name="sport_prediction_matching">Тот же преподаватель и время</string>
-    <string name="sport_prediction_location">Зал указан по прошлому занятию</string>
     <string name="sport_prediction_waiting">Ждём публикацию</string>
 </resources>

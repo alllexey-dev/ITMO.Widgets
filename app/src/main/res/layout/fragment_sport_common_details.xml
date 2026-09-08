@@ -108,14 +108,6 @@
                 <include
                     android:id="@+id/location_fact"
                     layout="@layout/item_sport_detail_fact" />
-                <TextView
-                    android:id="@+id/prediction_location"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="28dp"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:text="@string/sport_prediction_location" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/map_button"
                     style="@style/Widget.Material3.Button.ElevatedButton"

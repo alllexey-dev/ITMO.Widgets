@@ -279,10 +279,15 @@ queue for every MyITMO restriction: the queue services do not preflight all thos
 rules. The official submission must still satisfy MyITMO. Predictions carry
 inferred restrictions, explicitly marked as coming from the previous lesson.
 Backend's `SportAutoSignEntryRepository.findMatchingWaitingEntries` matches section,
-teacher, section/lesson level, type, time-slot ID and exact start two weeks later.
-Auto-sign does not substitute another teacher or time. Room/building is not in
-that matcher; the UI does not promise location immutability. No server matching
-behavior changed in this revision.
+teacher, building ID, room ID, section/lesson level, type, time-slot ID and exact
+start two weeks later, both for newly published lessons and notification retries.
+Auto-sign does not substitute another teacher, time, building or room. Room names
+are display metadata; matching uses `roomId`, so a rename does not prevent a
+match. Building ID `0` cannot confirm a match:
+the import also uses it as a fallback for unknown buildings. Such predictions
+are left waiting rather than matched on two unknown locations. The details list
+the building check among the prediction conditions without a separate
+historical-location footnote.
 
 Condition categories use stable semantic accents with deliberate day/night colors:
 green permission, blue waiting, amber warning/unknown, red denial. Each also has a
@@ -295,7 +300,9 @@ sheet's lowest surface separate the remaining content without saturated slabs.
 For real lessons the ordinary queue stops within one hour of start; the existing
 force-sign confirmation only relaxes that deadline, not eligibility. The sheet
 does not claim the account has available auto-sign quota without refreshing it.
-No Backend/Core/MyItmoApi contract or minimum version changed in this UI revision.
+The building check requires deploying the corresponding Backend revision before
+releasing this copy to users. No public Backend/Core/MyItmoApi contract or Android
+dependency version changes are required.
 
 The My Sport score card collapses into a compact bar as the bookings list scrolls.
 `SportScoreCollapseController` drives it from `computeVerticalScrollOffset`, which is

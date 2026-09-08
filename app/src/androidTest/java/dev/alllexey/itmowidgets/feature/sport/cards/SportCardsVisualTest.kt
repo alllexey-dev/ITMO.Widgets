@@ -204,6 +204,36 @@ class SportCardsVisualTest {
         }
     }
 
+    @Test fun predictionDetailsKeepLocationWithoutHistoricalFootnote() {
+        val appearances = listOf(
+            SportCardsPreviewActivity.Appearance(),
+            SportCardsPreviewActivity.Appearance(dark = true),
+            SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, colorSeed = 0xff826c24.toInt()),
+            SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, dark = true, colorSeed = 0xff386a20.toInt())
+        )
+        appearances.forEachIndexed { index, appearance ->
+            preview(appearance) { scenario ->
+                val predicted = SportCardFixtures.lesson().copy(isLessonReal = false, canSignIn = false)
+                scenario.onActivity { it.showDetails(predicted) }
+                settle()
+                scenario.onActivity { activity ->
+                    val details = sheet(activity)
+                    val root = details.requireView()
+                    val place = root.findViewById<ViewGroup>(R.id.place_card)
+                    assertEquals(listOf(R.id.teacher_fact, R.id.location_fact, R.id.map_button),
+                        (0 until place.childCount).map { place.getChildAt(it).id })
+                    assertEquals(predicted.roomName, root.findViewById<View>(R.id.location_fact)
+                        .findViewById<TextView>(R.id.fact_value).text.toString())
+                    assertTrue(root.findViewById<View>(R.id.attention_container).descendants()
+                        .filterIsInstance<TextView>().any { it.text == activity.getString(R.string.sport_prediction_hint) })
+                    assertTextFits(root)
+                    assertTouchTargets(details.dialog!!.window!!.decorView)
+                }
+                screenshot("prediction-building-$index")
+            }
+        }
+    }
+
     @Test fun bookingConditionsSeparateWarningsWaitingAndRestrictions() {
         preview(SportCardsPreviewActivity.Appearance(dark = true, widthDp = 320, fontScale = 1.3f)) { scenario ->
             val base = SportCardFixtures.lesson()

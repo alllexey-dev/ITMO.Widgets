@@ -87,7 +87,6 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         mapButton.isVisible = item.mapAddress != null
         mapButton.setOnClickListener { openMap() }
         placeCard.isVisible = item.teacherFio.isNotBlank() || item.roomName.isNotBlank()
-        predictionLocation.isVisible = !item.isReal && item.roomName.isNotBlank()
         bindRegistration()
         bindConditions()
         commentCard.isVisible = !item.comment.isNullOrBlank()
