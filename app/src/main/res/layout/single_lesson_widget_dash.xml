@@ -33,7 +33,8 @@
                 android:orientation="horizontal"
                 android:visibility="gone">
 
-                <ImageView
+                <!-- Keep the framework class: AppCompat overrides lack RemoteViews method annotations. -->
+                <android.widget.ImageView
                     android:id="@+id/type_indicator"
                     android:layout_width="3dp"
                     android:layout_height="12dp"

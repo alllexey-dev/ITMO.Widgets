@@ -470,22 +470,31 @@ class ScheduleFragmentLifecycleTest {
     fun refreshErrorArrivingBeforeEmptyDiffCommitRemainsVisibleAfterCommit() {
         withSchedule { scenario ->
             val days = installDiffGate(scenario)
+            lateinit var activity: ScheduleLifecycleTestActivity
+            scenario.onActivity { activity = it }
             try {
                 days.arm()
-                scenario.onActivity { ScheduleLifecycleTestActivity.days.value = emptyList() }
+                InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                    ScheduleLifecycleTestActivity.days.value = emptyList()
+                }
                 assertTrue("Empty diff did not reach its background executor", days.awaitDiff())
                 ScheduleLifecycleTestActivity.refreshOutcome = { AppResult.Failure(AppError.Network) }
-                scenario.onActivity { activity -> activity.viewModel().loadInitialSchedule() }
-                eventually(scenario) { activity ->
-                    assertEquals(ScheduleUiState.Error(AppError.Network, null), activity.viewModel().uiState.value)
-                    assertEquals(30, activity.recycler().adapter!!.itemCount)
+                // ActivityScenario.onActivity waits for main-loop idleness first.
+                // While a diff is deliberately blocked, order the competing state
+                // directly on main and release the barrier in that same action.
+                InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                    try {
+                        activity.viewModel().loadInitialSchedule()
+                        assertEquals(ScheduleUiState.Error(AppError.Network, null), activity.viewModel().uiState.value)
+                        assertEquals(30, activity.recycler().adapter!!.itemCount)
+                    } finally {
+                        days.release()
+                    }
                 }
-                days.release()
                 eventually(scenario) { activity ->
                     assertEquals(0, activity.recycler().adapter!!.itemCount)
                     assertState(activity, R.string.common_load_error_title, retryVisible = true)
                 }
-                assertFalse("Diff gate timed out before the error was rendered", days.timedOut.get())
             } finally {
                 days.release()
             }
@@ -497,19 +506,27 @@ class ScheduleFragmentLifecycleTest {
         val refresh = CompletableDeferred<Unit>()
         withSchedule { scenario ->
             val days = installDiffGate(scenario)
+            lateinit var activity: ScheduleLifecycleTestActivity
+            scenario.onActivity { activity = it }
             try {
                 days.arm()
-                scenario.onActivity { ScheduleLifecycleTestActivity.days.value = emptyList() }
+                InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                    ScheduleLifecycleTestActivity.days.value = emptyList()
+                }
                 assertTrue("Empty diff did not reach its background executor", days.awaitDiff())
                 ScheduleLifecycleTestActivity.refreshOutcome = {
                     refresh.await()
                     AppResult.Success(Unit)
                 }
-                scenario.onActivity { activity -> activity.viewModel().loadInitialSchedule() }
-                eventually(scenario) { activity ->
-                    assertEquals(ScheduleUiState.Loading(null), activity.viewModel().uiState.value)
+                InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                    try {
+                        activity.viewModel().loadInitialSchedule()
+                        assertEquals(ScheduleUiState.Loading(null), activity.viewModel().uiState.value)
+                        assertEquals(30, activity.recycler().adapter!!.itemCount)
+                    } finally {
+                        days.release()
+                    }
                 }
-                days.release()
                 eventually(scenario) { activity ->
                     val root = activity.schedule().requireView()
                     assertEquals(0, activity.recycler().adapter!!.itemCount)
@@ -522,7 +539,6 @@ class ScheduleFragmentLifecycleTest {
                     assertFalse(activity.schedule().requireView()
                         .findViewById<SwipeRefreshLayout>(R.id.swipe_refresh_layout).isRefreshing)
                 }
-                assertFalse("Diff gate timed out before loading was rendered", days.timedOut.get())
             } finally {
                 days.release()
                 refresh.complete(Unit)
@@ -589,7 +605,16 @@ class ScheduleFragmentLifecycleTest {
     }
 
     private fun awaitAnchor(scenario: ActivityScenario<ScheduleLifecycleTestActivity>, anchor: Pair<Int, Int>) {
-        eventually(scenario) { assertEquals(anchor, it.anchor()) }
+        eventually(scenario) { activity ->
+            val recycler = activity.recycler()
+            // A source emission, AsyncListDiffer commit, and restored-anchor
+            // layout are separate events; main-loop idleness alone is not enough.
+            assertTrue("The restored schedule must be visible", recycler.isShown)
+            assertTrue("The anchor's day has not been committed", recycler.adapter!!.itemCount > anchor.first)
+            assertFalse("The committed schedule still has pending adapter updates", recycler.hasPendingAdapterUpdates())
+            assertFalse("The restored anchor still needs layout", recycler.isLayoutRequested)
+            assertEquals(anchor, activity.anchor())
+        }
     }
 
     private fun screenshot(name: String) {
@@ -609,7 +634,10 @@ class ScheduleFragmentLifecycleTest {
         val recycler = recycler()
         val layout = recycler.layoutManager as LinearLayoutManager
         val position = layout.findFirstVisibleItemPosition()
-        return position to (layout.findViewByPosition(position)!!.top - recycler.paddingTop)
+        assertTrue("The schedule has not laid out a visible day", position != RecyclerView.NO_POSITION)
+        val firstDay = layout.findViewByPosition(position)
+            ?: throw AssertionError("The first visible day at $position has not been attached")
+        return position to (firstDay.top - recycler.paddingTop)
     }
 
     private fun ScheduleLifecycleTestActivity.schedule() =
@@ -659,18 +687,21 @@ class ScheduleFragmentLifecycleTest {
         return days
     }
 
-    /** Holds DiffUtil's background size read; UI-thread reads never wait. */
+    /**
+     * Holds DiffUtil's background size read; UI-thread reads never wait. Explicit
+     * release is paired with finally in each test, so no wall-clock deadline can
+     * silently commit the old diff before the competing state has been asserted.
+     */
     private class GatedDays<T>(private val values: List<T>) : AbstractList<T>() {
         private val armed = AtomicBoolean(false)
         private val reached = CountDownLatch(1)
         private val released = CountDownLatch(1)
-        val timedOut = AtomicBoolean(false)
 
         override val size: Int
             get() {
                 if (armed.get() && Looper.myLooper() != Looper.getMainLooper()) {
                     reached.countDown()
-                    if (!released.await(5, TimeUnit.SECONDS)) timedOut.set(true)
+                    released.await()
                 }
                 return values.size
             }

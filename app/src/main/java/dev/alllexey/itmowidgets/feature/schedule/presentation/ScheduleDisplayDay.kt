@@ -6,7 +6,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 
-/** Screen-only projection: pending sport must never enter the official cache or widget data. */
+/** Screen projection; widgets have their own projection, and neither changes the official cache. */
 data class ScheduleDisplayDay(
     val date: LocalDate,
     val officialDay: DaySchedule?,

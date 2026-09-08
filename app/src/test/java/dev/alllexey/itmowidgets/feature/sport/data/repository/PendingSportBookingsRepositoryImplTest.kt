@@ -15,12 +15,17 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -139,6 +144,110 @@ class PendingSportBookingsRepositoryImplTest {
         }
     }
 
+    @Test fun `first snapshot after cold refresh reads actual replay without an active observer`() = runTest {
+        val sources = useColdSources()
+        val entry = SportCardFixtures.entry()
+        bookings.refreshAction = { sources.confirmed.emit(DataState.Success(emptyList())) }
+        data.refreshAction = { sources.queues.emit(CustomDataState.Success(listOf(entry))) }
+
+        repository.refresh()
+
+        assertEquals(0, sources.confirmed.subscriptionCount.value)
+        assertEquals(0, sources.queues.subscriptionCount.value)
+        val snapshot = repository.getPendingBookings()
+        assertTrue(snapshot is DataState.Success)
+        val pending = (snapshot as DataState.Success).data.single()
+        assertEquals(entry.id, pending.queueId)
+        assertEquals(entry.lessonId, pending.lessonId)
+        assertEquals(entry.targetLesson.start, pending.start)
+        assertEquals(PendingSportBooking.QueueKind.FREE, pending.queueKind)
+        assertEquals(1, bookings.refreshes)
+        assertEquals(1, data.refreshes)
+    }
+
+    @Test fun `snapshot preserves source errors instead of returning synthetic empty data`() = runTest {
+        val sources = useColdSources()
+        sources.confirmed.emit(DataState.Error(AppError.Unauthorized))
+        sources.queues.emit(CustomDataState.Success(listOf(SportCardFixtures.entry())))
+
+        assertEquals(DataState.Error(AppError.Unauthorized), repository.getPendingBookings())
+
+        sources.confirmed.emit(DataState.Success(emptyList()))
+        sources.queues.emit(CustomDataState.Error(AppError.Network))
+
+        assertEquals(DataState.Error(AppError.Network), repository.getPendingBookings())
+        assertEquals(0, bookings.refreshes)
+        assertEquals(0, data.refreshes)
+    }
+
+    @Test fun `disabled snapshot returns immediately without subscribing to unseeded sources or requesting data`() = runTest {
+        val sources = useColdSources()
+        services.enabled.value = false
+        val startedAt = currentTime
+
+        assertEquals(DataState.Success(emptyList<PendingSportBooking>()), repository.getPendingBookings())
+
+        assertEquals(startedAt, currentTime)
+        assertEquals(0, sources.confirmed.subscriptionCount.value)
+        assertEquals(0, sources.queues.subscriptionCount.value)
+        assertEquals(0, bookings.refreshes)
+        assertEquals(0, data.refreshes)
+    }
+
+    @Test fun `snapshot before source replay times out after one second without making requests`() = runTest {
+        useColdSources()
+        val snapshot = async { repository.getPendingBookings() }
+        runCurrent()
+        assertFalse(snapshot.isCompleted)
+
+        advanceTimeBy(999)
+        runCurrent()
+        assertFalse(snapshot.isCompleted)
+
+        advanceTimeBy(1)
+        runCurrent()
+        assertTrue(snapshot.isCompleted)
+        assertEquals(DataState.Error(AppError.Unknown()), snapshot.await())
+        assertEquals(1_000L, currentTime)
+        assertEquals(0, bookings.refreshes)
+        assertEquals(0, data.refreshes)
+    }
+
+    @Test fun `snapshot propagates caller cancellation rather than returning an error snapshot`() = runTest {
+        useColdSources()
+        var returnedSnapshot = false
+        var propagatedCancellation: CancellationException? = null
+        val lookup = launch {
+            try {
+                repository.getPendingBookings()
+                returnedSnapshot = true
+            } catch (cancellation: CancellationException) {
+                propagatedCancellation = cancellation
+                throw cancellation
+            }
+        }
+        runCurrent()
+        assertFalse(lookup.isCompleted)
+
+        lookup.cancelAndJoin()
+
+        assertFalse(returnedSnapshot)
+        assertNotNull(propagatedCancellation)
+        assertEquals(0L, currentTime)
+        assertEquals(0, bookings.refreshes)
+        assertEquals(0, data.refreshes)
+    }
+
+    private fun useColdSources(): ColdSources = ColdSources().also {
+        bookings.confirmedOutput = it.confirmed
+        data.entriesOutput = it.queues
+    }
+
+    private class ColdSources {
+        val confirmed = MutableSharedFlow<DataState<List<SportBooking>>>(replay = 1)
+        val queues = MutableSharedFlow<CustomDataState<List<SportQueueEntry>>>(replay = 1)
+    }
+
     private fun auto(
         id: Long = 2,
         prototype: SportQueueLesson = SportCardFixtures.entry().targetLesson,
@@ -166,21 +275,29 @@ class PendingSportBookingsRepositoryImplTest {
 
     private class Bookings : SportBookingRepository {
         val confirmed = MutableStateFlow<DataState<List<SportBooking>>>(DataState.Success(emptyList()))
+        var confirmedOutput: Flow<DataState<List<SportBooking>>> = confirmed
         var refreshes = 0
         var cancelRefresh = false
-        override fun observeConfirmedSportBookings() = confirmed
+        var refreshAction: suspend () -> Unit = {}
+        override fun observeConfirmedSportBookings() = confirmedOutput
         override fun observeSportBookings(): Flow<MergedDataState<List<SportBooking>>> = error("Friend-enriched bookings are not required")
         override suspend fun refreshSportBookings() {
             if (cancelRefresh) throw CancellationException("Test cancellation")
             refreshes++
+            refreshAction()
         }
     }
 
     private class SportData : SportDataRepository {
         val entries = MutableStateFlow<CustomDataState<List<SportQueueEntry>>>(CustomDataState.Success(emptyList()))
+        var entriesOutput: Flow<CustomDataState<List<SportQueueEntry>>> = entries
         var refreshes = 0
-        override fun observeSportQueueEntries() = entries
-        override suspend fun refreshSportQueueEntries() { refreshes++ }
+        var refreshAction: suspend () -> Unit = {}
+        override fun observeSportQueueEntries() = entriesOutput
+        override suspend fun refreshSportQueueEntries() {
+            refreshes++
+            refreshAction()
+        }
         override fun observeSportScore(): Flow<DataState<SportScore>> = error("Not needed")
         override suspend fun refreshSportScore() = error("Not needed")
         override fun observeSportAttempts(): Flow<DataState<SportAttempts>> = error("Not needed")

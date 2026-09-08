@@ -59,13 +59,11 @@
                     android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/inner_recycler_view"
+            <LinearLayout
+                android:id="@+id/lesson_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:orientation="vertical"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                android:orientation="vertical" />
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

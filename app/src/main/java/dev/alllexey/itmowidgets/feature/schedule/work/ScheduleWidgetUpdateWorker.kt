@@ -12,6 +12,8 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProvide
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetRenderer
 import java.time.Duration
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 class ScheduleWidgetUpdateWorker(
     appContext: Context,
@@ -30,6 +32,7 @@ class ScheduleWidgetUpdateWorker(
             return Result.success()
         }
 
+        val generation = store.currentGeneration()
         val rendered = try {
             when (val result = dataProvider.load()) {
                 is ScheduleWidgetLoadResult.Available -> RenderedSnapshot(
@@ -54,8 +57,13 @@ class ScheduleWidgetUpdateWorker(
             )
         }
 
-        store.write(rendered.snapshot)
-        render(singleIds, listIds, rendered.snapshot)
+        currentCoroutineContext().ensureActive()
+        if (!store.writeIfCurrent(rendered.snapshot, generation)) return Result.success()
+        // Re-check persisted gates/expiry immediately before either widget type renders.
+        val snapshot = store.read()
+        currentCoroutineContext().ensureActive()
+        if (store.currentGeneration() != generation) return Result.success()
+        render(singleIds, listIds, snapshot)
         ScheduleWidgetWork.scheduleNext(applicationContext, rendered.nextUpdateDelay)
         return Result.success()
     }
@@ -65,7 +73,7 @@ class ScheduleWidgetUpdateWorker(
         lessonListStyle: LessonStyle? = null,
     ): ScheduleWidgetSnapshot {
         val previous = try {
-            store.read()
+            store.read().withoutPendingSport()
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (_: Exception) {

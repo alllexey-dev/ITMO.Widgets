@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
@@ -20,9 +21,11 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** Uses the same queue updates as Sport, without requiring friend data or modifying academic caches. */
 class PendingSportBookingsRepositoryImpl @Inject constructor(
@@ -32,8 +35,22 @@ class PendingSportBookingsRepositoryImpl @Inject constructor(
     private val timeProvider: AcademicTimeProvider
 ) : PendingSportBookingsRepository {
 
+    override fun observePendingBookings() = pendingProjection()
+        .onStart { emit(DataState.Success(emptyList())) }
+        .distinctUntilChanged()
+
+    override suspend fun getPendingBookings(): DataState<List<PendingSportBooking>> {
+        if (!customServices.isEnabled()) return DataState.Success(emptyList())
+        // Source replay may still be absent before the first refresh (or after a
+        // cancelled initialization). Do not hang a widget worker or mistake the
+        // UI observer's initial empty state for a completed source snapshot.
+        return withTimeoutOrNull(SNAPSHOT_WAIT_TIMEOUT_MILLIS) {
+            pendingProjection().first()
+        } ?: DataState.Error(AppError.Unknown())
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observePendingBookings() = customServices.observeEnabled().flatMapLatest { enabled ->
+    private fun pendingProjection() = customServices.observeEnabled().flatMapLatest { enabled ->
         if (!enabled) {
             flowOf<DataState<List<PendingSportBooking>>>(DataState.Success(emptyList()))
         } else {
@@ -71,9 +88,9 @@ class PendingSportBookingsRepositoryImpl @Inject constructor(
                         )
                     }
                 DataState.Success(pending)
-            }.onStart { emit(DataState.Success(emptyList())) }
+            }
         }
-    }.distinctUntilChanged()
+    }
 
     override suspend fun refresh() {
         if (!customServices.isEnabled()) return
@@ -83,5 +100,9 @@ class PendingSportBookingsRepositoryImpl @Inject constructor(
                 async { sportData.refreshSportQueueEntries() }
             )
         }
+    }
+
+    private companion object {
+        const val SNAPSHOT_WAIT_TIMEOUT_MILLIS = 1_000L
     }
 }

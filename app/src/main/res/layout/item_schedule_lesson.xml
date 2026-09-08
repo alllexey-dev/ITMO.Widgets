@@ -55,15 +55,13 @@
     <!-- Timeline dot -->
     <ImageView
         android:id="@+id/timeline_dot"
-        android:layout_width="10dp"
-        android:layout_height="10dp"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
         android:contentDescription="@null"
-        android:src="@drawable/shape_circle_filled"
         app:layout_constraintBottom_toBottomOf="@id/time_start"
         app:layout_constraintEnd_toEndOf="@id/timeline_guide"
         app:layout_constraintStart_toStartOf="@id/timeline_guide"
-        app:layout_constraintTop_toTopOf="@id/time_start"
-        app:tint="?attr/colorOutlineVariant" />
+        app:layout_constraintTop_toTopOf="@id/time_start" />
 
     <!-- Main container -->
     <LinearLayout

@@ -21,10 +21,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.RootMatchers.isDialog
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.viewpager2.widget.ViewPager2
@@ -62,6 +61,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -120,11 +120,31 @@ class WidgetPreviewTest {
             assertTrue(original.findViewById<ListView>(R.id.lesson_list).adapter.count < previousCount)
             original.findViewById<View>(R.id.preview_time).performClick()
         }
-        onView(withText(R.string.widget_preview_time_evening)).inRoot(isDialog()).perform(click())
-        screen.scenario.onActivity { screen.toggle(SettingsViewModel.KEY_WIDGET_SHOW_TOMORROW) }
+        // Main-loop idleness does not include the dialog window's enter animation.
+        // Let its bounds settle before injecting a tap, then address the actual list item.
+        settle()
+        onData(equalTo(context.getString(R.string.widget_preview_time_evening)))
+            .inRoot(isDialog())
+            .perform(click())
+        screen.scenario.onActivity {
+            assertEquals("Evening choice must update the actual preview before toggling tomorrow",
+                it.getString(R.string.widget_preview_time_evening_short),
+                original.findViewById<TextView>(R.id.preview_time).text)
+            assertTrue("Evening choice must be retained in preview state",
+                checkNotNull(screen.preview.saveState()).getBoolean("evening"))
+            screen.toggle(SettingsViewModel.KEY_WIDGET_SHOW_TOMORROW)
+        }
         settle()
         screen.scenario.onActivity {
-            assertTrue(original.findViewById<TextView>(R.id.day_title).text.startsWith(it.getString(R.string.schedule_widget_tomorrow)))
+            val settings = screen.vm.previewSettings.value as dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings.Schedule
+            assertTrue("Tomorrow preference must be persisted before preview rendering",
+                settings.appearance.showTomorrowWhenTodayIsOver)
+            val list = original.findViewById<ListView>(R.id.lesson_list)
+            val header = list.adapter.getItem(0) as dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItem
+            assertTrue("Adapter must contain tomorrow header: $header", header.tomorrow)
+            val title = list.findViewById<TextView>(R.id.day_title).text
+            assertTrue("Rendered header must match tomorrow adapter item, got: $title",
+                title.startsWith(it.getString(R.string.schedule_widget_tomorrow)))
             val saved = checkNotNull(screen.preview.saveState())
             screen.preview.restoreState(Bundle())
             screen.preview.restoreState(saved)

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="schedule_widget_pending_waiting">Ожидание записи</string>
+    <string name="schedule_widget_pending_prediction">Автозапись · прогноз</string>
+</resources>

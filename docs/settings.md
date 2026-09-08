@@ -116,15 +116,17 @@ do not incur an additional delay. Disabling services takes effect immediately.
 ## Schedule
 
 - `Автозапись на спорт` displays pending sport auto-sign entries in the user's own
-  in-app schedule. It is disabled by default and does not represent a confirmed
-  booking.
+  schedule in the application and schedule widgets. It is disabled by default
+  and does not represent a confirmed booking.
 - This is a local display preference, stored as `schedule_sport_auto_sign_enabled`.
   It can be changed while user services are disabled and never enables them or
   grants consent implicitly. Displaying the entries still requires user services.
-- The preference applies only inside the application, not to schedule widgets
-  or another user's schedule. Changing it does not refresh installed widgets.
+- The same preference controls the application and schedule widgets, never another
+  user's schedule. An explicit toggle refreshes installed widgets only after the
+  value is successfully saved. Loading or observing the preference does not
+  refresh widgets; a failed save preserves the previous value and does not refresh.
 - The page is an offline settings category with one toggle. Its footer explains
-  the application-only scope and user-services requirement.
+  the user-services requirement and that pending entries are not confirmed bookings.
 
 ## Sport
 

@@ -122,6 +122,57 @@ class ScheduleWidgetRenderingTest {
         }
     }
 
+    @Test
+    fun pendingRowsUseBothWidgetLayoutsAndKeepUnconfirmedStatusAcrossReuse() {
+        for (dark in listOf(false, true)) for (fontScale in listOf(1f, 1.3f)) {
+            SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance(fontScale, dark)
+            ActivityScenario.launch(SettingsPreviewActivity::class.java).use { scenario ->
+                scenario.onActivity { activity ->
+                    val width = (320 * activity.resources.displayMetrics.density).toInt()
+                    for (style in LessonStyle.entries) for (status in ScheduleWidgetPendingStatus.entries) {
+                        val pending = lesson(ScheduleWidgetLessonState.UPCOMING).copy(
+                            subject = "Функциональная тренировка и подготовка", pendingStatus = status, typeId = 11
+                        )
+                        val snapshot = ScheduleWidgetSnapshot(
+                            SingleLessonWidgetContent(SingleLessonWidgetKind.LESSON, pending), emptyList(), style, style
+                        )
+                        for (single in listOf(false, true)) {
+                            val remote = if (single) ScheduleWidgetRenderer.singleLessonViews(activity, snapshot)
+                                else ScheduleWidgetRenderer.lessonListRow(activity, pending, style)
+                            val root = remote.apply(activity, FrameLayout(activity))
+                            // Match the real Settings preview's AppCompat Activity inflater,
+                            // while retaining RemoteViews-compatible framework image methods.
+                            assertEquals(android.widget.ImageView::class.java,
+                                root.findViewById<View>(R.id.type_indicator).javaClass)
+                            root.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+                                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
+                            root.layout(0, 0, width, root.measuredHeight)
+                            val type = root.findViewById<TextView>(R.id.type)
+                            assertEquals(activity.getString(if (status == ScheduleWidgetPendingStatus.PREDICTED)
+                                R.string.schedule_widget_pending_prediction else R.string.schedule_widget_pending_waiting), type.text)
+                            assertTrue(type.contentDescription.contains("не подтвержден"))
+                            assertEquals(0, type.layout.getEllipsisCount(0))
+                            val image = Bitmap.createBitmap(width, root.height, Bitmap.Config.ARGB_8888)
+                            root.draw(Canvas(image))
+                            val folder = File(activity.externalCacheDir, "widget-pending-screenshots").apply { mkdirs() }
+                            File(folder, "$single-${style.name}-${status.name}-$dark-$fontScale.png").outputStream().use {
+                                image.compress(Bitmap.CompressFormat.PNG, 100, it)
+                            }
+                            image.recycle()
+                            val official = pending.copy(pendingStatus = null)
+                            if (single) ScheduleWidgetRenderer.singleLessonViews(activity, snapshot.copy(
+                                singleLesson = SingleLessonWidgetContent(SingleLessonWidgetKind.LESSON, official)
+                            )).reapply(activity, root)
+                            else ScheduleWidgetRenderer.lessonListRow(activity, official, style).reapply(activity, root)
+                            assertEquals(activity.getString(R.string.title_sport), type.text)
+                            assertNull(type.contentDescription)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun lesson(state: ScheduleWidgetLessonState) = ScheduleWidgetLesson(
         "Программирование", "13:30", "15:00", 2, "Иванов И. И.", "1506", "Кронверкский проспект, 49", state
     )

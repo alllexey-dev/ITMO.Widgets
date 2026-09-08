@@ -151,6 +151,8 @@ class SportBookingDelegate @Inject constructor(
     }
 
     private suspend fun refreshCommunityData() {
+        // Queue changes affect the optional widget projection, not the official schedule cache.
+        scheduleWidgetRefreshRequester.refreshScheduleWidgets()
         coroutineScope {
             awaitAll(
                 async { sportDataRepository.refreshSportAutoSignLimits() },

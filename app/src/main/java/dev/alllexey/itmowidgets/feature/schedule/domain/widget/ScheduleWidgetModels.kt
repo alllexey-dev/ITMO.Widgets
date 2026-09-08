@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import java.time.Duration
+import java.time.Instant
 
 data class ScheduleWidgetPreferences(
     val smartScheduling: Boolean,
@@ -19,6 +20,8 @@ enum class ScheduleWidgetLessonState {
     UPCOMING,
 }
 
+enum class ScheduleWidgetPendingStatus { WAITING, PREDICTED }
+
 data class ScheduleWidgetLesson(
     val subject: String,
     val start: String,
@@ -28,6 +31,7 @@ data class ScheduleWidgetLesson(
     val room: String?,
     val building: String?,
     val state: ScheduleWidgetLessonState,
+    val pendingStatus: ScheduleWidgetPendingStatus? = null,
 )
 
 enum class SingleLessonWidgetKind {
@@ -69,7 +73,18 @@ data class ScheduleWidgetSnapshot(
     val lessonList: List<ScheduleListWidgetItem>,
     val singleLessonStyle: LessonStyle,
     val lessonListStyle: LessonStyle,
+    // Exact official-only selection, not a filtered list with a wrong next lesson/count.
+    val officialFallback: ScheduleWidgetSnapshot? = null,
+    val pendingValidUntil: String? = null,
 ) {
+
+    fun withoutPendingSport(): ScheduleWidgetSnapshot = officialFallback ?: this
+
+    fun forPendingAvailability(enabled: Boolean, now: Instant): ScheduleWidgetSnapshot {
+        if (officialFallback == null) return this
+        val expiresAt = pendingValidUntil?.let { runCatching { Instant.parse(it) }.getOrNull() }
+        return if (enabled && expiresAt != null && now < expiresAt) this else withoutPendingSport()
+    }
 
     fun canBeShownWhenRefreshFails(): Boolean {
         val singleIsUseful = singleLesson.kind != SingleLessonWidgetKind.LOADING &&
@@ -137,6 +152,14 @@ interface ScheduleWidgetSnapshotStore {
     suspend fun read(): ScheduleWidgetSnapshot
 
     suspend fun write(snapshot: ScheduleWidgetSnapshot)
+
+    /** Session generation captured before asynchronous work starts. */
+    suspend fun currentGeneration(): Long = 0L
+
+    suspend fun writeIfCurrent(snapshot: ScheduleWidgetSnapshot, generation: Long): Boolean {
+        write(snapshot)
+        return true
+    }
 
     suspend fun clear()
 }

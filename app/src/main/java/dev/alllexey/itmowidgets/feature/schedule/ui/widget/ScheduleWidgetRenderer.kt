@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetLesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetLessonState
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPendingStatus
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.ui.colorRes
 import dev.alllexey.itmowidgets.feature.schedule.ui.nameRes
@@ -48,7 +49,7 @@ object ScheduleWidgetRenderer {
             views.setViewVisibility(R.id.widget_message, View.GONE)
             views.setViewVisibility(R.id.lesson_content, View.VISIBLE)
             views.setFloat(R.id.lesson_content, "setAlpha", lessonAlpha(lesson))
-            bindLesson(context, views, lesson)
+            bindLesson(context, views, lesson, snapshot.singleLessonStyle)
             views.setViewVisibility(R.id.more_lessons_layout, View.VISIBLE)
             views.setTextViewText(
                 R.id.more_lessons_text,
@@ -90,7 +91,7 @@ object ScheduleWidgetRenderer {
         style: LessonStyle,
     ): RemoteViews {
         return RemoteViews(context.packageName, lessonListLayout(style)).apply {
-            bindLesson(context, this, lesson)
+            bindLesson(context, this, lesson, style)
             // Fade the complete row, including its time column, exactly once.
             // Reset alpha left by older widget views that only faded lesson_content.
             setFloat(R.id.lesson_content, "setAlpha", 1f)
@@ -115,6 +116,7 @@ object ScheduleWidgetRenderer {
         context: Context,
         views: RemoteViews,
         lesson: ScheduleWidgetLesson,
+        style: LessonStyle,
     ) {
         views.setViewVisibility(R.id.time_column, View.VISIBLE)
         views.setViewVisibility(R.id.type_layout, View.VISIBLE)
@@ -127,8 +129,21 @@ object ScheduleWidgetRenderer {
         views.setTextViewText(R.id.time_end, lesson.end)
         views.setTextViewText(
             R.id.type,
-            context.getString(Lesson.TypeId(lesson.typeId).nameRes())
+            context.getString(when (lesson.pendingStatus) {
+                ScheduleWidgetPendingStatus.WAITING -> R.string.schedule_widget_pending_waiting
+                ScheduleWidgetPendingStatus.PREDICTED -> R.string.schedule_widget_pending_prediction
+                null -> Lesson.TypeId(lesson.typeId).nameRes()
+            })
         )
+        views.setContentDescription(R.id.type, lesson.pendingStatus?.let {
+            context.getString(if (it == ScheduleWidgetPendingStatus.PREDICTED)
+                R.string.schedule_auto_sign_prediction_description else R.string.schedule_auto_sign_waiting_description)
+        })
+        views.setImageViewResource(R.id.type_indicator, when {
+            lesson.pendingStatus != null -> R.drawable.widget_pending_indicator
+            style == LessonStyle.DOT -> R.drawable.shape_circle_filled
+            else -> R.drawable.indicator_dash
+        })
         views.setInt(
             R.id.type_indicator,
             "setColorFilter",

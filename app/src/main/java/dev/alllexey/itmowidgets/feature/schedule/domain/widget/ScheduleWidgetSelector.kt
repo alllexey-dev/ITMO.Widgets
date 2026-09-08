@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import java.time.Duration
@@ -14,21 +15,44 @@ class ScheduleWidgetSelector @Inject constructor() {
         schedule: List<DaySchedule>,
         now: OffsetDateTime,
         preferences: ScheduleWidgetPreferences,
+        pendingSport: List<PendingSportBooking> = emptyList(),
     ): ScheduleWidgetSelection {
         val today = now.toLocalDate()
-        val days = schedule.associateBy(DaySchedule::date)
-        val todayLessons = days[today]?.lessons.orEmpty().sortedBy(Lesson::start)
-        val tomorrowLessons = days[today.plusDays(1)]
-            ?.lessons
-            .orEmpty()
-            .sortedBy(Lesson::start)
+        // Widget-only projection: pending queues never enter the official Lesson/cache model.
+        val official = schedule.flatMap { day ->
+            day.lessons.map { lesson ->
+                TimelineLesson(day.date, lesson.start, lesson.end,
+                    lesson.toWidgetLesson(day.date, now, preferences.hideTeacher))
+            }
+        }
+        val pending = pendingSport.distinctBy { it.queueKind to it.queueId }
+            .filter { it.start.isAfter(now) && it.end.isAfter(it.start) }
+            .filter { it.start.withOffsetSameInstant(now.offset).toLocalDate() in today..today.plusDays(1) }
+            .map { booking ->
+                val start = booking.start.withOffsetSameInstant(now.offset)
+                val end = booking.end.withOffsetSameInstant(now.offset)
+                TimelineLesson(start.toLocalDate(), start.toLocalTime(), end.toLocalTime(),
+                    ScheduleWidgetLesson(
+                        subject = booking.sectionName.trim(),
+                        start = start.toLocalTime().toString(),
+                        end = end.toLocalTime().toString(),
+                        typeId = 11,
+                        teacher = booking.teacherFio.trim().takeUnless { preferences.hideTeacher || it.isEmpty() },
+                        room = booking.roomName.trim().takeIf(String::isNotEmpty),
+                        building = null,
+                        state = ScheduleWidgetLessonState.UPCOMING,
+                        pendingStatus = if (booking.isPrediction) ScheduleWidgetPendingStatus.PREDICTED
+                            else ScheduleWidgetPendingStatus.WAITING
+                    ))
+            }
+        val days = (official + pending).groupBy(TimelineLesson::date)
+        val todayLessons = days[today].orEmpty().sortedBy(TimelineLesson::start)
+        val tomorrowLessons = days[today.plusDays(1)].orEmpty().sortedBy(TimelineLesson::start)
         val lessonToShow = lessonToShow(todayLessons, now, preferences.forwardScheduling)
 
         val singleLesson = selectSingleLesson(
             lessons = todayLessons,
             lessonToShow = lessonToShow,
-            now = now,
-            hideTeacher = preferences.hideTeacher
         )
         val list = selectLessonList(
             todayLessons = todayLessons,
@@ -43,7 +67,12 @@ class ScheduleWidgetSelector @Inject constructor() {
                 singleLesson = singleLesson,
                 lessonList = list,
                 singleLessonStyle = preferences.singleLessonStyle,
-                lessonListStyle = preferences.lessonListStyle
+                lessonListStyle = preferences.lessonListStyle,
+                officialFallback = if (pending.isEmpty()) null else select(schedule, now, preferences).snapshot,
+                pendingValidUntil = pending.minOfOrNull {
+                    minOf(OffsetDateTime.of(it.date, it.start, now.offset).toInstant(),
+                        now.toInstant().plus(PERIODIC_UPDATE_DELAY))
+                }?.toString()
             ),
             nextUpdateDelay = nextUpdateDelay(
                 lessons = todayLessons,
@@ -55,10 +84,8 @@ class ScheduleWidgetSelector @Inject constructor() {
     }
 
     private fun selectSingleLesson(
-        lessons: List<Lesson>,
-        lessonToShow: Lesson?,
-        now: OffsetDateTime,
-        hideTeacher: Boolean,
+        lessons: List<TimelineLesson>,
+        lessonToShow: TimelineLesson?,
     ): SingleLessonWidgetContent {
         if (lessons.isEmpty()) {
             return SingleLessonWidgetContent(SingleLessonWidgetKind.EMPTY_TODAY)
@@ -70,19 +97,15 @@ class ScheduleWidgetSelector @Inject constructor() {
         val index = lessons.indexOf(lessonToShow)
         return SingleLessonWidgetContent(
             kind = SingleLessonWidgetKind.LESSON,
-            lesson = lessonToShow.toWidgetLesson(
-                date = now.toLocalDate(),
-                now = now,
-                hideTeacher = hideTeacher
-            ),
+            lesson = lessonToShow.display,
             remainingLessons = (lessons.lastIndex - index).coerceAtLeast(0)
         )
     }
 
     private fun selectLessonList(
-        todayLessons: List<Lesson>,
-        tomorrowLessons: List<Lesson>,
-        lessonToShow: Lesson?,
+        todayLessons: List<TimelineLesson>,
+        tomorrowLessons: List<TimelineLesson>,
+        lessonToShow: TimelineLesson?,
         now: OffsetDateTime,
         preferences: ScheduleWidgetPreferences,
     ): List<ScheduleListWidgetItem> {
@@ -119,11 +142,7 @@ class ScheduleWidgetSelector @Inject constructor() {
         items += selectedLessons.map { lesson ->
             ScheduleListWidgetItem(
                 kind = ScheduleListWidgetItemKind.LESSON,
-                lesson = lesson.toWidgetLesson(
-                    date = selectedDate,
-                    now = now,
-                    hideTeacher = preferences.hideTeacher
-                )
+                lesson = lesson.display
             )
         }
         items += ScheduleListWidgetItem(
@@ -134,8 +153,8 @@ class ScheduleWidgetSelector @Inject constructor() {
     }
 
     private fun nextUpdateDelay(
-        lessons: List<Lesson>,
-        lessonToShow: Lesson?,
+        lessons: List<TimelineLesson>,
+        lessonToShow: TimelineLesson?,
         now: OffsetDateTime,
         preferences: ScheduleWidgetPreferences,
     ): Duration {
@@ -156,15 +175,18 @@ class ScheduleWidgetSelector @Inject constructor() {
             OffsetDateTime.of(now.toLocalDate(), targetTime, now.offset)
         }
 
-        val delay = Duration.between(now, target)
+        val pendingStart = lessons.filter { it.display.pendingStatus != null && it.start > now.toLocalTime() }
+            .minOfOrNull { OffsetDateTime.of(it.date, it.start, now.offset) }
+        val nextTarget = if (pendingStart != null && pendingStart < target) pendingStart else target
+        val delay = Duration.between(now, nextTarget)
         return if (delay < MINIMUM_UPDATE_DELAY) MINIMUM_UPDATE_DELAY else delay
     }
 
     private fun lessonToShow(
-        lessons: List<Lesson>,
+        lessons: List<TimelineLesson>,
         now: OffsetDateTime,
         forwardScheduling: Boolean,
-    ): Lesson? {
+    ): TimelineLesson? {
         val regular = lessons.firstOrNull { lesson -> lesson.end > now.toLocalTime() }
         if (!forwardScheduling || regular == null) return regular
 
@@ -204,6 +226,13 @@ class ScheduleWidgetSelector @Inject constructor() {
         }
         return ScheduleWidgetLessonState.UPCOMING
     }
+
+    private data class TimelineLesson(
+        val date: LocalDate,
+        val start: LocalTime,
+        val end: LocalTime,
+        val display: ScheduleWidgetLesson,
+    )
 
     companion object {
         const val FORWARD_MINUTES = 15L

@@ -45,6 +45,30 @@ class SchedulePendingSportTest {
     }
 
     @Test
+    fun `time updates remove started pending rows without reloading or clearing official data`() = runTest(dispatcher.dispatcher) {
+        var now = Today.now()
+        val clock = object : AcademicTimeProvider {
+            override val zoneId = Today.zoneId
+            override fun today() = now.toLocalDate()
+            override fun now() = now
+        }
+        val official = OfficialRepository()
+        val pending = PendingRepository()
+        val model = ScheduleViewModel(official, clock, SavedStateHandle(), Preferences(true), pending)
+        model.ensureDataLoaded()
+        runCurrent()
+        val original = model.content().schedule
+        assertEquals(1, model.content().displayDays.single().pendingSport.size)
+        now = booking().start
+        model.updateTimeState()
+        assertEquals(original, model.content().schedule)
+        assertTrue(model.content().displayDays.single().pendingSport.isEmpty())
+        assertEquals(1, official.refreshes)
+        assertEquals(1, pending.refreshes)
+        assertEquals(0, official.clears)
+    }
+
+    @Test
     fun `live toggles and queue emissions update the overlay without touching official data`() = runTest(dispatcher.dispatcher) {
         val preference = Preferences()
         val pending = PendingRepository()

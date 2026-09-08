@@ -46,7 +46,9 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
             VIEW_TYPE_LESSON -> LessonViewHolder(inflater.inflate(R.layout.item_schedule_lesson, parent, false))
             VIEW_TYPE_BREAK -> BreakViewHolder(inflater.inflate(R.layout.item_schedule_break, parent, false))
             VIEW_TYPE_NO_LESSONS -> EmptyDayViewHolder(inflater.inflate(R.layout.item_schedule_empty, parent, false))
-            VIEW_TYPE_PENDING_SPORT -> PendingSportViewHolder(inflater.inflate(R.layout.item_schedule_pending_sport, parent, false))
+            VIEW_TYPE_PENDING_SPORT -> PendingSportViewHolder(inflater.inflate(R.layout.item_schedule_lesson, parent, false).apply {
+                id = R.id.pending_sport_root
+            })
             else -> throw IllegalArgumentException("Invalid type")
         }
     }
@@ -159,28 +161,24 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
                 ScheduleItem.LessonState.CURRENT -> {
                     title.setTextColor(color.onSurface)
 
-                    timelineDot.setColorFilter(color.primary)
-                    timelineDot.scaleX = 1.3f
-                    timelineDot.scaleY = 1.3f
-
+                    timelineDot.renderTimelineMarker(ScheduleTimelineMarker.CURRENT)
                     timeStart.setTextColor(color.primary)
+                }
+                ScheduleItem.LessonState.NEXT -> {
+                    title.setTextColor(color.onSurface)
+                    timelineDot.renderTimelineMarker(ScheduleTimelineMarker.NEXT)
+                    timeStart.setTextColor(color.onSurface)
                 }
                 ScheduleItem.LessonState.COMPLETED -> {
                     title.setTextColor(color.onSurfaceVariant)
 
-                    timelineDot.setColorFilter(color.outline)
-                    timelineDot.scaleX = 0.8f
-                    timelineDot.scaleY = 0.8f
-
+                    timelineDot.renderTimelineMarker(ScheduleTimelineMarker.COMPLETED)
                     timeStart.setTextColor(color.onSurfaceVariant)
                 }
                 ScheduleItem.LessonState.UPCOMING -> {
                     title.setTextColor(color.onSurface)
 
-                    timelineDot.setColorFilter(color.outline)
-                    timelineDot.scaleX = 1.0f
-                    timelineDot.scaleY = 1.0f
-
+                    timelineDot.renderTimelineMarker(ScheduleTimelineMarker.UPCOMING)
                     timeStart.setTextColor(color.onSurface)
                 }
             }
@@ -191,9 +189,11 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
         private val title: TextView = itemView.findViewById(R.id.title)
         private val start: TextView = itemView.findViewById(R.id.time_start)
         private val end: TextView = itemView.findViewById(R.id.time_end)
-        private val status: TextView = itemView.findViewById(R.id.pending_status)
-        private val teacher: TextView = itemView.findViewById(R.id.pending_teacher)
-        private val location: TextView = itemView.findViewById(R.id.pending_location)
+        private val status: TextView = itemView.findViewById(R.id.type)
+        private val teacher: TextView = itemView.findViewById(R.id.teacher_text_view)
+        private val location: TextView = itemView.findViewById(R.id.location_room)
+        private val timelineDot: ImageView = itemView.findViewById(R.id.timeline_dot)
+        private val typeIndicator: ImageView = itemView.findViewById(R.id.type_indicator)
         private val content: View = itemView.findViewById(R.id.card_container)
 
         fun bind(item: ScheduleItem.PendingSportItem) {
@@ -201,14 +201,21 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
             title.text = booking.sectionName
             start.text = booking.start.format(TIME_FORMATTER)
             end.text = booking.end.format(TIME_FORMATTER)
+            title.setTextColor(itemView.context.color.onSurface)
+            start.setTextColor(itemView.context.color.onSurface)
+            end.setTextColor(itemView.context.color.onSurfaceVariant)
+            timelineDot.renderTimelineMarker(ScheduleTimelineMarker.AUTO_SIGN)
+            typeIndicator.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(itemView.context, R.color.free_sport_color))
             status.setText(if (booking.isPrediction) R.string.schedule_auto_sign_prediction else R.string.schedule_auto_sign_waiting)
             status.contentDescription = itemView.context.getString(
                 if (booking.isPrediction) R.string.schedule_auto_sign_prediction_description else R.string.schedule_auto_sign_waiting_description
             )
             teacher.text = booking.teacherFio
-            teacher.visibility = if (booking.teacherFio.isBlank()) View.GONE else View.VISIBLE
+            itemView.findViewById<View>(R.id.teacher_layout).visibility = if (booking.teacherFio.isBlank()) View.GONE else View.VISIBLE
             location.text = booking.roomName
-            location.visibility = if (booking.roomName.isBlank()) View.GONE else View.VISIBLE
+            itemView.findViewById<View>(R.id.location_layout).visibility = if (booking.roomName.isBlank()) View.GONE else View.VISIBLE
+            itemView.findViewById<View>(R.id.location_building).visibility = View.GONE
+            itemView.findViewById<View>(R.id.note_layout).visibility = View.GONE
             (content.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = if (item.isLast) 0 else 16.dp
             itemView.alpha = 1f
             content.alpha = 1f

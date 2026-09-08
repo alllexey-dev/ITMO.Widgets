@@ -15,6 +15,7 @@ sealed interface ScheduleItem {
 
     enum class LessonState {
         UPCOMING,
+        NEXT,
         CURRENT,
         COMPLETED
     }

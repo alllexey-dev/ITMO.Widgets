@@ -79,6 +79,10 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
+    fun updateTimeState() {
+        if (hasStarted) emitCurrentState()
+    }
+
     fun loadInitialSchedule(forceRefresh: Boolean = false) {
         hasStarted = true
         refreshJob?.cancel()

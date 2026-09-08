@@ -161,7 +161,7 @@ class SettingsViewModel @Inject constructor(
             KEY_SPORT_SHARING -> updateSharing {
                 repository.setSportSharing(checked)
             }
-            KEY_SCHEDULE_SPORT_AUTO_SIGN -> updateLocalSetting {
+            KEY_SCHEDULE_SPORT_AUTO_SIGN -> updateWidgetSetting {
                 repository.setScheduleSportAutoSignEnabled(checked)
             }
             KEY_WIDGET_NEXT_LESSON_EARLY -> updateWidgetSetting {
@@ -216,6 +216,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 customServicesRepository.setEnabled(enabled)
+                widgetRefreshRequester.refreshAll()
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {

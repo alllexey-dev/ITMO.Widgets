@@ -97,13 +97,25 @@ class SportBookingDelegateTest {
     }
 
     @Test
-    fun `queue subscriptions do not claim that the actual schedule changed`() = runTest {
+    fun `queue subscriptions refresh widget projection but never the official schedule cache`() = runTest {
         delegate.createFreeSign(1, false)
         delegate.cancelFreeSign(1)
         delegate.createAutoSign(1)
         delegate.cancelAutoSign(1)
         delegate.cancel(booking().copy(signed = false))
+        assertEquals(5, widgetRefreshCount)
+        assertEquals(0, scheduleRefreshGateway.refreshCount)
+    }
+
+    @Test
+    fun `failed queue mutations never refresh widget projection`() = runTest {
+        actionRepository.result = AppResult.Failure(AppError.Network)
+        assertTrue(delegate.createFreeSign(1, false) is AppResult.Failure)
+        assertTrue(delegate.cancelFreeSign(1) is AppResult.Failure)
+        assertTrue(delegate.createAutoSign(1) is AppResult.Failure)
+        assertTrue(delegate.cancelAutoSign(1) is AppResult.Failure)
         assertEquals(0, widgetRefreshCount)
+        assertEquals(0, dataRepository.entriesRefreshCount)
         assertEquals(0, scheduleRefreshGateway.refreshCount)
     }
 

@@ -2,6 +2,6 @@
 <resources>
     <string name="settings_group_schedule">Расписание</string>
     <string name="settings_schedule_sport_auto_sign_title">Автозапись на спорт</string>
-    <string name="settings_schedule_sport_auto_sign_description">Показывать ожидание записи в своём расписании.</string>
-    <string name="settings_schedule_footer">Не влияет на виджеты. Нужны пользовательские сервисы.</string>
+    <string name="settings_schedule_sport_auto_sign_description">Показывать ожидание записи в своём расписании и виджетах.</string>
+    <string name="settings_schedule_footer">Нужны пользовательские сервисы. Это не подтверждённая запись.</string>
 </resources>

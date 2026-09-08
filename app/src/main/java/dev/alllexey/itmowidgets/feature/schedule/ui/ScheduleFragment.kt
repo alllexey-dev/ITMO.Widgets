@@ -10,6 +10,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -28,6 +30,9 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.SelectedUser
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.getValue
 
@@ -175,6 +180,18 @@ class ScheduleFragment : Fragment() {
     }
 
     private fun setupObservers() {
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (isActive) {
+                    // Time changes presentation only: do not reload data or reset the list.
+                    viewModel.updateTimeState()
+                    scheduleAdapter?.updateLessonStates()
+                    val now = timeProvider.now()
+                    delay(60_000L - now.second * 1_000L - now.nano / 1_000_000L)
+                }
+            }
+        }
 
         viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach { state ->

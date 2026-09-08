@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
@@ -10,6 +11,8 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.core.graphics.ColorUtils
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
@@ -18,6 +21,8 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.color
@@ -28,6 +33,8 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import dev.alllexey.itmowidgets.feature.schedule.ui.DayScheduleAdapter
 import dev.alllexey.itmowidgets.feature.schedule.ui.LessonAdapter
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem
+import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleTimelineMarker
+import dev.alllexey.itmowidgets.feature.schedule.ui.renderTimelineMarker
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
@@ -42,12 +49,109 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ScheduleCardsVisualTest {
     @Test
+    fun timelineShapesRemainDistinctInEveryPaletteAndOnRebind() {
+        for (appearance in listOf(Appearance(), Appearance(dark = true),
+            Appearance(fontScale = 1.3f, seed = 0xff826c24.toInt()),
+            Appearance(fontScale = 1.3f, dark = true, seed = 0xff386a20.toInt()))) {
+            preview(appearance.dark, appearance.fontScale, appearance.seed) { scenario ->
+                scenario.onActivity { activity ->
+                    val image = ImageView(activity)
+                    val density = activity.resources.displayMetrics.density
+                    val size = (14 * density).toInt()
+                    val surface = activity.color.resolve(com.google.android.material.R.attr.colorSurfaceContainerLow)
+                    for (marker in ScheduleTimelineMarker.entries + ScheduleTimelineMarker.UPCOMING) {
+                        image.scaleX = 1.3f
+                        image.scaleY = 0.8f
+                        image.renderTimelineMarker(marker)
+                        assertEquals(1f, image.scaleX, 0f)
+                        assertEquals(1f, image.scaleY, 0f)
+                        assertNull(image.imageTintList)
+                        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+                        image.drawable.setBounds(0, 0, size, size)
+                        image.drawable.draw(Canvas(bitmap))
+                        val ink = when (marker) {
+                            ScheduleTimelineMarker.CURRENT, ScheduleTimelineMarker.NEXT -> activity.color.primary
+                            else -> activity.color.outline
+                        }
+                        assertTrue(ColorUtils.calculateContrast(ink, surface) >= 3)
+                        val hollow = marker in listOf(ScheduleTimelineMarker.UPCOMING, ScheduleTimelineMarker.AUTO_SIGN)
+                        assertEquals("Center of $marker", if (hollow) surface else ink, bitmap.getPixel(size / 2, size / 2))
+                        if (marker == ScheduleTimelineMarker.NEXT) {
+                            assertEquals("Gap around the next-lesson dot", surface, bitmap.getPixel((4 * density).toInt(), size / 2))
+                        }
+                        val ring = hollow || marker == ScheduleTimelineMarker.NEXT
+                        if (ring) assertEquals("Outer ring of $marker", ink, bitmap.getPixel((2 * density).toInt(), size / 2))
+                        if (marker == ScheduleTimelineMarker.AUTO_SIGN) assertNull(image.contentDescription)
+                        else assertFalse(image.contentDescription.isNullOrBlank())
+                        bitmap.recycle()
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun nextMarkerMovesAcrossUnchangedDaysAndTimeBoundaries() = preview { scenario ->
+        var now = FixedTime.now()
+        val clock = object : AcademicTimeProvider {
+            override val zoneId = FixedTime.zoneId
+            override fun today() = now.toLocalDate()
+            override fun now() = now
+        }
+        lateinit var adapter: DayScheduleAdapter
+        lateinit var list: RecyclerView
+        fun day(offset: Long): ScheduleDisplayDay {
+            val date = FixedTime.today().plusDays(offset)
+            return ScheduleDisplayDay(date, DaySchedule(date.dayOfWeek.value, 1, date, null,
+                listOf(lesson().copy(subjectName = "Тестовая пара", note = null, teacherFio = null, room = null, building = null))))
+        }
+        val first = day(1)
+        val second = day(2)
+        val third = day(3)
+        scenario.onActivity { activity ->
+            adapter = DayScheduleAdapter(clock)
+            list = RecyclerView(activity).apply {
+                layoutManager = LinearLayoutManager(activity)
+                itemAnimator = null
+                this.adapter = adapter
+            }
+            activity.setContentView(list)
+            adapter.submitList(listOf(second, third))
+        }
+        fun assertMarker(position: Int, description: Int) {
+            settle()
+            scenario.onActivity { activity ->
+                val holder = list.findViewHolderForAdapterPosition(position) as DayScheduleAdapter.DayViewHolder
+                assertEquals(activity.getString(description), holder.lessonList.findViewById<ImageView>(R.id.timeline_dot).contentDescription)
+            }
+        }
+        assertMarker(0, R.string.schedule_timeline_next)
+        scenario.onActivity { adapter.submitList(listOf(first, second, third)) }
+        assertMarker(0, R.string.schedule_timeline_next)
+        assertMarker(1, R.string.schedule_timeline_upcoming)
+        scenario.onActivity { adapter.submitList(listOf(second, third)) }
+        assertMarker(0, R.string.schedule_timeline_next)
+        scenario.onActivity {
+            now = second.date.atTime(8, 20).atZone(clock.zoneId).toOffsetDateTime()
+            adapter.updateLessonStates()
+        }
+        assertMarker(0, R.string.schedule_timeline_current)
+        assertMarker(1, R.string.schedule_timeline_next)
+        scenario.onActivity {
+            now = now.withHour(9).withMinute(50)
+            adapter.updateLessonStates()
+        }
+        assertMarker(0, R.string.schedule_timeline_completed)
+    }
+
+    @Test
     fun recycledLessonsRestoreAllStateAndKeepTimeAndContentOpaque() {
         for (dark in listOf(false, true)) preview(dark = dark) { scenario ->
             scenario.onActivity { activity ->
                 val states = listOf(
                     ScheduleItem.LessonState.COMPLETED,
                     ScheduleItem.LessonState.CURRENT,
+                    ScheduleItem.LessonState.NEXT,
                     ScheduleItem.LessonState.COMPLETED,
                     ScheduleItem.LessonState.UPCOMING
                 )
@@ -94,7 +198,7 @@ class ScheduleCardsVisualTest {
                     assertEquals(expectedAlpha, holder.itemRoot.alpha, 0f)
                     assertEquals(if (position == 1) activity.color.primary else activity.color.onSurface,
                         holder.dayTitle.currentTextColor)
-                    val row = checkNotNull(holder.innerRecyclerView.findViewById<View>(R.id.item_root))
+                    val row = checkNotNull(holder.lessonList.findViewById<View>(R.id.item_root))
                     assertEquals(1f, row.alpha, 0f)
                     assertEquals(1f, row.findViewById<View>(R.id.card_container).alpha, 0f)
                     for (id in listOf(R.id.title, R.id.time_start, R.id.time_end, R.id.location_building)) {
@@ -107,7 +211,7 @@ class ScheduleCardsVisualTest {
     }
 
     @Test
-    fun pendingSportRowsStayDistinctAndReadableWithoutCountingAsConfirmedLessons() {
+    fun pendingSportSharesLessonAnatomyWithAnUnconfirmedMarkerAndStatus() {
         val appearances = listOf(
             Appearance(), Appearance(dark = true),
             Appearance(widthDp = 320, fontScale = 1.3f, seed = 0xff826c24.toInt()),
@@ -118,6 +222,32 @@ class ScheduleCardsVisualTest {
                 for (pendingOnly in listOf(false, true)) {
                     lateinit var holder: DayScheduleAdapter.DayViewHolder
                     lateinit var scroll: ScrollView
+                    val seenStatuses = mutableSetOf<String>()
+                    fun checkVisiblePendingRows() {
+                        val activity = holder.itemView.context
+                        assertTextFits(holder.itemView)
+                        val lastRow = holder.lessonList.getChildAt(holder.lessonList.childCount - 1)
+                        assertTrue("The last lesson must fit inside the measured day", lastRow.bottom <= holder.lessonList.height)
+                        val rows = holder.lessonList.descendants().filter { it.id == R.id.pending_sport_root }.toList()
+                        rows.forEach { row ->
+                            assertFalse(row.descendants().any { it.isClickable })
+                            assertEquals(1f, row.alpha, 0f)
+                            assertEquals(activity.color.onSurface, row.findViewById<TextView>(R.id.time_start).currentTextColor)
+                            assertTrue(row.findViewById<TextView>(R.id.title).typeface.isBold)
+                            assertEquals(View.VISIBLE, row.findViewById<View>(R.id.teacher_layout).visibility)
+                            assertEquals(View.VISIBLE, row.findViewById<View>(R.id.location_layout).visibility)
+                            for (id in listOf(R.id.teacher_layout, R.id.location_layout)) {
+                                row.findViewById<ViewGroup>(id).descendants().filterIsInstance<ImageView>().forEach {
+                                    assertEquals(activity.color.onSurfaceVariant, it.imageTintList!!.defaultColor)
+                                }
+                            }
+                            val status = row.findViewById<TextView>(R.id.type)
+                            seenStatuses += status.text.toString()
+                            assertEquals(activity.getString(if (status.text.toString() == activity.getString(R.string.schedule_auto_sign_prediction))
+                                R.string.schedule_auto_sign_prediction_description else R.string.schedule_auto_sign_waiting_description),
+                                status.contentDescription.toString())
+                        }
+                    }
                     scenario.onActivity { activity ->
                         val date = FixedTime.today().plusDays(if (pendingOnly) 1 else 0)
                         val start = date.atTime(16, 0).atZone(FixedTime.zoneId).toOffsetDateTime()
@@ -153,26 +283,23 @@ class ScheduleCardsVisualTest {
                     settle()
                     screenshot("pending-$pendingOnly-$index")
                     scenario.onActivity { activity ->
-                        assertTextFits(holder.itemView)
-                        val rows = holder.innerRecyclerView.descendants().filter { it.id == R.id.pending_sport_root }.toList()
-                        assertEquals(2, rows.size)
+                        // Every row contributes its full height; verify both ends of
+                        // the actual scrollable card, including the final prediction.
+                        checkVisiblePendingRows()
+                        assertEquals(if (pendingOnly) 2 else 4, holder.lessonList.childCount)
                         assertEquals(if (pendingOnly) activity.getString(R.string.schedule_auto_sign_label)
                             else activity.resources.getQuantityString(R.plurals.schedule_lesson_count, 2, 2),
                             holder.numberOfLessons.text.toString())
-                        assertNull(holder.innerRecyclerView.findViewById<View>(R.id.break_text))
-                        rows.forEach { row ->
-                            assertFalse(row.descendants().any { it.isClickable })
-                            assertEquals(1f, row.alpha, 0f)
-                            assertEquals(activity.color.onSurfaceVariant, row.findViewById<TextView>(R.id.time_start).currentTextColor)
-                        }
-                        assertEquals(activity.getString(R.string.schedule_auto_sign_waiting),
-                            rows.first().findViewById<TextView>(R.id.pending_status).text.toString())
-                        assertEquals(activity.getString(R.string.schedule_auto_sign_prediction_description),
-                            rows.last().findViewById<TextView>(R.id.pending_status).contentDescription.toString())
+                        assertNull(holder.lessonList.findViewById<View>(R.id.break_text))
                         scroll.fullScroll(View.FOCUS_DOWN)
                     }
                     settle()
                     screenshot("pending-$pendingOnly-$index-bottom")
+                    scenario.onActivity { activity ->
+                        checkVisiblePendingRows()
+                        assertEquals(setOf(activity.getString(R.string.schedule_auto_sign_waiting),
+                            activity.getString(R.string.schedule_auto_sign_prediction)), seenStatuses)
+                    }
                 }
             }
         }
@@ -222,12 +349,12 @@ class ScheduleCardsVisualTest {
                     scenario.onActivity {
                         assertEquals(if (offset < 0) 0.72f else 1f, holder.itemRoot.alpha, 0f)
                         assertTextFits(holder.itemView)
-                        assertTrue(holder.innerRecyclerView.childCount >= 3)
-                        val guides = holder.innerRecyclerView.descendants().filter {
+                        assertTrue(holder.lessonList.childCount >= 3)
+                        val guides = holder.lessonList.descendants().filter {
                             it.id == R.id.timeline_guide || it.id == R.id.timeline_guide_break
                         }.map { (it.layoutParams as ConstraintLayout.LayoutParams).guideBegin }.toSet()
                         assertEquals("Lessons and breaks share one timeline gutter", 1, guides.size)
-                        holder.innerRecyclerView.descendants().filter { it.id == R.id.item_root }.forEach { root ->
+                        holder.lessonList.descendants().filter { it.id == R.id.item_root }.forEach { root ->
                             assertEquals(1f, root.alpha, 0f)
                             assertEquals(1f, root.findViewById<View>(R.id.card_container).alpha, 0f)
                         }
@@ -266,14 +393,10 @@ class ScheduleCardsVisualTest {
         assertEquals(when (state) {
             ScheduleItem.LessonState.CURRENT -> colors.primary
             ScheduleItem.LessonState.COMPLETED -> colors.onSurfaceVariant
-            ScheduleItem.LessonState.UPCOMING -> colors.onSurface
+            ScheduleItem.LessonState.UPCOMING, ScheduleItem.LessonState.NEXT -> colors.onSurface
         }, start.currentTextColor)
         assertEquals(colors.onSurfaceVariant, end.currentTextColor)
-        val expectedScale = when (state) {
-            ScheduleItem.LessonState.CURRENT -> 1.3f
-            ScheduleItem.LessonState.COMPLETED -> 0.8f
-            ScheduleItem.LessonState.UPCOMING -> 1f
-        }
+        val expectedScale = 1f
         val dot = root.findViewById<View>(R.id.timeline_dot)
         assertEquals(expectedScale, dot.scaleX, 0f)
         assertEquals(expectedScale, dot.scaleY, 0f)
@@ -315,10 +438,17 @@ class ScheduleCardsVisualTest {
 
     private fun screenshot(name: String) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val folder = File(instrumentation.targetContext.externalCacheDir, "schedule-cards-screenshots").apply { mkdirs() }
-        File(folder, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
+        instrumentation.runOnMainSync {
+            // Capture the actual laid-out test window, not unrelated phone notifications.
+            val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                .filterIsInstance<SettingsPreviewActivity>().single()
+            val view = activity.window.decorView
+            val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+            view.draw(Canvas(bitmap))
+            val folder = File(instrumentation.targetContext.externalCacheDir, "schedule-cards-screenshots").apply { mkdirs() }
+            File(folder, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            bitmap.recycle()
+        }
     }
 
     private fun View.descendants(): Sequence<View> = sequence {

@@ -222,8 +222,9 @@ API observations and limitations are recorded in `docs/recordbook-api.md`.
 The optional `Автозапись на спорт` switch is a persisted local preference, disabled
 by default. `SchedulePreferencesRepository` is shared through `core/schedule`;
 its settings-owned implementation forwards DataStore changes without enabling
-community services. The setting applies only to the own in-app schedule, not to
-friends' schedules, widgets, exported data or the official schedule cache.
+community services. The same setting applies to the own in-app schedule and both
+schedule widget types, not to friends' schedules, exported data or the official
+schedule cache.
 
 `PendingSportBookingsRepository` in `core/sport` exposes a read-only projection of
 active own queues. Its sport-owned implementation combines official chosen-sport
@@ -449,12 +450,39 @@ widgets. QR uses its production bitmap/animation renderers with a sample payload
 Previews never register an AppWidget host, create PendingIntents, request network
 data, write widget snapshots, or display a real QR pass.
 
-After an actual sport booking succeeds, `SportBookingDelegate` requests a schedule
-widget update through `core/schedule.ScheduleWidgetRefreshRequester` before awaiting
-screen refreshes. The app-level `WidgetRefreshCoordinator` enqueues forced schedule
-work, bypassing the routine throttle without touching QR widgets. Failed actions
-and queue subscriptions do not signal an actual schedule change; the worker loads
-fresh schedule data and updates both installed schedule-widget types.
+Both schedule widgets use the same default-off `Автозапись на спорт` preference as
+the own schedule screen. `ScheduleWidgetDataProvider` loads only the own academic
+range and, with both the preference and community services enabled, refreshes the
+pending source and reads its completed `getPendingBookings()` snapshot. This API
+has no synthetic initial empty emission and performs no implicit network request.
+Optional errors remove only pending rows; a failed initial academic request with
+no cache remains unavailable rather than being disguised as a pending-only day.
+
+`ScheduleWidgetSelector` builds a separate widget-only timeline, never synthetic
+academic `Lesson` objects. Today/tomorrow selection, teacher visibility and smart
+refresh boundaries include pending times. Every pending row has a persisted
+`WAITING` or `PREDICTED` marker, rendered in both widget types with a short explicit
+label and an outlined indicator. It never becomes a confirmed/current lesson.
+Queue-enabled widgets request the next refresh within seven minutes (or sooner
+at a lesson boundary); Android may defer background execution, so this is not a
+wall-clock delivery guarantee. The atomic presentation snapshot includes an exact official-only
+fallback, so dropping optional rows also restores the correct single next lesson
+and remaining count. Pending data expires at its earliest start or after seven
+minutes; snapshot reads re-check both settings gates and authentication. Process
+recreation preserves the explicit marker only within that validity window.
+Refresh failure never restores old pending rows from the presentation snapshot.
+The store is a shared singleton session cleaner; cleanup invalidates in-flight
+worker generation tickets before clearing disk, preventing an old account's
+completed snapshot from being written into a new session.
+
+After an actual sport booking or queue mutation succeeds, `SportBookingDelegate`
+requests a schedule widget update through
+`core/schedule.ScheduleWidgetRefreshRequester` before awaiting screen refreshes.
+The app-level `WidgetRefreshCoordinator` enqueues forced schedule work, bypassing
+the routine throttle without touching QR widgets. Failed actions do not enqueue
+updates. Queue mutations update only the optional projection and do not invalidate
+the official schedule cache. Explicit changes to the shared display preference
+or community-services gate also enqueue widget refresh after persistence.
 
 `CustomSpoilerViewModel` owns local image save/reset operations and widget refresh.
 `CustomSpoilerRepository` keeps URI strings at the domain boundary; its data

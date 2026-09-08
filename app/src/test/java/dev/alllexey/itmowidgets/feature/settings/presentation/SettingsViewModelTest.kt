@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SportDisplaySettings
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceTimeBy
@@ -309,7 +310,7 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `custom services toggle is delegated without refreshing widgets`() =
+    fun `custom services toggle refreshes widgets after applying the data gate`() =
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.SERVICES)
             advanceUntilIdle()
@@ -318,7 +319,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             assertEquals(listOf(true), fixture.customServicesRepository.requests)
-            assertEquals(0, fixture.widgetRefresher.refreshCount)
+            assertEquals(1, fixture.widgetRefresher.refreshCount)
         }
 
     @Test
@@ -550,7 +551,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `schedule auto sign display is local and toggleable with custom services disabled`() =
+    fun `schedule auto sign display remains local and refreshes widgets for explicit toggles with services disabled`() =
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.SCHEDULE)
             advanceUntilIdle()
@@ -565,11 +566,13 @@ class SettingsViewModelTest {
             assertTrue(toggle.enabled)
             assertTrue(toggle.stateKnown)
             assertFalse(toggle.checked)
+            assertEquals(0, fixture.widgetRefresher.refreshCount)
 
             fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN, true)
             advanceUntilIdle()
             assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
             assertTrue(fixture.repository.local.value.showSportAutoSign)
+            assertEquals(1, fixture.widgetRefresher.refreshCount)
 
             fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN, false)
             advanceUntilIdle()
@@ -580,8 +583,51 @@ class SettingsViewModelTest {
             assertEquals(0, fixture.repository.refreshSharingCount)
             assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
             assertTrue(fixture.repository.sportSharingRequests.isEmpty())
-            assertEquals(0, fixture.widgetRefresher.refreshCount)
+            assertEquals(2, fixture.widgetRefresher.refreshCount)
             assertEquals(null, fixture.viewModel.previewSettings.value)
+        }
+
+    @Test
+    fun `schedule auto sign display refreshes widgets only after persistence completes`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.SCHEDULE)
+            val persisted = CompletableDeferred<Unit>()
+            fixture.repository.scheduleSportAutoSignWrite = { persisted.await() }
+            advanceUntilIdle()
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN, true)
+            runCurrent()
+
+            assertEquals(listOf(true), fixture.repository.scheduleSportAutoSignRequests)
+            assertFalse(fixture.repository.local.value.showSportAutoSign)
+            assertEquals(0, fixture.widgetRefresher.refreshCount)
+
+            persisted.complete(Unit)
+            advanceUntilIdle()
+
+            assertTrue(fixture.repository.local.value.showSportAutoSign)
+            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertEquals(1, fixture.widgetRefresher.refreshCount)
+        }
+
+    @Test
+    fun `schedule auto sign persistence failure does not refresh widgets or enable services`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.SCHEDULE)
+            val failure = IllegalStateException("Preference write failed")
+            fixture.repository.scheduleSportAutoSignWrite = { throw failure }
+            advanceUntilIdle()
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN, true)
+            advanceUntilIdle()
+
+            assertEquals(listOf(true), fixture.repository.scheduleSportAutoSignRequests)
+            assertFalse(fixture.repository.local.value.showSportAutoSign)
+            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertEquals(0, fixture.widgetRefresher.refreshCount)
+            assertFalse(fixture.repository.local.value.customServicesEnabled)
+            assertTrue(fixture.customServicesRepository.requests.isEmpty())
+            assertEquals(SettingsEvent.ShowError(AppError.Unknown(failure)), fixture.viewModel.events.first())
         }
 
     @Test
@@ -772,6 +818,7 @@ class SettingsViewModelTest {
         val teacherSelectorHiddenRequests = mutableListOf<Boolean>()
         val timeSelectorHiddenRequests = mutableListOf<Boolean>()
         val scheduleSportAutoSignRequests = mutableListOf<Boolean>()
+        var scheduleSportAutoSignWrite: suspend () -> Unit = {}
 
         override fun observeLocalSettings(): Flow<LocalSettings> =
             combine(localAvailable, local) { available, settings ->
@@ -873,6 +920,7 @@ class SettingsViewModelTest {
 
         override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
             scheduleSportAutoSignRequests += enabled
+            scheduleSportAutoSignWrite()
             local.value = local.value.copy(showSportAutoSign = enabled)
         }
     }

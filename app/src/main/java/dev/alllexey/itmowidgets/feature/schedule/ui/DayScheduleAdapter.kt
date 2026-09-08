@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
@@ -18,7 +17,6 @@ import dev.alllexey.itmowidgets.core.util.dp
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import java.time.Duration
-import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -29,7 +27,27 @@ class DayScheduleAdapter(
 ) :
     ListAdapter<ScheduleDisplayDay, DayScheduleAdapter.DayViewHolder>(ScheduleDiffCallback) {
 
-    private val viewPool = RecyclerView.RecycledViewPool()
+    private var timelineDays = emptyList<ScheduleDisplayDay>()
+    private var timelineStates = emptyList<List<ScheduleItem.LessonState>>()
+    private var renderedToday = timeProvider.today()
+
+    override fun onCurrentListChanged(
+        previousList: List<ScheduleDisplayDay>,
+        currentList: List<ScheduleDisplayDay>
+    ) {
+        val previousStatesByDate = timelineDays.mapIndexed { index, day ->
+            day.date to timelineStates[index]
+        }.toMap()
+        updateTimeline(currentList)
+        currentList.forEachIndexed { index, day ->
+            val previousStates = previousStatesByDate[day.date]
+            if (previousStates != null && previousStates != timelineStates[index]) {
+                // An inserted earlier lesson can move NEXT off an unchanged day,
+                // which the day-content DiffUtil comparison cannot detect.
+                notifyItemChanged(index)
+            }
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -84,24 +102,41 @@ class DayScheduleAdapter(
         // is applied only once. Always reset it when a holder is reused.
         holder.itemRoot.alpha = if (date.isBefore(today)) 0.72f else 1f
 
-        val layoutManager = LinearLayoutManager(
-            holder.innerRecyclerView.context,
-            LinearLayoutManager.VERTICAL,
-            false
-        )
-
-        val processed = processLessonsWithBreaks(lessons, date, daySchedule.pendingSport)
-        layoutManager.initialPrefetchItemCount = processed.size
+        // Also support a first bind before ListAdapter's list-change callback.
+        // Keep the committed snapshot intact for its old/new marker comparison.
+        val states = if (timelineDays === currentList) timelineStates
+        else resolveScheduleTimeline(currentList, timeProvider.now().toLocalDateTime())
+        val processed = processLessonsWithBreaks(lessons, states[position], daySchedule.pendingSport)
         val lessonAdapter = LessonAdapter(processed)
-
-        holder.innerRecyclerView.layoutManager = layoutManager
-        holder.innerRecyclerView.adapter = lessonAdapter
-        holder.innerRecyclerView.setRecycledViewPool(viewPool)
+        // Days are recycled by the outer list. A day's bounded rows must all
+        // contribute their natural height; a nested wrap-content RecyclerView
+        // can stop measuring at the viewport and silently hide large-font rows.
+        holder.lessonList.removeAllViews()
+        processed.indices.forEach { index ->
+            val row = lessonAdapter.onCreateViewHolder(holder.lessonList, lessonAdapter.getItemViewType(index))
+            lessonAdapter.onBindViewHolder(row, index)
+            holder.lessonList.addView(row.itemView)
+        }
     }
 
     fun updateLessonStates() {
-        // it can be optimized
-        notifyItemRangeChanged(0, itemCount)
+        val previousStates = timelineStates
+        val previousToday = renderedToday
+        updateTimeline(currentList)
+        renderedToday = timeProvider.today()
+        if (previousToday != renderedToday) {
+            // Date-card emphasis and past-day alpha also change at midnight.
+            notifyItemRangeChanged(0, itemCount)
+        } else {
+            timelineStates.forEachIndexed { index, states ->
+                if (previousStates.getOrNull(index) != states) notifyItemChanged(index)
+            }
+        }
+    }
+
+    private fun updateTimeline(days: List<ScheduleDisplayDay>) {
+        timelineDays = days
+        timelineStates = resolveScheduleTimeline(days, timeProvider.now().toLocalDateTime())
     }
 
     class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -110,28 +145,23 @@ class DayScheduleAdapter(
         val dayTitle: TextView = itemView.findViewById(R.id.day_title)
         val numberOfLessons: TextView = itemView.findViewById(R.id.number_of_lessons)
         val dayDate: TextView = itemView.findViewById(R.id.day_date)
-        val innerRecyclerView: RecyclerView = itemView.findViewById(R.id.inner_recycler_view)
+        val lessonList: LinearLayout = itemView.findViewById(R.id.lesson_list)
     }
 
-    private fun processLessonsWithBreaks(lessons: List<Lesson>, date: LocalDate, pending: List<PendingSportBooking>): List<ScheduleItem> {
-        val now = timeProvider.now().toLocalDateTime()
+    private fun processLessonsWithBreaks(
+        lessons: List<Lesson>,
+        states: List<ScheduleItem.LessonState>,
+        pending: List<PendingSportBooking>
+    ): List<ScheduleItem> {
         val processedList = mutableListOf<ScheduleItem>()
-        val sortedLessons = lessons.sortedBy { it.start }
+        val sortedLessons = lessons.withIndex().sortedBy { it.value.start }
 
-        sortedLessons.forEachIndexed { index, currentLesson ->
-            val lessonStartTime = currentLesson.start.atDate(date)
-            val lessonEndTime = currentLesson.end.atDate(date)
-
-            val lessonState = when {
-                lessonEndTime < now -> ScheduleItem.LessonState.COMPLETED
-                now in lessonStartTime..lessonEndTime -> ScheduleItem.LessonState.CURRENT
-                else -> ScheduleItem.LessonState.UPCOMING
-            }
-
-            processedList.add(ScheduleItem.LessonItem(currentLesson, lessonState, index == sortedLessons.size - 1))
+        sortedLessons.forEachIndexed { index, indexedLesson ->
+            val currentLesson = indexedLesson.value
+            processedList.add(ScheduleItem.LessonItem(currentLesson, states[indexedLesson.index], index == sortedLessons.size - 1))
 
             if (index < sortedLessons.size - 1) {
-                val nextLesson = sortedLessons[index + 1]
+                val nextLesson = sortedLessons[index + 1].value
                 val currentEndTime = currentLesson.end
                 val nextStartTime = nextLesson.start
                 val breakDuration = Duration.between(currentEndTime, nextStartTime)
