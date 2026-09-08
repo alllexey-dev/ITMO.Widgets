@@ -63,7 +63,7 @@ core/                   cross-cutting; knows nothing about features
   network/              WidgetsClient, AppErrorMapper, serialization adapters
   result/               AppError, AppResult
   schedule/             Schedule refresh and widget-update cross-feature contracts
-  sport/                SportScoreRepository, period identifiers and shared score calculation
+  sport/                SportScoreRepository, shared scores and own pending-booking projection
   services/             CustomServicesRepository — the backend opt-in
   session/              SessionTokenStore, SessionDataCleaner, CurrentUserProvider,
                         BackendIdentitySync
@@ -216,6 +216,44 @@ The compact root and scrollable subject details retain content during refresh an
 cancel superseded period requests. Details reload the official subject rather than
 trusting a navigation snapshot, preserve control hierarchy, and respect `have_tree`.
 API observations and limitations are recorded in `docs/recordbook-api.md`.
+
+### Pending sport in the schedule screen
+
+The optional `Автозапись на спорт` switch is a persisted local preference, disabled
+by default. `SchedulePreferencesRepository` is shared through `core/schedule`;
+its settings-owned implementation forwards DataStore changes without enabling
+community services. The setting applies only to the own in-app schedule, not to
+friends' schedules, widgets, exported data or the official schedule cache.
+
+`PendingSportBookingsRepository` in `core/sport` exposes a read-only projection of
+active own queues. Its sport-owned implementation combines official chosen-sport
+bookings with the existing queue stream; friend enrichment is not a dependency.
+Cancelled, terminal, already-started and already-signed entries are excluded.
+Multiple queues resolving to the same sport lesson produce one pending row.
+Unpublished predictions use prototype dates plus two weeks; a bound real lesson
+uses its actual dates without a second shift. Confirmation uses sport lesson IDs,
+not an assumed equality with academic `pairId` or a name/time heuristic.
+
+Schedule observes this source only when the setting is enabled and both its
+selected and loaded schedule belong to self. Backend opt-in remains an independent
+data-layer gate. Both sport source caches participate in session cleanup, and
+results started before cleanup cannot repopulate them afterward.
+
+`ScheduleUiState.Content.schedule` remains official data. `ScheduleDisplayDay`
+adds pending rows in the loaded date range, including dates with no official
+lessons. The adapter compares the complete display day, so live additions and
+cancellations render without clearing the cache or resetting scroll position.
+After the first successful academic load, pending-only content also stays visible
+during refresh and pagination. Initial academic loading/failure remains explicit;
+later refresh failures use a snackbar while valid content remains on screen.
+Pending rows are explicitly labelled as waiting or predicted, never styled as a
+current confirmed lesson, and do not increase the confirmed lesson count. Optional
+source loading/errors do not replace the academic screen. An error or successful
+empty snapshot removes pending rows rather than keeping a possibly cancelled or
+already-confirmed queue visible. The source refreshes independently of academic
+refresh and receives subsequent queue/booking changes from the Sport screen.
+
+No Backend/Core/MyItmoApi API or dependency version changes are required.
 
 ### Sport session cards and details
 

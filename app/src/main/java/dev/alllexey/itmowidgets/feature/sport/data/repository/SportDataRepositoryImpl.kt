@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.util.dataOrNull
@@ -24,15 +25,22 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class SportDataRepositoryImpl @Inject constructor(
     private val friendRepository: FriendRepository,
     private val settings: AppSettingsStorage,
     private val myItmoApi: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi,
     private val scoreRepository: SportScoreRepositoryImpl
-) : SportDataRepository {
+) : SportDataRepository, SessionDataCleaner {
+
+    private val queueSessionMutex = Mutex()
+    private var queueSessionGeneration = 0L
 
     private val attemptsFlow = MutableSharedFlow<DataState<SportAttempts>>(replay = 1)
     private val scoreFlow = MutableSharedFlow<DataState<SportScore>>(replay = 1)
@@ -110,8 +118,9 @@ class SportDataRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshSportQueueEntries() {
+        val generation = queueSessionMutex.withLock { queueSessionGeneration }
         if (!settings.getCustomServicesEnabled()) {
-            queueEntriesFlow.emit(CustomDataState.Disabled)
+            emitQueueState(generation, CustomDataState.Disabled)
             return
         }
 
@@ -135,13 +144,23 @@ class SportDataRepositoryImpl @Inject constructor(
                 }
             }
 
-            queueEntriesFlow.emit(CustomDataState.Success(result))
+            emitQueueState(generation, CustomDataState.Success(result))
 
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            queueEntriesFlow.emit(CustomDataState.Error(error.toAppError()))
+            emitQueueState(generation, CustomDataState.Error(error.toAppError()))
         }
+    }
+
+    private suspend fun emitQueueState(generation: Long, state: CustomDataState<List<SportQueueEntry>>) =
+        queueSessionMutex.withLock {
+            if (generation == queueSessionGeneration) queueEntriesFlow.emit(state)
+        }
+
+    override suspend fun clearSessionData() = queueSessionMutex.withLock {
+        queueSessionGeneration++
+        queueEntriesFlow.emit(CustomDataState.Disabled)
     }
 
     override suspend fun refreshSportQueues() {

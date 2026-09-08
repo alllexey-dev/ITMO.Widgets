@@ -12,6 +12,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
+import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.util.DataState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -296,7 +301,14 @@ class ScheduleViewModelTest {
         return ScheduleViewModel(
             repository = repository,
             timeProvider = timeProvider,
-            savedStateHandle = savedStateHandle
+            savedStateHandle = savedStateHandle,
+            preferences = object : SchedulePreferencesRepository {
+                override fun observeSportAutoSignEnabled() = flowOf(false)
+            },
+            pendingRepository = object : PendingSportBookingsRepository {
+                override fun observePendingBookings() = flowOf<DataState<List<PendingSportBooking>>>(DataState.Success(emptyList()))
+                override suspend fun refresh() = Unit
+            }
         )
     }
 

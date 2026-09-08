@@ -172,6 +172,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         override suspend fun setQrAnimationType(type: QrAnimationType) = Unit
         override suspend fun setTeacherSelectorHidden(hidden: Boolean) = Unit
         override suspend fun setTimeSelectorHidden(hidden: Boolean) = Unit
+        override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
+            local.value = local.value.copy(showSportAutoSign = enabled)
+        }
     }
 
     private object Services : CustomServicesRepository {

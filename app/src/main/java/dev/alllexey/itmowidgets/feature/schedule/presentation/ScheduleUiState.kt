@@ -20,7 +20,8 @@ sealed interface ScheduleUiState {
     data class Content(
         val schedule: List<DaySchedule>,
         val loadingMore: Boolean,
-        override val selectedUser: SelectedUser?
+        override val selectedUser: SelectedUser?,
+        val displayDays: List<ScheduleDisplayDay> = schedule.map { ScheduleDisplayDay(it.date, it) }
     ) : ScheduleUiState
 
     data class Empty(

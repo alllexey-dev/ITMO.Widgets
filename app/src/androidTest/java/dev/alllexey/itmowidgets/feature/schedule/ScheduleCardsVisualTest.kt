@@ -28,6 +28,8 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import dev.alllexey.itmowidgets.feature.schedule.ui.DayScheduleAdapter
 import dev.alllexey.itmowidgets.feature.schedule.ui.LessonAdapter
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import java.io.File
 import java.time.LocalDate
@@ -77,7 +79,7 @@ class ScheduleCardsVisualTest {
                 adapter = DayScheduleAdapter(FixedTime)
                 adapter.submitList(listOf(-1L, 0L, 1L).map { offset ->
                     val date = FixedTime.today().plusDays(offset)
-                    DaySchedule(date.dayOfWeek.value, 1, date, null, listOf(lesson()))
+                    ScheduleDisplayDay(date, DaySchedule(date.dayOfWeek.value, 1, date, null, listOf(lesson())))
                 })
                 val frame = FrameLayout(activity)
                 holder = adapter.onCreateViewHolder(frame, 0)
@@ -105,6 +107,78 @@ class ScheduleCardsVisualTest {
     }
 
     @Test
+    fun pendingSportRowsStayDistinctAndReadableWithoutCountingAsConfirmedLessons() {
+        val appearances = listOf(
+            Appearance(), Appearance(dark = true),
+            Appearance(widthDp = 320, fontScale = 1.3f, seed = 0xff826c24.toInt()),
+            Appearance(widthDp = 320, fontScale = 1.3f, dark = true, seed = 0xff386a20.toInt())
+        )
+        appearances.forEachIndexed { index, appearance ->
+            preview(appearance.dark, appearance.fontScale, appearance.seed) { scenario ->
+                for (pendingOnly in listOf(false, true)) {
+                    lateinit var holder: DayScheduleAdapter.DayViewHolder
+                    lateinit var scroll: ScrollView
+                    scenario.onActivity { activity ->
+                        val date = FixedTime.today().plusDays(if (pendingOnly) 1 else 0)
+                        val start = date.atTime(16, 0).atZone(FixedTime.zoneId).toOffsetDateTime()
+                        val waiting = PendingSportBooking(
+                            queueId = 1, queueKind = PendingSportBooking.QueueKind.FREE, lessonId = 100,
+                            sectionName = "Современные танцы — тестовая секция с длинным названием",
+                            start = start, end = start.plusMinutes(90), teacherFio = "Тестовый преподаватель с длинным именем",
+                            roomName = "Тестовый корпус на Кронверкском проспекте, 49, спортивный зал", isPrediction = false
+                        )
+                        val prediction = waiting.copy(queueId = 2, queueKind = PendingSportBooking.QueueKind.AUTO,
+                            lessonId = 200, start = start.plusHours(2), end = start.plusHours(3), isPrediction = true)
+                        val official = if (pendingOnly) null else DaySchedule(date.dayOfWeek.value, 1, date, null,
+                            listOf(lesson(), lesson().copy(pairId = 2, start = LocalTime.of(20, 0), end = LocalTime.of(21, 30))))
+                        val adapter = DayScheduleAdapter(FixedTime)
+                        adapter.submitList(listOf(ScheduleDisplayDay(date, official, listOf(waiting, prediction))))
+                        val frame = FrameLayout(activity).apply { setBackgroundColor(activity.color.surface) }
+                        scroll = ScrollView(activity)
+                        holder = adapter.onCreateViewHolder(scroll, 0)
+                        adapter.onBindViewHolder(holder, 0)
+                        scroll.addView(holder.itemView)
+                        frame.addView(scroll, FrameLayout.LayoutParams(
+                            if (appearance.widthDp > 0) (appearance.widthDp * activity.resources.displayMetrics.density).toInt() else -1,
+                            -1, Gravity.CENTER_HORIZONTAL
+                        ))
+                        activity.setContentView(frame)
+                        ViewCompat.setOnApplyWindowInsetsListener(frame) { view, insets ->
+                            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+                            insets
+                        }
+                        ViewCompat.requestApplyInsets(frame)
+                    }
+                    settle()
+                    screenshot("pending-$pendingOnly-$index")
+                    scenario.onActivity { activity ->
+                        assertTextFits(holder.itemView)
+                        val rows = holder.innerRecyclerView.descendants().filter { it.id == R.id.pending_sport_root }.toList()
+                        assertEquals(2, rows.size)
+                        assertEquals(if (pendingOnly) activity.getString(R.string.schedule_auto_sign_label)
+                            else activity.resources.getQuantityString(R.plurals.schedule_lesson_count, 2, 2),
+                            holder.numberOfLessons.text.toString())
+                        assertNull(holder.innerRecyclerView.findViewById<View>(R.id.break_text))
+                        rows.forEach { row ->
+                            assertFalse(row.descendants().any { it.isClickable })
+                            assertEquals(1f, row.alpha, 0f)
+                            assertEquals(activity.color.onSurfaceVariant, row.findViewById<TextView>(R.id.time_start).currentTextColor)
+                        }
+                        assertEquals(activity.getString(R.string.schedule_auto_sign_waiting),
+                            rows.first().findViewById<TextView>(R.id.pending_status).text.toString())
+                        assertEquals(activity.getString(R.string.schedule_auto_sign_prediction_description),
+                            rows.last().findViewById<TextView>(R.id.pending_status).contentDescription.toString())
+                        scroll.fullScroll(View.FOCUS_DOWN)
+                    }
+                    settle()
+                    screenshot("pending-$pendingOnly-$index-bottom")
+                }
+            }
+        }
+    }
+
+    @Test
     fun scheduleDaysRemainReadableAcrossThemesNarrowWidthsAndLargeFonts() {
         val appearances = listOf(
             Appearance(),
@@ -124,7 +198,7 @@ class ScheduleCardsVisualTest {
                             lesson(),
                             lesson().copy(pairId = 2, start = LocalTime.of(11, 40), end = LocalTime.of(13, 10)),
                             lesson().copy(pairId = 3, start = LocalTime.of(15, 20), end = LocalTime.of(16, 50))
-                        ))))
+                        ))).map { ScheduleDisplayDay(it.date, it) })
                         val frame = FrameLayout(activity).apply { setBackgroundColor(activity.color.surface) }
                         scroll = ScrollView(activity)
                         holder = adapter.onCreateViewHolder(scroll, 0)

@@ -10,6 +10,7 @@ enum class SettingsPage(val title: UiText) {
     PRIVACY(UiText.Resource(R.string.settings_privacy_title)),
     SCHEDULE_WIDGETS(UiText.Resource(R.string.settings_group_schedule_widget)),
     QR_WIDGET(UiText.Resource(R.string.settings_group_qr_widget)),
+    SCHEDULE(UiText.Resource(R.string.settings_group_schedule)),
     SPORT(UiText.Resource(R.string.settings_group_sport)),
     MAINTENANCE(UiText.Resource(R.string.settings_group_maintenance));
 

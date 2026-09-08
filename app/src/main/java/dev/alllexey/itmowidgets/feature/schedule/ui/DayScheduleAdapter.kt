@@ -12,13 +12,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.ScheduleUtil
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.core.util.dp
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -26,7 +27,7 @@ import java.util.Locale
 class DayScheduleAdapter(
     private val timeProvider: AcademicTimeProvider
 ) :
-    ListAdapter<DaySchedule, DayScheduleAdapter.DayViewHolder>(ScheduleDiffCallback) {
+    ListAdapter<ScheduleDisplayDay, DayScheduleAdapter.DayViewHolder>(ScheduleDiffCallback) {
 
     private val viewPool = RecyclerView.RecycledViewPool()
 
@@ -39,7 +40,7 @@ class DayScheduleAdapter(
     override fun onBindViewHolder(holder: DayViewHolder, position: Int) {
         val daySchedule = getItem(position)
         val date = daySchedule.date
-        val lessons = daySchedule.lessons
+        val lessons = daySchedule.officialDay?.lessons.orEmpty()
         val context = holder.itemView.context
 
         holder.dayTitle.text = date.dayOfWeek
@@ -48,7 +49,7 @@ class DayScheduleAdapter(
         holder.dayDate.text = date.format(DATE_FORMATTER)
 
         holder.numberOfLessons.text = if (lessons.isEmpty()) {
-            context.getString(R.string.schedule_no_lessons)
+            context.getString(if (daySchedule.pendingSport.isEmpty()) R.string.schedule_no_lessons else R.string.schedule_auto_sign_label)
         } else {
             context.resources.getQuantityString(
                 R.plurals.schedule_lesson_count,
@@ -89,7 +90,7 @@ class DayScheduleAdapter(
             false
         )
 
-        val processed = processLessonsWithBreaks(lessons, date)
+        val processed = processLessonsWithBreaks(lessons, date, daySchedule.pendingSport)
         layoutManager.initialPrefetchItemCount = processed.size
         val lessonAdapter = LessonAdapter(processed)
 
@@ -112,7 +113,7 @@ class DayScheduleAdapter(
         val innerRecyclerView: RecyclerView = itemView.findViewById(R.id.inner_recycler_view)
     }
 
-    private fun processLessonsWithBreaks(lessons: List<Lesson>, date: LocalDate): List<ScheduleItem> {
+    private fun processLessonsWithBreaks(lessons: List<Lesson>, date: LocalDate, pending: List<PendingSportBooking>): List<ScheduleItem> {
         val now = timeProvider.now().toLocalDateTime()
         val processedList = mutableListOf<ScheduleItem>()
         val sortedLessons = lessons.sortedBy { it.start }
@@ -134,26 +135,39 @@ class DayScheduleAdapter(
                 val currentEndTime = currentLesson.end
                 val nextStartTime = nextLesson.start
                 val breakDuration = Duration.between(currentEndTime, nextStartTime)
-                if (breakDuration > BIG_BREAK_THRESHOLD) {
+                val overlapsPending = pending.any {
+                    it.start.toLocalTime() < nextStartTime && it.end.toLocalTime() > currentEndTime
+                }
+                if (breakDuration > BIG_BREAK_THRESHOLD && !overlapsPending) {
                     processedList.add(ScheduleItem.BreakItem(currentEndTime, nextStartTime))
                 }
             }
         }
 
+        processedList += pending.map { ScheduleItem.PendingSportItem(it, isLast = false) }
         if (processedList.isEmpty()) {
             return listOf(ScheduleItem.NoLessonsItem(ScheduleItem.LessonState.COMPLETED))
         }
 
-        return processedList
+        return processedList.sortedBy { item -> when (item) {
+            is ScheduleItem.LessonItem -> item.lesson.start
+            is ScheduleItem.PendingSportItem -> item.booking.start.toLocalTime()
+            is ScheduleItem.BreakItem -> item.from
+            is ScheduleItem.NoLessonsItem -> LocalTime.MIN
+        } }.mapIndexed { index, item -> when (item) {
+            is ScheduleItem.LessonItem -> item.copy(isLastLesson = index == processedList.lastIndex)
+            is ScheduleItem.PendingSportItem -> item.copy(isLast = index == processedList.lastIndex)
+            else -> item
+        } }
     }
 
     companion object {
         private val BIG_BREAK_THRESHOLD = Duration.ofMinutes(60)
         private val RUSSIAN_LOCALE = Locale.forLanguageTag("ru")
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("d MMMM", RUSSIAN_LOCALE)
-        private val ScheduleDiffCallback = object : DiffUtil.ItemCallback<DaySchedule>() {
-            override fun areItemsTheSame(oldItem: DaySchedule, newItem: DaySchedule) = oldItem.date == newItem.date
-            override fun areContentsTheSame(oldItem: DaySchedule, newItem: DaySchedule) = oldItem == newItem
+        private val ScheduleDiffCallback = object : DiffUtil.ItemCallback<ScheduleDisplayDay>() {
+            override fun areItemsTheSame(oldItem: ScheduleDisplayDay, newItem: ScheduleDisplayDay) = oldItem.date == newItem.date
+            override fun areContentsTheSame(oldItem: ScheduleDisplayDay, newItem: ScheduleDisplayDay) = oldItem == newItem
         }
     }
 }

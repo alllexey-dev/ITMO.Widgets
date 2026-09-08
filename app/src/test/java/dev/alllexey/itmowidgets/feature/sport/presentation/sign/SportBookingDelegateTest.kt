@@ -217,6 +217,9 @@ class SportBookingDelegateTest {
     private class FakeSportBookingRepository : SportBookingRepository {
         var refreshCount = 0
 
+        override fun observeConfirmedSportBookings(): Flow<DataState<List<SportBooking>>> =
+            flowOf(DataState.Success(emptyList()))
+
         override fun observeSportBookings(): Flow<MergedDataState<List<SportBooking>>> {
             return flowOf(MergedDataState.Success(emptyList()))
         }

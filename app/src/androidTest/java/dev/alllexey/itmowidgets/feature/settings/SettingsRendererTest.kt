@@ -233,11 +233,26 @@ class SettingsRendererTest {
                     val expected = if (dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
                     assertEquals(expected, activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
                 }
-                for (page in listOf(SettingsPage.ROOT, SettingsPage.PRIVACY, SettingsPage.QR_WIDGET)) {
+                for (page in listOf(SettingsPage.ROOT, SettingsPage.PRIVACY, SettingsPage.QR_WIDGET, SettingsPage.SCHEDULE)) {
                     renderProductionPage(scenario, page)
                     saveScreenshot(scenario, "settings-${page.name.lowercase()}-$name")
                 }
             }
+        }
+    }
+
+    @Test
+    fun scheduleDisplaySettingFitsNarrowScreenWithCustomServicesDisabled() {
+        ActivityScenario.launch<SettingsPreviewActivity>(previewIntent(fontScale = 1.3f, widthDp = 320)).use { scenario ->
+            renderProductionPage(scenario, SettingsPage.SCHEDULE, PreviewRepository(SharingSettingsState.Disabled))
+            scenario.onActivity { activity ->
+                val row = rowWithTitle(activity, activity.getString(R.string.settings_schedule_sport_auto_sign_title))
+                assertTrue(row.isEnabled)
+                assertTextFits(row.findViewById(R.id.setting_title))
+                assertTextFits(row.findViewById(R.id.setting_description))
+                assertTrue("Settings row must retain a 48 dp touch target", row.height >= 48 * activity.resources.displayMetrics.density)
+            }
+            saveScreenshot(scenario, "settings-schedule-disabled-services-narrow-font130")
         }
     }
 
@@ -392,6 +407,9 @@ class SettingsRendererTest {
         override suspend fun setQrAnimationType(type: QrAnimationType) = Unit
         override suspend fun setTeacherSelectorHidden(hidden: Boolean) = Unit
         override suspend fun setTimeSelectorHidden(hidden: Boolean) = Unit
+        override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
+            local.value = local.value.copy(showSportAutoSign = enabled)
+        }
     }
 
     private companion object {

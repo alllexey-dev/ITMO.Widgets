@@ -161,6 +161,9 @@ class SettingsViewModel @Inject constructor(
             KEY_SPORT_SHARING -> updateSharing {
                 repository.setSportSharing(checked)
             }
+            KEY_SCHEDULE_SPORT_AUTO_SIGN -> updateLocalSetting {
+                repository.setScheduleSportAutoSignEnabled(checked)
+            }
             KEY_WIDGET_NEXT_LESSON_EARLY -> updateWidgetSetting {
                 repository.setNextLessonEarlyEnabled(checked)
             }
@@ -302,6 +305,7 @@ class SettingsViewModel @Inject constructor(
             SettingSection(
                 title = UiText.Resource(R.string.me_group_app),
                 items = listOf(
+                    navigation(SettingsPage.SCHEDULE),
                     navigation(SettingsPage.SPORT),
                     navigation(SettingsPage.MAINTENANCE)
                 )
@@ -404,6 +408,20 @@ class SettingsViewModel @Inject constructor(
                         enabled = local.qrWidget.spoilerEnabled && hasCustomSpoiler && !imageBusy
                     )
                 )
+            )
+        )
+        SettingsPage.SCHEDULE -> listOf(
+            SettingSection(
+                title = null,
+                items = listOf(
+                    SettingItem.Toggle(
+                        key = KEY_SCHEDULE_SPORT_AUTO_SIGN,
+                        title = UiText.Resource(R.string.settings_schedule_sport_auto_sign_title),
+                        description = UiText.Resource(R.string.settings_schedule_sport_auto_sign_description),
+                        checked = local.showSportAutoSign
+                    )
+                ),
+                footer = UiText.Resource(R.string.settings_schedule_footer)
             )
         )
         SettingsPage.SPORT -> listOf(
@@ -518,6 +536,7 @@ class SettingsViewModel @Inject constructor(
         const val KEY_NOTIFICATIONS = "notifications"
         const val KEY_SCHEDULE_SHARING = "schedule_sharing"
         const val KEY_SPORT_SHARING = "sport_sharing"
+        const val KEY_SCHEDULE_SPORT_AUTO_SIGN = "schedule_sport_auto_sign"
         const val KEY_RETRY_PRIVACY = "retry_privacy"
         const val KEY_WIDGET_NEXT_LESSON_EARLY = "widget_next_lesson_early"
         const val KEY_WIDGET_HIDE_TEACHER = "widget_hide_teacher"

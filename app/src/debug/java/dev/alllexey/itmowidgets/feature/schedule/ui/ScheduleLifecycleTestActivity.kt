@@ -11,6 +11,10 @@ import androidx.lifecycle.ViewModelProvider
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
@@ -32,7 +36,13 @@ class ScheduleLifecycleTestActivity : AppCompatActivity() {
                 ViewModelProvider(fragment, object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                        ScheduleViewModel(PreviewRepository(), FixedTime, SavedStateHandle()) as T
+                        ScheduleViewModel(PreviewRepository(), FixedTime, SavedStateHandle(),
+                            object : SchedulePreferencesRepository {
+                                override fun observeSportAutoSignEnabled() = showPendingSport
+                            }, object : PendingSportBookingsRepository {
+                                override fun observePendingBookings() = pendingSport
+                                override suspend fun refresh() = refreshPendingOutcome()
+                            }) as T
                 })[ScheduleViewModel::class.java]
             }
         }, false)
@@ -66,5 +76,8 @@ class ScheduleLifecycleTestActivity : AppCompatActivity() {
         @Volatile var refreshOutcome: suspend () -> AppResult<Unit> = { AppResult.Success(Unit) }
         @Volatile var clearOutcome: suspend () -> Unit = {}
         @Volatile var restrictToRequestedRange = false
+        @Volatile var showPendingSport = MutableStateFlow(false)
+        @Volatile var pendingSport = MutableStateFlow<DataState<List<PendingSportBooking>>>(DataState.Success(emptyList()))
+        @Volatile var refreshPendingOutcome: suspend () -> Unit = {}
     }
 }

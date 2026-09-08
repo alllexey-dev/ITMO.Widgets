@@ -21,7 +21,7 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.databinding.FragmentScheduleBinding
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleEvent
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleUiState
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
@@ -180,10 +180,8 @@ class ScheduleFragment : Fragment() {
             .onEach { state ->
                 renderSelectedUser(state.selectedUser)
                 when (state) {
-                    is ScheduleUiState.Loading -> showLoading()
                     is ScheduleUiState.Content -> renderSchedule(state)
-                    is ScheduleUiState.Empty -> showEmptySchedule()
-                    is ScheduleUiState.Error -> showError(state)
+                    else -> renderNonContent(state)
                 }
             }.launchIn(viewLifecycleOwner.lifecycleScope)
 
@@ -248,36 +246,20 @@ class ScheduleFragment : Fragment() {
 
     // region Ui
 
-    private fun showLoading() {
-        swipe.isRefreshing = true
-        if (adapter.itemCount == 0) {
-            binding.scheduleStateContainer.isVisible = false
-        }
-    }
-
     private fun renderSchedule(state: ScheduleUiState.Content) {
         swipe.isRefreshing = state.loadingMore
 
         binding.scheduleStateContainer.isVisible = false
 
         val renderedBinding = binding
-        adapter.submitList(state.schedule) {
+        adapter.submitList(state.displayDays) {
             // AsyncListDiffer may finish after navigation or even after a new view exists.
             if (_binding !== renderedBinding) return@submitList
+            if (viewModel.uiState.value !is ScheduleUiState.Content) return@submitList
             restoreScrollState()
-            tryScrollToToday(state.schedule)
+            tryScrollToToday(state.displayDays)
+            renderedBinding.outerRecyclerView.visibility = View.VISIBLE
         }
-    }
-
-    private fun showError(state: ScheduleUiState.Error) {
-        swipe.isRefreshing = false
-        if (adapter.itemCount > 0) return
-
-        binding.scheduleStateContainer.isVisible = true
-        binding.scheduleStateIcon.setImageResource(R.drawable.ic_error_rounded)
-        binding.scheduleStateTitle.setText(R.string.common_load_error_title)
-        binding.scheduleStateDescription.setText(state.error.messageRes())
-        binding.scheduleStateAction.isVisible = true
     }
 
     private fun renderSelectedUser(user: SelectedUser?) {
@@ -287,21 +269,38 @@ class ScheduleFragment : Fragment() {
         fabFriend.isVisible = user == null && userIsu == null
     }
 
-    private fun showEmptySchedule() {
-        swipe.isRefreshing = false
+    private fun renderNonContent(state: ScheduleUiState) {
+        swipe.isRefreshing = state is ScheduleUiState.Loading
+        binding.scheduleStateContainer.isVisible = false
+        // Only Content may retain rows during a refresh. Pending-only rows may
+        // already be disabled/private while an academic request is still running.
+        // Hide them immediately and reconcile the list before showing a state.
+        recycler.visibility = View.INVISIBLE
         val renderedBinding = binding
         adapter.submitList(emptyList()) {
             if (_binding !== renderedBinding) return@submitList
             when (val latest = viewModel.uiState.value) {
                 is ScheduleUiState.Empty -> {
+                    renderedBinding.swipeRefreshLayout.isRefreshing = false
                     renderedBinding.scheduleStateIcon.setImageResource(R.drawable.ic_event_note)
                     renderedBinding.scheduleStateTitle.setText(R.string.schedule_empty_title)
                     renderedBinding.scheduleStateDescription.setText(R.string.schedule_empty_description)
                     renderedBinding.scheduleStateAction.isVisible = false
                     renderedBinding.scheduleStateContainer.isVisible = true
                 }
-                is ScheduleUiState.Error -> showError(latest)
-                else -> renderedBinding.scheduleStateContainer.isVisible = false
+                is ScheduleUiState.Error -> {
+                    renderedBinding.swipeRefreshLayout.isRefreshing = false
+                    renderedBinding.scheduleStateIcon.setImageResource(R.drawable.ic_error_rounded)
+                    renderedBinding.scheduleStateTitle.setText(R.string.common_load_error_title)
+                    renderedBinding.scheduleStateDescription.setText(latest.error.messageRes())
+                    renderedBinding.scheduleStateAction.isVisible = true
+                    renderedBinding.scheduleStateContainer.isVisible = true
+                }
+                is ScheduleUiState.Loading -> {
+                    renderedBinding.swipeRefreshLayout.isRefreshing = true
+                    renderedBinding.scheduleStateContainer.isVisible = false
+                }
+                is ScheduleUiState.Content -> return@submitList
             }
             hideFabScrollToTop()
         }
@@ -324,7 +323,7 @@ class ScheduleFragment : Fragment() {
         if (fabTop.isShown) fabTop.hide()
     }
 
-    private fun tryScrollToToday(schedule: List<DaySchedule>) {
+    private fun tryScrollToToday(schedule: List<ScheduleDisplayDay>) {
 
         if (hasScrolledToToday) return
 

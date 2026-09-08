@@ -12,9 +12,11 @@ import dev.alllexey.itmowidgets.app.WidgetRefreshCoordinator
 import dev.alllexey.itmowidgets.app.DefaultWidgetPreviewFactory
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.CustomSpoilerRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
+import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.domain.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
@@ -37,6 +39,12 @@ abstract class SettingsModule {
     abstract fun bindSettingsRepository(
         impl: SettingsRepositoryImpl
     ): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSchedulePreferencesRepository(
+        impl: SchedulePreferencesRepositoryImpl
+    ): SchedulePreferencesRepository
 
     @Binds
     @Singleton

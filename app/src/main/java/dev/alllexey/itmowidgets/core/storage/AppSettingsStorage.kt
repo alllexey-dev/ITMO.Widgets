@@ -27,6 +27,9 @@ class AppSettingsStorage(
     suspend fun getCustomServicesEnabled(): Boolean =
         read()[CUSTOM_SERVICES_ENABLED] ?: false
 
+    suspend fun getScheduleSportAutoSignEnabled(): Boolean =
+        read()[SCHEDULE_SPORT_AUTO_SIGN_ENABLED] ?: false
+
     suspend fun getWidgetSmartSchedulingEnabled(): Boolean = true
 
     suspend fun getWidgetForwardSchedulingEnabled(): Boolean =
@@ -64,6 +67,11 @@ class AppSettingsStorage(
     fun observeCustomServicesEnabled(): Flow<Boolean> =
         preferences
             .map { it[CUSTOM_SERVICES_ENABLED] ?: false }
+            .distinctUntilChanged()
+
+    fun observeScheduleSportAutoSignEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[SCHEDULE_SPORT_AUTO_SIGN_ENABLED] ?: false }
             .distinctUntilChanged()
 
     fun observeWidgetForwardSchedulingEnabled(): Flow<Boolean> =
@@ -117,6 +125,10 @@ class AppSettingsStorage(
         write(CUSTOM_SERVICES_ENABLED, enabled)
     }
 
+    suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
+        write(SCHEDULE_SPORT_AUTO_SIGN_ENABLED, enabled)
+    }
+
     suspend fun setWidgetForwardSchedulingEnabled(enabled: Boolean) {
         write(WIDGET_FORWARD_SCHEDULING_ENABLED, enabled)
     }
@@ -162,6 +174,8 @@ class AppSettingsStorage(
     companion object {
         private val CUSTOM_SERVICES_ENABLED =
             booleanPreferencesKey("custom_services_enabled")
+        private val SCHEDULE_SPORT_AUTO_SIGN_ENABLED =
+            booleanPreferencesKey("schedule_sport_auto_sign_enabled")
         private val WIDGET_FORWARD_SCHEDULING_ENABLED =
             booleanPreferencesKey("widget_forward_scheduling_enabled")
         private val WIDGET_HIDE_TEACHER_ENABLED =

@@ -9,7 +9,7 @@ The settings root is a compact catalogue, not a scrolling list of every switch:
 
 - `Сервисы и доступ`: user services, privacy, and the Android notifications action.
 - `Виджеты`: schedule widgets and the QR widget.
-- `Приложение`: sport and maintenance.
+- `Приложение`: schedule, sport, and maintenance.
 
 Each category opens a separate back-stack entry with its own title and scroll
 position. Notification permissions open Android settings directly. Rows show a
@@ -113,12 +113,25 @@ do not incur an additional delay. Disabling services takes effect immediately.
 - `Сбросить изображение спойлера` removes the custom image.
 - Animation and custom-image controls are disabled when the spoiler is disabled.
 
+## Schedule
+
+- `Автозапись на спорт` displays pending sport auto-sign entries in the user's own
+  in-app schedule. It is disabled by default and does not represent a confirmed
+  booking.
+- This is a local display preference, stored as `schedule_sport_auto_sign_enabled`.
+  It can be changed while user services are disabled and never enables them or
+  grants consent implicitly. Displaying the entries still requires user services.
+- The preference applies only inside the application, not to schedule widgets
+  or another user's schedule. Changing it does not refresh installed widgets.
+- The page is an offline settings category with one toggle. Its footer explains
+  the application-only scope and user-services requirement.
+
 ## Sport
 
 - `Показывать фильтр по преподавателю` controls the optional teacher selector.
 - `Показывать фильтр по времени` controls the optional time selector.
-- Sport type, building, availability, auto-sign, and friends are ordinary screen
-  filters, not application settings.
+- Sport type, building, availability, auto-sign, and friends remain ordinary
+  sport-screen filters, separate from the schedule display preference above.
 
 ## Maps
 

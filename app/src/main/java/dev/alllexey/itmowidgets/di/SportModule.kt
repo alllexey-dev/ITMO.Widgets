@@ -2,9 +2,13 @@ package dev.alllexey.itmowidgets.di
 
 import dagger.Binds
 import dagger.Module
+import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
+import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.feature.sport.data.repository.PendingSportBookingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.debug.DefaultSportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
@@ -23,6 +27,26 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SportModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindPendingSportBookingsRepository(
+        impl: PendingSportBookingsRepositoryImpl
+    ): PendingSportBookingsRepository
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindSportQueueSessionDataCleaner(
+        impl: SportDataRepositoryImpl
+    ): SessionDataCleaner
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindSportBookingsSessionDataCleaner(
+        impl: SportBookingRepositoryImpl
+    ): SessionDataCleaner
 
     @Binds
     abstract fun bindSportScoreRepository(

@@ -25,6 +25,7 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
         private const val VIEW_TYPE_LESSON = 1
         private const val VIEW_TYPE_BREAK = 2
         private const val VIEW_TYPE_NO_LESSONS = 3
+        private const val VIEW_TYPE_PENDING_SPORT = 4
         private val TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
     }
 
@@ -35,6 +36,7 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
             is ScheduleItem.LessonItem -> VIEW_TYPE_LESSON
             is ScheduleItem.BreakItem -> VIEW_TYPE_BREAK
             is ScheduleItem.NoLessonsItem -> VIEW_TYPE_NO_LESSONS
+            is ScheduleItem.PendingSportItem -> VIEW_TYPE_PENDING_SPORT
         }
     }
 
@@ -44,6 +46,7 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
             VIEW_TYPE_LESSON -> LessonViewHolder(inflater.inflate(R.layout.item_schedule_lesson, parent, false))
             VIEW_TYPE_BREAK -> BreakViewHolder(inflater.inflate(R.layout.item_schedule_break, parent, false))
             VIEW_TYPE_NO_LESSONS -> EmptyDayViewHolder(inflater.inflate(R.layout.item_schedule_empty, parent, false))
+            VIEW_TYPE_PENDING_SPORT -> PendingSportViewHolder(inflater.inflate(R.layout.item_schedule_pending_sport, parent, false))
             else -> throw IllegalArgumentException("Invalid type")
         }
     }
@@ -59,6 +62,10 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
                 (holder as BreakViewHolder).bind(item)
             }
             is ScheduleItem.NoLessonsItem -> (holder as EmptyDayViewHolder).bind(item)
+            is ScheduleItem.PendingSportItem -> {
+                updateTimelineGuide(holder.itemView, R.id.timeline_guide)
+                (holder as PendingSportViewHolder).bind(item)
+            }
         }
     }
 
@@ -69,8 +76,11 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
             val timeLabel = row.findViewById<TextView>(R.id.time_start)
                 ?: LayoutInflater.from(row.context).inflate(R.layout.item_schedule_lesson, FrameLayout(row.context), false)
                     .findViewById<TextView>(R.id.time_start)
-            val widestTime = scheduleList.filterIsInstance<ScheduleItem.LessonItem>()
-                .flatMap { listOf(it.lesson.start, it.lesson.end) }
+            val widestTime = scheduleList.flatMap { item -> when (item) {
+                is ScheduleItem.LessonItem -> listOf(item.lesson.start, item.lesson.end)
+                is ScheduleItem.PendingSportItem -> listOf(item.booking.start.toLocalTime(), item.booking.end.toLocalTime())
+                else -> emptyList()
+            } }
                 .maxOfOrNull { ceil(timeLabel.paint.measureText(it.format(TIME_FORMATTER))).toInt() } ?: 0
             val margin = (timeLabel.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
             // Measure the actual themed/scaled font once, and keep breaks on the
@@ -174,6 +184,34 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
                     timeStart.setTextColor(color.onSurface)
                 }
             }
+        }
+    }
+
+    class PendingSportViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val title: TextView = itemView.findViewById(R.id.title)
+        private val start: TextView = itemView.findViewById(R.id.time_start)
+        private val end: TextView = itemView.findViewById(R.id.time_end)
+        private val status: TextView = itemView.findViewById(R.id.pending_status)
+        private val teacher: TextView = itemView.findViewById(R.id.pending_teacher)
+        private val location: TextView = itemView.findViewById(R.id.pending_location)
+        private val content: View = itemView.findViewById(R.id.card_container)
+
+        fun bind(item: ScheduleItem.PendingSportItem) {
+            val booking = item.booking
+            title.text = booking.sectionName
+            start.text = booking.start.format(TIME_FORMATTER)
+            end.text = booking.end.format(TIME_FORMATTER)
+            status.setText(if (booking.isPrediction) R.string.schedule_auto_sign_prediction else R.string.schedule_auto_sign_waiting)
+            status.contentDescription = itemView.context.getString(
+                if (booking.isPrediction) R.string.schedule_auto_sign_prediction_description else R.string.schedule_auto_sign_waiting_description
+            )
+            teacher.text = booking.teacherFio
+            teacher.visibility = if (booking.teacherFio.isBlank()) View.GONE else View.VISIBLE
+            location.text = booking.roomName
+            location.visibility = if (booking.roomName.isBlank()) View.GONE else View.VISIBLE
+            (content.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = if (item.isLast) 0 else 16.dp
+            itemView.alpha = 1f
+            content.alpha = 1f
         }
     }
 

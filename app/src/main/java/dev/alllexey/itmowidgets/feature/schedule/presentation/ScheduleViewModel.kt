@@ -6,7 +6,11 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.Job
@@ -16,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -25,7 +30,9 @@ import javax.inject.Inject
 class ScheduleViewModel @Inject constructor(
     private val repository: ScheduleRepository,
     private val timeProvider: AcademicTimeProvider,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val preferences: SchedulePreferencesRepository,
+    private val pendingRepository: PendingSportBookingsRepository
 ) : ViewModel() {
 
     private val rootUserIsu = savedStateHandle
@@ -38,9 +45,15 @@ class ScheduleViewModel @Inject constructor(
     private var currentDays = emptyList<DaySchedule>()
     private var observedUserIsu: Int? = activeUserIsu()
     private var isLoading = false
+    private var hasSuccessfulOfficialLoad = false
     private var lastError: AppError? = null
     private var observeJob: Job? = null
     private var refreshJob: Job? = null
+    private var hasStarted = false
+    private var sportAutoSignEnabled = false
+    private var pendingSport = emptyList<PendingSportBooking>()
+    private var pendingObserveJob: Job? = null
+    private var pendingRefreshJob: Job? = null
 
     private val _uiState = MutableStateFlow<ScheduleUiState>(
         ScheduleUiState.Loading(selectedUser)
@@ -50,6 +63,16 @@ class ScheduleViewModel @Inject constructor(
     private val eventChannel = Channel<ScheduleEvent>(capacity = Channel.BUFFERED)
     val events: Flow<ScheduleEvent> = eventChannel.receiveAsFlow()
 
+    init {
+        viewModelScope.launch {
+            preferences.observeSportAutoSignEnabled().distinctUntilChanged().collect { enabled ->
+                sportAutoSignEnabled = enabled
+                updatePendingObservation()
+                if (hasStarted) emitCurrentState()
+            }
+        }
+    }
+
     fun ensureDataLoaded() {
         if (observeJob == null) {
             loadInitialSchedule()
@@ -57,6 +80,7 @@ class ScheduleViewModel @Inject constructor(
     }
 
     fun loadInitialSchedule(forceRefresh: Boolean = false) {
+        hasStarted = true
         refreshJob?.cancel()
         val userIsu = activeUserIsu()
         val keepLoadedRange = forceRefresh && observedUserIsu == userIsu && observeJob != null
@@ -70,6 +94,7 @@ class ScheduleViewModel @Inject constructor(
         if (!keepLoadedRange) {
             observeRange()
         }
+        updatePendingObservation(refresh = true)
 
         val startDate = currentStart
         val endDate = currentEnd
@@ -113,12 +138,48 @@ class ScheduleViewModel @Inject constructor(
         savedStateHandle[STATE_SELECTED_USER_ISU] = user?.isu
         savedStateHandle[STATE_SELECTED_USER_NAME] = user?.name
         savedStateHandle[STATE_SELECTED_USER_AVATAR] = user?.avatar
+        updatePendingObservation()
         emitCurrentState()
+    }
+
+    private fun canShowPendingSport() = hasStarted && sportAutoSignEnabled &&
+        activeUserIsu() == null && observedUserIsu == null
+
+    private fun updatePendingObservation(refresh: Boolean = false) {
+        if (!canShowPendingSport()) {
+            pendingObserveJob?.cancel()
+            pendingObserveJob = null
+            pendingRefreshJob?.cancel()
+            pendingRefreshJob = null
+            pendingSport = emptyList()
+            return
+        }
+        val startObservation = pendingObserveJob == null
+        if (startObservation) {
+            pendingObserveJob = viewModelScope.launch {
+                pendingRepository.observePendingBookings().collect { state ->
+                    ensureActive()
+                    // When either queue or confirmed-booking data is unavailable,
+                    // old pending rows may already be signed. Hide this optional
+                    // overlay rather than inventing a still-active queue.
+                    pendingSport = when (state) {
+                        is DataState.Success -> state.data
+                        is DataState.Error -> emptyList()
+                    }
+                    emitCurrentState()
+                }
+            }
+        }
+        if (refresh || startObservation) {
+            pendingRefreshJob?.cancel()
+            pendingRefreshJob = viewModelScope.launch { pendingRepository.refresh() }
+        }
     }
 
     private fun prepareForUser(userIsu: Int?) {
         if (observedUserIsu != userIsu) {
             currentDays = emptyList()
+            hasSuccessfulOfficialLoad = false
             observedUserIsu = userIsu
         }
     }
@@ -141,9 +202,12 @@ class ScheduleViewModel @Inject constructor(
         isLoading = false
 
         when (result) {
-            is AppResult.Success -> lastError = null
+            is AppResult.Success -> {
+                hasSuccessfulOfficialLoad = true
+                lastError = null
+            }
             is AppResult.Failure -> {
-                if (currentDays.isEmpty()) {
+                if (!hasDisplayableContent(currentDisplayDays())) {
                     lastError = result.error
                 } else {
                     eventChannel.send(ScheduleEvent.ShowError(result.error))
@@ -154,12 +218,26 @@ class ScheduleViewModel @Inject constructor(
         emitCurrentState()
     }
 
+    private fun currentDisplayDays() = buildScheduleDisplayDays(
+        currentDays, if (canShowPendingSport()) pendingSport else emptyList(),
+        currentStart, currentEnd, timeProvider.zoneId, timeProvider.now()
+    )
+
+    // A successful empty academic response is still a usable snapshot. Keep its
+    // pending rows during refresh/pagination, but never mask an initial failure
+    // or retain rows after their optional source has been disabled or invalidated.
+    private fun hasDisplayableContent(displayDays: List<ScheduleDisplayDay>) =
+        currentDays.isNotEmpty() ||
+            (hasSuccessfulOfficialLoad && lastError == null && displayDays.isNotEmpty())
+
     private fun emitCurrentState() {
+        val displayDays = currentDisplayDays()
         _uiState.value = when {
-            currentDays.isNotEmpty() -> ScheduleUiState.Content(
+            hasDisplayableContent(displayDays) -> ScheduleUiState.Content(
                 schedule = currentDays,
                 loadingMore = isLoading,
-                selectedUser = selectedUser
+                selectedUser = selectedUser,
+                displayDays = displayDays
             )
 
             isLoading -> ScheduleUiState.Loading(selectedUser)

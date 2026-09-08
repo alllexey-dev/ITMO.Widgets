@@ -101,7 +101,7 @@ class SettingsViewModelTest {
 
             assertEquals(SettingsPage.ROOT, fixture.viewModel.page)
             assertEquals(3, fixture.viewModel.sections.value.size)
-            assertEquals(7, fixture.viewModel.allItems().size)
+            assertEquals(8, fixture.viewModel.allItems().size)
             assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
             val navigation = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
             assertEquals(
@@ -111,6 +111,13 @@ class SettingsViewModelTest {
             assertTrue(navigation.all { it.description == null })
             assertTrue(navigation.filter { it.page != SettingsPage.SERVICES }.all { it.value == null })
             assertEquals(UiText.Resource(R.string.settings_services_enabled), navigation.first().value)
+            val applicationSection = fixture.viewModel.sections.value.single {
+                it.title == UiText.Resource(R.string.me_group_app)
+            }
+            assertEquals(
+                listOf(SettingsPage.SCHEDULE, SettingsPage.SPORT, SettingsPage.MAINTENANCE),
+                applicationSection.items.filterIsInstance<SettingItem.Navigation>().map { it.page }
+            )
             assertEquals(0, fixture.repository.refreshSharingCount)
         }
 
@@ -244,6 +251,7 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_QR_RESET_IMAGE,
                     SettingsViewModel.KEY_SPORT_TEACHER_FILTER,
                     SettingsViewModel.KEY_SPORT_TIME_FILTER,
+                    SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN,
                     SettingsViewModel.KEY_REFRESH_WIDGETS,
                     SettingsViewModel.KEY_VERSION
                 ),
@@ -542,6 +550,63 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `schedule auto sign display is local and toggleable with custom services disabled`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.SCHEDULE)
+            advanceUntilIdle()
+
+            val section = fixture.viewModel.sections.value.single()
+            val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN)
+            assertEquals(listOf(toggle), section.items)
+            assertEquals(UiText.Resource(R.string.settings_group_schedule), fixture.viewModel.page.title)
+            assertEquals(UiText.Resource(R.string.settings_schedule_sport_auto_sign_title), toggle.title)
+            assertEquals(UiText.Resource(R.string.settings_schedule_sport_auto_sign_description), toggle.description)
+            assertEquals(UiText.Resource(R.string.settings_schedule_footer), section.footer)
+            assertTrue(toggle.enabled)
+            assertTrue(toggle.stateKnown)
+            assertFalse(toggle.checked)
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN, true)
+            advanceUntilIdle()
+            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertTrue(fixture.repository.local.value.showSportAutoSign)
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN, false)
+            advanceUntilIdle()
+            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertEquals(listOf(true, false), fixture.repository.scheduleSportAutoSignRequests)
+            assertFalse(fixture.repository.local.value.customServicesEnabled)
+            assertTrue(fixture.customServicesRepository.requests.isEmpty())
+            assertEquals(0, fixture.repository.refreshSharingCount)
+            assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
+            assertTrue(fixture.repository.sportSharingRequests.isEmpty())
+            assertEquals(0, fixture.widgetRefresher.refreshCount)
+            assertEquals(null, fixture.viewModel.previewSettings.value)
+        }
+
+    @Test
+    fun `schedule auto sign display waits for and follows persisted values`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(
+                page = SettingsPage.SCHEDULE,
+                local = LocalSettings(showSportAutoSign = true),
+                localInitiallyAvailable = false
+            )
+            advanceUntilIdle()
+            assertTrue(fixture.viewModel.sections.value.isEmpty())
+
+            fixture.repository.publishLocalSettings()
+            advanceUntilIdle()
+            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+
+            fixture.repository.local.value = fixture.repository.local.value.copy(showSportAutoSign = false)
+            advanceUntilIdle()
+            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertTrue(fixture.repository.scheduleSportAutoSignRequests.isEmpty())
+            assertEquals(0, fixture.widgetRefresher.refreshCount)
+        }
+
+    @Test
     fun `fast privacy responses stay in the bounded loading state for 300 ms`() = runTest(mainDispatcherRule.dispatcher) {
         val fixture = createFixture(
             page = SettingsPage.PRIVACY,
@@ -706,6 +771,7 @@ class SettingsViewModelTest {
         val qrAnimationRequests = mutableListOf<QrAnimationType>()
         val teacherSelectorHiddenRequests = mutableListOf<Boolean>()
         val timeSelectorHiddenRequests = mutableListOf<Boolean>()
+        val scheduleSportAutoSignRequests = mutableListOf<Boolean>()
 
         override fun observeLocalSettings(): Flow<LocalSettings> =
             combine(localAvailable, local) { available, settings ->
@@ -803,6 +869,11 @@ class SettingsViewModelTest {
             local.value = local.value.copy(
                 sport = local.value.sport.copy(hideTimeSelector = hidden)
             )
+        }
+
+        override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
+            scheduleSportAutoSignRequests += enabled
+            local.value = local.value.copy(showSportAutoSign = enabled)
         }
     }
 

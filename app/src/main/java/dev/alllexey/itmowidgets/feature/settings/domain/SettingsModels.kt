@@ -10,7 +10,8 @@ data class LocalSettings(
     val customServicesEnabled: Boolean = false,
     val scheduleWidget: ScheduleWidgetSettings = ScheduleWidgetSettings(),
     val qrWidget: QrWidgetSettings = QrWidgetSettings(),
-    val sport: SportDisplaySettings = SportDisplaySettings()
+    val sport: SportDisplaySettings = SportDisplaySettings(),
+    val showSportAutoSign: Boolean = false
 )
 
 /** Stored as `hide*` to preserve the existing preference keys. */
@@ -47,6 +48,8 @@ interface SettingsRepository {
     suspend fun setScheduleSharing(enabled: Boolean): AppResult<Unit>
 
     suspend fun setSportSharing(enabled: Boolean): AppResult<Unit>
+
+    suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean)
 
     suspend fun setNextLessonEarlyEnabled(enabled: Boolean)
 

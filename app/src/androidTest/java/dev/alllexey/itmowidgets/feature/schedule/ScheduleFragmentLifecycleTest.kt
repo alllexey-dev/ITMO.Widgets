@@ -19,11 +19,15 @@ import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleUiState
+import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleFragment
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
+import dev.alllexey.itmowidgets.feature.schedule.ui.DayScheduleAdapter
 import java.io.File
 import java.time.LocalDate
 import java.util.concurrent.CountDownLatch
@@ -213,6 +217,206 @@ class ScheduleFragmentLifecycleTest {
         }
 
     @Test
+    fun liveAutoSignPreferenceUpdatesTheVisibleDayWithoutResettingItsAnchor() = withSchedule { scenario ->
+        val anchor = scrollToMiddle(scenario)
+        val date = sampleDays()[anchor.first].date
+        val start = date.atTime(16, 0).atZone(java.time.ZoneId.of("Europe/Moscow")).toOffsetDateTime()
+        ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(listOf(PendingSportBooking(
+            queueId = 77, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 777,
+            sectionName = "Тестовая секция плавания", start = start, end = start.plusMinutes(90),
+            teacherFio = "Тестовый преподаватель", roomName = "Тестовый корпус", isPrediction = true
+        )))
+        ScheduleLifecycleTestActivity.showPendingSport.value = true
+        eventually(scenario) { activity ->
+            val state = activity.viewModel().uiState.value as ScheduleUiState.Content
+            assertEquals(1, state.displayDays.single { it.date == date }.pendingSport.size)
+            assertTrue(state.schedule.single { it.date == date }.lessons.isEmpty())
+            assertNotNull(activity.recycler().findViewById<View>(R.id.pending_sport_root))
+            assertEquals(anchor, activity.anchor())
+            assertEquals(30, activity.recycler().adapter!!.itemCount)
+        }
+        screenshot("pending-visible")
+        ScheduleLifecycleTestActivity.showPendingSport.value = false
+        eventually(scenario) { activity ->
+            assertNull(activity.recycler().findViewById<View>(R.id.pending_sport_root))
+            assertEquals(anchor, activity.anchor())
+            assertEquals(30, activity.recycler().adapter!!.itemCount)
+        }
+    }
+
+    @Test
+    fun pendingOnlyRefreshAndScrollPaginationKeepTheVisibleDayThroughEveryFrame() =
+        withSchedule(initialDays = emptyList(), restrictToRequestedRange = true) { scenario ->
+            val today = LocalDate.of(2026, 9, 7)
+            ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success((1..42).flatMap { day ->
+                (0..2).map { index ->
+                    val id = (day * 10 + index).toLong()
+                    val start = today.plusDays(day.toLong()).atTime(14 + index * 2, 0)
+                        .atZone(java.time.ZoneId.of("Europe/Moscow")).toOffsetDateTime()
+                    PendingSportBooking(
+                        queueId = id, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 1000 + id,
+                        sectionName = "Тестовая секция плавания с ожиданием свободного места",
+                        start = start, end = start.plusMinutes(90), teacherFio = "Тестовый преподаватель",
+                        roomName = "Тестовый спортивный корпус", isPrediction = true
+                    )
+                }
+            })
+            ScheduleLifecycleTestActivity.showPendingSport.value = true
+            eventually(scenario) { activity ->
+                assertEquals(14, activity.recycler().adapter!!.itemCount)
+                val state = activity.viewModel().uiState.value
+                assertTrue(state is ScheduleUiState.Content)
+                assertFalse((state as ScheduleUiState.Content).loadingMore)
+                assertTrue(state.schedule.isEmpty())
+            }
+            val anchor = scrollToMiddle(scenario)
+            var expectedAnchor: Pair<Int, Int>? = anchor
+            val invalidFrame = AtomicBoolean(false)
+            val request = CompletableDeferred<AppResult<Unit>>()
+            val page = CompletableDeferred<AppResult<Unit>>()
+            val pageStarted = AtomicBoolean(false)
+            lateinit var root: View
+            val observer = ViewTreeObserver.OnPreDrawListener {
+                val list = root.findViewById<RecyclerView>(R.id.outerRecyclerView)
+                val layout = list.layoutManager as LinearLayoutManager
+                val first = layout.findFirstVisibleItemPosition()
+                val offset = layout.findViewByPosition(first)?.top?.minus(list.paddingTop)
+                if (!list.isShown || list.adapter!!.itemCount == 0 ||
+                    (expectedAnchor != null && expectedAnchor != (first to offset))) {
+                    invalidFrame.set(true)
+                }
+                true
+            }
+            ScheduleLifecycleTestActivity.refreshOutcome = { request.await() }
+            scenario.onActivity { activity ->
+                root = activity.schedule().requireView()
+                root.viewTreeObserver.addOnPreDrawListener(observer)
+                activity.viewModel().loadInitialSchedule(forceRefresh = true)
+            }
+            try {
+                eventually(scenario) { activity ->
+                    val current = activity.viewModel().uiState.value
+                    assertTrue(current is ScheduleUiState.Content)
+                    assertTrue((current as ScheduleUiState.Content).loadingMore)
+                    assertEquals(14, activity.recycler().adapter!!.itemCount)
+                    assertEquals(anchor, activity.anchor())
+                    assertTrue(activity.recycler().isShown)
+                }
+                screenshot("pending-only-refresh")
+                request.complete(AppResult.Success(Unit))
+                eventually(scenario) { activity ->
+                    assertFalse((activity.viewModel().uiState.value as ScheduleUiState.Content).loadingMore)
+                    assertEquals(anchor, activity.anchor())
+                }
+
+                ScheduleLifecycleTestActivity.refreshOutcome = {
+                    pageStarted.set(true)
+                    page.await()
+                }
+                scenario.onActivity { activity ->
+                    expectedAnchor = null // The next movement is the user's deliberate scroll.
+                    (activity.recycler().layoutManager as LinearLayoutManager)
+                        .scrollToPositionWithOffset(12, -19)
+                }
+                val pageAnchor = 12 to -19
+                eventually(scenario) { activity ->
+                    assertTrue("Scrolling near the end must request the next range", pageStarted.get())
+                    val current = activity.viewModel().uiState.value
+                    assertTrue(current is ScheduleUiState.Content)
+                    assertTrue((current as ScheduleUiState.Content).loadingMore)
+                    assertTrue(current.schedule.isEmpty())
+                    assertEquals(28, activity.recycler().adapter!!.itemCount)
+                    assertEquals(pageAnchor, activity.anchor())
+                    assertTrue(activity.recycler().isShown)
+                }
+                scenario.onActivity { expectedAnchor = pageAnchor }
+                screenshot("pending-only-pagination")
+                page.complete(AppResult.Success(Unit))
+                eventually(scenario) { activity ->
+                    assertFalse((activity.viewModel().uiState.value as ScheduleUiState.Content).loadingMore)
+                    assertEquals(28, activity.recycler().adapter!!.itemCount)
+                    assertEquals(pageAnchor, activity.anchor())
+                }
+                assertFalse("Pending-only refresh/pagination hid rows or moved a resting anchor", invalidFrame.get())
+            } finally {
+                request.complete(AppResult.Success(Unit))
+                page.complete(AppResult.Success(Unit))
+                scenario.onActivity { root.viewTreeObserver.removeOnPreDrawListener(observer) }
+            }
+        }
+
+    @Test
+    fun pendingOnlyRowsAreRemovedDuringLoadingAndStayRemovedAfterFailure() {
+        for (removal in listOf("preference", "services", "error")) {
+            withSchedule(initialDays = emptyList()) { scenario ->
+                val start = LocalDate.of(2026, 9, 8).atTime(16, 0)
+                    .atZone(java.time.ZoneId.of("Europe/Moscow")).toOffsetDateTime()
+                ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(listOf(PendingSportBooking(
+                    queueId = 78, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 778,
+                    sectionName = "Тестовая автозапись без учебных пар", start = start, end = start.plusMinutes(90),
+                    teacherFio = "Тестовый преподаватель", roomName = "Тестовый корпус", isPrediction = true
+                )))
+                ScheduleLifecycleTestActivity.showPendingSport.value = true
+                eventually(scenario) { activity ->
+                    val current = activity.viewModel().uiState.value
+                    assertTrue(current is ScheduleUiState.Content)
+                    val state = current as ScheduleUiState.Content
+                    assertFalse(state.loadingMore)
+                    assertTrue(state.schedule.isEmpty())
+                    assertEquals(1, activity.recycler().adapter!!.itemCount)
+                    assertTrue(activity.recycler().findViewById<View>(R.id.pending_sport_root)?.isShown == true)
+                }
+
+                val request = CompletableDeferred<AppResult<Unit>>()
+                ScheduleLifecycleTestActivity.refreshOutcome = { request.await() }
+                try {
+                    scenario.onActivity { it.viewModel().loadInitialSchedule(forceRefresh = true) }
+                    eventually(scenario) { activity ->
+                        val current = activity.viewModel().uiState.value
+                        assertTrue(current is ScheduleUiState.Content)
+                        assertTrue((current as ScheduleUiState.Content).loadingMore)
+                        assertEquals(1, activity.recycler().adapter!!.itemCount)
+                        assertTrue(activity.recycler().findViewById<View>(R.id.pending_sport_root)?.isShown == true)
+                    }
+                    when (removal) {
+                        "preference" -> ScheduleLifecycleTestActivity.showPendingSport.value = false
+                        "services" -> ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(emptyList())
+                        else -> ScheduleLifecycleTestActivity.pendingSport.value = DataState.Error(AppError.Network)
+                    }
+                    eventually(scenario) { activity ->
+                        val root = activity.schedule().requireView()
+                        assertTrue(activity.viewModel().uiState.value is ScheduleUiState.Loading)
+                        assertEquals("Stale pending rows after $removal", 0, activity.recycler().adapter!!.itemCount)
+                        assertNull(activity.recycler().findViewById<View>(R.id.pending_sport_root))
+                        assertEquals(View.GONE, root.findViewById<View>(R.id.schedule_state_container).visibility)
+                        assertTrue(root.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh_layout).isRefreshing)
+                    }
+                    request.complete(AppResult.Failure(AppError.Network))
+                    eventually(scenario) { activity ->
+                        assertEquals(ScheduleUiState.Error(AppError.Network, null), activity.viewModel().uiState.value)
+                        assertEquals(0, activity.recycler().adapter!!.itemCount)
+                        assertNull(activity.recycler().findViewById<View>(R.id.pending_sport_root))
+                        assertState(activity, R.string.common_load_error_title, retryVisible = true)
+                        assertFalse(activity.schedule().requireView()
+                            .findViewById<SwipeRefreshLayout>(R.id.swipe_refresh_layout).isRefreshing)
+                    }
+                    ScheduleLifecycleTestActivity.refreshOutcome = { AppResult.Success(Unit) }
+                    ScheduleLifecycleTestActivity.days.value = sampleDays()
+                    scenario.onActivity { it.viewModel().loadInitialSchedule(forceRefresh = true) }
+                    eventually(scenario) { activity ->
+                        assertEquals(30, activity.recycler().adapter!!.itemCount)
+                        assertTrue(activity.recycler().isShown)
+                        assertEquals(View.GONE, activity.schedule().requireView()
+                            .findViewById<View>(R.id.schedule_state_container).visibility)
+                    }
+                } finally {
+                    request.complete(AppResult.Success(Unit))
+                }
+            }
+        }
+    }
+
+    @Test
     fun pendingListUpdatesCannotTouchDestroyedOrReplacementViews() = withSchedule { scenario ->
         repeat(5) { index ->
             scenario.onActivity { activity ->
@@ -264,8 +468,8 @@ class ScheduleFragmentLifecycleTest {
 
     @Test
     fun refreshErrorArrivingBeforeEmptyDiffCommitRemainsVisibleAfterCommit() {
-        val days = GatedDays(sampleDays())
-        withSchedule(days) { scenario ->
+        withSchedule { scenario ->
+            val days = installDiffGate(scenario)
             try {
                 days.arm()
                 scenario.onActivity { ScheduleLifecycleTestActivity.days.value = emptyList() }
@@ -290,9 +494,9 @@ class ScheduleFragmentLifecycleTest {
 
     @Test
     fun refreshStartingBeforeEmptyDiffCommitKeepsLoadingUntilItCompletes() {
-        val days = GatedDays(sampleDays())
         val refresh = CompletableDeferred<Unit>()
-        withSchedule(days) { scenario ->
+        withSchedule { scenario ->
+            val days = installDiffGate(scenario)
             try {
                 days.arm()
                 scenario.onActivity { ScheduleLifecycleTestActivity.days.value = emptyList() }
@@ -336,6 +540,9 @@ class ScheduleFragmentLifecycleTest {
         ScheduleLifecycleTestActivity.refreshOutcome = { AppResult.Success(Unit) }
         ScheduleLifecycleTestActivity.clearOutcome = {}
         ScheduleLifecycleTestActivity.restrictToRequestedRange = restrictToRequestedRange
+        ScheduleLifecycleTestActivity.showPendingSport = MutableStateFlow(false)
+        ScheduleLifecycleTestActivity.pendingSport = MutableStateFlow(DataState.Success(emptyList()))
+        ScheduleLifecycleTestActivity.refreshPendingOutcome = {}
         try {
             ActivityScenario.launch(ScheduleLifecycleTestActivity::class.java).use { scenario ->
                 eventually(scenario) { assertEquals(initialItemCount, it.recycler().adapter!!.itemCount) }
@@ -346,6 +553,9 @@ class ScheduleFragmentLifecycleTest {
             ScheduleLifecycleTestActivity.refreshOutcome = { AppResult.Success(Unit) }
             ScheduleLifecycleTestActivity.clearOutcome = {}
             ScheduleLifecycleTestActivity.restrictToRequestedRange = false
+            ScheduleLifecycleTestActivity.showPendingSport = MutableStateFlow(false)
+            ScheduleLifecycleTestActivity.pendingSport = MutableStateFlow(DataState.Success(emptyList()))
+            ScheduleLifecycleTestActivity.refreshPendingOutcome = {}
         }
     }
 
@@ -437,8 +647,20 @@ class ScheduleFragmentLifecycleTest {
         DaySchedule(date.dayOfWeek.value, 1, date, null, emptyList())
     }
 
+    private fun installDiffGate(scenario: ActivityScenario<ScheduleLifecycleTestActivity>): GatedDays<ScheduleDisplayDay> {
+        lateinit var days: GatedDays<ScheduleDisplayDay>
+        val committed = AtomicBoolean(false)
+        scenario.onActivity { activity ->
+            val adapter = activity.recycler().adapter as DayScheduleAdapter
+            days = GatedDays(adapter.currentList.toList())
+            adapter.submitList(days) { committed.set(true) }
+        }
+        eventually(scenario) { assertTrue("The gated display list was not committed", committed.get()) }
+        return days
+    }
+
     /** Holds DiffUtil's background size read; UI-thread reads never wait. */
-    private class GatedDays(private val values: List<DaySchedule>) : AbstractList<DaySchedule>() {
+    private class GatedDays<T>(private val values: List<T>) : AbstractList<T>() {
         private val armed = AtomicBoolean(false)
         private val reached = CountDownLatch(1)
         private val released = CountDownLatch(1)
@@ -453,7 +675,7 @@ class ScheduleFragmentLifecycleTest {
                 return values.size
             }
 
-        override fun get(index: Int): DaySchedule = values[index]
+        override fun get(index: Int): T = values[index]
 
         fun arm() = armed.set(true)
 

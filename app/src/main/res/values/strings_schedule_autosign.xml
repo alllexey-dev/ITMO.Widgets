@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="schedule_auto_sign_label">Автозапись</string>
+    <string name="schedule_auto_sign_waiting">Автозапись · ожидание места</string>
+    <string name="schedule_auto_sign_prediction">Автозапись · прогноз</string>
+    <string name="schedule_auto_sign_waiting_description">Автозапись: ожидаем свободное место. Запись ещё не подтверждена.</string>
+    <string name="schedule_auto_sign_prediction_description">Автозапись на прогнозируемое занятие. Занятие ещё не опубликовано, запись не подтверждена.</string>
+</resources>

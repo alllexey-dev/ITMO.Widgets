@@ -3,7 +3,9 @@ package dev.alllexey.itmowidgets.feature.sport.data.repository
 import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.core.network.requireResult
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.util.MergedDataState
 import dev.alllexey.itmowidgets.core.util.dataOrNull
@@ -20,16 +22,23 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
+import javax.inject.Singleton
+import retrofit2.HttpException
 
+@Singleton
 class SportBookingRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
     private val sportDataRepository: SportDataRepository,
     private val myItmoApi: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi
-) : SportBookingRepository {
+) : SportBookingRepository, SessionDataCleaner {
 
     private val bookingsFlow = MutableSharedFlow<DataState<List<SportBooking>>>(replay = 1)
+    private val sessionMutex = Mutex()
+    private var sessionGeneration = 0L
 
     private val combined = combine(
         bookingsFlow,
@@ -80,12 +89,18 @@ class SportBookingRepositoryImpl @Inject constructor(
 
     override fun observeSportBookings() = combined
 
+    override fun observeConfirmedSportBookings() = bookingsFlow
+
     override suspend fun refreshSportBookings() {
+        val generation = sessionMutex.withLock { sessionGeneration }
         try {
             val result = withContext(Dispatchers.IO) {
                 val response = myItmoApi.chosenSportSections.execute()
-                response.body()?.result?.flatMap { it.toBookings() }
-            } ?: emptyList()
+                if (!response.isSuccessful) throw HttpException(response)
+                response.body().requireResult().flatMap { it.toBookings() }
+            }
+
+            if (sessionMutex.withLock { generation != sessionGeneration }) return
 
             if (settings.getCustomServicesEnabled()) {
                 try {
@@ -99,12 +114,21 @@ class SportBookingRepositoryImpl @Inject constructor(
                 }
             }
 
-            bookingsFlow.emit(DataState.Success(result))
+            sessionMutex.withLock {
+                if (generation == sessionGeneration) bookingsFlow.emit(DataState.Success(result))
+            }
 
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            bookingsFlow.emit(DataState.Error(error.toAppError()))
+            sessionMutex.withLock {
+                if (generation == sessionGeneration) bookingsFlow.emit(DataState.Error(error.toAppError()))
+            }
         }
+    }
+
+    override suspend fun clearSessionData() = sessionMutex.withLock {
+        sessionGeneration++
+        bookingsFlow.emit(DataState.Success(emptyList()))
     }
 }

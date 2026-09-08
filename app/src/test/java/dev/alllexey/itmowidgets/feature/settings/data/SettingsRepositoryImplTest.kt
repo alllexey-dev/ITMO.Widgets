@@ -18,6 +18,8 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SportDisplaySettings
 import java.io.IOException
 import java.lang.reflect.Proxy
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +28,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -52,6 +55,7 @@ class SettingsRepositoryImplTest {
         fixture.repository.setQrAnimationType(QrAnimationType.FADE)
         fixture.repository.setTeacherSelectorHidden(false)
         fixture.repository.setTimeSelectorHidden(false)
+        fixture.repository.setScheduleSportAutoSignEnabled(true)
 
         assertEquals(
             LocalSettings(
@@ -70,10 +74,31 @@ class SettingsRepositoryImplTest {
                 sport = SportDisplaySettings(
                     hideTeacherSelector = false,
                     hideTimeSelector = false
-                )
+                ),
+                showSportAutoSign = true
             ),
             fixture.repository.observeLocalSettings().first()
         )
+    }
+
+    @Test
+    fun `schedule sport auto sign updates local settings without enabling services or calling backend`() = runTest {
+        val fixture = createRepository()
+        assertFalse(fixture.repository.observeLocalSettings().first().showSportAutoSign)
+        val enabledSettings = async(start = CoroutineStart.UNDISPATCHED) {
+            fixture.repository.observeLocalSettings().first { it.showSportAutoSign }
+        }
+
+        fixture.repository.setScheduleSportAutoSignEnabled(true)
+
+        assertEquals(LocalSettings(showSportAutoSign = true), enabledSettings.await())
+        assertTrue(fixture.storage.getScheduleSportAutoSignEnabled())
+        fixture.repository.setScheduleSportAutoSignEnabled(false)
+        assertEquals(LocalSettings(), fixture.repository.observeLocalSettings().first())
+        assertFalse(fixture.storage.getScheduleSportAutoSignEnabled())
+        assertFalse(fixture.storage.getCustomServicesEnabled())
+        assertEquals(0, fixture.api.mySettingsCalls)
+        assertTrue(fixture.api.updatedSettings.isEmpty())
     }
 
     @Test

@@ -74,13 +74,15 @@ class SettingsRepositoryImpl @Inject constructor(
             settings.observeCustomServicesEnabled(),
             scheduleWidget,
             qrWidget,
-            sport
-        ) { customServices, schedule, qr, sportSettings ->
+            sport,
+            settings.observeScheduleSportAutoSignEnabled()
+        ) { customServices, schedule, qr, sportSettings, showSportAutoSign ->
             LocalSettings(
                 customServicesEnabled = customServices,
                 scheduleWidget = schedule,
                 qrWidget = qr,
-                sport = sportSettings
+                sport = sportSettings,
+                showSportAutoSign = showSportAutoSign
             )
         }
     }
@@ -120,6 +122,10 @@ class SettingsRepositoryImpl @Inject constructor(
         return updateSharingSettings { current ->
             current.copy(sportSharing = enabled)
         }
+    }
+
+    override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
+        settings.setScheduleSportAutoSignEnabled(enabled)
     }
 
     override suspend fun setNextLessonEarlyEnabled(enabled: Boolean) {
