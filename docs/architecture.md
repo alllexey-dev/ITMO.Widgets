@@ -425,9 +425,11 @@ unknown choices. Disabling services bypasses the delay immediately.
 Privacy uses the typed Core `GET/PUT /api/users/me/privacy` contract, with independent
 `ALL`, `FRIENDS`, and `NOBODY` audiences. Android's `SharingVisibility` is a domain
 enum mapped at the repository boundary; no transport DTO reaches presentation.
-Legacy boolean privacy endpoints are not a fallback: an older Backend must show
-a load error instead of silently ignoring an `ALL` choice. The existing
-`UserSummary.sharing` booleans are viewer-scoped capabilities, not owner audiences.
+The unreleased boolean privacy endpoints and Core adapters have been removed.
+Public `UserData.capabilities` requires `canViewSchedule` and `canViewSport`; Core
+rejects missing or malformed permissions rather than inferring access from old
+settings. The existing domain `UserSummary.sharing` booleans map these viewer-scoped
+capabilities, not owner audiences. Own audiences use only `/api/users/me/privacy`.
 Definitive denial of a foreign schedule removes that user's entire cache and visible
 content, without deleting own or other users' data. Generation checks prevent a
 concurrent late response from restoring a revoked cache. Ordinary network failures
@@ -437,9 +439,11 @@ Coordinated development uses Core and Backend `1.2.0-SNAPSHOT`. Core is publishe
 only to MavenLocal. The privacy contract was smoke-tested on the development
 server; subsequent local changes do not imply another deployment. Neither is a
 public release or a production deployment. This privacy screen requires the new
-Backend privacy endpoint. Legacy disabled audiences remain `NOBODY`; only new
-users default to `FRIENDS`. A public non-friend profile/search entry point is not
-added here.
+Backend privacy endpoint and the coordinated `capabilities` user-data shape. The
+local PostgreSQL hardening changes and refreshed Core artifact have not been
+deployed to that server. The fresh-database schema defaults new users to `FRIENDS`;
+it does not import legacy MariaDB preferences. A public non-friend profile/search
+entry point is not added here.
 
 Application update metadata has a separate public `GET /api/app/version-info`
 contract: required `minVersion`, `latestVersion`, and plain-text `note` strings.
