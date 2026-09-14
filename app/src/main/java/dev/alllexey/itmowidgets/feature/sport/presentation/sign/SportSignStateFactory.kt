@@ -31,23 +31,23 @@ class SportSignStateFactory @Inject constructor(
             selectedSportNames.isEmpty() || it.sectionName in selectedSportNames
         }
 
-        fun SportLesson.realBuildingId(): Long {
+        fun SportLesson.buildingFilterId(): Long {
             return when {
-                roomId == -1L || buildingId == null -> -1L
-                buildingsById.containsKey(buildingId) -> buildingId
+                roomId == -1L -> -1L
+                buildingId != null && buildingId > 0 && buildingsById.containsKey(buildingId) -> buildingId
                 else -> 0L
             }
         }
 
         val validBuildingName = selectedBuildingName?.takeIf { name ->
-            lessonsBySport.any { buildingsById[it.realBuildingId()] == name }
+            lessonsBySport.any { buildingsById[it.buildingFilterId()] == name }
         }
         val selectedBuildingId = buildingsById.entries
             .find { it.value == validBuildingName }
             ?.key
 
         val lessonsByBuilding = selectedBuildingId?.let { buildingId ->
-            lessonsBySport.filter { it.realBuildingId() == buildingId }
+            lessonsBySport.filter { it.buildingFilterId() == buildingId }
         } ?: lessonsBySport
 
         val validTeacherNames = lessonsByBuilding
@@ -76,7 +76,7 @@ class SportSignStateFactory @Inject constructor(
             .distinct()
             .sortedBy { it.shorten() }
         val availableBuildings = lessonsBySport
-            .mapNotNull { buildingsById[it.realBuildingId()] }
+            .mapNotNull { buildingsById[it.buildingFilterId()] }
             .distinct()
             .sorted()
         val availableTeachers = validTeacherNames.sorted()

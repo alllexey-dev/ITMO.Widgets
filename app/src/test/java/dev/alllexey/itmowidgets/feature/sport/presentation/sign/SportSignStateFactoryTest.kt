@@ -114,6 +114,28 @@ class SportSignStateFactoryTest {
         assertEquals("Несуществующий корпус", filters.selectedBuildingName)
     }
 
+    @Test
+    fun `online and other venues are filter categories without changing real location ids`() {
+        val base = lesson(1, "Плавание", 335, 100, 1, "2026-07-22T10:00:00+03:00")
+        val external = base.copy(roomId = 20013, roomName = "Внешний бассейн")
+        val anotherExternal = base.copy(lessonId = 2, buildingId = 493, roomId = 21765)
+        val online = base.copy(lessonId = 3, buildingId = null, roomId = -1, roomName = "Online")
+        val unknownOffline = base.copy(lessonId = 4, buildingId = null, roomId = 10)
+        val missingOnlineMarker = base.copy(lessonId = 5, buildingId = -1, roomId = 10)
+        val rows = listOf(external, anotherExternal, online, unknownOffline, missingOnlineMarker)
+        val filters = catalog.copy(buildings = catalog.buildings + SportFilterOption(0, "Другие объекты"))
+        fun state(building: String?) = factory.create(rows, filters, timeSlots,
+            SportSignFilters(selectedDate = timeProvider.today(), selectedBuildingName = building), false)
+
+        assertEquals(listOf(online), state("Онлайн").displayedLessons)
+        assertEquals(listOf(external, anotherExternal, unknownOffline, missingOnlineMarker), state("Другие объекты").displayedLessons)
+        assertEquals(rows, state(null).displayedLessons)
+        assertEquals(335L, external.buildingId)
+        assertEquals(493L, anotherExternal.buildingId)
+        assertNull(online.buildingId)
+        assertEquals(-1L, online.roomId)
+    }
+
     private fun lesson(
         id: Long,
         section: String,

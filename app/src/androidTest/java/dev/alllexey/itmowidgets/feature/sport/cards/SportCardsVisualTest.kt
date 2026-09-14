@@ -30,6 +30,12 @@ import dev.alllexey.itmowidgets.feature.sport.ui.SportCardsPreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonItem
 import java.io.File
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignStateFactory
+import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignFilters
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterOption
+import java.time.ZoneId
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -100,6 +106,47 @@ class SportCardsVisualTest {
                 scenario.recreate()
                 settle()
                 scenario.onActivity { assertEquals(lesson.sectionName.raw, sheet(it).requireView().findViewById<TextView>(R.id.section_name).text.toString()) }
+            }
+        }
+    }
+
+    @Test fun onlineAndExternalLocationsRenderAcrossThemesAndFilters() {
+        val appearances = listOf(
+            SportCardsPreviewActivity.Appearance(),
+            SportCardsPreviewActivity.Appearance(dark = true),
+            SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, colorSeed = 0xff826c24.toInt()),
+            SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, dark = true, colorSeed = 0xff386a20.toInt())
+        )
+        val original = SportCardFixtures.lesson()
+        val online = original.copy(lessonId = 101, sectionName = SectionName("Шахматы"), buildingId = null,
+            roomId = -1, roomName = "Online")
+        val external = original.copy(lessonId = 102, sectionName = SectionName("Плавание"), buildingId = 335,
+            roomId = 20013, roomName = "ул. Правды, 11, ФОК «Юность»")
+        val unknown = original.copy(lessonId = 103, sectionName = SectionName("Тренировка"), buildingId = null,
+            roomId = 99, roomName = "Место уточняется")
+        val clock = object : AcademicTimeProvider {
+            override val zoneId = ZoneId.of("Europe/Moscow")
+            override fun today() = original.start.toLocalDate()
+            override fun now() = original.start.minusHours(1)
+        }
+        val factory = SportSignStateFactory(clock)
+        val catalog = SportFilterCatalog(
+            buildings = listOf(
+                SportFilterOption(-1, "Онлайн"),
+                SportFilterOption(0, "Другие объекты")),
+            sections = emptyList(), sportTypes = emptyList(), teachers = emptyList())
+        appearances.forEachIndexed { index, appearance ->
+            preview(appearance) { scenario ->
+                for ((filter, expected) in listOf("Онлайн" to listOf(online), "Другие объекты" to listOf(external, unknown))) {
+                    val state = factory.create(listOf(online, external, unknown), catalog, emptyList(),
+                        SportSignFilters(
+                            selectedDate = clock.today(), selectedBuildingName = filter), false)
+                    assertEquals(expected, state.displayedLessons)
+                    scenario.onActivity { it.showLessons(state.displayedLessons.map { row -> SportLessonItem(row) }) }
+                    settle()
+                    scenario.onActivity { assertTextFits(it.list, allowEllipsis = true); assertTouchTargets(it.list) }
+                    screenshot("venue-${if (filter == "Онлайн") "online" else "external"}-$index")
+                }
             }
         }
     }

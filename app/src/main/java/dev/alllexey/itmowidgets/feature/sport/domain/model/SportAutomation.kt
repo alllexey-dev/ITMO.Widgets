@@ -21,7 +21,7 @@ data class SportQueueLesson(
     val sectionLevel: Long,
     val level: Long,
     val typeId: Long,
-    val buildingId: Long,
+    val buildingId: Long?,
     val roomName: String,
     val start: OffsetDateTime,
     val end: OffsetDateTime,
