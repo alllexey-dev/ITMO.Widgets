@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsAuthPolicy
+import api.bars.utils.BarsAuthHelper
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
 import java.util.UUID
 import javax.inject.Inject
@@ -21,6 +21,7 @@ data class BarsLoginState(val completing: Boolean = false, val error: AppError? 
 @HiltViewModel
 class BarsLoginViewModel @Inject constructor(
     private val repository: BarsSessionRepository,
+    private val auth: BarsAuthHelper,
     private val savedState: SavedStateHandle
 ) : ViewModel() {
     private val state = MutableStateFlow(BarsLoginState())
@@ -30,7 +31,11 @@ class BarsLoginViewModel @Inject constructor(
     private var oauthState: String
         get() = savedState.get<String>(KEY) ?: UUID.randomUUID().toString().also { savedState[KEY] = it }
         set(value) { savedState[KEY] = value }
-    val loginUrl get() = BarsAuthPolicy.loginUrl(oauthState)
+    val loginUrl: String get() = auth.getLoginUrl(oauthState)
+
+    fun isCallback(url: String): Boolean = auth.isCallback(url)
+
+    fun isAllowedPage(url: String): Boolean = auth.isAllowedPage(url)
 
     fun complete(url: String) {
         if (state.value.completing) return

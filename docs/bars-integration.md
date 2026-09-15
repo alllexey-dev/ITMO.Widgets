@@ -1,6 +1,8 @@
 # Зачётка: наложение БАРС
 
-Реализовано 15 сентября 2026 года. Исходные wire-наблюдения: [API БАРС](bars-api.md).
+Реализовано 15 сентября 2026 года. Транспорт, модели и OIDC-вход живут в библиотеке
+MyItmoApi (`api.bars`, с версии 1.8.0); wire-семантика описана в javadoc её моделей
+и в README библиотеки. Здесь только то, что делает приложение поверх неё.
 
 ## Что видит пользователь
 
@@ -31,27 +33,28 @@
 access token → 401).
 
 Зато сессия ITMO.ID в WebView приложения живёт около 90 дней (`KEYCLOAK_IDENTITY`,
-`KEYCLOAK_REMEMBER_ME`) и остаётся после входа в само приложение. Поэтому
-`BarsWebSilentLogin` при отсутствии или истечении токена загружает официальный
-OIDC-URL клиента `bars` в скрытом WebView, перехватывает только точный callback
-`https://bars.itmo.ru/rest/login` с проверкой `state`, и `BarsClient` обменивает
-код через `/backend/rest/login`. Никакого JavaScript-моста и чтения localStorage.
-Если ITMO.ID отрисовал форму входа, тихий вход возвращает `null`, запрос
-завершается `Unauthorized`, и пользователь видит кнопку входа.
+`KEYCLOAK_REMEMBER_ME`) и остаётся после входа в само приложение. Библиотечный
+`Bars` при 401 один раз просит код у `BarsCodeSupplier` и повторяет запрос;
+в приложении поставщик кода — `BarsWebSilentLogin`: скрытый WebView загружает
+официальный OIDC-URL клиента `bars`, перехватывает только точный callback
+`https://bars.itmo.ru/rest/login` с проверкой `state` (`BarsAuthHelper` из библиотеки),
+а обмен кода делает `Bars.login`. Никакого JavaScript-моста и чтения localStorage.
+Если ITMO.ID отрисовал форму входа, поставщик возвращает `null`, запрос завершается
+`Unauthorized`, и пользователь видит кнопку входа (`BarsLoginActivity`).
 
-`BarsClient.Account`: один `current_user` в начале (владелец и выбранный период),
-`config/personal` только при отличии года/сезона, повторное чтение `current_user`
-только после записи. Вызовы внутри одного блока могут идти параллельно; при 401
-тихий вход выполняется один раз под mutex, остальные вызовы повторяются с новым токеном.
-Токен хранится зашифрованным в `noBackupFilesDir/bars_tokens.enc` вместе с ISU
-владельца; `BarsPreferenceRepositoryImpl` как `SessionDataCleaner` удаляет токен
-и чип при выходе из аккаунта.
+`BarsClient` в приложении — тонкий слой над библиотекой: привязывает сессию к ISU
+текущего пользователя (`OwnerBoundBarsStorage` поверх зашифрованного
+`noBackupFilesDir/bars_tokens.enc`), сверяет `login` из `current_user` с ISU,
+сериализует выбор периода (`Bars.selectPeriod` пишет `config/personal` только при
+отличии) и переводит `BarsApiException` в `AppError`. Журналы внутри одного блока
+запрашиваются параллельно. `BarsPreferenceRepositoryImpl` как `SessionDataCleaner`
+удаляет токен и чип при выходе из аккаунта.
 
 ## Архитектура
 
 ```text
-RecordbookFragment → RecordbookViewModel ─┬─ RecordbookRepository (MyITMO)
-                                          ├─ BarsRecordbookRepository → BarsClient → BarsApi
+RecordbookFragment → RecordbookViewModel ─┬─ RecordbookRepository (MyITMO, MyItmoApi)
+                                          ├─ BarsRecordbookRepository → BarsClient → api.bars.Bars (MyItmoApi)
                                           └─ BarsPreferenceRepository (DataStore)
 RecordbookBarsMerge.apply(myItmo, bars)   — чистое слияние по названию
 RecordbookSubjectFragment → RecordbookSubjectViewModel (ссылка на журнал БАРС в аргументах)
@@ -64,7 +67,7 @@ RecordbookSubjectFragment → RecordbookSubjectViewModel (ссылка на жу
 - MyITMO `est_id`/`discipline_id` в БАРС не подставляются; в слитом предмете
   остаются идентичность, преподаватель и дата экзамена MyITMO.
 - Маппер: серверный `marks.total`, последнее однозначное активное подтверждение
-  (словесная оценка «Удвл., E» переводится в код «3/E», зачёт остаётся словом),
+  (`Approval#getGradeCode()` библиотеки переводит «Удвл., E» в «3/E», зачёт остаётся словом),
   работы по `checkpoint_id`, дополнительные баллы отдельной строкой, неявка
   не становится сдачей. Планы с `has_course_project` пока отклоняются.
 

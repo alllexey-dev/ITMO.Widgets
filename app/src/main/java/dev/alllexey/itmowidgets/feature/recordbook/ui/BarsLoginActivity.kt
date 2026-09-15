@@ -25,7 +25,6 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.databinding.ActivityLoginBinding
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsAuthPolicy
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.BarsLoginViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -88,7 +87,7 @@ class BarsLoginActivity : AppCompatActivity() {
         CookieManager.getInstance().setAcceptThirdPartyCookies(binding.loginWebView, false)
         binding.loginWebView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                if (!request.isForMainFrame) return !BarsAuthPolicy.isAllowedPage(request.url.toString())
+                if (!request.isForMainFrame) return !viewModel.isAllowedPage(request.url.toString())
                 return handleUrl(request.url.toString())
             }
             override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
@@ -104,11 +103,11 @@ class BarsLoginActivity : AppCompatActivity() {
     }
 
     private fun handleUrl(url: String): Boolean {
-        if (BarsAuthPolicy.isCallback(url)) {
+        if (viewModel.isCallback(url)) {
             viewModel.complete(url)
             return true
         }
-        if (BarsAuthPolicy.isAllowedPage(url)) return false
+        if (viewModel.isAllowedPage(url)) return false
         showBrowserError()
         return true
     }

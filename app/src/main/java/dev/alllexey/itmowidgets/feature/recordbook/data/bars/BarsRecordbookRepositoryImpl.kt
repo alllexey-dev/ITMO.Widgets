@@ -19,25 +19,26 @@ class BarsRecordbookRepositoryImpl @Inject constructor(
     private val mapper = BarsRecordbookMapper()
 
     override suspend fun getSubjects(period: RecordbookPeriod): AppResult<List<RecordbookSubject>> = client.account {
+        val api = client.bars.api
         val yearStart = period.studyYear.substringBefore('/').toInt()
         selectPeriod(period.studyYear, period.semesterInCourse == 1)
-        val disciplines = call { client.api.disciplines(it) }
-        val groups = call { client.api.groupsAndFlows(it) }
+        val disciplines = execute { api.getDisciplines(true) }
+        val groups = execute { api.getGroupsAndFlows(null) }
         // A student's marks are plan-scoped. Lecture/practice flows can reference the same plan.
-        val references = disciplines.flatMap { it.planIds }.distinct().mapNotNull { plan ->
-            val group = groups.firstOrNull { plan in it.planIds } ?: return@mapNotNull null
+        val references = disciplines.flatMap { it.checkpointPlanIds }.distinct().mapNotNull { plan ->
+            val group = groups.firstOrNull { plan in it.checkpointPlanIds } ?: return@mapNotNull null
             BarsJournalReference(plan, group.type, group.identifier, yearStart, period.semesterInCourse)
         }
         coroutineScope {
             references.map { reference ->
-                async { mapper.subject(call { client.api.journal(it, reference.planId, reference.type, reference.identifier) }, reference, owner.toString()) }
+                async { mapper.subject(execute { api.getStudentJournal(reference.planId, reference.type, reference.identifier) }, reference, owner.toString()) }
             }.awaitAll()
         }
     }
 
     override suspend fun getSubject(journal: BarsJournalReference): AppResult<BarsSubjectDetails> = client.account {
         selectPeriod("${journal.yearStart}/${journal.yearStart + 1}", journal.semester == 1)
-        val response = call { client.api.journal(it, journal.planId, journal.type, journal.identifier) }
+        val response = execute { client.bars.api.getStudentJournal(journal.planId, journal.type, journal.identifier) }
         BarsSubjectDetails(mapper.subject(response, journal, owner.toString()), mapper.controls(response, journal, owner.toString()))
     }
 }

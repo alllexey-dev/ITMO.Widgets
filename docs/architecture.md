@@ -218,8 +218,9 @@ trusting a navigation snapshot, preserve control hierarchy, and respect `have_tr
 API observations and limitations are recorded in `docs/recordbook-api.md`.
 
 The recordbook can overlay BARS on top of the MyITMO list (`БАРС` chip). The
-temporary in-app client, authorized on 2026-09-15, is isolated in
-`feature/recordbook/data/bars`. `RecordbookBarsMerge` pairs subjects by
+transport, models and OIDC helper live in MyItmoApi (`api.bars`); the app keeps
+only the owner-bound session, mapping and UI in `feature/recordbook/data/bars`.
+`RecordbookBarsMerge` pairs subjects by
 normalized name within the same period; identities, teachers, PE and sport stay
 MyITMO, and a BARS failure leaves MyITMO values on screen with a visible error.
 The BARS token lives 30 minutes; `BarsWebSilentLogin` renews it from the ITMO.ID

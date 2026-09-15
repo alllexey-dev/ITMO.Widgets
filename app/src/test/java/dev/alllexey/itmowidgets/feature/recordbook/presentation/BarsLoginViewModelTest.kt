@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import api.bars.Bars
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
@@ -29,7 +30,7 @@ class BarsLoginViewModelTest {
                 return pending.await()
             }
         }
-        val vm = BarsLoginViewModel(repo, SavedStateHandle(mapOf("bars_oauth_state" to "synthetic-state")))
+        val vm = BarsLoginViewModel(repo, Bars().authHelper, SavedStateHandle(mapOf("bars_oauth_state" to "synthetic-state")))
         val event = async { vm.events.first() }
         vm.complete("synthetic-callback"); vm.complete("synthetic-callback"); runCurrent()
         assertEquals(1, calls)
@@ -41,7 +42,7 @@ class BarsLoginViewModelTest {
         val repo = object : BarsSessionRepository {
             override suspend fun completeLogin(callbackUrl: String, expectedState: String) = AppResult.Failure(AppError.Forbidden)
         }
-        val vm = BarsLoginViewModel(repo, SavedStateHandle())
+        val vm = BarsLoginViewModel(repo, Bars().authHelper, SavedStateHandle())
         val initial = vm.loginUrl
         vm.complete("synthetic-callback"); advanceUntilIdle()
         assertEquals(AppError.Forbidden, vm.uiState.value.error)

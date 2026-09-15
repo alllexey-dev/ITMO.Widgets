@@ -9,9 +9,8 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import api.bars.utils.BarsAuthHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsAuthPolicy
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
@@ -22,24 +21,24 @@ import kotlinx.coroutines.withTimeoutOrNull
 /** Re-issues a BARS authorization code from the ITMO.ID session the app's WebView already holds. */
 interface BarsSilentLogin {
     /** Null when ITMO.ID wants the user (session ended) or the flow did not finish in time. */
-    suspend fun authorizationCode(): String?
+    suspend fun authorizationCode(state: String): String?
 }
 
 /** Headless copy of the interactive flow: same official URLs, no JavaScript bridge, no token reading. */
 class BarsWebSilentLogin @Inject constructor(
-    @param:ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
+    private val auth: BarsAuthHelper
 ) : BarsSilentLogin {
     @Suppress("SetJavaScriptEnabled")
-    override suspend fun authorizationCode(): String? = withContext(Dispatchers.Main.immediate) {
-        val state = UUID.randomUUID().toString()
+    override suspend fun authorizationCode(state: String): String? = withContext(Dispatchers.Main.immediate) {
         val web = WebView(context)
         try {
             withTimeoutOrNull(TIMEOUT_MS) {
                 suspendCancellableCoroutine { continuation ->
                     fun finish(code: String?) { if (continuation.isActive) continuation.resume(code) }
                     fun handle(url: String): Boolean {
-                        if (BarsAuthPolicy.isCallback(url)) { finish(BarsAuthPolicy.authorizationCode(url, state)); return true }
-                        if (BarsAuthPolicy.isAllowedPage(url)) return false
+                        if (auth.isCallback(url)) { finish(auth.extractCode(url, state)); return true }
+                        if (auth.isAllowedPage(url)) return false
                         finish(null)
                         return true
                     }
@@ -60,7 +59,7 @@ class BarsWebSilentLogin @Inject constructor(
                         }
                         override fun onPageFinished(view: WebView, url: String?) {
                             // A rendered ITMO.ID page is a sign-in form: only the user can continue from here.
-                            if (url != null && !BarsAuthPolicy.isCallback(url)) finish(null)
+                            if (url != null && !auth.isCallback(url)) finish(null)
                         }
                         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
                             if (request.isForMainFrame) finish(null)
@@ -69,7 +68,7 @@ class BarsWebSilentLogin @Inject constructor(
                             if (request.isForMainFrame) finish(null)
                         }
                     }
-                    web.loadUrl(BarsAuthPolicy.loginUrl(state))
+                    web.loadUrl(auth.getLoginUrl(state))
                 }
             }
         } finally {

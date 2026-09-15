@@ -1,7 +1,8 @@
 package dev.alllexey.itmowidgets.di
 
 import android.content.Context
-import com.google.gson.Gson
+import api.bars.Bars
+import api.bars.utils.BarsAuthHelper
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -14,10 +15,10 @@ import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsSessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsApi
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
@@ -27,8 +28,6 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -60,14 +59,17 @@ abstract class RecordbookModule {
     abstract fun bindRecordbookCleaner(impl: BarsPreferenceRepositoryImpl): SessionDataCleaner
 
     companion object {
+        /** Library client with the app's encrypted, owner-bound session; no shared cookie jar with MyITMO. */
         @Provides
         @Singleton
-        fun barsApi(): BarsApi = Retrofit.Builder()
-            .baseUrl("https://bars.itmo.ru/backend/rest/")
-            .client(OkHttpClient.Builder().followRedirects(false).followSslRedirects(false)
-                .connectTimeout(20, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build())
-            .addConverterFactory(GsonConverterFactory.create(Gson()))
-            .build().create(BarsApi::class.java)
+        fun bars(storage: OwnerBoundBarsStorage): Bars = Bars().apply {
+            this.storage = storage
+            okHttpClient = okHttpClient.newBuilder()
+                .connectTimeout(20, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build()
+        }
+
+        @Provides
+        fun barsAuthHelper(bars: Bars): BarsAuthHelper = bars.authHelper
 
         @Provides
         @Singleton
