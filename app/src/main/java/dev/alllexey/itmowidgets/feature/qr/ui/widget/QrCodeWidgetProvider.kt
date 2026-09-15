@@ -250,13 +250,13 @@ class QrCodeWidgetProvider : AppWidgetProvider() {
             ?: return
 
         val appWidgetManager = AppWidgetManager.getInstance(context)
-        var views = RemoteViews(context.packageName, R.layout.qr_code_widget)
+        var views = RemoteViews(context.packageName, R.layout.widget_qr_code)
 
         repeat(ANIMATION_FRAMES) { frame ->
             // Every setter appends an action, so the object is rebuilt periodically
             // instead of carrying all frames' bitmaps in a single parcel.
             if (frame > 0 && frame % VIEWS_RESET_FRAMES == 0) {
-                views = RemoteViews(context.packageName, R.layout.qr_code_widget)
+                views = RemoteViews(context.packageName, R.layout.widget_qr_code)
             }
 
             val progress = (frame + 1).toFloat() / ANIMATION_FRAMES
@@ -291,7 +291,7 @@ class QrCodeWidgetProvider : AppWidgetProvider() {
 
         /** Draws widget content and always keeps the tap inside the widget flow. */
         fun render(context: Context, appWidgetId: Int, bitmap: Bitmap) {
-            val views = RemoteViews(context.packageName, R.layout.qr_code_widget)
+            val views = RemoteViews(context.packageName, R.layout.widget_qr_code)
             views.setImageViewBitmap(R.id.qr_code_image, bitmap)
             views.setOnClickPendingIntent(R.id.qr_code_image, clickIntent(context, appWidgetId))
             AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, views)

@@ -18,7 +18,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
-import dev.alllexey.itmowidgets.databinding.WidgetPreviewScheduleBinding
+import dev.alllexey.itmowidgets.databinding.ViewWidgetPreviewScheduleBinding
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewLabels
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
@@ -27,7 +27,7 @@ class ScheduleSettingsPreview(
     private val context: Context,
     private val scenario: SchedulePreviewScenario
 ) : WidgetPreview {
-    private val binding = WidgetPreviewScheduleBinding.inflate(LayoutInflater.from(context))
+    private val binding = ViewWidgetPreviewScheduleBinding.inflate(LayoutInflater.from(context))
     override val view: View = binding.root
     private var appearance: ScheduleWidgetSettings? = null
     private var evening = false
@@ -131,7 +131,7 @@ class ScheduleSettingsPreview(
             }
         } else {
             if (holder.root.isEmpty()) {
-                LayoutInflater.from(context).inflate(R.layout.lesson_list_widget, holder.root, true)
+                LayoutInflater.from(context).inflate(R.layout.widget_lesson_list, holder.root, true)
             }
             val list = holder.root.findViewById<ListView>(R.id.lesson_list)
             list.adapter = object : BaseAdapter() {

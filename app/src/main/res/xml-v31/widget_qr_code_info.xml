@@ -6,12 +6,12 @@
     android:maxResizeHeight="600dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="3600000"
-    android:previewImage="@drawable/qr_widget_preview"
-    android:initialLayout="@layout/qr_code_widget"
-    android:description="@string/qr_widget_description"
+    android:previewImage="@drawable/widget_qr_code_preview"
+    android:initialLayout="@layout/widget_qr_code"
+    android:description="@string/widget_qr_code_description"
 
     android:widgetCategory="home_screen"
     android:targetCellHeight="1"
     android:targetCellWidth="1"
-    android:initialKeyguardLayout="@layout/qr_code_widget"
+    android:initialKeyguardLayout="@layout/widget_qr_code"
 />

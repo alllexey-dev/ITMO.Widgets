@@ -11,7 +11,7 @@
 
         <include
             android:id="@+id/qr_preview_widget"
-            layout="@layout/qr_code_widget" />
+            layout="@layout/widget_qr_code" />
 
 
     </FrameLayout>

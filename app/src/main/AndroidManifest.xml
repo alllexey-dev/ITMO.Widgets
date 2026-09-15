@@ -41,38 +41,38 @@
         <receiver
             android:name=".feature.qr.ui.widget.QrCodeWidgetProvider"
             android:exported="false"
-            android:label="@string/qr_widget_name">
+            android:label="@string/widget_qr_code_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="dev.alllexey.itmowidgets.action.QR_WIDGET_CLICK" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/qr_code_widget_info" />
+                android:resource="@xml/widget_qr_code_info" />
         </receiver>
 
         <receiver
             android:name=".feature.schedule.ui.widget.SingleLessonWidgetProvider"
             android:exported="false"
-            android:label="@string/single_lesson_widget_name">
+            android:label="@string/widget_single_lesson_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/single_lesson_widget_info" />
+                android:resource="@xml/widget_single_lesson_info" />
         </receiver>
 
         <receiver
             android:name=".feature.schedule.ui.widget.DayScheduleWidgetProvider"
             android:exported="false"
-            android:label="@string/list_lesson_widget_name">
+            android:label="@string/widget_lesson_list_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/lesson_list_widget_info" />
+                android:resource="@xml/widget_lesson_list_info" />
         </receiver>
 
         <receiver

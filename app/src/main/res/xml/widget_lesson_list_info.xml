@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:description="@string/list_lesson_widget_description"
-    android:initialKeyguardLayout="@layout/lesson_list_widget"
-    android:initialLayout="@layout/lesson_list_widget"
+    android:description="@string/widget_lesson_list_description"
+    android:initialKeyguardLayout="@layout/widget_lesson_list"
+    android:initialLayout="@layout/widget_lesson_list"
     android:minWidth="250dp"
     android:minHeight="112dp"
-    android:previewImage="@drawable/lesson_list_widget_preview"
+    android:previewImage="@drawable/widget_lesson_list_preview"
 
     android:updatePeriodMillis="3600000"
     android:resizeMode="horizontal|vertical"

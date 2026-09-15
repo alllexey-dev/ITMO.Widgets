@@ -42,7 +42,7 @@ class SportFragment : Fragment() {
         viewPager.isUserInputEnabled = true
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = when (position) {
-                0 -> getString(R.string.title_sport_me)
+                0 -> getString(R.string.title_sport_my)
                 1 -> getString(R.string.title_sport_sign)
                 else -> null
             }

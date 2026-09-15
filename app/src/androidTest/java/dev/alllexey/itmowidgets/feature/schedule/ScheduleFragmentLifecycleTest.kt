@@ -131,7 +131,7 @@ class ScheduleFragmentLifecycleTest {
             }
             lateinit var root: View
             val observer = ViewTreeObserver.OnPreDrawListener {
-                val list = root.findViewById<RecyclerView>(R.id.outerRecyclerView)
+                val list = root.findViewById<RecyclerView>(R.id.outer_recycler_view)
                 val layout = list.layoutManager as LinearLayoutManager
                 val position = layout.findFirstVisibleItemPosition()
                 val offset = layout.findViewByPosition(position)?.top?.minus(list.paddingTop)
@@ -277,7 +277,7 @@ class ScheduleFragmentLifecycleTest {
             val pageStarted = AtomicBoolean(false)
             lateinit var root: View
             val observer = ViewTreeObserver.OnPreDrawListener {
-                val list = root.findViewById<RecyclerView>(R.id.outerRecyclerView)
+                val list = root.findViewById<RecyclerView>(R.id.outer_recycler_view)
                 val layout = list.layoutManager as LinearLayoutManager
                 val first = layout.findFirstVisibleItemPosition()
                 val offset = layout.findViewByPosition(first)?.top?.minus(list.paddingTop)
@@ -438,7 +438,7 @@ class ScheduleFragmentLifecycleTest {
         val observer = ViewTreeObserver.OnPreDrawListener {
             if (root.findViewById<View>(R.id.schedule_state_container).visibility == View.VISIBLE) {
                 placeholderDrawn.set(true)
-                val recycler = root.findViewById<RecyclerView>(R.id.outerRecyclerView)
+                val recycler = root.findViewById<RecyclerView>(R.id.outer_recycler_view)
                 // Removed children can still be drawn by an ItemAnimator after adapter count reaches zero.
                 if (recycler.adapter!!.itemCount > 0 || recycler.childCount > 0) overlapDrawn.set(true)
             }
@@ -643,7 +643,7 @@ class ScheduleFragmentLifecycleTest {
     private fun ScheduleLifecycleTestActivity.schedule() =
         supportFragmentManager.findFragmentByTag(ScheduleLifecycleTestActivity.SCHEDULE_TAG) as ScheduleFragment
 
-    private fun ScheduleLifecycleTestActivity.recycler() = schedule().requireView().findViewById<RecyclerView>(R.id.outerRecyclerView)
+    private fun ScheduleLifecycleTestActivity.recycler() = schedule().requireView().findViewById<RecyclerView>(R.id.outer_recycler_view)
 
     private fun ScheduleLifecycleTestActivity.viewModel() = ViewModelProvider(schedule())[ScheduleViewModel::class.java]
 

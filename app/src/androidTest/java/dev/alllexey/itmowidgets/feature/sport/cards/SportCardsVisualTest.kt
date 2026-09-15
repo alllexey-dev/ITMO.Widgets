@@ -89,7 +89,7 @@ class SportCardsVisualTest {
                 scenario.onActivity {
                     assertLessonActionInsets(it.list)
                     assertTextFits(it.list, allowEllipsis = true)
-                    it.list.findViewById<View>(R.id.sportLessonCardView).performClick()
+                    it.list.findViewById<View>(R.id.sport_lesson_card_view).performClick()
                 }
                 settle()
                 scenario.onActivity {
@@ -387,7 +387,7 @@ class SportCardsVisualTest {
     }
 
     private fun assertLessonActionInsets(root: View) {
-        root.descendants().filterIsInstance<MaterialCardView>().filter { it.id == R.id.sportLessonCardView }.forEach { card ->
+        root.descendants().filterIsInstance<MaterialCardView>().filter { it.id == R.id.sport_lesson_card_view }.forEach { card ->
             val button = card.findViewById<MaterialButton>(R.id.sign_up_button)
             if (!button.isShown) return@forEach
             val bounds = Rect().also(button::getDrawingRect)

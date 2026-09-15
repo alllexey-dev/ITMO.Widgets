@@ -16,7 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.databinding.DialogRefreshTokenLoginBinding
+import dev.alllexey.itmowidgets.databinding.DialogAuthRefreshTokenBinding
 import dev.alllexey.itmowidgets.databinding.FragmentAuthBinding
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthUiState
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthViewModel
@@ -73,7 +73,7 @@ class AuthFragment : Fragment() {
     }
 
     private fun showRefreshTokenDialog() {
-        val dialogBinding = DialogRefreshTokenLoginBinding.inflate(layoutInflater)
+        val dialogBinding = DialogAuthRefreshTokenBinding.inflate(layoutInflater)
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.auth_manual_dialog_title)
             .setMessage(R.string.auth_manual_dialog_description)

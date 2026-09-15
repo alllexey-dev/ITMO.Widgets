@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
-import dev.alllexey.itmowidgets.databinding.WidgetPreviewQrBinding
+import dev.alllexey.itmowidgets.databinding.ViewWidgetPreviewQrBinding
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrColorResolver
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrPreviewBitmapCache
 import kotlinx.coroutines.CancellationException
@@ -27,7 +27,7 @@ class QrSettingsPreview(
     private val colors: QrColorResolver
 ) : WidgetPreview {
 
-    private val binding = WidgetPreviewQrBinding.inflate(LayoutInflater.from(context))
+    private val binding = ViewWidgetPreviewQrBinding.inflate(LayoutInflater.from(context))
     override val view: View = binding.root
     private val image = binding.qrPreviewWidget.qrCodeImage
     private var appearance: QrWidgetSettings? = null

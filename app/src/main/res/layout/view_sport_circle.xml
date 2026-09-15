@@ -7,7 +7,7 @@
     android:layout_height="wrap_content">
 
     <dev.alllexey.itmowidgets.core.ui.CircularProgressBar
-        android:id="@+id/circularProgressBar"
+        android:id="@+id/circular_progress_bar"
         android:layout_width="112dp"
         android:layout_height="112dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -23,13 +23,13 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="@id/circularProgressBar"
-        app:layout_constraintEnd_toEndOf="@id/circularProgressBar"
-        app:layout_constraintStart_toStartOf="@id/circularProgressBar"
-        app:layout_constraintTop_toTopOf="@id/circularProgressBar">
+        app:layout_constraintBottom_toBottomOf="@id/circular_progress_bar"
+        app:layout_constraintEnd_toEndOf="@id/circular_progress_bar"
+        app:layout_constraintStart_toStartOf="@id/circular_progress_bar"
+        app:layout_constraintTop_toTopOf="@id/circular_progress_bar">
 
         <TextView
-            android:id="@+id/progressTextView"
+            android:id="@+id/progress_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFeatureSettings="tnum"
@@ -38,7 +38,7 @@
             tools:text="120" />
 
         <TextView
-            android:id="@+id/progressGoalTextView"
+            android:id="@+id/progress_goal_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="-2dp"

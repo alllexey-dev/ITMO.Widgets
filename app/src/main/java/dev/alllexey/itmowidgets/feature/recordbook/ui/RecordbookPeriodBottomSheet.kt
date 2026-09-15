@@ -15,7 +15,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookPeriodBinding
-import dev.alllexey.itmowidgets.databinding.SheetRecordbookPeriodBinding
+import dev.alllexey.itmowidgets.databinding.FragmentRecordbookPeriodBinding
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSelection
 import kotlin.math.roundToInt
@@ -31,7 +31,7 @@ data class RecordbookPeriodOption(
 
 class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
 
-    private var _binding: SheetRecordbookPeriodBinding? = null
+    private var _binding: FragmentRecordbookPeriodBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -39,7 +39,7 @@ class RecordbookPeriodBottomSheet : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = SheetRecordbookPeriodBinding.inflate(inflater, container, false)
+        _binding = FragmentRecordbookPeriodBinding.inflate(inflater, container, false)
         return binding.root
     }
 

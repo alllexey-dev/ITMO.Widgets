@@ -68,7 +68,7 @@ object ScheduleWidgetRenderer {
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             data = "itmowidgets://schedule-widget/$appWidgetId".toUri()
         }
-        val views = RemoteViews(context.packageName, R.layout.lesson_list_widget).apply {
+        val views = RemoteViews(context.packageName, R.layout.widget_lesson_list).apply {
             setRemoteAdapter(R.id.lesson_list, serviceIntent)
             setPendingIntentTemplate(
                 R.id.lesson_list,
@@ -221,8 +221,8 @@ object ScheduleWidgetRenderer {
 
     private fun singleLessonLayout(style: LessonStyle): Int {
         return when (style) {
-            LessonStyle.DOT -> R.layout.single_lesson_widget_dot
-            LessonStyle.LINE -> R.layout.single_lesson_widget_dash
+            LessonStyle.DOT -> R.layout.widget_single_lesson_dot
+            LessonStyle.LINE -> R.layout.widget_single_lesson_dash
         }
     }
 
