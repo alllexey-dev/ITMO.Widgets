@@ -67,8 +67,13 @@ do not incur an additional delay. Disabling services takes effect immediately.
   contain viewer-scoped permissions. Unavailable/unknown settings are disabled
   and shown without an invented selected audience; saving failures restore the
   previously confirmed values.
-- Friend-request audience and block-management controls remain planned until
-  their corresponding Backend features are implemented.
+- Friends are explicit: a request stays pending until the other side accepts,
+  rejects, or the sender cancels; a crossed request becomes a friendship at once.
+  Friends, requests and people search live in the profile tab; a public profile
+  shows one relationship action and unlocks schedule and sport rows from Backend
+  capabilities, never from the viewer's own settings.
+- Block-management controls remain planned until the corresponding Backend
+  feature is implemented.
 - Public-review visibility is not shown until reviews ship in v2.2.
 
 ## Schedule widgets

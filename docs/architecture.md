@@ -57,7 +57,7 @@ Paths are relative to `app/src/main/java/dev/alllexey/itmowidgets/`.
 app/                    Application, MainActivity, NavHost, bottom-nav wiring
 core/                   cross-cutting; knows nothing about features
   debug/                BuildConfig.DEBUG fixtures (provider/controller/store)
-  friend/               FriendRepository — contract shared by several features
+  friend/               FriendRepository — the picker's narrow view of friends
   model/                transport DTOs + UserSummary (the one shared identity model)
   navigation/           navigation contracts between features
   network/              WidgetsClient, AppErrorMapper, serialization adapters
@@ -65,6 +65,8 @@ core/                   cross-cutting; knows nothing about features
   schedule/             Schedule refresh and widget-update cross-feature contracts
   sport/                SportScoreRepository, shared scores and own pending-booking projection
   services/             CustomServicesRepository — the backend opt-in
+  social/               SocialRepository and PeopleSearchRepository — friends,
+                        requests, public profiles, lookup and MyITMO name search
   session/              SessionTokenStore, SessionDataCleaner, CurrentUserProvider,
                         BackendIdentitySync
   storage/              DataStore wrappers, encrypted token storage, AppSettingsStorage
@@ -83,7 +85,7 @@ feature/
 ```
 
 Current features: `debug`, `friendselector`, `home`, `me`, `qr`, `recordbook`,
-`schedule`, `settings`, `sport`, `update`, `widget`. Not every feature needs all four
+`schedule`, `settings`, `social`, `sport`, `update`, `widget`. Not every feature needs all four
 layers — `home` is presently UI only, and `me` has no data layer of its own.
 
 Placement rules:
@@ -401,21 +403,29 @@ The offer records when it was shown rather than which button closed it, so leavi
 by Back postpones it exactly like `Напомнить позже`. The screen renders the check's
 result passed as arguments; it never repeats the request and has no loading state.
 
-### Friends/public-profile contract preparation
+### Friends and public profiles
 
-Stages 1–3 of `vibe/friends-public-profile-plan.md` prepare Backend and Core only.
-The future Android social repository requires the updated Core **1.2.0-SNAPSHOT**
-friendship revision and Backend **1.2.0-SNAPSHOT** with explicit accepted
-friendships, profile/lookup endpoints and viewer-scoped pending sport entries.
-Versions remain fixed by the user's 2026-09-15 instruction; matching snapshot
-numbers alone do not prove that these API changes are present.
+Android requires the Core **1.2.0-SNAPSHOT** friendship revision (commit
+`b25c056`) and Backend **1.2.0-SNAPSHOT** with explicit friendships, profile and
+lookup endpoints and pending sport entries (commit `dd37d69`). Versions stay
+pinned until the Android 2.1 release, so a matching snapshot number alone does
+not prove the API is present; the local artifact was published on 2026-09-15.
 
-The new Core replaces `myFriends/addFriend` and body-based removal with the
-profile-based social contract. This Android source and its version catalogue are
-not switched until Stage 4. No new MavenLocal artifact is published here, so the
-current Android dependency is not silently replaced. Backend and Core can be
-verified together with Gradle composite dependency substitution without publishing.
-This source change does not imply a development or production deployment.
+`core/social/SocialRepository` is the one source for friends, requests, public
+profiles and lookup. It gates every call on the custom-services opt-in and folds
+the profile returned by a relationship action into its cached lists, so screens
+never refresh after acting. `FriendRepository` in `core/friend` is a facade over
+it for the schedule picker. `PeopleSearchRepository` searches MyITMO by name and
+annotates registered users through lookup; phone and e-mail never leave the
+data layer.
+
+Screens: `feature/social` owns friends and requests, people search and the
+public profile; `feature/schedule/ui/UserScheduleFragment` and
+`feature/sport/ui/user/UserSportFragment` show another user's data and are
+reached only from the profile by `AppScreen.USER_SCHEDULE` and
+`AppScreen.USER_SPORT` with `core/navigation/UserScreenArgs`. A public profile
+opens through `AppScreen.USER_PROFILE` from every list, the sport friends-on-lesson
+sheet and the picker; features never import each other for that.
 
 ### Dependency injection
 

@@ -344,6 +344,11 @@ state-компонента и доступной строки выбора. Об
   [согласованная семантика строк настроек](../app/src/main/java/dev/alllexey/itmowidgets/feature/settings/ui/SettingsRenderer.kt).
 - [Карточка предмета](../app/src/main/res/layout/item_recordbook_subject.xml)
   как допустимый filled-вариант.
+- [Строка пользователя](../app/src/main/res/layout/item_user_row.xml) для друзей,
+  заявок и поиска, [публичный профиль](../app/src/main/res/layout/fragment_user_profile.xml)
+  с одной контекстной кнопкой и строками входа по capabilities,
+  [пикер друзей](../app/src/main/res/layout/dialog_friend_selector.xml) с выбором
+  через `colorSecondaryContainer` вместо обводки.
 - [Refresh расписания](../app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/ui/ScheduleFragment.kt),
   [refresh зачётки](../app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/ui/RecordbookFragment.kt),
   [refresh деталей предмета](../app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/ui/RecordbookSubjectFragment.kt).
