@@ -56,10 +56,12 @@ object SessionModule {
     fun provideBackendDeviceSession(
         settings: AppSettingsStorage,
         utilityStorage: UtilityStorage,
+        currentUser: CurrentUserProvider,
         widgetsApi: ItmoWidgetsApi
     ): BackendDeviceSession = DefaultBackendDeviceSession(
         settings = settings,
         utilityStorage = utilityStorage,
+        currentUser = currentUser,
         widgetsApi = widgetsApi,
         deviceName = listOf(Build.MANUFACTURER, Build.MODEL)
             .map(String::trim)

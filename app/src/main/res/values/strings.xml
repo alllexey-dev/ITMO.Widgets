@@ -31,7 +31,6 @@
     </plurals>
     <string name="refresh_token_help_url">https://github.com/alllexey-dev/ITMO.Widgets?tab=readme-ov-file#использование</string>
     <string name="latest_release_url">https://github.com/alllexey-dev/ITMO.Widgets/releases/latest</string>
-    <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
     <string name="title_web">My ITMO</string>
     <string name="title_me">Профиль</string>
     <string name="title_recordbook">Зачётка</string>
@@ -595,4 +594,11 @@
     <string name="friend_picker_people_empty_title">Никого не нашли</string>
     <string name="friend_picker_people_empty_description">Среди пользователей ITMO.Widgets нет таких</string>
     <string name="friend_picker_open_profile">Открыть профиль</string>
+    <string name="notification_channel_sport">Спорт: автозапись</string>
+    <string name="notification_channel_friends">Друзья</string>
+    <string name="notification_sport_success">Вы записаны на спорт</string>
+    <string name="notification_sport_failure">Не удалось записать на спорт</string>
+    <string name="notification_sport_lesson">%1$s, %2$s</string>
+    <string name="notification_friend_request">%1$s хочет добавить вас в друзья</string>
+    <string name="notification_friend_accepted">%1$s принял вашу заявку</string>
 </resources>

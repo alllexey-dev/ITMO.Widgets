@@ -15,3 +15,6 @@
 local.properties
 .refresh-token
 *.har
+app-keystore.jks
+app/release/
+.DS_Store

@@ -2,6 +2,9 @@ package dev.alllexey.itmowidgets.di
 
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
+import dev.alllexey.itmowidgets.core.notification.FcmPayloadHandler
+import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushHandler
 import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -96,4 +99,11 @@ abstract class SportModule {
     abstract fun bindUserSportRepository(
         impl: UserSportRepositoryImpl
     ): UserSportRepository
+    companion object {
+        @Provides @IntoSet
+        fun freeSignHandler(factory: SportSignPushHandler.Factory): FcmPayloadHandler = factory.create(auto = false)
+
+        @Provides @IntoSet
+        fun autoSignHandler(factory: SportSignPushHandler.Factory): FcmPayloadHandler = factory.create(auto = true)
+    }
 }

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import java.io.IOException
 import kotlinx.coroutines.flow.catch
@@ -15,6 +16,19 @@ class UtilityStorage(
     private val dataStore: DataStore<Preferences>,
     private val appVersionName: String
 ) {
+
+    suspend fun getRegisteredFirebaseToken(): String? = read()[REGISTERED_FIREBASE_TOKEN]
+
+    suspend fun getRegisteredFirebaseOwner(): Int? = read()[REGISTERED_FIREBASE_OWNER]
+
+    suspend fun setRegisteredFirebaseToken(token: String?, ownerIsu: Int? = null) {
+        dataStore.edit { preferences ->
+            if (token == null) preferences.remove(REGISTERED_FIREBASE_TOKEN)
+            else preferences[REGISTERED_FIREBASE_TOKEN] = token
+            if (token == null || ownerIsu == null) preferences.remove(REGISTERED_FIREBASE_OWNER)
+            else preferences[REGISTERED_FIREBASE_OWNER] = ownerIsu
+        }
+    }
 
     suspend fun getFirebaseToken(): String? = read()[FIREBASE_TOKEN]
 
@@ -77,6 +91,8 @@ class UtilityStorage(
     }
 
     companion object {
+        private val REGISTERED_FIREBASE_OWNER = intPreferencesKey("registered_firebase_owner")
+        private val REGISTERED_FIREBASE_TOKEN = stringPreferencesKey("registered_firebase_token")
         private val FIREBASE_TOKEN = stringPreferencesKey("firebase_token")
         private val LAST_UPDATE_TIMESTAMP = longPreferencesKey("last_update_timestamp")
         private val LESSON_WIDGET_STYLE_CHANGED =

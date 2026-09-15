@@ -403,6 +403,64 @@ The offer records when it was shown rather than which button closed it, so leavi
 by Back postpones it exactly like `Напомнить позже`. The screen renders the check's
 result passed as arguments; it never repeats the request and has no loading state.
 
+### Notifications
+
+`core/notification` owns the FCM receiver, strict envelope dispatcher, token sync,
+notification contracts and WorkManager entry point. Feature-owned Hilt multibindings
+handle sport (`SportSignPushHandler`, free and auto instances) and friendship
+(`FriendshipPushHandler`) payloads. `app/AndroidAppNotifier` owns Android rendering
+and PendingIntents; data handlers only produce `AppNotification` values with
+localized `UiText` and typed destinations.
+
+The application creates `sport` (Спорт: автозапись) and `friends` (Друзья) channels
+at default importance. The obsolete default channel is removed. Android owns
+notification permission, category visibility and sound. Notifications have private
+lock-screen visibility, stable channel-scoped IDs and immutable PendingIntents;
+friendship items have an explicit group summary. Notification failures never undo
+successful sport booking or suppress cache refresh.
+
+`DefaultFcmTokenSync` reads the current Firebase SDK token, saves it in UtilityStorage
+and registers it only with an authenticated, opted-in session. A successful
+registration is recorded with its owner so failed uploads and account changes can
+retry even without token rotation. Login and services opt-in also register the current device even if its
+token is unchanged. Sign-out unregisters before clearing credentials; disabling
+services attempts unregister while the old opt-in is still enabled.
+
+Firebase callbacks enqueue persistent WorkManager work instead of leaving network
+coroutines attached to a service that may immediately stop. Messages retain the
+existing `data` string containing `{type, payload}`; the Backend also supplies
+`recipient_isu`. Android requires the recipient to match the signed-in ISU and
+rechecks the services opt-in before dispatch; token rotation inside the same
+account never drops a queued message. Missing/foreign recipients and messages
+queued before a sign-out are discarded. Session changes cancel
+message work and clear notifications. A request already sent to MyITMO cannot be
+recalled. WorkManager may delay execution; expired sport lessons are skipped and
+Backend owns booking retry attempts, so the worker never blindly replays a batch.
+See [Firebase callback lifetime](https://firebase.google.com/docs/cloud-messaging/android/receive-messages).
+
+Successful sport pushes satisfy the corresponding queue and refresh official
+bookings, pending bookings and schedule widgets. The legacy no-capacity signature
+keeps the queue active without a notification; definite MyITMO business errors
+cancel it; network/auth/malformed-response failures do neither. Each lesson and
+follow-up operation is isolated. Friendship notifications always display both
+request-received and request-accepted events when Android permits them. They refresh
+social collections only if the repository already contains a loaded friend list.
+Unknown/malformed payloads are ignored with type-only diagnostics, never raw JSON,
+tokens or user-visible FCM error alerts.
+
+Taps route to the sport root or to a public profile above the Me root.
+`MainActivityIntentRouting` validates the action and positive ISU. Pending root and
+profile arguments survive authentication and saved state and are consumed exactly
+once, without growing the contextual back stack on recreation.
+
+The minimum FCM-compatible artifacts are Core and Backend **1.2.0-SNAPSHOT** with
+the 2026-09-15 FCM worktree changes (`FriendshipEventPayload` with strict decoding;
+Backend `recipient_isu` and after-commit friendship delivery). These extend the
+friendship baseline revisions below, not a public release. The version catalog
+stays at 1.2.0-SNAPSHOT; Core was rebuilt and published only to Maven Local. A
+matching version string alone is insufficient. Dev and production have not been
+deployed by this task; live two-account delivery remains a separate approval gate.
+
 ### Friends and public profiles
 
 Android requires the Core **1.2.0-SNAPSHOT** friendship revision (commit
@@ -631,7 +689,7 @@ Extend this suite when a new invariant is agreed, rather than relying on review.
 
 ## Known gaps and debt
 
-Functional gaps toward v2.0.1 parity: authentication, onboarding, FCM handling, the
+Functional gaps toward v2.0.1 parity: authentication, onboarding, the
 three widgets with their workers and boot receiver, the QR screen, and error
 diagnostics. The home feed is still a stub.
 

@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
@@ -37,13 +38,15 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private lateinit var binding: ActivityMainBinding
     private lateinit var navigation: MainNavigationCoordinator
     private var pendingRootDestination: Int? = null
+    private var pendingUserIsu: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        pendingRootDestination = if (savedInstanceState != null) {
-            savedInstanceState.getInt(PENDING_ROOT).takeIf { it != 0 }
+        if (savedInstanceState != null) {
+            pendingRootDestination = savedInstanceState.getInt(PENDING_ROOT).takeIf { it != 0 }
+            pendingUserIsu = savedInstanceState.getInt(PENDING_USER).takeIf { it > 0 }
         } else {
-            intent.rootDestination()
+            acceptIntent(intent)
         }
         binding = ActivityMainBinding.inflate(layoutInflater)
         enableEdgeToEdge()
@@ -80,7 +83,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        pendingRootDestination = intent.rootDestination()
+        acceptIntent(intent)
         renderSession(sessionRepository.state.value)
     }
 
@@ -92,6 +95,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putInt(PENDING_ROOT, pendingRootDestination ?: 0)
+        outState.putInt(PENDING_USER, pendingUserIsu ?: 0)
         super.onSaveInstanceState(outState)
     }
 
@@ -125,7 +129,16 @@ class MainActivity : AppCompatActivity(), AppNavigator {
                     }
                 }
                 pendingRootDestination?.let { destination ->
-                    if (navigation.selectRoot(destination)) pendingRootDestination = null
+                    if (navigation.selectRoot(destination)) {
+                        pendingRootDestination = null
+                        val userIsu = pendingUserIsu
+                        pendingUserIsu = null
+                        if (userIsu != null) {
+                            navigation.openScreen(AppScreen.USER_PROFILE, Bundle().apply {
+                                putInt(UserScreenArgs.ISU, userIsu)
+                            })
+                        }
+                    }
                 }
                 // A signed-in session is what the update check needs; it runs once per process.
                 updateGate.checkForUpdate()
@@ -143,11 +156,17 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         binding.navHostFragment.isVisible = true
     }
 
-    private fun Intent.rootDestination(): Int? =
-        if (action == ACTION_OPEN_SCHEDULE) R.id.navigation_schedule else null
+    private fun acceptIntent(intent: Intent) {
+        val route = MainActivityIntentRouting.parse(intent.action, intent.getIntExtra(UserScreenArgs.ISU, 0)) ?: return
+        pendingRootDestination = route.rootDestination
+        pendingUserIsu = route.userIsu
+    }
 
     companion object {
+        const val ACTION_OPEN_SPORT = "dev.alllexey.itmowidgets.action.OPEN_SPORT"
+        const val ACTION_OPEN_USER_PROFILE = "dev.alllexey.itmowidgets.action.OPEN_USER_PROFILE"
         const val ACTION_OPEN_SCHEDULE = "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE"
+        private const val PENDING_USER = "pending_user_isu"
         private const val PENDING_ROOT = "pending_root_destination"
     }
 }

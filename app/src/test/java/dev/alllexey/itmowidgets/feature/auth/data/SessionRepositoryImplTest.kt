@@ -151,6 +151,7 @@ class SessionRepositoryImplTest {
             dataCleaners = setOf(cleaner),
             lifecycleEffects = effects,
             backendIdentitySync = identitySync,
+            fcmTokenSync = dev.alllexey.itmowidgets.core.notification.FcmTokenSync { },
             backendDeviceSession = deviceSession
         )
         return Fixture(

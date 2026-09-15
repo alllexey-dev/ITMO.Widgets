@@ -39,7 +39,7 @@ class SelectionRowsTest {
         scenario.onActivity { activity ->
             val friend = friend()
             val clicks = mutableListOf<UserSummary>()
-            val adapter = FriendSelectorAdapter(friend.isu, clicks::add)
+            val adapter = FriendSelectorAdapter(friend.isu, clicks::add, onOpenProfile = {})
             val holder = adapter.onCreateViewHolder(activity.sectionsContainer, 0)
             val row = holder.itemView as MaterialCardView
             activity.sectionsContainer.addView(row)
@@ -134,7 +134,7 @@ class SelectionRowsTest {
             for (fontScale in listOf(1f, 1.3f)) {
                 preview(fontScale, dark, 0xff087f5b.toInt()) { scenario ->
                     scenario.onActivity { activity ->
-                        val friendAdapter = FriendSelectorAdapter {}
+                        val friendAdapter = FriendSelectorAdapter(onClick = {}, onOpenProfile = {})
                         val friendHolder = friendAdapter.onCreateViewHolder(activity.sectionsContainer, 0)
                         friendHolder.bind(friend())
                         activity.sectionsContainer.addView(friendHolder.itemView)

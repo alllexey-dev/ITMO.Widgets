@@ -32,10 +32,11 @@ class SportActionRepositoryImpl @Inject constructor(
                 val response = myItmoApi.signInLessons(listOf(lessonId)).execute()
                 if (!response.isSuccessful) throw HttpException(response)
                 val body = response.body()
-                    ?: throw ApiException("Empty sport sign-in response", null)
+                    ?: throw IllegalStateException("Empty sport sign-in response")
                 if (body.errorCode != 0) {
                     throw ApiException(body.errorCode, body.errorMessage)
                 }
+                check(body.result != null) { "Missing sport action result" }
             }
         }
     }

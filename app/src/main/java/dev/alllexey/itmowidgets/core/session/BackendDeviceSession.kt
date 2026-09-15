@@ -19,21 +19,25 @@ class DefaultBackendDeviceSession(
     private val settings: AppSettingsStorage,
     private val utilityStorage: UtilityStorage,
     private val widgetsApi: ItmoWidgetsApi,
-    private val deviceName: String
+    private val deviceName: String,
+    private val currentUser: CurrentUserProvider
 ) : BackendDeviceSession {
 
     override suspend fun registerCurrentDevice() {
         if (!settings.getCustomServicesEnabled()) return
+        val ownerIsu = currentUser.getCurrentUser()?.isu?.takeIf { it > 0 } ?: return
         val fcmToken = utilityStorage.getFirebaseToken()?.trim()?.takeIf(String::isNotEmpty)
             ?: return
 
         withContext(Dispatchers.IO) {
-            widgetsApi.registerDevice(
+            val response = widgetsApi.registerDevice(
                 RegisterDeviceRequest(
                     fcmToken = fcmToken,
                     deviceName = deviceName
                 )
             )
+            check(response.success) { "Device registration rejected" }
+            utilityStorage.setRegisteredFirebaseToken(fcmToken, ownerIsu)
         }
     }
 
@@ -43,7 +47,9 @@ class DefaultBackendDeviceSession(
             ?: return
 
         withContext(Dispatchers.IO) {
-            widgetsApi.unregisterCurrentDevice(UnregisterDeviceRequest(fcmToken))
+            val response = widgetsApi.unregisterCurrentDevice(UnregisterDeviceRequest(fcmToken))
+            check(response.success) { "Device unregistration rejected" }
+            utilityStorage.setRegisteredFirebaseToken(null)
         }
     }
 }

@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.auth.data
 
+import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import api.myitmo.MyItmo
 import api.myitmo.model.other.TokenResponse
 import com.google.gson.Gson
@@ -32,7 +33,8 @@ class SessionRepositoryImpl @Inject constructor(
     private val dataCleaners: Set<@JvmSuppressWildcards SessionDataCleaner>,
     private val lifecycleEffects: SessionLifecycleEffects,
     private val backendIdentitySync: BackendIdentitySync,
-    private val backendDeviceSession: BackendDeviceSession
+    private val backendDeviceSession: BackendDeviceSession,
+    private val fcmTokenSync: FcmTokenSync
 ) : SessionRepository {
 
     private val mutableState = MutableStateFlow<SessionState>(SessionState.Initializing)
@@ -137,6 +139,7 @@ class SessionRepositoryImpl @Inject constructor(
 
     private suspend fun synchronizeSignedInSession() {
         runCatching { backendIdentitySync.sync() }
+        runCatching { fcmTokenSync.sync() }
         runCatching { backendDeviceSession.registerCurrentDevice() }
     }
 

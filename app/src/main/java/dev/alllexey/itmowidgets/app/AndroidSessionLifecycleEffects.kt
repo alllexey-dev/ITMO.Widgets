@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.app
 
 import android.appwidget.AppWidgetManager
+import dev.alllexey.itmowidgets.core.notification.FcmWork
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
@@ -22,10 +24,13 @@ class AndroidSessionLifecycleEffects @Inject constructor(
     private val settings: AppSettingsStorage,
     private val scheduleWidgetStore: ScheduleWidgetSnapshotStore,
     private val qrWidgetStateStore: QrWidgetStateStore,
-    private val qrWidgetImages: QrWidgetImages
+    private val qrWidgetImages: QrWidgetImages,
+    private val notifier: AppNotifier
 ) : SessionLifecycleEffects {
 
     override suspend fun prepareForSessionChange() {
+        FcmWork.cancelMessages(context)
+        notifier.clear()
         QrWidgetWork.cancelAll(context)
         ScheduleWidgetWork.cancelAll(context)
     }

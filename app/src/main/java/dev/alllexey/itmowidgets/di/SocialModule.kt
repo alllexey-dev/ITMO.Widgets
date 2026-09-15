@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.di
 
+import dev.alllexey.itmowidgets.core.notification.FcmPayloadHandler
+import dev.alllexey.itmowidgets.feature.social.data.push.FriendshipPushHandler
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,6 +21,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SocialModule {
+
+    @Binds
+    @IntoSet
+    abstract fun friendshipPush(impl: FriendshipPushHandler): FcmPayloadHandler
 
     @Binds
     @Singleton

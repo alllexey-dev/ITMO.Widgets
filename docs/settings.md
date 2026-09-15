@@ -139,6 +139,16 @@ do not incur an additional delay. Disabling services takes effect immediately.
 - The page is an offline settings category with one toggle. Its footer explains
   the user-services requirement and that pending entries are not confirmed bookings.
 
+## Notification channels
+
+`Уведомления` opens Android's application notification settings. FCM categories
+are `Спорт: автозапись` (`sport`) and `Друзья` (`friends`), both at default
+importance. Android controls permission, sound and category visibility; there are
+no duplicate in-app switches. Disabled notification permission suppresses only
+the visual alert, not sport automation already enabled by the user. Disabling
+user services suppresses FCM actions and attempts to unregister this device.
+The old generic `fcm_default_channel` is removed.
+
 ## Sport
 
 - `Показывать фильтр по преподавателю` controls the optional teacher selector.
