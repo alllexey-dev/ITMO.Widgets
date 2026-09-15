@@ -47,6 +47,14 @@
 
         </LinearLayout>
 
+        <com.google.android.material.chip.Chip android:id="@+id/bars_chip"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:checkable="true"
+            android:text="@string/recordbook_source_bars" />
+
         <com.google.android.material.button.MaterialButton android:id="@+id/source_button"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="48dp"

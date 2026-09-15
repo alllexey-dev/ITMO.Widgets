@@ -360,7 +360,7 @@
     <string name="schedule_timeline_upcoming">Предстоящая пара</string>
     <string name="recordbook_subject_title">Предмет</string>
     <string name="recordbook_source_title">Откуда данные</string>
-    <string name="recordbook_source_description">Оценки и контрольные мероприятия приходят из зачётки MyITMO. «Без оценки» значит, что итог ещё не выставлен, — это не задолженность. Баллы за работы не всегда складываются в итоговую оценку.\n\nУ физкультуры источник другой — «Мой спорт». Показываем баллы, только если совпали учебный год и полугодие. Бонусных учитываем не больше 40, как на экране спорта. Официальный зачёт эти баллы не заменяют.\n\nПотяните список вниз, чтобы обновить.</string>
+    <string name="recordbook_source_description">Оценки и контрольные мероприятия приходят из зачётки MyITMO. «Без оценки» значит, что итог ещё не выставлен, — это не задолженность. Баллы за работы не всегда складываются в итоговую оценку.\n\nПереключатель «БАРС» берёт баллы, оценки и работы напрямую из БАРС, где они появляются раньше. Предметы сопоставляются по названию за тот же семестр; у остальных остаются данные MyITMO.\n\nУ физкультуры источник другой — «Мой спорт». Показываем баллы, только если совпали учебный год и полугодие. Бонусных учитываем не больше 40, как на экране спорта. Официальный зачёт эти баллы не заменяют.\n\nПотяните список вниз, чтобы обновить.</string>
     <string name="recordbook_summary_closed">Сдано %1$d из %2$d</string>
     <string name="recordbook_summary_pending">Без оценки: %1$d · не сдано: %2$d</string>
     <string name="recordbook_score_pending">—</string>
@@ -481,4 +481,12 @@
     <string name="widget_preview_subject_physics">Физика</string>
     <string name="widget_preview_teacher">Иванов И. И.</string>
 
+    <string name="recordbook_source_bars">БАРС</string>
+    <string name="recordbook_bars_login">Войти в БАРС</string>
+    <string name="recordbook_bars_login_required">Сессия БАРС закончилась, нужно войти снова.</string>
+    <string name="recordbook_bars_error">БАРС недоступен, показываем MyITMO. %1$s</string>
+    <string name="recordbook_bars_wrong_account">В БАРС открыт другой аккаунт. Нажмите «Повторить» и войдите под тем же аккаунтом ITMO.ID, что и в приложении.</string>
+    <string name="recordbook_bars_missing">нет в БАРС</string>
+    <string name="recordbook_additional_points">Дополнительные баллы</string>
+    <string name="recordbook_absent">Неявка</string>
 </resources>

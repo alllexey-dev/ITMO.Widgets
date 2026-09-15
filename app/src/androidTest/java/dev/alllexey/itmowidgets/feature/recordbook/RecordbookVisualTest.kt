@@ -316,6 +316,7 @@ class RecordbookVisualTest {
         try {
             ActivityScenario.launch<RecordbookPreviewActivity>(Intent(ApplicationProvider.getApplicationContext(), RecordbookPreviewActivity::class.java)).use { block(it, repository) }
         } finally {
+            RecordbookPreviewActivity.bars = null
             RecordbookPreviewActivity.repository = null
             RecordbookPreviewActivity.sportRepository = null
         }

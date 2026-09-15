@@ -19,7 +19,7 @@ import java.util.Locale
 sealed interface RecordbookListItem {
     data class Summary(val subjects: List<RecordbookSubject>) : RecordbookListItem
     data class Section(val titleRes: Int) : RecordbookListItem
-    data class Subject(val value: RecordbookSubject, val sport: RecordbookSportState?) : RecordbookListItem
+    data class Subject(val value: RecordbookSubject, val sport: RecordbookSportState?, val barsMissing: Boolean = false) : RecordbookListItem
 }
 
 class RecordbookAdapter(private val onSubjectClick: (RecordbookSubject) -> Unit) :
@@ -27,17 +27,20 @@ class RecordbookAdapter(private val onSubjectClick: (RecordbookSubject) -> Unit)
 
     init { stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY }
 
-    fun submitData(subjects: List<RecordbookSubject>, sport: RecordbookSportState?, onCommitted: () -> Unit = {}) {
+    fun submitData(subjects: List<RecordbookSubject>, sport: RecordbookSportState?, bars: Boolean = false, onCommitted: () -> Unit = {}) {
         val (attention, regular) = subjects.partition { it.status == RecordbookSubjectStatus.ATTENTION }
+        fun item(subject: RecordbookSubject) = RecordbookListItem.Subject(subject, sport.takeIf { subject.isPhysicalEducation },
+            // PE is graded outside BARS; only other unmatched subjects need the hint.
+            barsMissing = bars && subject.barsJournal == null && !subject.isPhysicalEducation)
         submitList(buildList {
             if (subjects.isNotEmpty()) add(RecordbookListItem.Summary(subjects))
             if (attention.isNotEmpty()) {
                 add(RecordbookListItem.Section(R.string.recordbook_attention_section))
-                addAll(attention.map { RecordbookListItem.Subject(it, sport.takeIf { _ -> it.isPhysicalEducation }) })
+                addAll(attention.map(::item))
             }
             if (regular.isNotEmpty()) {
                 if (attention.isNotEmpty()) add(RecordbookListItem.Section(R.string.recordbook_disciplines_section))
-                addAll(regular.map { RecordbookListItem.Subject(it, sport.takeIf { _ -> it.isPhysicalEducation }) })
+                addAll(regular.map(::item))
             }
         }, onCommitted)
     }
@@ -88,7 +91,8 @@ class RecordbookAdapter(private val onSubjectClick: (RecordbookSubject) -> Unit)
             val subject = item.value
             val context = binding.root.context
             binding.name.text = subject.name
-            binding.meta.text = subject.assessmentLabel(context)
+            binding.meta.text = listOf(subject.assessmentLabel(context), if (item.barsMissing) context.getString(R.string.recordbook_bars_missing) else "")
+                .filter(String::isNotBlank).joinToString(" · ")
             binding.result.bind(subject, item.sport)
             binding.sport.isVisible = item.sport != null
             binding.sport.text = item.sport?.compactText(context)
@@ -103,7 +107,7 @@ class RecordbookAdapter(private val onSubjectClick: (RecordbookSubject) -> Unit)
         override fun areItemsTheSame(old: RecordbookListItem, new: RecordbookListItem): Boolean = when {
             old is RecordbookListItem.Summary && new is RecordbookListItem.Summary -> true
             old is RecordbookListItem.Section && new is RecordbookListItem.Section -> old.titleRes == new.titleRes
-            old is RecordbookListItem.Subject && new is RecordbookListItem.Subject -> old.value.entryId == new.value.entryId && old.value.disciplineId == new.value.disciplineId
+            old is RecordbookListItem.Subject && new is RecordbookListItem.Subject -> old.value.entryId == new.value.entryId && old.value.disciplineId == new.value.disciplineId && old.value.barsJournal == new.value.barsJournal
             else -> false
         }
         override fun areContentsTheSame(old: RecordbookListItem, new: RecordbookListItem) = old == new

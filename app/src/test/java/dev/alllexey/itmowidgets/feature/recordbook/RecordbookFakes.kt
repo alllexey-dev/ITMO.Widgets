@@ -1,11 +1,16 @@
 package dev.alllexey.itmowidgets.feature.recordbook
 
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
@@ -54,3 +59,34 @@ class FixedAcademicTime(date: String = "2026-09-07") : AcademicTimeProvider {
     override fun today() = date
     override fun now() = date.atStartOfDay(zoneId).toOffsetDateTime()
 }
+
+class FakeBarsRepository : BarsRecordbookRepository {
+    var subjects: AppResult<List<RecordbookSubject>> = AppResult.Success(emptyList())
+    var details: AppResult<BarsSubjectDetails> = AppResult.Failure(AppError.NotFound)
+    var subjectLoader: (suspend () -> AppResult<List<RecordbookSubject>>)? = null
+    val periodRequests = mutableListOf<RecordbookPeriod>()
+    val journalRequests = mutableListOf<BarsJournalReference>()
+    override suspend fun getSubjects(period: RecordbookPeriod): AppResult<List<RecordbookSubject>> {
+        periodRequests += period
+        return subjectLoader?.invoke() ?: subjects
+    }
+    override suspend fun getSubject(journal: BarsJournalReference): AppResult<BarsSubjectDetails> {
+        journalRequests += journal
+        return details
+    }
+}
+
+class FakeBarsPreference(var enabled: Boolean = false) : BarsPreferenceRepository {
+    var writes = 0
+    override suspend fun isEnabled() = enabled
+    override suspend fun setEnabled(enabled: Boolean): AppResult<Unit> {
+        this.enabled = enabled
+        writes++
+        return AppResult.Success(Unit)
+    }
+}
+
+fun barsJournal(id: Long = 8L) = BarsJournalReference(id, "flow", "7", 2025, 2)
+
+fun barsSubject(name: String = "Тестовый предмет", score: Double? = 91.5, rate: String? = "5/A") =
+    RecordbookSubject(name, 900L, 8L, "Экзамен", score, rate, 1, null, true, null, barsJournal(), false)

@@ -2,6 +2,10 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.model
 
 import java.time.OffsetDateTime
 
+/** BARS has its own year/season and plan identity, unrelated to MyITMO est_id. */
+data class BarsJournalReference(val planId: Long, val type: String, val identifier: String,
+    val yearStart: Int, val semester: Int)
+
 data class RecordbookProgram(
     val id: Long,
     val name: String,
@@ -46,7 +50,9 @@ data class RecordbookSubject(
     val attempt: Int?,
     val examDate: OffsetDateTime?,
     val hasDetails: Boolean,
-    val teacherName: String?
+    val teacherName: String?,
+    val barsJournal: BarsJournalReference? = null,
+    val absent: Boolean = false
 ) {
     val assessmentKind: RecordbookAssessmentKind
         get() = when {
@@ -63,6 +69,7 @@ data class RecordbookSubject(
 
     val status: RecordbookSubjectStatus
         get() = when {
+            absent -> RecordbookSubjectStatus.ATTENTION
             normalizedText.startsWith("2") || normalizedText in setOf("незачет", "незачтено") ->
                 RecordbookSubjectStatus.ATTENTION
             normalizedText in setOf("зачет", "зачтено") ||
@@ -80,6 +87,7 @@ data class RecordbookSubject(
 
     val normalizedRate: RecordbookRate
         get() = when {
+            absent -> RecordbookRate.InProgress
             normalizedText in setOf("зачет", "зачтено") -> RecordbookRate.Credit
             normalizedText.isBlank() -> RecordbookRate.InProgress
             Regex("[2345]/?[A-FX]+").matches(normalizedText.uppercase()) ->
@@ -97,5 +105,7 @@ data class RecordbookControl(
     val required: Boolean,
     val date: OffsetDateTime?,
     val teacherName: String?,
-    val parentId: Long? = null
+    val parentId: Long? = null,
+    val absent: Boolean = false,
+    val additional: Boolean = false
 )

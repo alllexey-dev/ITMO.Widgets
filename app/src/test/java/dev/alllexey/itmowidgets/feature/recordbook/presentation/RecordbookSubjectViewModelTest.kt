@@ -1,12 +1,18 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
+import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
+import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
+import dev.alllexey.itmowidgets.feature.recordbook.barsJournal
+import dev.alllexey.itmowidgets.feature.recordbook.barsSubject
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -19,9 +25,36 @@ import org.junit.Test
 class RecordbookSubjectViewModelTest {
     @get:Rule val mainDispatcherRule = MainDispatcherRule()
     private val repository = FakeRecordbookRepository()
-    private fun model() = RecordbookSubjectViewModel(repository, SavedStateHandle(mapOf(
-        "entry_id" to 42L, "program_id" to 1L, "semester" to 2, "study_year" to "2025/2026"
-    )), RecordbookSportResolver(FakeSportScoreRepository()))
+    private val bars = FakeBarsRepository()
+    private fun model(withBars: Boolean = false) = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
+        put("entry_id", 42L); put("program_id", 1L); put("semester", 2); put("study_year", "2025/2026")
+        if (withBars) { put("bars_plan", 8L); put("bars_type", "flow"); put("bars_identifier", "7") }
+    }), RecordbookSportResolver(FakeSportScoreRepository()))
+
+    @Test fun `BARS journal overlays the official subject and supplies its controls`() = runTest {
+        val control = RecordbookControl(6, "Работа", 7.5, 0.0, 10.0, true, null, null)
+        bars.details = AppResult.Success(BarsSubjectDetails(barsSubject(), listOf(control)))
+        val vm = model(withBars = true); advanceUntilIdle()
+        val state = vm.uiState.value as RecordbookSubjectUiState.Content
+        assertEquals(listOf(barsJournal()), bars.journalRequests)
+        assertEquals(91.5, state.subject.score!!, 0.0)
+        assertEquals(42L, state.subject.entryId)
+        assertEquals(listOf(control), state.controls)
+        assertEquals(0, repository.controlRequests)
+        assertNull(state.barsError)
+    }
+    @Test fun `failed BARS journal falls back to official values with a visible error`() = runTest {
+        bars.details = AppResult.Failure(AppError.Network)
+        val vm = model(withBars = true); advanceUntilIdle()
+        val state = vm.uiState.value as RecordbookSubjectUiState.Content
+        assertEquals(recordbookSubject(), state.subject)
+        assertEquals(AppError.Network, state.barsError)
+        assertEquals(1, repository.controlRequests)
+    }
+    @Test fun `subject without a BARS journal never asks BARS`() = runTest {
+        model(); advanceUntilIdle()
+        assertTrue(bars.journalRequests.isEmpty())
+    }
 
     @Test fun `no tree does not make a detail API request`() = runTest {
         repository.subjects = AppResult.Success(listOf(recordbookSubject(details = false)))

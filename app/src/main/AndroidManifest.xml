@@ -27,6 +27,10 @@
         </activity>
 
         <activity
+            android:name=".feature.recordbook.ui.BarsLoginActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".feature.auth.ui.LoginActivity"
             android:exported="false" />
 

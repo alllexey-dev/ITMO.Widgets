@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
+import android.app.Activity
+import android.content.Intent
+import androidx.activity.result.contract.ActivityResultContracts
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -28,7 +31,11 @@ class RecordbookSubjectFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: RecordbookSubjectViewModel by viewModels()
     private lateinit var adapter: RecordbookControlAdapter
+    private val barsLogin = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (it.resultCode == Activity.RESULT_OK) viewModel.refresh()
+    }
     private var lastRefreshError: AppError? = null
+    private var lastBarsError: AppError? = null
     private var errorSnackbar: Snackbar? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -54,6 +61,7 @@ class RecordbookSubjectFragment : Fragment() {
         errorSnackbar?.dismiss()
         errorSnackbar = null
         lastRefreshError = null
+        lastBarsError = null
         _binding = null
         super.onDestroyView()
     }
@@ -62,13 +70,19 @@ class RecordbookSubjectFragment : Fragment() {
         if (state !is RecordbookSubjectUiState.Content) binding.loading.isVisible = state is RecordbookSubjectUiState.Loading
         binding.swipeRefreshLayout.isRefreshing = (state as? RecordbookSubjectUiState.Content)?.refreshing == true
         val refreshError = (state as? RecordbookSubjectUiState.Content)?.refreshError
-        if (refreshError != lastRefreshError) {
+        val barsError = (state as? RecordbookSubjectUiState.Content)?.barsError
+        if (refreshError != lastRefreshError || barsError != lastBarsError) {
             errorSnackbar?.dismiss()
             errorSnackbar = refreshError?.let {
                 Snackbar.make(binding.root, getString(R.string.recordbook_refresh_error, getString(it.messageRes())), Snackbar.LENGTH_LONG)
                     .setAction(R.string.common_retry) { viewModel.refresh() }.also(Snackbar::show)
+            } ?: barsError?.let { error ->
+                recordbookBarsSnackbar(binding.root, error, viewModel::refresh) {
+                    barsLogin.launch(Intent(requireContext(), BarsLoginActivity::class.java))
+                }
             }
             lastRefreshError = refreshError
+            lastBarsError = barsError
         }
         when (state) {
             RecordbookSubjectUiState.Loading -> {

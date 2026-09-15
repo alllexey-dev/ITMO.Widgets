@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
+import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
+import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -26,7 +28,7 @@ class RecordbookViewModelTest {
     private val sport = FakeSportScoreRepository()
 
     private fun model(state: SavedStateHandle = SavedStateHandle(), date: String = "2026-09-07") =
-        RecordbookViewModel(repository, state, RecordbookSportResolver(sport), FixedAcademicTime(date))
+        RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), state, RecordbookSportResolver(sport), FixedAcademicTime(date))
 
     @Test fun `loads current academic period without asking sport for regular subjects`() = runTest {
         val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()

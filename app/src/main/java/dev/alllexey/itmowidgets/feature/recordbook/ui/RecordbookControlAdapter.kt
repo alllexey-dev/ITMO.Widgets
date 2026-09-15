@@ -115,7 +115,7 @@ class RecordbookControlAdapter(private val onRetry: () -> Unit = {}) :
             binding.root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 marginStart = (row.depth.coerceAtMost(3) * 12 * context.resources.displayMetrics.density).toInt()
             }
-            binding.name.text = control.name
+            binding.name.text = if (control.additional) context.getString(R.string.recordbook_additional_points) else control.name
             val progress = RecordbookProgress(control.score, control.maximum)
             val earned = progress.value?.let(::formatRecordbookNumber) ?: context.getString(R.string.recordbook_score_pending)
             binding.score.text = control.maximum?.let { context.getString(R.string.recordbook_control_score, earned, formatRecordbookNumber(it)) } ?: earned
@@ -127,6 +127,7 @@ class RecordbookControlAdapter(private val onRetry: () -> Unit = {}) :
             binding.meta.text = buildList {
                 control.minimum?.takeIf { it > 0 }?.let { add(context.getString(R.string.recordbook_control_minimum, formatRecordbookNumber(it))) }
                 if (control.required) add(context.getString(R.string.recordbook_required))
+                if (control.absent) add(context.getString(R.string.recordbook_absent))
             }.joinToString(" · ")
             binding.meta.isVisible = binding.meta.text.isNotEmpty()
             binding.details.text = listOfNotNull(control.date?.format(DATE_FORMAT),

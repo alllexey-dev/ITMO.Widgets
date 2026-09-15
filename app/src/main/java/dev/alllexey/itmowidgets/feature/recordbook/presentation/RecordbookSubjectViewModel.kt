@@ -6,12 +6,15 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.withBars
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -27,7 +30,9 @@ sealed interface RecordbookSubjectUiState {
         val sport: RecordbookSportState?,
         val controlsError: AppError? = null,
         val refreshing: Boolean = false,
-        val refreshError: AppError? = null
+        val refreshError: AppError? = null,
+        /** BARS journal failed; subject and controls are MyITMO values. */
+        val barsError: AppError? = null
     ) : RecordbookSubjectUiState
     data class Error(val error: AppError) : RecordbookSubjectUiState
 }
@@ -35,6 +40,7 @@ sealed interface RecordbookSubjectUiState {
 @HiltViewModel
 class RecordbookSubjectViewModel @Inject constructor(
     private val repository: RecordbookRepository,
+    private val bars: BarsRecordbookRepository,
     savedStateHandle: SavedStateHandle,
     private val sportResolver: RecordbookSportResolver
 ) : ViewModel() {
@@ -46,6 +52,11 @@ class RecordbookSubjectViewModel @Inject constructor(
         course = 0,
         actual = false
     )
+    private val barsJournal: BarsJournalReference? = savedStateHandle.get<Long>(ARG_BARS_PLAN)?.let { plan ->
+        BarsJournalReference(plan, checkNotNull(savedStateHandle.get<String>(ARG_BARS_TYPE)),
+            checkNotNull(savedStateHandle.get<String>(ARG_BARS_IDENTIFIER)),
+            period.studyYear.substringBefore('/').toInt(), period.semesterInCourse)
+    }
     private val _uiState = MutableStateFlow<RecordbookSubjectUiState>(RecordbookSubjectUiState.Loading)
     val uiState = _uiState.asStateFlow()
     private var loadJob: Job? = null
@@ -58,30 +69,46 @@ class RecordbookSubjectViewModel @Inject constructor(
         _uiState.value = previous?.copy(refreshing = true, refreshError = null)
             ?: RecordbookSubjectUiState.Loading
         loadJob = viewModelScope.launch {
+            val journal = barsJournal?.let { async { bars.getSubject(it) } }
             val subjects = repository.getSubjects(programId, period.semester)
-            val subject = (subjects as? AppResult.Success)?.value?.firstOrNull { it.entryId == entryId }
-            if (subject == null) {
+            val official = (subjects as? AppResult.Success)?.value?.firstOrNull { it.entryId == entryId } ?: run {
+                journal?.cancel()
                 val error = (subjects as? AppResult.Failure)?.error ?: AppError.NotFound
                 _uiState.value = previous?.copy(refreshError = error)
                     ?: RecordbookSubjectUiState.Error(error)
                 return@launch
             }
-            val sport = async { sportResolver.resolve(period, listOf(subject)) }
-            val controls = if (subject.hasDetails) repository.getControls(entryId)
-                else AppResult.Success(emptyList())
+            val sport = async { sportResolver.resolve(period, listOf(official)) }
+            var subject = official
+            var barsError: AppError? = null
+            val controls = when (val details = journal?.await()) {
+                is AppResult.Success -> {
+                    subject = subject.withBars(details.value.subject)
+                    AppResult.Success(details.value.controls)
+                }
+                is AppResult.Failure -> { barsError = details.error; myItmoControls(official) }
+                null -> myItmoControls(official)
+            }
             _uiState.value = RecordbookSubjectUiState.Content(
                 subject = subject,
                 controls = (controls as? AppResult.Success)?.value.orEmpty(),
                 sport = sport.await(),
-                controlsError = (controls as? AppResult.Failure)?.error
+                controlsError = (controls as? AppResult.Failure)?.error,
+                barsError = barsError
             )
         }
     }
+
+    private suspend fun myItmoControls(subject: RecordbookSubject): AppResult<List<RecordbookControl>> =
+        if (subject.hasDetails) repository.getControls(entryId) else AppResult.Success(emptyList())
 
     companion object {
         const val ARG_ENTRY_ID = "entry_id"
         const val ARG_PROGRAM_ID = "program_id"
         const val ARG_SEMESTER = "semester"
         const val ARG_STUDY_YEAR = "study_year"
+        const val ARG_BARS_PLAN = "bars_plan"
+        const val ARG_BARS_TYPE = "bars_type"
+        const val ARG_BARS_IDENTIFIER = "bars_identifier"
     }
 }

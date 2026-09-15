@@ -217,6 +217,17 @@ cancel superseded period requests. Details reload the official subject rather th
 trusting a navigation snapshot, preserve control hierarchy, and respect `have_tree`.
 API observations and limitations are recorded in `docs/recordbook-api.md`.
 
+The recordbook can overlay BARS on top of the MyITMO list (`БАРС` chip). The
+temporary in-app client, authorized on 2026-09-15, is isolated in
+`feature/recordbook/data/bars`. `RecordbookBarsMerge` pairs subjects by
+normalized name within the same period; identities, teachers, PE and sport stay
+MyITMO, and a BARS failure leaves MyITMO values on screen with a visible error.
+The BARS token lives 30 minutes; `BarsWebSilentLogin` renews it from the ITMO.ID
+session already held by the app's WebView, so the interactive `BarsLoginActivity`
+is only a fallback. The chip preference uses DataStore, the token an encrypted
+no-backup file; both are cleared by the registered `SessionDataCleaner`.
+See `docs/bars-integration.md`.
+
 ### Pending sport in the schedule screen
 
 The optional `Автозапись на спорт` switch is a persisted local preference, disabled

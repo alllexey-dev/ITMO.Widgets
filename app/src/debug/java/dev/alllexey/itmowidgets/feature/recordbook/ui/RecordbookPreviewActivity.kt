@@ -19,11 +19,19 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
@@ -52,14 +60,21 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         val resolver = RecordbookSportResolver(checkNotNull(sportRepository))
                         return if (fragment is RecordbookFragment) {
-                            RecordbookViewModel(checkNotNull(repository), SavedStateHandle(), resolver, FixedTime) as T
+                            RecordbookViewModel(checkNotNull(repository), bars ?: NoBars, preference, SavedStateHandle(), resolver, FixedTime) as T
                         } else {
                             val args = fragment.requireArguments()
-                            val handle = SavedStateHandle(mapOf<String, Any>(
+                            val values = mutableMapOf<String, Any>(
                                 "entry_id" to args.getLong("entry_id"), "program_id" to args.getLong("program_id"),
                                 "semester" to args.getInt("semester"), "study_year" to checkNotNull(args.getString("study_year"))
-                            ))
-                            RecordbookSubjectViewModel(checkNotNull(repository), handle, resolver) as T
+                            )
+                            @Suppress("DEPRECATION")
+                            (args.get("bars_plan") as? Long)?.let { plan ->
+                                values["bars_plan"] = plan
+                                values["bars_type"] = checkNotNull(args.getString("bars_type"))
+                                values["bars_identifier"] = checkNotNull(args.getString("bars_identifier"))
+                            }
+                            val handle = SavedStateHandle(values)
+                            RecordbookSubjectViewModel(checkNotNull(repository), bars ?: NoBars, handle, resolver) as T
                         }
                     }
                 }
@@ -104,12 +119,25 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         override fun now() = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
     }
 
+    private object NoBars : BarsRecordbookRepository {
+        override suspend fun getSubjects(period: RecordbookPeriod) = AppResult.Success(emptyList<RecordbookSubject>())
+        override suspend fun getSubject(journal: BarsJournalReference) = AppResult.Failure(AppError.NotFound)
+    }
+
+    /** In-memory toggle so previews never touch DataStore or a BARS session. */
+    private val preference = object : BarsPreferenceRepository {
+        private var enabled = false
+        override suspend fun isEnabled() = enabled
+        override suspend fun setEnabled(enabled: Boolean): AppResult<Unit> { this.enabled = enabled; return AppResult.Success(Unit) }
+    }
+
     data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val widthDp: Int = 0, val colorSeed: Int? = null)
 
     companion object {
         const val ROOT_TAG = "recordbook"
         @Volatile var appearance = Appearance()
         @Volatile var repository: RecordbookRepository? = null
+        @Volatile var bars: BarsRecordbookRepository? = null
         @Volatile var sportRepository: SportScoreRepository? = null
     }
 }

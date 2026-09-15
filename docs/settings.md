@@ -141,6 +141,20 @@ do not incur an additional delay. Disabling services takes effect immediately.
 - Sport type, building, availability, auto-sign, and friends remain ordinary
   sport-screen filters, separate from the schedule display preference above.
 
+## Recordbook BARS overlay
+
+- The recordbook header has a `БАРС` filter chip, not a settings category. It is
+  off by default, persisted locally in DataStore and cleared on sign-out.
+- The chip overlays BARS scores, grades and control trees onto the MyITMO list
+  of the same period. Periods, subject identities, PE and sport stay MyITMO.
+- BARS needs its own ITMO.ID token. It is renewed silently from the session the
+  app's WebView already holds; a sign-in screen appears only when that session
+  has ended. Tokens are never editable settings or bundled credentials.
+- Changing the period while the chip is on also changes the saved period in web
+  BARS: the server keeps that selection and offers no stateless read.
+- When BARS fails the list keeps MyITMO values and shows a snackbar; nothing
+  is silently substituted in either direction.
+
 ## Maps
 
 There is no map-provider setting. Every building action launches a generic

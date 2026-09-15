@@ -1,10 +1,13 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -36,8 +39,13 @@ class RecordbookFragment : Fragment() {
     private val viewModel: RecordbookViewModel by viewModels()
     private lateinit var adapter: RecordbookAdapter
     private var lastRefreshError: AppError? = null
+    private var lastBarsError: AppError? = null
     private var errorSnackbar: Snackbar? = null
     private var selection: RecordbookSelection? = null
+    private var renderingBars = false
+    private val barsLogin = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (it.resultCode == Activity.RESULT_OK) viewModel.refresh()
+    }
     private var scrollState: Parcelable? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -55,6 +63,12 @@ class RecordbookFragment : Fragment() {
         binding.swipeRefreshLayout.setOnRefreshListener(viewModel::refresh)
         binding.stateAction.setOnClickListener { viewModel.refresh() }
         binding.sourceButton.setOnClickListener { showRecordbookSourceInfo(requireContext()) }
+        binding.barsChip.setOnCheckedChangeListener { _, checked -> if (!renderingBars) viewModel.setBarsEnabled(checked) }
+        viewModel.barsEnabled.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { enabled ->
+            renderingBars = true
+            binding.barsChip.isChecked = enabled
+            renderingBars = false
+        }.launchIn(viewLifecycleOwner.lifecycleScope)
         parentFragmentManager.setFragmentResultListener(RecordbookPeriodBottomSheet.RESULT_KEY, viewLifecycleOwner) { _, result ->
             viewModel.selectPeriod(result.getLong(RecordbookPeriodBottomSheet.RESULT_PROGRAM_ID), result.getInt(RecordbookPeriodBottomSheet.RESULT_SEMESTER))
         }
@@ -74,6 +88,7 @@ class RecordbookFragment : Fragment() {
         errorSnackbar?.dismiss()
         errorSnackbar = null
         lastRefreshError = null
+        lastBarsError = null
         _binding = null
         super.onDestroyView()
     }
@@ -81,13 +96,19 @@ class RecordbookFragment : Fragment() {
     private fun render(state: RecordbookUiState) {
         if (state !is RecordbookUiState.Content) binding.loading.isVisible = state is RecordbookUiState.Loading
         val refreshError = (state as? RecordbookUiState.Content)?.refreshError
-        if (refreshError != lastRefreshError) {
+        val barsError = (state as? RecordbookUiState.Content)?.barsError
+        if (refreshError != lastRefreshError || barsError != lastBarsError) {
             errorSnackbar?.dismiss()
             errorSnackbar = refreshError?.let {
                 Snackbar.make(binding.root, getString(R.string.recordbook_refresh_error, getString(it.messageRes())), Snackbar.LENGTH_LONG)
                     .setAction(R.string.common_retry) { viewModel.refresh() }.also(Snackbar::show)
+            } ?: barsError?.let { error ->
+                recordbookBarsSnackbar(binding.root, error, viewModel::refresh) {
+                    barsLogin.launch(Intent(requireContext(), BarsLoginActivity::class.java))
+                }
             }
             lastRefreshError = refreshError
+            lastBarsError = barsError
         }
         binding.swipeRefreshLayout.isRefreshing = (state as? RecordbookUiState.Content)?.refreshing == true
         when (state) {
@@ -99,7 +120,7 @@ class RecordbookFragment : Fragment() {
             is RecordbookUiState.Content -> {
                 renderPeriod(state.programs, state.selection)
                 val currentBinding = binding
-                adapter.submitData(state.subjects, state.sport) {
+                adapter.submitData(state.subjects, state.sport, state.barsApplied) {
                     if (_binding !== currentBinding || viewModel.uiState.value != state) return@submitData
                     currentBinding.loading.isVisible = false
                     currentBinding.swipeRefreshLayout.isVisible = state.subjects.isNotEmpty()
@@ -151,11 +172,17 @@ class RecordbookFragment : Fragment() {
 
     private fun openSubject(subject: RecordbookSubject) {
         val selected = selection ?: return
-        openScreen(AppScreen.RECORDBOOK_SUBJECT, bundleOf(
+        val arguments = bundleOf(
             RecordbookSubjectViewModel.ARG_ENTRY_ID to subject.entryId,
             RecordbookSubjectViewModel.ARG_PROGRAM_ID to selected.program.id,
             RecordbookSubjectViewModel.ARG_SEMESTER to selected.period.semester,
             RecordbookSubjectViewModel.ARG_STUDY_YEAR to selected.period.studyYear
-        ))
+        )
+        subject.barsJournal?.let {
+            arguments.putLong(RecordbookSubjectViewModel.ARG_BARS_PLAN, it.planId)
+            arguments.putString(RecordbookSubjectViewModel.ARG_BARS_TYPE, it.type)
+            arguments.putString(RecordbookSubjectViewModel.ARG_BARS_IDENTIFIER, it.identifier)
+        }
+        openScreen(AppScreen.RECORDBOOK_SUBJECT, arguments)
     }
 }
