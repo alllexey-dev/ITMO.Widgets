@@ -499,4 +499,66 @@
     <string name="recordbook_bars_missing">нет в БАРС</string>
     <string name="recordbook_additional_points">Дополнительные баллы</string>
     <string name="recordbook_absent">Неявка</string>
+
+    <!-- Me: social and profile rows -->
+    <string name="me_group_social">Друзья</string>
+    <string name="me_friends_title">Друзья</string>
+    <string name="me_friends_count">%1$d</string>
+    <string name="me_friends_none">Пока никого</string>
+    <string name="me_friends_loading">Загружаем…</string>
+    <string name="me_friends_error">Не загрузились</string>
+    <string name="me_requests_badge">%1$d</string>
+    <string name="me_requests_badge_accessibility">Входящих заявок: %1$d</string>
+    <string name="me_find_people_title">Найти людей</string>
+    <string name="me_find_people_description">По имени в MyITMO</string>
+    <string name="me_services_disabled_title">Сервисы ITMO.Widgets выключены</string>
+    <string name="me_services_disabled_description">Друзья, заявки и приватность появятся после подключения</string>
+    <string name="me_privacy_title">Приватность</string>
+    <string name="me_privacy_description">Кто видит расписание и спорт</string>
+    <string name="me_notifications_title">Уведомления</string>
+    <string name="me_version_title">Версия</string>
+    <string name="me_group_format">%1$s • %2$d курс • %3$s</string>
+
+    <!-- Friends screen -->
+    <string name="friends_title">Друзья</string>
+    <string name="friends_tab_friends">Друзья</string>
+    <string name="friends_tab_requests">Заявки</string>
+    <string name="friends_empty_title">Друзей пока нет</string>
+    <string name="friends_empty_description">Найдите знакомых по имени и отправьте заявку</string>
+    <string name="friends_requests_empty_title">Заявок нет</string>
+    <string name="friends_requests_empty_description">Здесь появятся входящие и отправленные заявки</string>
+    <string name="friends_section_incoming">Входящие</string>
+    <string name="friends_section_outgoing">Отправленные</string>
+    <string name="friends_find_people">Найти людей</string>
+    <string name="friends_disabled_title">Сервисы ITMO.Widgets выключены</string>
+    <string name="friends_disabled_description">Подключитесь в настройках, чтобы добавлять друзей</string>
+    <string name="friends_action_failed">Не получилось: %1$s</string>
+    <string name="friends_remove_confirm_title">Удалить из друзей?</string>
+    <string name="friends_remove_confirm_message">%1$s перестанет видеть ваши данные для друзей, а вы — его.</string>
+
+    <!-- User row actions -->
+    <string name="user_action_add">Добавить</string>
+    <string name="user_action_accept">Принять</string>
+    <string name="user_action_reject">Отклонить</string>
+    <string name="user_action_cancel">Отменить</string>
+    <string name="user_action_remove">Удалить</string>
+    <string name="user_action_invite">Пригласить</string>
+    <string name="user_status_outgoing">Заявка отправлена</string>
+    <string name="user_status_incoming">Хочет добавить вас</string>
+    <string name="user_status_friends">В друзьях</string>
+    <string name="user_status_not_registered">Не в ITMO.Widgets</string>
+    <string name="user_subtitle_isu">ИСУ %1$d</string>
+
+    <!-- People search -->
+    <string name="user_search_title">Найти людей</string>
+    <string name="user_search_hint">Имя или фамилия</string>
+    <string name="user_search_idle_title">Кого ищем?</string>
+    <string name="user_search_idle_description">Поиск по всем студентам и сотрудникам ИТМО</string>
+    <string name="user_search_empty_title">Никого не нашли</string>
+    <string name="user_search_empty_description">Попробуйте написать иначе</string>
+    <string name="user_search_section_registered">В ITMO.Widgets</string>
+    <string name="user_search_section_others">Остальные</string>
+    <string name="user_search_load_more">Показать ещё</string>
+    <string name="user_search_invite_text">Привет! Добавляйся в ITMO.Widgets — там расписание, спорт и друзья: %1$s</string>
+    <string name="user_search_invite_chooser">Пригласить</string>
 </resources>

@@ -63,4 +63,6 @@ internal val AppScreen.destinationId: Int
         AppScreen.DEBUG_TOOLS -> R.id.debug_tools
         AppScreen.RECORDBOOK_SUBJECT -> R.id.recordbook_subject
         AppScreen.APP_UPDATE -> R.id.app_update
+        AppScreen.FRIENDS -> R.id.friends
+        AppScreen.USER_SEARCH -> R.id.user_search
     }

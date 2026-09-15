@@ -34,4 +34,16 @@
         android:label="Record book subject"
         tools:layout="@layout/fragment_recordbook_subject" />
 
+    <fragment
+        android:id="@+id/friends"
+        android:name="dev.alllexey.itmowidgets.feature.social.ui.FriendsFragment"
+        android:label="Friends"
+        tools:layout="@layout/fragment_friends" />
+
+    <fragment
+        android:id="@+id/user_search"
+        android:name="dev.alllexey.itmowidgets.feature.social.ui.UserSearchFragment"
+        android:label="Find people"
+        tools:layout="@layout/fragment_user_search" />
+
 </navigation>

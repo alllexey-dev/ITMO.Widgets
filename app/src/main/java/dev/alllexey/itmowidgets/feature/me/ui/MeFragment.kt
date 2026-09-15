@@ -1,9 +1,13 @@
 package dev.alllexey.itmowidgets.feature.me.ui
 
+import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -44,26 +48,42 @@ class MeFragment : Fragment() {
 
         binding.debugToolsRow.isVisible = BuildConfig.DEBUG
         binding.debugDivider.isVisible = BuildConfig.DEBUG
+        binding.versionValue.text = BuildConfig.VERSION_NAME
         // Bind cached identity before the first frame, including activity recreation.
         render(viewModel.uiState.value)
 
-        listOf(binding.settingsRow, binding.debugToolsRow).forEach {
-            ViewCompat.setScreenReaderFocusable(it, true)
+        listOf(
+            binding.friendsRow,
+            binding.findPeopleRow,
+            binding.privacyRow,
+            binding.servicesDisabledRow,
+            binding.settingsRow,
+            binding.notificationsRow,
+            binding.debugToolsRow
+        ).forEach { ViewCompat.setScreenReaderFocusable(it, true) }
+
+        binding.friendsRow.setOnClickListener { openScreen(AppScreen.FRIENDS) }
+        binding.findPeopleRow.setOnClickListener { openScreen(AppScreen.USER_SEARCH) }
+        binding.privacyRow.setOnClickListener {
+            openScreen(AppScreen.SETTINGS, bundleOf(SETTINGS_PAGE_ARGUMENT to SETTINGS_PAGE_PRIVACY))
         }
-        binding.settingsRow.setOnClickListener {
-            openScreen(AppScreen.SETTINGS)
-        }
-        binding.debugToolsRow.setOnClickListener {
-            openScreen(AppScreen.DEBUG_TOOLS)
-        }
-        binding.signOutRow.setOnClickListener {
-            showSignOutConfirmation()
-        }
+        binding.servicesDisabledRow.setOnClickListener { openScreen(AppScreen.SETTINGS) }
+        binding.settingsRow.setOnClickListener { openScreen(AppScreen.SETTINGS) }
+        binding.notificationsRow.setOnClickListener { openNotificationSettings() }
+        binding.debugToolsRow.setOnClickListener { openScreen(AppScreen.DEBUG_TOOLS) }
+        binding.signOutRow.setOnClickListener { showSignOutConfirmation() }
 
         viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Returning from a contextual screen may have changed friends or requests.
+        viewModel.refresh()
+        renderNotifications()
     }
 
     override fun onDestroyView() {
@@ -75,6 +95,20 @@ class MeFragment : Fragment() {
         MeRenderer.render(binding, state)
     }
 
+    private fun renderNotifications() {
+        val enabled = NotificationManagerCompat.from(requireContext()).areNotificationsEnabled()
+        binding.notificationsDescription.setText(
+            if (enabled) R.string.settings_notifications_allowed else R.string.settings_notifications_blocked
+        )
+    }
+
+    private fun openNotificationSettings() {
+        startActivity(
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
+        )
+    }
+
     private fun showSignOutConfirmation() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.me_sign_out_confirm_title)
@@ -82,5 +116,11 @@ class MeFragment : Fragment() {
             .setNegativeButton(R.string.common_cancel, null)
             .setPositiveButton(R.string.me_sign_out) { _, _ -> viewModel.signOut() }
             .show()
+    }
+
+    private companion object {
+        /** Mirrors the settings graph argument; features must not import each other. */
+        const val SETTINGS_PAGE_ARGUMENT = "settings_page"
+        const val SETTINGS_PAGE_PRIVACY = "PRIVACY"
     }
 }

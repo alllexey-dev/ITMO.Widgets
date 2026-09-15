@@ -26,7 +26,12 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.model.UserProfile
+import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.social.FriendRequests
+import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
@@ -61,7 +66,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                     ViewModelProvider(f, object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            MeViewModel(ProfileSession) as T
+                            MeViewModel(ProfileSession, ProfileSocial, Services) as T
                     })[MeViewModel::class.java]
                     return
                 }
@@ -189,6 +194,21 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         override fun observeEnabled() = MutableStateFlow(true)
         override suspend fun isEnabled() = true
         override suspend fun setEnabled(enabled: Boolean) = Unit
+    }
+
+    private object ProfileSocial : SocialRepository {
+        override fun observeFriends() = MutableStateFlow<SocialState<List<UserProfile>>>(SocialState.Content(emptyList()))
+        override fun observeRequests() = MutableStateFlow<SocialState<FriendRequests>>(SocialState.Content(FriendRequests.EMPTY))
+        override fun observeCurrentUser() = MutableStateFlow<UserSummary?>(null)
+        override val currentFriends: List<UserProfile> = emptyList()
+        override suspend fun refresh() = Unit
+        override suspend fun profile(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")
+        override suspend fun lookup(isus: List<Int>): AppResult<List<UserProfile>> = AppResult.Success(emptyList())
+        override suspend fun sendRequest(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")
+        override suspend fun acceptRequest(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")
+        override suspend fun rejectRequest(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")
+        override suspend fun cancelRequest(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")
+        override suspend fun removeFriend(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")
     }
 
     private object ProfileSession : SessionRepository {
