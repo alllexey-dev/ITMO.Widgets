@@ -46,4 +46,42 @@
         android:label="Find people"
         tools:layout="@layout/fragment_user_search" />
 
+    <fragment
+        android:id="@+id/user_profile"
+        android:name="dev.alllexey.itmowidgets.feature.social.ui.UserProfileFragment"
+        android:label="User profile"
+        tools:layout="@layout/fragment_user_profile">
+        <argument
+            android:name="user_isu"
+            app:argType="integer" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/user_schedule"
+        android:name="dev.alllexey.itmowidgets.feature.schedule.ui.UserScheduleFragment"
+        android:label="User schedule"
+        tools:layout="@layout/fragment_user_schedule">
+        <argument
+            android:name="user_isu"
+            app:argType="integer" />
+        <argument
+            android:name="user_name"
+            android:defaultValue=""
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/user_sport"
+        android:name="dev.alllexey.itmowidgets.feature.sport.ui.user.UserSportFragment"
+        android:label="User sport"
+        tools:layout="@layout/fragment_user_sport">
+        <argument
+            android:name="user_isu"
+            app:argType="integer" />
+        <argument
+            android:name="user_name"
+            android:defaultValue=""
+            app:argType="string" />
+    </fragment>
+
 </navigation>

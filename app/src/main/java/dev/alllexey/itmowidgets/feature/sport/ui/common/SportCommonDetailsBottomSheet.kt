@@ -19,7 +19,11 @@ import androidx.core.view.updateLayoutParams
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.core.os.bundleOf
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportCommonDetailsBinding
@@ -222,8 +226,15 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
                 }
                 else -> getString(R.string.sport_friend_not_signed)
             }
+            row.root.setOnClickListener { openFriendProfile(friend.isu) }
             friendsContainer.addView(row.root)
         }
+    }
+
+    /** The profile is a contextual screen above the tabs; the sheet has nothing to add once it opens. */
+    private fun openFriendProfile(isu: Int) {
+        dismiss()
+        openScreen(AppScreen.USER_PROFILE, bundleOf(UserScreenArgs.ISU to isu))
     }
 
     /** The icon carries the category, so [title] only survives for screen readers. */

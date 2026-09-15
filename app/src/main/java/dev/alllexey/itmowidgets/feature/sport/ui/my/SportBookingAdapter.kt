@@ -32,7 +32,9 @@ interface SportBookingListener {
 
 class SportBookingAdapter(
     private val timeProvider: AcademicTimeProvider,
-    private val listener: SportBookingListener
+    private val listener: SportBookingListener,
+    /** Another user's bookings: no cancellation, no details, no friend preview. */
+    private val readOnly: Boolean = false
 ) : ListAdapter<SportBooking, SportBookingAdapter.SportBookingViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SportBookingViewHolder {
@@ -67,9 +69,10 @@ class SportBookingAdapter(
             } else status.label(root.context)
             bindSportStatus(status, statusTextView, label)
             friendsPreview.bind(item.friendsBookings)
-            sportRecordCard.setOnClickListener { listener.onBookingClick(item) }
+            sportRecordCard.setOnClickListener(if (readOnly) null else { _ -> listener.onBookingClick(item) })
+            sportRecordCard.isClickable = !readOnly
             optionsMenu.setOnClickListener { showPopupMenu(it, item) }
-            optionsMenu.isVisible = item.signed || item.signEntry != null
+            optionsMenu.isVisible = !readOnly && (item.signed || item.signEntry != null)
         }
 
         private fun showPopupMenu(view: View, item: SportBooking) {

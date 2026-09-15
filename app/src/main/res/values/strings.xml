@@ -561,4 +561,28 @@
     <string name="user_search_load_more">Показать ещё</string>
     <string name="user_search_invite_text">Привет! Добавляйся в ITMO.Widgets — там расписание, спорт и друзья: %1$s</string>
     <string name="user_search_invite_chooser">Пригласить</string>
+
+    <!-- Public profile -->
+    <string name="user_profile_title">Профиль</string>
+    <string name="user_profile_add_friend">Добавить в друзья</string>
+    <string name="user_profile_cancel_request">Отменить заявку</string>
+    <string name="user_profile_accept_request">Принять заявку</string>
+    <string name="user_profile_reject_request">Отклонить</string>
+    <string name="user_profile_remove_friend">Удалить из друзей</string>
+    <string name="user_profile_self">Это вы</string>
+    <string name="user_profile_schedule_title">Расписание</string>
+    <string name="user_profile_schedule_open">Пары на ближайшие недели</string>
+    <string name="user_profile_sport_title">Спорт</string>
+    <string name="user_profile_sport_open">Записи и ожидающие занятия</string>
+    <string name="user_profile_hidden">Скрыто настройками приватности</string>
+    <string name="user_profile_hidden_friends_hint">Обычно открывается после добавления в друзья</string>
+    <string name="user_profile_not_found_title">Профиль не найден</string>
+    <string name="user_profile_not_found_description">Этот человек ещё не пользуется ITMO.Widgets</string>
+
+    <!-- Another user's schedule and sport -->
+    <string name="user_schedule_title">Расписание: %1$s</string>
+    <string name="user_sport_title">Спорт: %1$s</string>
+    <string name="user_sport_empty_title">Записей нет</string>
+    <string name="user_sport_empty_description">Ни подтверждённых занятий, ни ожидающих записей</string>
+    <string name="user_sport_hidden_title">Спорт скрыт</string>
 </resources>

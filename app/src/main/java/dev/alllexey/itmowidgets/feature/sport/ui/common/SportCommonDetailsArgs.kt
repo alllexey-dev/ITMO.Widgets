@@ -46,6 +46,7 @@ data class SportQueueEntryArgs(
 ) : Serializable
 
 data class SportFriendDetailsArgs(
+    val isu: Int,
     val name: String,
     val pictureUrl: String?,
     val entry: SportQueueEntryArgs?,
@@ -64,6 +65,7 @@ fun SportCommon.toDetailsArgs(): SportCommonDetailsArgs {
         signEntry = signEntry?.toDetailsArgs(),
         friends = friendsBookings.map { booking ->
             SportFriendDetailsArgs(
+                isu = booking.friend.isu,
                 name = booking.friend.name,
                 pictureUrl = booking.friend.pictureUrl,
                 entry = booking.entry?.toDetailsArgs(),

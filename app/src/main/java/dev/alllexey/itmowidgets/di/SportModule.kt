@@ -17,11 +17,13 @@ import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositor
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScheduleRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportScoreRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportSignPreferencesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.sport.data.repository.UserSportRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
+import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
 import javax.inject.Singleton
 
 @Module
@@ -88,4 +90,10 @@ abstract class SportModule {
     abstract fun bindSportLessonTemplateProvider(
         impl: DefaultSportLessonTemplateProvider
     ): SportLessonTemplateProvider
+
+    @Binds
+    @Singleton
+    abstract fun bindUserSportRepository(
+        impl: UserSportRepositoryImpl
+    ): UserSportRepository
 }
