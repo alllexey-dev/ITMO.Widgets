@@ -3,11 +3,13 @@ package dev.alllexey.itmowidgets.app
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
@@ -18,6 +20,8 @@ import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
+import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateGateViewModel
+import dev.alllexey.itmowidgets.feature.update.ui.toScreenArguments
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -29,6 +33,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     @Inject
     lateinit var sessionRepository: SessionRepository
 
+    private val updateGate: AppUpdateGateViewModel by viewModels()
     private lateinit var binding: ActivityMainBinding
     private lateinit var navigation: MainNavigationCoordinator
     private var pendingRootDestination: Int? = null
@@ -60,6 +65,11 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         sessionRepository.state
             .flowWithLifecycle(lifecycle)
             .onEach(::renderSession)
+            .launchIn(lifecycleScope)
+        // Only while resumed: opening the offer runs a Fragment transaction.
+        updateGate.offers
+            .flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
+            .onEach { update -> openScreen(AppScreen.APP_UPDATE, update.toScreenArguments()) }
             .launchIn(lifecycleScope)
     }
 
@@ -117,6 +127,8 @@ class MainActivity : AppCompatActivity(), AppNavigator {
                 pendingRootDestination?.let { destination ->
                     if (navigation.selectRoot(destination)) pendingRootDestination = null
                 }
+                // A signed-in session is what the update check needs; it runs once per process.
+                updateGate.checkForUpdate()
                 // Contextual navigation covers this surface instead of resizing it.
                 binding.bottomNavView.isVisible = true
                 binding.overlayContainer.isVisible = true

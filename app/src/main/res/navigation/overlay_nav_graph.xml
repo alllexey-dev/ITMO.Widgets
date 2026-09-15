@@ -23,6 +23,12 @@
         tools:layout="@layout/fragment_debug_tools" />
 
     <fragment
+        android:id="@+id/app_update"
+        android:name="dev.alllexey.itmowidgets.feature.update.ui.AppUpdateFragment"
+        android:label="App update"
+        tools:layout="@layout/fragment_app_update" />
+
+    <fragment
         android:id="@+id/recordbook_subject"
         android:name="dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookSubjectFragment"
         android:label="Record book subject"

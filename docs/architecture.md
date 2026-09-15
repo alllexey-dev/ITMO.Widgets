@@ -83,8 +83,8 @@ feature/
 ```
 
 Current features: `debug`, `friendselector`, `home`, `me`, `qr`, `recordbook`,
-`schedule`, `settings`, `sport`, `widget`. Not every feature needs all four layers —
-`home` is presently UI only, and `me` has no data layer of its own.
+`schedule`, `settings`, `sport`, `update`, `widget`. Not every feature needs all four
+layers — `home` is presently UI only, and `me` has no data layer of its own.
 
 Placement rules:
 
@@ -384,6 +384,23 @@ debug host, with synthetic data and no network actions. It covers both themes,
 two dynamic palettes, a 320 dp content width, font scale 1.0/1.3, queue states,
 busy-action protection, re-binding, full detail text and recreation.
 
+### Update offer
+
+`feature/update` compares the installed `app_version` with `/api/app/version-info`
+once per process, after the session reports a signed-in user. Like every other
+backend call it is gated on the opt-in — the endpoint is unauthenticated, but the
+client attaches the MyITMO token to whatever it sends there. A failed check offers
+nothing: the prompt is advisory and must not open a screen to show an error.
+
+Versions are ordered by `AppVersionName`, not as text, so `2.10` follows `2.9` and
+a `-SNAPSHOT` build still sees its own release. `PendingAppUpdate` applies the
+policy: at most one offer a day, none for a release the user skipped, and no limit
+at all once the installed build drops below the backend's `minVersion` — a build it
+no longer serves has nothing to postpone to, and `Пропустить версию` disappears.
+The offer records when it was shown rather than which button closed it, so leaving
+by Back postpones it exactly like `Напомнить позже`. The screen renders the check's
+result passed as arguments; it never repeats the request and has no loading state.
+
 ### Dependency injection
 
 `@Binds` with constructor injection is the default; `@Provides` is for types the
@@ -396,9 +413,10 @@ growing module. Workers use `@HiltWorker`. The backend base URL comes from
 One Activity owns two navigation surfaces. `main_nav_graph` contains authentication,
 the five bottom destinations, and the schedule friend-selector dialog. The root
 host and bottom bar retain their geometry while a full-screen `AppOverlayHostFragment`
-slides above them. `overlay_nav_graph` owns settings, debug tools, and subject details;
-future contextual user/teacher/review screens belong there too. Features open these
-screens through `core/ui/navigation.AppNavigator`, implemented in the app layer.
+slides above them. `overlay_nav_graph` owns settings, debug tools, subject details and
+the update offer; future contextual user/teacher/review screens belong there too.
+Features open these screens through `core/ui/navigation.AppNavigator`, implemented in
+the app layer.
 
 `MainNavigationCoordinator` makes the overlay host the primary navigation Fragment
 in one reversible parent transaction. The covered root remains STARTED with its

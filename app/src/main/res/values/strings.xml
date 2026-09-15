@@ -56,6 +56,16 @@
     <string name="common_friends">Друзья</string>
     <string name="common_close">Закрыть</string>
 
+    <string name="app_update_title">Вышла новая версия</string>
+    <string name="app_update_description">Обновление уже можно скачать. В нём новые возможности и исправления.</string>
+    <string name="app_update_unsupported_title">Эта версия устарела</string>
+    <string name="app_update_unsupported_description">ITMO.Widgets больше не поддерживает установленную версию — часть возможностей может не работать. Обновитесь, и всё снова заработает.</string>
+    <string name="app_update_versions">%1$s → %2$s</string>
+    <string name="app_update_action">Скачать</string>
+    <string name="app_update_later">Напомнить позже</string>
+    <string name="app_update_skip">Пропустить версию</string>
+    <string name="app_update_open_failed">Не удалось открыть страницу с релизом</string>
+
     <string name="sport_score_title">Баллы за семестр</string>
     <string name="sport_score_attendance">за посещение</string>
     <string name="sport_score_bonus">бонусы</string>
