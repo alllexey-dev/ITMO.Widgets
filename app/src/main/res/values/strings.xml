@@ -585,4 +585,14 @@
     <string name="user_sport_empty_title">Записей нет</string>
     <string name="user_sport_empty_description">Ни подтверждённых занятий, ни ожидающих записей</string>
     <string name="user_sport_hidden_title">Спорт скрыт</string>
+
+    <!-- Friend picker scope -->
+    <string name="friend_picker_scope_friends">Друзья</string>
+    <string name="friend_picker_scope_all">Все</string>
+    <string name="friend_picker_search_people_hint">Имя или фамилия</string>
+    <string name="friend_picker_people_idle_title">Кого ищем?</string>
+    <string name="friend_picker_people_idle_description">Показываем только пользователей ITMO.Widgets</string>
+    <string name="friend_picker_people_empty_title">Никого не нашли</string>
+    <string name="friend_picker_people_empty_description">Среди пользователей ITMO.Widgets нет таких</string>
+    <string name="friend_picker_open_profile">Открыть профиль</string>
 </resources>

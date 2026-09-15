@@ -2,9 +2,10 @@ package dev.alllexey.itmowidgets.feature.friendselector.ui
 
 import android.content.res.ColorStateList
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -14,9 +15,14 @@ import dev.alllexey.itmowidgets.core.ui.bindSelectionAccessibility
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemFriendSelectorBinding
 
+/**
+ * One quiet row per person. Selection is a contextual surface, not a stroke; a
+ * closed schedule shows a lock and leads to the profile instead of selecting.
+ */
 class FriendSelectorAdapter(
     private var selectedIsu: Int? = null,
-    private val onClick: (UserSummary) -> Unit
+    private val onClick: (UserSummary) -> Unit,
+    private val onOpenProfile: (UserSummary) -> Unit
 ) : ListAdapter<UserSummary, FriendSelectorAdapter.VH>(Diff) {
 
     object Diff : DiffUtil.ItemCallback<UserSummary>() {
@@ -45,59 +51,54 @@ class FriendSelectorAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: UserSummary) {
+            val context = binding.root.context
+            binding.avatar.setUser(item)
             binding.name.text = item.name
             binding.subtitle.text = buildSubtitle(item)
             val canViewSchedule = item.sharing.schedule
             val isSelected = canViewSchedule && item.isu == selectedIsu
 
-            binding.root.alpha = if (canViewSchedule) 1f else 0.52f
-            binding.root.isEnabled = canViewSchedule
-
-            val primary = binding.root.context.color.primary
-            val onSurfaceVariant = binding.root.context.color.onSurfaceVariant
-            binding.root.strokeWidth = if (isSelected) {
-                binding.root.resources.getDimensionPixelSize(
-                    R.dimen.friend_picker_selection_stroke
-                )
+            binding.root.background = if (isSelected) {
+                ContextCompat.getDrawable(context, R.drawable.bg_friend_row_selected)
             } else {
-                0
+                null
             }
-            binding.root.strokeColor = primary
+            binding.name.setTextColor(
+                if (isSelected) context.color.onSecondaryContainer else context.color.onSurface
+            )
+            binding.root.alpha = if (canViewSchedule) 1f else 0.72f
+
             binding.trailingIcon.setImageResource(
                 if (canViewSchedule) R.drawable.ic_check_rounded else R.drawable.ic_lock
             )
             binding.trailingIcon.imageTintList = ColorStateList.valueOf(
-                if (canViewSchedule) primary else onSurfaceVariant
+                if (canViewSchedule) context.color.onSecondaryContainer else context.color.onSurfaceVariant
             )
             // Reserve the icon column so choosing a row never changes name wrapping.
             binding.trailingIcon.isInvisible = !isSelected && canViewSchedule
-            binding.sharingStatus.setText(
-                if (canViewSchedule) {
-                    R.string.friend_picker_schedule_open
-                } else {
-                    R.string.friend_picker_schedule_hidden
-                }
-            )
-            binding.sharingStatus.setTextColor(onSurfaceVariant)
+            binding.sharingStatus.isVisible = !canViewSchedule
+            binding.sharingStatus.setText(R.string.friend_picker_schedule_hidden)
+
             binding.root.bindSelectionAccessibility(
-                label = listOf(item.name, binding.subtitle.text, binding.sharingStatus.text).joinToString(". "),
+                label = listOf(item.name, binding.subtitle.text, binding.sharingStatus.text.takeIf { !canViewSchedule })
+                    .filterNotNull()
+                    .joinToString(". "),
                 selected = isSelected,
                 selectable = canViewSchedule
             )
-
-            binding.avatar.setUser(item)
-            binding.root.setOnClickListener(if (canViewSchedule) View.OnClickListener {
-                onClick(item)
-            } else null)
-            // View.setOnClickListener makes a view clickable even when the listener is null.
-            binding.root.isClickable = canViewSchedule
+            binding.root.setOnClickListener {
+                if (canViewSchedule) onClick(item) else onOpenProfile(item)
+            }
+            binding.root.setOnLongClickListener {
+                onOpenProfile(item)
+                true
+            }
         }
 
         private fun buildSubtitle(item: UserSummary): String {
             val context = binding.root.context
             val groupsText = when {
                 item.groups.isEmpty() -> context.getString(R.string.friend_picker_no_group)
-                item.groups.size == 1 -> item.groups.first().name
                 item.groups.size <= 2 -> item.groups.joinToString(" • ") { it.name }
                 else -> context.getString(
                     R.string.friend_picker_more_groups,

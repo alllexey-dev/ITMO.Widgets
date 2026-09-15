@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingHorizontal="16dp">
+    android:paddingHorizontal="@dimen/design_screen_margin">
 
     <View
         android:id="@+id/drag_handle"
         android:layout_width="32dp"
         android:layout_height="4dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/design_spacing_compact"
         android:background="@drawable/bg_drag_handle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -20,56 +20,45 @@
         android:id="@+id/title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/design_spacing_content"
         android:text="@string/friend_picker_title"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
         android:textColor="?attr/colorOnSurface"
+        app:layout_constraintBottom_toBottomOf="@id/close_button"
         app:layout_constraintEnd_toStartOf="@id/close_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/drag_handle" />
+        app:layout_constraintTop_toTopOf="@id/close_button" />
 
     <ImageButton
         android:id="@+id/close_button"
         android:layout_width="48dp"
         android:layout_height="48dp"
+        android:layout_marginTop="@dimen/design_spacing_related"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/common_close"
         android:padding="12dp"
         android:src="@drawable/ic_close"
-        app:layout_constraintBottom_toBottomOf="@id/title"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/title"
+        app:layout_constraintTop_toBottomOf="@id/drag_handle"
         app:tint="?attr/colorOnSurfaceVariant" />
-
-    <TextView
-        android:id="@+id/subtitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="@string/friend_picker_subtitle"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title" />
 
     <TextView
         android:id="@+id/recent_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/design_spacing_compact"
         android:text="@string/friend_picker_recent"
-        android:textAppearance="?attr/textAppearanceTitleSmall"
+        android:textAppearance="?attr/textAppearanceLabelLarge"
         android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/subtitle" />
+        app:layout_constraintTop_toBottomOf="@id/close_button" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recent_recycler_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/design_spacing_related"
         android:clipToPadding="false"
         android:orientation="horizontal"
         android:overScrollMode="never"
@@ -79,18 +68,48 @@
         app:layout_constraintTop_toBottomOf="@id/recent_title"
         tools:listitem="@layout/item_recent_friend" />
 
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/scope_toggle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/design_spacing_content"
+        app:checkedButton="@id/scope_friends"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/recent_recycler_view"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/scope_friends"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/friend_picker_scope_friends" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/scope_all"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/friend_picker_scope_all" />
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/search_layout"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="@dimen/design_spacing_compact"
         android:hint="@string/friend_picker_search_hint"
         app:endIconMode="clear_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/recent_recycler_view"
-        app:startIconDrawable="@drawable/ic_search" >
+        app:layout_constraintTop_toBottomOf="@id/scope_toggle"
+        app:startIconDrawable="@drawable/ic_search">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/search_input"
@@ -107,9 +126,9 @@
         android:id="@+id/recycler_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/design_spacing_related"
         android:clipToPadding="false"
-        android:paddingBottom="8dp"
+        android:paddingBottom="@dimen/design_spacing_compact"
         app:layout_constraintBottom_toTopOf="@id/apply_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -128,71 +147,45 @@
         app:layout_constraintTop_toBottomOf="@id/search_layout" />
 
     <LinearLayout
-        android:id="@+id/error_group"
+        android:id="@+id/state_container"
+        style="@style/Widget.ItmoWidgets.ContentState"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/apply_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/search_layout">
 
+        <ImageView
+            android:id="@+id/state_icon"
+            style="@style/Widget.ItmoWidgets.ContentState.InlineIcon"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_group" />
+
         <TextView
-            android:id="@+id/error_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="@string/common_load_error_title"
-            android:textAppearance="?attr/textAppearanceBodyLarge" />
+            android:id="@+id/state_title"
+            style="@style/Widget.ItmoWidgets.ContentState.Title" />
+
+        <TextView
+            android:id="@+id/state_description"
+            style="@style/Widget.ItmoWidgets.ContentState.Description" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/retry_button"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/common_retry" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/empty_group"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/apply_button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/search_layout">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/friend_picker_empty_title"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:textColor="?attr/colorOnSurface" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/friend_picker_empty_description"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:id="@+id/state_action"
+            style="@style/Widget.ItmoWidgets.ContentState.Action"
+            android:text="@string/common_retry"
+            android:visibility="gone" />
 
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/apply_button"
-        style="@style/Widget.Material3.Button.TonalButton"
+        style="@style/Widget.Material3.Button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="12dp"
+        android:layout_marginTop="@dimen/design_spacing_compact"
+        android:layout_marginBottom="@dimen/design_spacing_content"
         android:minHeight="56dp"
         android:text="@string/friend_picker_apply_my"
         app:icon="@drawable/ic_check_rounded"

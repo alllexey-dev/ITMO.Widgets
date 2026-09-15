@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="76dp"
+    android:layout_width="72dp"
     android:layout_height="wrap_content"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackgroundBorderless"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:paddingVertical="4dp">
+    android:paddingVertical="@dimen/design_spacing_related">
 
     <FrameLayout
-        android:layout_width="60dp"
-        android:layout_height="60dp">
+        android:layout_width="56dp"
+        android:layout_height="56dp">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/avatar_container"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="top|center_horizontal"
             app:cardBackgroundColor="?attr/colorSecondaryContainer"
-            app:cardCornerRadius="26dp"
+            app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
             app:strokeColor="?attr/colorPrimary">
 
@@ -48,12 +48,12 @@
 
         <ImageView
             android:id="@+id/selection_indicator"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:layout_gravity="bottom|end"
             android:background="@drawable/bg_friend_selection_badge"
             android:contentDescription="@null"
-            android:padding="4dp"
+            android:padding="3dp"
             android:src="@drawable/ic_check_rounded"
             app:tint="?attr/colorOnPrimary" />
 
@@ -63,7 +63,7 @@
         android:id="@+id/name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="@dimen/design_spacing_related"
         android:ellipsize="end"
         android:gravity="center"
         android:maxLines="1"

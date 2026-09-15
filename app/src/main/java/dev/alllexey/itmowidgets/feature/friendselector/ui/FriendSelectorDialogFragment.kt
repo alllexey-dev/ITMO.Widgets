@@ -20,10 +20,15 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.databinding.DialogFriendSelectorBinding
+import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorScope
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorUiState
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorViewModel
+import dev.alllexey.itmowidgets.feature.friendselector.presentation.PeopleResults
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlin.math.roundToInt
@@ -87,7 +92,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun setupLists() {
-        friendsAdapter = FriendSelectorAdapter(initialSelectedIsu, ::selectFriend)
+        friendsAdapter = FriendSelectorAdapter(initialSelectedIsu, ::selectFriend, ::openProfile)
         recentAdapter = RecentFriendAdapter(::selectRecentItem)
 
         binding.recyclerView.apply {
@@ -106,9 +111,20 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
 
     private fun setupListeners() {
         binding.closeButton.setOnClickListener { dismiss() }
-        binding.retryButton.setOnClickListener { viewModel.refresh() }
+        binding.stateAction.setOnClickListener { retry() }
         binding.searchInput.doOnTextChanged { text, _, _, _ ->
-            filterFriends(text?.toString().orEmpty())
+            val query = text?.toString().orEmpty()
+            viewModel.onQueryChanged(query)
+            if (currentScope() == FriendSelectorScope.FRIENDS) filterFriends(query)
+        }
+        binding.scopeToggle.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            val scope = if (checkedId == R.id.scope_all) FriendSelectorScope.ALL else FriendSelectorScope.FRIENDS
+            binding.searchLayout.hint = getString(
+                if (scope == FriendSelectorScope.ALL) R.string.friend_picker_search_people_hint
+                else R.string.friend_picker_search_hint
+            )
+            viewModel.selectScope(scope)
         }
         binding.applyButton.setOnClickListener { applySelection() }
     }
@@ -117,6 +133,8 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach { state ->
+                binding.scopeToggle.isVisible =
+                    state is FriendSelectorUiState.Content || state is FriendSelectorUiState.Empty
                 when (state) {
                     FriendSelectorUiState.Loading -> renderLoading()
                     is FriendSelectorUiState.Content -> renderContent(state)
@@ -136,19 +154,17 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
 
     private fun renderLoading() {
         binding.progress.isVisible = true
-        binding.errorGroup.isVisible = false
-        binding.emptyGroup.isVisible = false
+        binding.stateContainer.isVisible = false
         binding.recyclerView.isVisible = false
         binding.applyButton.isEnabled = false
     }
 
     private fun renderContent(state: FriendSelectorUiState.Content) {
         binding.progress.isVisible = false
-        binding.errorGroup.isVisible = false
         binding.applyButton.isEnabled = true
 
         allFriends = state.friends
-        pendingFriend = initialSelectedIsu?.let { isu ->
+        pendingFriend = pendingFriend ?: initialSelectedIsu?.let { isu ->
             allFriends.firstOrNull { it.isu == isu && it.sharing.schedule }
         }
 
@@ -158,31 +174,89 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
             .take(MAX_RECENT_FRIENDS)
         recentAdapter.submitItems(recentFriends, pendingFriend?.isu, state.currentUser)
         friendsAdapter.setSelectedIsu(pendingFriend?.isu)
-        filterFriends(binding.searchInput.text?.toString().orEmpty())
+
+        when (state.scope) {
+            FriendSelectorScope.FRIENDS -> {
+                binding.stateContainer.isVisible = false
+                filterFriends(binding.searchInput.text?.toString().orEmpty())
+            }
+            FriendSelectorScope.ALL -> renderPeople(state.people)
+        }
         updateApplyButton()
+    }
+
+    private fun renderPeople(people: PeopleResults) {
+        when (people) {
+            PeopleResults.Idle -> showState(
+                icon = R.drawable.ic_search,
+                title = getString(R.string.friend_picker_people_idle_title),
+                description = getString(R.string.friend_picker_people_idle_description)
+            )
+            PeopleResults.Loading -> {
+                binding.stateContainer.isVisible = false
+                binding.recyclerView.isVisible = false
+                binding.progress.isVisible = true
+            }
+            is PeopleResults.Content -> {
+                friendsAdapter.submitList(people.people)
+                if (people.people.isEmpty()) {
+                    showState(
+                        icon = R.drawable.ic_person,
+                        title = getString(R.string.friend_picker_people_empty_title),
+                        description = getString(R.string.friend_picker_people_empty_description)
+                    )
+                } else {
+                    binding.stateContainer.isVisible = false
+                    binding.recyclerView.isVisible = true
+                }
+            }
+            is PeopleResults.Error -> showState(
+                icon = R.drawable.ic_error_rounded,
+                title = getString(R.string.common_load_error_title),
+                description = getString(people.error.messageRes()),
+                retry = true
+            )
+        }
     }
 
     private fun renderEmpty() {
         binding.progress.isVisible = false
-        binding.errorGroup.isVisible = false
-        binding.emptyGroup.isVisible = true
-        binding.recyclerView.isVisible = false
         binding.applyButton.isEnabled = true
         allFriends = emptyList()
         pendingFriend = null
         recentAdapter.submitItems(emptyList(), null, currentUser())
         friendsAdapter.submitList(emptyList())
+        showState(
+            icon = R.drawable.ic_group,
+            title = getString(R.string.friends_empty_title),
+            description = getString(R.string.friends_empty_description)
+        )
         updateApplyButton()
     }
 
     private fun renderError(message: String, canRetry: Boolean) {
         binding.progress.isVisible = false
-        binding.recyclerView.isVisible = false
-        binding.emptyGroup.isVisible = false
-        binding.errorGroup.isVisible = true
-        binding.errorText.text = message
-        binding.retryButton.isVisible = canRetry
         binding.applyButton.isEnabled = false
+        showState(
+            icon = if (canRetry) R.drawable.ic_error_rounded else R.drawable.ic_lock,
+            title = getString(R.string.common_load_error_title),
+            description = message,
+            retry = canRetry
+        )
+    }
+
+    private fun showState(icon: Int, title: String, description: String, retry: Boolean = false) {
+        binding.recyclerView.isVisible = false
+        binding.progress.isVisible = false
+        binding.stateContainer.isVisible = true
+        binding.stateIcon.setImageResource(icon)
+        binding.stateTitle.text = title
+        binding.stateDescription.text = description
+        binding.stateAction.isVisible = retry
+    }
+
+    private fun retry() {
+        if (currentScope() == FriendSelectorScope.ALL) viewModel.retrySearch() else viewModel.refresh()
     }
 
     private fun filterFriends(query: String) {
@@ -204,8 +278,16 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         friendsAdapter.submitList(filtered)
         val isEmpty = filtered.isEmpty() &&
             viewModel.uiState.value is FriendSelectorUiState.Content
-        binding.emptyGroup.isVisible = isEmpty
-        binding.recyclerView.isVisible = !isEmpty
+        if (isEmpty) {
+            showState(
+                icon = R.drawable.ic_search,
+                title = getString(R.string.friend_picker_empty_title),
+                description = getString(R.string.friend_picker_empty_description)
+            )
+        } else {
+            binding.stateContainer.isVisible = false
+            binding.recyclerView.isVisible = true
+        }
     }
 
     private fun selectFriend(friend: UserSummary) {
@@ -222,6 +304,12 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         updateApplyButton()
     }
 
+    /** The profile is a contextual screen; the sheet has nothing to add once it opens. */
+    private fun openProfile(user: UserSummary) {
+        dismiss()
+        openScreen(AppScreen.USER_PROFILE, bundleOf(UserScreenArgs.ISU to user.isu))
+    }
+
     private fun updateRecentSelection() {
         val state = viewModel.uiState.value as? FriendSelectorUiState.Content ?: return
         val items = (listOfNotNull(pendingFriend) + state.recentFriends)
@@ -233,6 +321,14 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
 
     private fun currentUser(): UserSummary? {
         return (viewModel.uiState.value as? FriendSelectorUiState.Content)?.currentUser
+    }
+
+    private fun currentScope(): FriendSelectorScope {
+        return if (binding.scopeToggle.checkedButtonId == R.id.scope_all) {
+            FriendSelectorScope.ALL
+        } else {
+            FriendSelectorScope.FRIENDS
+        }
     }
 
     private fun updateApplyButton() {

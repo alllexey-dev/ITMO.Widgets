@@ -4,7 +4,13 @@ import dev.alllexey.itmowidgets.core.friend.FriendListState
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.model.RelationshipState
+import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
+import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
+import dev.alllexey.itmowidgets.core.social.PersonSearchResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,7 +37,7 @@ class FriendSelectorViewModelTest {
                 FriendListState.Content(listOf(first, second))
             )
             val history = FakeHistory(listOf(2, 1))
-            val viewModel = FriendSelectorViewModel(repository, history)
+            val viewModel = FriendSelectorViewModel(repository, history, FakePeopleSearch())
 
             advanceUntilIdle()
 
@@ -50,7 +56,8 @@ class FriendSelectorViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val viewModel = FriendSelectorViewModel(
                 FakeFriendRepository(FriendListState.Content(emptyList())),
-                FakeHistory()
+                FakeHistory(),
+                FakePeopleSearch()
             )
 
             advanceUntilIdle()
@@ -64,7 +71,7 @@ class FriendSelectorViewModelTest {
             val repository = FakeFriendRepository(
                 FriendListState.Error(AppError.Unauthorized)
             )
-            val viewModel = FriendSelectorViewModel(repository, FakeHistory())
+            val viewModel = FriendSelectorViewModel(repository, FakeHistory(), FakePeopleSearch())
             advanceUntilIdle()
             assertEquals(
                 FriendSelectorUiState.Error(AppError.Unauthorized),
@@ -80,7 +87,7 @@ class FriendSelectorViewModelTest {
     fun `settles on a terminal state when a repeated refresh does not change the repository`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeFriendRepository(FriendListState.Disabled)
-            val viewModel = FriendSelectorViewModel(repository, FakeHistory())
+            val viewModel = FriendSelectorViewModel(repository, FakeHistory(), FakePeopleSearch())
             advanceUntilIdle()
             assertEquals(FriendSelectorUiState.Disabled, viewModel.uiState.value)
 
@@ -98,7 +105,7 @@ class FriendSelectorViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val first = user(1, "Первый")
             val repository = FakeFriendRepository(FriendListState.Content(listOf(first)))
-            val viewModel = FriendSelectorViewModel(repository, FakeHistory())
+            val viewModel = FriendSelectorViewModel(repository, FakeHistory(), FakePeopleSearch())
             advanceUntilIdle()
 
             viewModel.refresh()
@@ -122,7 +129,8 @@ class FriendSelectorViewModelTest {
                     initialState = FriendListState.Content(listOf(friend)),
                     initialUser = me
                 ),
-                FakeHistory()
+                FakeHistory(),
+                FakePeopleSearch()
             )
 
             advanceUntilIdle()
@@ -142,7 +150,8 @@ class FriendSelectorViewModelTest {
                     initialState = FriendListState.Content(listOf(friend)),
                     initialUser = null
                 ),
-                FakeHistory()
+                FakeHistory(),
+                FakePeopleSearch()
             )
 
             advanceUntilIdle()
@@ -158,7 +167,8 @@ class FriendSelectorViewModelTest {
             val history = FakeHistory()
             val viewModel = FriendSelectorViewModel(
                 FakeFriendRepository(FriendListState.Content(emptyList())),
-                history
+                history,
+                FakePeopleSearch()
             )
 
             viewModel.recordSelection(123456)
@@ -175,6 +185,82 @@ class FriendSelectorViewModelTest {
             groups = emptyList(),
             sharing = UserSharing(sport = true, schedule = true)
         )
+    }
+
+    @Test
+    fun `wide scope searches registered people after the debounce and narrow scope does not`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val friend = user(1, "Первый")
+            val stranger = user(2, "Чужой")
+            val search = FakePeopleSearch(registered = listOf(stranger))
+            val viewModel = FriendSelectorViewModel(
+                FakeFriendRepository(FriendListState.Content(listOf(friend))),
+                FakeHistory(),
+                search
+            )
+            advanceUntilIdle()
+
+            viewModel.onQueryChanged("чуж")
+            advanceUntilIdle()
+            assertEquals(emptyList<String>(), search.queries)
+
+            viewModel.selectScope(FriendSelectorScope.ALL)
+            advanceUntilIdle()
+            assertEquals(listOf("чуж"), search.queries)
+            val content = viewModel.uiState.value as FriendSelectorUiState.Content
+            assertEquals(FriendSelectorScope.ALL, content.scope)
+            assertEquals(PeopleResults.Content(listOf(stranger)), content.people)
+            assertEquals(listOf(friend), content.friends)
+
+            viewModel.selectScope(FriendSelectorScope.FRIENDS)
+            advanceUntilIdle()
+            assertEquals(
+                PeopleResults.Idle,
+                (viewModel.uiState.value as FriendSelectorUiState.Content).people
+            )
+        }
+
+    @Test
+    fun `wide scope stays available without friends and reports search failures`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val search = FakePeopleSearch(error = AppError.Network)
+            val viewModel = FriendSelectorViewModel(
+                FakeFriendRepository(FriendListState.Content(emptyList())),
+                FakeHistory(),
+                search
+            )
+            advanceUntilIdle()
+            assertEquals(FriendSelectorUiState.Empty, viewModel.uiState.value)
+
+            viewModel.selectScope(FriendSelectorScope.ALL)
+            viewModel.onQueryChanged("а")
+            advanceUntilIdle()
+
+            val content = viewModel.uiState.value as FriendSelectorUiState.Content
+            assertEquals(PeopleResults.Error(AppError.Network), content.people)
+
+            viewModel.onQueryChanged("")
+            advanceUntilIdle()
+            assertEquals(
+                PeopleResults.Idle,
+                (viewModel.uiState.value as FriendSelectorUiState.Content).people
+            )
+        }
+
+    private class FakePeopleSearch(
+        private val registered: List<UserSummary> = emptyList(),
+        private val error: AppError? = null
+    ) : PeopleSearchRepository {
+        val queries = mutableListOf<String>()
+
+        override suspend fun search(query: String, offset: Int): AppResult<PeopleSearchPage> {
+            queries += query
+            error?.let { return AppResult.Failure(it) }
+            val results = registered.map { user ->
+                PersonSearchResult(user.isu, user.name, user.pictureUrl, UserProfile(user, RelationshipState.NONE))
+            } + PersonSearchResult(999999, "Незарегистрированный", null, null)
+            return AppResult.Success(PeopleSearchPage(results, results.size, null))
+        }
     }
 
     private class FakeFriendRepository(
