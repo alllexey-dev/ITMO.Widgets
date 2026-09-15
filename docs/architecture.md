@@ -1,723 +1,219 @@
-# ITMO.Widgets Android architecture
+# Android architecture
 
-## Purpose and precedence
+Package layout, layering, the dependency rule and the cross-cutting conventions
+new code follows. Everything here is implemented unless marked otherwise. Rules
+marked *enforced* are checked by the Konsist suite in
+`app/src/test/java/dev/alllexey/itmowidgets/architecture/ArchitectureTest.kt`
+and fail the build when broken. Feature-specific behaviour lives in
+[`features/`](features/); the visual language in [`design.md`](design.md).
 
-This document describes how the ITMO.Widgets Android application is structured:
-package layout, layering, the dependency rule, cross-cutting technical decisions,
-and the conventions that new code is expected to follow.
+## Principles
 
-It is scoped to *structure*. It deliberately does not repeat what already lives in
-`AGENTS.md`:
-
-- product/release contract, system boundaries, and source-of-truth rules;
-- UI/UX design language, Material 3/You, spacing, motion, accessibility;
-- data privacy, security, secrets, and server-side authorization;
-- build, verification, server environments, and deployment.
-
-Read it together with `AGENTS.md` (engineering constraints and design language) and
-`vibe/itmo-widgets-social-learning-plan.md` (delivery order). Where the two overlap
-on dependency direction they must stay consistent; this file is the detailed version.
-The user-facing v2.1 settings surface and product invariants are defined separately
-in `docs/settings.md`.
-
-The [design guide](design.md) consolidates the target component language,
-intentional exceptions, and open UI consistency work; it does not imply those
-changes are already implemented.
-
-Unless stated otherwise, everything below is **implemented**, not planned. Rules
-marked as enforced are checked by `ArchitectureTest` and fail the build when broken.
-
-### The single-module decision
-
-The application is a single Gradle module (`:app`). Multi-module is a build/scale
-tool, not an architectural principle, and its one relevant benefit here —
-compile-time enforcement of layer boundaries — is achieved far more cheaply by the
-Konsist suite. Reuse across applications is already served by the separate
-`itmo-widgets-core` and `MyItmoApi` repositories.
-
-Revisit only on a concrete trigger: painful incremental build times, a second
-developer, or a second in-repo reuse site.
-
-## Guiding principles
-
-1. **Package-by-feature, all the way down.** A feature owns its `ui`,
-   `presentation`, `domain`, and `data` together.
+1. **Package-by-feature.** A feature owns its `ui`, `presentation`, `domain` and
+   `data` together.
 2. **The dependency rule points inward.** `ui -> presentation -> domain <- data`.
-3. **Domain is DTO-free.** No `api.myitmo.*` and no transport models from
-   `core.model.*` inside a `domain` package.
-4. **Minimum ceremony.** A `UseCase` is introduced only for real orchestration or
-   reused logic, never as a one-line passthrough.
-5. **Boundaries are held by a test, not by a module.**
+3. **Domain is DTO-free.** No `api.myitmo.*` and no `core.model.*` transport
+   types inside a `domain` package; `UserSummary` is the one shared identity model.
+4. **Minimum ceremony.** A use case exists only for real orchestration, never as
+   a one-line passthrough.
+5. **Boundaries are held by tests, not modules.** The app is a single Gradle
+   module by decision ([0001](decisions/0001-single-module.md)).
 
 ## Package structure
 
 Paths are relative to `app/src/main/java/dev/alllexey/itmowidgets/`.
 
 ```text
-app/                    Application, MainActivity, NavHost, bottom-nav wiring
-core/                   cross-cutting; knows nothing about features
-  debug/                BuildConfig.DEBUG fixtures (provider/controller/store)
-  friend/               FriendRepository — the picker's narrow view of friends
-  model/                transport DTOs + UserSummary (the one shared identity model)
-  navigation/           navigation contracts between features
-  network/              WidgetsClient, AppErrorMapper, serialization adapters
-  result/               AppError, AppResult
-  schedule/             Schedule refresh and widget-update cross-feature contracts
-  sport/                SportScoreRepository, shared scores and own pending-booking projection
-  services/             CustomServicesRepository — the backend opt-in
-  social/               SocialRepository and PeopleSearchRepository — friends,
-                        requests, public profiles, lookup and MyITMO name search
-  session/              SessionTokenStore, SessionDataCleaner, CurrentUserProvider,
-                        BackendIdentitySync
-  storage/              DataStore wrappers, encrypted token storage, AppSettingsStorage
-  text/                 UiText
-  time/                 AcademicTimeProvider, WallClock
-  ui/                   AvatarView, CircularProgressBar, AppErrorText, UiTextResolver
-    navigation/         AppNavigator UI port for contextual screens
-  util/                 small shared helpers
-di/                     Hilt modules, one per feature or concern
-feature/
-  <name>/
-    ui/                 Fragment, adapters, ViewBinding
-    presentation/       ViewModel, UI state, one-shot events
-    domain/             models, repository interfaces, use-cases
-    data/               repository implementations, data sources, mappers
+app/            Application, MainActivity, navigation coordinator, notifier, widget coordinator
+core/           cross-cutting; knows nothing about features
+  debug/        BuildConfig.DEBUG fixtures (provider / controller / store)
+  friend/       FriendRepository — the schedule picker's narrow view of friends
+  model/        transport DTOs, UserSummary, UserProfile, RelationshipState
+  navigation/   contracts between features (FriendSelectionContract, UserScreenArgs)
+  network/      WidgetsClient, error mapping, serialization adapters
+  notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
+  result/       AppError, AppResult
+  schedule/     schedule preferences and widget-refresh contracts
+  services/     CustomServicesRepository — the Backend opt-in
+  session/      token store, session repository, current user, device registration
+  social/       SocialRepository, PeopleSearchRepository
+  sport/        SportScoreRepository, PendingSportBookingsRepository
+  storage/      DataStore wrappers, encrypted token storage
+  text/         UiText
+  time/         AcademicTimeProvider, WallClock
+  ui/           AvatarView, state helpers, AppNavigator port
+di/             Hilt modules, one per feature or concern
+feature/<name>/ ui | presentation | domain | data
 ```
 
-Current features: `debug`, `friendselector`, `home`, `me`, `qr`, `recordbook`,
-`schedule`, `settings`, `social`, `sport`, `update`, `widget`. Not every feature needs all four
-layers — `home` is presently UI only, and `me` has no data layer of its own.
+Features: `auth`, `debug`, `friendselector`, `home`, `me`, `qr`, `recordbook`,
+`schedule`, `settings`, `social`, `sport`, `update`, `widget`. A feature does not
+need all four layers.
 
 Placement rules:
 
-- **Shared contracts go to `core`, not to another feature.** When two features need
-  the same repository, the interface moves into a `core` package
-  (`core/friend`, `core/schedule`, `core/services`) and the implementation stays in
-  the feature that owns the data. This is why `CustomServicesRepository` lives in
-  `core/services` while `CustomServicesRepositoryImpl` lives in
-  `feature/settings/data`.
-- **`*RepositoryImpl` must live in a `data` package** and implement the matching
-  contract — enforced. Helper implementations that are not repositories use the
-  `Default*` prefix instead (`DefaultBackendIdentitySync`).
-- **Shared models** move into `core` only once two or more features genuinely share
-  them. `UserSummary` is the only transport model `domain` may import.
+- A contract shared by two features moves to `core/<topic>`; the implementation
+  stays in the feature that owns the data (`CustomServicesRepository` in
+  `core/services`, its `Impl` in `feature/settings/data`).
+- `*RepositoryImpl` lives in a `data` package and implements the matching
+  contract. *Enforced.* Non-repository helpers use the `Default*` prefix.
+- Models move to `core` only once two features genuinely share them.
 
-## Layers and the dependency rule
+## Layers
 
-| Layer | Lives in | May depend on | Must not touch |
-|---|---|---|---|
-| `ui` | `feature/*/ui` | own `presentation`, `core/ui`, `core/text` | `data`, `core/network`, `core/storage`, `api.myitmo.*` |
-| `presentation` | `feature/*/presentation` | own `domain`, `core` contracts | Android views, `data`, transport DTOs, raw `Throwable` |
-| `domain` | `feature/*/domain` | pure Kotlin, `core/result`, `core/time` | Android, `androidx`, Gson, `api.myitmo.*`, transport DTOs |
-| `data` | `feature/*/data`, `core/network`, `core/storage` | own `domain`, `MyItmoApi`, Core API | `ui`, `presentation` |
+| Layer | May depend on | Must not touch |
+|---|---|---|
+| `ui` | own `presentation`, `core/ui`, `core/text` | `data`, `core/network`, `core/storage`, `api.myitmo.*` |
+| `presentation` | own `domain`, `core` contracts | Android views, `data`, transport DTOs, `Throwable` |
+| `domain` | pure Kotlin, `core/result`, `core/time` | Android, `androidx`, Gson, `api.myitmo.*`, transport DTOs |
+| `data` | own `domain`, MyItmoApi, Core API | `ui`, `presentation` |
 
-Two hard rules on top of the table:
+Across features: `feature/X` never imports `feature/Y`. *Enforced.* Navigation
+between features goes through the navigation graphs and `AppNavigator`; shared
+contracts go through `core`.
 
-- **Inside a feature:** `ui -> presentation -> domain <- data`.
-- **Across features:** `feature/X` must not import `feature/Y`. Cross-feature
-  navigation goes through the Nav graph; shared contracts go through `core`.
+## Cross-cutting conventions
 
-## Cross-cutting decisions
+### Screen state and events
 
-### UI state and events
+A screen exposes one `StateFlow` of a sealed state (`Loading`, `Content`,
+`Empty`, `Error`). One-shot effects such as navigation, snackbars and dialogs go
+through a `Channel` exposed as a `Flow` and are collected with the view lifecycle.
 
-Every screen exposes one state through a `StateFlow`, modelled as a sealed interface
-when the screen has distinct modes:
-
-```kotlin
-sealed interface ScheduleUiState {
-    data class Loading(val selectedUser: SelectedUser?) : ScheduleUiState
-    data class Content(val schedule: List<DaySchedule>, ...) : ScheduleUiState
-    data class Empty(val selectedUser: SelectedUser?) : ScheduleUiState
-    data class Error(val error: AppError, ...) : ScheduleUiState
-}
-```
-
-One-shot effects — navigation, toasts, dialogs — are **not** part of the state. They
-go through a `Channel` exposed as a `Flow` and are collected with the view lifecycle.
-
-**Derive state, never strand it.** A ViewModel must not write a transient value such
-as `Loading` into a state that is otherwise driven by a repository flow: `StateFlow`
-conflates equal values, so a refresh ending on the value the repository already held
-emits nothing and the screen stays stuck. Combine the repository flow with an
-explicit in-flight flag instead — see `FriendSelectorViewModel`.
+Derive state, never strand it: a ViewModel does not write a transient `Loading`
+into a state otherwise driven by a repository flow, because `StateFlow` conflates
+equal values and a refresh ending on the same value emits nothing. Combine the
+repository flow with an explicit in-flight flag (`FriendSelectorViewModel`).
 
 ### Errors
 
-Exceptions are mapped to `AppError` at the `data` boundary by
-`Throwable.toAppError()`; the UI renders them through `AppError.messageRes()`. Raw
-exception messages must never reach the UI — `presentation` is forbidden from
-referencing `Throwable` or `.message` at all, and that is enforced.
-
-`AppError.CustomServicesDisabled` exists so that a refusal caused by the backend
-opt-in reads as an actionable instruction rather than a generic "forbidden".
+Exceptions become `AppError` at the `data` boundary via `Throwable.toAppError()`;
+the UI renders `AppError.messageRes()`. `presentation` never references
+`Throwable` or `.message`. *Enforced.* `AppError.CustomServicesDisabled` makes a
+refusal caused by the opt-in read as an instruction, not a generic error.
 
 ### Threading
 
-Data sources own their dispatcher; callers must not have to know. Disk and network
-work runs under `withContext(Dispatchers.IO)`, and cold flows that read the disk are
-wrapped so that the read happens on collection, not at call time:
-
-```kotlin
-return flow { emitAll(combineFlows(keys).map { ... }) }.flowOn(Dispatchers.IO)
-```
-
-`viewModelScope` runs on `Dispatchers.Main.immediate`, so anything a ViewModel calls
-directly executes on the main thread until it suspends.
+Data sources own their dispatcher. Disk and network run under
+`Dispatchers.IO`; cold flows that read disk do so on collection, not at call
+time. `viewModelScope` is `Main.immediate`, so ViewModel code runs on the main
+thread until it suspends.
 
 ### Persistence
 
 | Data | Store |
 |---|---|
 | Settings, flags, one-off values | DataStore (`AppSettingsStorage`, `UtilityStorage`) |
-| ITMO.ID tokens | Encrypted file via Android Keystore (`MyItmoStorage`) |
+| ITMO.ID tokens, BARS session | Encrypted files via Android Keystore |
 | Schedule and QR caches | Files under `cacheDir`, observed through flows |
 
-`SharedPreferences` and `PreferenceManager` are banned from production code —
-enforced. This is also why settings screens are plain Fragments rather than
-`PreferenceFragmentCompat`.
-
-Anything that caches user-scoped data implements `SessionDataCleaner`, so a session
-change can drop it. **Any future sign-out or account-switch flow must invoke the
-cleaners**; cache keys do not carry account identity on their own.
+`SharedPreferences` is banned. *Enforced.* Anything caching user-scoped data
+implements `SessionDataCleaner`; sign-out and account change invoke every
+cleaner, and cache keys do not carry account identity themselves.
 
 ### Session and identity
 
-- `SessionTokenStore` — token storage contract.
-- `CurrentUserProvider` — decodes `isu`, `name` and `picture` from the locally
-  stored ITMO.ID token. Identity therefore works offline and without the backend
-  opt-in. The token is not verified: it is our own token and the result is used only
-  for display, never for authorization.
-- `BackendIdentitySync` — publishes the ID token to Backend, which derives the
-  profile other users see from its claims.
+- `SessionTokenStore` stores tokens; `SessionRepository` drives sign-in,
+  sign-out and the lifecycle effects (widgets, notifications, device registration).
+- `CurrentUserProvider` decodes ISU, name and picture from the local ID token,
+  so identity works offline and without the opt-in. The token is not verified;
+  the result is for display only.
+- `BackendIdentitySync` publishes the ID token to Backend on sign-in and opt-in;
+  `BackendDeviceSession` registers the FCM token, remembering the registered
+  token and owner.
 
 ### The two-backend seam
 
-`MyItmoApi` and Core's `ItmoWidgetsApi` are touched **only** inside a feature's
-`data` layer. A repository may combine both sources; `domain` stays source-agnostic.
+MyItmoApi and Core's `ItmoWidgetsApi` are touched only inside `data`. A
+repository may combine both. Every call to Backend passes the custom-services
+gate inside the repository, so no data source can bypass it.
 
-Everything that reaches the project backend is gated on the custom-services opt-in,
-and the gate belongs in the repository — the layer that chooses the source — so no
-data source can be reached without passing it.
+### Time
 
-### Recordbook and sport
-
-Recordbook reads official grades independently of sport progress. The shared
-`core/sport/SportScoreRepository` returns period-specific score summaries;
-`feature/sport/data/repository/SportScoreRepositoryImpl` owns the MyItmoApi calls and supplies
-attendance history to the sport feature as well. Both screens use
-`SportScoreSummary` for the bonus cap and total, but sports progress never changes
-an official academic grade. PE rings display that period's sports progress even
-before the official credit, while their grade marker and the passed-subject count
-remain based on the recordbook. The PE detail card separates attendance/bonus
-sectors from the official result and keeps API errors distinct from a zero score.
-The resolver accepts only a unique year/season match,
-not numeric equality between unrelated semester identifiers.
-
-The compact root and scrollable subject details retain content during refresh and
-cancel superseded period requests. Details reload the official subject rather than
-trusting a navigation snapshot, preserve control hierarchy, and respect `have_tree`.
-API observations and limitations are recorded in `docs/recordbook-api.md`.
-
-The recordbook can overlay BARS on top of the MyITMO list (`БАРС` chip). The
-transport, models and OIDC helper live in MyItmoApi (`api.bars`); the app keeps
-only the owner-bound session, mapping and UI in `feature/recordbook/data/bars`.
-`RecordbookBarsMerge` pairs subjects by
-normalized name within the same period; identities, teachers, PE and sport stay
-MyITMO, and a BARS failure leaves MyITMO values on screen with a visible error.
-The BARS token lives 30 minutes; `BarsWebSilentLogin` renews it from the ITMO.ID
-session already held by the app's WebView, so the interactive `BarsLoginActivity`
-is only a fallback. The chip preference uses DataStore, the token an encrypted
-no-backup file; both are cleared by the registered `SessionDataCleaner`.
-See `docs/bars-integration.md`.
-
-### Pending sport in the schedule screen
-
-The optional `Автозапись на спорт` switch is a persisted local preference, disabled
-by default. `SchedulePreferencesRepository` is shared through `core/schedule`;
-its settings-owned implementation forwards DataStore changes without enabling
-community services. The same setting applies to the own in-app schedule and both
-schedule widget types, not to friends' schedules, exported data or the official
-schedule cache.
-
-`PendingSportBookingsRepository` in `core/sport` exposes a read-only projection of
-active own queues. Its sport-owned implementation combines official chosen-sport
-bookings with the existing queue stream; friend enrichment is not a dependency.
-Cancelled, terminal, already-started and already-signed entries are excluded.
-Multiple queues resolving to the same sport lesson produce one pending row.
-Unpublished predictions use prototype dates plus two weeks; a bound real lesson
-uses its actual dates without a second shift. Confirmation uses sport lesson IDs,
-not an assumed equality with academic `pairId` or a name/time heuristic.
-
-Schedule observes this source only when the setting is enabled and both its
-selected and loaded schedule belong to self. Backend opt-in remains an independent
-data-layer gate. Both sport source caches participate in session cleanup, and
-results started before cleanup cannot repopulate them afterward.
-
-`ScheduleUiState.Content.schedule` remains official data. `ScheduleDisplayDay`
-adds pending rows in the loaded date range, including dates with no official
-lessons. The adapter compares the complete display day, so live additions and
-cancellations render without clearing the cache or resetting scroll position.
-After the first successful academic load, pending-only content also stays visible
-during refresh and pagination. Initial academic loading/failure remains explicit;
-later refresh failures use a snackbar while valid content remains on screen.
-Pending rows are explicitly labelled as waiting or predicted, never styled as a
-current confirmed lesson, and do not increase the confirmed lesson count. Optional
-source loading/errors do not replace the academic screen. An error or successful
-empty snapshot removes pending rows rather than keeping a possibly cancelled or
-already-confirmed queue visible. The source refreshes independently of academic
-refresh and receives subsequent queue/booking changes from the Sport screen.
-
-No Backend/Core/MyItmoApi API or dependency version changes are required.
-
-### Sport session cards and details
-
-The My Sport and registration lists share the same restrained card language and
-friend preview. Cards keep a compact title/time header, fixed-size metadata icons
-and a small outlined 48 dp action target (36 dp visual button). Start time is the
-scanning anchor and is the only card metadata drawn on `colorOnSurface`; the class
-kind is a filled chip on `colorSurfaceContainerHighest` so it stays legible against
-the card's own surface. A full-width 6 dp occupancy bar separates session
-information from booking controls, and its label carries the same occupancy tone as
-the bar. The
-details use a 100 dp occupied-capacity ring beside a free-place stat. Each number is
-stated once: the ring owns occupied and limit, the column beside it owns the free
-count (`нет` when full), so no figure is repeated in a derived form. Bookings
-retain their date tile beside the weekday, time and registration status, with the
-tile centred against that column. A wider gap below it separates *when + status* from
-the teacher/location rail, so the two groups read as groups. Weekday and month names
-are capitalised on the way out: `DateTimeFormatter` renders Russian ones in lower
-case, so every sport date string goes through the helpers in `SportCardPresentation`
-rather than being formatted at the call site. Full names and queue history belong in
-the details sheet.
-Sport registration status and capacity are derived by the pure
-presentation helpers in `feature/sport/presentation/common`. Capacity bars
-represent **occupied** places, matching their label; invalid/unknown capacity and
-predicted lessons never appear as zero-capacity real sessions.
-
-The contextual bottom sheet is a separate layout, not an included list item. It
-retains the full section title and separates date/duration, teacher/location,
-registration, queue metrics/history, notices, comments and friends. Session facts
-(when, who, where) share one icon rail directly under the title; registration state,
-conditions, comment and friends follow as divider-separated sections. Rail rows carry
-no visible category label — the icon already states it, and the label survives as the
-value's `contentDescription`. Rail icons are a fixed dp size while the text line box
-grows with the font scale, so `alignRailIcon` recentres them at bind time instead of
-using a constant margin. Rail values are `colorOnSurfaceVariant`, matching the list
-cards: the section title and the start time are the only text on `colorOnSurface`,
-so the facts read as a hierarchy instead of a wall of same-sized lines. A wider gap,
-not a divider, separates *when* from *who/where*. Queue history is a label/value
-table without icons. It renders the
-selected domain snapshot; opening it does not make another booking request.
-Booking-only responses do not contain capacity or comments, so those fields are
-not invented. Queue notification counts describe requests, not guaranteed
-successful booking attempts. All timestamps use `AcademicTimeProvider.zoneId`.
-Location hand-off uses a generic `geo:` intent; booking/cancellation continues
-through the existing list actions and ViewModels.
-
-`SportBookingConditions` is the shared, deterministic local offer policy for cards
-and details. Academic schedule intersections only warn; official sport booking
-conflicts, quotas, selection, credit and health-group restrictions block a new
-offer. A full or unpublished lesson can be waited for, subject to the existing
-community-services and future-auto-sign rolling-30-day checks at confirmation.
-Explicit MyITMO denial (including debt-only classes) is a definite restriction,
-even when its text has no known enum mapping. Only a missing explanation is
-labelled unknown. The class type alone never invents personal ineligibility. Existing active queues can still
-be cancelled when new restrictions appear. Starting time uses the academic clock,
-both when rendering and when a card action is tapped.
-
-The details distinguish permission, waiting, non-blocking warnings and restrictions
-that auto-sign cannot bypass. This does **not** claim Backend rejects creating a
-queue for every MyITMO restriction: the queue services do not preflight all those
-rules. The official submission must still satisfy MyITMO. Predictions carry
-inferred restrictions, explicitly marked as coming from the previous lesson.
-Backend's `SportAutoSignEntryRepository.findMatchingWaitingEntries` matches section,
-teacher, building ID, room ID, section/lesson level, type, time-slot ID and exact
-start two weeks later, both for newly published lessons and notification retries.
-Auto-sign does not substitute another teacher, time, building or room. Room names
-are display metadata; matching uses `roomId`, so a rename does not prevent a
-match. Building ID `0` cannot confirm a match:
-the import also uses it as a fallback for unknown buildings. Such predictions
-are left waiting rather than matched on two unknown locations. The details list
-the building check among the prediction conditions without a separate
-historical-location footnote.
-
-Condition categories use stable semantic accents with deliberate day/night colors:
-green permission, blue waiting, amber warning/unknown, red denial. Each also has a
-label and icon; color is not the only cue. Registration status reuses those accents
-for its label and icon through `SportRegistrationStatus.tone()`; statuses with no
-outcome yet (not signed, cancelled) stay neutral instead of borrowing an accent.
-Compact tinted condition panels replace
-generic explanations plus duplicate reason rows. Neutral card outlines and the
-sheet's lowest surface separate the remaining content without saturated slabs.
-For real lessons the ordinary queue stops within one hour of start; the existing
-force-sign confirmation only relaxes that deadline, not eligibility. The sheet
-does not claim the account has available auto-sign quota without refreshing it.
-The building check requires deploying the corresponding Backend revision before
-releasing this copy to users. No public Backend/Core/MyItmoApi contract or Android
-dependency version changes are required.
-
-The My Sport score card collapses into a compact bar as the bookings list scrolls.
-`SportScoreCollapseController` drives it from `computeVerticalScrollOffset`, which is
-exact while the first row is visible — the whole collapse range — and only has to stay
-large enough to clamp past it. The list owns its geometry: it fills the screen and
-reserves the expanded card height as top padding, so a drag moves rows one to one.
-Letting the card push the list instead would move rows twice per drag, once for the
-scroll and once for the shrinking header. Before the first draw, padding changes
-preserve the list anchor and wait for the corresponding layout; padding alone does
-not move already laid-out rows. During scrolling, all measured sizes remain expanded:
-only the card/detail drawing bounds, content translations and alpha change. Neither
-layout parameters nor padding are animated, so the screen is not remeasured on each
-frame. The details retreat under the header; title and status remain the same views,
-with a small translation for compact vertical spacing. Rows share the card's
-surface, so the collapsed card steps up a surface level and a backdrop fades in behind
-its inset strip, reaching past the card bottom to keep the same gutter the expanded
-card has. A header left half collapsed settles to the nearer edge once the list stops.
-That snap scrolls the list, not the fraction: the fraction is derived from the scroll
-offset, so moving it alone would leave the two disagreeing and the card would jump back
-on the next scroll event. A list too short to reach either edge stays put rather than
-chasing the snap. `SportScoreCollapseTest` drives the real layout and controller from a
-debug host with synthetic bookings, asserting the reserved padding never moves while
-collapsing, the first drawn booking is below the card, scrolling does not request a
-new layout, and snapping resolves both ways without looping on a short list.
-
-`SportCardsVisualTest` runs real adapters and the real bottom sheet in an isolated
-debug host, with synthetic data and no network actions. It covers both themes,
-two dynamic palettes, a 320 dp content width, font scale 1.0/1.3, queue states,
-busy-action protection, re-binding, full detail text and recreation.
-
-### Update offer
-
-`feature/update` compares the installed `app_version` with `/api/app/version-info`
-once per process, after the session reports a signed-in user. Like every other
-backend call it is gated on the opt-in — the endpoint is unauthenticated, but the
-client attaches the MyITMO token to whatever it sends there. A failed check offers
-nothing: the prompt is advisory and must not open a screen to show an error.
-
-Versions are ordered by `AppVersionName`, not as text, so `2.10` follows `2.9` and
-a `-SNAPSHOT` build still sees its own release. `PendingAppUpdate` applies the
-policy: at most one offer a day, none for a release the user skipped, and no limit
-at all once the installed build drops below the backend's `minVersion` — a build it
-no longer serves has nothing to postpone to, and `Пропустить версию` disappears.
-The offer records when it was shown rather than which button closed it, so leaving
-by Back postpones it exactly like `Напомнить позже`. The screen renders the check's
-result passed as arguments; it never repeats the request and has no loading state.
-
-### Notifications
-
-`core/notification` owns the FCM receiver, strict envelope dispatcher, token sync,
-notification contracts and WorkManager entry point. Feature-owned Hilt multibindings
-handle sport (`SportSignPushHandler`, free and auto instances) and friendship
-(`FriendshipPushHandler`) payloads. `app/AndroidAppNotifier` owns Android rendering
-and PendingIntents; data handlers only produce `AppNotification` values with
-localized `UiText` and typed destinations.
-
-The application creates `sport` (Спорт: автозапись) and `friends` (Друзья) channels
-at default importance. The obsolete default channel is removed. Android owns
-notification permission, category visibility and sound. Notifications have private
-lock-screen visibility, stable channel-scoped IDs and immutable PendingIntents;
-friendship items have an explicit group summary. Notification failures never undo
-successful sport booking or suppress cache refresh.
-
-`DefaultFcmTokenSync` reads the current Firebase SDK token, saves it in UtilityStorage
-and registers it only with an authenticated, opted-in session. A successful
-registration is recorded with its owner so failed uploads and account changes can
-retry even without token rotation. Login and services opt-in also register the current device even if its
-token is unchanged. Sign-out unregisters before clearing credentials; disabling
-services attempts unregister while the old opt-in is still enabled.
-
-Firebase callbacks enqueue persistent WorkManager work instead of leaving network
-coroutines attached to a service that may immediately stop. Messages retain the
-existing `data` string containing `{type, payload}`; the Backend also supplies
-`recipient_isu`. Android requires the recipient to match the signed-in ISU and
-rechecks the services opt-in before dispatch; token rotation inside the same
-account never drops a queued message. Missing/foreign recipients and messages
-queued before a sign-out are discarded. Session changes cancel
-message work and clear notifications. A request already sent to MyITMO cannot be
-recalled. WorkManager may delay execution; expired sport lessons are skipped and
-Backend owns booking retry attempts, so the worker never blindly replays a batch.
-See [Firebase callback lifetime](https://firebase.google.com/docs/cloud-messaging/android/receive-messages).
-
-Successful sport pushes satisfy the corresponding queue and refresh official
-bookings, pending bookings and schedule widgets. The legacy no-capacity signature
-keeps the queue active without a notification; definite MyITMO business errors
-cancel it; network/auth/malformed-response failures do neither. Each lesson and
-follow-up operation is isolated. Friendship notifications always display both
-request-received and request-accepted events when Android permits them. They refresh
-social collections only if the repository already contains a loaded friend list.
-Unknown/malformed payloads are ignored with type-only diagnostics, never raw JSON,
-tokens or user-visible FCM error alerts.
-
-Taps route to the sport root or to a public profile above the Me root.
-`MainActivityIntentRouting` validates the action and positive ISU. Pending root and
-profile arguments survive authentication and saved state and are consumed exactly
-once, without growing the contextual back stack on recreation.
-
-The minimum FCM-compatible artifacts are Core and Backend **1.2.0-SNAPSHOT** with
-the 2026-09-15 FCM worktree changes (`FriendshipEventPayload` with strict decoding;
-Backend `recipient_isu` and after-commit friendship delivery). These extend the
-friendship baseline revisions below, not a public release. The version catalog
-stays at 1.2.0-SNAPSHOT; Core was rebuilt and published only to Maven Local. A
-matching version string alone is insufficient. Dev and production have not been
-deployed by this task; live two-account delivery remains a separate approval gate.
-
-### Friends and public profiles
-
-Android requires the Core **1.2.0-SNAPSHOT** friendship revision (commit
-`b25c056`) and Backend **1.2.0-SNAPSHOT** with explicit friendships, profile and
-lookup endpoints and pending sport entries (commit `dd37d69`). Versions stay
-pinned until the Android 2.1 release, so a matching snapshot number alone does
-not prove the API is present; the local artifact was published on 2026-09-15.
-
-`core/social/SocialRepository` is the one source for friends, requests, public
-profiles and lookup. It gates every call on the custom-services opt-in and folds
-the profile returned by a relationship action into its cached lists, so screens
-never refresh after acting. `FriendRepository` in `core/friend` is a facade over
-it for the schedule picker. `PeopleSearchRepository` searches MyITMO by name and
-annotates registered users through lookup; phone and e-mail never leave the
-data layer.
-
-Screens: `feature/social` owns friends and requests, people search and the
-public profile; `feature/schedule/ui/UserScheduleFragment` and
-`feature/sport/ui/user/UserSportFragment` show another user's data and are
-reached only from the profile by `AppScreen.USER_SCHEDULE` and
-`AppScreen.USER_SPORT` with `core/navigation/UserScreenArgs`. A public profile
-opens through `AppScreen.USER_PROFILE` from every list, the sport friends-on-lesson
-sheet and the picker; features never import each other for that.
+Feature and storage code take an injected `Clock` or `AcademicTimeProvider`.
+*Enforced.* The production clock is `Europe/Moscow`; tests use fixed clocks; a
+debug-only academic date override exists.
 
 ### Dependency injection
 
-`@Binds` with constructor injection is the default; `@Provides` is for types the
-project does not construct. Modules are split per feature or concern rather than one
-growing module. Workers use `@HiltWorker`. The backend base URL comes from
-`BuildConfig.WIDGETS_BASE_URL`, set per build type.
+`@Binds` with constructor injection by default, `@Provides` for types the project
+does not construct, one module per feature or concern, `@HiltWorker` for
+workers, `@IntoSet` multibindings for open sets such as `SessionDataCleaner` and
+`FcmPayloadHandler`.
 
 ### Navigation
 
-One Activity owns two navigation surfaces. `main_nav_graph` contains authentication,
-the five bottom destinations, and the schedule friend-selector dialog. The root
-host and bottom bar retain their geometry while a full-screen `AppOverlayHostFragment`
-slides above them. `overlay_nav_graph` owns settings, debug tools, subject details and
-the update offer; future contextual user/teacher/review screens belong there too.
-Features open these screens through `core/ui/navigation.AppNavigator`, implemented in
-the app layer.
+One Activity, two surfaces. `main_nav_graph` holds authentication, the five
+bottom destinations (recordbook, schedule, home, sport, profile) and the schedule
+friend-picker dialog. Contextual screens (settings, debug tools, subject details,
+update offer, friends, people search, public profile, another user's schedule
+and sport) live in `overlay_nav_graph` inside a full-screen `AppOverlayHostFragment`
+that slides above the unchanged root and bottom bar.
 
-`MainNavigationCoordinator` makes the overlay host the primary navigation Fragment
-in one reversible parent transaction. The covered root remains STARTED with its
-view intact; only the overlay handles Back and accessibility. Nested Back pops one
-level; Back at the overlay root removes the surface without animating profile children.
-Root selection/reselection discards the entire overlay and any root dialog before
-switching tabs. Overlay history is never saved as part of a bottom tab's back stack.
-Activity recreation restores the current overlay level, unlike explicit root selection.
+Features open contextual screens through `core/ui/navigation.AppNavigator`,
+implemented by `MainActivity` and `MainNavigationCoordinator`. Selecting or
+reselecting a root tab discards the whole overlay stack; Back pops one overlay
+level; rotation restores the current level. Widget and notification intents are
+parsed by `MainActivityIntentRouting`, queued until the session is signed in,
+saved across recreation and consumed exactly once.
 
-Widget intents use the same root-selection path. `MainActivity` queues an intent
-received after state saving until `onResumeFragments`, saves that pending destination,
-and consumes it once so rotation does not replay an old widget intent. Sign-out
-removes overlays before revealing authentication. No navigation commits allow state loss.
+### Settings as data
 
-`ScheduleFragment` snapshots its list position before destroying its view. State
-saving must also work for viewless back-stack Fragments; pending scroll restoration
-waits for list data, and asynchronous adapter callbacks cannot touch an old view.
-
-## Settings as data
-
-Settings screens are **declarative**: a ViewModel emits `List<SettingSection>` built
-from `SettingItem.Toggle | Choice | Navigation | Action | Info`, and `SettingsRenderer` inflates it.
-Adding a section means writing a list, not a Fragment and a layout. Screens therefore
-look identical by construction and can be asserted in plain JVM tests.
-
-`SettingsPage` is a typed presentation destination. Each page uses the same
-`SettingsFragment` with a `settings_page` navigation argument, read by its own
-ViewModel through `SavedStateHandle`. The root lists categories; only the privacy
-page requests remote sharing values. Section footers hold shared explanations,
-and dynamic rows do not save view-hierarchy values over repository state.
-The privacy page holds its bounded loading area for at least 300 ms on entry and
-retry; network work and the minimum duration run concurrently in the ViewModel.
-Only final content or error rows replace the loader, avoiding a transient set of
-unknown choices. Disabling services bypasses the delay immediately.
-
-Privacy uses the typed Core `GET/PUT /api/users/me/privacy` contract, with independent
-`ALL`, `FRIENDS`, and `NOBODY` audiences. Android's `SharingVisibility` is a domain
-enum mapped at the repository boundary; no transport DTO reaches presentation.
-The unreleased boolean privacy endpoints and Core adapters have been removed.
-Public `UserData.capabilities` requires `canViewSchedule` and `canViewSport`; Core
-rejects missing or malformed permissions rather than inferring access from old
-settings. The existing domain `UserSummary.sharing` booleans map these viewer-scoped
-capabilities, not owner audiences. Own audiences use only `/api/users/me/privacy`.
-Definitive denial of a foreign schedule removes that user's entire cache and visible
-content, without deleting own or other users' data. Generation checks prevent a
-concurrent late response from restoring a revoked cache. Ordinary network failures
-still preserve cached content.
-
-Coordinated development uses Core and Backend `1.2.0-SNAPSHOT`. Core is published
-only to MavenLocal. The privacy contract was smoke-tested on the development
-server; subsequent local changes do not imply another deployment. Neither is a
-public release or a production deployment. This privacy screen requires the new
-Backend privacy endpoint and the coordinated `capabilities` user-data shape. The
-local PostgreSQL hardening changes and refreshed Core artifact have not been
-deployed to that server. The fresh-database schema defaults new users to `FRIENDS`;
-it does not import legacy MariaDB preferences. A public non-friend profile/search
-entry point is not added here.
-
-Application update metadata has a separate public `GET /api/app/version-info`
-contract: required `minVersion`, `latestVersion`, and plain-text `note` strings.
-Both version defaults are `2.1`; an empty note means there is no additional message.
-The legacy `GET /api/app/version` still returns the latest version as a string.
-These are Android application versions, not Backend or Core artifact versions.
-The typed Core contract is available for a future update screen; this change does
-not add a popup, display the note, or enforce the minimum in Android.
-
-Android currently builds as `2.1-SNAPSHOT` with version code `4`. Gradle generates
-`R.string.app_version` from `versionName`, keeping the settings display and local
-version-dependent storage aligned with the APK metadata instead of maintaining a
-second version string in XML.
-
-`localSettingsLoaded` is independent of privacy refresh. Settings postpone their
-enter transition until persisted sections and any initial QR image are ready,
-then start on pre-draw; offline pages never show a progress indicator. Shared-axis
-transitions use explicit forward/backward directions and a 220 ms duration.
-The first settings page signals `ScreenTransitionHost` on ready pre-draw, releasing
-the parent surface's postponed 220 ms slide. Only deeper settings levels use
-shared-axis motion; the profile underneath never exits or animates its children.
-Cached profile identity is bound before its first draw, including activity recreation.
-
-Widget settings values and `WidgetPreviewSettings` live in `core/settings`.
-`SettingsViewModel.previewSettings` emits only persisted values for QR/schedule
-pages. `core/ui/widget.WidgetPreviewFactory` is the UI contract; app-layer
-`DefaultWidgetPreviewFactory` composes the feature-owned implementations without
-cross-feature imports. Previews are scoped to the Fragment view and release bitmap
-work/animations on teardown. The schedule preview saves its page and example time
-through the Fragment's saved state.
-
-The app factory warms QR sample images while the root settings page is open.
-`QrPreviewBitmapCache` retains at most four bitmap pairs, keyed by resolved palette,
-custom-spoiler revision, and invalidation generation. Disk reads and rendering stay
-off the main thread; the cache retains no Activity or view. Atomic image save/reset
-increments the shared image-store revision, so stale custom images are not reused.
-
-Schedule preview data is deterministic and goes through `ScheduleWidgetSelector`,
-`ScheduleWidgetRenderer`, and `ScheduleListRowRenderer`, shared with the real
-widgets. QR uses its production bitmap/animation renderers with a sample payload.
-Previews never register an AppWidget host, create PendingIntents, request network
-data, write widget snapshots, or display a real QR pass.
-
-Both schedule widgets use the same default-off `Автозапись на спорт` preference as
-the own schedule screen. `ScheduleWidgetDataProvider` loads only the own academic
-range and, with both the preference and community services enabled, refreshes the
-pending source and reads its completed `getPendingBookings()` snapshot. This API
-has no synthetic initial empty emission and performs no implicit network request.
-Optional errors remove only pending rows; a failed initial academic request with
-no cache remains unavailable rather than being disguised as a pending-only day.
-
-`ScheduleWidgetSelector` builds a separate widget-only timeline, never synthetic
-academic `Lesson` objects. Today/tomorrow selection, teacher visibility and smart
-refresh boundaries include pending times. Every pending row has a persisted
-`WAITING` or `PREDICTED` marker, rendered in both widget types with a short explicit
-label and an outlined indicator. It never becomes a confirmed/current lesson.
-Queue-enabled widgets request the next refresh within seven minutes (or sooner
-at a lesson boundary); Android may defer background execution, so this is not a
-wall-clock delivery guarantee. The atomic presentation snapshot includes an exact official-only
-fallback, so dropping optional rows also restores the correct single next lesson
-and remaining count. Pending data expires at its earliest start or after seven
-minutes; snapshot reads re-check both settings gates and authentication. Process
-recreation preserves the explicit marker only within that validity window.
-Refresh failure never restores old pending rows from the presentation snapshot.
-The store is a shared singleton session cleaner; cleanup invalidates in-flight
-worker generation tickets before clearing disk, preventing an old account's
-completed snapshot from being written into a new session.
-
-After an actual sport booking or queue mutation succeeds, `SportBookingDelegate`
-requests a schedule widget update through
-`core/schedule.ScheduleWidgetRefreshRequester` before awaiting screen refreshes.
-The app-level `WidgetRefreshCoordinator` enqueues forced schedule work, bypassing
-the routine throttle without touching QR widgets. Failed actions do not enqueue
-updates. Queue mutations update only the optional projection and do not invalidate
-the official schedule cache. Explicit changes to the shared display preference
-or community-services gate also enqueue widget refresh after persistence.
-
-`CustomSpoilerViewModel` owns local image save/reset operations and widget refresh.
-`CustomSpoilerRepository` keeps URI strings at the domain boundary; its data
-implementation performs disk work on IO through the shared `core/qr` image store.
-The picker and crop UI return only a selected URI, cancellation, or a safe failure;
-view recreation does not cancel an in-flight save.
-
-Two conventions matter here:
-
-- **A summary value on a row is only honest when the section collapses into a single
-  state** (services on/off, signed-in account). Sections made of independent options
-  use a static description of what is inside; showing one option out of three would
-  misrepresent the section.
-- **The renderer rebuilds views only when the set of rows changes**, and skips
-  assigning a switch value that already matches. Re-inflating on every emission
-  destroys the control the user just touched and swallows its animation.
+Settings screens are declarative: a ViewModel emits `List<SettingSection>` of
+`Toggle | Choice | Navigation | Action | Info` items and `SettingsRenderer`
+inflates them. Each page is the same `SettingsFragment` with a `settings_page`
+argument. The renderer rebuilds views only when the set of rows changes and
+skips assigning a switch value that already matches. A row shows a summary value
+only when the section collapses into one state. See [`settings.md`](settings.md)
+for the contract itself.
 
 ## Boundary enforcement
 
-`app/src/test/java/.../architecture/ArchitectureTest.kt` is a Konsist suite of 13
-rules run as ordinary unit tests. It encodes:
-
-- `domain` imports no Android, `androidx`, Gson, `api.myitmo.*`, `core.network`,
-  `core.storage`, `core.ui`, or transport models except `UserSummary`;
-- `ui` imports no `api.myitmo.*`, `core.network`, `core.storage`, or `data`;
-- `presentation` imports none of the above and never references `Throwable`/`.message`;
-- `data` imports no `ui` or `presentation`;
-- no feature imports another feature; `core` imports no feature;
-- the legacy global `data`/`domain` packages stay empty;
-- ViewModels live in `presentation`; `*RepositoryImpl` lives in `data` and implements
-  the matching contract;
-- every Fragment with a nullable binding clears it in `onDestroyView()`;
-- no `LocalDate.now()`, `OffsetDateTime.now()`, `Calendar.getInstance()` or
-  `System.currentTimeMillis()` under `feature.*` or `core.storage`;
-- no `SharedPreferences`/`PreferenceManager` in production code, and the settings,
-  utility and friend-history stores use `DataStore`.
-
-Extend this suite when a new invariant is agreed, rather than relying on review.
+The Konsist suite encodes: the layer table above; no feature-to-feature imports;
+`core` imports no feature; the legacy global `data`/`domain` packages stay empty;
+ViewModels live in `presentation`; `*RepositoryImpl` lives in `data`; every
+Fragment with a nullable binding clears it in `onDestroyView()`; no direct
+`now()` calls under `feature.*` or `core.storage`; no `SharedPreferences`.
+`DesignCardResourcesTest` pins the card style family from
+[`design.md`](design.md). Add a rule when a new invariant is agreed instead of
+relying on review.
 
 ## Testing conventions
 
-- JVM unit tests are the default. `unitTests.isReturnDefaultValues = true` lets
-  classes that log through `android.util.Log` be tested directly.
-- Time-dependent logic takes an injected `Clock` or `AcademicTimeProvider`; tests use
-  a fixed clock.
-- ViewModels are created **inside** the test body, not in a field: `MainDispatcherRule`
-  installs the test dispatcher when the test starts, and a ViewModel that collects a
-  flow in `init` will otherwise touch an uninstalled main dispatcher.
-- Prefer extracting a small collaborator over faking six repositories. `InFlightLessons`
-  exists so the double-tap guard is testable without constructing `SportSignViewModel`.
-- Instrumented tests are reserved for what genuinely needs a device: Keystore and
-  file-backed storage.
+- JVM unit tests are the default; `unitTests.isReturnDefaultValues = true` lets
+  code that logs through `android.util.Log` run.
+- ViewModels are created inside the test body after `MainDispatcherRule` is
+  installed, never in a field.
+- Fakes over mocks: small in-memory repositories (`FakeSocialRepository`), a
+  `Proxy`-based `ItmoWidgetsApi` fake, and `myItmoStub` that answers real
+  Retrofit calls with synthetic JSON. Prefer extracting a small collaborator over
+  faking six repositories.
+- Instrumented tests cover what needs a device: Keystore, file storage, real
+  layouts in an isolated debug host (`SportCardsVisualTest`,
+  `RecordbookVisualTest`, `SelectionRowsTest`, `SportScoreCollapseTest`).
 
-## Known gaps and debt
+## Known gaps
 
-Functional gaps toward v2.0.1 parity: authentication, onboarding, the
-three widgets with their workers and boot receiver, the QR screen, and error
-diagnostics. The home feed is still a stub.
+Toward v2.0.1 parity: authentication and onboarding polish, the three widgets'
+boot receiver, the QR screen, error diagnostics. The home tab is a stub.
 
-Structural debt, in rough priority order:
+Structural debt, in priority order:
 
-1. **Stale caches are dropped, not shown.** The schedule cache has a 24-hour TTL and
-   filters expired entries out, so going offline for a day yields an empty schedule
-   instead of stale data.
-2. **Cache failures are silent.** Schedule and QR disk writes swallow exceptions
-   without logging, so a full or corrupted cache is invisible.
-3. **Token storage does crypto on the calling thread.** `MyItmoStorage` decrypts
-   lazily under `@Synchronized`; a slow Keystore call blocks whichever thread asks.
-4. **QR expiry is passive.** An expired entry simply stops being emitted, so a
-   displayed code would outlive its TTL. Dormant until the widgets land.
-5. **The bottom bar does not hide** on contextual destinations, contrary to the
-   design language.
-6. **An empty friend list from the backend is reported as an error** rather than an
-   empty state; the Core contract should be confirmed.
+1. Stale caches are dropped, not shown: the schedule cache has a 24-hour TTL.
+2. Cache write failures are swallowed silently.
+3. `MyItmoStorage` does Keystore crypto on the calling thread.
+4. QR expiry is passive; a displayed code could outlive its TTL.
+5. The bottom bar does not hide on contextual screens.
+6. The profile tab cannot show live privacy values or the BARS session state
+   because those live inside other features; a `core` contract is needed.
 
 ## Architecture definition of done
 
-Extends the `AGENTS.md` "Definition of done". A structural change is complete when:
-
-1. New code sits in the correct feature and layer.
-2. The touched feature's `domain` is free of Android and transport DTOs.
-3. The Konsist suite passes, with any new invariant added to it.
-4. Screen state uses the state/event contract, and no transient value can be stranded.
-5. Errors surface as `AppError`, never as raw exception text.
-6. New persistence follows the DataStore/file rules, and user-scoped caches implement
-   `SessionDataCleaner`.
-7. Anything reaching the project backend passes the custom-services gate.
+1. New code sits in the correct feature and layer; `domain` is free of Android
+   and transport types.
+2. The Konsist suite passes, extended with any new invariant.
+3. Screen state follows the state/event contract with nothing stranded.
+4. Errors surface as `AppError`.
+5. New persistence follows the DataStore/file rules and user-scoped caches
+   implement `SessionDataCleaner`.
+6. Anything reaching Backend passes the custom-services gate.

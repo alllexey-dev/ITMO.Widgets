@@ -1,7 +1,8 @@
-# ITMO.Widgets v2.1 settings contract
+# Settings contract
 
-This document defines the complete user-facing settings surface for Android
-v2.1. Options not listed here are not settings for this release.
+The complete user-facing settings surface of the application. An option not
+listed here is not a setting. Screens are built declaratively; see the
+"Settings as data" section of [`architecture.md`](architecture.md).
 
 ## Navigation and density
 
@@ -60,9 +61,9 @@ do not incur an additional delay. Disabling services takes effect immediately.
   the owner. There is no reciprocal sharing requirement.
 - Existing enabled legacy settings become `Друзья`; previously disabled settings
   remain `Никто`. Upgrading must never silently broaden an existing audience.
-- Backend, not Android, enforces the owner audience and friendship requirements.
-  Block management is not implemented in the current Backend; it is not simulated
-  by treating a rejected friend request as a block.
+- Backend, not Android, enforces the owner audience and friendship requirements
+  (decision [0004](decisions/0004-privacy-audiences.md)). Blocking is not
+  implemented and a rejected request is not a block.
 - Only the owner privacy endpoint returns audience settings. Other user responses
   contain viewer-scoped permissions. Unavailable/unknown settings are disabled
   and shown without an invented selected audience; saving failures restore the
@@ -147,7 +148,6 @@ importance. Android controls permission, sound and category visibility; there ar
 no duplicate in-app switches. Disabled notification permission suppresses only
 the visual alert, not sport automation already enabled by the user. Disabling
 user services suppresses FCM actions and attempts to unregister this device.
-The old generic `fcm_default_channel` is removed.
 
 ## Sport
 

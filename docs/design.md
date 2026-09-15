@@ -1,357 +1,199 @@
-# ITMO.Widgets: дизайн-гайд
+# Design guide
 
-## Назначение и статус
+One visual language across the Android application, grown from the screens the
+user already likes: the schedule and the sport cards. Quiet surfaces, compact
+layout, clear hierarchy, small meaningful accents. This is the target contract
+for every screen; card styles are pinned by `DesignCardResourcesTest`.
 
-Единый ориентир для оформления Android-приложения. Основа — понравившиеся
-пользователю экран расписания и карточки спорта: спокойные поверхности,
-компактность, ясная иерархия, небольшие смысловые акценты.
+## Principle
 
-Это целевой дизайн-контракт, а не описание полностью внедрённой системы.
-Документ собран по аудиту от 2026-09-08; открытые расхождения перечислены в конце.
-При первичном создании гайда UI не менялся. Первый проход реализации описан
-ниже; он не означает завершения всех пунктов. Скриншоты прошлых проверок
-не заменяют проверку текущей сборки на устройстве.
+**One visual language, not identical screens.**
 
-Гайд конкретизирует UI-правила [AGENTS.md](../AGENTS.md), не отменяя его
-инженерных и продуктовых ограничений. Структуру кода определяет
-[архитектура](architecture.md), набор настроек — [контракт настроек](settings.md),
-порядок продуктового развития — [roadmap](../vibe/itmo-widgets-social-learning-plan.md).
+- Information over decoration. Colour, size and motion explain meaning.
+- A compact card has one focus object and secondary context.
+- Hierarchy comes from surfaces, typography and spacing, not shadows.
+- Never stack a filled surface, a coloured stroke, a large status, a badge and a
+  decorative progress on one element.
+- Screens that already work are kept. Unification does not mean a redesign, a
+  new UI framework or features outside the roadmap.
 
-## Главный принцип
+## Colour and surfaces
 
-**Единый визуальный язык, а не одинаковые экраны.**
+Material 3 with the existing `Theme.Material3.DynamicColors.DayNight`. Every
+screen must work in light, dark and dynamic palettes; never assume the wallpaper.
 
-- Информация важнее оформления. Цвет, размер и движение объясняют смысл.
-- У компактной карточки есть один главный объект внимания и вторичный контекст.
-- Иерархия строится поверхностями, типографикой и расстояниями, а не тенями.
-- Не складывать на одном элементе яркую заливку, цветную рамку, крупный статус,
-  бейдж и дополнительный декоративный прогресс.
-- Уже удачные экраны сохраняются. Унификация не требует массового редизайна,
-  нового UI-фреймворка или добавления функций вне roadmap.
-
-## Цвета и поверхности
-
-Использовать Material 3 и существующую `Theme.Material3.DynamicColors.DayNight`.
-Оформление должно работать в светлой, тёмной и динамической палитрах.
-
-| Роль | Правило |
+| Role | Rule |
 |---|---|
-| Фон экрана | `colorSurface`; фон окна не переопределять случайным фиксированным цветом |
-| Обычная карточка | `colorSurfaceContainerLow`, elevation 0 dp |
-| Вложенная нейтральная плашка | Подходящий surface-container уровень, например `colorSurfaceContainerHighest` |
-| Основной текст | `colorOnSurface` |
-| Метаданные и декоративные иконки | `colorOnSurfaceVariant` |
-| Действие, текущий элемент, небольшой акцент | `colorPrimary` |
-| Выбранная контекстная поверхность | `colorSecondaryContainer` с `colorOnSecondaryContainer` |
-| Тихая обводка и разделитель | `colorOutlineVariant` |
+| Screen background | `colorSurface`; never override the window background with a fixed colour |
+| Ordinary card | `colorSurfaceContainerLow`, elevation 0 dp |
+| Nested neutral panel | a surface-container level such as `colorSurfaceContainerHighest` |
+| Primary text | `colorOnSurface` |
+| Metadata and decorative icons | `colorOnSurfaceVariant` |
+| Action, current item, small accent | `colorPrimary` |
+| Selected contextual surface | `colorSecondaryContainer` with `colorOnSecondaryContainer` |
+| Quiet stroke and divider | `colorOutlineVariant` |
 
-Цвета `on…Container` использовать только на соответствующем контейнере.
-Прозрачная строка на нейтральной карточке не должна получать `onPrimaryContainer`
-лишь потому, что она текущая. Для текущего дня достаточно небольшого акцента:
-например, заголовка и обводки при сохранении спокойного фона.
+`on…Container` colours are used only on their container. Do not fill large
+cards with `colorPrimary` to make them prominent; the user rejects heavy tonal
+fills. Lesson types, grades, sport statuses and ring sectors are domain
+semantics with their own deliberate light and dark values and contrast checks;
+a status is also readable by text or icon, never by colour alone.
 
-Цвета типов занятий, оценок, спортивных статусов и секторов кольца — отдельная
-доменная семантика. Их не перекрашивать в `primary` ради одинаковости. Для них
-нужны осмысленные light/dark варианты и проверка контраста; статус также должен
-быть понятен по тексту или иконке. Спортивные allowed/waiting/warning/blocked
-служат образцом такого подхода, но не универсальной палитрой всех сущностей.
+## Geometry and the card family
 
-## Геометрия и семейство карточек
+The grid is 4 dp. Compactness never shrinks the touch target.
 
-Базовая сетка — 4 dp. Визуальная компактность не уменьшает область нажатия.
-
-| Параметр | Базовое значение |
+| Parameter | Value |
 |---|---|
-| Горизонтальные поля экрана | 16 dp |
-| Промежуток в компактном списке | 8 dp |
-| Промежуток между смысловыми группами | 16–24 dp |
-| Промежуток между связанными строками | 4 dp |
-| Внутренний padding карточки | 16 dp; для крупной сводки — 20 dp |
-| Минимальная область нажатия | 48 × 48 dp |
-| Elevation карточки | 0 dp |
+| Screen horizontal margin | 16 dp |
+| Compact list gap | 8 dp |
+| Gap between groups | 16–24 dp |
+| Gap between related rows | 4 dp |
+| Card padding | 16 dp; 20 dp for a large summary |
+| Minimum touch target | 48 × 48 dp |
+| Card elevation | 0 dp |
 
-Не сводить все контейнеры к одному радиусу. Зафиксированы следующие варианты:
-
-| Вариант | Форма и граница | Назначение |
+| Variant | Shape | Use |
 |---|---|---|
-| Компактная контентная карточка | Радиус 20 dp; тихая обводка 1 dp либо без обводки | Спортивное занятие, предмет, контроль |
-| Крупная сводка | Радиус 24 dp; спокойная поверхность | Сводка спорта, обзор предмета |
-| Группа строк настроек/профиля | Радиус 20 dp, без обводки; внутренние разделители по необходимости | Одна карточка на группу, не на каждую настройку |
-| День расписания | Сохранить радиус 16 dp и промежуток между днями 16 dp | Группа занятий с временной шкалой |
+| `Card.Content` | 20 dp radius, no stroke | Subject, control, user rows |
+| `Card.Content.Outlined` | 20 dp radius, 1 dp `colorOutlineVariant` | Sport lesson and booking cards, debug cards |
+| `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius | Recordbook summary and overview |
+| `Card.SettingsGroup` | 20 dp radius, no stroke, inner dividers | One card per settings or profile group, never per row |
+| `Card.ScheduleDay` | 16 dp radius, 16 dp between days | A day of lessons with its timeline |
 
-Outlined и filled — допустимые варианты: спорт сохраняет тихую обводку,
-зачётка и настройки могут оставаться без неё. Разница должна следовать роли
-компонента, а не случайным значениям в отдельном layout. Маленькие чипы,
-плитки дат и аватары имеют собственную геометрию, не радиус большой карточки.
+Chips, date tiles and avatars have their own geometry. Vertical padding is
+symmetric; height grows with content and font scale. Clipped text is fixed
+through constraints, wrapping, font metrics and insets, never with a fixed height.
 
-Вертикальный padding строк должен быть симметричным. Высота растёт с содержимым
-и масштабом шрифта. Обрезание текста исправляется через constraints, переносы,
-font metrics и insets, а не произвольной фиксированной высотой.
+## Typography and content
 
-## Типографика и содержание
+- Card title `titleMedium`; time as the scanning anchor `titleSmall`; metadata
+  `bodySmall`/`bodyMedium`. Settings rows keep `bodyLarge` titles and
+  `bodyMedium` descriptions.
+- A small set of Material roles; not every label is bold.
+- Long titles wrap; secondary metadata may be shortened when the full value is
+  in the details; an important status is never shortened into ambiguity.
+- User-visible strings live in resources and are Russian. Remote names are
+  trimmed at the mapper.
+- Grade codes are contiguous: `2FX`, `3E`, `3D`. Short status plus number pairs
+  do not wrap into ambiguous lines. One number is not repeated in neighbouring views.
 
-- Название карточки — обычно `textAppearanceTitleMedium`; время как опорная
-  информация — `textAppearanceTitleSmall`; метаданные — `BodySmall`/`BodyMedium`.
-- Строки настроек сохраняют `BodyLarge` для названия и `BodyMedium` для пояснения:
-  их не нужно искусственно уменьшать до плотности спортивной карточки.
-- Использовать небольшой набор Material-ролей. Не добавлять bold каждому полю.
-- Длинное название переносить; вторичные метаданные можно сокращать, если полное
-  значение доступно в деталях. Не сокращать важный статус до потери смысла.
-- Пользовательские строки хранить в ресурсах. Основной язык — русский.
-- Убирать случайные пробелы внешних данных на границе маппинга.
-- Оценки писать слитно: `2FX`, `3E`, `3D`. Короткие пары «статус + число»
-  не должны распадаться на неоднозначные строки.
-- Не дублировать одно число в нескольких соседних представлениях без пользы.
-- В обзоре предмета не показывать дату оценивания в шапке: она относится
-  к конкретному контролю.
+## Icons, actions and selection
 
-## Иконки, действия и выбор
+- Official Material Symbols, rounded outline family, 24 dp viewport, named after
+  the symbol (`ic_calendar_add`). One meaning, one symbol. No emoji or text glyphs.
+- Tint through semantic attributes; teacher and location icons are neutral.
+- Filled variants only for a selected/active state or legibility.
+- A button may look smaller than 48 dp through insets; its touch area stays 48 dp.
+- Filled button for the strong primary action, tonal for an ordinary prominent
+  action, outlined or text for secondary and contextual ones.
+- Every actionable icon has a localized `contentDescription`; decorative ones `@null`.
+- Selection is shown by a check or a container surface plus `selected` or
+  `checkable` state for TalkBack, and the whole row is the target. A closed or
+  private row never looks selectable.
+- The bottom navigation keeps `labelVisibilityMode="selected"`; no permanent
+  label row, no large titles above root content. Contextual screens use a back
+  button and a concise title.
 
-- Использовать официальные Material Symbols/Icons, преимущественно rounded
-  outline. Один смысл — один согласованный символ, без параллельных семейств.
-- Drawable имеет viewport 24 × 24. Размер отображения зависит от роли:
-  небольшая иконка метаданных может быть 16 dp, иконка действия — 24 dp.
-- Tint задаётся семантическим атрибутом. Иконки преподавателя и места нейтральны;
-  `primary` не используется просто для украшения метаданных.
-- Filled-вариант нужен для выбранного/активного состояния либо читаемости,
-  а не случайного разнообразия. Не заменять иконки emoji или текстовыми глифами.
-- Кнопка может выглядеть компактнее 48 dp за счёт inset, как в спорте,
-  но доступная область нажатия остаётся не меньше 48 × 48 dp.
-- Filled-кнопка — сильное основное действие, tonal — обычное заметное действие,
-  outlined/text — вторичное или контекстное. Не делать все кнопки одинаковыми
-  независимо от их роли.
-- Action-иконке нужен локализованный `contentDescription`; декоративной — `@null`.
-- Выбор обозначается не только цветом: нужна ясная галочка/граница и состояние
-  selected/checkable для TalkBack. Нажатие работает по всей строке.
+## Refresh and loading
 
-## Refresh и индикаторы загрузки
-
-### Принятые решения
-
-| Экран | Контракт |
+| Screen | Contract |
 |---|---|
-| Расписание и обе вкладки спорта | Сохранить текущую настройку: индикатор `color.primary`, подложка `color.background` |
-| Зачётка и детали предмета | Оба цвета настроены так же, как в расписании и спорте через общий helper |
-| Окно входа через ITMO.ID | Явное исключение: светлая тема, дефолтный refresh-индикатор; не применять общую настройку цветов |
+| Schedule, both sport tabs, recordbook and subject details | `applyAppRefreshColors()` from `core/ui/RefreshAppearance.kt`: indicator `colorPrimary`, background `android.R.attr.colorBackground` |
+| ITMO.ID web sign-in | Explicit exception: light theme, library default indicator |
 
-Для refresh `color.background` означает текущий `ThemeColors.background`,
-разрешающий `android.R.attr.colorBackground`. Не подменять его другой surface-ролью
-на одном из экранов независимо от остальных.
+- First load: a Material indicator in the bounded content area, no flash of an
+  empty state before it.
+- Refresh: existing data and scroll position stay; the indicator reports work
+  without replacing the screen. The schedule keeps its loaded range including
+  pagination and replaces it with one snapshot; an error keeps the old data.
+- Card actions show local progress inside their button without changing its
+  geometry and ignore a second tap.
+- Score rings and capacity bars are not loading indicators.
+- Settings root and offline pages render persisted values immediately; only the
+  privacy page has a network state, visible at least 300 ms. QR previews open
+  ready or with an error, never with an intermediate spinner.
 
-Общее оформление refresh подключается через `applyAppRefreshColors()`
-из `core/ui/RefreshAppearance.kt`, а не копированием вызовов по Fragment.
-Оно не применяется автоматически и не затрагивает окно ITMO.ID. Исключение
-относится именно к окну веб-входа, а не ко всем экранам профиля или авторизации.
+## Empty, error and feedback states
 
-### Разные сценарии загрузки
+One family with two sizes: a full state in the content area (64 dp icon) and a
+compact one inside a section (56 dp icon), each with optional icon, title,
+description and optional action. `Widget.ItmoWidgets.ContentState.*` styles hold
+the geometry.
 
-- **Первичная загрузка:** Material-индикатор в ограниченной области контента,
-  без краткого показа пустого состояния перед ним.
-- **Обновление:** сохранённые данные и положение прокрутки остаются на экране;
-  refresh сообщает о работе, не заменяя весь экран заглушкой.
-- **Обновление расписания:** сохраняется уже загруженный диапазон, в том числе
-  после пагинации. Кеш не обнуляется перед запросом; успешный ответ заменяет
-  диапазон одним снимком, а не последовательностью списков из одного, двух и
-  следующих дней. Ошибка оставляет прежние данные и видимую позицию.
-- **Действие в карточке:** локальная загрузка внутри соответствующей кнопки,
-  без изменения её геометрии и повторной отправки по двойному нажатию.
-- **Предметный прогресс:** кольца баллов, оценок и вместимость — не индикаторы
-  загрузки. Они сохраняют собственную семантику, цвета и подписи.
+- Loading, content, empty and error occupy the same bounded area.
+- Empty explains why there is nothing and what to do. An error is never shown as
+  "nothing found"; an unknown value is never shown as zero.
+- Retry is a tonal action; a primary action leading out of an empty screen may be
+  filled; a text button is fine in a compact secondary message.
+- A refresh error with data on screen keeps the data and shows a snackbar with
+  retry. Toasts are not used for recoverable errors.
+- List and placeholder switch atomically after `submitList` completes; no message
+  under the previous list on an intermediate frame.
 
-Это не требование добавлять загрузчик на каждый экран. Корень и офлайн-разделы
-настроек сразу отображают сохранённые значения без индикатора; сетевое состояние
-есть только у приватности. Её первичная загрузка и явный повтор видны минимум
-300 ms без задержки старта запроса. QR-превью открывается уже готовым либо
-с ошибкой, без промежуточного spinner. Эти исключения сохраняют
-[контракт настроек](settings.md).
+## Screen behaviour
 
-## Пустые состояния, ошибки и обратная связь
+- Five bottom tabs, contextual screens in the overlay. Ordinary state changes do
+  not recreate the screen or lose scroll position. Root selection or reselection
+  closes the whole overlay stack.
+- Motion explains a change: 150–250 ms, honouring the system animator scale. Do
+  not animate unchanged text or flash the screen on refresh. Sport tabs switch by
+  tap and pager gesture; the sport date strip moves only with its arrows; the
+  month label animates only when the month changes.
+- Every mutable visual property is set on rebind. Past schedule days keep content
+  alpha 0.72; today and future days 1.0; inner lesson rows get no second alpha layer.
+- Schedule timeline markers: a hollow neutral circle for a lesson not yet
+  started, a filled dot for a past one, a circle with an inner dot in
+  `colorPrimary` for the next official lesson in the loaded range, a filled accent
+  marker for the lesson in progress. Markers are 12 dp in a 14 dp stable area and
+  cover the line with the day surface. Auto-sign rows use the same row and a
+  short text note, not a separate card style. States recompute on return and at
+  the minute boundary without network or scroll reset.
+- The sport score ring keeps a constant angular gap between attendance and bonus,
+  a visible minimum for every non-zero sector, identical geometry on the first
+  and later frames, and values above 100 do not remove the gap.
+- The friend picker is modal: recent chips, bounded search, the whole row as the
+  target, explicit confirmation. Selection is a `colorSecondaryContainer` row
+  surface; a closed schedule shows a lock and leads to the profile.
+- Settings and the profile use quiet group cards with stable row updates.
+- Widgets and the QR pass keep their own launcher-adapted palette and readability
+  rules; sign-in branding is a separate exception.
+- The home tab is a placeholder and must not promise a working refresh.
 
-Нужны согласованные варианты одного семейства, а не отдельный дизайн в каждом
-Fragment: полноразмерное состояние в области контента и компактное состояние
-внутри секции. Общая анатомия — необязательная иконка, заголовок, пояснение,
-необязательное действие. Одинаковые роли используют одинаковую геометрию.
+## Shared components
 
-- Loading, content, empty и error занимают одну ограниченную область.
-- Empty сообщает, почему данных нет и что можно сделать. Error не выдаётся за
-  «ничего не найдено», неизвестное значение не выдаётся за ноль.
-- Повтор загрузки — tonal-действие; переход к основной функции из пустого экрана
-  может быть filled. Text-кнопка допустима в компактном вторичном сообщении.
-- Ошибка refresh при наличии данных не прячет их. Предпочтителен Snackbar
-  с повтором, если операция допускает повтор; не исчезающий Toast вместо
-  восстанавливаемого состояния ошибки.
-- Смена списка и заглушки применяется атомарно, с учётом завершения `submitList`.
-  Не показывать сообщение под предыдущим списком на промежуточном кадре.
-- Полноразмерное состояние использует иконку 64 dp, компактное внутри секции —
-  56 dp. Это разные контексты одного семейства, а не варианты для одинакового
-  места. Геометрию и переносы проверять на устройстве.
+Keep XML, Material components and the current architecture. The shared layer is
+deliberately small: card variants, named dimensions, refresh helper, content-state
+styles, the accessible selection row (`bindSelectionAccessibility`), the user row
+(`item_user_row.xml`) and the contextual screen header. Shared helpers belong to
+`core/ui`; screen-specific behaviour to `feature/<name>/ui`. Extract only rules
+that genuinely repeat; do not build a universal renderer.
 
-## Поведение и особенности экранов
+## Verification matrix
 
-- Нижняя навигация сохраняет пять существующих разделов и
-  `labelVisibilityMode="selected"`. Без постоянного ряда подписей и больших
-  заголовков над корневым контентом. Контекстные экраны — не новые bottom tabs.
-- Учитывать системные панели и IME в edge-to-edge. Обычное изменение состояния
-  не пересоздаёт экран и не сбрасывает прокрутку или корневой back stack.
-  При переключении или повторном выборе корневого раздела overlay-стек настроек
-  закрывается целиком согласно контракту навигации; это не потеря состояния
-  при обычном обновлении данных. Поворот устройства восстанавливает текущий уровень.
-- Движение объясняет изменение: обычно 150–250 ms, с учётом системного масштаба
-  анимации. Не анимировать неизменившийся текст и не мигать всем экраном.
-- В спорте вкладки переключаются тапом и pager-жестом, но лента дат — только
-  стрелками. Название месяца анимируется лишь при смене месяца.
-- При повторном bind задаются все изменяемые визуальные свойства. Завершённость
-  не должна накапливать несколько слоёв alpha; текст и время затемняются согласованно.
-- Прошлый день сохраняет привычную прозрачность содержимого карточки: alpha 0.72.
-  Сегодня и будущие дни используют alpha 1.0; при переиспользовании строки значение
-  обязательно сбрасывается. Внутренние строки занятий не получают второй слой alpha.
-- У спортивного кольца постоянный угловой зазор между attendance/bonus, видимый
-  минимум ненулевого сектора и одинаковая геометрия первого и последующих кадров.
-  Значения выше 100 не убирают зазор.
-- Выбор друга остаётся модальным: недавние, ограниченный поиск, вся строка как
-  цель, явное подтверждение. Закрытое расписание не выглядит доступным для выбора.
-- Настройки и профиль сохраняют тихие групповые карточки и стабильное обновление
-  строк. Унификация не добавляет настройки стиля, карт или режима обновления виджетов.
-- Виджеты используют отдельную адаптированную под launcher палитру; QR сохраняет
-  требования читаемости и выбранный режим цветов. Их не приводить механически
-  к оформлению Activity. Брендовые элементы входа также допустимы отдельно.
-- Главная пока является заглушкой. Не разрабатывать отложенную ленту в рамках
-  унификации; пустая оболочка не должна обещать неработающий refresh.
+Every meaningful UI change is checked on an emulator before it is called done:
 
-## Реализация общего оформления
+- light and dark theme, at least one non-default Material You palette on
+  Android 12+; the ITMO.ID window in its light theme;
+- a narrow phone (320 dp content width) and the primary test device; font scale
+  1.0 and 1.3;
+- long Russian names and titles; loading, content, empty and error; first load,
+  refresh with cache, refresh error, retry, in-button progress, view recreation;
+- touch targets, TalkBack descriptions, selected and unavailable states;
+- first and last transition frames; no clipped dates or chips, no jumps, no
+  leftover alpha after recycling, no lost scroll.
 
-### Маркеры временной шкалы расписания
+Screenshots and fixtures contain synthetic data only. Compilation is not visual
+verification.
 
-- Ещё не начавшиеся пары — полый нейтральный круг; прошедшие — заполненная точка.
-- Ближайшая будущая официальная пара во всём загруженном диапазоне — круг с
-  маленькой точкой внутри, в `colorPrimary`. Это не первая пара каждого дня.
-- Идущая сейчас пара сохраняет заполненный акцентный маркер. Интервал занятия
-  включает время начала, но не время окончания.
-- Автозапись использует ту же строку, типографику, иконки преподавателя и места,
-  что и обычная пара. Неопределённость обозначают обычный нейтральный полый маркер
-  и короткая текстовая пометка ожидания/прогноза, а не отдельное оформление карточки.
-- Полые маркеры закрывают проходящую за ними линию цветом поверхности дня.
-  Их диаметр — 12 dp в стабильной области 14 dp; автозапись не получает отдельный
-  цветовой акцент.
-  Цвет дополняет форму и доступное описание, но не заменяет их.
-- Состояния пересчитываются при возвращении на экран и на границе минуты без
-  сетевого запроса и сброса прокрутки.
-- Прокручивается и переиспользуется целый день. Его небольшой список занятий
-  измеряется полностью, без второй виртуализированной прокрутки внутри карточки:
-  крупный шрифт не должен скрывать нижние пары.
+## Reference implementations
 
-### Общие компоненты
-
-Сохранять XML, Material-компоненты и текущую архитектуру. Минимальный общий слой:
-стили вариантов карточек, именованные размеры, настройка refresh, варианты
-state-компонента и доступной строки выбора. Общие UI-помощники относятся к
-`core/ui`, особенности конкретного экрана — к `feature/<name>/ui`.
-
-Выносить действительно повторяющиеся правила, не строить универсальный renderer
-всего приложения. Сначала закреплять общий компонент, затем переводить его
-потребителей; не переписывать уже согласованные экраны ради механической симметрии.
-
-## Статус унификации после аудита
-
-Первый проход от 2026-09-08 добавил общие `design_tokens.xml`, `design_styles.xml`,
-`design_state_styles.xml`, helper refresh и семантику строк выбора. Компоновка
-карточек расписания, спорта и зачётки сохранена. Состояния зачётки/расписания/спорта
-используют общую типографику и действия; sport refresh-error сохраняет показанные
-данные и предлагает повтор через Snackbar только на активной вкладке.
-
-Это статус UI-работы, не новая продуктовая roadmap. «Реализовано» ниже описывает
-код; матрица проверки и оставшиеся ограничения фиксируются отдельно.
-
-| Приоритет | Расхождение / действие | Статус |
-|---|---|---|
-| Высокий | Настроить подложку refresh зачётки и деталей предмета; ITMO.ID не менять | Реализовано; общий helper, ITMO.ID без изменений |
-| Высокий | Согласовать empty/error и повтор загрузки, включая Snackbar/Toast | Общие state-стили и Snackbar для ошибок загрузки внедрены; контекстные success/info Toast сохранены |
-| Высокий | Строки фильтров спорта: минимум 48 dp, сетка отступов, семантический цвет текста | Реализовано и покрыто тестами строк выбора |
-| Высокий | Передать выбор друга через accessibility-состояние, не только галочку/рамку | Реализовано; native checked/checkable MaterialCardView, недоступные строки не кликабельны |
-| Высокий | В расписании восстановить alpha для CURRENT, убрать двойное затемнение, проверить пару цвета текста/фона | Реализовано: внутренние строки без alpha, прошлые дни сохраняют alpha 0.72; также исправлены HH:mm и ширина колонки времени |
-| Средний | Согласовать цвета метаданных и дублирующиеся семейства иконок | Метаданные расписания и галочки выбора согласованы; полный аудит всех символов остаётся |
-| Средний | Проверить light/dark палитру типов занятий; сейчас отдельных night-значений нет | Нужна проверка контраста, не безусловная замена всех цветов |
-| Средний | Закрепить общие card/spacing/refresh/state стили вместо независимых значений | Общие ресурсы подключены к основным карточкам и состояниям; остальное переносится по мере изменения экранов |
-| Средний | Проверить длинные имена в выборе друга и края переходов список/заглушка | Добавлены проверки длинных имён и переходов, включая Error/Loading во время DiffUtil; сохранена явная кнопка подтверждения |
-| Низкий | Привести debug-карточки к общему семейству; убрать ложное обещание refresh из заглушки главной | Реализовано: явные surface/elevation debug-карточек и информационная заглушка главной без refresh |
-
-## Проверка UI-изменений
-
-- Светлая и тёмная темы, минимум одна нестандартная Material You палитра
-  на Android 12+. Окно ITMO.ID проверять в его светлой теме с дефолтным refresh.
-- Узкий телефон и основное тестовое устройство; font scale 1.0 и не меньше 1.3.
-- Длинные русские имена и названия; loading, content, empty, error.
-- Начальная загрузка, refresh с кешем, ошибка refresh, повтор, локальная загрузка
-  кнопки, восстановление после пересоздания view.
-- Одинаковые refresh-цвета у расписания, спорта и обоих экранов зачётки;
-  исключение ITMO.ID не затронуто.
-- Области нажатия, TalkBack, доступность выбранного и недоступного состояния.
-- Первый и последний кадры перехода; отсутствие обрезанных дат/чипов, скачков,
-  остаточной alpha после переиспользования и потери прокрутки.
-
-Компиляция не заменяет визуальную проверку. Для нового поведения нужны тесты
-соответствующего слоя; скриншоты и тестовые данные не должны содержать токены
-или реальные персональные данные.
-
-### Результаты первого прохода, 2026-09-08
-
-- Gradle-задачи `:app:testDebugUnitTest`, `:app:lintDebug`, `:app:assembleDebug`
-  и `:app:assembleDebugAndroidTest` — успешно; 225 unit-тестов, ошибок lint нет.
-  Предупреждения lint в проекте остаются, их полная очистка не входила в этот проход.
-- 34 выбранных instrumentation-теста прошли на Pixel 7 / Android 15 эмуляторе
-  и основном телефоне `2510DPC44G`. Проверены общие состояния и refresh,
-  строки выбора, карточки расписания, lifecycle расписания, зачётка и спорт.
-- Матрица включает light/dark, нестандартные Material You палитры от цветового
-  seed, ширину 320 dp и ширину устройства, font scale 1.0/1.3, длинные имена
-  и названия. Используются синтетические данные, а не реальные профили.
-- Accessibility-проверки подтверждают checked/checkable/selected, недоступность
-  закрытого расписания и отсутствие дублирующих дочерних целей. Это не заменяет
-  отдельный ручной проход с озвучиванием TalkBack.
-- Кадры эмулятора сохранены в игнорируемом `app/build/outputs/design-alignment-qa/`.
-  Просмотрены характерные light/dark и узкие состояния карточек и заглушек;
-  тесты дополнительно проверяют текстовые границы и минимальные touch targets.
-- Финальный APK установлен на телефон с сохранением данных. После полного
-  успешного прогона беспроводное ADB-соединение оборвалось: дополнительный
-  короткий прогон не завершён, кадры телефона не удалось забрать для ручного
-  просмотра, первый свайп sport-вкладок в обычном приложении не проверен.
-- Полная проверка контраста доменной палитры типов занятий и аудит всех иконок
-  остаются открытыми. Проверки карточек спорта не заменяют проверки lifecycle
-  реальных sport-вкладок: их Snackbar и первый свайп требуют отдельного сценария.
-- По уточнению пользователя возвращена прозрачность прошлых дней alpha 0.72.
-  Повторно прошли сборка, lint, 225 unit-тестов и 3 UI-теста расписания на эмуляторе,
-  включая переиспользование одной карточки «прошлый → сегодня → будущий → прошлый».
-  Корректировка затем вошла в установленную по USB сборку с исправлением refresh.
-- Исправлен сброс позиции при refresh расписания: ViewModel сохраняет загруженный
-  диапазон; кеш заменяет диапазон одного пользователя единым снимком после
-  успешного запроса, не публикуя промежуточные пустые/частичные списки. Удалённые
-  из ответа даты не остаются в кеше, другие диапазоны и пользователи сохраняются.
-  Прошли 234 unit-теста, сборка/lint и 18 тестов расписания/кеша на эмуляторе и
-  основном телефоне. Проверены кадры до/во время/после refresh, сохранение дня и
-  pixel-offset на каждом кадре, ошибка и фактический повтор через Snackbar,
-  атомарность, scoped-замена, TTL, дисковый формат и параллельные записи кеша.
-  Сборка установлена на телефон с сохранением пользовательских данных;
-  тесты кеша используют отдельные временные каталоги.
-
-## Опорные реализации
-
-Примеры показывают удачные решения, но не объявляют весь файл безусловным эталоном.
-
-- [Группа дня расписания](../app/src/main/res/layout/item_day_schedule.xml)
-  и [её оформление](../app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/ui/DayScheduleAdapter.kt).
-- [Карточка занятия спорта](../app/src/main/res/layout/item_sport_lesson.xml)
-  и [карточка записи](../app/src/main/res/layout/item_sport_booking.xml).
-- [Стили настроек и профиля](../app/src/main/res/values/styles.xml),
-  [согласованная семантика строк настроек](../app/src/main/java/dev/alllexey/itmowidgets/feature/settings/ui/SettingsRenderer.kt).
-- [Карточка предмета](../app/src/main/res/layout/item_recordbook_subject.xml)
-  как допустимый filled-вариант.
-- [Строка пользователя](../app/src/main/res/layout/item_user_row.xml) для друзей,
-  заявок и поиска, [публичный профиль](../app/src/main/res/layout/fragment_user_profile.xml)
-  с одной контекстной кнопкой и строками входа по capabilities,
-  [пикер друзей](../app/src/main/res/layout/dialog_friend_selector.xml) с выбором
-  через `colorSecondaryContainer` вместо обводки.
-- [Refresh расписания](../app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/ui/ScheduleFragment.kt),
-  [refresh зачётки](../app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/ui/RecordbookFragment.kt),
-  [refresh деталей предмета](../app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/ui/RecordbookSubjectFragment.kt).
-- [Визуальные тесты спорта](../app/src/androidTest/java/dev/alllexey/itmowidgets/feature/sport/cards/SportCardsVisualTest.kt)
-  и [зачётки](../app/src/androidTest/java/dev/alllexey/itmowidgets/feature/recordbook/RecordbookVisualTest.kt)
-  как основа матрицы проверок.
+- Schedule day: `res/layout/item_day_schedule.xml`, `feature/schedule/ui/DayScheduleAdapter.kt`.
+- Sport cards: `res/layout/item_sport_lesson.xml`, `res/layout/item_sport_booking.xml`,
+  details sheet `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt`.
+- Settings and profile groups: `res/values/styles.xml`, `feature/settings/ui/SettingsRenderer.kt`.
+- Recordbook card: `res/layout/item_recordbook_subject.xml`.
+- User row and public profile: `res/layout/item_user_row.xml`, `res/layout/fragment_user_profile.xml`.
+- Friend picker: `res/layout/dialog_friend_selector.xml`.
+- Visual tests: `feature/sport/cards/SportCardsVisualTest.kt`,
+  `feature/recordbook/RecordbookVisualTest.kt`, `feature/friendselector/SelectionRowsTest.kt`.
