@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="sport_filter_search_hint">Поиск вида спорта</string>
-    <string name="friend_picker_my_schedule_accessibility">Моё расписание</string>
-    <string name="friend_picker_loading">Загрузка списка друзей</string>
-</resources>

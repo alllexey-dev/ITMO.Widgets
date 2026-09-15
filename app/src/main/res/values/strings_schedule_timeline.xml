@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="schedule_timeline_completed">Пара завершилась</string>
-    <string name="schedule_timeline_current">Пара идёт сейчас</string>
-    <string name="schedule_timeline_next">Следующая пара</string>
-    <string name="schedule_timeline_upcoming">Предстоящая пара</string>
-    <item name="pending_sport_root" type="id" />
-</resources>

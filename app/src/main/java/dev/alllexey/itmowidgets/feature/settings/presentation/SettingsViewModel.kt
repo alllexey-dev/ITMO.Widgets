@@ -340,7 +340,8 @@ class SettingsViewModel @Inject constructor(
                 items = listOf(
                     SettingItem.Toggle(
                         key = KEY_CUSTOM_SERVICES,
-                        title = UiText.Resource(R.string.settings_custom_services_title),
+                        // The screen is already titled by the page; the switch names the action.
+                        title = UiText.Resource(R.string.settings_custom_services_toggle),
                         checked = local.customServicesEnabled
                     )
                 ),
