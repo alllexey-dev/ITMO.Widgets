@@ -2,32 +2,48 @@ package dev.alllexey.itmowidgets.di
 
 import dagger.Binds
 import dagger.Module
-import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
+import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
+import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class FriendModule {
+abstract class SocialModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindSocialRepository(
+        impl: SocialRepositoryImpl
+    ): SocialRepository
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindSocialRepositorySessionDataCleaner(
+        impl: SocialRepositoryImpl
+    ): SessionDataCleaner
+
+    @Binds
+    @Singleton
+    abstract fun bindPeopleSearchRepository(
+        impl: PeopleSearchRepositoryImpl
+    ): PeopleSearchRepository
 
     @Binds
     @Singleton
     abstract fun bindFriendRepository(
         impl: FriendRepositoryImpl
     ): FriendRepository
-
-    @Binds
-    @IntoSet
-    @Singleton
-    abstract fun bindFriendRepositorySessionDataCleaner(
-        impl: FriendRepositoryImpl
-    ): SessionDataCleaner
 
     @Binds
     @Singleton

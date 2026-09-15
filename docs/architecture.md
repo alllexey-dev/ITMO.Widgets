@@ -401,6 +401,22 @@ The offer records when it was shown rather than which button closed it, so leavi
 by Back postpones it exactly like `Напомнить позже`. The screen renders the check's
 result passed as arguments; it never repeats the request and has no loading state.
 
+### Friends/public-profile contract preparation
+
+Stages 1–3 of `vibe/friends-public-profile-plan.md` prepare Backend and Core only.
+The future Android social repository requires the updated Core **1.2.0-SNAPSHOT**
+friendship revision and Backend **1.2.0-SNAPSHOT** with explicit accepted
+friendships, profile/lookup endpoints and viewer-scoped pending sport entries.
+Versions remain fixed by the user's 2026-09-15 instruction; matching snapshot
+numbers alone do not prove that these API changes are present.
+
+The new Core replaces `myFriends/addFriend` and body-based removal with the
+profile-based social contract. This Android source and its version catalogue are
+not switched until Stage 4. No new MavenLocal artifact is published here, so the
+current Android dependency is not silently replaced. Backend and Core can be
+verified together with Gradle composite dependency substitution without publishing.
+This source change does not imply a development or production deployment.
+
 ### Dependency injection
 
 `@Binds` with constructor injection is the default; `@Provides` is for types the

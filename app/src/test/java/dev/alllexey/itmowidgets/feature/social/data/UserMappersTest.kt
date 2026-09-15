@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.friendselector.data
+package dev.alllexey.itmowidgets.feature.social.data
 
 import dev.alllexey.itmowidgets.core.model.GroupData
 import dev.alllexey.itmowidgets.core.model.UserCapabilities
