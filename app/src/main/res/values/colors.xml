@@ -1,27 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- Lesson type accents. Named by the type they mark, so a repaint stays honest. -->
+    <color name="lesson_type_lecture">#4984E2</color>
+    <color name="lesson_type_lab">#8A5BE1</color>
+    <color name="lesson_type_practice">#CDA634</color>
+    <color name="lesson_type_assessment">#F14F7B</color>
+    <color name="lesson_type_consultation">#355EDA</color>
+    <color name="lesson_type_sport">#44C614</color>
+    <color name="lesson_type_free">#7A7A7A</color>
+    <color name="lesson_type_default">#FF5C5C5C</color>
+
     <color name="recordbook_passed">#286B39</color>
-    <color name="primary_color">#FF1743BD</color>
-    <color name="primary_variant_color">#3A8AFF</color>
-    <color name="green">#46C118</color>
 
-    <color name="practice_color">#CDA634</color>
-    <color name="lab_color">#8A5BE1</color>
-    <color name="lecture_color">#4984E2</color>
-    <color name="red_lesson_color">#F14F7B</color>
-    <color name="consultation_color">#355EDA</color>
-    <color name="free_sport_color">#44C614</color>
-
-    <color name="red_sport_color">#ED3E6F</color>
-    <color name="blue_sport_color">#3D67DE</color>
     <color name="sport_score_attendance">#345BD1</color>
     <color name="sport_score_bonus">#C93672</color>
 
-    <color name="subtext_color">#FF5C5C5C</color>
-    <color name="subtext_color_lighter">#7A7A7A</color>
-    <color name="free_color">#7A7A7A</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="sport_condition_allowed">#216B3C</color>
+    <color name="sport_condition_waiting">#285EA7</color>
+    <color name="sport_condition_warning">#875200</color>
+    <color name="sport_condition_blocked">#B32635</color>
 
     <!-- App-widget palette for launchers that cannot resolve the activity theme. -->
     <color name="widget_surface">#FFFDFBFF</color>
@@ -30,8 +28,5 @@
     <color name="widget_on_surface_variant">#FF49454F</color>
     <color name="widget_outline_variant">#FFCAC4D0</color>
     <color name="widget_primary">#FF6750A4</color>
-    <color name="sport_condition_allowed">#216B3C</color>
-    <color name="sport_condition_waiting">#285EA7</color>
-    <color name="sport_condition_warning">#875200</color>
-    <color name="sport_condition_blocked">#B32635</color>
+
 </resources>

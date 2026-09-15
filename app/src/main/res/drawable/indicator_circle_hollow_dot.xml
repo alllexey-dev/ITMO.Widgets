@@ -5,7 +5,7 @@
         <shape android:shape="oval">
             <stroke
                 android:width="3.4dp"
-                android:color="@color/subtext_color" />
+                android:color="@color/lesson_type_default" />
             <solid android:color="@android:color/transparent" />
             <size
                 android:width="24dp"
@@ -19,7 +19,7 @@
         android:top="9dp"
         android:bottom="9dp">
         <shape android:shape="oval">
-            <solid android:color="@color/subtext_color" />
+            <solid android:color="@color/lesson_type_default" />
         </shape>
     </item>
 

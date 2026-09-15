@@ -23,7 +23,7 @@
             android:layout_marginEnd="6dp"
             android:contentDescription="@null"
             android:src="@drawable/shape_circle_filled"
-            android:tint="@color/practice_color" />
+            android:tint="@color/lesson_type_practice" />
 
         <TextView
             android:layout_width="0dp"

@@ -3,6 +3,6 @@
     android:shape="oval">
     <stroke
         android:width="2dp"
-        android:color="@color/subtext_color"/>
+        android:color="@color/lesson_type_default"/>
     <solid android:color="@android:color/transparent"/>
 </shape>

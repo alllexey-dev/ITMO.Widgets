@@ -12,10 +12,14 @@ class DesignCardResourcesTest {
 
     private val resources = listOf(File("src/main/res"), File("app/src/main/res"))
         .first { it.isDirectory }
-    private val dimensions = elements("values/design_tokens.xml", "dimen")
+    // Keyed on the resource set, not on which file declares it: a values/ reshuffle is not a regression.
+    private val values = File(resources, "values").listFiles { file -> file.extension == "xml" }
+        .orEmpty()
+        .sortedBy { it.name }
+        .map { "values/${it.name}" }
+    private val dimensions = values.flatMap { elements(it, "dimen") }
         .associate { it.getAttribute("name") to it.textContent.trim() }
-    private val styles = listOf("values/design_styles.xml", "values/styles.xml")
-        .flatMap { elements(it, "style") }
+    private val styles = values.flatMap { elements(it, "style") }
         .associateBy { it.getAttribute("name") }
 
     @Test

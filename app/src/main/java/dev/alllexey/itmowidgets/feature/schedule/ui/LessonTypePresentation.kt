@@ -8,14 +8,14 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 @ColorRes
 fun Lesson.TypeId.colorRes(): Int {
     return when (raw) {
-        -1 -> R.color.free_color
-        1 -> R.color.lecture_color
-        2 -> R.color.lab_color
-        3 -> R.color.practice_color
-        4, 5, 6, 7, 8, 9 -> R.color.red_lesson_color
-        10 -> R.color.consultation_color
-        11 -> R.color.free_sport_color
-        else -> R.color.subtext_color
+        -1 -> R.color.lesson_type_free
+        1 -> R.color.lesson_type_lecture
+        2 -> R.color.lesson_type_lab
+        3 -> R.color.lesson_type_practice
+        4, 5, 6, 7, 8, 9 -> R.color.lesson_type_assessment
+        10 -> R.color.lesson_type_consultation
+        11 -> R.color.lesson_type_sport
+        else -> R.color.lesson_type_default
     }
 }
 

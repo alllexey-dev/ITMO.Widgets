@@ -18,7 +18,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:tabGravity="fill"
         app:tabMode="fixed"
-        app:tabTextAppearance="@style/SportTabTextAppearance" />
+        app:tabTextAppearance="@style/TextAppearance.ItmoWidgets.SportTab" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/sport_view_pager"

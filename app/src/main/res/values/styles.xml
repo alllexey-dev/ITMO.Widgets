@@ -1,27 +1,34 @@
 <resources>
 
-    <style name="Base.AppTheme" parent="Theme.Material3.DynamicColors.DayNight">
-<!--        <item name="colorPrimary">@color/primary_color</item>-->
-        <item name="android:statusBarColor">?android:colorBackground</item>
-        <item name="android:windowDisablePreview">true</item>
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+    <!-- Surface and shape are shared; content padding and list spacing belong to each role. -->
+    <style name="Widget.ItmoWidgets.Card.Content" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerLow</item>
+        <item name="cardCornerRadius">@dimen/design_card_radius_content</item>
+        <item name="cardElevation">@dimen/design_card_elevation</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">0dp</item>
     </style>
 
-    <style name="AppTheme" parent="Base.AppTheme" />
-
-    <style name="FilledButton" parent="Widget.Material3.Button">
+    <style name="Widget.ItmoWidgets.Card.Content.Outlined" parent="Widget.ItmoWidgets.Card.Content">
+        <item name="strokeWidth">@dimen/design_card_stroke</item>
     </style>
 
-    <style name="AlertDialogTheme_FilledButton" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="buttonBarPositiveButtonStyle">@style/FilledButton</item>
+    <!-- The compact recordbook summary keeps its slightly stronger neutral surface and 20 dp shape. -->
+    <style name="Widget.ItmoWidgets.Card.CompactSummary" parent="Widget.ItmoWidgets.Card.Content">
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainer</item>
     </style>
 
-    <style name="SportTabTextAppearance" parent="TextAppearance.Design.Tab">
-        <item name="android:textSize">16sp</item>
-        <item name="textAllCaps">false</item>
+    <style name="Widget.ItmoWidgets.Card.Summary" parent="Widget.ItmoWidgets.Card.Content">
+        <item name="cardCornerRadius">@dimen/design_card_radius_summary</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.Card.ScheduleDay" parent="Widget.ItmoWidgets.Card.Content">
+        <item name="cardCornerRadius">@dimen/design_card_radius_day</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.Card.SettingsGroup" parent="Widget.ItmoWidgets.Card.Content">
+        <item name="cardUseCompatPadding">false</item>
+        <item name="cardPreventCornerOverlap">false</item>
     </style>
 
     <style name="Widget.ItmoWidgets.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
@@ -106,6 +113,63 @@
         <item name="android:layout_marginTop">@dimen/design_spacing_compact</item>
         <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- Empty, error and loading blocks share one vertical rhythm across every screen. -->
+
+    <style name="Widget.ItmoWidgets.ContentState" parent="">
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">@dimen/design_state_padding</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.Icon" parent="">
+        <item name="android:layout_width">@dimen/design_state_icon</item>
+        <item name="android:layout_height">@dimen/design_state_icon</item>
+        <item name="android:contentDescription">@null</item>
+        <item name="tint">?attr/colorPrimary</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.InlineIcon" parent="Widget.ItmoWidgets.ContentState.Icon">
+        <item name="android:layout_width">@dimen/design_state_inline_icon</item>
+        <item name="android:layout_height">@dimen/design_state_inline_icon</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.Title" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/design_spacing_group</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.Description" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/design_spacing_compact</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.Action" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">20dp</item>
+        <item name="android:minHeight">@dimen/design_touch_target</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.ContentState.PrimaryAction" parent="Widget.Material3.Button">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">20dp</item>
+        <item name="android:minHeight">@dimen/design_touch_target</item>
+    </style>
+
+    <style name="TextAppearance.ItmoWidgets.SportTab" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">16sp</item>
+        <item name="textAllCaps">false</item>
     </style>
 
 </resources>

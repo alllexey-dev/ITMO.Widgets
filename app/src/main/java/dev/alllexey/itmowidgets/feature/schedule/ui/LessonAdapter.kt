@@ -205,7 +205,7 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
             start.setTextColor(itemView.context.color.onSurface)
             end.setTextColor(itemView.context.color.onSurfaceVariant)
             timelineDot.renderTimelineMarker(ScheduleTimelineMarker.AUTO_SIGN)
-            typeIndicator.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(itemView.context, R.color.free_sport_color))
+            typeIndicator.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(itemView.context, R.color.lesson_type_sport))
             status.setText(if (booking.isPrediction) R.string.schedule_auto_sign_prediction else R.string.schedule_auto_sign_waiting)
             status.contentDescription = itemView.context.getString(
                 if (booking.isPrediction) R.string.schedule_auto_sign_prediction_description else R.string.schedule_auto_sign_waiting_description
