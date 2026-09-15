@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -64,6 +66,10 @@ class FriendSelectorViewModel @Inject constructor(
         FriendSelectorUiState.Loading
     )
     val uiState: StateFlow<FriendSelectorUiState> = _uiState.asStateFlow()
+
+    /** The own-schedule chip needs the avatar even when the friend list is empty or failed. */
+    val currentUser: StateFlow<UserSummary?> = repository.observeCurrentUser()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private var observeJob: Job? = null
     private var searchJob: Job? = null

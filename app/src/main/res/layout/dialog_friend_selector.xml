@@ -150,7 +150,7 @@
         android:id="@+id/state_container"
         style="@style/Widget.ItmoWidgets.ContentState"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/apply_button"
         app:layout_constraintEnd_toEndOf="parent"

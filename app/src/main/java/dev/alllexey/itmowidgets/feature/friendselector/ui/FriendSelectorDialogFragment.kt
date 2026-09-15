@@ -150,6 +150,11 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
                 }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
+        // The own profile arrives after the list; the chip must not stay generic.
+        viewModel.currentUser
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .onEach { updateRecentSelection() }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     private fun renderLoading() {
@@ -311,17 +316,15 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun updateRecentSelection() {
-        val state = viewModel.uiState.value as? FriendSelectorUiState.Content ?: return
-        val items = (listOfNotNull(pendingFriend) + state.recentFriends)
+        val state = viewModel.uiState.value as? FriendSelectorUiState.Content
+        val items = (listOfNotNull(pendingFriend) + state?.recentFriends.orEmpty())
             .filter { it.sharing.schedule }
             .distinctBy(UserSummary::isu)
             .take(MAX_RECENT_FRIENDS)
-        recentAdapter.submitItems(items, pendingFriend?.isu, state.currentUser)
+        recentAdapter.submitItems(items, pendingFriend?.isu, currentUser())
     }
 
-    private fun currentUser(): UserSummary? {
-        return (viewModel.uiState.value as? FriendSelectorUiState.Content)?.currentUser
-    }
+    private fun currentUser(): UserSummary? = viewModel.currentUser.value
 
     private fun currentScope(): FriendSelectorScope {
         return if (binding.scopeToggle.checkedButtonId == R.id.scope_all) {
