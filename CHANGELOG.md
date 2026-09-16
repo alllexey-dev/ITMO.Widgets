@@ -7,6 +7,9 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
 ### 2026-09-16
 
+- Sport details now offer sign in/out and queue actions in addition to the
+  unchanged card controls, with one-shot routing and deadline revalidation.
+
 - Public profiles now open viewer-scoped friends lists; independent friends
   privacy defaults to ALL and supports FRIENDS / NOBODY. Loading, empty, denied,
   retry and refresh-failure states use the shared social row and state styles.

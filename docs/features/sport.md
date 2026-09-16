@@ -32,6 +32,15 @@ the bar's tone. Start time is the scanning anchor and the only metadata on
 Russian weekday and month names are capitalised by the helpers in
 `SportCardPresentation`, never at the call site.
 
+The details bottom sheet adds a fixed bottom action: sign in, sign out, auto-sign
+or cancel the active queue, following the same offer policy as the card. Existing
+card buttons and menus remain unchanged. Read-only details and unavailable offers
+show no action. Selection dismisses the sheet and routes a one-shot Fragment
+Result to its owning sport tab, which resolves the current item and preserves
+existing confirmations, custom-services gates and busy protection. Time-dependent
+offers are rechecked on tap; recreation preserves the target and cannot duplicate
+a submitted result.
+
 The details bottom sheet is its own layout. It shows the full title; an icon
 rail with date and duration, teacher and location; registration state; queue
 metrics and history; conditions; comment; friends on the lesson. Rail icons are a

@@ -8,6 +8,8 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrat
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
 import dev.alllexey.itmowidgets.feature.sport.ui.common.fullDateText
 import dev.alllexey.itmowidgets.feature.sport.ui.common.toDetailsArgs
+import dev.alllexey.itmowidgets.feature.sport.ui.common.bookingAction
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import java.io.*
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -16,6 +18,29 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class SportSessionPresentationTest {
+    @Test fun `details expose the same lesson offer and only existing booking cancellation`() {
+        val lesson = SportCardFixtures.lesson()
+        val now = lesson.start.minusHours(2)
+        assertEquals(lesson.lessonId, lesson.toDetailsArgs().lessonId)
+        assertEquals(SportBookingAction.SIGN, lesson.toDetailsArgs().bookingAction(now))
+        assertEquals(SportBookingAction.NONE, lesson.toDetailsArgs().bookingAction(lesson.start))
+        assertEquals(SportBookingAction.CANCEL, lesson.copy(signed = true).toDetailsArgs().bookingAction(now))
+        assertEquals(SportBookingAction.AUTO, lesson.copy(available = 0, canSignIn = false,
+            unavailableReasons = listOf(UnavailableReason.Full)).toDetailsArgs().bookingAction(now))
+        assertEquals(SportBookingAction.CANCEL_AUTO, lesson.copy(available = 0, canSignIn = false,
+            signEntry = SportCardFixtures.entry()).toDetailsArgs().bookingAction(now))
+        val booking = SportCardFixtures.booking()
+        assertEquals(SportBookingAction.CANCEL, booking.toDetailsArgs().bookingAction(now))
+        assertEquals(SportBookingAction.NONE, booking.copy(signed = false, signEntry = null).toDetailsArgs().bookingAction(now))
+        for (status in SportQueueEntryStatus.entries) {
+            val action = booking.copy(signed = false, signEntry = SportCardFixtures.entry(status)).toDetailsArgs().bookingAction(now)
+            assertEquals(if (status in setOf(SportQueueEntryStatus.WAITING, SportQueueEntryStatus.NOTIFIED))
+                SportBookingAction.CANCEL_AUTO else SportBookingAction.NONE, action)
+        }
+        assertEquals(SportBookingAction.NONE, booking.copy(signed = false,
+            signEntry = SportCardFixtures.entry().copy(isCancelled = true)).toDetailsArgs().bookingAction(now))
+    }
+
     @Test fun `every queue state renders without stale recycled status`() {
         val expected = listOf(SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED,
             SportRegistrationStatus.FAILED, SportRegistrationStatus.AUTO_SIGNED, SportRegistrationStatus.EXPIRED)

@@ -66,6 +66,15 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
             }
         }, false)
         super.onCreate(savedInstanceState)
+        supportFragmentManager.setFragmentResultListener(SportCommonDetailsBottomSheet.ACTION_REQUEST, this) { _, result ->
+            action(when (result.getString(SportCommonDetailsBottomSheet.RESULT_ACTION)) {
+                "SIGN" -> "sign"
+                "CANCEL" -> "unsign"
+                "AUTO" -> "auto"
+                "CANCEL_AUTO" -> "unauto"
+                else -> error("Unexpected details action")
+            })
+        }
         appearance.colorSeed?.let {
             DynamicColors.applyToActivityIfAvailable(this, DynamicColorsOptions.Builder().setContentBasedSource(it).build())
         }
@@ -102,7 +111,7 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
     }
 
     fun showDetails(item: SportCommon) {
-        SportCommonDetailsBottomSheet.newInstance(item).show(supportFragmentManager, SportCommonDetailsBottomSheet.TAG)
+        SportCommonDetailsBottomSheet.newInstance(item, actionsEnabled = true).show(supportFragmentManager, SportCommonDetailsBottomSheet.TAG)
     }
 
     private fun action(name: String) { actionCount++; lastAction = name }

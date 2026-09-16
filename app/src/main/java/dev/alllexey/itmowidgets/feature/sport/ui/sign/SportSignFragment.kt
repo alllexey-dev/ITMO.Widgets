@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.sign
 
 import android.os.Bundle
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -87,6 +89,24 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        childFragmentManager.setFragmentResultListener(SportCommonDetailsBottomSheet.ACTION_REQUEST, viewLifecycleOwner) { _, result ->
+            val current = lessonsAdapter.currentList.firstOrNull {
+                it.lesson.lessonId == result.getLong(SportCommonDetailsBottomSheet.RESULT_LESSON_ID)
+            } ?: return@setFragmentResultListener
+            if (current.isBusy) return@setFragmentResultListener
+            val action = current.lesson.bookingConditions().evaluate(timeProvider.now()).action
+            if (action.name != result.getString(SportCommonDetailsBottomSheet.RESULT_ACTION)) {
+                showFeedback(R.string.sport_lesson_unavailable)
+                return@setFragmentResultListener
+            }
+            when (action) {
+                SportBookingAction.SIGN -> onSignUpClick(current.lesson)
+                SportBookingAction.CANCEL -> onUnSignClick(current.lesson)
+                SportBookingAction.AUTO -> onAutoSignClick(current.lesson)
+                SportBookingAction.CANCEL_AUTO -> onUnAutoSignClick(current.lesson)
+                SportBookingAction.NONE -> Unit
+            }
+        }
         setupRecyclerView()
         binding.swipeRefreshLayout.applyAppRefreshColors()
         setupUIListeners()
@@ -380,8 +400,9 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     }
 
     override fun onLessonClick(lesson: SportLesson) {
-        SportCommonDetailsBottomSheet.newInstance(lesson)
-            .show(parentFragmentManager, SportCommonDetailsBottomSheet.TAG)
+        SportCommonDetailsBottomSheet.newInstance(lesson, actionsEnabled = true,
+            busy = lessonsAdapter.currentList.any { it.lesson.lessonId == lesson.lessonId && it.isBusy })
+            .show(childFragmentManager, SportCommonDetailsBottomSheet.TAG)
     }
 
     private fun handleTemplateAction(lesson: SportLesson): Boolean {

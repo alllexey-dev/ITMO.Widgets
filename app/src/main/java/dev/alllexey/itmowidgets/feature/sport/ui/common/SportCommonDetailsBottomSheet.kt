@@ -32,6 +32,7 @@ import dev.alllexey.itmowidgets.databinding.ItemSportDetailFactBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportHistoryFactBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportConditionBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingObstacle
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportOccupancy
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
@@ -48,6 +49,8 @@ import javax.inject.Inject
 class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     private var _binding: FragmentSportCommonDetailsBinding? = null
     private val binding get() = _binding!!
+
+    private var actionSubmitted = false
 
     @Inject lateinit var timeProvider: AcademicTimeProvider
 
@@ -74,6 +77,8 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
+        actionSubmitted = savedInstanceState?.getBoolean(STATE_SUBMITTED) == true
+        bindAction()
         toolbar.setNavigationOnClickListener { dismiss() }
         sectionName.text = item.sectionName
         sectionName.setTextColor(requireContext().color.onSurface)
@@ -96,6 +101,39 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         commentCard.isVisible = !item.comment.isNullOrBlank()
         comment.text = item.comment
         bindFriends()
+    }
+
+    private fun bindAction(): Unit = with(binding) {
+        val action = item.bookingAction(timeProvider.now())
+        bookingAction.isVisible = requireArguments().getBoolean(ARG_ACTIONS) && action != SportBookingAction.NONE
+        bookingAction.isEnabled = !actionSubmitted && !requireArguments().getBoolean(ARG_BUSY)
+        bookingAction.setText(when (action) {
+            SportBookingAction.SIGN -> R.string.sport_lesson_sign_up
+            SportBookingAction.CANCEL -> R.string.sport_lesson_sign_out
+            SportBookingAction.AUTO -> R.string.sport_auto_sign_title
+            SportBookingAction.CANCEL_AUTO -> R.string.sport_card_cancel_auto
+            SportBookingAction.NONE -> R.string.sport_lesson_unavailable
+        })
+        bookingAction.setOnClickListener {
+            if (actionSubmitted || requireArguments().getBoolean(ARG_BUSY)) return@setOnClickListener
+            // Time can move on while details are open. Never dispatch the earlier offer.
+            if (item.bookingAction(timeProvider.now()) != action) {
+                bindAction()
+                bindConditions()
+                return@setOnClickListener
+            }
+            actionSubmitted = true
+            bookingAction.isEnabled = false
+            parentFragmentManager.setFragmentResult(ACTION_REQUEST, bundleOf(
+                RESULT_LESSON_ID to item.lessonId, RESULT_ACTION to action.name
+            ))
+            dismiss()
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(STATE_SUBMITTED, actionSubmitted)
+        super.onSaveInstanceState(outState)
     }
 
     private fun bindRegistration() = with(binding) {
@@ -274,10 +312,20 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     companion object {
         const val TAG = "SportCommonDetailsBottomSheet"
         private const val ARG_COMMON = "arg_sport_common"
+        private const val ARG_ACTIONS = "arg_sport_actions"
+        private const val ARG_BUSY = "arg_sport_busy"
+        private const val STATE_SUBMITTED = "sport_action_submitted"
+        const val ACTION_REQUEST = "sport_details_action"
+        const val RESULT_LESSON_ID = "lesson_id"
+        const val RESULT_ACTION = "action"
 
-        fun newInstance(item: SportCommon): SportCommonDetailsBottomSheet =
+        fun newInstance(item: SportCommon, actionsEnabled: Boolean = false, busy: Boolean = false): SportCommonDetailsBottomSheet =
             SportCommonDetailsBottomSheet().apply {
-                arguments = Bundle().apply { putSerializable(ARG_COMMON, item.toDetailsArgs()) }
+                arguments = Bundle().apply {
+                    putSerializable(ARG_COMMON, item.toDetailsArgs())
+                    putBoolean(ARG_ACTIONS, actionsEnabled)
+                    putBoolean(ARG_BUSY, busy)
+                }
             }
 
         @Suppress("DEPRECATION", "UNCHECKED_CAST")

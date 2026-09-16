@@ -3,6 +3,9 @@ package dev.alllexey.itmowidgets.feature.sport.ui.my
 import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.os.Bundle
+import dev.alllexey.itmowidgets.feature.sport.ui.common.bookingAction
+import dev.alllexey.itmowidgets.feature.sport.ui.common.toDetailsArgs
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -88,6 +91,15 @@ class SportMyFragment : Fragment(), SportBookingListener {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        childFragmentManager.setFragmentResultListener(SportCommonDetailsBottomSheet.ACTION_REQUEST, viewLifecycleOwner) { _, result ->
+            val current = adapter.currentList.firstOrNull {
+                it.lessonId == result.getLong(SportCommonDetailsBottomSheet.RESULT_LESSON_ID)
+            } ?: return@setFragmentResultListener
+            val action = current.toDetailsArgs().bookingAction(timeProvider.now())
+            if (action != SportBookingAction.NONE && action.name == result.getString(SportCommonDetailsBottomSheet.RESULT_ACTION)) {
+                onUnSign(current)
+            }
+        }
 
         setupUI()
         setupRecycler()
@@ -384,8 +396,8 @@ class SportMyFragment : Fragment(), SportBookingListener {
     // endregion
 
     override fun onBookingClick(booking: SportBooking) {
-        SportCommonDetailsBottomSheet.newInstance(booking)
-            .show(parentFragmentManager, SportCommonDetailsBottomSheet.TAG)
+        SportCommonDetailsBottomSheet.newInstance(booking, actionsEnabled = true)
+            .show(childFragmentManager, SportCommonDetailsBottomSheet.TAG)
     }
 
     override fun onUnSign(booking: SportBooking) {

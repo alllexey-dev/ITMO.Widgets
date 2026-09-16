@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import dev.alllexey.itmowidgets.feature.sport.ui.SportCardsPreviewActivity
@@ -167,6 +168,85 @@ class SportCardsVisualTest {
                     sheet(it).dismiss()
                 }
                 settle()
+            }
+        }
+    }
+
+    @Test fun detailsActionsAreAdditiveDispatchOnceAndSurviveRecreation() {
+        val lesson = SportCardFixtures.lesson()
+        val cases: List<Triple<SportCommon, Int, String>> = listOf(
+            Triple(lesson, R.string.sport_lesson_sign_up, "sign"),
+            Triple(lesson.copy(signed = true), R.string.sport_lesson_sign_out, "unsign"),
+            Triple(lesson.copy(available = 0, canSignIn = false, unavailableReasons = listOf(UnavailableReason.Full)), R.string.sport_auto_sign_title, "auto"),
+            Triple(lesson.copy(available = 0, canSignIn = false, signEntry = SportCardFixtures.entry()), R.string.sport_card_cancel_auto, "unauto"),
+            Triple(SportCardFixtures.booking(), R.string.sport_lesson_sign_out, "unsign"),
+            Triple(SportCardFixtures.booking().copy(signed = false, signEntry = SportCardFixtures.entry()), R.string.sport_card_cancel_auto, "unauto")
+        )
+        preview(SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario ->
+            scenario.onActivity { it.showLessons(listOf(SportLessonItem(lesson))) }
+            settle()
+            scenario.onActivity {
+                assertTrue(it.findViewById<View>(R.id.sign_up_button).isShown)
+                assertTrue(it.findViewById<View>(R.id.sign_up_button).isEnabled)
+            }
+            cases.forEach { (item, label, expected) ->
+                scenario.onActivity { it.showDetails(item) }
+                settle()
+                scenario.onActivity { activity ->
+                    val button = sheet(activity).requireView().findViewById<MaterialButton>(R.id.booking_action)
+                    assertTrue(button.isShown)
+                    assertEquals(activity.getString(label), button.text.toString())
+                    assertTrue(button.height >= 48 * activity.resources.displayMetrics.density - 1)
+                    val before = activity.actionCount
+                    button.performClick()
+                    button.performClick()
+                    assertEquals(before + 1, activity.actionCount)
+                    assertEquals(expected, activity.lastAction)
+                }
+                settle()
+            }
+            scenario.onActivity { it.showDetails(lesson) }
+            settle()
+            scenario.recreate()
+            settle()
+            scenario.onActivity {
+                sheet(it).requireView().findViewById<View>(R.id.booking_action).performClick()
+                assertEquals("sign", it.lastAction)
+                assertEquals(1, it.actionCount)
+            }
+        }
+    }
+
+    @Test fun detailsRespectReadOnlyBusyAndChangedDeadline() {
+        preview(SportCardsPreviewActivity.Appearance(dark = true)) { scenario ->
+            val lesson = SportCardFixtures.lesson()
+            for ((enabled, busy) in listOf(false to false, true to true)) {
+                scenario.onActivity {
+                    SportCommonDetailsBottomSheet.newInstance(lesson, actionsEnabled = enabled, busy = busy)
+                        .show(it.supportFragmentManager, SportCommonDetailsBottomSheet.TAG)
+                }
+                settle()
+                scenario.onActivity {
+                    val button = sheet(it).requireView().findViewById<View>(R.id.booking_action)
+                    assertEquals(if (enabled) View.VISIBLE else View.GONE, button.visibility)
+                    if (busy) { assertFalse(button.isEnabled); button.performClick() }
+                    assertEquals(0, it.actionCount)
+                    sheet(it).dismiss()
+                }
+                settle()
+            }
+            scenario.onActivity { it.showDetails(lesson) }
+            settle()
+            scenario.onActivity {
+                val details = sheet(it) as SportCommonDetailsBottomSheet
+                details.timeProvider = object : AcademicTimeProvider {
+                    override val zoneId = ZoneId.of("Europe/Moscow")
+                    override fun today() = lesson.start.toLocalDate()
+                    override fun now() = lesson.start
+                }
+                details.requireView().findViewById<View>(R.id.booking_action).performClick()
+                assertEquals(View.GONE, details.requireView().findViewById<View>(R.id.booking_action).visibility)
+                assertEquals(0, it.actionCount)
             }
         }
     }

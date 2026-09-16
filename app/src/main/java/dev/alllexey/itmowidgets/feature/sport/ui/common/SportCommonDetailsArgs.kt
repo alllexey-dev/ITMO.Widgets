@@ -9,8 +9,11 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingCo
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
 import java.io.Serializable
+import java.time.OffsetDateTime
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 
 data class SportCommonDetailsArgs(
+    val lessonId: Long,
     val sectionName: String,
     val start: String,
     val end: String,
@@ -56,6 +59,7 @@ data class SportFriendDetailsArgs(
 fun SportCommon.toDetailsArgs(): SportCommonDetailsArgs {
     val lesson = this as? SportLesson
     return SportCommonDetailsArgs(
+        lessonId = lessonId,
         sectionName = sectionName.raw,
         start = start.toString(),
         end = end.toString(),
@@ -105,3 +109,11 @@ private fun SportQueueEntry.toDetailsArgs(): SportQueueEntryArgs {
         cancelledAt = cancelledAt?.toString()
     )
 }
+
+/** Booking-only responses can cancel an existing registration, never invent a new offer. */
+fun SportCommonDetailsArgs.bookingAction(now: OffsetDateTime): SportBookingAction =
+    bookingConditions?.evaluate(now)?.action ?: when {
+        signed -> SportBookingAction.CANCEL
+        registrationStatus in setOf(SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED) -> SportBookingAction.CANCEL_AUTO
+        else -> SportBookingAction.NONE
+    }
