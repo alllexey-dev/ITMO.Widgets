@@ -7,6 +7,9 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
 ### 2026-09-16
 
+- Home QR FAB opens a full-screen pass with cached loading, refresh/retry and
+  active cache-expiry handling; widget fallback semantics are unchanged.
+
 - Sport details now offer sign in/out and queue actions in addition to the
   unchanged card controls, with one-shot routing and deadline revalidation.
 

@@ -195,14 +195,14 @@ relying on review.
 ## Known gaps
 
 Toward v2.0.1 parity: authentication and onboarding polish, the three widgets'
-boot receiver, the QR screen, error diagnostics. The home tab is a stub.
+boot receiver, error diagnostics. The home feed is a stub with a QR quick action.
 
 Structural debt, in priority order:
 
 1. Stale caches are dropped, not shown: the schedule cache has a 24-hour TTL.
 2. Cache write failures are swallowed silently.
 3. `MyItmoStorage` does Keystore crypto on the calling thread.
-4. QR expiry is passive; a displayed code could outlive its TTL.
+4. Widget QR expiry is passive; the full-screen QR pass actively hides expired codes.
 5. The bottom bar does not hide on contextual screens.
 6. The profile tab cannot show live privacy values or the BARS session state
    because those live inside other features; a `core` contract is needed.

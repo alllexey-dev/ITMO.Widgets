@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.qr.data.repository
 
+import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSource
@@ -22,6 +23,7 @@ class QrCodeRepositoryImplTest {
         val result = repository.refreshQrHex(force = false)
 
         assertEquals(AppResult.Success(Unit), result)
+        assertEquals(QrCodeSnapshot("cached", 3_600_000L), repository.currentQr())
         assertEquals(0, remote.requestCount)
         assertEquals(emptyList<String>(), local.savedValues)
     }
@@ -57,6 +59,7 @@ class QrCodeRepositoryImplTest {
         val local = FakeLocalDataSource(cached = "last-working-code", expired = true)
         val repository = QrCodeRepositoryImpl(local, FakeRemoteDataSource())
 
+        assertEquals(null, repository.currentQr())
         assertEquals(null, repository.currentQrHex())
         assertEquals(
             "last-working-code",
@@ -70,6 +73,8 @@ class QrCodeRepositoryImplTest {
     ) : QrCodeLocalDataSource {
 
         val savedValues = mutableListOf<String>()
+
+        override fun snapshot() = get(false)?.let { QrCodeSnapshot(it, 3_600_000L) }
 
         override fun observe(): Flow<String> = flowOf(cached.orEmpty())
 

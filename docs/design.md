@@ -111,7 +111,7 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
   geometry and ignore a second tap.
 - Score rings and capacity bars are not loading indicators.
 - Settings root and offline pages render persisted values immediately; only the
-  privacy page has a network state, visible at least 300 ms. QR previews open
+  privacy page has a network state, visible at least 300 ms. Settings QR previews open
   ready or with an error, never with an intermediate spinner.
 
 ## Empty, error and feedback states
@@ -158,7 +158,8 @@ the geometry.
 - Settings and the profile use quiet group cards with stable row updates.
 - Widgets and the QR pass keep their own launcher-adapted palette and readability
   rules; sign-in branding is a separate exception.
-- The home tab is a placeholder and must not promise a working refresh.
+- The home feed is a placeholder and must not promise a working refresh; quick
+  actions stay in a separate bottom-end FAB group.
 
 ## Shared components
 

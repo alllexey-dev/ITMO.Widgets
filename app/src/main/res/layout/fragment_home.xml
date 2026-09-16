@@ -1,21 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.ItmoWidgets.ContentState"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+    <LinearLayout
+        style="@style/Widget.ItmoWidgets.ContentState"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="104dp">
 
-    <ImageView
-        style="@style/Widget.ItmoWidgets.ContentState.Icon"
-        android:contentDescription="@null"
-        android:src="@drawable/ic_home" />
+        <ImageView
+            style="@style/Widget.ItmoWidgets.ContentState.Icon"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_home" />
 
-    <TextView
-        style="@style/Widget.ItmoWidgets.ContentState.Title"
-        android:text="@string/home_placeholder_title" />
+        <TextView
+            style="@style/Widget.ItmoWidgets.ContentState.Title"
+            android:text="@string/home_placeholder_title" />
 
-    <TextView
-        style="@style/Widget.ItmoWidgets.ContentState.Description"
-        android:text="@string/home_placeholder_description" />
+        <TextView
+            style="@style/Widget.ItmoWidgets.ContentState.Description"
+            android:text="@string/home_placeholder_description" />
 
-</LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/quick_actions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:gravity="end"
+        android:orientation="vertical">
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/qr_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/home_open_qr"
+            android:text="@string/qr_pass_title"
+            app:icon="@drawable/ic_qr_code" />
+    </LinearLayout>
+</FrameLayout>

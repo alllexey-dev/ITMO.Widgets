@@ -3,6 +3,14 @@ package dev.alllexey.itmowidgets.app
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
+import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
+import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
+import dev.alllexey.itmowidgets.feature.qr.ui.QrCodeFragment
+import kotlinx.coroutines.flow.flowOf
 import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
@@ -78,6 +86,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         @Volatile var friendsResult: AppResult<List<UserProfile>> = AppResult.Success(emptyList())
         @Volatile var friendsDelayMs = 0L
         @Volatile var friendsOpen = true
+        @Volatile var qrCode: QrCodeSnapshot? = QrCodeSnapshot("ITMO-TEST", 3_600_000)
+        @Volatile var qrRefreshResult: AppResult<Unit> = AppResult.Success(Unit)
+        @Volatile var qrDelayMs = 0L
         const val LONG_NAME = "Александра Константиновна Константинопольская"
     }
 
@@ -94,6 +105,24 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, state: Bundle?) {
+                if (f is QrCodeFragment) {
+                    ViewModelProvider(f, object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = QrCodeViewModel(
+                            object : QrCodeRepository {
+                                override suspend fun currentQr() = qrCode
+                                override suspend fun currentQrHex(allowExpired: Boolean) = qrCode?.hex
+                                override fun observeQrHex() = flowOf(qrCode?.hex.orEmpty())
+                                override suspend fun refreshQrHex(force: Boolean): AppResult<Unit> {
+                                    delay(qrDelayMs)
+                                    return qrRefreshResult
+                                }
+                                override fun clearCache() = Unit
+                            }, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+                        ) as T
+                    })[QrCodeViewModel::class.java]
+                    return
+                }
                 if (f is UserProfileFragment || f is UserFriendsFragment) {
                     val arguments = SavedStateHandle(mapOf(
                         UserScreenArgs.ISU to f.requireArguments().getInt(UserScreenArgs.ISU),

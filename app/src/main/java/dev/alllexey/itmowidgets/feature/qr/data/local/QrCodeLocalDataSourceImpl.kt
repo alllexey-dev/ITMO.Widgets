@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.qr.data.local
 
 import android.content.Context
+import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.time.WallClock
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +36,11 @@ class QrCodeLocalDataSourceImpl @Inject constructor(
         }
     }
 
+    override fun snapshot(): QrCodeSnapshot? {
+        val entry = _flow.value ?: return null
+        return if (isExpired(entry)) null else QrCodeSnapshot(entry.hex, entry.timestamp + QR_CACHE_EXPIRATION_MS)
+    }
+
     override fun get(allowExpired: Boolean): String? {
         val entry = _flow.value ?: return null
         return if (allowExpired || !isExpired(entry)) entry.hex else null
@@ -58,7 +64,7 @@ class QrCodeLocalDataSourceImpl @Inject constructor(
     }
 
     internal fun isExpired(entry: QrCacheEntry): Boolean {
-        return clock.millis() - entry.timestamp > QR_CACHE_EXPIRATION_MS
+        return clock.millis() - entry.timestamp >= QR_CACHE_EXPIRATION_MS
     }
 
     private fun serialize(entry: QrCacheEntry): String {

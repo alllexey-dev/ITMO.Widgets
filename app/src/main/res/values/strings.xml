@@ -614,4 +614,11 @@
     <string name="user_friends_hidden_title">Список друзей скрыт</string>
     <string name="user_friends_hidden_description">Пользователь ограничил доступ к списку друзей</string>
     <string name="user_friends_refresh">Обновить</string>
+    <string name="home_open_qr">Открыть QR-пропуск</string>
+    <string name="qr_pass_title">QR-пропуск</string>
+    <string name="qr_pass_description">Покажите код считывателю на входе в корпус</string>
+    <string name="qr_pass_image_description">QR-код пропуска</string>
+    <string name="qr_pass_refresh">Обновить QR-код</string>
+    <string name="qr_pass_empty_title">QR-код пока недоступен</string>
+    <string name="qr_pass_empty_description">Попробуйте обновить пропуск через MyITMO</string>
 </resources>

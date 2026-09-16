@@ -17,6 +17,8 @@ class QrCodeRepositoryImpl @Inject constructor(
     private val remote: QrCodeRemoteDataSource
 ) : QrCodeRepository, SessionDataCleaner {
 
+    override suspend fun currentQr() = withContext(Dispatchers.IO) { local.snapshot() }
+
     override fun observeQrHex(): Flow<String> {
         return local.observe()
     }

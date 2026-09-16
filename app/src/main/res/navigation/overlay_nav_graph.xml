@@ -93,4 +93,10 @@
             app:argType="string" />
     </fragment>
 
+    <fragment
+        android:id="@+id/qr_pass"
+        android:name="dev.alllexey.itmowidgets.feature.qr.ui.QrCodeFragment"
+        android:label="@string/title_qr"
+        tools:layout="@layout/fragment_qr_code" />
+
 </navigation>
