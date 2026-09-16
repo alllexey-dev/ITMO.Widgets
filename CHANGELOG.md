@@ -6,6 +6,9 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ## Unreleased (2.1-SNAPSHOT)
 
 ### 2026-09-16
+- Profile: notifications and version rows removed (both remain in settings);
+  compact GitHub and Telegram buttons with logos above sign-out, Telegram via
+  `tg://` deep link with a web fallback.
 
 - Split compact and full schedule-widget settings into independent pages, previews
   and preference keys, preserving existing choices. Early switching is compact-only;

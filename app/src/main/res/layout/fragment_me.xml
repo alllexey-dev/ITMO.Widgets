@@ -327,92 +327,6 @@
                 </LinearLayout>
 
                 <View
-                    style="@style/Widget.ItmoWidgets.CompactSettingsDivider"
-                    android:layout_marginStart="56dp" />
-
-                <LinearLayout
-                    android:id="@+id/notifications_row"
-                    style="@style/Widget.ItmoWidgets.CompactSettingsRow"
-                    android:background="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="16dp"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_notification"
-                        app:tint="?attr/colorOnSurfaceVariant" />
-
-                    <LinearLayout style="@style/Widget.ItmoWidgets.CompactSettingsRowText">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/me_notifications_title"
-                            android:textAppearance="?attr/textAppearanceBodyLarge"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <TextView
-                            android:id="@+id/notifications_description"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:textAppearance="?attr/textAppearanceBodyMedium"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            tools:text="Разрешены в Android" />
-
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_chevron_right"
-                        app:tint="?attr/colorOnSurfaceVariant" />
-
-                </LinearLayout>
-
-                <View
-                    style="@style/Widget.ItmoWidgets.CompactSettingsDivider"
-                    android:layout_marginStart="56dp" />
-
-                <LinearLayout
-                    android:id="@+id/version_row"
-                    style="@style/Widget.ItmoWidgets.CompactSettingsRow">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="16dp"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_info"
-                        app:tint="?attr/colorOnSurfaceVariant" />
-
-                    <LinearLayout style="@style/Widget.ItmoWidgets.CompactSettingsRowText">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/me_version_title"
-                            android:textAppearance="?attr/textAppearanceBodyLarge"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <TextView
-                            android:id="@+id/version_value"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:textAppearance="?attr/textAppearanceBodyMedium"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            tools:text="2.1.0" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <View
                     android:id="@+id/debug_divider"
                     style="@style/Widget.ItmoWidgets.CompactSettingsDivider"
                     android:layout_marginStart="56dp"
@@ -455,6 +369,30 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/github_button"
+                style="@style/Widget.ItmoWidgets.ProjectLink"
+                android:contentDescription="@string/me_github_accessibility"
+                android:text="@string/me_github"
+                app:icon="@drawable/ic_github" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/telegram_button"
+                style="@style/Widget.ItmoWidgets.ProjectLink"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/me_telegram_accessibility"
+                android:text="@string/me_telegram"
+                app:icon="@drawable/ic_telegram" />
+
+        </LinearLayout>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/sign_out_row"
             style="@style/Widget.Material3.Button.TextButton"
@@ -467,6 +405,7 @@
             android:textColor="?attr/colorOnSurfaceVariant"
             app:icon="@drawable/ic_logout"
             app:iconTint="?attr/colorOnSurfaceVariant" />
+
 
     </LinearLayout>
 

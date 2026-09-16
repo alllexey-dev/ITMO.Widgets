@@ -509,8 +509,14 @@
     <string name="me_services_disabled_description">Друзья, заявки и приватность появятся после подключения</string>
     <string name="me_privacy_title">Приватность</string>
     <string name="me_privacy_description">Кто видит расписание и спорт</string>
-    <string name="me_notifications_title">Уведомления</string>
-    <string name="me_version_title">Версия</string>
+    <string name="me_github">GitHub</string>
+    <string name="me_github_accessibility">Открыть проект на GitHub</string>
+    <string name="me_telegram">Telegram</string>
+    <string name="me_telegram_accessibility">Открыть канал @itmowidgets в Telegram</string>
+    <string name="link_open_failed">Нет приложения, чтобы открыть ссылку</string>
+    <string name="project_github_url" translatable="false">https://github.com/alllexey-dev/ITMO.Widgets</string>
+    <string name="project_telegram_url" translatable="false">https://t.me/itmowidgets</string>
+    <string name="project_telegram_deeplink" translatable="false">tg://resolve?domain=itmowidgets</string>
     <string name="me_group_format">%1$s • %2$d курс • %3$s</string>
 
     <!-- Friends screen -->

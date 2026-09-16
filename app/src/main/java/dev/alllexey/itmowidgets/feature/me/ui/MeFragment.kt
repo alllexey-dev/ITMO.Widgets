@@ -1,12 +1,12 @@
 package dev.alllexey.itmowidgets.feature.me.ui
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.app.NotificationManagerCompat
+import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
@@ -15,6 +15,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
@@ -48,7 +49,6 @@ class MeFragment : Fragment() {
 
         binding.debugToolsRow.isVisible = BuildConfig.DEBUG
         binding.debugDivider.isVisible = BuildConfig.DEBUG
-        binding.versionValue.text = BuildConfig.VERSION_NAME
         // Bind cached identity before the first frame, including activity recreation.
         render(viewModel.uiState.value)
 
@@ -58,7 +58,6 @@ class MeFragment : Fragment() {
             binding.privacyRow,
             binding.servicesDisabledRow,
             binding.settingsRow,
-            binding.notificationsRow,
             binding.debugToolsRow
         ).forEach { ViewCompat.setScreenReaderFocusable(it, true) }
 
@@ -69,9 +68,13 @@ class MeFragment : Fragment() {
         }
         binding.servicesDisabledRow.setOnClickListener { openScreen(AppScreen.SETTINGS) }
         binding.settingsRow.setOnClickListener { openScreen(AppScreen.SETTINGS) }
-        binding.notificationsRow.setOnClickListener { openNotificationSettings() }
         binding.debugToolsRow.setOnClickListener { openScreen(AppScreen.DEBUG_TOOLS) }
         binding.signOutRow.setOnClickListener { showSignOutConfirmation() }
+        binding.githubButton.setOnClickListener { openLink(R.string.project_github_url) }
+        // The native client handles tg:// itself; the web page is only a fallback.
+        binding.telegramButton.setOnClickListener {
+            openLink(R.string.project_telegram_deeplink, R.string.project_telegram_url)
+        }
 
         viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
@@ -83,7 +86,6 @@ class MeFragment : Fragment() {
         super.onStart()
         // Returning from a contextual screen may have changed friends or requests.
         viewModel.refresh()
-        renderNotifications()
     }
 
     override fun onDestroyView() {
@@ -95,18 +97,16 @@ class MeFragment : Fragment() {
         MeRenderer.render(binding, state)
     }
 
-    private fun renderNotifications() {
-        val enabled = NotificationManagerCompat.from(requireContext()).areNotificationsEnabled()
-        binding.notificationsDescription.setText(
-            if (enabled) R.string.settings_notifications_allowed else R.string.settings_notifications_blocked
-        )
-    }
-
-    private fun openNotificationSettings() {
-        startActivity(
-            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                .putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
-        )
+    private fun openLink(vararg urlResources: Int) {
+        for (urlRes in urlResources) {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, getString(urlRes).toUri()))
+                return
+            } catch (_: ActivityNotFoundException) {
+                continue
+            }
+        }
+        Snackbar.make(binding.root, R.string.link_open_failed, Snackbar.LENGTH_LONG).show()
     }
 
     private fun showSignOutConfirmation() {

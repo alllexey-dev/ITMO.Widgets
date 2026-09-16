@@ -29,8 +29,11 @@ Header with avatar, name, study group from Backend and ISU. A `Друзья` car
 with the friends count and an incoming-requests badge, `Найти людей` and
 `Приватность` rows (the latter opens the settings privacy page); when services
 are off, one row explains it and opens settings. An `Приложение` card holds
-settings, notifications state, version and debug tools. The tab refreshes social
-data on start and when services are re-enabled.
+settings and debug tools; notification state and the version live in settings.
+Above sign-out, two compact tonal buttons with logos open the GitHub repository
+and the `@itmowidgets` Telegram channel. Telegram tries the `tg://` deep link
+first and falls back to the web page. The tab refreshes social data on start
+and when services are re-enabled.
 
 ## Friends screen (`feature/social`, overlay `FRIENDS`)
 
