@@ -1,8 +1,9 @@
 # 0004 Independent privacy audiences without reciprocity
 
-**Decision.** Schedule and sport each have an owner-chosen audience: `ALL`
-(any authenticated user), `FRIENDS` (accepted mutual friends, the default) or
-`NOBODY`. Name, group and ISU are always visible. The viewer's own audiences do
+**Decision.** Schedule, sport and friends each have an owner-chosen audience: `ALL`
+(any authenticated user), `FRIENDS` (accepted mutual friends) or
+`NOBODY`. Schedule and sport default to `FRIENDS`; friends default to `ALL` for new and
+existing accounts, as explicitly chosen for this feature. Name, group and ISU are always visible. The viewer's own audiences do
 not restrict what the viewer can see.
 
 **Why.** Identity is already public through official university services, so

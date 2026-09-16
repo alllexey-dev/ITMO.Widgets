@@ -6,7 +6,7 @@ import androidx.navigation.fragment.findNavController
 
 enum class AppScreen {
     SETTINGS, DEBUG_TOOLS, RECORDBOOK_SUBJECT, APP_UPDATE,
-    FRIENDS, USER_SEARCH, USER_PROFILE, USER_SCHEDULE, USER_SPORT
+    FRIENDS, USER_FRIENDS, USER_SEARCH, USER_PROFILE, USER_SCHEDULE, USER_SPORT
 }
 
 /** Contextual screens belong to the transient overlay stack, never to a bottom tab's history. */

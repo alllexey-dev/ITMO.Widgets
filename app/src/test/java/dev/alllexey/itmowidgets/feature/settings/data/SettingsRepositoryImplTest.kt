@@ -250,6 +250,24 @@ class SettingsRepositoryImplTest {
         assertTrue(fixture.api.updatedSettings.isEmpty())
     }
 
+    @Test
+    fun `friends privacy preserves other audiences rolls back failures and respects opt in`() = runTest {
+        val fixture = createRepository()
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), fixture.repository.setFriendsVisibility(SharingVisibility.NOBODY))
+        assertTrue(fixture.api.updatedSettings.isEmpty())
+        fixture.storage.setCustomServicesEnabled(true)
+        fixture.repository.refreshSharingSettings()
+        assertEquals(AppResult.Success(Unit), fixture.repository.setFriendsVisibility(SharingVisibility.NOBODY))
+        assertEquals(UserPrivacySettings(ApiSharingVisibility.FRIENDS, ApiSharingVisibility.FRIENDS, ApiSharingVisibility.NOBODY), fixture.api.updatedSettings.last())
+        fixture.repository.setScheduleVisibility(SharingVisibility.ALL)
+        assertEquals(ApiSharingVisibility.NOBODY, fixture.api.updatedSettings.last().friendsVisibility)
+        fixture.api.updateResponse = { throw IOException("offline") }
+        assertTrue(fixture.repository.setFriendsVisibility(SharingVisibility.ALL) is AppResult.Failure)
+        val saved = fixture.repository.observeSharingSettings().first() as SharingSettingsState.Content
+        assertEquals(SharingVisibility.NOBODY, saved.settings.friendsVisibility)
+        assertEquals(SharingVisibility.ALL, saved.settings.scheduleVisibility)
+    }
+
     private fun createRepository(): Fixture {
         val storage = AppSettingsStorage(InMemoryPreferencesDataStore())
         val fakeApi = FakeItmoWidgetsApi()

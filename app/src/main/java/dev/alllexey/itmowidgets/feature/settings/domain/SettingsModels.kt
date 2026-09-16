@@ -25,7 +25,8 @@ enum class SharingVisibility { ALL, FRIENDS, NOBODY }
 
 data class SharingSettings(
     val scheduleVisibility: SharingVisibility = SharingVisibility.FRIENDS,
-    val sportVisibility: SharingVisibility = SharingVisibility.FRIENDS
+    val sportVisibility: SharingVisibility = SharingVisibility.FRIENDS,
+    val friendsVisibility: SharingVisibility = SharingVisibility.ALL
 )
 
 sealed interface SharingSettingsState {
@@ -49,6 +50,8 @@ interface SettingsRepository {
     fun disableSharingSettings()
 
     suspend fun setScheduleVisibility(visibility: SharingVisibility): AppResult<Unit>
+
+    suspend fun setFriendsVisibility(visibility: SharingVisibility): AppResult<Unit>
 
     suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit>
 

@@ -123,6 +123,7 @@ class MeViewModelTest {
         override suspend fun refresh() {
             refreshes += 1
         }
+        override suspend fun userFriends(isu: Int): AppResult<List<UserProfile>> = AppResult.Success(emptyList())
         override suspend fun profile(isu: Int): AppResult<UserProfile> = error("not used")
         override suspend fun lookup(isus: List<Int>): AppResult<List<UserProfile>> = error("not used")
         override suspend fun sendRequest(isu: Int): AppResult<UserProfile> = error("not used")

@@ -508,7 +508,7 @@
     <string name="me_services_disabled_title">Сервисы ITMO.Widgets выключены</string>
     <string name="me_services_disabled_description">Друзья, заявки и приватность появятся после подключения</string>
     <string name="me_privacy_title">Приватность</string>
-    <string name="me_privacy_description">Кто видит расписание и спорт</string>
+    <string name="me_privacy_description">Кто видит расписание, спорт и друзей</string>
     <string name="me_github">GitHub</string>
     <string name="me_github_accessibility">Открыть проект на GitHub</string>
     <string name="me_telegram">Telegram</string>
@@ -606,4 +606,12 @@
     <string name="settings_full_schedule_widget_title">Полное расписание</string>
     <string name="settings_compact_widget_footer">Текущая или ближайшая пара сегодня. Настройки не влияют на полный виджет.</string>
     <string name="settings_full_widget_footer">Список пар на день. Настройки не влияют на компактный виджет.</string>
+    <string name="settings_friends_sharing_title">Кто видит список друзей</string>
+    <string name="user_profile_friends_open">Посмотреть список друзей</string>
+    <string name="user_friends_owner">Друзья · %1$s</string>
+    <string name="user_friends_empty_title">Пока нет друзей</string>
+    <string name="user_friends_empty_description">Здесь появятся подтверждённые друзья пользователя</string>
+    <string name="user_friends_hidden_title">Список друзей скрыт</string>
+    <string name="user_friends_hidden_description">Пользователь ограничил доступ к списку друзей</string>
+    <string name="user_friends_refresh">Обновить</string>
 </resources>

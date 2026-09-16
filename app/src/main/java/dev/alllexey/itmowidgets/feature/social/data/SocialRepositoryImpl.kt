@@ -64,6 +64,10 @@ class SocialRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun userFriends(isu: Int): AppResult<List<UserProfile>> = gated {
+        call { widgetsApi.userFriends(isu) }.map { list -> list.map(CoreUserProfile::toModel) }
+    }
+
     override suspend fun profile(isu: Int): AppResult<UserProfile> {
         return gated { call { widgetsApi.userProfile(isu) }.map(CoreUserProfile::toModel) }
     }

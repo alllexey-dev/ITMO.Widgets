@@ -23,7 +23,8 @@ fun UserData.toModel(): UserSummary {
         },
         sharing = UserSharing(
             sport = capabilities.canViewSport,
-            schedule = capabilities.canViewSchedule
+            schedule = capabilities.canViewSchedule,
+            friends = capabilities.canViewFriends
         )
     )
 }

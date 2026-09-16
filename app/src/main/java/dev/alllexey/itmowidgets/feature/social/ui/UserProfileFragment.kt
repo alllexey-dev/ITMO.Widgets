@@ -132,6 +132,9 @@ class UserProfileFragment : Fragment() {
             RelationshipState.BLOCKED -> Unit
         }
 
+        bindEntry(friendsRow, friendsDescription, friendsTrailing, user.sharing.friends, R.string.user_profile_friends_open) {
+            openScreen(AppScreen.USER_FRIENDS, userArguments(user.isu, user.name))
+        }
         val scheduleOpen = state.isSelf || user.sharing.schedule
         val sportOpen = state.isSelf || user.sharing.sport
         bindEntry(scheduleRow, scheduleDescription, scheduleTrailing, scheduleOpen, R.string.user_profile_schedule_open) {

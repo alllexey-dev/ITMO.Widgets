@@ -41,6 +41,15 @@
         tools:layout="@layout/fragment_friends" />
 
     <fragment
+        android:id="@+id/user_friends"
+        android:name="dev.alllexey.itmowidgets.feature.social.ui.UserFriendsFragment"
+        android:label="Друзья"
+        tools:layout="@layout/fragment_user_friends">
+        <argument android:name="user_isu" app:argType="integer" />
+        <argument android:name="user_name" android:defaultValue="" app:argType="string" />
+    </fragment>
+
+    <fragment
         android:id="@+id/user_search"
         android:name="dev.alllexey.itmowidgets.feature.social.ui.UserSearchFragment"
         android:label="Find people"

@@ -56,6 +56,8 @@ do not incur an additional delay. Disabling services takes effect immediately.
   does not offer controls that imply these official identity fields can be hidden.
 - `Кто видит расписание` and `Кто видит спорт` are independent audience choices:
   `Все`, `Друзья` (the default for new users), and `Никто`.
+- `Кто видит список друзей` uses the same three audiences and defaults to `Все`
+  for existing and new accounts. Schedule and sport defaults are unchanged.
 - `Все` allows any authenticated application user, regardless of that viewer's
   own privacy choices. `Друзья` requires mutual friendship. `Никто` allows only
   the owner. There is no reciprocal sharing requirement.
@@ -71,7 +73,7 @@ do not incur an additional delay. Disabling services takes effect immediately.
 - Friends are explicit: a request stays pending until the other side accepts,
   rejects, or the sender cancels; a crossed request becomes a friendship at once.
   Friends, requests and people search live in the profile tab; a public profile
-  shows one relationship action and unlocks schedule and sport rows from Backend
+  shows one relationship action and unlocks friends, schedule and sport rows from Backend
   capabilities, never from the viewer's own settings.
 - Block-management controls remain planned until the corresponding Backend
   feature is implemented.

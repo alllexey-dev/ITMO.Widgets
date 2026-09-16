@@ -288,7 +288,7 @@ class SettingsRendererTest {
                         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.settings_progress).visibility)
                         assertEquals(View.GONE, activity.findViewById<View>(R.id.settings_scroll).visibility)
                     } else {
-                        listOf(R.string.settings_schedule_sharing_title, R.string.settings_sport_sharing_title).forEach { title ->
+                        listOf(R.string.settings_schedule_sharing_title, R.string.settings_sport_sharing_title, R.string.settings_friends_sharing_title).forEach { title ->
                             val row = rowWithTitle(activity, activity.getString(title))
                             assertFalse(row.isEnabled)
                             assertEquals(activity.getString(R.string.settings_privacy_unknown), row.findViewById<TextView>(R.id.setting_value).text.toString())
@@ -323,7 +323,9 @@ class SettingsRendererTest {
                     val sport = rowWithTitle(activity, activity.getString(R.string.settings_sport_sharing_title))
                     assertEquals(activity.getString(R.string.settings_privacy_all), schedule.findViewById<TextView>(R.id.setting_value).text.toString())
                     assertEquals(activity.getString(R.string.settings_privacy_nobody), sport.findViewById<TextView>(R.id.setting_value).text.toString())
-                    listOf(schedule, sport).forEach { row ->
+                    val friends = rowWithTitle(activity, activity.getString(R.string.settings_friends_sharing_title))
+                    assertEquals(activity.getString(R.string.settings_privacy_all), friends.findViewById<TextView>(R.id.setting_value).text.toString())
+                    listOf(schedule, sport, friends).forEach { row ->
                         assertTrue(row.isEnabled)
                         assertTrue(row.isClickable)
                         assertTrue("Audience choice needs a 48 dp target", row.height >= 48 * activity.resources.displayMetrics.density)
@@ -508,6 +510,7 @@ class SettingsRendererTest {
         override suspend fun refreshSharingSettings() = Unit
         override fun disableSharingSettings() = Unit
         override suspend fun setScheduleVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
+        override suspend fun setFriendsVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
         override suspend fun setSportVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
         override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) = Unit
         override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) = Unit

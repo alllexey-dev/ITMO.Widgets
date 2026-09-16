@@ -29,7 +29,7 @@ the minimum Core and Backend it needs.
 
 | Android | Core | Backend | MyItmoApi | Notes |
 |---|---|---|---|---|
-| 2.1-SNAPSHOT (current branch) | 1.2.0-SNAPSHOT, commit `0e8d13f` | 1.2.0-SNAPSHOT, commit `cf48da6` | 1.8.0 | Snapshot numbers stay fixed until 2.1 ships; a matching number alone does not prove the API is present. See decision 0003. |
+| 2.1-SNAPSHOT (current branch) | 1.2.0-SNAPSHOT, commit `28bcb92` | 1.2.0-SNAPSHOT, commit `79da56a` | 1.8.0 | Snapshot numbers stay fixed until 2.1 ships; a matching number alone does not prove the API is present. See decision 0003. |
 | 2.0.x (legacy) | 1.1.x | 1.1.6 | 1.6.0 | MariaDB backend, reciprocal friend requests, boolean privacy. |
 
 Core is published to Maven Local during development. Public publication of Core

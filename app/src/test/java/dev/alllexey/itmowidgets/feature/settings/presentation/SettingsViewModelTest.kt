@@ -48,6 +48,21 @@ class SettingsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Test
+    fun `friends privacy starts all and edits only its own audience`() = runTest(mainDispatcherRule.dispatcher) {
+        val fixture = createFixture(page = SettingsPage.PRIVACY,
+            local = LocalSettings(customServicesEnabled = true),
+            sharing = SharingSettingsState.Content(SharingSettings()))
+        advanceUntilIdle()
+        assertEquals("ALL", fixture.viewModel.choice(SettingsViewModel.KEY_FRIENDS_SHARING).selectedOptionKey)
+        fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_FRIENDS_SHARING, "NOBODY")
+        advanceUntilIdle()
+        assertEquals(listOf(SharingVisibility.NOBODY), fixture.repository.friendsSharingRequests)
+        assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
+        assertTrue(fixture.repository.sportSharingRequests.isEmpty())
+        assertEquals("NOBODY", fixture.viewModel.choice(SettingsViewModel.KEY_FRIENDS_SHARING).selectedOptionKey)
+    }
+
+    @Test
     fun `widget pages expose only their own controls and independent teacher values`() = runTest(mainDispatcherRule.dispatcher) {
         val local = LocalSettings(scheduleWidget = ScheduleWidgetSettings(
             compact = CompactScheduleWidgetSettings(hideTeacher = true),
@@ -267,6 +282,7 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_NOTIFICATIONS,
                     SettingsViewModel.KEY_SCHEDULE_SHARING,
                     SettingsViewModel.KEY_SPORT_SHARING,
+                    SettingsViewModel.KEY_FRIENDS_SHARING,
                     SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY,
                     SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER,
                     SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER,
@@ -795,13 +811,14 @@ class SettingsViewModelTest {
             )
             advanceUntilIdle()
             val choices = fixture.viewModel.allItems().filterIsInstance<SettingItem.Choice>()
-            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING), choices.map { it.key })
-            assertEquals(listOf(UiText.Resource(R.string.settings_schedule_sharing_title), UiText.Resource(R.string.settings_sport_sharing_title)), choices.map { it.title })
+            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING, SettingsViewModel.KEY_FRIENDS_SHARING), choices.map { it.key })
+            assertEquals(listOf(UiText.Resource(R.string.settings_schedule_sharing_title), UiText.Resource(R.string.settings_sport_sharing_title), UiText.Resource(R.string.settings_friends_sharing_title)), choices.map { it.title })
             choices.forEach { choice ->
                 assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), choice.options.map { it.key })
                 assertEquals(listOf(R.string.settings_privacy_all, R.string.settings_privacy_friends, R.string.settings_privacy_nobody).map(UiText::Resource), choice.options.map { it.label })
-                assertEquals(SharingVisibility.FRIENDS.name, choice.selectedOptionKey)
-                assertEquals(UiText.Resource(R.string.settings_privacy_friends), choice.value)
+                val isFriends = choice.key == SettingsViewModel.KEY_FRIENDS_SHARING
+                assertEquals((if (isFriends) SharingVisibility.ALL else SharingVisibility.FRIENDS).name, choice.selectedOptionKey)
+                assertEquals(UiText.Resource(if (isFriends) R.string.settings_privacy_all else R.string.settings_privacy_friends), choice.value)
                 assertTrue(choice.enabled)
             }
             assertEquals(UiText.Resource(R.string.settings_privacy_footer), fixture.viewModel.sections.value.single().footer)
@@ -1005,6 +1022,7 @@ class SettingsViewModelTest {
         var sharingWrite: suspend () -> Unit = {}
         val scheduleSharingRequests = mutableListOf<SharingVisibility>()
         val sportSharingRequests = mutableListOf<SharingVisibility>()
+        val friendsSharingRequests = mutableListOf<SharingVisibility>()
         val nextLessonEarlyRequests = mutableListOf<Boolean>()
         val widgetTeacherHiddenRequests = mutableListOf<Boolean>()
         val pastLessonsHiddenRequests = mutableListOf<Boolean>()
@@ -1048,6 +1066,16 @@ class SettingsViewModelTest {
                 sharing.value = content.copy(settings = content.settings.copy(scheduleVisibility = visibility))
             }
             return scheduleSharingResult
+        }
+
+        override suspend fun setFriendsVisibility(visibility: SharingVisibility): AppResult<Unit> {
+            friendsSharingRequests += visibility
+            sharingWrite()
+            if (sportSharingResult is AppResult.Success) {
+                val content = sharing.value as SharingSettingsState.Content
+                sharing.value = content.copy(settings = content.settings.copy(friendsVisibility = visibility))
+            }
+            return sportSharingResult
         }
 
         override suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit> {

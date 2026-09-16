@@ -8,7 +8,7 @@ Everything here is gated on the custom-services opt-in.
 
 - `SocialRepository` loads friends, incoming and outgoing requests and the own
   Backend profile in one refresh, caches them as `SocialState` flows and exposes
-  `profile(isu)`, `lookup(isus)` and the actions `sendRequest`, `acceptRequest`,
+  `profile(isu)`, `userFriends(isu)`, `lookup(isus)` and the actions `sendRequest`, `acceptRequest`,
   `rejectRequest`, `cancelRequest`, `removeFriend`. Every action returns the
   fresh `UserProfile` and folds it into the cached lists, so screens never
   refresh after acting. It is a `SessionDataCleaner`.
@@ -63,6 +63,20 @@ name. `NotFound` renders as "not an ITMO.Widgets user".
 Profiles open from the friends list, requests, search results, the friend
 picker (locked row tap or long-press) and the friends list in the sport details
 sheet, always through `AppScreen.USER_PROFILE`.
+
+## Another user’s friends (overlay `USER_FRIENDS`)
+
+The public profile has a `Друзья` row controlled by Backend’s `canViewFriends`.
+The screen shows only accepted friends, with every row and capability relative
+to the signed-in viewer. Rows open public profiles; the list has no mutation
+buttons or request tabs. First loading, empty, denied, disabled services and
+retryable errors are distinct. Refresh retains content on network failure,
+but discards it if authorization is revoked; returning to the screen rechecks
+access. No target list is stored in the viewer’s own friends cache.
+
+`Кто видит список друзей` is an independent privacy choice: `Все` (the default
+for both existing and new accounts), `Друзья`, `Никто`. Backend enforces it before
+reading the list and never exposes pending requests or the owner’s raw audience.
 
 ## Shared list row
 

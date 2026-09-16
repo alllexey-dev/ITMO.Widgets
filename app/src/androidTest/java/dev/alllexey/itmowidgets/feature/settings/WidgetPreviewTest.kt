@@ -400,6 +400,7 @@ class WidgetPreviewTest {
         override suspend fun refreshSharingSettings() = Unit
         override fun disableSharingSettings() = Unit
         override suspend fun setScheduleVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
+        override suspend fun setFriendsVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
         override suspend fun setSportVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
         override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(compact = local.value.scheduleWidget.compact.copy(showNextLessonEarly = enabled))) }
         override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(compact = local.value.scheduleWidget.compact.copy(hideTeacher = hidden))) }

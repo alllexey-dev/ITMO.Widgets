@@ -202,7 +202,7 @@ class SettingsViewModel @Inject constructor(
                 val animation = QrAnimationType.entries.firstOrNull { it.name == optionKey } ?: return
                 updateWidgetSetting { repository.setQrAnimationType(animation) }
             }
-            KEY_SCHEDULE_SHARING, KEY_SPORT_SHARING -> {
+            KEY_SCHEDULE_SHARING, KEY_SPORT_SHARING, KEY_FRIENDS_SHARING -> {
                 val visibility = SharingVisibility.entries.firstOrNull { it.name == optionKey } ?: return
                 val item = sections.value.flatMap(SettingSection::items)
                     .filterIsInstance<SettingItem.Choice>().firstOrNull { it.key == key } ?: return
@@ -212,6 +212,7 @@ class SettingsViewModel @Inject constructor(
                 updateSharing {
                     when (key) {
                         KEY_SCHEDULE_SHARING -> repository.setScheduleVisibility(visibility)
+                        KEY_FRIENDS_SHARING -> repository.setFriendsVisibility(visibility)
                         else -> repository.setSportVisibility(visibility)
                     }
                 }
@@ -527,6 +528,12 @@ class SettingsViewModel @Inject constructor(
                 title = UiText.Resource(R.string.settings_sport_sharing_title),
                 visibility = content?.settings?.sportVisibility,
                 enabled = editable
+            ),
+            sharingChoice(
+                key = KEY_FRIENDS_SHARING,
+                title = UiText.Resource(R.string.settings_friends_sharing_title),
+                visibility = content?.settings?.friendsVisibility,
+                enabled = editable
             )
         )
         if (!local.customServicesEnabled) {
@@ -596,6 +603,7 @@ class SettingsViewModel @Inject constructor(
         const val KEY_NOTIFICATIONS = "notifications"
         const val KEY_SCHEDULE_SHARING = "schedule_sharing"
         const val KEY_SPORT_SHARING = "sport_sharing"
+        const val KEY_FRIENDS_SHARING = "friends_sharing"
         const val KEY_SCHEDULE_SPORT_AUTO_SIGN = "schedule_sport_auto_sign"
         const val KEY_RETRY_PRIVACY = "retry_privacy"
         const val KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY = "compact_widget_next_lesson_early"

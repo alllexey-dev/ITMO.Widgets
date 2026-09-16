@@ -158,6 +158,56 @@
                         android:orientation="vertical">
 
                         <LinearLayout
+                            android:id="@+id/friends_row"
+                            style="@style/Widget.ItmoWidgets.CompactSettingsRow"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:id="@+id/friends_icon"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_marginEnd="16dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_group"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+
+                            <LinearLayout style="@style/Widget.ItmoWidgets.CompactSettingsRowText">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/friends_title"
+                                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                                    android:textColor="?attr/colorOnSurface" />
+
+                                <TextView
+                                    android:id="@+id/friends_description"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    tools:text="Пары на ближайшие недели" />
+
+                            </LinearLayout>
+
+                            <ImageView
+                                android:id="@+id/friends_trailing"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_chevron_right"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+
+                        </LinearLayout>
+
+                        <View
+                            style="@style/Widget.ItmoWidgets.CompactSettingsDivider"
+                            android:layout_marginStart="56dp" />
+
+                        <LinearLayout
                             android:id="@+id/schedule_row"
                             style="@style/Widget.ItmoWidgets.CompactSettingsRow"
                             android:background="?attr/selectableItemBackground"

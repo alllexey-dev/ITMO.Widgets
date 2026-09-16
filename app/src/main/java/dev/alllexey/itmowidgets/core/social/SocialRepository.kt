@@ -48,6 +48,9 @@ interface SocialRepository {
 
     suspend fun refresh()
 
+    /** Accepted friends of [isu], with access and each profile scoped by Backend. */
+    suspend fun userFriends(isu: Int): AppResult<List<UserProfile>>
+
     suspend fun profile(isu: Int): AppResult<UserProfile>
 
     /** Registered users among [isus], in request order; unknown ISUs are omitted. */

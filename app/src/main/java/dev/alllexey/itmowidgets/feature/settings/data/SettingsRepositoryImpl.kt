@@ -107,6 +107,9 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun setFriendsVisibility(visibility: SharingVisibility): AppResult<Unit> =
+        updateSharingSettings { current -> current.copy(friendsVisibility = visibility) }
+
     override suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit> {
         return updateSharingSettings { current ->
             current.copy(sportVisibility = visibility)
@@ -195,14 +198,16 @@ class SettingsRepositoryImpl @Inject constructor(
     private fun UserPrivacySettings.toDomain(): SharingSettings {
         return SharingSettings(
             scheduleVisibility = SharingVisibility.valueOf(scheduleVisibility.name),
-            sportVisibility = SharingVisibility.valueOf(sportVisibility.name)
+            sportVisibility = SharingVisibility.valueOf(sportVisibility.name),
+            friendsVisibility = SharingVisibility.valueOf(friendsVisibility.name)
         )
     }
 
     private fun SharingSettings.toDto(): UserPrivacySettings {
         return UserPrivacySettings(
             scheduleVisibility = ApiSharingVisibility.valueOf(scheduleVisibility.name),
-            sportVisibility = ApiSharingVisibility.valueOf(sportVisibility.name)
+            sportVisibility = ApiSharingVisibility.valueOf(sportVisibility.name),
+            friendsVisibility = ApiSharingVisibility.valueOf(friendsVisibility.name)
         )
     }
 

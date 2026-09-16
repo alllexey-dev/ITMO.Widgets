@@ -19,6 +19,8 @@ internal class FakeSocialRepository : SocialRepository {
     val requests = MutableStateFlow<SocialState<FriendRequests>>(SocialState.Loading)
     val currentUser = MutableStateFlow<UserSummary?>(null)
     val actions = mutableListOf<String>()
+    var userFriendsResult: AppResult<List<UserProfile>> = AppResult.Success(emptyList())
+    val userFriendsCalls = mutableListOf<Int>()
     var refreshes = 0
     var actionError: AppError? = null
     var profiles: Map<Int, UserProfile> = emptyMap()
@@ -30,6 +32,11 @@ internal class FakeSocialRepository : SocialRepository {
 
     override suspend fun refresh() {
         refreshes += 1
+    }
+
+    override suspend fun userFriends(isu: Int): AppResult<List<UserProfile>> {
+        userFriendsCalls += isu
+        return userFriendsResult
     }
 
     override suspend fun profile(isu: Int): AppResult<UserProfile> =

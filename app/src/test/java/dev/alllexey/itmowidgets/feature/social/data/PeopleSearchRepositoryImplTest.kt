@@ -106,6 +106,7 @@ class PeopleSearchRepositoryImplTest {
         override fun observeCurrentUser(): Flow<UserSummary?> = flowOf(null)
         override val currentFriends: List<UserProfile>? = null
         override suspend fun refresh() = Unit
+        override suspend fun userFriends(isu: Int): AppResult<List<UserProfile>> = AppResult.Success(emptyList())
         override suspend fun profile(isu: Int) = error("not used")
         override suspend fun sendRequest(isu: Int) = error("not used")
         override suspend fun acceptRequest(isu: Int) = error("not used")

@@ -1,6 +1,19 @@
 package dev.alllexey.itmowidgets.app
 
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatDelegate
+import com.google.android.material.color.DynamicColors
+import com.google.android.material.color.DynamicColorsOptions
+import dev.alllexey.itmowidgets.core.model.RelationshipState
+import dev.alllexey.itmowidgets.core.model.UserSharing
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
+import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
+import dev.alllexey.itmowidgets.feature.social.ui.UserFriendsFragment
+import dev.alllexey.itmowidgets.feature.social.ui.UserProfileFragment
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -59,9 +72,47 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     private val repository = FixtureRepository()
     private val refresh = object : WidgetRefreshRequester { override fun refreshAll() = Unit }
 
+    data class Appearance(val dark: Boolean = false, val fontScale: Float = 1f, val colorSeed: Int? = null)
+    companion object {
+        @Volatile var appearance = Appearance()
+        @Volatile var friendsResult: AppResult<List<UserProfile>> = AppResult.Success(emptyList())
+        @Volatile var friendsDelayMs = 0L
+        @Volatile var friendsOpen = true
+        const val LONG_NAME = "Александра Константиновна Константинопольская"
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        val configuration = Configuration(newBase.resources.configuration).apply {
+            fontScale = appearance.fontScale
+            uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                if (appearance.dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+        }
+        super.attachBaseContext(newBase.createConfigurationContext(configuration))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, state: Bundle?) {
+                if (f is UserProfileFragment || f is UserFriendsFragment) {
+                    val arguments = SavedStateHandle(mapOf(
+                        UserScreenArgs.ISU to f.requireArguments().getInt(UserScreenArgs.ISU),
+                        UserScreenArgs.NAME to f.requireArguments().getString(UserScreenArgs.NAME)
+                    ))
+                    val factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
+                            UserFriendsViewModel::class.java -> UserFriendsViewModel(arguments, ProfileSocial)
+                            UserProfileViewModel::class.java -> UserProfileViewModel(arguments, ProfileSocial, object : CurrentUserProvider {
+                                override suspend fun getCurrentUser() = CurrentUser(100001, "Тестовый пользователь", null)
+                            })
+                            else -> error("Unexpected social ViewModel")
+                        } as T
+                    }
+                    if (f is UserFriendsFragment) ViewModelProvider(f, factory)[UserFriendsViewModel::class.java]
+                    else ViewModelProvider(f, factory)[UserProfileViewModel::class.java]
+                    return
+                }
                 if (f is MeFragment) {
                     ViewModelProvider(f, object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
@@ -127,6 +178,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
             }
         }, true)
         super.onCreate(savedInstanceState)
+        appearance.colorSeed?.let {
+            DynamicColors.applyToActivityIfAvailable(this, DynamicColorsOptions.Builder().setContentBasedSource(it).build())
+        }
         binding = ActivityMainBinding.inflate(layoutInflater)
         enableEdgeToEdge()
         setContentView(binding.root)
@@ -171,6 +225,12 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
             sharing.value = content.copy(settings = content.settings.copy(scheduleVisibility = visibility))
             return AppResult.Success(Unit)
         }
+        override suspend fun setFriendsVisibility(visibility: SharingVisibility): AppResult<Unit> {
+            val content = sharing.value as SharingSettingsState.Content
+            sharing.value = content.copy(settings = content.settings.copy(friendsVisibility = visibility))
+            return AppResult.Success(Unit)
+        }
+
         override suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit> {
             val content = sharing.value as SharingSettingsState.Content
             sharing.value = content.copy(settings = content.settings.copy(sportVisibility = visibility))
@@ -203,7 +263,13 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         override fun observeCurrentUser() = MutableStateFlow<UserSummary?>(null)
         override val currentFriends: List<UserProfile> = emptyList()
         override suspend fun refresh() = Unit
-        override suspend fun profile(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")
+        override suspend fun userFriends(isu: Int): AppResult<List<UserProfile>> {
+            delay(friendsDelayMs)
+            return friendsResult
+        }
+        override suspend fun profile(isu: Int): AppResult<UserProfile> = AppResult.Success(UserProfile(
+            UserSummary(isu, LONG_NAME, null, emptyList(), UserSharing(true, true, friendsOpen)), RelationshipState.NONE
+        ))
         override suspend fun lookup(isus: List<Int>): AppResult<List<UserProfile>> = AppResult.Success(emptyList())
         override suspend fun sendRequest(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")
         override suspend fun acceptRequest(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")

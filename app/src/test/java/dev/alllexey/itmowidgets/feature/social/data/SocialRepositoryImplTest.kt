@@ -56,6 +56,7 @@ class SocialRepositoryImplTest {
         assertEquals(SocialState.Disabled, repository.observeFriends().first())
         assertEquals(SocialState.Disabled, repository.observeRequests().first())
         assertEquals(0, api.calls)
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.userFriends(1))
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.profile(1))
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.sendRequest(1))
     }
@@ -157,6 +158,24 @@ class SocialRepositoryImplTest {
         assertNull(repository.currentFriends)
     }
 
+    @Test
+    fun `target friends retain viewer capabilities and never overwrite own friends cache`() = runTest {
+        val api = FakeApi().apply { friends = listOf(profile(1, CoreRelationshipState.FRIENDS)) }
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance)
+        repository.refresh()
+        api.userFriends = listOf(profile(2, CoreRelationshipState.NONE).copy(user = user(2).copy(
+            capabilities = UserCapabilities(false, false, true)
+        )))
+        val result = repository.userFriends(99) as AppResult.Success
+        assertEquals(listOf(99), api.friendOwners)
+        assertEquals(RelationshipState.NONE, result.value.single().relationship)
+        assertTrue(result.value.single().user.sharing.friends)
+        assertEquals(false, result.value.single().user.sharing.schedule)
+        assertEquals(listOf(1), repository.friendIsus())
+        api.userFriendsFailure = IOException("offline")
+        assertEquals(AppResult.Failure(AppError.Network), repository.userFriends(99))
+    }
+
     private suspend fun SocialRepositoryImpl.friendIsus(): List<Int> =
         (observeFriends().first() as SocialState.Content).value.map(UserProfile::isu)
 
@@ -184,6 +203,9 @@ class SocialRepositoryImplTest {
 
     private class FakeApi {
         var friends: List<CoreUserProfile> = emptyList()
+        var userFriends: List<CoreUserProfile> = emptyList()
+        var userFriendsFailure: Exception? = null
+        val friendOwners = mutableListOf<Int>()
         var incoming: List<CoreUserProfile> = emptyList()
         var outgoing: List<CoreUserProfile> = emptyList()
         var me: UserData? = null
@@ -210,6 +232,10 @@ class SocialRepositoryImplTest {
             when (method.name) {
                 "myUserData" -> meFailure?.let { throw it } ?: ApiResponse.success(me)
                 "friends" -> ApiResponse.success(friends)
+                "userFriends" -> {
+                    friendOwners += arguments[0] as Int
+                    userFriendsFailure?.let { throw it } ?: ApiResponse.success(userFriends)
+                }
                 "incomingFriendRequests" -> ApiResponse.success(incoming)
                 "outgoingFriendRequests" -> outgoingFailure?.let { throw it } ?: ApiResponse.success(outgoing)
                 "userProfile" -> ApiResponse.success(actionResult(arguments[0] as Int))
