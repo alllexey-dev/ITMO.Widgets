@@ -11,6 +11,9 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
@@ -45,6 +48,29 @@ class SettingsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Test
+    fun `widget pages expose only their own controls and independent teacher values`() = runTest(mainDispatcherRule.dispatcher) {
+        val local = LocalSettings(scheduleWidget = ScheduleWidgetSettings(
+            compact = CompactScheduleWidgetSettings(hideTeacher = true),
+            full = FullScheduleWidgetSettings(hideTeacher = false)
+        ))
+        val compact = createFixture(page = SettingsPage.COMPACT_SCHEDULE_WIDGET, local = local)
+        val full = createFixture(page = SettingsPage.FULL_SCHEDULE_WIDGET, local = local)
+        advanceUntilIdle()
+        assertEquals(setOf(SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY, SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER),
+            compact.viewModel.allItems().map { it.key }.toSet())
+        assertEquals(setOf(SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER, SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST, SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW),
+            full.viewModel.allItems().map { it.key }.toSet())
+        assertTrue(compact.viewModel.toggle(SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER).checked)
+        assertFalse(full.viewModel.toggle(SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER).checked)
+        full.viewModel.onToggleChanged(SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER, true)
+        advanceUntilIdle()
+        assertEquals(listOf(true), full.repository.fullWidgetTeacherHiddenRequests)
+        assertTrue(full.repository.widgetTeacherHiddenRequests.isEmpty())
+        assertEquals(1, full.widgetRefresher.refreshCount)
+        assertEquals(SettingsPage.COMPACT_SCHEDULE_WIDGET, SettingsPage.fromArgument("SCHEDULE_WIDGETS"))
+    }
+
+    @Test
     fun `local readiness waits for persisted values but never waits for privacy refresh`() =
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.PRIVACY, local = LocalSettings(customServicesEnabled = true), localInitiallyAvailable = false)
@@ -62,7 +88,7 @@ class SettingsViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val local = LocalSettings(
                 qrWidget = QrWidgetSettings(dynamicColors = false, animationType = QrAnimationType.NONE),
-                scheduleWidget = ScheduleWidgetSettings(hideTeacher = true)
+                scheduleWidget = ScheduleWidgetSettings(compact = CompactScheduleWidgetSettings(hideTeacher = true), full = FullScheduleWidgetSettings(hideTeacher = true))
             )
             SettingsPage.entries.forEach { page ->
                 val fixture = createFixture(page = page, local = local)
@@ -70,7 +96,8 @@ class SettingsViewModelTest {
                 assertEquals(
                     when (page) {
                         SettingsPage.QR_WIDGET -> WidgetPreviewSettings.Qr(local.qrWidget)
-                        SettingsPage.SCHEDULE_WIDGETS -> WidgetPreviewSettings.Schedule(local.scheduleWidget)
+                        SettingsPage.COMPACT_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT)
+                        SettingsPage.FULL_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL)
                         else -> null
                     },
                     fixture.viewModel.previewSettings.value
@@ -103,7 +130,7 @@ class SettingsViewModelTest {
 
             assertEquals(SettingsPage.ROOT, fixture.viewModel.page)
             assertEquals(3, fixture.viewModel.sections.value.size)
-            assertEquals(8, fixture.viewModel.allItems().size)
+            assertEquals(9, fixture.viewModel.allItems().size)
             assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
             val navigation = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
             assertEquals(
@@ -168,14 +195,12 @@ class SettingsViewModelTest {
     fun `does not publish defaults before stored local settings arrive`() =
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(
-                page = SettingsPage.SCHEDULE_WIDGETS,
+                page = SettingsPage.FULL_SCHEDULE_WIDGET,
                 local = LocalSettings(
                     customServicesEnabled = true,
                     scheduleWidget = ScheduleWidgetSettings(
-                        showNextLessonEarly = true,
-                        hideTeacher = true,
-                        hidePastLessons = true,
-                        showTomorrowWhenTodayIsOver = true
+                        compact = CompactScheduleWidgetSettings(hideTeacher = true),
+                        full = FullScheduleWidgetSettings(hideTeacher = true, hidePastLessons = true, showTomorrowWhenTodayIsOver = true)
                     ),
                     sport = SportDisplaySettings(
                         hideTeacherSelector = false,
@@ -191,9 +216,9 @@ class SettingsViewModelTest {
             fixture.repository.publishLocalSettings()
             advanceUntilIdle()
 
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_WIDGET_HIDE_TEACHER).checked)
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_WIDGET_HIDE_PAST).checked)
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_WIDGET_SHOW_TOMORROW).checked)
+            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER).checked)
+            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST).checked)
+            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW).checked)
         }
 
     @Test
@@ -242,10 +267,11 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_NOTIFICATIONS,
                     SettingsViewModel.KEY_SCHEDULE_SHARING,
                     SettingsViewModel.KEY_SPORT_SHARING,
-                    SettingsViewModel.KEY_WIDGET_NEXT_LESSON_EARLY,
-                    SettingsViewModel.KEY_WIDGET_HIDE_TEACHER,
-                    SettingsViewModel.KEY_WIDGET_HIDE_PAST,
-                    SettingsViewModel.KEY_WIDGET_SHOW_TOMORROW,
+                    SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY,
+                    SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER,
+                    SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER,
+                    SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST,
+                    SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW,
                     SettingsViewModel.KEY_QR_DYNAMIC_COLORS,
                     SettingsViewModel.KEY_QR_SPOILER,
                     SettingsViewModel.KEY_QR_ANIMATION,
@@ -287,12 +313,12 @@ class SettingsViewModelTest {
             )
 
             fixture.viewModel.onToggleChanged(
-                SettingsViewModel.KEY_WIDGET_NEXT_LESSON_EARLY,
+                SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY,
                 false
             )
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_WIDGET_HIDE_TEACHER, true)
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_WIDGET_HIDE_PAST, true)
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_WIDGET_SHOW_TOMORROW, true)
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER, true)
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST, true)
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW, true)
             fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_QR_DYNAMIC_COLORS, false)
             fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_QR_SPOILER, false)
             fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SPORT_TEACHER_FILTER, true)
@@ -1034,33 +1060,42 @@ class SettingsViewModelTest {
             return sportSharingResult
         }
 
-        override suspend fun setNextLessonEarlyEnabled(enabled: Boolean) {
+        override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) {
             nextLessonEarlyRequests += enabled
             local.value = local.value.copy(
-                scheduleWidget = local.value.scheduleWidget.copy(showNextLessonEarly = enabled)
+                scheduleWidget = local.value.scheduleWidget.copy(compact = local.value.scheduleWidget.compact.copy(showNextLessonEarly = enabled))
             )
         }
 
-        override suspend fun setWidgetTeacherHidden(hidden: Boolean) {
+        override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) {
             widgetTeacherHiddenRequests += hidden
             local.value = local.value.copy(
-                scheduleWidget = local.value.scheduleWidget.copy(hideTeacher = hidden)
+                scheduleWidget = local.value.scheduleWidget.copy(compact = local.value.scheduleWidget.compact.copy(hideTeacher = hidden))
             )
         }
 
-        override suspend fun setPastLessonsHidden(hidden: Boolean) {
+        val fullWidgetTeacherHiddenRequests = mutableListOf<Boolean>()
+
+        override suspend fun setFullWidgetTeacherHidden(hidden: Boolean) {
+            fullWidgetTeacherHiddenRequests += hidden
+            local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(
+                full = local.value.scheduleWidget.full.copy(hideTeacher = hidden)
+            ))
+        }
+
+        override suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean) {
             pastLessonsHiddenRequests += hidden
             local.value = local.value.copy(
-                scheduleWidget = local.value.scheduleWidget.copy(hidePastLessons = hidden)
+                scheduleWidget = local.value.scheduleWidget.copy(full = local.value.scheduleWidget.full.copy(hidePastLessons = hidden))
             )
         }
 
-        override suspend fun setTomorrowScheduleEnabled(enabled: Boolean) {
+        override suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean) {
             tomorrowScheduleRequests += enabled
             local.value = local.value.copy(
-                scheduleWidget = local.value.scheduleWidget.copy(
+                scheduleWidget = local.value.scheduleWidget.copy(full = local.value.scheduleWidget.full.copy(
                     showTomorrowWhenTodayIsOver = enabled
-                )
+                ))
             )
         }
 

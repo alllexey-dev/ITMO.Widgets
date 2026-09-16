@@ -22,7 +22,7 @@ class ScheduleWidgetSelector @Inject constructor() {
         val official = schedule.flatMap { day ->
             day.lessons.map { lesson ->
                 TimelineLesson(day.date, lesson.start, lesson.end,
-                    lesson.toWidgetLesson(day.date, now, preferences.hideTeacher))
+                    lesson.toWidgetLesson(day.date, now))
             }
         }
         val pending = pendingSport.distinctBy { it.queueKind to it.queueId }
@@ -37,7 +37,7 @@ class ScheduleWidgetSelector @Inject constructor() {
                         start = start.toLocalTime().toString(),
                         end = end.toLocalTime().toString(),
                         typeId = 11,
-                        teacher = booking.teacherFio.trim().takeUnless { preferences.hideTeacher || it.isEmpty() },
+                        teacher = booking.teacherFio.trim().takeUnless { it.isEmpty() },
                         room = booking.roomName.trim().takeIf(String::isNotEmpty),
                         building = null,
                         state = ScheduleWidgetLessonState.UPCOMING,
@@ -48,16 +48,16 @@ class ScheduleWidgetSelector @Inject constructor() {
         val days = (official + pending).groupBy(TimelineLesson::date)
         val todayLessons = days[today].orEmpty().sortedBy(TimelineLesson::start)
         val tomorrowLessons = days[today.plusDays(1)].orEmpty().sortedBy(TimelineLesson::start)
-        val lessonToShow = lessonToShow(todayLessons, now, preferences.forwardScheduling)
+        val lessonToShow = lessonToShow(todayLessons, now, preferences.display.compact.showNextLessonEarly)
 
         val singleLesson = selectSingleLesson(
             lessons = todayLessons,
             lessonToShow = lessonToShow,
+            hideTeacher = preferences.display.compact.hideTeacher
         )
         val list = selectLessonList(
             todayLessons = todayLessons,
             tomorrowLessons = tomorrowLessons,
-            lessonToShow = lessonToShow,
             now = now,
             preferences = preferences
         )
@@ -86,6 +86,7 @@ class ScheduleWidgetSelector @Inject constructor() {
     private fun selectSingleLesson(
         lessons: List<TimelineLesson>,
         lessonToShow: TimelineLesson?,
+        hideTeacher: Boolean,
     ): SingleLessonWidgetContent {
         if (lessons.isEmpty()) {
             return SingleLessonWidgetContent(SingleLessonWidgetKind.EMPTY_TODAY)
@@ -97,7 +98,7 @@ class ScheduleWidgetSelector @Inject constructor() {
         val index = lessons.indexOf(lessonToShow)
         return SingleLessonWidgetContent(
             kind = SingleLessonWidgetKind.LESSON,
-            lesson = lessonToShow.display,
+            lesson = lessonToShow.display.withTeacherHidden(hideTeacher),
             remainingLessons = (lessons.lastIndex - index).coerceAtLeast(0)
         )
     }
@@ -105,19 +106,17 @@ class ScheduleWidgetSelector @Inject constructor() {
     private fun selectLessonList(
         todayLessons: List<TimelineLesson>,
         tomorrowLessons: List<TimelineLesson>,
-        lessonToShow: TimelineLesson?,
         now: OffsetDateTime,
         preferences: ScheduleWidgetPreferences,
     ): List<ScheduleListWidgetItem> {
-        val showTomorrow = preferences.showTomorrowWhenFinished &&
-            (todayLessons.isEmpty() || lessonToShow == null)
+        val full = preferences.display.full
+        val remainingToday = todayLessons.filter { it.end > now.toLocalTime() }
+        val showTomorrow = full.showTomorrowWhenTodayIsOver && remainingToday.isEmpty()
         val selectedDate = if (showTomorrow) now.toLocalDate().plusDays(1) else now.toLocalDate()
         val selectedLessons = if (showTomorrow) {
             tomorrowLessons
-        } else if (preferences.hidePreviousLessons) {
-            lessonToShow?.let { lesson ->
-                todayLessons.drop(todayLessons.indexOf(lesson))
-            }.orEmpty()
+        } else if (full.hidePastLessons) {
+            remainingToday
         } else {
             todayLessons
         }
@@ -132,7 +131,7 @@ class ScheduleWidgetSelector @Inject constructor() {
         }
 
         val items = mutableListOf<ScheduleListWidgetItem>()
-        if (preferences.showTomorrowWhenFinished) {
+        if (full.showTomorrowWhenTodayIsOver) {
             items += ScheduleListWidgetItem(
                 kind = ScheduleListWidgetItemKind.HEADER,
                 dateIso = selectedDate.toString(),
@@ -142,7 +141,7 @@ class ScheduleWidgetSelector @Inject constructor() {
         items += selectedLessons.map { lesson ->
             ScheduleListWidgetItem(
                 kind = ScheduleListWidgetItemKind.LESSON,
-                lesson = lesson.display
+                lesson = lesson.display.withTeacherHidden(full.hideTeacher)
             )
         }
         items += ScheduleListWidgetItem(
@@ -167,7 +166,7 @@ class ScheduleWidgetSelector @Inject constructor() {
                 .atOffset(now.offset)
         } else {
             val isLast = lessonToShow == lessons.lastOrNull()
-            val targetTime = if (preferences.forwardScheduling && !isLast) {
+            val targetTime = if (preferences.display.compact.showNextLessonEarly && !isLast) {
                 lessonToShow.end.minusMinutes(FORWARD_MINUTES)
             } else {
                 lessonToShow.end
@@ -177,7 +176,12 @@ class ScheduleWidgetSelector @Inject constructor() {
 
         val pendingStart = lessons.filter { it.display.pendingStatus != null && it.start > now.toLocalTime() }
             .minOfOrNull { OffsetDateTime.of(it.date, it.start, now.offset) }
-        val nextTarget = if (pendingStart != null && pendingStart < target) pendingStart else target
+        // A compact early switch does not advance the full widget. Its current/past
+        // states still change at actual starts/ends, so shared work takes the earliest boundary.
+        val fullBoundary = lessons.flatMap { listOf(it.start, it.end) }
+            .filter { it > now.toLocalTime() }
+            .minOrNull()?.let { OffsetDateTime.of(now.toLocalDate(), it, now.offset) }
+        val nextTarget = listOfNotNull(target, pendingStart, fullBoundary).min()
         val delay = Duration.between(now, nextTarget)
         return if (delay < MINIMUM_UPDATE_DELAY) MINIMUM_UPDATE_DELAY else delay
     }
@@ -198,19 +202,21 @@ class ScheduleWidgetSelector @Inject constructor() {
     private fun Lesson.toWidgetLesson(
         date: LocalDate,
         now: OffsetDateTime,
-        hideTeacher: Boolean,
     ): ScheduleWidgetLesson {
         return ScheduleWidgetLesson(
             subject = subjectName.trim(),
             start = start.toString(),
             end = end.toString(),
             typeId = typeId.raw,
-            teacher = teacherFio?.trim()?.takeUnless { hideTeacher || it.isEmpty() },
+            teacher = teacherFio?.trim()?.takeIf(String::isNotEmpty),
             room = room?.raw?.trim()?.takeIf(String::isNotEmpty),
             building = building?.raw?.trim()?.takeIf(String::isNotEmpty),
             state = stateAt(date, start, end, now)
         )
     }
+
+    private fun ScheduleWidgetLesson.withTeacherHidden(hidden: Boolean) =
+        if (hidden) copy(teacher = null) else this
 
     private fun stateAt(
         date: LocalDate,

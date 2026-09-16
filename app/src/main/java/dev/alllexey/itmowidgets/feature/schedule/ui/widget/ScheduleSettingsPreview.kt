@@ -11,12 +11,10 @@ import android.widget.BaseAdapter
 import android.widget.FrameLayout
 import android.widget.ListView
 import androidx.core.view.isEmpty
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.tabs.TabLayoutMediator
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
+import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.databinding.ViewWidgetPreviewScheduleBinding
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewLabels
@@ -29,11 +27,10 @@ class ScheduleSettingsPreview(
 ) : WidgetPreview {
     private val binding = ViewWidgetPreviewScheduleBinding.inflate(LayoutInflater.from(context))
     override val view: View = binding.root
-    private var appearance: ScheduleWidgetSettings? = null
+    private var appearance: WidgetPreviewSettings.Schedule? = null
     private var evening = false
     private var snapshot: ScheduleWidgetSnapshot? = null
     private val rowRenderer = ScheduleListRowRenderer(context)
-    private val pageHolders = mutableSetOf<PreviewHolder>()
     private val labels = SchedulePreviewLabels(
         context.getString(R.string.widget_preview_subject_history),
         context.getString(R.string.widget_preview_subject_math),
@@ -41,26 +38,6 @@ class ScheduleSettingsPreview(
         context.getString(R.string.widget_preview_subject_physics),
         context.getString(R.string.widget_preview_teacher)
     )
-    private val adapter = object : RecyclerView.Adapter<PreviewHolder>() {
-        override fun getItemCount() = 2
-        override fun getItemViewType(position: Int) = position
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = PreviewHolder(
-            FrameLayout(context).apply {
-                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                val padding = (4 * resources.displayMetrics.density).toInt()
-                setPadding(0, padding, 0, padding)
-            }
-        )
-        override fun onBindViewHolder(holder: PreviewHolder, position: Int) {
-            holder.page = position
-            pageHolders.add(holder)
-            renderPage(holder)
-        }
-        override fun onViewRecycled(holder: PreviewHolder) { pageHolders.remove(holder) }
-    }
-    private val tabs = TabLayoutMediator(binding.previewTabs, binding.schedulePreviewPager) { tab, index ->
-        tab.setText(if (index == 0) R.string.widget_preview_schedule_single else R.string.widget_preview_schedule_day)
-    }
 
     init {
         // Scale the bounded area by actual widget text, not a 160 sp value: Android's
@@ -68,10 +45,7 @@ class ScheduleSettingsPreview(
         val textSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_SP, 14f, context.resources.displayMetrics
         )
-        binding.schedulePreviewPager.layoutParams.height = (160f * textSize / 14f).toInt()
-        binding.schedulePreviewPager.adapter = adapter
-        binding.schedulePreviewPager.offscreenPageLimit = 1
-        tabs.attach()
+        binding.schedulePreviewContent.layoutParams.height = (160f * textSize / 14f).toInt()
         updateTimeLabel()
         binding.previewTime.setOnClickListener {
             MaterialAlertDialogBuilder(context)
@@ -91,20 +65,19 @@ class ScheduleSettingsPreview(
     }
 
     override fun bind(settings: WidgetPreviewSettings) {
-        val next = (settings as WidgetPreviewSettings.Schedule).appearance
+        val next = settings as WidgetPreviewSettings.Schedule
         if (next == appearance) return
+        if (next.format != appearance?.format) binding.schedulePreviewContent.removeAllViews()
         appearance = next
         updateSnapshot()
     }
 
     override fun saveState() = Bundle().apply {
-        putInt("page", binding.schedulePreviewPager.currentItem)
         putBoolean("evening", evening)
     }
 
     override fun restoreState(state: Bundle) {
         evening = state.getBoolean("evening")
-        binding.schedulePreviewPager.setCurrentItem(state.getInt("page").coerceIn(0, 1), false)
         updateTimeLabel()
         updateSnapshot()
     }
@@ -116,24 +89,25 @@ class ScheduleSettingsPreview(
 
     private fun updateSnapshot() {
         val settings = appearance ?: return
-        snapshot = scenario.snapshot(settings, evening, labels)
-        pageHolders.forEach(::renderPage)
+        snapshot = scenario.snapshot(settings.appearance, evening, labels)
+        renderPreview()
     }
 
-    private fun renderPage(holder: PreviewHolder) {
+    private fun renderPreview() {
         val content = snapshot ?: return
-        if (holder.page == 0) {
+        val root = binding.schedulePreviewContent
+        if (appearance?.format == ScheduleWidgetFormat.COMPACT) {
             val remote = ScheduleWidgetRenderer.singleLessonViews(context, content)
-            if (holder.root.isEmpty()) {
-                holder.root.addView(remote.apply(context, holder.root), FrameLayout.LayoutParams(-1, -2, Gravity.CENTER))
+            if (root.isEmpty()) {
+                root.addView(remote.apply(context, root), FrameLayout.LayoutParams(-1, -2, Gravity.CENTER))
             } else {
-                remote.reapply(context, holder.root.getChildAt(0))
+                remote.reapply(context, root.getChildAt(0))
             }
         } else {
-            if (holder.root.isEmpty()) {
-                LayoutInflater.from(context).inflate(R.layout.widget_lesson_list, holder.root, true)
+            if (root.isEmpty()) {
+                LayoutInflater.from(context).inflate(R.layout.widget_lesson_list, root, true)
             }
-            val list = holder.root.findViewById<ListView>(R.id.lesson_list)
+            val list = root.findViewById<ListView>(R.id.lesson_list)
             list.adapter = object : BaseAdapter() {
                 override fun getCount() = content.lessonList.size
                 override fun getItem(position: Int) = content.lessonList[position]
@@ -152,12 +126,7 @@ class ScheduleSettingsPreview(
     }
 
     override fun close() {
-        tabs.detach()
-        binding.schedulePreviewPager.adapter = null
-        pageHolders.clear()
-    }
-
-    private class PreviewHolder(val root: FrameLayout) : RecyclerView.ViewHolder(root) {
-        var page = 0
+        binding.schedulePreviewContent.removeAllViews()
+        snapshot = null
     }
 }

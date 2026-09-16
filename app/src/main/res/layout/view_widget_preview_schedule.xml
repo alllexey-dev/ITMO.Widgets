@@ -31,28 +31,11 @@
 
     </LinearLayout>
 
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/preview_tabs"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        app:tabMode="fixed">
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/widget_preview_schedule_single" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/widget_preview_schedule_day" />
-
-    </com.google.android.material.tabs.TabLayout>
-
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/schedule_preview_pager"
+    <FrameLayout
+        android:id="@+id/schedule_preview_content"
         android:layout_width="match_parent"
         android:layout_height="160dp"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:paddingVertical="4dp" />
 
 </LinearLayout>

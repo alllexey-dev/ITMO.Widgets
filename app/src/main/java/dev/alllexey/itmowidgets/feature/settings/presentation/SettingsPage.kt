@@ -8,7 +8,8 @@ enum class SettingsPage(val title: UiText) {
     ROOT(UiText.Resource(R.string.settings_title)),
     SERVICES(UiText.Resource(R.string.settings_custom_services_title)),
     PRIVACY(UiText.Resource(R.string.settings_privacy_title)),
-    SCHEDULE_WIDGETS(UiText.Resource(R.string.settings_group_schedule_widget)),
+    COMPACT_SCHEDULE_WIDGET(UiText.Resource(R.string.settings_compact_schedule_widget_title)),
+    FULL_SCHEDULE_WIDGET(UiText.Resource(R.string.settings_full_schedule_widget_title)),
     QR_WIDGET(UiText.Resource(R.string.settings_group_qr_widget)),
     SCHEDULE(UiText.Resource(R.string.settings_group_schedule)),
     SPORT(UiText.Resource(R.string.settings_group_sport)),
@@ -18,6 +19,7 @@ enum class SettingsPage(val title: UiText) {
         const val ARGUMENT = "settings_page"
 
         fun fromArgument(value: String?): SettingsPage =
-            entries.firstOrNull { it.name == value } ?: ROOT
+            if (value == "SCHEDULE_WIDGETS") COMPACT_SCHEDULE_WIDGET
+            else entries.firstOrNull { it.name == value } ?: ROOT
     }
 }

@@ -147,7 +147,7 @@ class SettingsFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.localSettingsLoaded.first { it }
             renderSections(viewModel.sections.value)
-            if (viewModel.page == SettingsPage.QR_WIDGET || viewModel.page == SettingsPage.SCHEDULE_WIDGETS) {
+            if (viewModel.page in setOf(SettingsPage.QR_WIDGET, SettingsPage.COMPACT_SCHEDULE_WIDGET, SettingsPage.FULL_SCHEDULE_WIDGET)) {
                 renderPreview(viewModel.previewSettings.filterNotNull().first()).awaitReady()
             }
             // Enter with final local values and an already drawn QR image, not a loading frame.

@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
@@ -54,7 +57,7 @@ class ScheduleWidgetSelectorTest {
             result.snapshot.singleLesson.lesson?.state
         )
         assertEquals(0, result.snapshot.singleLesson.remainingLessons)
-        assertEquals(Duration.ofHours(2), result.nextUpdateDelay)
+        assertEquals(Duration.ofMinutes(10), result.nextUpdateDelay)
     }
 
     @Test
@@ -323,6 +326,22 @@ class ScheduleWidgetSelectorTest {
         assertNull(official.pendingValidUntil)
     }
 
+    @Test
+    fun `pending teachers and official fallback respect each format independently`() {
+        val options = preferences().copy(display = ScheduleWidgetSettings(
+            compact = CompactScheduleWidgetSettings(hideTeacher = true),
+            full = FullScheduleWidgetSettings(hideTeacher = false)
+        ))
+        val selection = selector.select(
+            listOf(day(TODAY, lesson(1, "14:00", "15:30", "Official", "Teacher"))),
+            at("10:00"), options, listOf(pending(1, "11:00"))
+        ).snapshot
+        assertNull(selection.singleLesson.lesson?.teacher)
+        assertTrue(selection.lessonList.mapNotNull { it.lesson }.all { it.teacher != null })
+        assertNull(selection.withoutPendingSport().singleLesson.lesson?.teacher)
+        assertEquals("Teacher", selection.withoutPendingSport().lessonList.first().lesson?.teacher)
+    }
+
     private fun pending(
         id: Long,
         start: String,
@@ -351,10 +370,10 @@ class ScheduleWidgetSelectorTest {
         showTomorrowWhenFinished: Boolean = false,
     ) = ScheduleWidgetPreferences(
         smartScheduling = smartScheduling,
-        forwardScheduling = forwardScheduling,
-        hideTeacher = hideTeacher,
-        hidePreviousLessons = hidePreviousLessons,
-        showTomorrowWhenFinished = showTomorrowWhenFinished,
+        display = ScheduleWidgetSettings(
+            compact = CompactScheduleWidgetSettings(forwardScheduling, hideTeacher),
+            full = FullScheduleWidgetSettings(hideTeacher, hidePreviousLessons, showTomorrowWhenFinished)
+        ),
         singleLessonStyle = LessonStyle.DOT,
         lessonListStyle = LessonStyle.DOT
     )

@@ -1,15 +1,13 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import java.time.Duration
 import java.time.Instant
 
 data class ScheduleWidgetPreferences(
     val smartScheduling: Boolean,
-    val forwardScheduling: Boolean,
-    val hideTeacher: Boolean,
-    val hidePreviousLessons: Boolean,
-    val showTomorrowWhenFinished: Boolean,
+    val display: ScheduleWidgetSettings,
     val singleLessonStyle: LessonStyle,
     val lessonListStyle: LessonStyle,
 )

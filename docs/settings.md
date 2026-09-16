@@ -9,7 +9,7 @@ listed here is not a setting. Screens are built declaratively; see the
 The settings root is a compact catalogue, not a scrolling list of every switch:
 
 - `Сервисы и доступ`: user services, privacy, and the Android notifications action.
-- `Виджеты`: schedule widgets and the QR widget.
+- `Виджеты`: `Компактное расписание`, `Полное расписание` and the QR widget.
 - `Приложение`: schedule, sport, and maintenance.
 
 Each category opens a separate back-stack entry with its own title and scroll
@@ -79,27 +79,37 @@ do not incur an additional delay. Disabling services takes effect immediately.
 
 ## Schedule widgets
 
-- A pinned live preview sits above the controls. Tap or swipe between `Ближайшая`
-  and `На день`; the preview uses the real widget layouts and selection rules.
-- The sample time selector switches between 12:50 (during lessons) and 18:00
-  (after lessons), so early selection, hidden past lessons, and tomorrow's list
-  can be checked immediately. The page and sample time survive view recreation.
-- Examples are fixed, local demonstration data, not the user's schedule. They do
-  not change academic time, widget caches, or installed widget instances.
-- Completed rows dim uniformly, including both time labels. Empty/status messages
-  center the title and hint as one block; normal lesson rows retain their alignment.
-- The day widget centers its `Сегодня`/`Завтра` date header, including the launcher
-  preview. Successful sport sign-in and cancellation enqueue a fresh snapshot for
-  both schedule widgets without waiting for the next automatic update.
-- Smart update scheduling is always enabled and is not configurable.
-- Both schedule widgets use the single established visual style. Style selectors
-  are not shown.
-- `Следующая пара заранее` controls whether the next lesson appears 15 minutes
-  before the current lesson ends. It is enabled by default.
-- `Скрывать преподавателя` is disabled by default.
-- `Скрывать прошедшие занятия` is disabled by default.
-- `Показывать расписание на завтра`, when today is finished, is disabled by
-  default.
+Each format has its own settings page and independent persisted values, shared
+only among installed instances of that same format:
+
+| Page | Controls | Defaults |
+|---|---|---|
+| `Компактное расписание` | `Следующая пара заранее`, `Скрывать преподавателя` | early switch on; teacher visible |
+| `Полное расписание` | `Скрывать преподавателя`, `Скрывать прошедшие занятия`, `Показывать расписание на завтра` | teacher visible; past lessons visible; tomorrow off |
+
+- The compact widget shows today's current/next lesson. Its optional early switch
+  advances 15 minutes before a lesson ends. It has no past-list or tomorrow-list
+  switches, since neither applies to its format.
+- The full widget keeps a lesson until its actual end when hiding past lessons,
+  regardless of the compact widget's early-switch preference. Its optional
+  tomorrow list appears only after today's lessons actually finish.
+- Teacher visibility is independent, including pending sport rows and the
+  official-only offline fallback. Format-scoped preference keys override read-only
+  unscoped fallback keys, preserving existing choices without linking later edits.
+- Each page has a pinned live preview of only its own format, using the real
+  layouts and selection rules. There is no format pager inside either page.
+  Sample time switches between 12:50 (during lessons) and 18:00 (after lessons)
+  and survives view recreation. Examples are fixed local data, not the user's
+  schedule; they never change academic time, caches or installed widgets.
+- Completed full-widget rows dim uniformly, including both time labels. Status
+  messages center their title and hint; normal rows retain their alignment.
+  The full widget centers its `Сегодня`/`Завтра` date header.
+- Smart updates and the established visual style remain fixed. Shared update
+  work chooses the earliest boundary needed by either format. Successful setting
+  writes and sport mutations refresh installed widgets without waiting for the
+  next automatic update; failed writes preserve the saved values.
+- The schedule-level `Автозапись на спорт` preference still controls the optional
+  pending projection in the app and both widgets; it is not a format setting.
 
 ## QR widget
 

@@ -39,10 +39,7 @@ class SchedulePreviewScenario @Inject constructor(private val selector: Schedule
             now = OffsetDateTime.of(DATE, LocalTime.of(if (evening) 18 else 12, if (evening) 0 else 50), ZoneOffset.ofHours(3)),
             preferences = ScheduleWidgetPreferences(
                 smartScheduling = true,
-                forwardScheduling = settings.showNextLessonEarly,
-                hideTeacher = settings.hideTeacher,
-                hidePreviousLessons = settings.hidePastLessons,
-                showTomorrowWhenFinished = settings.showTomorrowWhenTodayIsOver,
+                display = settings,
                 singleLessonStyle = LessonStyle.DOT,
                 lessonListStyle = LessonStyle.DOT
             )

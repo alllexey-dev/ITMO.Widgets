@@ -214,7 +214,6 @@
     <string name="settings_group_widgets">Виджеты</string>
     <string name="settings_group_spoiler">Спойлер</string>
     <string name="settings_privacy_title">Приватность</string>
-    <string name="settings_schedule_short_title">Расписание</string>
     <string name="settings_qr_short_title">QR-код</string>
     <string name="settings_services_enabled">Подключено</string>
     <string name="settings_services_disabled">Не подключено</string>
@@ -223,7 +222,6 @@
     <string name="settings_notifications_checking">Проверяем разрешение…</string>
     <string name="settings_services_footer">Друзья, общие данные и автозапись работают через сервер ITMO.Widgets. Расписание, зачётка и QR работают и без него.\n\nЕсли отключиться на этом устройстве, профиль на сервере и настройки доступа останутся как были.</string>
     <string name="settings_privacy_footer">«Все» — любой, кто вошёл в приложение. «Друзья» — только взаимные. «Никто» — только вы.\n\nЭто про ваши данные: чужие открытые данные вы видите в любом случае. Имя, группу и ИСУ видят все вошедшие.</string>
-    <string name="settings_schedule_widgets_footer">Эти настройки меняют только виджеты, но не расписание в приложении. Виджеты обновляются сами.</string>
     <string name="settings_sport_footer">Добавляет фильтры на экран записи. Сам выбор преподавателя и времени остаётся в разделе «Спорт».</string>
     <string name="settings_qr_custom_image_selected">Своё изображение</string>
     <string name="settings_qr_custom_image_default">Стандартное</string>
@@ -248,7 +246,6 @@
     <string name="settings_privacy_loading">Загружаем…</string>
     <string name="settings_privacy_load_error">Сервер не ответил.</string>
     <string name="settings_privacy_retry">Повторить</string>
-    <string name="settings_group_schedule_widget">Виджеты расписания</string>
     <string name="settings_widget_next_early_title">Следующая пара заранее</string>
     <string name="settings_widget_next_early_description">За 15 минут до конца текущей пары.</string>
     <string name="settings_widget_hide_teacher_title">Скрывать преподавателя</string>
@@ -476,8 +473,6 @@
     <string name="widget_preview_qr_open_hint">Пример, не пропуск. Нажмите, чтобы скрыть QR-код.</string>
     <string name="widget_preview_qr_plain_hint">Пример QR-кода, не действительный пропуск.</string>
     <string name="widget_preview_failed">Не удалось загрузить превью</string>
-    <string name="widget_preview_schedule_single">Ближайшая</string>
-    <string name="widget_preview_schedule_day">На день</string>
     <string name="widget_preview_time_title">Время в примере</string>
     <string name="widget_preview_time_lesson">12:50 · во время пар</string>
     <string name="widget_preview_time_evening">18:00 · после пар</string>
@@ -601,4 +596,8 @@
     <string name="notification_sport_lesson">%1$s, %2$s</string>
     <string name="notification_friend_request">%1$s хочет добавить вас в друзья</string>
     <string name="notification_friend_accepted">%1$s принял вашу заявку</string>
+    <string name="settings_compact_schedule_widget_title">Компактное расписание</string>
+    <string name="settings_full_schedule_widget_title">Полное расписание</string>
+    <string name="settings_compact_widget_footer">Текущая или ближайшая пара сегодня. Настройки не влияют на полный виджет.</string>
+    <string name="settings_full_widget_footer">Список пар на день. Настройки не влияют на компактный виджет.</string>
 </resources>

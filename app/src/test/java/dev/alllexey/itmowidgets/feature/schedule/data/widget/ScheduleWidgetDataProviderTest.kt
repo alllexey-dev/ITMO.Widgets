@@ -39,6 +39,21 @@ class ScheduleWidgetDataProviderTest {
     private val provider = ScheduleWidgetDataProvider(official, settings, Time, ScheduleWidgetSelector(), pending, tokens)
 
     @Test
+    fun `worker settings select teachers independently for the two rendered formats`() = runTest {
+        enable()
+        settings.setCompactWidgetTeacherHidden(true)
+        settings.setFullWidgetTeacherHidden(false)
+        val first = available().snapshot
+        assertNull(first.singleLesson.lesson?.teacher)
+        assertEquals("Тестовый преподаватель", first.lessonList.first().lesson?.teacher)
+        settings.setCompactWidgetTeacherHidden(false)
+        settings.setFullWidgetTeacherHidden(true)
+        val reversed = available().snapshot
+        assertEquals("Тестовый преподаватель", reversed.singleLesson.lesson?.teacher)
+        assertNull(reversed.lessonList.first().lesson?.teacher)
+    }
+
+    @Test
     fun `default off and disabled services never read or refresh optional backend data`() = runTest {
         settings.setCustomServicesEnabled(true)
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, available().snapshot.singleLesson.kind)
@@ -53,7 +68,7 @@ class ScheduleWidgetDataProviderTest {
     @Test
     fun `cold widget refreshes sources before reading pending snapshot and includes pending only day`() = runTest {
         enable()
-        settings.setWidgetFutureScheduleEnabled(true)
+        settings.setFullWidgetTomorrowEnabled(true)
         val result = available()
         assertEquals(ScheduleWidgetPendingStatus.PREDICTED, result.snapshot.singleLesson.lesson?.pendingStatus)
         assertEquals(listOf("refresh", "snapshot"), pending.calls)

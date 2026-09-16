@@ -27,6 +27,13 @@ the app.
 - Successful sport actions, preference changes and the services gate enqueue a
   forced schedule-widget update through `WidgetRefreshCoordinator`; QR widgets
   are not touched.
+- Compact and full widget settings are independent typed models in
+  `core/settings`. Each has its own teacher visibility. Early switching belongs
+  only to compact; hiding past lessons and tomorrow selection belong only to full.
+  The full list uses actual lesson ends, not the compact selection. Shared work
+  refreshes at the earliest start/end or compact early-switch boundary.
+- `AppSettingsStorage` reads both formats atomically. New format-specific keys
+  override read-only shared fallback keys without changing the other format.
 - Smart update scheduling and the single visual style are fixed; there are no
   selectors. Completed rows dim uniformly; the day widget centres its
   `Сегодня`/`Завтра` header.
@@ -41,8 +48,9 @@ Expiry is passive: an expired code stops being emitted (known gap).
 
 ## Previews in settings
 
-Settings show live previews built from the real renderers with fixed sample
-data: `ScheduleWidgetRenderer` and `ScheduleListRowRenderer` for schedule pages,
+Separate compact and full settings pages each show only their own live preview,
+with a saved sample-time selector and no format pager. Previews use fixed sample
+data and the real renderers: `ScheduleWidgetRenderer` and `ScheduleListRowRenderer` for schedule pages,
 the production bitmap and animation renderers with a labelled sample payload for
 QR. `core/ui/widget.WidgetPreviewFactory` is the UI contract; the app-level
 `DefaultWidgetPreviewFactory` composes feature implementations without

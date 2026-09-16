@@ -26,7 +26,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.viewpager2.widget.ViewPager2
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.DefaultWidgetPreviewFactory
 import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
@@ -91,30 +90,35 @@ class WidgetPreviewTest {
     }
 
     @Test
-    fun scheduleSwitchesUpdateActualWidgetViewsWithoutReplacingThePreview() = withScreen(SettingsPage.SCHEDULE_WIDGETS) { screen ->
+    fun scheduleSwitchesUpdateActualWidgetViewsWithoutReplacingThePreview() = withScreen(SettingsPage.COMPACT_SCHEDULE_WIDGET) { screen ->
         lateinit var original: View
         screen.scenario.onActivity {
             original = screen.preview.view
             assertEquals(it.getString(R.string.widget_preview_subject_programming), original.findViewById<TextView>(R.id.title).text)
-            screen.toggle(SettingsViewModel.KEY_WIDGET_NEXT_LESSON_EARLY)
+            screen.toggle(SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY)
         }
         settle()
         screen.scenario.onActivity {
             assertSame(original, screen.preview.view)
             assertEquals(it.getString(R.string.widget_preview_subject_math), original.findViewById<TextView>(R.id.title).text)
             assertTrue(original.findViewById<TextView>(R.id.secondary_text).text.contains(it.getString(R.string.widget_preview_teacher)))
-            screen.toggle(SettingsViewModel.KEY_WIDGET_HIDE_TEACHER)
+            screen.toggle(SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER)
         }
         settle()
         screen.scenario.onActivity {
             assertFalse(original.findViewById<TextView>(R.id.secondary_text).text.contains(it.getString(R.string.widget_preview_teacher)))
-            original.findViewById<ViewPager2>(R.id.schedule_preview_pager).setCurrentItem(1, false)
+            assertNull(original.findViewById<ListView>(R.id.lesson_list))
+            assertEquals(2, screen.vm.sections.value.flatMap { section -> section.items }.size)
         }
-        settle()
+    }
+
+    @Test
+    fun fullScheduleControlsOnlyChangeTheDayPreviewAndRetainSampleTime() = withScreen(SettingsPage.FULL_SCHEDULE_WIDGET) { screen ->
+        val original = screen.preview.view
         var previousCount = 0
         screen.scenario.onActivity {
             previousCount = original.findViewById<ListView>(R.id.lesson_list).adapter.count
-            screen.toggle(SettingsViewModel.KEY_WIDGET_HIDE_PAST)
+            screen.toggle(SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST)
         }
         settle()
         screen.scenario.onActivity {
@@ -133,13 +137,13 @@ class WidgetPreviewTest {
                 original.findViewById<TextView>(R.id.preview_time).text)
             assertTrue("Evening choice must be retained in preview state",
                 checkNotNull(screen.preview.saveState()).getBoolean("evening"))
-            screen.toggle(SettingsViewModel.KEY_WIDGET_SHOW_TOMORROW)
+            screen.toggle(SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW)
         }
         settle()
         screen.scenario.onActivity {
             val settings = screen.vm.previewSettings.value as dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings.Schedule
             assertTrue("Tomorrow preference must be persisted before preview rendering",
-                settings.appearance.showTomorrowWhenTodayIsOver)
+                settings.appearance.full.showTomorrowWhenTodayIsOver)
             val list = original.findViewById<ListView>(R.id.lesson_list)
             val header = list.adapter.getItem(0) as dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItem
             assertTrue("Adapter must contain tomorrow header: $header", header.tomorrow)
@@ -149,7 +153,6 @@ class WidgetPreviewTest {
             val saved = checkNotNull(screen.preview.saveState())
             screen.preview.restoreState(Bundle())
             screen.preview.restoreState(saved)
-            assertEquals(1, original.findViewById<ViewPager2>(R.id.schedule_preview_pager).currentItem)
             assertEquals("18:00", original.findViewById<TextView>(R.id.preview_time).text)
         }
         screen.capture("schedule-tomorrow")
@@ -250,13 +253,13 @@ class WidgetPreviewTest {
             Triple("light", false, 1f), Triple("dark", true, 1f),
             Triple("green-narrow", false, 1.3f), Triple("dark-narrow", true, 1.3f)
         )) {
-            for (page in listOf(SettingsPage.QR_WIDGET, SettingsPage.SCHEDULE_WIDGETS)) {
+            for (page in listOf(SettingsPage.QR_WIDGET, SettingsPage.COMPACT_SCHEDULE_WIDGET, SettingsPage.FULL_SCHEDULE_WIDGET)) {
                 withScreen(page, dark, scale, name == "green-narrow") { screen ->
                     screen.scenario.onActivity { activity ->
                         val root = screen.preview.view
                         val scroll = activity.findViewById<ScrollView>(R.id.settings_scroll)
                         assertTrue("Controls must retain usable height", scroll.height >= 160 * activity.resources.displayMetrics.density)
-                        if (page == SettingsPage.SCHEDULE_WIDGETS) {
+                        if (page != SettingsPage.QR_WIDGET) {
                             val button = root.findViewById<View>(R.id.preview_time)
                             assertTrue(button.height >= 48 * activity.resources.displayMetrics.density)
                         }
@@ -268,11 +271,7 @@ class WidgetPreviewTest {
                     settle()
                     screen.scenario.onActivity { it.findViewById<ScrollView>(R.id.settings_scroll).scrollTo(0, 0) }
                     screen.capture("${page.name.lowercase()}-$name")
-                    if (page == SettingsPage.SCHEDULE_WIDGETS) {
-                        screen.scenario.onActivity { screen.preview.view.findViewById<ViewPager2>(R.id.schedule_preview_pager).setCurrentItem(1, false) }
-                        settle()
-                        screen.capture("schedule-day-$name")
-                    }
+
                 }
             }
         }
@@ -402,10 +401,12 @@ class WidgetPreviewTest {
         override fun disableSharingSettings() = Unit
         override suspend fun setScheduleVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
         override suspend fun setSportVisibility(visibility: SharingVisibility) = AppResult.Success(Unit)
-        override suspend fun setNextLessonEarlyEnabled(enabled: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(showNextLessonEarly = enabled)) }
-        override suspend fun setWidgetTeacherHidden(hidden: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(hideTeacher = hidden)) }
-        override suspend fun setPastLessonsHidden(hidden: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(hidePastLessons = hidden)) }
-        override suspend fun setTomorrowScheduleEnabled(enabled: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(showTomorrowWhenTodayIsOver = enabled)) }
+        override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(compact = local.value.scheduleWidget.compact.copy(showNextLessonEarly = enabled))) }
+        override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(compact = local.value.scheduleWidget.compact.copy(hideTeacher = hidden))) }
+        override suspend fun setFullWidgetTeacherHidden(hidden: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(full = local.value.scheduleWidget.full.copy(hideTeacher = hidden))) }
+
+        override suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(full = local.value.scheduleWidget.full.copy(hidePastLessons = hidden))) }
+        override suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(full = local.value.scheduleWidget.full.copy(showTomorrowWhenTodayIsOver = enabled))) }
         override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) { local.value = local.value.copy(qrWidget = local.value.qrWidget.copy(dynamicColors = enabled)) }
         override suspend fun setQrSpoilerEnabled(enabled: Boolean) { local.value = local.value.copy(qrWidget = local.value.qrWidget.copy(spoilerEnabled = enabled)) }
         override suspend fun setQrAnimationType(type: QrAnimationType) { local.value = local.value.copy(qrWidget = local.value.qrWidget.copy(animationType = type)) }

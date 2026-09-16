@@ -11,7 +11,6 @@ import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
-import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
@@ -38,19 +37,7 @@ class SettingsRepositoryImpl @Inject constructor(
     private val sharingMutex = Mutex()
 
     override fun observeLocalSettings(): Flow<LocalSettings> {
-        val scheduleWidget = combine(
-            settings.observeWidgetForwardSchedulingEnabled(),
-            settings.observeWidgetHideTeacherEnabled(),
-            settings.observeWidgetHidePreviousLessonsEnabled(),
-            settings.observeWidgetFutureScheduleEnabled()
-        ) { showNextEarly, hideTeacher, hidePast, showTomorrow ->
-            ScheduleWidgetSettings(
-                showNextLessonEarly = showNextEarly,
-                hideTeacher = hideTeacher,
-                hidePastLessons = hidePast,
-                showTomorrowWhenTodayIsOver = showTomorrow
-            )
-        }
+        val scheduleWidget = settings.observeScheduleWidgetSettings()
         val qrWidget = combine(
             settings.observeQrDynamicColorsEnabled(),
             settings.observeQrSpoilerEnabled(),
@@ -130,20 +117,24 @@ class SettingsRepositoryImpl @Inject constructor(
         settings.setScheduleSportAutoSignEnabled(enabled)
     }
 
-    override suspend fun setNextLessonEarlyEnabled(enabled: Boolean) {
-        settings.setWidgetForwardSchedulingEnabled(enabled)
+    override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) {
+        settings.setCompactWidgetNextLessonEarlyEnabled(enabled)
     }
 
-    override suspend fun setWidgetTeacherHidden(hidden: Boolean) {
-        settings.setWidgetHideTeacherEnabled(hidden)
+    override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) {
+        settings.setCompactWidgetTeacherHidden(hidden)
     }
 
-    override suspend fun setPastLessonsHidden(hidden: Boolean) {
-        settings.setWidgetHidePreviousLessonsEnabled(hidden)
+    override suspend fun setFullWidgetTeacherHidden(hidden: Boolean) {
+        settings.setFullWidgetTeacherHidden(hidden)
     }
 
-    override suspend fun setTomorrowScheduleEnabled(enabled: Boolean) {
-        settings.setWidgetFutureScheduleEnabled(enabled)
+    override suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean) {
+        settings.setFullWidgetPastLessonsHidden(hidden)
+    }
+
+    override suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean) {
+        settings.setFullWidgetTomorrowEnabled(enabled)
     }
 
     override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) {

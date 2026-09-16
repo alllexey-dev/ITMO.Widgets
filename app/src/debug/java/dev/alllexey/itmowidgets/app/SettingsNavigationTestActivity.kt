@@ -176,10 +176,11 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
             sharing.value = content.copy(settings = content.settings.copy(sportVisibility = visibility))
             return AppResult.Success(Unit)
         }
-        override suspend fun setNextLessonEarlyEnabled(enabled: Boolean) = Unit
-        override suspend fun setWidgetTeacherHidden(hidden: Boolean) = Unit
-        override suspend fun setPastLessonsHidden(hidden: Boolean) = Unit
-        override suspend fun setTomorrowScheduleEnabled(enabled: Boolean) = Unit
+        override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) = Unit
+        override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) = Unit
+        override suspend fun setFullWidgetTeacherHidden(hidden: Boolean) = Unit
+        override suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean) = Unit
+        override suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean) = Unit
         override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) = Unit
         override suspend fun setQrSpoilerEnabled(enabled: Boolean) = Unit
         override suspend fun setQrAnimationType(type: QrAnimationType) = Unit

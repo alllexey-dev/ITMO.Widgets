@@ -54,13 +54,15 @@ interface SettingsRepository {
 
     suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean)
 
-    suspend fun setNextLessonEarlyEnabled(enabled: Boolean)
+    suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean)
 
-    suspend fun setWidgetTeacherHidden(hidden: Boolean)
+    suspend fun setCompactWidgetTeacherHidden(hidden: Boolean)
 
-    suspend fun setPastLessonsHidden(hidden: Boolean)
+    suspend fun setFullWidgetTeacherHidden(hidden: Boolean)
 
-    suspend fun setTomorrowScheduleEnabled(enabled: Boolean)
+    suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean)
+
+    suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean)
 
     suspend fun setQrDynamicColorsEnabled(enabled: Boolean)
 

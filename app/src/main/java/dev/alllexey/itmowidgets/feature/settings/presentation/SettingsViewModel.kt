@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
+import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
@@ -80,7 +81,8 @@ class SettingsViewModel @Inject constructor(
         .map { local ->
             when (page) {
                 SettingsPage.QR_WIDGET -> WidgetPreviewSettings.Qr(local.qrWidget)
-                SettingsPage.SCHEDULE_WIDGETS -> WidgetPreviewSettings.Schedule(local.scheduleWidget)
+                SettingsPage.COMPACT_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT)
+                SettingsPage.FULL_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL)
                 else -> null
             }
         }
@@ -164,17 +166,20 @@ class SettingsViewModel @Inject constructor(
             KEY_SCHEDULE_SPORT_AUTO_SIGN -> updateWidgetSetting {
                 repository.setScheduleSportAutoSignEnabled(checked)
             }
-            KEY_WIDGET_NEXT_LESSON_EARLY -> updateWidgetSetting {
-                repository.setNextLessonEarlyEnabled(checked)
+            KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY -> updateWidgetSetting {
+                repository.setCompactWidgetNextLessonEarlyEnabled(checked)
             }
-            KEY_WIDGET_HIDE_TEACHER -> updateWidgetSetting {
-                repository.setWidgetTeacherHidden(checked)
+            KEY_COMPACT_WIDGET_HIDE_TEACHER -> updateWidgetSetting {
+                repository.setCompactWidgetTeacherHidden(checked)
             }
-            KEY_WIDGET_HIDE_PAST -> updateWidgetSetting {
-                repository.setPastLessonsHidden(checked)
+            KEY_FULL_WIDGET_HIDE_TEACHER -> updateWidgetSetting {
+                repository.setFullWidgetTeacherHidden(checked)
             }
-            KEY_WIDGET_SHOW_TOMORROW -> updateWidgetSetting {
-                repository.setTomorrowScheduleEnabled(checked)
+            KEY_FULL_WIDGET_HIDE_PAST -> updateWidgetSetting {
+                repository.setFullWidgetPastLessonsHidden(checked)
+            }
+            KEY_FULL_WIDGET_SHOW_TOMORROW -> updateWidgetSetting {
+                repository.setFullWidgetTomorrowEnabled(checked)
             }
             KEY_QR_DYNAMIC_COLORS -> updateWidgetSetting {
                 repository.setQrDynamicColorsEnabled(checked)
@@ -315,10 +320,8 @@ class SettingsViewModel @Inject constructor(
             SettingSection(
                 title = UiText.Resource(R.string.settings_group_widgets),
                 items = listOf(
-                    navigation(
-                        SettingsPage.SCHEDULE_WIDGETS,
-                        title = UiText.Resource(R.string.settings_schedule_short_title)
-                    ),
+                    navigation(SettingsPage.COMPACT_SCHEDULE_WIDGET),
+                    navigation(SettingsPage.FULL_SCHEDULE_WIDGET),
                     navigation(
                         SettingsPage.QR_WIDGET,
                         title = UiText.Resource(R.string.settings_qr_short_title)
@@ -353,34 +356,47 @@ class SettingsViewModel @Inject constructor(
         } else {
             buildPrivacySections(local, sharing)
         }
-        SettingsPage.SCHEDULE_WIDGETS -> listOf(
+        SettingsPage.COMPACT_SCHEDULE_WIDGET -> listOf(
             SettingSection(
                 title = null,
                 items = listOf(
                     SettingItem.Toggle(
-                        key = KEY_WIDGET_NEXT_LESSON_EARLY,
+                        key = KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY,
                         title = UiText.Resource(R.string.settings_widget_next_early_title),
                         description = UiText.Resource(R.string.settings_widget_next_early_description),
-                        checked = local.scheduleWidget.showNextLessonEarly
+                        checked = local.scheduleWidget.compact.showNextLessonEarly
                     ),
                     SettingItem.Toggle(
-                        key = KEY_WIDGET_HIDE_TEACHER,
+                        key = KEY_COMPACT_WIDGET_HIDE_TEACHER,
                         title = UiText.Resource(R.string.settings_widget_hide_teacher_title),
-                        checked = local.scheduleWidget.hideTeacher
-                    ),
-                    SettingItem.Toggle(
-                        key = KEY_WIDGET_HIDE_PAST,
-                        title = UiText.Resource(R.string.settings_widget_hide_past_title),
-                        checked = local.scheduleWidget.hidePastLessons
-                    ),
-                    SettingItem.Toggle(
-                        key = KEY_WIDGET_SHOW_TOMORROW,
-                        title = UiText.Resource(R.string.settings_widget_tomorrow_title),
-                        description = UiText.Resource(R.string.settings_widget_tomorrow_description),
-                        checked = local.scheduleWidget.showTomorrowWhenTodayIsOver
+                        checked = local.scheduleWidget.compact.hideTeacher
                     )
                 ),
-                footer = UiText.Resource(R.string.settings_schedule_widgets_footer)
+                footer = UiText.Resource(R.string.settings_compact_widget_footer)
+            )
+        )
+        SettingsPage.FULL_SCHEDULE_WIDGET -> listOf(
+            SettingSection(
+                title = null,
+                items = listOf(
+                    SettingItem.Toggle(
+                        key = KEY_FULL_WIDGET_HIDE_TEACHER,
+                        title = UiText.Resource(R.string.settings_widget_hide_teacher_title),
+                        checked = local.scheduleWidget.full.hideTeacher
+                    ),
+                    SettingItem.Toggle(
+                        key = KEY_FULL_WIDGET_HIDE_PAST,
+                        title = UiText.Resource(R.string.settings_widget_hide_past_title),
+                        checked = local.scheduleWidget.full.hidePastLessons
+                    ),
+                    SettingItem.Toggle(
+                        key = KEY_FULL_WIDGET_SHOW_TOMORROW,
+                        title = UiText.Resource(R.string.settings_widget_tomorrow_title),
+                        description = UiText.Resource(R.string.settings_widget_tomorrow_description),
+                        checked = local.scheduleWidget.full.showTomorrowWhenTodayIsOver
+                    )
+                ),
+                footer = UiText.Resource(R.string.settings_full_widget_footer)
             )
         )
         SettingsPage.QR_WIDGET -> listOf(
@@ -582,10 +598,11 @@ class SettingsViewModel @Inject constructor(
         const val KEY_SPORT_SHARING = "sport_sharing"
         const val KEY_SCHEDULE_SPORT_AUTO_SIGN = "schedule_sport_auto_sign"
         const val KEY_RETRY_PRIVACY = "retry_privacy"
-        const val KEY_WIDGET_NEXT_LESSON_EARLY = "widget_next_lesson_early"
-        const val KEY_WIDGET_HIDE_TEACHER = "widget_hide_teacher"
-        const val KEY_WIDGET_HIDE_PAST = "widget_hide_past"
-        const val KEY_WIDGET_SHOW_TOMORROW = "widget_show_tomorrow"
+        const val KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY = "compact_widget_next_lesson_early"
+        const val KEY_COMPACT_WIDGET_HIDE_TEACHER = "compact_widget_hide_teacher"
+        const val KEY_FULL_WIDGET_HIDE_TEACHER = "full_widget_hide_teacher"
+        const val KEY_FULL_WIDGET_HIDE_PAST = "full_widget_hide_past"
+        const val KEY_FULL_WIDGET_SHOW_TOMORROW = "full_widget_show_tomorrow"
         const val KEY_QR_DYNAMIC_COLORS = "qr_dynamic_colors"
         const val KEY_QR_SPOILER = "qr_spoiler"
         const val KEY_QR_ANIMATION = "qr_animation"

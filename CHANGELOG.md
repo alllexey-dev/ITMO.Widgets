@@ -6,6 +6,11 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ## Unreleased (2.1-SNAPSHOT)
 
 ### 2026-09-16
+
+- Split compact and full schedule-widget settings into independent pages, previews
+  and preference keys, preserving existing choices. Early switching is compact-only;
+  past/tomorrow controls are full-only; each has separate teacher visibility. The
+  full list no longer removes an ongoing lesson because compact switched early.
 - Another user's sport no longer waits for the merged sport schedule; it resolves
   confirmed lessons against the raw catalog, so it loads before the sport tab
   was ever opened in the process.

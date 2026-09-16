@@ -32,7 +32,7 @@ class ScheduleWidgetDataProvider @Inject constructor(
         if (!tokens.hasRefreshToken()) return signedOut(preferences)
         val now = timeProvider.now()
         val start = now.toLocalDate()
-        val end = if (preferences.showTomorrowWhenFinished) start.plusDays(1) else start
+        val end = if (preferences.display.full.showTomorrowWhenTodayIsOver) start.plusDays(1) else start
 
         val includePending = pendingEnabled()
         val (refreshResult, pending) = coroutineScope {
@@ -93,10 +93,7 @@ class ScheduleWidgetDataProvider @Inject constructor(
     private suspend fun readPreferences(): ScheduleWidgetPreferences {
         return ScheduleWidgetPreferences(
             smartScheduling = settings.getWidgetSmartSchedulingEnabled(),
-            forwardScheduling = settings.getWidgetForwardSchedulingEnabled(),
-            hideTeacher = settings.getWidgetHideTeacherEnabled(),
-            hidePreviousLessons = settings.getWidgetHidePreviousLessonsEnabled(),
-            showTomorrowWhenFinished = settings.getWidgetFutureScheduleEnabled(),
+            display = settings.getScheduleWidgetSettings(),
             singleLessonStyle = settings.getSingleLessonWidgetStyle(),
             lessonListStyle = settings.getLessonListWidgetStyle()
         )

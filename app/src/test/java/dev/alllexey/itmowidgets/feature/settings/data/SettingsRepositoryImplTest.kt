@@ -13,6 +13,8 @@ import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
@@ -48,10 +50,10 @@ class SettingsRepositoryImplTest {
         val fixture = createRepository()
 
         fixture.storage.setCustomServicesEnabled(true)
-        fixture.repository.setNextLessonEarlyEnabled(false)
-        fixture.repository.setWidgetTeacherHidden(true)
-        fixture.repository.setPastLessonsHidden(true)
-        fixture.repository.setTomorrowScheduleEnabled(true)
+        fixture.repository.setCompactWidgetNextLessonEarlyEnabled(false)
+        fixture.repository.setCompactWidgetTeacherHidden(true)
+        fixture.repository.setFullWidgetPastLessonsHidden(true)
+        fixture.repository.setFullWidgetTomorrowEnabled(true)
         fixture.repository.setQrDynamicColorsEnabled(false)
         fixture.repository.setQrSpoilerEnabled(false)
         fixture.repository.setQrAnimationType(QrAnimationType.FADE)
@@ -63,10 +65,8 @@ class SettingsRepositoryImplTest {
             LocalSettings(
                 customServicesEnabled = true,
                 scheduleWidget = ScheduleWidgetSettings(
-                    showNextLessonEarly = false,
-                    hideTeacher = true,
-                    hidePastLessons = true,
-                    showTomorrowWhenTodayIsOver = true
+                    compact = CompactScheduleWidgetSettings(showNextLessonEarly = false, hideTeacher = true),
+                    full = FullScheduleWidgetSettings(hidePastLessons = true, showTomorrowWhenTodayIsOver = true)
                 ),
                 qrWidget = QrWidgetSettings(
                     dynamicColors = false,
