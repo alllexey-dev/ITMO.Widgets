@@ -282,6 +282,21 @@
     <string name="settings_schedule_sport_auto_sign_description">Показывать ожидание записи в своём расписании и виджетах.</string>
     <string name="settings_schedule_footer">Нужно подключение к ITMO.Widgets. Ожидание — это ещё не подтверждённая запись.</string>
     <string name="settings_version_title">Версия</string>
+    <string name="settings_diagnostics_title">Журнал ошибок</string>
+    <string name="settings_diagnostics_description">Локальные записи о сбоях без токенов и личных данных.</string>
+    <string name="settings_diagnostics_count">Записей: %1$d</string>
+    <string name="diagnostics_title">Журнал ошибок</string>
+    <string name="diagnostics_description">Записи хранятся только на устройстве. Токены и пароли вырезаются до записи.</string>
+    <string name="diagnostics_copy">Копировать</string>
+    <string name="diagnostics_copied">Журнал скопирован</string>
+    <string name="diagnostics_clear">Очистить</string>
+    <string name="diagnostics_clear_confirm_title">Очистить журнал?</string>
+    <string name="diagnostics_clear_confirm_message">Записи удалятся с устройства, восстановить их не получится.</string>
+    <string name="diagnostics_empty_title">Ошибок нет</string>
+    <string name="diagnostics_empty_description">Сюда попадают сбои синхронизации, пушей и обновлений.</string>
+    <string name="diagnostics_level_warning">Предупреждение</string>
+    <string name="diagnostics_level_error">Ошибка</string>
+    <string name="diagnostics_level_crash">Падение</string>
 
     <string name="debug_tools_title">Инструменты разработчика</string>
     <string name="debug_custom_services_title">Подключение к ITMO.Widgets</string>

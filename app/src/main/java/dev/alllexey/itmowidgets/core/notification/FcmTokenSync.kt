@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.core.notification
 
-import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
@@ -39,7 +39,8 @@ class DefaultFcmTokenSync @Inject constructor(
     private val settings: AppSettingsStorage,
     private val sessionTokens: SessionTokenStore,
     private val deviceSession: BackendDeviceSession,
-    private val currentUser: CurrentUserProvider
+    private val currentUser: CurrentUserProvider,
+    private val diagnostics: AppDiagnostics
 ) : FcmTokenSync {
     private val mutex = Mutex()
 
@@ -57,7 +58,7 @@ class DefaultFcmTokenSync @Inject constructor(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
-            Log.w("FcmTokenSync", "FCM token sync failed: ${error.javaClass.simpleName}")
+            diagnostics.warn("FcmTokenSync", "FCM token sync failed", error)
             throw error
         }
     }

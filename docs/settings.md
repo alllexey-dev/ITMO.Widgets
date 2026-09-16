@@ -191,8 +191,12 @@ system `geo:` intent and lets Android resolve the installed mapping application.
 
 - `Обновить все виджеты` refreshes QR and schedule widgets.
 - `Последнее обновление` displays the last successful widget refresh.
-- `Журнал ошибок` opens sanitized local diagnostics without credentials or
-  tokens.
+- `Журнал ошибок` opens the local diagnostics journal (`core/diagnostics`): the
+  newest 200 warnings, errors and crashes, stored as one JSON line each in
+  `files/diagnostics/log.jsonl`. Every message passes `DiagnosticSanitizer`,
+  which redacts bearer headers, JWTs and named token/password fields before
+  the write. The screen copies the whole journal to the clipboard or clears it
+  after confirmation; nothing is uploaded. The row shows the entry count.
 - `Повторить первоначальную настройку` starts onboarding again.
 - `Версия` displays the application version.
 

@@ -19,6 +19,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 class SessionRepositoryImplTest {
 
@@ -152,7 +153,8 @@ class SessionRepositoryImplTest {
             lifecycleEffects = effects,
             backendIdentitySync = identitySync,
             fcmTokenSync = dev.alllexey.itmowidgets.core.notification.FcmTokenSync { },
-            backendDeviceSession = deviceSession
+            backendDeviceSession = deviceSession,
+            diagnostics = RecordingDiagnostics()
         )
         return Fixture(
             repository,

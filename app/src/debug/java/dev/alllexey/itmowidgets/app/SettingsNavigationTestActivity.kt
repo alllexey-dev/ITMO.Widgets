@@ -68,6 +68,7 @@ import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onStart
+import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
 
 /** Actual settings/NavHost lifecycle, backed only by in-memory settings and no credentials. */
 @AndroidEntryPoint
@@ -163,7 +164,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, refresh, AppVersion("test"), SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
+                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, refresh, AppVersion("test"), NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
                         CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(object : CustomSpoilerRepository {
                             override suspend fun hasImage() = false
                             override suspend fun saveImage(sourceUri: String) = false

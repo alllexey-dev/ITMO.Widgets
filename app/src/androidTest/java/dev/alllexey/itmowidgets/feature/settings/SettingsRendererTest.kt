@@ -55,6 +55,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
 
 @RunWith(AndroidJUnit4::class)
 class SettingsRendererTest {
@@ -398,6 +399,7 @@ class SettingsRendererTest {
                         override fun refreshAll() = Unit
                     },
                     AppVersion(activity.getString(R.string.app_version)),
+                    NoDiagnostics,
                     SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
             })[page.name, SettingsViewModel::class.java]

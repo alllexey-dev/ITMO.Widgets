@@ -1,14 +1,15 @@
 package dev.alllexey.itmowidgets.core.notification
 
-import android.util.Log
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.model.fcm.FcmJsonWrapper
 import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class FcmPayloadDispatcher @Inject constructor(
     private val gson: Gson,
-    handlers: Set<@JvmSuppressWildcards FcmPayloadHandler>
+    handlers: Set<@JvmSuppressWildcards FcmPayloadHandler>,
+    private val diagnostics: AppDiagnostics
 ) {
     private val handlersByType = handlers.associateBy(FcmPayloadHandler::type).also {
         require(it.size == handlers.size) { "Duplicate FCM payload handlers" }
@@ -20,7 +21,7 @@ class FcmPayloadDispatcher @Inject constructor(
             val wrapper = gson.fromJson(json, FcmJsonWrapper::class.java) ?: return
             val handler = handlersByType[wrapper.type]
             if (handler == null) {
-                Log.w(TAG, "Unknown FCM payload type")
+                diagnostics.warn(TAG, "Unknown FCM payload type: ${wrapper.type}")
                 return
             }
             // Gson's reflective adapter can supply null for a missing non-null Kotlin field.
@@ -30,7 +31,7 @@ class FcmPayloadDispatcher @Inject constructor(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
-            Log.w(TAG, "FCM dispatch failed: ${error.javaClass.simpleName}")
+            diagnostics.warn(TAG, "FCM dispatch failed", error)
         }
     }
 

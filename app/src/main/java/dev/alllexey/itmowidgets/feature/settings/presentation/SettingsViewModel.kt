@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
@@ -44,6 +45,7 @@ sealed interface SettingsEvent {
     data object OpenNotificationSettings : SettingsEvent
     data object ChooseCustomSpoiler : SettingsEvent
     data object ResetCustomSpoiler : SettingsEvent
+    data object OpenDiagnostics : SettingsEvent
     data class ShowError(val error: AppError) : SettingsEvent
 }
 
@@ -53,6 +55,7 @@ class SettingsViewModel @Inject constructor(
     private val customServicesRepository: CustomServicesRepository,
     private val widgetRefreshRequester: WidgetRefreshRequester,
     private val appVersion: AppVersion,
+    diagnostics: AppDiagnostics,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -74,6 +77,8 @@ class SettingsViewModel @Inject constructor(
             else -> sharing
         }
     }
+    private val diagnosticsCount = diagnostics.observe().map { it.size }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
     private val localSettings = repository.observeLocalSettings()
         .shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
 
@@ -104,14 +109,17 @@ class SettingsViewModel @Inject constructor(
             displayedSharingSettings,
             notificationPermissionGranted,
             customSpoilerConfigured,
-            customSpoilerBusy
-        ) { local, sharing, notificationsGranted, hasCustomSpoiler, imageBusy ->
+            customSpoilerBusy,
+            diagnosticsCount
+        ) { values ->
+            @Suppress("UNCHECKED_CAST")
             buildSections(
-                local = local,
-                sharing = sharing,
-                notificationsGranted = notificationsGranted,
-                hasCustomSpoiler = hasCustomSpoiler,
-                imageBusy = imageBusy
+                local = values[0] as LocalSettings,
+                sharing = values[1] as SharingSettingsState,
+                notificationsGranted = values[2] as Boolean?,
+                hasCustomSpoiler = values[3] as Boolean,
+                imageBusy = values[4] as Boolean,
+                diagnosticsCount = values[5] as Int
             )
         }
             .onEach {
@@ -229,6 +237,7 @@ class SettingsViewModel @Inject constructor(
             KEY_NOTIFICATIONS -> eventChannel.trySend(SettingsEvent.OpenNotificationSettings)
             KEY_QR_CUSTOM_IMAGE -> eventChannel.trySend(SettingsEvent.ChooseCustomSpoiler)
             KEY_QR_RESET_IMAGE -> eventChannel.trySend(SettingsEvent.ResetCustomSpoiler)
+            KEY_DIAGNOSTICS -> eventChannel.trySend(SettingsEvent.OpenDiagnostics)
             KEY_RETRY_PRIVACY -> viewModelScope.launch {
                 refreshPrivacySettings()
             }
@@ -287,7 +296,8 @@ class SettingsViewModel @Inject constructor(
         sharing: SharingSettingsState,
         notificationsGranted: Boolean?,
         hasCustomSpoiler: Boolean,
-        imageBusy: Boolean
+        imageBusy: Boolean,
+        diagnosticsCount: Int
     ): List<SettingSection> = when (page) {
         SettingsPage.ROOT -> listOf(
             SettingSection(
@@ -493,6 +503,13 @@ class SettingsViewModel @Inject constructor(
                         description = UiText.Resource(R.string.settings_refresh_widgets_description),
                         trailingIconRes = R.drawable.ic_refresh
                     ),
+                    SettingItem.Action(
+                        key = KEY_DIAGNOSTICS,
+                        title = UiText.Resource(R.string.settings_diagnostics_title),
+                        description = UiText.Resource(R.string.settings_diagnostics_description),
+                        value = UiText.Resource(R.string.settings_diagnostics_count, listOf(diagnosticsCount)),
+                        trailingIconRes = R.drawable.ic_chevron_right
+                    ),
                     SettingItem.Info(
                         key = KEY_VERSION,
                         title = UiText.Resource(R.string.settings_version_title),
@@ -620,6 +637,7 @@ class SettingsViewModel @Inject constructor(
         const val KEY_SPORT_TIME_FILTER = "sport_time_filter"
         const val KEY_REFRESH_WIDGETS = "refresh_widgets"
         const val KEY_VERSION = "app_version"
+        const val KEY_DIAGNOSTICS = "diagnostics"
     }
 }
 

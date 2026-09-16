@@ -6,6 +6,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
+import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 class FcmPayloadDispatcherTest {
     @Test fun `routes independent types and ignores unknown malformed and missing payloads`() = runTest {
@@ -14,7 +15,7 @@ class FcmPayloadDispatcherTest {
             override val type = name
             override suspend fun handle(payload: JsonElement) { received += name + payload.asJsonObject["id"].asInt }
         }
-        val dispatcher = FcmPayloadDispatcher(Gson(), setOf(handler("first"), handler("second")))
+        val dispatcher = FcmPayloadDispatcher(Gson(), setOf(handler("first"), handler("second")), RecordingDiagnostics())
         for (wire in listOf("{", "null", "{}", "[]", "", "{\"type\":\"first\"}",
             "{\"type\":\"first\",\"payload\":null}", "{\"type\":\"third\",\"payload\":{}}")) {
             dispatcher.dispatch(wire)
@@ -35,7 +36,7 @@ class FcmPayloadDispatcherTest {
                 handled = true
             }
         }
-        val dispatcher = FcmPayloadDispatcher(Gson(), setOf(handler))
+        val dispatcher = FcmPayloadDispatcher(Gson(), setOf(handler), RecordingDiagnostics())
         val wire = """{"type":"type","payload":{}}"""
         dispatcher.dispatch(wire)
         fail = false
@@ -46,7 +47,7 @@ class FcmPayloadDispatcherTest {
             override suspend fun handle(payload: JsonElement) { throw CancellationException() }
         }
         try {
-            FcmPayloadDispatcher(Gson(), setOf(cancelled)).dispatch(wire)
+            FcmPayloadDispatcher(Gson(), setOf(cancelled), RecordingDiagnostics()).dispatch(wire)
             fail("Cancellation must propagate")
         } catch (_: CancellationException) { }
     }

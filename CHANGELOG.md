@@ -6,6 +6,10 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ## Unreleased (2.1-SNAPSHOT)
 
 ### 2026-09-16
+- Local diagnostics journal: `core/diagnostics` records warnings, errors and
+  uncaught crashes to a bounded file after redacting tokens; `Журнал ошибок`
+  in maintenance lists, copies and clears it. Sync, FCM, push and update
+  failures that used to go to logcat now land there.
 
 - Home MyITMO FAB opens an origin-restricted embedded browser with history,
   retry and external-browser fallback; web session data is cleared on sign-out

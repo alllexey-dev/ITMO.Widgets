@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.feature.social.data.push
 
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.model.fcm.impl.FriendshipEvent
 import dev.alllexey.itmowidgets.core.model.fcm.impl.FriendshipEventPayload
 import dev.alllexey.itmowidgets.core.notification.AppNotification
@@ -21,7 +21,8 @@ class FriendshipPushHandler @Inject constructor(
     private val gson: Gson,
     private val notifier: AppNotifier,
     private val social: SocialRepository,
-    private val services: CustomServicesRepository
+    private val services: CustomServicesRepository,
+    private val diagnostics: AppDiagnostics
 ) : FcmPayloadHandler {
     override val type: String = FriendshipEventPayload.TYPE
 
@@ -30,7 +31,7 @@ class FriendshipPushHandler @Inject constructor(
         val event = try {
             gson.fromJson(payload, FriendshipEventPayload::class.java) ?: return
         } catch (error: Exception) {
-            Log.w(TAG, "Invalid friendship push: ${error.javaClass.simpleName}")
+            diagnostics.warn(TAG, "Invalid friendship push", error)
             return
         }
         val actor = event.user
@@ -57,7 +58,7 @@ class FriendshipPushHandler @Inject constructor(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
-            Log.w(TAG, "Friendship push operation failed: ${error.javaClass.simpleName}")
+            diagnostics.warn(TAG, "Friendship push operation failed", error)
         }
     }
 

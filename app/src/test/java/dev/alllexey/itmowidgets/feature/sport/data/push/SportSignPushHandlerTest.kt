@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
+import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 class SportSignPushHandlerTest {
     @Test fun `both payload types book then satisfy notify and refresh every projection`() = runTest {
@@ -133,7 +134,7 @@ class SportSignPushHandlerTest {
                     notifications += notification
                 }
                 override fun clear() = Unit
-            }, Clock.fixed(Instant.parse("2026-09-15T10:00:00Z"), ZoneOffset.UTC))
+            }, Clock.fixed(Instant.parse("2026-09-15T10:00:00Z"), ZoneOffset.UTC), RecordingDiagnostics())
 
         suspend fun run(vararg lessons: String, enabled: Boolean = true) {
             settings.setCustomServicesEnabled(enabled)

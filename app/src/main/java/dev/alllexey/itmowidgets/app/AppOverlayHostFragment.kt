@@ -60,6 +60,7 @@ class AppOverlayHostFragment : NavHostFragment(), ScreenTransitionHost {
 internal val AppScreen.destinationId: Int
     get() = when (this) {
         AppScreen.SETTINGS -> R.id.settings
+        AppScreen.DIAGNOSTICS -> R.id.diagnostics
         AppScreen.DEBUG_TOOLS -> R.id.debug_tools
         AppScreen.RECORDBOOK_SUBJECT -> R.id.recordbook_subject
         AppScreen.APP_UPDATE -> R.id.app_update

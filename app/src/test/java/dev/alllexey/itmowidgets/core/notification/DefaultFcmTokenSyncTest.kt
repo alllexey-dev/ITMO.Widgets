@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.IOException
+import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 class DefaultFcmTokenSyncTest {
     @Test fun `new token is saved and registered once while a successful unchanged token is skipped`() = runTest {
@@ -80,7 +81,7 @@ class DefaultFcmTokenSyncTest {
                 override suspend fun unregisterCurrentDevice() = Unit
             }, object : CurrentUserProvider {
                 override suspend fun getCurrentUser() = if (signedIn) CurrentUser(ownerIsu, "Synthetic user", null) else null
-            })
+            }, RecordingDiagnostics())
     }
 
     private class MemoryPreferences : DataStore<Preferences> {

@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.core.session
 
-import android.util.Log
 import api.myitmo.MyItmo
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.model.IdTokenRequest
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import kotlinx.coroutines.CancellationException
@@ -17,7 +17,8 @@ interface BackendIdentitySync {
 class DefaultBackendIdentitySync(
     private val settings: AppSettingsStorage,
     private val myItmo: MyItmo,
-    private val widgetsApi: ItmoWidgetsApi
+    private val widgetsApi: ItmoWidgetsApi,
+    private val diagnostics: AppDiagnostics
 ) : BackendIdentitySync {
 
     override suspend fun sync() {
@@ -32,7 +33,7 @@ class DefaultBackendIdentitySync(
             throw cancellation
         } catch (error: Exception) {
             // Best effort: a stale profile must never block the application.
-            Log.w(TAG, "Failed to publish identity to backend", error)
+            diagnostics.warn(TAG, "Failed to publish identity to backend", error)
         }
     }
 

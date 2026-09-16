@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
+import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 class FriendshipPushHandlerTest {
     private val gson = ItmoWidgetsImpl(MyItmo()).gson
@@ -89,6 +90,6 @@ class FriendshipPushHandlerTest {
             override fun observeEnabled() = flowOf(enabled)
             override suspend fun isEnabled() = enabled
             override suspend fun setEnabled(enabled: Boolean) { this@Fixture.enabled = enabled }
-        })
+        }, RecordingDiagnostics())
     }
 }

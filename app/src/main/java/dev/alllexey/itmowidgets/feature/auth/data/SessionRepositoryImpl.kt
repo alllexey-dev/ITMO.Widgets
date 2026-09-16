@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 
 class SessionRepositoryImpl @Inject constructor(
     private val tokenStore: SessionTokenStore,
@@ -34,7 +35,8 @@ class SessionRepositoryImpl @Inject constructor(
     private val lifecycleEffects: SessionLifecycleEffects,
     private val backendIdentitySync: BackendIdentitySync,
     private val backendDeviceSession: BackendDeviceSession,
-    private val fcmTokenSync: FcmTokenSync
+    private val fcmTokenSync: FcmTokenSync,
+    private val diagnostics: AppDiagnostics
 ) : SessionRepository {
 
     private val mutableState = MutableStateFlow<SessionState>(SessionState.Initializing)
@@ -138,9 +140,11 @@ class SessionRepositoryImpl @Inject constructor(
     }
 
     private suspend fun synchronizeSignedInSession() {
+        // Identity and token sync record their own failures; device registration reports here.
         runCatching { backendIdentitySync.sync() }
         runCatching { fcmTokenSync.sync() }
         runCatching { backendDeviceSession.registerCurrentDevice() }
+            .onFailure { diagnostics.warn("Session", "Device registration after sign-in failed", it) }
     }
 
     private suspend fun clearSessionData() {

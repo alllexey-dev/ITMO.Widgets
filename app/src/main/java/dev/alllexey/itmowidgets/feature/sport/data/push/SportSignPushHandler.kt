@@ -1,10 +1,10 @@
 package dev.alllexey.itmowidgets.feature.sport.data.push
 
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.SportLessonDto
 import dev.alllexey.itmowidgets.core.model.fcm.impl.SportAutoSignLessonsPayload
@@ -36,7 +36,8 @@ class SportSignPushHandler(
     private val pending: PendingSportBookingsRepository,
     private val widgets: ScheduleWidgetRefreshRequester,
     private val notifier: AppNotifier,
-    private val clock: Clock
+    private val clock: Clock,
+    private val diagnostics: AppDiagnostics
 ) : FcmPayloadHandler {
     override val type = if (auto) SportAutoSignLessonsPayload.TYPE else SportFreeSignLessonsPayload.TYPE
 
@@ -64,7 +65,7 @@ class SportSignPushHandler(
                         safely { widgets.refreshScheduleWidgets() }
                     }
                     SportSignOutcome.NO_CAPACITY -> Unit
-                    SportSignOutcome.RETRY_LATER -> Log.w(TAG, "Sport push booking deferred")
+                    SportSignOutcome.RETRY_LATER -> diagnostics.warn(TAG, "Sport push booking deferred for lesson ${lesson.id}")
                 }
             }
         }
@@ -96,7 +97,7 @@ class SportSignPushHandler(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
-            Log.w(TAG, "Sport push operation failed: ${error.javaClass.simpleName}")
+            diagnostics.warn(TAG, "Sport push operation failed", error)
         }
     }
 
@@ -108,10 +109,11 @@ class SportSignPushHandler(
         private val pending: PendingSportBookingsRepository,
         private val widgets: ScheduleWidgetRefreshRequester,
         private val notifier: AppNotifier,
-        @param:WallClock private val clock: Clock
+        @param:WallClock private val clock: Clock,
+        private val diagnostics: AppDiagnostics
     ) {
         fun create(auto: Boolean): FcmPayloadHandler =
-            SportSignPushHandler(auto, gson, actions, api, bookings, pending, widgets, notifier, clock)
+            SportSignPushHandler(auto, gson, actions, api, bookings, pending, widgets, notifier, clock, diagnostics)
     }
 
     companion object {

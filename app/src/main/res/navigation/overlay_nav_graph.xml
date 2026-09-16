@@ -17,6 +17,11 @@
     </fragment>
 
     <fragment
+        android:id="@+id/diagnostics"
+        android:name="dev.alllexey.itmowidgets.feature.settings.ui.DiagnosticsFragment"
+        android:label="diagnostics" />
+
+    <fragment
         android:id="@+id/debug_tools"
         android:name="dev.alllexey.itmowidgets.feature.debug.ui.DebugToolsFragment"
         android:label="Debug tools"

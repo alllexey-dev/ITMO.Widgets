@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 class AppUpdateRepositoryImplTest {
 
@@ -97,7 +98,8 @@ class AppUpdateRepositoryImplTest {
                 customServices = FakeCustomServicesRepository(customServicesEnabled),
                 utilityStorage = storage,
                 installedVersion = AppVersionName(INSTALLED_VERSION),
-                clock = Clock.fixed(now, ZoneOffset.UTC)
+                clock = Clock.fixed(now, ZoneOffset.UTC),
+                diagnostics = RecordingDiagnostics()
             )
         )
     }

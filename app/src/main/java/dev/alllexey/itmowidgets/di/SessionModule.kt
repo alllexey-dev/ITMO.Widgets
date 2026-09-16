@@ -8,6 +8,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
@@ -34,11 +35,13 @@ object SessionModule {
     fun provideBackendIdentitySync(
         settings: AppSettingsStorage,
         myItmo: MyItmo,
-        widgetsApi: ItmoWidgetsApi
+        widgetsApi: ItmoWidgetsApi,
+        diagnostics: AppDiagnostics
     ): BackendIdentitySync = DefaultBackendIdentitySync(
         settings = settings,
         myItmo = myItmo,
-        widgetsApi = widgetsApi
+        widgetsApi = widgetsApi,
+        diagnostics = diagnostics
     )
 
     @Provides

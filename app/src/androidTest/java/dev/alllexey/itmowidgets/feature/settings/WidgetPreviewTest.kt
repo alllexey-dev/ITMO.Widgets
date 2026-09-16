@@ -65,6 +65,7 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
 
 @RunWith(AndroidJUnit4::class)
 class WidgetPreviewTest {
@@ -329,7 +330,7 @@ class WidgetPreviewTest {
                         override suspend fun setEnabled(enabled: Boolean) = Unit
                     },
                     object : WidgetRefreshRequester { override fun refreshAll() = Unit },
-                    AppVersion(activity.getString(R.string.app_version)), SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
+                    AppVersion(activity.getString(R.string.app_version)), NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
             })[SettingsViewModel::class.java]
             activity.findViewById<TextView>(R.id.settings_title).text = page.title.resolve(activity)

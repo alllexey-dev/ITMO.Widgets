@@ -25,6 +25,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.ScreenTransitionHost
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
@@ -169,6 +171,7 @@ class SettingsFragment : Fragment() {
                     SettingsEvent.OpenNotificationSettings -> openNotificationSettings()
                     SettingsEvent.ChooseCustomSpoiler -> chooseCustomSpoiler()
                     SettingsEvent.ResetCustomSpoiler -> spoilerViewModel.resetImage()
+                    SettingsEvent.OpenDiagnostics -> openScreen(AppScreen.DIAGNOSTICS)
                     is SettingsEvent.ShowError -> {
                         restoreRenderedValues()
                         Snackbar.make(

@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
-import android.util.Log
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
@@ -14,7 +14,8 @@ class CustomServicesRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
     private val identitySync: BackendIdentitySync,
     private val tokenSync: FcmTokenSync,
-    private val devices: BackendDeviceSession
+    private val devices: BackendDeviceSession,
+    private val diagnostics: AppDiagnostics
 ) : CustomServicesRepository {
 
     override fun observeEnabled(): Flow<Boolean> {
@@ -43,7 +44,7 @@ class CustomServicesRepositoryImpl @Inject constructor(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
-            Log.w("CustomServices", "Device session sync failed: ${error.javaClass.simpleName}")
+            diagnostics.warn("CustomServices", "Device session sync failed", error)
         }
     }
 }

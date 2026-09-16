@@ -27,6 +27,7 @@ Paths are relative to `app/src/main/java/dev/alllexey/itmowidgets/`.
 app/            Application, MainActivity, navigation coordinator, notifier, widget coordinator
 core/           cross-cutting; knows nothing about features
   debug/        BuildConfig.DEBUG fixtures (provider / controller / store)
+  diagnostics/  AppDiagnostics journal, sanitizer, crash handler
   friend/       FriendRepository — the schedule picker's narrow view of friends
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState
   navigation/   contracts between features (FriendSelectionContract, UserScreenArgs)
@@ -194,8 +195,8 @@ relying on review.
 
 ## Known gaps
 
-Toward v2.0.1 parity: authentication and onboarding polish, the three widgets'
-boot receiver, error diagnostics. The home feed is a stub with QR and MyITMO web quick actions.
+Toward v2.0.1 parity: authentication and onboarding polish. The home feed is a
+stub with QR and MyITMO web quick actions.
 
 Structural debt, in priority order:
 

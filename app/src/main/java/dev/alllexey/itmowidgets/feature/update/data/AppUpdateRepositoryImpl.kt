@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.update.data
 
-import android.util.Log
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.time.WallClock
@@ -28,7 +28,8 @@ class AppUpdateRepositoryImpl @Inject constructor(
     private val customServices: CustomServicesRepository,
     private val utilityStorage: UtilityStorage,
     private val installedVersion: AppVersionName,
-    @param:WallClock private val clock: Clock
+    @param:WallClock private val clock: Clock,
+    private val diagnostics: AppDiagnostics
 ) : AppUpdateRepository {
 
     override suspend fun loadUpdate(): AppUpdate? {
@@ -62,7 +63,7 @@ class AppUpdateRepositoryImpl @Inject constructor(
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {
-        Log.w(TAG, "Failed to read the latest app version", error)
+        diagnostics.warn(TAG, "Failed to read the latest app version", error)
         null
     }
 

@@ -40,6 +40,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
@@ -297,6 +298,7 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_SPORT_TIME_FILTER,
                     SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN,
                     SettingsViewModel.KEY_REFRESH_WIDGETS,
+                    SettingsViewModel.KEY_DIAGNOSTICS,
                     SettingsViewModel.KEY_VERSION
                 ),
                 items.map(SettingItem::key).toSet()
@@ -982,6 +984,7 @@ class SettingsViewModelTest {
             customServicesRepository = customServicesRepository,
             widgetRefreshRequester = refresher,
             appVersion = AppVersion("2.1-test"),
+            diagnostics = RecordingDiagnostics(),
             savedStateHandle = SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
         )
         return Fixture(viewModel, repository, customServicesRepository, refresher)
