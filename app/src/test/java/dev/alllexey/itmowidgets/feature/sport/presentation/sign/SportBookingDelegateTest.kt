@@ -252,6 +252,10 @@ class SportBookingDelegateTest {
             scheduleRefreshCount += 1
         }
 
+        override fun observeSportCatalog(): Flow<DataState<List<SportLesson>>> {
+            return flowOf(DataState.Success(emptyList()))
+        }
+
         override fun observeSportFilters(): Flow<DataState<SportFilterCatalog>> {
             return flowOf(
                 DataState.Success(

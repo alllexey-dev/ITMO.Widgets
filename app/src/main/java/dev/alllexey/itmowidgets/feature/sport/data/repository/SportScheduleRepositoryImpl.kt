@@ -23,7 +23,9 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRep
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
@@ -150,6 +152,13 @@ class SportScheduleRepositoryImpl @Inject constructor(
     }
 
     override fun observeSportSchedule() = combined
+
+    override fun observeSportCatalog(): Flow<DataState<List<SportLesson>>> = scheduleFlow.map { state ->
+        when (state) {
+            is DataState.Success -> DataState.Success(state.data.values.flatten().filter { it.isFreeAttendance() })
+            is DataState.Error -> state
+        }
+    }
 
     override fun observeSportFilters() = filtersFlow
 

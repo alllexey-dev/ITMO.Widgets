@@ -20,6 +20,13 @@ interface SportScheduleRepository {
 
     suspend fun refreshSportSchedule()
 
+    /**
+     * Free-attendance lessons from ITMO only, without the viewer's queues and friends.
+     * Emits as soon as [refreshSportSchedule] completes; screens about another user
+     * must not wait for streams that only the viewer's own sport tab refreshes.
+     */
+    fun observeSportCatalog(): Flow<DataState<List<SportLesson>>>
+
     fun observeSportFilters(): Flow<DataState<SportFilterCatalog>>
 
     suspend fun refreshSportFilters()

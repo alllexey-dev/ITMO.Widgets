@@ -7,7 +7,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.util.MergedDataState
+import dev.alllexey.itmowidgets.core.util.DataState
+import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
@@ -54,8 +55,9 @@ class UserSportViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = coroutineScope {
-                    // Confirmed IDs are resolved against the shared catalog, which must be loaded.
-                    val catalog = async { sportSchedule.refreshSportSchedule(); sportSchedule.observeSportSchedule().first() }
+                    // Confirmed IDs are resolved against the ITMO catalog alone: the merged schedule
+                    // also waits for the viewer's queues and friends, which only the sport tab loads.
+                    val catalog = async { sportSchedule.refreshSportSchedule(); sportSchedule.observeSportCatalog().first() }
                     when (val bookings = userSport.getUserBookings(isu)) {
                         is AppResult.Failure -> UserSportUiState.Error(bookings.error)
                         is AppResult.Success -> UserSportUiState.Content(
@@ -73,13 +75,9 @@ class UserSportViewModel @Inject constructor(
     private fun merge(
         confirmedIds: List<Long>,
         pending: List<SportBooking>,
-        catalog: MergedDataState<List<SportLesson>>
+        catalog: DataState<List<SportLesson>>
     ): List<SportBooking> {
-        val lessons = when (catalog) {
-            is MergedDataState.Success -> catalog.data
-            is MergedDataState.PartialSuccess -> catalog.data
-            is MergedDataState.Error -> emptyList()
-        }.associateBy { it.lessonId }
+        val lessons = catalog.dataOrNull().orEmpty().associateBy { it.lessonId }
         val confirmed = confirmedIds.mapNotNull { lessons[it]?.toBooking() }
         val pendingWithoutDuplicates = pending.filter { it.lessonId !in confirmedIds }
         return (confirmed + pendingWithoutDuplicates).sortedBy { it.start }

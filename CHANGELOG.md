@@ -6,6 +6,9 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ## Unreleased (2.1-SNAPSHOT)
 
 ### 2026-09-16
+- Another user's sport no longer waits for the merged sport schedule; it resolves
+  confirmed lessons against the raw catalog, so it loads before the sport tab
+  was ever opened in the process.
 - FCM restored: messaging service, token sync, `sport` and `friends` channels,
   serialized WorkManager processing, sport auto-sign booking from pushes,
   friendship notifications that open the profile. Delivery is guarded by the

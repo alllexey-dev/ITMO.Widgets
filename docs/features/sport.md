@@ -81,9 +81,11 @@ in the Backend sport-automation contract.
 ## Another user's sport
 
 `UserSportFragment` (overlay `USER_SPORT`) lists confirmed lessons resolved
-against the shared catalog plus pending queues returned by Backend, sorted by
+against the ITMO catalog plus pending queues returned by Backend, sorted by
 start, read-only: no cancellation, no details, no friends preview. `Forbidden`
-renders as a lock state.
+renders as a lock state. The screen reads `observeSportCatalog()`, the raw
+free-attendance lessons, not the merged schedule: that stream also waits for
+the viewer's queues and friends, which only the sport tab refreshes.
 
 ## Push handling
 
