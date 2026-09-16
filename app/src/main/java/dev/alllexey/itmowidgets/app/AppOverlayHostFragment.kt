@@ -64,6 +64,7 @@ internal val AppScreen.destinationId: Int
         AppScreen.RECORDBOOK_SUBJECT -> R.id.recordbook_subject
         AppScreen.APP_UPDATE -> R.id.app_update
         AppScreen.QR_PASS -> R.id.qr_pass
+        AppScreen.MY_ITMO_WEB -> R.id.my_itmo_web
         AppScreen.FRIENDS -> R.id.friends
         AppScreen.USER_FRIENDS -> R.id.user_friends
         AppScreen.USER_SEARCH -> R.id.user_search

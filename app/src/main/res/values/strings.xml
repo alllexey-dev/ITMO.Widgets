@@ -621,4 +621,10 @@
     <string name="qr_pass_refresh">Обновить QR-код</string>
     <string name="qr_pass_empty_title">QR-код пока недоступен</string>
     <string name="qr_pass_empty_description">Попробуйте обновить пропуск через MyITMO</string>
+    <string name="home_open_my_itmo">Открыть сайт Мой ИТМО</string>
+    <string name="my_itmo_web_title">Мой ИТМО</string>
+    <string name="my_itmo_web_reload">Обновить страницу</string>
+    <string name="my_itmo_web_external">Открыть в браузере</string>
+    <string name="my_itmo_web_error_title">Не удалось открыть Мой ИТМО</string>
+    <string name="my_itmo_web_error_description">Проверьте подключение к интернету и попробуйте ещё раз</string>
 </resources>

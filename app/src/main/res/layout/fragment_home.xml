@@ -8,7 +8,7 @@
         style="@style/Widget.ItmoWidgets.ContentState"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="104dp">
+        android:paddingBottom="176dp">
 
         <ImageView
             style="@style/Widget.ItmoWidgets.ContentState.Icon"
@@ -27,18 +27,28 @@
 
     <LinearLayout
         android:id="@+id/quick_actions"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:gravity="end"
         android:orientation="vertical">
-        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/web_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:contentDescription="@string/home_open_my_itmo"
+            app:backgroundTint="?attr/colorSecondaryContainer"
+            app:tint="?attr/colorOnSecondaryContainer"
+            app:srcCompat="@drawable/ic_language" />
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/qr_fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/home_open_qr"
-            android:text="@string/qr_pass_title"
-            app:icon="@drawable/ic_qr_code" />
+            app:srcCompat="@drawable/ic_qr_code" />
     </LinearLayout>
 </FrameLayout>

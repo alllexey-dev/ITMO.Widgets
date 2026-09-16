@@ -195,7 +195,7 @@ relying on review.
 ## Known gaps
 
 Toward v2.0.1 parity: authentication and onboarding polish, the three widgets'
-boot receiver, error diagnostics. The home feed is a stub with a QR quick action.
+boot receiver, error diagnostics. The home feed is a stub with QR and MyITMO web quick actions.
 
 Structural debt, in priority order:
 

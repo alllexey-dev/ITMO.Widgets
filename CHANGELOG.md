@@ -7,6 +7,11 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
 ### 2026-09-16
 
+- Home MyITMO FAB opens an origin-restricted embedded browser with history,
+  retry and external-browser fallback; web session data is cleared on sign-out
+  or native account replacement, without exposing native tokens to JavaScript.
+  Both home FABs are icon-only, with localized accessibility descriptions.
+
 - Home QR FAB opens a full-screen pass with cached loading, refresh/retry and
   active cache-expiry handling; widget fallback semantics are unchanged.
 

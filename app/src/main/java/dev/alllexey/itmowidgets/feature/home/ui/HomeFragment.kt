@@ -33,6 +33,7 @@ class HomeFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.webFab.setOnClickListener { openScreen(AppScreen.MY_ITMO_WEB) }
         binding.qrFab.setOnClickListener { openScreen(AppScreen.QR_PASS) }
     }
 

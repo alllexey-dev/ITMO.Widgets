@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 
 enum class AppScreen {
-    SETTINGS, DEBUG_TOOLS, RECORDBOOK_SUBJECT, APP_UPDATE, QR_PASS,
+    SETTINGS, DEBUG_TOOLS, RECORDBOOK_SUBJECT, APP_UPDATE, QR_PASS, MY_ITMO_WEB,
     FRIENDS, USER_FRIENDS, USER_SEARCH, USER_PROFILE, USER_SCHEDULE, USER_SPORT
 }
 

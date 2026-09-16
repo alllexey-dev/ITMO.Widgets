@@ -34,6 +34,9 @@ import androidx.core.view.updatePadding
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentFactory
+import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebFragment
+import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebPreviewFragment
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -102,6 +105,11 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        supportFragmentManager.fragmentFactory = object : FragmentFactory() {
+            override fun instantiate(classLoader: ClassLoader, className: String): Fragment =
+                if (className == MyItmoWebFragment::class.java.name) MyItmoWebPreviewFragment()
+                else super.instantiate(classLoader, className)
+        }
         delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, state: Bundle?) {

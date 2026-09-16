@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/web_reload"
+        android:icon="@drawable/ic_refresh"
+        android:title="@string/my_itmo_web_reload"
+        app:iconTint="?attr/colorOnSurface"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/web_external"
+        android:title="@string/my_itmo_web_external"
+        app:showAsAction="never" />
+</menu>
