@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.ui.bindSelectionAccessibility
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemFriendSelectorBinding
+import dev.alllexey.itmowidgets.core.ui.userDisplayName
 
 /**
  * One quiet row per person. Selection is a contextual surface, not a stroke; a
@@ -53,7 +54,7 @@ class FriendSelectorAdapter(
         fun bind(item: UserSummary) {
             val context = binding.root.context
             binding.avatar.setUser(item)
-            binding.name.text = item.name
+            binding.name.text = context.userDisplayName(item.name, item.isu)
             binding.subtitle.text = buildSubtitle(item)
             val canViewSchedule = item.sharing.schedule
             val isSelected = canViewSchedule && item.isu == selectedIsu

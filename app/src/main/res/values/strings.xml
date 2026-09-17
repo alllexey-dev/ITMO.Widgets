@@ -590,6 +590,7 @@
     <string name="user_profile_sport_title">Спорт</string>
     <string name="user_profile_sport_open">Записи и ожидающие занятия</string>
     <string name="user_profile_hidden">Скрыто настройками приватности</string>
+    <string name="user_name_placeholder">Пользователь ИСУ %1$d</string>
     <string name="user_profile_hidden_friends_hint">Обычно открывается после добавления в друзья</string>
     <string name="user_profile_not_found_title">Профиль не найден</string>
     <string name="user_profile_not_found_description">Этот человек ещё не пользуется ITMO.Widgets</string>

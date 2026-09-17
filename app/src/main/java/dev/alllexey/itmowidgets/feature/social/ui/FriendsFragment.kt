@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import dev.alllexey.itmowidgets.core.ui.userDisplayName
 
 @AndroidEntryPoint
 class FriendsFragment : Fragment() {
@@ -162,7 +163,7 @@ class FriendsFragment : Fragment() {
             ).show()
             is FriendsEvent.ConfirmRemove -> MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.friends_remove_confirm_title)
-                .setMessage(getString(R.string.friends_remove_confirm_message, event.name))
+                .setMessage(getString(R.string.friends_remove_confirm_message, requireContext().userDisplayName(event.name, event.isu)))
                 .setNegativeButton(R.string.common_cancel, null)
                 .setPositiveButton(R.string.user_action_remove) { _, _ -> viewModel.removeFriend(event.isu) }
                 .show()

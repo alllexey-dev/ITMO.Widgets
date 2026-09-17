@@ -1,11 +1,13 @@
 package dev.alllexey.itmowidgets.di
 
+import android.content.Context
 import android.os.Build
 import api.myitmo.MyItmo
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
@@ -33,11 +35,13 @@ object SessionModule {
     @Provides
     @Singleton
     fun provideBackendIdentitySync(
+        @ApplicationContext context: Context,
         settings: AppSettingsStorage,
         myItmo: MyItmo,
         widgetsApi: ItmoWidgetsApi,
         diagnostics: AppDiagnostics
     ): BackendIdentitySync = DefaultBackendIdentitySync(
+        context = context,
         settings = settings,
         myItmo = myItmo,
         widgetsApi = widgetsApi,

@@ -32,6 +32,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import dev.alllexey.itmowidgets.core.ui.userDisplayName
 
 @AndroidEntryPoint
 class UserProfileFragment : Fragment() {
@@ -97,7 +98,7 @@ class UserProfileFragment : Fragment() {
     private fun renderContent(state: UserProfileUiState.Content) = with(binding) {
         val user = state.profile.user
         avatar.setUser(user)
-        name.text = user.name
+        name.text = requireContext().userDisplayName(user.name, user.isu)
         val firstGroup = user.groups.firstOrNull()
         group.isVisible = firstGroup != null
         group.text = firstGroup?.let {
@@ -179,7 +180,7 @@ class UserProfileFragment : Fragment() {
             ).show()
             is UserProfileEvent.ConfirmRemove -> MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.friends_remove_confirm_title)
-                .setMessage(getString(R.string.friends_remove_confirm_message, event.name))
+                .setMessage(getString(R.string.friends_remove_confirm_message, requireContext().userDisplayName(event.name, viewModel.isu)))
                 .setNegativeButton(R.string.common_cancel, null)
                 .setPositiveButton(R.string.user_action_remove) { _, _ -> viewModel.removeFriend() }
                 .show()

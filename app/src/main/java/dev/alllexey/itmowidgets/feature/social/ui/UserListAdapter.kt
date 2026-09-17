@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.databinding.ItemUserRowBinding
 import dev.alllexey.itmowidgets.feature.social.presentation.UserAction
 import dev.alllexey.itmowidgets.feature.social.presentation.UserListItem
 import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
+import dev.alllexey.itmowidgets.core.ui.userDisplayName
 
 /** Renders people lists shared by friends, requests and search: one row layout, actions by state. */
 class UserListAdapter(
@@ -67,8 +68,9 @@ class UserListAdapter(
 
         fun bind(row: UserRowUi) = with(binding) {
             val context = root.context
+            val displayName = context.userDisplayName(row.name, row.isu)
             avatar.setUser(row.name, row.pictureUrl)
-            name.text = row.name
+            name.text = displayName
             subtitle.text = row.subtitle.resolve(context)
             status.isVisible = row.status != null
             status.text = row.status?.resolve(context)
@@ -78,7 +80,7 @@ class UserListAdapter(
             root.isClickable = row.opensProfile
             root.setOnClickListener(if (row.opensProfile) { _ -> onOpen(row) } else null)
             root.contentDescription = listOfNotNull(
-                row.name,
+                displayName,
                 subtitle.text,
                 status.text.takeIf { row.status != null }
             ).joinToString(". ")

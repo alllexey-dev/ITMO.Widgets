@@ -23,6 +23,13 @@ Everything here is gated on the custom-services opt-in.
 `FRIENDS`, `BLOCKED` (reserved, never produced yet). `UserSummary.sharing`
 carries the viewer's capabilities, not the owner's audiences.
 
+Identity publication: `BackendIdentitySync` uploads the ITMO.ID id token on cold
+start, after sign-in and when services are enabled. A failed upload is retried
+by `IdentitySyncWork` with exponential backoff, up to six attempts, and every
+failure is recorded in the diagnostics journal. Until the upload lands,
+`UserData.name` from Backend is empty and every screen renders
+`Пользователь ИСУ N` through `Context.userDisplayName`.
+
 ## Profile tab (`feature/me`)
 
 Header with avatar, name, study group from Backend and ISU. A `Друзья` card

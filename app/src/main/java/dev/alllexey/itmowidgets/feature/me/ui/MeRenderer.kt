@@ -11,11 +11,12 @@ object MeRenderer {
         val context = binding.root.context
         val user = state.user
         val backendUser = state.backendUser
+        val backendName = backendUser?.name?.takeIf { it.isNotBlank() }
         binding.profileAvatar.setUser(
-            user?.name ?: backendUser?.name,
+            user?.name ?: backendName,
             user?.pictureUrl ?: backendUser?.pictureUrl
         )
-        binding.profileName.text = user?.name ?: backendUser?.name
+        binding.profileName.text = user?.name ?: backendName
             ?: context.getString(R.string.me_unknown_user)
         val group = backendUser?.groups?.firstOrNull()
         binding.profileGroup.isVisible = group != null

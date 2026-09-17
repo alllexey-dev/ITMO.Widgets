@@ -260,8 +260,9 @@ class SessionRepositoryImplTest {
     private class FakeIdentitySync : BackendIdentitySync {
         var requests = 0
 
-        override suspend fun sync() {
+        override suspend fun sync(scheduleRetry: Boolean): Boolean {
             requests += 1
+            return true
         }
     }
 

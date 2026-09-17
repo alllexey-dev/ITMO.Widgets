@@ -11,6 +11,10 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
   opening order and pending selection survive recreation; selection updates only
   its markers, and history changes after confirmation for the next opening.
 
+### 2026-09-17
+- Identity upload retries through WorkManager after a failure; an empty name
+  from Backend renders as `Пользователь ИСУ N` instead of raw text.
+
 ### 2026-09-16
 - Roadmap: BARS mark tracking and notifications added as Stages 37–38 inside
   v2.2; the QR quick-settings tile and static app shortcuts added to the home-feed
