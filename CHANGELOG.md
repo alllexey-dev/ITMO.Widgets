@@ -6,6 +6,8 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ## Unreleased (2.1-SNAPSHOT)
 
 ### 2026-09-17
+- People search shows Cyrillic names: MyItmoApi 1.8.1 sends `Accept-Language: ru`
+  with every MyITMO request (without it the directory transliterates).
 
 - Friend selector: recent chips no longer jump to the front on each tap. Their
   opening order and pending selection survive recreation; selection updates only
