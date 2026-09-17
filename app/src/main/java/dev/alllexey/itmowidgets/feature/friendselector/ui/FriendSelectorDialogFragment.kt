@@ -29,6 +29,7 @@ import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelect
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorUiState
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorViewModel
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.PeopleResults
+import dev.alllexey.itmowidgets.feature.friendselector.presentation.RecentFriendOrder
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlin.math.roundToInt
@@ -46,12 +47,16 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     private var allFriends: List<UserSummary> = emptyList()
     private var initialSelectedIsu: Int? = null
     private var pendingFriend: UserSummary? = null
+    private var selectionInitialized = false
+    private lateinit var recentOrder: RecentFriendOrder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        initialSelectedIsu = arguments
-            ?.getInt(FriendSelectionContract.ARG_SELECTED_ISU)
-            ?.takeIf { it != FriendSelectionContract.NO_USER_ISU }
+        val selection = if (savedInstanceState?.containsKey(STATE_SELECTED_ISU) == true) {
+            savedInstanceState.getInt(STATE_SELECTED_ISU)
+        } else arguments?.getInt(FriendSelectionContract.ARG_SELECTED_ISU)
+        initialSelectedIsu = selection?.takeIf { it != FriendSelectionContract.NO_USER_ISU }
+        recentOrder = RecentFriendOrder(savedInstanceState?.getIntegerArrayList(STATE_RECENT_ORDER))
     }
 
     override fun onCreateView(
@@ -84,6 +89,14 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(STATE_SELECTED_ISU, selectedIsu() ?: FriendSelectionContract.NO_USER_ISU)
+        recentOrder.snapshot?.let { outState.putIntegerArrayList(STATE_RECENT_ORDER, ArrayList(it)) }
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun selectedIsu(): Int? = if (selectionInitialized) pendingFriend?.isu else initialSelectedIsu
+
     override fun onDestroyView() {
         binding.recyclerView.adapter = null
         binding.recentRecyclerView.adapter = null
@@ -92,8 +105,8 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun setupLists() {
-        friendsAdapter = FriendSelectorAdapter(initialSelectedIsu, ::selectFriend, ::openProfile)
-        recentAdapter = RecentFriendAdapter(::selectRecentItem)
+        friendsAdapter = FriendSelectorAdapter(selectedIsu(), ::selectFriend, ::openProfile)
+        recentAdapter = RecentFriendAdapter(::selectRecentItem).apply { setSelectedIsu(selectedIsu()) }
 
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -153,7 +166,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         // The own profile arrives after the list; the chip must not stay generic.
         viewModel.currentUser
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach { updateRecentSelection() }
+            .onEach(recentAdapter::setCurrentUser)
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
@@ -169,14 +182,14 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         binding.applyButton.isEnabled = true
 
         allFriends = state.friends
-        pendingFriend = pendingFriend ?: initialSelectedIsu?.let { isu ->
-            allFriends.firstOrNull { it.isu == isu && it.sharing.schedule }
+        if (!selectionInitialized) {
+            pendingFriend = initialSelectedIsu?.let { isu ->
+                allFriends.firstOrNull { it.isu == isu && it.sharing.schedule }
+            }
+            selectionInitialized = true
         }
 
-        val recentFriends = (listOfNotNull(pendingFriend) + state.recentFriends)
-            .filter { it.sharing.schedule }
-            .distinctBy(UserSummary::isu)
-            .take(MAX_RECENT_FRIENDS)
+        val recentFriends = recentOrder.resolve(state.friends, state.recentFriends, initialSelectedIsu)
         recentAdapter.submitItems(recentFriends, pendingFriend?.isu, state.currentUser)
         friendsAdapter.setSelectedIsu(pendingFriend?.isu)
 
@@ -229,7 +242,9 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         binding.applyButton.isEnabled = true
         allFriends = emptyList()
         pendingFriend = null
-        recentAdapter.submitItems(emptyList(), null, currentUser())
+        selectionInitialized = true
+        val recentFriends = recentOrder.resolve(emptyList(), emptyList(), initialSelectedIsu)
+        recentAdapter.submitItems(recentFriends, null, currentUser())
         friendsAdapter.submitList(emptyList())
         showState(
             icon = R.drawable.ic_group,
@@ -296,6 +311,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun selectFriend(friend: UserSummary) {
+        selectionInitialized = true
         pendingFriend = friend
         friendsAdapter.setSelectedIsu(friend.isu)
         updateRecentSelection()
@@ -303,6 +319,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun selectRecentItem(item: RecentFriendItem) {
+        selectionInitialized = true
         pendingFriend = (item as? RecentFriendItem.Friend)?.user
         friendsAdapter.setSelectedIsu(pendingFriend?.isu)
         updateRecentSelection()
@@ -316,12 +333,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     }
 
     private fun updateRecentSelection() {
-        val state = viewModel.uiState.value as? FriendSelectorUiState.Content
-        val items = (listOfNotNull(pendingFriend) + state?.recentFriends.orEmpty())
-            .filter { it.sharing.schedule }
-            .distinctBy(UserSummary::isu)
-            .take(MAX_RECENT_FRIENDS)
-        recentAdapter.submitItems(items, pendingFriend?.isu, currentUser())
+        recentAdapter.setSelectedIsu(pendingFriend?.isu)
     }
 
     private fun currentUser(): UserSummary? = viewModel.currentUser.value
@@ -365,7 +377,8 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     companion object {
         const val TAG = "FriendSelectorBottomSheet"
 
-        private const val MAX_RECENT_FRIENDS = 5
+        private const val STATE_RECENT_ORDER = "recent_friend_order"
+        private const val STATE_SELECTED_ISU = "pending_friend_isu"
         private const val MAX_HEIGHT_RATIO = 0.9f
 
         fun newInstance(selectedIsu: Int? = null) = FriendSelectorDialogFragment().apply {

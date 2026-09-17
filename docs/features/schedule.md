@@ -32,6 +32,11 @@ answered through `FriendSelectionContract` fragment results.
 - A row is selectable only when its schedule is open (`sharing.schedule`).
   Closed rows show a lock and open the public profile on tap; long-press opens
   the profile for any row. Applying records the choice in the recent history.
+- Recent-chip identities and order are fixed when the loaded selector first opens
+  and survive view recreation. Pending taps change only selection markers; a new
+  choice enters the recent history only after Apply and appears on the next opening.
+  Profile refreshes update metadata in place; removed or private schedules stop
+  being selectable without reordering the remaining chips.
 - The own chip reads the current user from its own flow, so an empty or failed
   friend list still shows the avatar.
 

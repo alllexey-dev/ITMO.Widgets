@@ -5,6 +5,12 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
 ## Unreleased (2.1-SNAPSHOT)
 
+### 2026-09-17
+
+- Friend selector: recent chips no longer jump to the front on each tap. Their
+  opening order and pending selection survive recreation; selection updates only
+  its markers, and history changes after confirmation for the next opening.
+
 ### 2026-09-16
 - Roadmap: BARS mark tracking and notifications added as Stages 37–38 inside
   v2.2; the QR quick-settings tile and static app shortcuts added to the home-feed

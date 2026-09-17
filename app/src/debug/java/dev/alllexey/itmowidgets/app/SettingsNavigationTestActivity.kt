@@ -3,6 +3,9 @@ package dev.alllexey.itmowidgets.app
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
+import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
+import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorViewModel
+import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -87,6 +90,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     data class Appearance(val dark: Boolean = false, val fontScale: Float = 1f, val colorSeed: Int? = null)
     companion object {
         @Volatile var appearance = Appearance()
+        @Volatile var friendSelectorFixture = FriendSelectorFixture()
         @Volatile var friendsResult: AppResult<List<UserProfile>> = AppResult.Success(emptyList())
         @Volatile var friendsDelayMs = 0L
         @Volatile var friendsOpen = true
@@ -114,6 +118,15 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, state: Bundle?) {
+                if (f is FriendSelectorDialogFragment) {
+                    ViewModelProvider(f, object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = friendSelectorFixture.let {
+                            FriendSelectorViewModel(it.repository, it.history, it.search) as T
+                        }
+                    })[FriendSelectorViewModel::class.java]
+                    return
+                }
                 if (f is QrCodeFragment) {
                     ViewModelProvider(f, object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
@@ -216,6 +229,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
             }
         }, true)
         super.onCreate(savedInstanceState)
+        supportFragmentManager.setFragmentResultListener(FriendSelectionContract.RESULT_KEY, this) { _, result ->
+            friendSelectorFixture.results += result.getInt(FriendSelectionContract.RESULT_USER_ISU)
+        }
         appearance.colorSeed?.let {
             DynamicColors.applyToActivityIfAvailable(this, DynamicColorsOptions.Builder().setContentBasedSource(it).build())
         }
