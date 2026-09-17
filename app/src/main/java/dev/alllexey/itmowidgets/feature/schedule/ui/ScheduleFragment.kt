@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.getValue
 
@@ -62,6 +63,10 @@ class ScheduleFragment : Fragment() {
     private var listState: Parcelable? = null
     private var hasScrolledToToday = false
     private var errorSnackbar: Snackbar? = null
+    private var pendingDayAnchor: DayAnchor? = null
+    private var anchorUserIsu: Int? = null
+    private var anchorPageRequests = 0
+    private var anchorPagedThrough: LocalDate? = null
 
     private val viewModel: ScheduleViewModel by viewModels()
 
@@ -254,6 +259,13 @@ class ScheduleFragment : Fragment() {
     }
 
     private fun selectUser(user: SelectedUser?) {
+        // Another schedule of the same days: keep the reader on the day and the
+        // offset they were reading instead of rewinding the list to today. An
+        // empty list (a denied or still loading schedule) keeps the last anchor.
+        pendingDayAnchor = currentDayAnchor() ?: pendingDayAnchor
+        anchorUserIsu = user?.isu
+        anchorPageRequests = 0
+        anchorPagedThrough = null
         viewModel.setSelectedUser(user)
         swipe.isRefreshing = true
         viewModel.loadInitialSchedule()
@@ -274,6 +286,12 @@ class ScheduleFragment : Fragment() {
             if (_binding !== renderedBinding) return@submitList
             if (viewModel.uiState.value !is ScheduleUiState.Content) return@submitList
             restoreScrollState()
+            if (restoreDayAnchor(state)) {
+                // Never show the new schedule rewound to its first day: the
+                // anchored day is still being paged in.
+                renderedBinding.outerRecyclerView.visibility = View.INVISIBLE
+                return@submitList
+            }
             tryScrollToToday(state.displayDays)
             renderedBinding.outerRecyclerView.visibility = View.VISIBLE
         }
@@ -340,6 +358,53 @@ class ScheduleFragment : Fragment() {
         if (fabTop.isShown) fabTop.hide()
     }
 
+    private fun currentDayAnchor(): DayAnchor? {
+        val layout = recycler.layoutManager as? LinearLayoutManager ?: return null
+        val position = layout.findFirstVisibleItemPosition()
+        if (position == RecyclerView.NO_POSITION) return null
+        val date = adapter.currentList.getOrNull(position)?.date ?: return null
+        val top = layout.findViewByPosition(position)?.top ?: return null
+        return DayAnchor(date, top - recycler.paddingTop)
+    }
+
+    /** Returns true while the anchored day is still outside the loaded range. */
+    private fun restoreDayAnchor(state: ScheduleUiState.Content): Boolean {
+
+        val anchor = pendingDayAnchor ?: return false
+        // A diff committed after the switch can still carry the previous
+        // schedule; anchoring it would fix the list on the wrong days.
+        if (state.selectedUser?.isu != anchorUserIsu) return true
+        val schedule = state.displayDays
+        // A day without lessons is missing from another user's list: the next
+        // day it does have is the closest thing to the same place in the term.
+        val index = schedule.indexOfFirst { !it.date.isBefore(anchor.date) }
+
+        if (index != -1) {
+            (recycler.layoutManager as LinearLayoutManager)
+                .scrollToPositionWithOffset(index, anchor.offset)
+            pendingDayAnchor = null
+            hasScrolledToToday = true
+            return false
+        }
+
+        // Another user's schedule starts from the initial range again, so a day
+        // reached by pagination needs its pages before it can be anchored.
+        if (state.loadingMore) return true
+        val lastDate = schedule.lastOrNull()?.date
+        if (lastDate != null && lastDate != anchorPagedThrough &&
+            anchorPageRequests < MAX_ANCHOR_PAGE_REQUESTS) {
+            anchorPagedThrough = lastDate
+            anchorPageRequests++
+            viewModel.fetchNextDays()
+            return true
+        }
+
+        // An unreachable day: open the schedule on today, as a fresh screen does.
+        pendingDayAnchor = null
+        hasScrolledToToday = false
+        return false
+    }
+
     private fun tryScrollToToday(schedule: List<ScheduleDisplayDay>) {
 
         if (hasScrolledToToday) return
@@ -381,9 +446,13 @@ class ScheduleFragment : Fragment() {
 
     // endregion
 
+    /** The day a reader is looking at, and how far into it they have scrolled. */
+    private data class DayAnchor(val date: LocalDate, val offset: Int)
+
     companion object {
 
         private const val KEY_LIST_STATE = "list_state"
+        private const val MAX_ANCHOR_PAGE_REQUESTS = 4
 
         fun newInstance(userIsu: Int?): ScheduleFragment {
             return ScheduleFragment().apply {

@@ -17,6 +17,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
@@ -546,6 +547,78 @@ class ScheduleFragmentLifecycleTest {
         }
     }
 
+    @Test
+    fun switchingToAFriendKeepsTheVisibleDayAndItsOffset() = withSchedule { scenario ->
+        val anchor = scrollToMiddle(scenario)
+        val anchoredDay = sampleDays()[anchor.first].date
+        // A friend has their own days: the same date sits at another position.
+        ScheduleLifecycleTestActivity.friendDays.value = sampleDays(30).drop(3)
+        selectFriend(scenario)
+        eventually(scenario) { activity ->
+            val state = activity.viewModel().uiState.value
+            assertTrue(state is ScheduleUiState.Content)
+            assertEquals(FRIEND_ISU, (state as ScheduleUiState.Content).selectedUser?.isu)
+            assertEquals(27, activity.recycler().adapter!!.itemCount)
+            assertTrue("The friend's schedule must be visible", activity.recycler().isShown)
+            assertFalse(activity.recycler().hasPendingAdapterUpdates())
+            assertEquals(anchoredDay to anchor.second, activity.visibleDay())
+        }
+        screenshot("friend-schedule-anchored")
+    }
+
+    @Test
+    fun switchingToAFriendPagesUntilADayBeyondTheInitialRange() =
+        withSchedule(sampleDays(60), restrictToRequestedRange = true, initialItemCount = 16) { scenario ->
+            val anchor = scrollPastInitialPage(scenario)
+            val anchoredDay = sampleDays(60)[anchor.first].date
+            // The anchored day was paginated in and is outside the initial range
+            // a switched-to schedule starts from.
+            ScheduleLifecycleTestActivity.friendDays.value = sampleDays(60).drop(1)
+            selectFriend(scenario)
+            eventually(scenario) { activity ->
+                val state = activity.viewModel().uiState.value
+                assertTrue(state is ScheduleUiState.Content)
+                assertFalse((state as ScheduleUiState.Content).loadingMore)
+                // The anchored day is two pages into the friend's schedule.
+                assertTrue(activity.recycler().adapter!!.itemCount >= 29)
+                assertTrue("The friend's schedule must be visible", activity.recycler().isShown)
+                assertFalse(activity.recycler().hasPendingAdapterUpdates())
+                assertEquals(anchoredDay to anchor.second, activity.visibleDay())
+            }
+        }
+
+    @Test
+    fun switchingToAFriendWithoutTheAnchoredDayOpensOnToday() =
+        withSchedule(sampleDays(60), restrictToRequestedRange = true, initialItemCount = 16) { scenario ->
+            scrollPastInitialPage(scenario)
+            // The friend's schedule ends before the anchored day, so paging can
+            // never reach it: the switch must settle on today instead of hiding.
+            ScheduleLifecycleTestActivity.friendDays.value = sampleDays(10)
+            selectFriend(scenario)
+            eventually(scenario) { activity ->
+                val state = activity.viewModel().uiState.value
+                assertTrue(state is ScheduleUiState.Content)
+                assertFalse((state as ScheduleUiState.Content).loadingMore)
+                assertEquals(10, activity.recycler().adapter!!.itemCount)
+                assertTrue("The friend's schedule must be visible", activity.recycler().isShown)
+                assertFalse(activity.recycler().hasPendingAdapterUpdates())
+                // Today, with the same peek of the previous day a fresh screen has.
+                assertEquals(20, activity.dayTop(LocalDate.of(2026, 9, 7)))
+            }
+        }
+
+    private fun selectFriend(scenario: ActivityScenario<ScheduleLifecycleTestActivity>) {
+        scenario.onActivity { activity ->
+            activity.supportFragmentManager.setFragmentResult(
+                FriendSelectionContract.RESULT_KEY,
+                Bundle().apply {
+                    putInt(FriendSelectionContract.RESULT_USER_ISU, FRIEND_ISU)
+                    putString(FriendSelectionContract.RESULT_USER_NAME, "Тестовый друг")
+                }
+            )
+        }
+    }
+
     private fun withSchedule(
         initialDays: List<DaySchedule> = sampleDays(),
         restrictToRequestedRange: Boolean = false,
@@ -553,6 +626,7 @@ class ScheduleFragmentLifecycleTest {
         block: (ActivityScenario<ScheduleLifecycleTestActivity>) -> Unit
     ) {
         ScheduleLifecycleTestActivity.days = MutableStateFlow(initialDays)
+        ScheduleLifecycleTestActivity.friendDays = MutableStateFlow(emptyList())
         ScheduleLifecycleTestActivity.refreshOutcome = { AppResult.Success(Unit) }
         ScheduleLifecycleTestActivity.clearOutcome = {}
         ScheduleLifecycleTestActivity.restrictToRequestedRange = restrictToRequestedRange
@@ -566,6 +640,7 @@ class ScheduleFragmentLifecycleTest {
             }
         } finally {
             ScheduleLifecycleTestActivity.days = MutableStateFlow(emptyList())
+            ScheduleLifecycleTestActivity.friendDays = MutableStateFlow(emptyList())
             ScheduleLifecycleTestActivity.refreshOutcome = { AppResult.Success(Unit) }
             ScheduleLifecycleTestActivity.clearOutcome = {}
             ScheduleLifecycleTestActivity.restrictToRequestedRange = false
@@ -640,6 +715,25 @@ class ScheduleFragmentLifecycleTest {
         return position to (firstDay.top - recycler.paddingTop)
     }
 
+    private fun ScheduleLifecycleTestActivity.visibleDay(): Pair<LocalDate, Int> {
+        val recycler = recycler()
+        val layout = recycler.layoutManager as LinearLayoutManager
+        val position = layout.findFirstVisibleItemPosition()
+        assertTrue("The schedule has not laid out a visible day", position != RecyclerView.NO_POSITION)
+        val firstDay = layout.findViewByPosition(position)
+            ?: throw AssertionError("The first visible day at $position has not been attached")
+        val date = (recycler.adapter as DayScheduleAdapter).currentList[position].date
+        return date to (firstDay.top - recycler.paddingTop)
+    }
+
+    private fun ScheduleLifecycleTestActivity.dayTop(date: LocalDate): Int? {
+        val recycler = recycler()
+        val index = (recycler.adapter as DayScheduleAdapter).currentList.indexOfFirst { it.date == date }
+        assertTrue("The schedule has no $date", index != -1)
+        val day = (recycler.layoutManager as LinearLayoutManager).findViewByPosition(index)
+        return day?.top?.minus(recycler.paddingTop)
+    }
+
     private fun ScheduleLifecycleTestActivity.schedule() =
         supportFragmentManager.findFragmentByTag(ScheduleLifecycleTestActivity.SCHEDULE_TAG) as ScheduleFragment
 
@@ -685,6 +779,10 @@ class ScheduleFragmentLifecycleTest {
         }
         eventually(scenario) { assertTrue("The gated display list was not committed", committed.get()) }
         return days
+    }
+
+    private companion object {
+        const val FRIEND_ISU = 123456
     }
 
     /**

@@ -68,5 +68,10 @@ or the official cache.
 - Timeline markers and day alpha follow [`design.md`](../design.md).
 - The list snapshots its scroll position before the view is destroyed; restoration
   waits for data, and adapter callbacks never touch an old view.
+- Switching between own and a friend's schedule keeps the reader on the day and
+  offset they were reading: the visible day is anchored by date, the closest later
+  day is used when that date has no lessons, and a day past the initial range is
+  paged in (up to four pages) before the list is shown. An unreachable day opens
+  the schedule on today instead.
 - After the first successful load, later refresh failures show a snackbar while
   content stays; the initial failure is an explicit error state.

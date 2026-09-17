@@ -57,9 +57,11 @@ class ScheduleLifecycleTestActivity : AppCompatActivity() {
 
     private class PreviewRepository : ScheduleRepository {
         override fun observeScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) =
-            if (restrictToRequestedRange) days.map { values ->
-                values.filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) }
-            } else days
+            (if (userIsu == null) days else friendDays).let { source ->
+                if (restrictToRequestedRange) source.map { values ->
+                    values.filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) }
+                } else source
+            }
         override suspend fun refreshSchedule(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) = refreshOutcome()
         override suspend fun clearCaches() = clearOutcome()
     }
@@ -73,6 +75,7 @@ class ScheduleLifecycleTestActivity : AppCompatActivity() {
     companion object {
         const val SCHEDULE_TAG = "schedule-under-test"
         @Volatile var days = MutableStateFlow<List<DaySchedule>>(emptyList())
+        @Volatile var friendDays = MutableStateFlow<List<DaySchedule>>(emptyList())
         @Volatile var refreshOutcome: suspend () -> AppResult<Unit> = { AppResult.Success(Unit) }
         @Volatile var clearOutcome: suspend () -> Unit = {}
         @Volatile var restrictToRequestedRange = false
