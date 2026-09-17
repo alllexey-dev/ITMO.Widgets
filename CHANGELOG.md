@@ -6,6 +6,14 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ## Unreleased (2.1-SNAPSHOT)
 
 ### 2026-09-16
+- Roadmap: BARS mark tracking and notifications added as Stages 37–38 inside
+  v2.2; the QR quick-settings tile and static app shortcuts added to the home-feed
+  stages; later stages renumbered to 39–45.
+- Roadmap: Stages 11–45 now name files in the package-by-feature layout
+  (`feature/<name>/{ui,presentation,domain,data,work}`, `app/`, `core/`) instead
+  of the pre-refactor global `data`/`domain` packages; contextual destinations
+  point at the overlay graph; Backend migrations renumbered after the existing
+  `V3`; Core commands use JDK 17.
 - Local diagnostics journal: `core/diagnostics` records warnings, errors and
   uncaught crashes to a bounded file after redacting tokens; `Журнал ошибок`
   in maintenance lists, copies and clears it. Sync, FCM, push and update

@@ -12,8 +12,9 @@
    privacy, own and public profiles, friends on a lesson, lesson details, map
    hand-off and the subject hub.
 4. **v2.2** adds moderated community resources and reviews, legacy review
-   import, personal Google Sheet mappings, schedule change tracking, range
-   calendar export, verified App Links, sharing and the home feed.
+   import, personal Google Sheet mappings, schedule change tracking, BARS mark
+   notifications, range calendar export, verified App Links, sharing, the QR
+   quick-settings tile with app shortcuts, and the home feed.
 
 Achievements, messaging, posts, followers and free-window discovery are outside
 the roadmap. Do not add them opportunistically.

@@ -2,7 +2,7 @@
 
 ## Task
 
-Complete the current application refactor and extend ITMO.Widgets into a student assistant with a social layer around lessons, subjects, teachers, friends, schedules, and shared study resources. The Android application must provide user profiles, lesson details, subject pages, moderated teacher reviews, community Google Sheets links, schedule change tracking, range export to a dedicated calendar, map hand-off, and verified App Links.
+Complete the current application refactor and extend ITMO.Widgets into a student assistant with a social layer around lessons, subjects, teachers, friends, schedules, and shared study resources. The Android application must provide user profiles, lesson details, subject pages, moderated teacher reviews, community Google Sheets links, schedule change tracking, BARS mark notifications, range export to a dedicated calendar, map hand-off, and verified App Links.
 
 Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source of social and moderated community data, ITMO.Widgets Core as the typed client contract, and Android as the source of local caches, personal sheet mappings, calendar mappings, and schedule diffs. Achievements, messages, posts, followers, and free-window discovery are outside this roadmap.
 
@@ -19,7 +19,7 @@ The work is delivered through the completed v2.0.1 baseline and two large produc
 
 * v2.0.1 completes Android legacy parity in the current refactor: authentication, onboarding, FCM, QR, widgets, settings, diagnostics, and regression coverage (Stages 1-2).
 * v2.1 delivers the social and study-context release. Its internal preparation introduces explicit database migrations, followed by friendship and privacy, own and public profiles, friends on lessons, lesson details, map hand-off, and the subject hub (Stages 3-18).
-* v2.2 delivers the community and schedule-intelligence release: moderated resources, teacher reviews, legacy review import, personal Google Sheet mappings, schedule changes, range calendar export, verified App Links, sharing, and the smart home feed (Stages 19-43).
+* v2.2 delivers the community and schedule-intelligence release: moderated resources, teacher reviews, legacy review import, personal Google Sheet mappings, schedule changes, BARS mark notifications, range calendar export, verified App Links, sharing, the QR quick-settings tile and app shortcuts, and the smart home feed (Stages 19-45).
 
 No additional v2.0 feature release is planned after v2.0.1. A v2.0.2 version is reserved only for a required compatibility or bug-fix release discovered after v2.0.1 ships.
 
@@ -209,7 +209,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Verification commands:**
 
-* `JAVA_HOME=$(/usr/libexec/java_home -v 11) ./gradlew build`
+* `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew build`
 
 ### Stage 8: Add Core social contract tests
 
@@ -226,7 +226,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Verification commands:**
 
-* `JAVA_HOME=$(/usr/libexec/java_home -v 11) ./gradlew test`
+* `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew test`
 
 ### Stage 9: Add Android own-profile, public-profile, and friend-management flows
 
@@ -288,7 +288,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `../itmo-widgets-backend/src/main/resources/db/migration/V3__lesson_occurrences.sql` - add occurrence keys and indexes.
+* `../itmo-widgets-backend/src/main/resources/db/migration/V4__lesson_occurrences.sql` - add occurrence keys and indexes.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/model/LessonEntity.kt` - occurrence identity.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/repositories/LessonRepository.kt` - authorized friend queries.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/services/LessonContextService.kt` - detail and capability logic.
@@ -335,7 +335,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Verification commands:**
 
-* `JAVA_HOME=$(/usr/libexec/java_home -v 11) ./gradlew build`
+* `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew build`
 
 ### Stage 14: Add Core lesson-context tests
 
@@ -349,7 +349,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Verification commands:**
 
-* `JAVA_HOME=$(/usr/libexec/java_home -v 11) ./gradlew test`
+* `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew test`
 
 ### Stage 15: Add Android lesson details, friend profiles, and map hand-off
 
@@ -362,9 +362,9 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/details/LessonDetailsBottomSheet.kt` - details UI.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/details/LessonDetailsViewModel.kt` - detail state.
-* `app/src/main/java/dev/alllexey/itmowidgets/core/navigation/MapLauncher.kt` - generic system geo intent and safe missing-handler fallback.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/ui/details/LessonDetailsBottomSheet.kt` - details UI.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/presentation/details/LessonDetailsViewModel.kt` - detail state.
+* `app/src/main/java/dev/alllexey/itmowidgets/core/ui/navigation/MapLauncher.kt` - generic system geo intent and safe missing-handler fallback.
 * `app/src/main/java/dev/alllexey/itmowidgets/core/location/BuildingDirectory.kt` - building lookup.
 * `app/src/main/res/raw/itmo_buildings.json` - building IDs, aliases, addresses, and coordinates.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/ui/LessonAdapter.kt` - details click action.
@@ -376,7 +376,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Examples in existing code:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/sport/common/SportCommonDetailsBottomSheet.kt` - current detail-sheet pattern.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/sport/ui/common/SportCommonDetailsBottomSheet.kt` - current detail-sheet pattern.
 
 **Verification commands:**
 
@@ -391,8 +391,8 @@ Core and Backend retain independent semantic versions. Every Android release doc
 **Files to edit/create:**
 
 * `app/src/test/java/dev/alllexey/itmowidgets/core/location/BuildingDirectoryTest.kt` - building tests.
-* `app/src/test/java/dev/alllexey/itmowidgets/core/navigation/MapLauncherTest.kt` - URI tests.
-* `app/src/test/java/dev/alllexey/itmowidgets/feature/schedule/details/LessonDetailsViewModelTest.kt` - state tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/core/ui/navigation/MapLauncherTest.kt` - URI tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/schedule/presentation/details/LessonDetailsViewModelTest.kt` - state tests.
 
 **Verification commands:**
 
@@ -408,19 +408,19 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/domain/model/subject/SubjectModels.kt` - subject context and overview.
-* `app/src/main/java/dev/alllexey/itmowidgets/domain/repository/SubjectRepository.kt` - aggregate contract.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/repository/SubjectRepositoryImpl.kt` - recordbook and schedule aggregation.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/local/SubjectBindingStore.kt` - confirmed local bindings.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/domain/model/SubjectModels.kt` - subject context and overview.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/domain/SubjectRepository.kt` - aggregate contract.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/data/SubjectRepositoryImpl.kt` - recordbook and schedule aggregation.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/data/SubjectBindingStore.kt` - confirmed local bindings.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/ui/SubjectFragment.kt` - subject hub.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/ui/SubjectViewModel.kt` - overview, controls, lessons, teachers, and resources state.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/presentation/SubjectViewModel.kt` - overview, controls, lessons, teachers, and resources state.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/ui/RecordbookFragment.kt` - simplify the root list and route to the subject hub.
-* `app/src/main/res/navigation/main_nav_graph.xml` - canonical subject destination.
+* `app/src/main/res/navigation/overlay_nav_graph.xml` - canonical subject destination.
 
 **Examples in existing code:**
 
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/ui/RecordbookSubjectFragment.kt` - existing control details.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/repository/RecordbookRepositoryImpl.kt` - recordbook source.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/RecordbookRepositoryImpl.kt` - recordbook source.
 
 **Verification commands:**
 
@@ -435,9 +435,9 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `app/src/test/java/dev/alllexey/itmowidgets/data/repository/SubjectRepositoryImplTest.kt` - aggregation tests.
-* `app/src/test/java/dev/alllexey/itmowidgets/data/local/SubjectBindingStoreTest.kt` - binding tests.
-* `app/src/test/java/dev/alllexey/itmowidgets/feature/subject/SubjectViewModelTest.kt` - state tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/subject/data/SubjectRepositoryImplTest.kt` - aggregation tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/subject/data/SubjectBindingStoreTest.kt` - binding tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/subject/presentation/SubjectViewModelTest.kt` - state tests.
 
 **Verification commands:**
 
@@ -454,7 +454,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `../itmo-widgets-backend/src/main/resources/db/migration/V4__community_resources.sql` - resources, confirmations, reports, roles, and moderation cases.
+* `../itmo-widgets-backend/src/main/resources/db/migration/V5__community_resources.sql` - resources, confirmations, reports, roles, and moderation cases.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/model/SubjectResourceEntity.kt` - community resource.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/model/ModerationCaseEntity.kt` - moderation lifecycle.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/model/UserRoleEntity.kt` - moderator authority.
@@ -508,7 +508,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Verification commands:**
 
-* `JAVA_HOME=$(/usr/libexec/java_home -v 11) ./gradlew build`
+* `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew build`
 
 ### Stage 22: Add Core resource contract tests
 
@@ -523,7 +523,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Verification commands:**
 
-* `JAVA_HOME=$(/usr/libexec/java_home -v 11) ./gradlew test`
+* `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew test`
 
 ### Stage 23: Add Android subject-resource UI
 
@@ -535,15 +535,15 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/domain/repository/SubjectResourceRepository.kt` - resource contract.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/repository/SubjectResourceRepositoryImpl.kt` - Core-backed implementation.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/resources/SubjectResourcesFragment.kt` - resource list.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/resources/SubjectResourcesViewModel.kt` - selection and moderation state.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/me/content/MyResourcesFragment.kt` - submitted links.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/domain/SubjectResourceRepository.kt` - resource contract.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/data/SubjectResourceRepositoryImpl.kt` - Core-backed implementation.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/ui/resources/SubjectResourcesFragment.kt` - resource list.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/presentation/resources/SubjectResourcesViewModel.kt` - selection and moderation state.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/ui/resources/MyResourcesFragment.kt` - submitted links, opened from the profile tab through `AppNavigator`.
 
 **Examples in existing code:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/sport/sign/MultiSelectSearchableAdapter.kt` - selectable-list conventions.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/sport/ui/sign/MultiSelectSearchableAdapter.kt` - selectable-list conventions.
 
 **Verification commands:**
 
@@ -557,8 +557,8 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `app/src/test/java/dev/alllexey/itmowidgets/feature/subject/resources/SubjectResourcesViewModelTest.kt` - resource state tests.
-* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/subject/resources/SubjectResourcesFlowTest.kt` - submission flow.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/subject/presentation/resources/SubjectResourcesViewModelTest.kt` - resource state tests.
+* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/subject/SubjectResourcesFlowTest.kt` - submission flow.
 
 **Verification commands:**
 
@@ -575,7 +575,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `../itmo-widgets-backend/src/main/resources/db/migration/V5__teacher_reviews.sql` - teacher and review tables.
+* `../itmo-widgets-backend/src/main/resources/db/migration/V6__teacher_reviews.sql` - teacher and review tables.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/model/TeacherEntity.kt` - canonical teacher.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/model/TeacherReviewEntity.kt` - review identity and lifecycle.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/model/TeacherReviewRevisionEntity.kt` - immutable revision data.
@@ -622,7 +622,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Verification commands:**
 
-* `JAVA_HOME=$(/usr/libexec/java_home -v 11) ./gradlew build`
+* `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew build`
 
 ### Stage 28: Add Core teacher-review tests
 
@@ -637,7 +637,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Verification commands:**
 
-* `JAVA_HOME=$(/usr/libexec/java_home -v 11) ./gradlew test`
+* `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew test`
 
 ### Stage 29: Add Android teacher profiles and review flows
 
@@ -650,17 +650,17 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/TeacherProfileFragment.kt` - teacher profile.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/TeacherProfileViewModel.kt` - teacher and review state.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/reviews/EditTeacherReviewFragment.kt` - create and edit form.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/me/content/MyReviewsFragment.kt` - own moderation states.
-* `app/src/main/java/dev/alllexey/itmowidgets/domain/repository/TeacherReviewRepository.kt` - Android contract.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/repository/TeacherReviewRepositoryImpl.kt` - Core-backed implementation.
-* `app/src/main/res/navigation/main_nav_graph.xml` - teacher and review destinations.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/ui/TeacherProfileFragment.kt` - teacher profile.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/presentation/TeacherProfileViewModel.kt` - teacher and review state.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/ui/EditTeacherReviewFragment.kt` - create and edit form.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/ui/MyReviewsFragment.kt` - own moderation states, opened from the profile tab through `AppNavigator`.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/domain/TeacherReviewRepository.kt` - Android contract.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/data/TeacherReviewRepositoryImpl.kt` - Core-backed implementation.
+* `app/src/main/res/navigation/overlay_nav_graph.xml` - teacher and review destinations.
 
 **Examples in existing code:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/ui/RecordbookSubjectViewModel.kt` - detail-state pattern.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/presentation/RecordbookSubjectViewModel.kt` - detail-state pattern.
 
 **Verification commands:**
 
@@ -674,9 +674,9 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `app/src/test/java/dev/alllexey/itmowidgets/feature/teacher/TeacherProfileViewModelTest.kt` - teacher state tests.
-* `app/src/test/java/dev/alllexey/itmowidgets/feature/reviews/EditTeacherReviewViewModelTest.kt` - form tests.
-* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/reviews/TeacherReviewFlowTest.kt` - end-to-end UI flow.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/teacher/presentation/TeacherProfileViewModelTest.kt` - teacher state tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/teacher/presentation/EditTeacherReviewViewModelTest.kt` - form tests.
+* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/teacher/TeacherReviewFlowTest.kt` - end-to-end UI flow.
 
 **Verification commands:**
 
@@ -732,12 +732,12 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/data/remote/sheets/PublicGoogleSheetClient.kt` - public sheet download.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/parser/sheets/GoogleSheetUrlParser.kt` - URL normalization.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/parser/sheets/SheetScoreExtractor.kt` - configured extraction.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/local/SheetMappingStore.kt` - local mappings and last result.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/sheets/SheetMappingFragment.kt` - mapping UI.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/sheets/SheetScoreViewModel.kt` - refresh and schema state.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/data/sheets/PublicGoogleSheetClient.kt` - public sheet download.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/domain/sheets/GoogleSheetUrlParser.kt` - URL normalization.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/domain/sheets/SheetScoreExtractor.kt` - configured extraction.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/data/sheets/SheetMappingStore.kt` - local mappings and last result.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/ui/sheets/SheetMappingFragment.kt` - mapping UI.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/presentation/sheets/SheetScoreViewModel.kt` - refresh and schema state.
 
 **Framework/Library Documentation:**
 
@@ -745,7 +745,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Examples in existing code:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/data/local/ScheduleLocalDataSourceImpl.kt` - local cached data pattern.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/data/local/ScheduleLocalDataSourceImpl.kt` - local cached data pattern.
 
 **Verification commands:**
 
@@ -760,8 +760,8 @@ Core and Backend retain independent semantic versions. Every Android release doc
 **Files to edit/create:**
 
 * `app/src/test/resources/sheets/` - anonymized table fixtures.
-* `app/src/test/java/dev/alllexey/itmowidgets/data/parser/sheets/GoogleSheetUrlParserTest.kt` - URL tests.
-* `app/src/test/java/dev/alllexey/itmowidgets/data/parser/sheets/SheetScoreExtractorTest.kt` - extraction tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/subject/domain/sheets/GoogleSheetUrlParserTest.kt` - URL tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/subject/domain/sheets/SheetScoreExtractorTest.kt` - extraction tests.
 
 **Verification commands:**
 
@@ -778,13 +778,14 @@ Core and Backend retain independent semantic versions. Every Android release doc
 **Files to edit/create:**
 
 * `app/build.gradle.kts` - add Room runtime and compiler dependencies.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/local/database/AppDatabase.kt` - local database.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/local/database/ScheduleSnapshotEntity.kt` - normalized snapshots.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/local/database/ScheduleChangeEntity.kt` - durable diffs.
-* `app/src/main/java/dev/alllexey/itmowidgets/domain/schedule/ScheduleDiffEngine.kt` - pure diff logic.
-* `app/src/main/java/dev/alllexey/itmowidgets/core/work/ScheduleSyncWorker.kt` - unique periodic sync.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/changes/ScheduleChangesFragment.kt` - history UI.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/repository/ScheduleRepositoryImpl.kt` - snapshot and diff persistence.
+* `app/src/main/java/dev/alllexey/itmowidgets/app/AppDatabase.kt` - Room database composed in the app layer from feature-owned entities and DAOs.
+* `app/src/main/java/dev/alllexey/itmowidgets/di/StorageModule.kt` - provide the database and the DAOs.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/data/changes/ScheduleSnapshotEntity.kt` - normalized snapshots.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/data/changes/ScheduleChangeEntity.kt` - durable diffs.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/domain/changes/ScheduleDiffEngine.kt` - pure diff logic.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/work/ScheduleSyncWorker.kt` - unique periodic sync.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/ui/changes/ScheduleChangesFragment.kt` - history UI.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/data/repository/ScheduleRepositoryImpl.kt` - snapshot and diff persistence.
 
 **Framework/Library Documentation:**
 
@@ -793,7 +794,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Examples in existing code:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/data/local/ScheduleLocalDataSourceImpl.kt` - current schedule cache.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/data/local/ScheduleLocalDataSourceImpl.kt` - current schedule cache.
 
 **Verification commands:**
 
@@ -808,15 +809,87 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `app/src/test/java/dev/alllexey/itmowidgets/domain/schedule/ScheduleDiffEngineTest.kt` - diff cases.
-* `app/src/androidTest/java/dev/alllexey/itmowidgets/core/work/ScheduleSyncWorkerTest.kt` - WorkManager tests.
-* `app/src/androidTest/java/dev/alllexey/itmowidgets/data/local/database/AppDatabaseMigrationTest.kt` - Room migrations.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/schedule/domain/changes/ScheduleDiffEngineTest.kt` - diff cases.
+* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/schedule/work/ScheduleSyncWorkerTest.kt` - WorkManager tests.
+* `app/src/androidTest/java/dev/alllexey/itmowidgets/app/AppDatabaseMigrationTest.kt` - Room migrations.
 
 **Verification commands:**
 
 * `./gradlew :app:testDebugUnitTest :app:connectedDebugAndroidTest`
 
-### Stage 37: Add range-based schedule export and optional calendar synchronization
+### Stage 37: Implement BARS mark tracking and notifications
+
+**What to add/implement:**
+
+* Track the BARS journal in the background and notify about new marks, changed marks, and changed approvals. Everything stays on the device: BARS data never reaches Backend, and the feature does not depend on the custom-services opt-in.
+* Renew the BARS token in the background without a WebView: `BarsCookieSilentLogin` replays the official OIDC authorization URL through OkHttp with the ITMO.ID cookies read from `CookieManager`, accepts only the exact callback with a checked `state`, and exchanges the code through the library's `BarsCodeSupplier`. No credentials, no JavaScript, no cookie leaves the device. Foreground renewal keeps `BarsWebSilentLogin`. Record the rule as decision 0008.
+* Persist a normalized per-checkpoint snapshot (discipline, checkpoint plan, checkpoint, mark, approval) per ISU in the Room database introduced in Stage 35. `BarsMarkDiffEngine` is pure: it emits `MarkAdded`, `MarkChanged`, and `ApprovalChanged` events, ignores reorder-only responses, treats an empty journal (`total = 0`, no marks) as "no marks" rather than a removal, and skips plans with `has_course_project` exactly like the overlay mapper. The first successful sync after enabling only writes the baseline and notifies nothing.
+* Run a unique periodic WorkManager job (`bars-mark-sync`, every three hours, network constraint, `@HiltWorker`). It exits quietly without a BARS session, backs off after a failed renewal, and when the ITMO.ID cookie session is gone posts one `Войдите в БАРС` notification and stays silent until the next successful BARS login. Opening the recordbook with the `БАРС` chip runs the same diff on the fresh journal so foreground use advances the baseline. Do not claim immediate delivery because Android controls periodic execution.
+* Add the `BARS` notification channel next to `SPORT` and `FRIENDS`. One notification per subject per sync with a stable id: subject and checkpoint in the title, the mark in the expanded text, `VISIBILITY_PRIVATE` with the public version `Новая оценка в БАРС`. Tapping opens the recordbook subject with the chip on through `MainActivityIntentRouting`.
+* Add the `Следить за оценками БАРС` toggle to the recordbook BARS section of settings. It appears once a BARS session exists, is enabled on the first successful BARS login, and disabling cancels the job and deletes the snapshot. `BarsMarkTrackingRepositoryImpl` is a `SessionDataCleaner`, so sign-out and account change clear snapshots, events, and the job.
+
+**Files to edit/create:**
+
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/domain/BarsMarkDiffEngine.kt` - pure snapshot diff producing `BarsMarkEvent` values.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/domain/BarsMarkTrackingRepository.kt` - contract: enable and disable, snapshot sync, unread events.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsMarkSnapshotEntity.kt` - Room entity and DAO registered in the Stage 35 database.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsMarkEventEntity.kt` - durable events with read state.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsMarkTrackingRepositoryImpl.kt` - journal fetch, diff, persistence, session cleaner.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsCookieSilentLogin.kt` - OkHttp cookie-replay renewal for background use.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/work/BarsMarkSyncWorker.kt` - unique periodic job and its scheduling entry point.
+* `app/src/main/java/dev/alllexey/itmowidgets/core/notification/AppNotificationChannels.kt` - `BARS` channel.
+* `app/src/main/java/dev/alllexey/itmowidgets/app/MainActivityIntentRouting.kt` - route to the recordbook subject with the chip on.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/settings/presentation/SettingsViewModel.kt` - the tracking toggle.
+* `app/src/main/java/dev/alllexey/itmowidgets/di/RecordbookModule.kt` - bindings and the worker entry point.
+* `docs/decisions/0008-bars-background-renewal.md` - cookie replay through OkHttp is the only background renewal path.
+* `docs/features/recordbook.md`, `docs/features/notifications.md`, `docs/settings.md` - current-state documentation of tracking, the channel, and the toggle.
+
+**Framework/Library Documentation:**
+
+* `https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/manage-work` - unique periodic WorkManager jobs.
+* `https://developer.android.com/develop/ui/views/notifications/build-notification#lockscreenNotification` - lock-screen visibility.
+* `https://developer.android.com/reference/android/webkit/CookieManager` - reading WebView cookies outside a WebView.
+* `../MyItmoApi/README.md` - `api.bars.Bars`, the auth helper, and `BarsCodeSupplier`.
+
+**Examples in existing code:**
+
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsSilentLogin.kt` - current WebView renewal and the `BarsSilentLogin` contract.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/domain/RecordbookBarsMerge.kt` - pure domain logic over the BARS journal.
+* `app/src/main/java/dev/alllexey/itmowidgets/core/notification/FcmWork.kt` - unique WorkManager chain with a network constraint.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/work/ScheduleWidgetWork.kt` - worker scheduling entry point.
+
+**Verification commands:**
+
+* `./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`
+
+### Stage 38: Add BARS mark tracking tests
+
+**What to add/implement:**
+
+* Test the diff engine: baseline run, added mark, changed mark, approval change, reorder-only response, empty journal, course-project plan, and a removed checkpoint that produces no notification.
+* Test the repository: per-ISU snapshots, enable and disable, unread transitions, and the session cleaner.
+* Test cookie renewal with `MockWebServer`: callback with a matching `state`, mismatched `state` rejected, missing cookies reported as a session-required error, one retry on 401.
+* Test the worker: unique scheduling, quiet exit without a session, a single `Войдите в БАРС` notification after a dead cookie session, no notification for unchanged data, no duplicate notification for one event.
+* Test notification rendering and routing: private visibility with the public fallback, stable ids, and the subject route with the chip on.
+
+**Files to edit/create:**
+
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/recordbook/domain/BarsMarkDiffEngineTest.kt` - diff cases.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsMarkTrackingRepositoryImplTest.kt` - persistence and cleaner cases with a fake journal source.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsCookieSilentLoginTest.kt` - `MockWebServer` renewal cases.
+* `app/src/test/java/dev/alllexey/itmowidgets/app/MainActivityIntentRoutingTest.kt` - BARS routing cases.
+* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/recordbook/work/BarsMarkSyncWorkerTest.kt` - WorkManager cases.
+
+**Examples in existing code:**
+
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/recordbook/RecordbookFakes.kt` - fakes for the recordbook feature.
+* `app/src/test/java/dev/alllexey/itmowidgets/core/notification/FcmPayloadDispatcherTest.kt` - notification handler tests.
+
+**Verification commands:**
+
+* `./gradlew :app:testDebugUnitTest :app:connectedDebugAndroidTest`
+
+### Stage 39: Add range-based schedule export and optional calendar synchronization
 
 **What to add/implement:**
 
@@ -828,9 +901,9 @@ Core and Backend retain independent semantic versions. Every Android release doc
 **Files to edit/create:**
 
 * `app/src/main/AndroidManifest.xml` - request calendar permissions only for direct provider synchronization.
-* `app/src/main/java/dev/alllexey/itmowidgets/core/calendar/CalendarExporter.kt` - range export and updates.
-* `app/src/main/java/dev/alllexey/itmowidgets/data/local/database/CalendarEventMappingEntity.kt` - stable event mappings.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/export/ScheduleExportBottomSheet.kt` - range and destination selection.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/data/export/CalendarExporter.kt` - range export and updates.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/data/export/CalendarEventMappingEntity.kt` - stable event mappings.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/ui/export/ScheduleExportBottomSheet.kt` - range and destination selection.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/ui/ScheduleFragment.kt` - root export action.
 
 **Framework/Library Documentation:**
@@ -839,13 +912,13 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Examples in existing code:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/domain/model/schedule/Lesson.kt` - event source fields.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/domain/model/Lesson.kt` - event source fields.
 
 **Verification commands:**
 
 * `./gradlew :app:assembleDebug lintDebug`
 
-### Stage 38: Add calendar export tests
+### Stage 40: Add calendar export tests
 
 **What to add/implement:**
 
@@ -853,14 +926,14 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `app/src/test/java/dev/alllexey/itmowidgets/core/calendar/CalendarExporterTest.kt` - export logic.
-* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/schedule/export/ScheduleExportFlowTest.kt` - permission and UI flow.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/schedule/data/export/CalendarExporterTest.kt` - export logic.
+* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/schedule/ScheduleExportFlowTest.kt` - permission and UI flow.
 
 **Verification commands:**
 
 * `./gradlew :app:testDebugUnitTest :app:connectedDebugAndroidTest`
 
-### Stage 39: Add verified App Links and sharing routes
+### Stage 41: Add verified App Links and sharing routes
 
 **What to add/implement:**
 
@@ -876,7 +949,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 * `app/src/main/AndroidManifest.xml` - verified App Link intent filter.
 * `app/src/main/java/dev/alllexey/itmowidgets/core/navigation/AppLinkRouter.kt` - route parsing and authorization continuation.
 * `app/src/main/java/dev/alllexey/itmowidgets/core/navigation/ShareLinkFactory.kt` - canonical URLs.
-* `app/src/main/java/dev/alllexey/itmowidgets/core/ui/MainActivity.kt` - incoming intent handling.
+* `app/src/main/java/dev/alllexey/itmowidgets/app/MainActivityIntentRouting.kt` - incoming App Link intents.
 
 **Framework/Library Documentation:**
 
@@ -893,7 +966,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 * `JAVA_HOME=$(/usr/libexec/java_home -v 21) ../itmo-widgets-backend/gradlew -p ../itmo-widgets-backend build`
 * `./gradlew :app:assembleDebug lintDebug`
 
-### Stage 40: Add App Link and sharing tests
+### Stage 42: Add App Link and sharing tests
 
 **What to add/implement:**
 
@@ -912,49 +985,58 @@ Core and Backend retain independent semantic versions. Every Android release doc
 * `./gradlew :app:testDebugUnitTest :app:connectedDebugAndroidTest`
 * `JAVA_HOME=$(/usr/libexec/java_home -v 21) ../itmo-widgets-backend/gradlew -p ../itmo-widgets-backend test`
 
-### Stage 41: Integrate the smart home feed and final information architecture
+### Stage 43: Integrate the smart home feed and final information architecture
 
 **What to add/implement:**
 
-* Populate the home feed with the current or next lesson, QR shortcut, unread schedule changes, subject attention, changed external score, sport queue actions, and moderation results.
+* Populate the home feed with the current or next lesson, QR shortcut, unread schedule changes, unread BARS marks, subject attention, changed external score, sport queue actions, and moderation results.
 * Show only relevant cards and remove empty decorative sections.
 * Rename the recordbook root to the broader study concept while keeping the simple subject list.
 * Preserve independent bottom-navigation state and hide the bottom bar on full-screen user, subject, teacher, review, and settings destinations.
+* Add the QR quick-settings tile `QrTileService`: a tap requires an unlocked device and opens the QR pass through `MainActivityIntentRouting`; on Android 13+ the QR settings page offers `Добавить в шторку` through `StatusBarManager.requestAddTileService`.
+* Add the static app shortcuts `QR-пропуск` and `Сегодня`; their intents use the same routing as widgets and notifications, queued until the session is signed in and consumed once.
 
 **Files to edit/create:**
 
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/home/ui/HomeFeedAdapter.kt` - typed feed cards.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/home/ui/HomeFragment.kt` - feed collection and refresh.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/home/HomeViewModel.kt` - feed aggregation.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/home/presentation/HomeViewModel.kt` - feed aggregation.
 * `app/src/main/res/layout/fragment_home.xml` - final feed layout.
 * `app/src/main/res/menu/bottom_nav.xml` - study naming.
 * `app/src/main/res/navigation/main_nav_graph.xml` - final route hierarchy.
-* `app/src/main/java/dev/alllexey/itmowidgets/core/ui/MainActivity.kt` - bottom-bar visibility and back stacks.
+* `app/src/main/java/dev/alllexey/itmowidgets/app/MainActivity.kt` - bottom-bar visibility and back stacks.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/qr/ui/QrTileService.kt` - quick-settings tile.
+* `app/src/main/res/xml/shortcuts.xml` - static shortcuts.
+* `app/src/main/AndroidManifest.xml` - tile service with `BIND_QUICK_SETTINGS_TILE` and the shortcuts meta-data.
+* `app/src/main/java/dev/alllexey/itmowidgets/app/MainActivityIntentRouting.kt` - shortcut and tile routes.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/settings/presentation/SettingsViewModel.kt` - the `Добавить в шторку` action.
 
 **Examples in existing code:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/sport/my/SportMyViewModel.kt` - aggregation of multiple repositories.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/sport/presentation/my/SportMyViewModel.kt` - aggregation of multiple repositories.
 
 **Verification commands:**
 
 * `./gradlew :app:assembleDebug lintDebug`
 
-### Stage 42: Add home-feed and navigation regression tests
+### Stage 44: Add home-feed and navigation regression tests
 
 **What to add/implement:**
 
-* Test card priority, irrelevant-card suppression, refresh errors, unread schedule changes, moderation results, selected subject resource changes, bottom-navigation state restoration, and deep-link back behavior.
+* Test card priority, irrelevant-card suppression, refresh errors, unread schedule changes, unread BARS marks, moderation results, selected subject resource changes, bottom-navigation state restoration, and deep-link back behavior.
+* Test shortcut and tile intents: routing to the QR pass and today's schedule, queueing until sign-in, single consumption, a tile tap on a locked device requesting unlock, and the `Добавить в шторку` action hidden below Android 13.
 
 **Files to edit/create:**
 
-* `app/src/test/java/dev/alllexey/itmowidgets/feature/home/HomeViewModelTest.kt` - feed ordering tests.
-* `app/src/androidTest/java/dev/alllexey/itmowidgets/core/ui/MainNavigationTest.kt` - back-stack and bottom-bar tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/home/presentation/HomeViewModelTest.kt` - feed ordering tests.
+* `app/src/androidTest/java/dev/alllexey/itmowidgets/app/MainNavigationTest.kt` - back-stack and bottom-bar tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/app/MainActivityIntentRoutingTest.kt` - shortcut and tile routing cases.
 
 **Verification commands:**
 
 * `./gradlew :app:testDebugUnitTest :app:connectedDebugAndroidTest`
 
-### Stage 43: Complete documentation, compatibility checks, and release verification
+### Stage 45: Complete documentation, compatibility checks, and release verification
 
 **What to add/implement:**
 
@@ -968,11 +1050,11 @@ Core and Backend retain independent semantic versions. Every Android release doc
 * `../itmo-widgets-core/README.md` - typed API and compatibility.
 * `../itmo-widgets-backend/README.md` - deployment, migrations, moderation, privacy, and importer.
 * `docs/features/social.md` - public profile, friend, review, schedule, sport, and sheet-data rules.
-* `docs/moderation.md` - moderation and appeal workflow.
+* `docs/features/moderation.md` - moderation and appeal workflow.
 
 **Verification commands:**
 
 * `./gradlew :app:testDebugUnitTest :app:assembleRelease lintRelease`
-* `JAVA_HOME=$(/usr/libexec/java_home -v 11) ../itmo-widgets-core/gradlew -p ../itmo-widgets-core clean test build`
+* `JAVA_HOME=$(/usr/libexec/java_home -v 17) ../itmo-widgets-core/gradlew -p ../itmo-widgets-core clean test build`
 * `JAVA_HOME=$(/usr/libexec/java_home -v 21) ../itmo-widgets-backend/gradlew -p ../itmo-widgets-backend clean test build`
 * `git diff --check`

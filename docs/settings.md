@@ -209,4 +209,5 @@ controls never appear in release builds and never change release behavior.
 ## Deferred beyond v2.1
 
 Google Sheet mappings, schedule-change notifications, calendar synchronization,
-community resources, and teacher-review settings belong to v2.2.
+community resources, teacher-review settings, the `Следить за оценками БАРС`
+toggle, and the `Добавить в шторку` action belong to v2.2.
