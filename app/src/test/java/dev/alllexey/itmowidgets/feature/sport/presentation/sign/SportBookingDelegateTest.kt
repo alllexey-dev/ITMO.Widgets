@@ -24,15 +24,26 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataReposit
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SportBookingDelegateTest {
 
+    private val scheduler = TestCoroutineScheduler()
+    private val followUpScope = TestScope(StandardTestDispatcher(scheduler))
     private val actionRepository = FakeActionRepository()
     private val scheduleRefreshGateway = FakeScheduleRefreshGateway()
     private val bookingRepository = FakeSportBookingRepository()
@@ -45,8 +56,34 @@ class SportBookingDelegateTest {
         sportBookingRepository = bookingRepository,
         sportScheduleRepository = sportScheduleRepository,
         sportDataRepository = dataRepository,
-        scheduleWidgetRefreshRequester = ScheduleWidgetRefreshRequester { widgetRefreshCount++ }
+        scheduleWidgetRefreshRequester = ScheduleWidgetRefreshRequester { widgetRefreshCount++ },
+        followUpScope = followUpScope
     )
+
+    @After
+    fun tearDown() {
+        followUpScope.cancel()
+    }
+
+    @Test
+    fun `a sign-up fetches the schedule and bookings again after the follow-up delay, outside the caller`() =
+        runTest(scheduler) {
+            delegate.signIn(lesson())
+            assertEquals(1, scheduleRefreshGateway.refreshCount)
+            assertEquals(1, bookingRepository.refreshCount)
+
+            followUpScope.advanceTimeBy(2_999)
+            followUpScope.runCurrent()
+            assertEquals(1, scheduleRefreshGateway.refreshCount)
+
+            followUpScope.advanceTimeBy(1)
+            followUpScope.runCurrent()
+            assertEquals(2, scheduleRefreshGateway.refreshCount)
+            assertEquals(2, bookingRepository.refreshCount)
+            // The sport catalogue and the widgets are not asked twice.
+            assertEquals(1, sportScheduleRepository.scheduleRefreshCount)
+            assertEquals(1, widgetRefreshCount)
+        }
 
     @Test
     fun `successful sign in refreshes every affected schedule`() = runTest {

@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -158,6 +159,25 @@ class OnboardingViewModelTest {
     }
 
     @Test
+    fun `text size writes through per schedule widget and the QR step has none`() = runTest(mainDispatcherRule.dispatcher) {
+        val fixture = createFixture()
+        advanceUntilIdle()
+
+        fixture.viewModel.setTextSize(WidgetKind.SINGLE_LESSON, WidgetTextSize.EXTRA_LARGE)
+        fixture.viewModel.setTextSize(WidgetKind.QR, WidgetTextSize.LARGE)
+        advanceUntilIdle()
+
+        val appearance = checkNotNull(fixture.viewModel.state.value.appearance)
+        assertEquals(WidgetTextSize.EXTRA_LARGE, WidgetKind.SINGLE_LESSON.textSize(appearance))
+        assertEquals(WidgetTextSize.NORMAL, WidgetKind.DAY_SCHEDULE.textSize(appearance))
+        assertEquals(null, WidgetKind.QR.textSize(appearance))
+
+        fixture.viewModel.setTextSize(WidgetKind.DAY_SCHEDULE, WidgetTextSize.LARGE)
+        advanceUntilIdle()
+        assertEquals(WidgetTextSize.LARGE, checkNotNull(fixture.viewModel.state.value.appearance).schedule.full.textSize)
+    }
+
+    @Test
     fun `each widget step offers its own options`() {
         assertEquals(listOf(WidgetOption.COMPACT_NEXT_LESSON_EARLY, WidgetOption.COMPACT_HIDE_TEACHER), WidgetKind.SINGLE_LESSON.options)
         assertEquals(
@@ -281,6 +301,12 @@ class OnboardingViewModelTest {
 
         override suspend fun setFullTomorrowEnabled(enabled: Boolean) =
             schedule { copy(full = full.copy(showTomorrowWhenTodayIsOver = enabled)) }
+
+        override suspend fun setCompactTextSize(size: WidgetTextSize) =
+            schedule { copy(compact = compact.copy(textSize = size)) }
+
+        override suspend fun setFullTextSize(size: WidgetTextSize) =
+            schedule { copy(full = full.copy(textSize = size)) }
 
         override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) = qr { copy(dynamicColors = enabled) }
 

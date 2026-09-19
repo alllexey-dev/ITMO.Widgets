@@ -389,6 +389,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
             schedule { copy(full = full.copy(hidePastLessons = hidden)) }
         override suspend fun setFullTomorrowEnabled(enabled: Boolean) =
             schedule { copy(full = full.copy(showTomorrowWhenTodayIsOver = enabled)) }
+        override suspend fun setCompactTextSize(size: WidgetTextSize) =
+            schedule { copy(compact = compact.copy(textSize = size)) }
+        override suspend fun setFullTextSize(size: WidgetTextSize) =
+            schedule { copy(full = full.copy(textSize = size)) }
         override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) =
             qr { copy(dynamicColors = enabled) }
         override suspend fun setQrSpoilerEnabled(enabled: Boolean) =

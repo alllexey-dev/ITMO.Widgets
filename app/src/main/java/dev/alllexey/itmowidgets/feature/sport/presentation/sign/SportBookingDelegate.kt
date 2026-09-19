@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
@@ -16,10 +17,15 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepos
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AutoSignAvailability(
@@ -33,7 +39,8 @@ class SportBookingDelegate @Inject constructor(
     private val sportBookingRepository: SportBookingRepository,
     private val sportScheduleRepository: SportScheduleRepository,
     private val sportDataRepository: SportDataRepository,
-    private val scheduleWidgetRefreshRequester: ScheduleWidgetRefreshRequester
+    private val scheduleWidgetRefreshRequester: ScheduleWidgetRefreshRequester,
+    @ApplicationScope private val followUpScope: CoroutineScope
 ) {
 
     suspend fun areCommunityServicesEnabled(): Boolean {
@@ -148,6 +155,18 @@ class SportBookingDelegate @Inject constructor(
                 async { sportScheduleRepository.refreshSportSchedule() }
             )
         }
+        // MyITMO often answers the first fetch with the state from before the change. The
+        // second fetch runs outside the caller: the result is already back and the screen
+        // may be gone by then.
+        followUpScope.launch {
+            delay(FOLLOW_UP_DELAY)
+            coroutineScope {
+                awaitAll(
+                    async { sportBookingRepository.refreshSportBookings() },
+                    async { scheduleRefreshGateway.refreshOwnSchedule(startDate, endDate) }
+                )
+            }
+        }
     }
 
     private suspend fun refreshCommunityData() {
@@ -161,6 +180,10 @@ class SportBookingDelegate @Inject constructor(
                 async { sportDataRepository.refreshFriendsBookings() }
             )
         }
+    }
+
+    private companion object {
+        val FOLLOW_UP_DELAY: Duration = 3.seconds
     }
 
     private suspend fun AppResult<Unit>.refreshOnSuccess(

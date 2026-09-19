@@ -10,20 +10,24 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
 import dev.alllexey.itmowidgets.databinding.FragmentOnboardingWidgetBinding
+import dev.alllexey.itmowidgets.databinding.ItemSettingRowBinding
 import dev.alllexey.itmowidgets.databinding.ItemSettingToggleBinding
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingUiState
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetKind
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetOption
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.options
+import dev.alllexey.itmowidgets.feature.onboarding.presentation.textSize
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -50,6 +54,8 @@ class WidgetStepFragment : Fragment() {
         WidgetKind.valueOf(requireNotNull(requireArguments().getString(ARG_KIND)))
     }
     private val rows = linkedMapOf<WidgetOption, ItemSettingToggleBinding>()
+    private var textSizeRow: ItemSettingRowBinding? = null
+    private var textSize: WidgetTextSize? = null
     private var preview: WidgetPreview? = null
 
     override fun onCreateView(
@@ -76,6 +82,17 @@ class WidgetStepFragment : Fragment() {
             row.root.setOnClickListener { viewModel.setOption(option, !row.settingSwitch.isChecked) }
             rows[option] = row
         }
+        if (kind != WidgetKind.QR) {
+            layoutInflater.inflate(R.layout.item_setting_divider, binding.settingRows, true)
+            // The settings screen's own choice row: title, current value, chevron, dialog.
+            val row = ItemSettingRowBinding.inflate(layoutInflater, binding.settingRows, true)
+            row.settingTitle.setText(R.string.settings_widget_text_size_title)
+            row.settingDescription.isVisible = false
+            row.settingChevron.isVisible = true
+            row.root.isClickable = true
+            row.root.setOnClickListener { chooseTextSize() }
+            textSizeRow = row
+        }
 
         binding.pinButton.setOnClickListener { viewModel.pinWidget(kind) }
 
@@ -95,7 +112,23 @@ class WidgetStepFragment : Fragment() {
         preview?.close()
         preview = null
         rows.clear()
+        textSizeRow = null
         _binding = null
+    }
+
+    private fun chooseTextSize() {
+        val current = textSize ?: return
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.settings_widget_text_size_title)
+            .setSingleChoiceItems(
+                WidgetTextSize.entries.map { getString(it.labelRes()) }.toTypedArray(),
+                WidgetTextSize.entries.indexOf(current)
+            ) { dialog, index ->
+                viewModel.setTextSize(kind, WidgetTextSize.entries[index])
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.common_cancel, null)
+            .show()
     }
 
     private fun render(state: OnboardingUiState) {
@@ -110,6 +143,16 @@ class WidgetStepFragment : Fragment() {
         renderPreview(appearance)
         // Programmatic values must not read back as a user choice.
         rows.forEach { (option, row) -> row.settingSwitch.isChecked = option.isEnabled(appearance) }
+        kind.textSize(appearance)?.let { size ->
+            textSize = size
+            textSizeRow?.settingValue?.setText(size.labelRes())
+        }
+    }
+
+    private fun WidgetTextSize.labelRes(): Int = when (this) {
+        WidgetTextSize.NORMAL -> R.string.settings_widget_text_size_normal
+        WidgetTextSize.LARGE -> R.string.settings_widget_text_size_large
+        WidgetTextSize.EXTRA_LARGE -> R.string.settings_widget_text_size_extra_large
     }
 
     private fun renderPreview(appearance: WidgetAppearance) {

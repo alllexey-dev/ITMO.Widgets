@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -87,6 +88,22 @@ class OnboardingViewModel @Inject constructor(
                         WidgetOption.QR_DYNAMIC_COLORS -> setQrDynamicColorsEnabled(enabled)
                         WidgetOption.QR_SPOILER -> setQrSpoilerEnabled(enabled)
                     }
+                }
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                eventChannel.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
+            }
+        }
+    }
+
+    fun setTextSize(kind: WidgetKind, size: WidgetTextSize) {
+        viewModelScope.launch {
+            try {
+                when (kind) {
+                    WidgetKind.SINGLE_LESSON -> widgetAppearanceRepository.setCompactTextSize(size)
+                    WidgetKind.DAY_SCHEDULE -> widgetAppearanceRepository.setFullTextSize(size)
+                    WidgetKind.QR -> Unit
                 }
             } catch (cancellation: CancellationException) {
                 throw cancellation

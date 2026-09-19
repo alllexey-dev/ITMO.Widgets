@@ -50,8 +50,10 @@ toggle rows (`item_setting_toggle.xml`), then one full-width
 `Добавить на главный экран`. The rows are `WidgetOption`s per kind: next lesson
 early and hidden teacher for the compact schedule; hidden teacher, hidden past
 lessons and tomorrow for the full schedule; dynamic colours and the spoiler for
-QR. Every row writes through `WidgetAppearanceRepository`, which also refreshes
-the installed widgets. The single-lesson preview is as tall as the widget
+QR. The two schedule steps end with the settings screen's `Размер текста`
+choice row (`item_setting_row.xml` and the same single-choice dialog). Every
+row writes through `WidgetAppearanceRepository`, which also refreshes the
+installed widgets. The single-lesson preview is as tall as the widget
 itself; only the day list gets the bounded 160 dp area.
 
 The pin button calls `AppWidgetManager.requestPinAppWidget` with a broadcast

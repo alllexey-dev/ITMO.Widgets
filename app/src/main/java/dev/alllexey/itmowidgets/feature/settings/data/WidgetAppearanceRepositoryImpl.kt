@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.settings.data
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import javax.inject.Inject
@@ -44,6 +45,12 @@ class WidgetAppearanceRepositoryImpl @Inject constructor(
 
     override suspend fun setFullTomorrowEnabled(enabled: Boolean) =
         write { settings.setFullWidgetTomorrowEnabled(enabled) }
+
+    override suspend fun setCompactTextSize(size: WidgetTextSize) =
+        write { settings.setCompactWidgetTextSize(size) }
+
+    override suspend fun setFullTextSize(size: WidgetTextSize) =
+        write { settings.setFullWidgetTextSize(size) }
 
     override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) =
         write { settings.setQrDynamicColorsEnabled(enabled) }

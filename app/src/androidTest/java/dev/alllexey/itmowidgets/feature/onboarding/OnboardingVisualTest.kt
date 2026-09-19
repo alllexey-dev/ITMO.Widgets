@@ -49,6 +49,8 @@ class OnboardingVisualTest {
                         val page = activity.currentPage()
                         assertEquals(activity.getString(titleRes), page.text(R.id.step_title))
                         assertEquals(rows, page.findViewById<ViewGroup>(R.id.setting_rows).switches().size)
+                        // Schedule widgets also offer their text size; the QR widget has none.
+                        assertEquals(step < 2, page.findViewById<ViewGroup>(R.id.setting_rows).hasTextSizeRow(activity))
                         assertPreviewDrawn(page, compact = step == 0)
                         assertEquals(View.VISIBLE, page.findViewById<View>(R.id.pin_button).visibility)
                         assertEquals(View.GONE, page.findViewById<View>(R.id.pin_hint).visibility)
@@ -175,6 +177,10 @@ class OnboardingVisualTest {
 
     private fun ViewGroup.switches(): List<MaterialSwitch> =
         descendants().filterIsInstance<MaterialSwitch>().toList()
+
+    private fun ViewGroup.hasTextSizeRow(activity: SettingsNavigationTestActivity): Boolean =
+        descendants().filterIsInstance<TextView>()
+            .any { it.text == activity.getString(R.string.settings_widget_text_size_title) }
 
     private fun ViewGroup.rows(): List<View> = (0 until childCount).map(::getChildAt).filter { it.isClickable }
 

@@ -22,6 +22,10 @@ interface WidgetAppearanceRepository {
 
     suspend fun setFullTomorrowEnabled(enabled: Boolean)
 
+    suspend fun setCompactTextSize(size: WidgetTextSize)
+
+    suspend fun setFullTextSize(size: WidgetTextSize)
+
     suspend fun setQrDynamicColorsEnabled(enabled: Boolean)
 
     suspend fun setQrSpoilerEnabled(enabled: Boolean)

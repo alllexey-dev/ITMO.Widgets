@@ -7,7 +7,11 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
 ### 2026-09-19
 - Schedule widgets get a `Размер текста` choice per format (`Обычный`,
-  `Крупный`, `Очень крупный`) on their settings pages; the preview follows it.
+  `Крупный`, `Очень крупный`) on their settings pages and on the first-run
+  widget steps; the preview follows it.
+- After a sport sign-up or cancellation the app fetches the schedule and the
+  bookings a second time 3 s later, outside the screen that asked, because
+  MyITMO often answers the first fetch with the state from before the change.
 - Schedule widget descriptors on Android 12+ ask only for the span the layouts
   need (180 dp minimum, explicit resize bounds, default span through
   `targetCellWidth/Height`), so a launcher with smaller cells has no reason to

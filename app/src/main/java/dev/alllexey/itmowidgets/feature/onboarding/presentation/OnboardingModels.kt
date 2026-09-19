@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.onboarding.presentation
 
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 
 /** Declaration order is the order of the flow; `next` and `back` walk [OnboardingUiState.steps]. */
 enum class OnboardingStep { COMPACT_WIDGET, FULL_WIDGET, QR_WIDGET, SERVICES, NOTIFICATIONS }
@@ -38,6 +39,13 @@ val WidgetKind.options: List<WidgetOption>
         )
         WidgetKind.QR -> listOf(WidgetOption.QR_DYNAMIC_COLORS, WidgetOption.QR_SPOILER)
     }
+
+/** The text size of a schedule widget; the QR widget has none. */
+fun WidgetKind.textSize(appearance: WidgetAppearance): WidgetTextSize? = when (this) {
+    WidgetKind.SINGLE_LESSON -> appearance.schedule.compact.textSize
+    WidgetKind.DAY_SCHEDULE -> appearance.schedule.full.textSize
+    WidgetKind.QR -> null
+}
 
 data class OnboardingUiState(
     val step: OnboardingStep = OnboardingStep.COMPACT_WIDGET,
