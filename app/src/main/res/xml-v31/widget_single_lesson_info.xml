@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Sizes: a launcher scales the whole widget down when its cells are smaller than
+     minWidth/minHeight, so these stay at the smallest span the layout still reads in
+     (3 x 1 cells); the default span comes from targetCellWidth/Height. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_single_lesson_description"
     android:initialKeyguardLayout="@layout/widget_single_lesson_dash"
     android:initialLayout="@layout/widget_single_lesson_dash"
-    android:minWidth="250dp"
+    android:minWidth="180dp"
     android:minHeight="56dp"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="56dp"
+    android:maxResizeWidth="340dp"
     android:previewImage="@drawable/widget_single_lesson_preview"
     android:previewLayout="@layout/widget_single_lesson_preview"
-
     android:resizeMode="horizontal|vertical"
-    android:maxResizeWidth="340dp"
-    android:widgetCategory="home_screen"
     android:targetCellWidth="4"
     android:targetCellHeight="1"
-    android:updatePeriodMillis="3600000"/>
+    android:updatePeriodMillis="3600000"
+    android:widgetCategory="home_screen" />

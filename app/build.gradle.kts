@@ -21,6 +21,9 @@ android {
         resValue("string", "app_version", versionName!!)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // ActivityScenario.launchActivityForResult waits the full lifecycle timeout (45 s) on
+        // close; observed transitions on the emulator stay under 2 s.
+        testInstrumentationRunnerArguments["activityLifecycleChangeTimeoutMillis"] = "5000"
     }
 
     buildTypes {
