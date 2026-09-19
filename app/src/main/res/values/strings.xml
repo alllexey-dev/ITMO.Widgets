@@ -252,6 +252,10 @@
     <string name="settings_widget_hide_past_title">Скрывать прошедшие занятия</string>
     <string name="settings_widget_tomorrow_title">Показывать расписание на завтра</string>
     <string name="settings_widget_tomorrow_description">Когда сегодняшние пары закончились.</string>
+    <string name="settings_widget_text_size_title">Размер текста</string>
+    <string name="settings_widget_text_size_normal">Обычный</string>
+    <string name="settings_widget_text_size_large">Крупный</string>
+    <string name="settings_widget_text_size_extra_large">Очень крупный</string>
     <string name="settings_group_qr_widget">Виджет QR-кода</string>
     <string name="settings_qr_dynamic_colors_title">Динамические цвета</string>
     <string name="settings_qr_spoiler_title">Скрывать QR-код за спойлером</string>

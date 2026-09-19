@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import java.time.Duration
 import java.time.Instant
 
@@ -74,7 +75,20 @@ data class ScheduleWidgetSnapshot(
     // Exact official-only selection, not a filtered list with a wrong next lesson/count.
     val officialFallback: ScheduleWidgetSnapshot? = null,
     val pendingValidUntil: String? = null,
+    // Nullable so snapshots written before the choice existed still deserialise.
+    val compactTextSize: WidgetTextSize? = null,
+    val fullTextSize: WidgetTextSize? = null,
 ) {
+
+    val resolvedCompactTextSize: WidgetTextSize get() = compactTextSize ?: WidgetTextSize.NORMAL
+
+    val resolvedFullTextSize: WidgetTextSize get() = fullTextSize ?: WidgetTextSize.NORMAL
+
+    fun withTextSizes(display: ScheduleWidgetSettings): ScheduleWidgetSnapshot = copy(
+        compactTextSize = display.compact.textSize,
+        fullTextSize = display.full.textSize,
+        officialFallback = officialFallback?.withTextSizes(display)
+    )
 
     fun withoutPendingSport(): ScheduleWidgetSnapshot = officialFallback ?: this
 

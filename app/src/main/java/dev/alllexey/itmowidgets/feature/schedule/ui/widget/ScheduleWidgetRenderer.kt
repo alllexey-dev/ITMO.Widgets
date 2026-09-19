@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
@@ -11,6 +12,7 @@ import androidx.core.net.toUri
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
@@ -42,6 +44,7 @@ object ScheduleWidgetRenderer {
     fun singleLessonViews(context: Context, snapshot: ScheduleWidgetSnapshot): RemoteViews {
         val content = snapshot.singleLesson
         val views = RemoteViews(context.packageName, singleLessonLayout(snapshot.singleLessonStyle))
+        applyTextSize(views, singleLessonTextSp, snapshot.resolvedCompactTextSize)
         val lesson = content.lesson
         if (lesson == null) {
             bindSingleMessage(context, views, content.kind)
@@ -89,8 +92,10 @@ object ScheduleWidgetRenderer {
         context: Context,
         lesson: ScheduleWidgetLesson,
         style: LessonStyle,
+        textSize: WidgetTextSize = WidgetTextSize.NORMAL,
     ): RemoteViews {
         return RemoteViews(context.packageName, lessonListLayout(style)).apply {
+            applyTextSize(this, lessonRowTextSp, textSize)
             bindLesson(context, this, lesson, style)
             // Fade the complete row, including its time column, exactly once.
             // Reset alpha left by older widget views that only faded lesson_content.
@@ -105,8 +110,12 @@ object ScheduleWidgetRenderer {
         layoutId: Int,
         textViewId: Int,
         text: CharSequence,
+        textSize: WidgetTextSize = WidgetTextSize.NORMAL,
     ): RemoteViews {
         return RemoteViews(context.packageName, layoutId).apply {
+            messageRowTextSp[textViewId]?.let { sp ->
+                setTextViewTextSize(textViewId, TypedValue.COMPLEX_UNIT_SP, sp * textSize.scale)
+            }
             setTextViewText(textViewId, text)
             setOnClickFillInIntent(R.id.item_root, Intent())
         }
@@ -164,6 +173,13 @@ object ScheduleWidgetRenderer {
             if (details.isBlank()) View.GONE else View.VISIBLE
         )
         views.setTextViewText(R.id.secondary_text, details)
+    }
+
+    /** Always applied, so a recycled launcher view drops the size of its previous snapshot. */
+    private fun applyTextSize(views: RemoteViews, baseSp: Map<Int, Float>, size: WidgetTextSize) {
+        baseSp.forEach { (id, sp) ->
+            views.setTextViewTextSize(id, TypedValue.COMPLEX_UNIT_SP, sp * size.scale)
+        }
     }
 
     private fun lessonAlpha(lesson: ScheduleWidgetLesson): Float =
@@ -250,4 +266,31 @@ object ScheduleWidgetRenderer {
 
     private const val COMPLETED_ALPHA = 0.62f
     private const val BUILDING_MAX_LENGTH = 14
+
+    // The layouts' own sizes; ScheduleWidgetRenderingTest checks they match the XML.
+    private val singleLessonTextSp = mapOf(
+        R.id.type to 11f,
+        R.id.time_start to 12f,
+        R.id.time_separator to 12f,
+        R.id.time_end to 12f,
+        R.id.title to 14f,
+        R.id.secondary_text to 10f,
+        R.id.more_lessons_text to 10f,
+        R.id.widget_message_title to 14f,
+        R.id.widget_message_hint to 10f
+    )
+    private val lessonRowTextSp = mapOf(
+        R.id.time_start to 12f,
+        R.id.time_end to 10f,
+        R.id.title to 13f,
+        R.id.type to 10f,
+        R.id.secondary_text to 10f
+    )
+    private val messageRowTextSp = mapOf(
+        R.id.day_title to 11f,
+        R.id.end_marker to 11f,
+        R.id.no_lessons to 14f,
+        R.id.no_more_lessons to 14f,
+        R.id.empty_view to 14f
+    )
 }

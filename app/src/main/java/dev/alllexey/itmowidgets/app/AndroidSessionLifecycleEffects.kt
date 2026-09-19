@@ -54,7 +54,7 @@ class AndroidSessionLifecycleEffects @Inject constructor(
         val snapshot = ScheduleWidgetSnapshot.signedOut(
             singleLessonStyle = settings.getSingleLessonWidgetStyle(),
             lessonListStyle = settings.getLessonListWidgetStyle()
-        )
+        ).withTextSizes(settings.getScheduleWidgetSettings())
         scheduleWidgetStore.write(snapshot)
 
         val manager = AppWidgetManager.getInstance(context)

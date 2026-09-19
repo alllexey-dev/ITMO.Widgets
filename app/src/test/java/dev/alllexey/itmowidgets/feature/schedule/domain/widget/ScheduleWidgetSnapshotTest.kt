@@ -1,7 +1,11 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,6 +20,28 @@ class ScheduleWidgetSnapshotTest {
     fun `loading and error snapshots cannot replace refresh failure`() {
         assertFalse(ScheduleWidgetSnapshot.loading().canBeShownWhenRefreshFails())
         assertFalse(ScheduleWidgetSnapshot.error().canBeShownWhenRefreshFails())
+    }
+
+    @Test
+    fun `snapshots written before the text size choice read as normal and the choice reaches the fallback`() {
+        val legacyJson = Gson().toJson(ScheduleWidgetSnapshot.loading())
+            .replace(",\"compactTextSize\":\"NORMAL\"", "")
+        assertFalse(legacyJson.contains("TextSize"))
+        val legacy = Gson().fromJson(legacyJson, ScheduleWidgetSnapshot::class.java)
+        assertNull(legacy.compactTextSize)
+        assertEquals(WidgetTextSize.NORMAL, legacy.resolvedCompactTextSize)
+        assertEquals(WidgetTextSize.NORMAL, legacy.resolvedFullTextSize)
+
+        val sized = ScheduleWidgetSnapshot.error().copy(officialFallback = ScheduleWidgetSnapshot.error()).withTextSizes(
+            ScheduleWidgetSettings(
+                compact = CompactScheduleWidgetSettings(textSize = WidgetTextSize.LARGE),
+                full = FullScheduleWidgetSettings(textSize = WidgetTextSize.EXTRA_LARGE)
+            )
+        )
+        assertEquals(WidgetTextSize.LARGE, sized.resolvedCompactTextSize)
+        assertEquals(WidgetTextSize.EXTRA_LARGE, sized.withoutPendingSport().resolvedFullTextSize)
+        val roundTrip = Gson().fromJson(Gson().toJson(sized), ScheduleWidgetSnapshot::class.java)
+        assertEquals(sized, roundTrip)
     }
 
     @Test

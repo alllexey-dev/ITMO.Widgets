@@ -85,7 +85,7 @@ class ScheduleWidgetDataProvider @Inject constructor(
         ScheduleWidgetSelection(
             dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot.signedOut(
                 preferences.singleLessonStyle, preferences.lessonListStyle
-            ),
+            ).withTextSizes(preferences.display),
             ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY
         )
     )

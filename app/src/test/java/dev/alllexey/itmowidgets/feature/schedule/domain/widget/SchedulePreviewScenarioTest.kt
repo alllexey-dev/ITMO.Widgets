@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,6 +17,19 @@ class SchedulePreviewScenarioTest {
     fun `early selection uses the real fifteen minute boundary`() {
         assertEquals("Programming", snapshot().singleLesson.lesson?.subject)
         assertEquals("Math", snapshot(ScheduleWidgetSettings(compact = CompactScheduleWidgetSettings(showNextLessonEarly = false))).singleLesson.lesson?.subject)
+    }
+
+    @Test
+    fun `text sizes reach the snapshot per format so the previews render them`() {
+        val snapshot = snapshot(
+            ScheduleWidgetSettings(
+                compact = CompactScheduleWidgetSettings(textSize = WidgetTextSize.EXTRA_LARGE),
+                full = FullScheduleWidgetSettings(textSize = WidgetTextSize.LARGE)
+            )
+        )
+        assertEquals(WidgetTextSize.EXTRA_LARGE, snapshot.resolvedCompactTextSize)
+        assertEquals(WidgetTextSize.LARGE, snapshot.resolvedFullTextSize)
+        assertEquals(WidgetTextSize.NORMAL, snapshot().resolvedCompactTextSize)
     }
 
     @Test

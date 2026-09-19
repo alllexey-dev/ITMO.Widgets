@@ -31,6 +31,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
@@ -112,7 +113,8 @@ class WidgetPreviewTest {
         screen.scenario.onActivity {
             assertFalse(original.findViewById<TextView>(R.id.secondary_text).text.contains(it.getString(R.string.widget_preview_teacher)))
             assertNull(original.findViewById<ListView>(R.id.lesson_list))
-            assertEquals(2, screen.vm.sections.value.flatMap { section -> section.items }.size)
+            // Two switches and the text size choice.
+            assertEquals(3, screen.vm.sections.value.flatMap { section -> section.items }.size)
         }
     }
 
@@ -394,6 +396,8 @@ class WidgetPreviewTest {
 
         override suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(full = local.value.scheduleWidget.full.copy(hidePastLessons = hidden))) }
         override suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(full = local.value.scheduleWidget.full.copy(showTomorrowWhenTodayIsOver = enabled))) }
+        override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(compact = local.value.scheduleWidget.compact.copy(textSize = size))) }
+        override suspend fun setFullWidgetTextSize(size: WidgetTextSize) { local.value = local.value.copy(scheduleWidget = local.value.scheduleWidget.copy(full = local.value.scheduleWidget.full.copy(textSize = size))) }
         override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) { local.value = local.value.copy(qrWidget = local.value.qrWidget.copy(dynamicColors = enabled)) }
         override suspend fun setQrSpoilerEnabled(enabled: Boolean) { local.value = local.value.copy(qrWidget = local.value.qrWidget.copy(spoilerEnabled = enabled)) }
         override suspend fun setQrAnimationType(type: QrAnimationType) { local.value = local.value.copy(qrWidget = local.value.qrWidget.copy(animationType = type)) }

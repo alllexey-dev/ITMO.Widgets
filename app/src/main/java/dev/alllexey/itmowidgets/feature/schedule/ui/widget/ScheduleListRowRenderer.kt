@@ -4,6 +4,7 @@ import android.content.Context
 import android.widget.RemoteViews
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItem
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItemKind
 import java.time.LocalDate
@@ -11,37 +12,46 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class ScheduleListRowRenderer(private val context: Context) {
-    fun render(item: ScheduleListWidgetItem, style: LessonStyle): RemoteViews? {
+    fun render(
+        item: ScheduleListWidgetItem,
+        style: LessonStyle,
+        textSize: WidgetTextSize = WidgetTextSize.NORMAL,
+    ): RemoteViews? {
         return when (item.kind) {
             ScheduleListWidgetItemKind.LESSON -> {
                 val lesson = item.lesson ?: return null
                 ScheduleWidgetRenderer.lessonListRow(
                     context = context,
                     lesson = lesson,
-                    style = style
+                    style = style,
+                    textSize = textSize
                 )
             }
 
-            ScheduleListWidgetItemKind.HEADER -> header(item)
+            ScheduleListWidgetItemKind.HEADER -> header(item, textSize)
             ScheduleListWidgetItemKind.EMPTY_TODAY -> message(
+                textSize,
                 R.layout.item_lesson_list_empty,
                 R.id.no_lessons,
                 R.string.schedule_widget_empty_today
             )
 
             ScheduleListWidgetItemKind.EMPTY_TODAY_AND_TOMORROW -> message(
+                textSize,
                 R.layout.item_lesson_list_empty,
                 R.id.no_lessons,
                 R.string.schedule_widget_empty_today_and_tomorrow
             )
 
             ScheduleListWidgetItemKind.NO_MORE_TODAY -> message(
+                textSize,
                 R.layout.item_lesson_list_no_more,
                 R.id.no_more_lessons,
                 R.string.schedule_widget_no_more_today
             )
 
             ScheduleListWidgetItemKind.END -> message(
+                textSize,
                 R.layout.item_lesson_list_end,
                 R.id.end_marker,
                 if (item.tomorrow) {
@@ -52,18 +62,21 @@ class ScheduleListRowRenderer(private val context: Context) {
             )
 
             ScheduleListWidgetItemKind.ERROR -> message(
+                textSize,
                 R.layout.item_lesson_list_error,
                 R.id.empty_view,
                 R.string.schedule_widget_error
             )
 
             ScheduleListWidgetItemKind.SIGNED_OUT -> message(
+                textSize,
                 R.layout.item_lesson_list_error,
                 R.id.empty_view,
                 R.string.schedule_widget_signed_out
             )
 
             ScheduleListWidgetItemKind.LOADING -> message(
+                textSize,
                 R.layout.item_lesson_list_updating,
                 R.id.empty_view,
                 R.string.schedule_widget_loading
@@ -71,7 +84,7 @@ class ScheduleListRowRenderer(private val context: Context) {
         }
     }
 
-    private fun header(item: ScheduleListWidgetItem): RemoteViews {
+    private fun header(item: ScheduleListWidgetItem, textSize: WidgetTextSize): RemoteViews {
         val date = item.dateIso?.let(LocalDate::parse)
         val formattedDate = date?.format(DATE_FORMATTER).orEmpty()
         val day = context.getString(
@@ -89,16 +102,18 @@ class ScheduleListRowRenderer(private val context: Context) {
                 R.string.schedule_widget_day_header,
                 day,
                 formattedDate
-            )
+            ),
+            textSize = textSize
         )
     }
 
-    private fun message(layoutId: Int, textViewId: Int, textId: Int): RemoteViews {
+    private fun message(textSize: WidgetTextSize, layoutId: Int, textViewId: Int, textId: Int): RemoteViews {
         return ScheduleWidgetRenderer.listMessageRow(
             context = context,
             layoutId = layoutId,
             textViewId = textViewId,
-            text = context.getString(textId)
+            text = context.getString(textId),
+            textSize = textSize
         )
     }
 

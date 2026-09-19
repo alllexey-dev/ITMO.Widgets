@@ -5,6 +5,20 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
 ## Unreleased (2.1-SNAPSHOT)
 
+### 2026-09-19
+- Schedule widgets get a `Размер текста` choice per format (`Обычный`,
+  `Крупный`, `Очень крупный`) on their settings pages; the preview follows it.
+- Schedule widget descriptors on Android 12+ ask only for the span the layouts
+  need (180 dp minimum, explicit resize bounds, default span through
+  `targetCellWidth/Height`), so a launcher with smaller cells has no reason to
+  scale the widget down.
+- Schedule widgets refresh a second time 3 s after a sport sign-up or
+  cancellation, so a MyITMO reply that predates the change no longer leaves
+  the widget stale until the next automatic update; failed widget refreshes
+  are recorded in the diagnostics journal.
+- Instrumentation runs skip the 45 s activity-lifecycle timeout that every
+  `launchActivityForResult` close used to wait for.
+
 ### 2026-09-17
 - First-run flow after sign-in: one screen per widget with its live preview,
   its own settings rows and a pin straight to the launcher; the ITMO.Widgets

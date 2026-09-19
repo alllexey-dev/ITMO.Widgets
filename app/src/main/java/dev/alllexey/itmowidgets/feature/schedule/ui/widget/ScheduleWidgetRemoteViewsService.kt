@@ -32,7 +32,7 @@ class ScheduleWidgetRemoteViewsService : RemoteViewsService() {
 
         override fun getViewAt(position: Int): RemoteViews? {
             val item = snapshot.lessonList.getOrNull(position) ?: return null
-            return rowRenderer.render(item, snapshot.lessonListStyle)
+            return rowRenderer.render(item, snapshot.lessonListStyle, snapshot.resolvedFullTextSize)
         }
 
         override fun getLoadingView(): RemoteViews? = null

@@ -16,10 +16,12 @@ class WidgetRefreshCoordinator @Inject constructor(
 
     override fun refreshAll() {
         QrWidgetWork.enqueueUpdate(context, force = true)
-        refreshScheduleWidgets()
+        ScheduleWidgetWork.enqueueUpdate(context, force = true)
     }
 
+    /** After a sport action: the first fetch may still see the schedule from before it. */
     override fun refreshScheduleWidgets() {
         ScheduleWidgetWork.enqueueUpdate(context, force = true)
+        ScheduleWidgetWork.enqueueFollowUp(context)
     }
 }

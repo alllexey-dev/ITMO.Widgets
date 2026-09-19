@@ -72,7 +72,9 @@ class ScheduleWidgetSelector @Inject constructor() {
                 pendingValidUntil = pending.minOfOrNull {
                     minOf(OffsetDateTime.of(it.date, it.start, now.offset).toInstant(),
                         now.toInstant().plus(PERIODIC_UPDATE_DELAY))
-                }?.toString()
+                }?.toString(),
+                compactTextSize = preferences.display.compact.textSize,
+                fullTextSize = preferences.display.full.textSize
             ),
             nextUpdateDelay = nextUpdateDelay(
                 lessons = todayLessons,

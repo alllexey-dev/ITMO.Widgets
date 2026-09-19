@@ -23,6 +23,7 @@ class ScheduleWidgetUpdateWorker(
     private val dependencies = ScheduleWidgetEntryPoint.from(appContext)
     private val dataProvider = dependencies.scheduleWidgetDataProvider()
     private val store = dependencies.scheduleWidgetSnapshotStore()
+    private val diagnostics = dependencies.appDiagnostics()
 
     override suspend fun doWork(): Result {
         val singleIds = ScheduleWidgetProviders.singleLessonIds(applicationContext)
@@ -40,17 +41,21 @@ class ScheduleWidgetUpdateWorker(
                     nextUpdateDelay = result.selection.nextUpdateDelay
                 )
 
-                is ScheduleWidgetLoadResult.Unavailable -> RenderedSnapshot(
-                    snapshot = fallbackSnapshot(
-                        singleLessonStyle = result.singleLessonStyle,
-                        lessonListStyle = result.lessonListStyle
-                    ),
-                    nextUpdateDelay = ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY
-                )
+                is ScheduleWidgetLoadResult.Unavailable -> {
+                    diagnostics.warn(TAG, "Schedule refresh failed and nothing is cached; keeping the last snapshot")
+                    RenderedSnapshot(
+                        snapshot = fallbackSnapshot(
+                            singleLessonStyle = result.singleLessonStyle,
+                            lessonListStyle = result.lessonListStyle
+                        ),
+                        nextUpdateDelay = ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY
+                    )
+                }
             }
         } catch (cancellation: CancellationException) {
             throw cancellation
-        } catch (_: Exception) {
+        } catch (error: Exception) {
+            diagnostics.warn(TAG, "Widget update failed; keeping the last snapshot", error)
             RenderedSnapshot(
                 snapshot = fallbackSnapshot(),
                 nextUpdateDelay = ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY
@@ -108,6 +113,10 @@ class ScheduleWidgetUpdateWorker(
         if (listIds.isNotEmpty()) {
             ScheduleWidgetRenderer.notifyListChanged(manager, listIds)
         }
+    }
+
+    private companion object {
+        const val TAG = "ScheduleWidget"
     }
 
     private data class RenderedSnapshot(

@@ -5,6 +5,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 
@@ -15,6 +16,8 @@ interface ScheduleWidgetEntryPoint {
     fun scheduleWidgetDataProvider(): ScheduleWidgetDataProvider
 
     fun scheduleWidgetSnapshotStore(): ScheduleWidgetSnapshotStore
+
+    fun appDiagnostics(): AppDiagnostics
 
     companion object {
 

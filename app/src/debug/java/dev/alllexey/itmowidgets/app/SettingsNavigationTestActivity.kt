@@ -64,6 +64,7 @@ import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
@@ -341,6 +342,16 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         override suspend fun setTimeSelectorHidden(hidden: Boolean) = Unit
         override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
             local.value = local.value.copy(showSportAutoSign = enabled)
+        }
+
+        override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {
+            val widget = local.value.scheduleWidget
+            local.value = local.value.copy(scheduleWidget = widget.copy(compact = widget.compact.copy(textSize = size)))
+        }
+
+        override suspend fun setFullWidgetTextSize(size: WidgetTextSize) {
+            val widget = local.value.scheduleWidget
+            local.value = local.value.copy(scheduleWidget = widget.copy(full = widget.full.copy(textSize = size)))
         }
     }
 

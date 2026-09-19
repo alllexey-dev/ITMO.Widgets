@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.util.safeEnumOf
 import java.io.IOException
 import kotlinx.coroutines.flow.Flow
@@ -75,12 +76,14 @@ class AppSettingsStorage(
     private fun Preferences.scheduleWidgetSettings() = ScheduleWidgetSettings(
         compact = CompactScheduleWidgetSettings(
             showNextLessonEarly = this[COMPACT_WIDGET_NEXT_EARLY] ?: this[WIDGET_FORWARD_SCHEDULING_ENABLED] ?: true,
-            hideTeacher = this[COMPACT_WIDGET_HIDE_TEACHER] ?: this[WIDGET_HIDE_TEACHER_ENABLED] ?: false
+            hideTeacher = this[COMPACT_WIDGET_HIDE_TEACHER] ?: this[WIDGET_HIDE_TEACHER_ENABLED] ?: false,
+            textSize = safeEnumOf(this[COMPACT_WIDGET_TEXT_SIZE], WidgetTextSize.NORMAL)
         ),
         full = FullScheduleWidgetSettings(
             hideTeacher = this[FULL_WIDGET_HIDE_TEACHER] ?: this[WIDGET_HIDE_TEACHER_ENABLED] ?: false,
             hidePastLessons = this[FULL_WIDGET_HIDE_PAST] ?: this[WIDGET_HIDE_PREVIOUS_LESSONS_ENABLED] ?: false,
-            showTomorrowWhenTodayIsOver = this[FULL_WIDGET_SHOW_TOMORROW] ?: this[WIDGET_FUTURE_SCHEDULE_ENABLED] ?: false
+            showTomorrowWhenTodayIsOver = this[FULL_WIDGET_SHOW_TOMORROW] ?: this[WIDGET_FUTURE_SCHEDULE_ENABLED] ?: false,
+            textSize = safeEnumOf(this[FULL_WIDGET_TEXT_SIZE], WidgetTextSize.NORMAL)
         )
     )
 
@@ -139,6 +142,14 @@ class AppSettingsStorage(
         write(FULL_WIDGET_SHOW_TOMORROW, enabled)
     }
 
+    suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {
+        write(COMPACT_WIDGET_TEXT_SIZE, size.name)
+    }
+
+    suspend fun setFullWidgetTextSize(size: WidgetTextSize) {
+        write(FULL_WIDGET_TEXT_SIZE, size.name)
+    }
+
     suspend fun setQrSpoilerEnabled(enabled: Boolean) {
         write(QR_SPOILER_ENABLED, enabled)
     }
@@ -171,6 +182,8 @@ class AppSettingsStorage(
         private val FULL_WIDGET_HIDE_TEACHER = booleanPreferencesKey("full_widget_hide_teacher")
         private val FULL_WIDGET_HIDE_PAST = booleanPreferencesKey("full_widget_hide_past")
         private val FULL_WIDGET_SHOW_TOMORROW = booleanPreferencesKey("full_widget_show_tomorrow")
+        private val COMPACT_WIDGET_TEXT_SIZE = stringPreferencesKey("compact_widget_text_size")
+        private val FULL_WIDGET_TEXT_SIZE = stringPreferencesKey("full_widget_text_size")
         private val CUSTOM_SERVICES_ENABLED =
             booleanPreferencesKey("custom_services_enabled")
         private val SCHEDULE_SPORT_AUTO_SIGN_ENABLED =

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.domain
 
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import kotlinx.coroutines.flow.Flow
@@ -66,6 +67,10 @@ interface SettingsRepository {
     suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean)
 
     suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean)
+
+    suspend fun setCompactWidgetTextSize(size: WidgetTextSize)
+
+    suspend fun setFullWidgetTextSize(size: WidgetTextSize)
 
     suspend fun setQrDynamicColorsEnabled(enabled: Boolean)
 

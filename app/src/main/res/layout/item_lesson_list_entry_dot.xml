@@ -13,8 +13,9 @@
 
     <LinearLayout
         android:id="@+id/time_column"
-        android:layout_width="44dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:minWidth="44dp"
         android:gravity="center_horizontal"
         android:orientation="vertical">
 

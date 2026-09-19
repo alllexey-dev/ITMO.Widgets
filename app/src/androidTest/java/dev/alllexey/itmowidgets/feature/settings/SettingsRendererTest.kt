@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
@@ -499,6 +500,8 @@ class SettingsRendererTest {
 
         override suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean) = Unit
         override suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean) = Unit
+        override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) = Unit
+        override suspend fun setFullWidgetTextSize(size: WidgetTextSize) = Unit
         override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) = Unit
         override suspend fun setQrSpoilerEnabled(enabled: Boolean) = Unit
         override suspend fun setQrAnimationType(type: QrAnimationType) = Unit

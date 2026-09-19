@@ -26,7 +26,10 @@ the app.
   written into a new session.
 - Successful sport actions, preference changes and the services gate enqueue a
   forced schedule-widget update through `WidgetRefreshCoordinator`; QR widgets
-  are not touched.
+  are not touched. A sport action also enqueues a follow-up update 3 s later,
+  because MyITMO can answer the first fetch with the schedule from before the
+  change. A refresh that fails or falls back to the previous snapshot leaves a
+  `ScheduleWidget` warning in the diagnostics journal.
 - Compact and full widget settings are independent typed models in
   `core/settings`. Each has its own teacher visibility. Early switching belongs
   only to compact; hiding past lessons and tomorrow selection belong only to full.
@@ -37,6 +40,17 @@ the app.
 - Smart update scheduling and the single visual style are fixed; there are no
   selectors. Completed rows dim uniformly; the day widget centres its
   `Сегодня`/`Завтра` header.
+- Text size is a per-format choice (`WidgetTextSize`: 1, 1.2 or 1.4). The
+  snapshot carries both formats' sizes (nullable, so older snapshots still
+  deserialise as normal) and `ScheduleWidgetRenderer` applies them with
+  `setTextViewTextSize` on every render, so a recycled launcher view never keeps
+  a previous size. The base sizes live in the renderer next to the layouts; the
+  list row's time column grows with its text instead of a fixed 44 dp.
+- Provider descriptors for Android 12+ declare `targetCellWidth/Height` for the
+  default span and keep `minWidth` at 180 dp with explicit resize bounds, the
+  smallest span the layouts still read in. A launcher scales the whole widget
+  down when its cells are smaller than the declared minimum; the descriptors
+  never ask for more than the layouts need.
 
 ## QR widget
 

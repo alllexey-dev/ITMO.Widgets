@@ -86,8 +86,8 @@ only among installed instances of that same format:
 
 | Page | Controls | Defaults |
 |---|---|---|
-| `Компактное расписание` | `Следующая пара заранее`, `Скрывать преподавателя` | early switch on; teacher visible |
-| `Полное расписание` | `Скрывать преподавателя`, `Скрывать прошедшие занятия`, `Показывать расписание на завтра` | teacher visible; past lessons visible; tomorrow off |
+| `Компактное расписание` | `Следующая пара заранее`, `Скрывать преподавателя`, `Размер текста` | early switch on; teacher visible; text `Обычный` |
+| `Полное расписание` | `Скрывать преподавателя`, `Скрывать прошедшие занятия`, `Показывать расписание на завтра`, `Размер текста` | teacher visible; past lessons visible; tomorrow off; text `Обычный` |
 
 - The compact widget shows today's current/next lesson. Its optional early switch
   advances 15 minutes before a lesson ends. It has no past-list or tomorrow-list
@@ -95,6 +95,11 @@ only among installed instances of that same format:
 - The full widget keeps a lesson until its actual end when hiding past lessons,
   regardless of the compact widget's early-switch preference. Its optional
   tomorrow list appears only after today's lessons actually finish.
+- `Размер текста` (`Обычный`, `Крупный`, `Очень крупный`) scales every text in
+  that format's widget by 1, 1.2 or 1.4 relative to the layout's own sizes.
+  It exists because widgets cannot follow the app's typography and a widget
+  stretched over a large area keeps small fixed text; the choice is per format and stored in
+  `compact_widget_text_size` / `full_widget_text_size`. The preview follows it.
 - Teacher visibility is independent, including pending sport rows and the
   official-only offline fallback. Format-scoped preference keys override read-only
   unscoped fallback keys, preserving existing choices without linking later edits.

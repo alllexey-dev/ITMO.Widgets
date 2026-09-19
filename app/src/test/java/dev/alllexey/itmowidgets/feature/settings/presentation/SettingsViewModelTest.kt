@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
@@ -73,10 +74,23 @@ class SettingsViewModelTest {
         val compact = createFixture(page = SettingsPage.COMPACT_SCHEDULE_WIDGET, local = local)
         val full = createFixture(page = SettingsPage.FULL_SCHEDULE_WIDGET, local = local)
         advanceUntilIdle()
-        assertEquals(setOf(SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY, SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER),
-            compact.viewModel.allItems().map { it.key }.toSet())
-        assertEquals(setOf(SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER, SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST, SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW),
-            full.viewModel.allItems().map { it.key }.toSet())
+        assertEquals(
+            setOf(
+                SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY,
+                SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER,
+                SettingsViewModel.KEY_COMPACT_WIDGET_TEXT_SIZE
+            ),
+            compact.viewModel.allItems().map { it.key }.toSet()
+        )
+        assertEquals(
+            setOf(
+                SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER,
+                SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST,
+                SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW,
+                SettingsViewModel.KEY_FULL_WIDGET_TEXT_SIZE
+            ),
+            full.viewModel.allItems().map { it.key }.toSet()
+        )
         assertTrue(compact.viewModel.toggle(SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER).checked)
         assertFalse(full.viewModel.toggle(SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER).checked)
         full.viewModel.onToggleChanged(SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER, true)
@@ -287,9 +301,11 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_FRIENDS_SHARING,
                     SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY,
                     SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER,
+                    SettingsViewModel.KEY_COMPACT_WIDGET_TEXT_SIZE,
                     SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER,
                     SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST,
                     SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW,
+                    SettingsViewModel.KEY_FULL_WIDGET_TEXT_SIZE,
                     SettingsViewModel.KEY_QR_DYNAMIC_COLORS,
                     SettingsViewModel.KEY_QR_SPOILER,
                     SettingsViewModel.KEY_QR_ANIMATION,
@@ -481,6 +497,43 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             assertEquals(2, fixture.repository.refreshSharingCount)
+        }
+
+    @Test
+    fun `text size choice writes only its own widget format and refreshes widgets`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val local = LocalSettings(
+                scheduleWidget = ScheduleWidgetSettings(
+                    compact = CompactScheduleWidgetSettings(textSize = WidgetTextSize.LARGE)
+                )
+            )
+            val compact = createFixture(page = SettingsPage.COMPACT_SCHEDULE_WIDGET, local = local)
+            val full = createFixture(page = SettingsPage.FULL_SCHEDULE_WIDGET, local = local)
+            advanceUntilIdle()
+
+            val choice = compact.viewModel.choice(SettingsViewModel.KEY_COMPACT_WIDGET_TEXT_SIZE)
+            assertEquals(WidgetTextSize.LARGE.name, choice.selectedOptionKey)
+            assertEquals(WidgetTextSize.entries.map { it.name }, choice.options.map { it.key })
+            assertEquals(
+                WidgetTextSize.NORMAL.name,
+                full.viewModel.choice(SettingsViewModel.KEY_FULL_WIDGET_TEXT_SIZE).selectedOptionKey
+            )
+
+            compact.viewModel.onChoiceChanged(SettingsViewModel.KEY_COMPACT_WIDGET_TEXT_SIZE, "huge")
+            advanceUntilIdle()
+            assertTrue(compact.repository.compactTextSizeRequests.isEmpty())
+            assertEquals(0, compact.widgetRefresher.refreshCount)
+
+            full.viewModel.onChoiceChanged(SettingsViewModel.KEY_FULL_WIDGET_TEXT_SIZE, WidgetTextSize.EXTRA_LARGE.name)
+            advanceUntilIdle()
+
+            assertEquals(listOf(WidgetTextSize.EXTRA_LARGE), full.repository.fullTextSizeRequests)
+            assertTrue(full.repository.compactTextSizeRequests.isEmpty())
+            assertEquals(
+                WidgetTextSize.EXTRA_LARGE.name,
+                full.viewModel.choice(SettingsViewModel.KEY_FULL_WIDGET_TEXT_SIZE).selectedOptionKey
+            )
+            assertEquals(1, full.widgetRefresher.refreshCount)
         }
 
     @Test
@@ -1176,6 +1229,27 @@ class SettingsViewModelTest {
                 scheduleWidget = local.value.scheduleWidget.copy(full = local.value.scheduleWidget.full.copy(
                     showTomorrowWhenTodayIsOver = enabled
                 ))
+            )
+        }
+
+        val compactTextSizeRequests = mutableListOf<WidgetTextSize>()
+        val fullTextSizeRequests = mutableListOf<WidgetTextSize>()
+
+        override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {
+            compactTextSizeRequests += size
+            local.value = local.value.copy(
+                scheduleWidget = local.value.scheduleWidget.copy(
+                    compact = local.value.scheduleWidget.compact.copy(textSize = size)
+                )
+            )
+        }
+
+        override suspend fun setFullWidgetTextSize(size: WidgetTextSize) {
+            fullTextSizeRequests += size
+            local.value = local.value.copy(
+                scheduleWidget = local.value.scheduleWidget.copy(
+                    full = local.value.scheduleWidget.full.copy(textSize = size)
+                )
             )
         }
 

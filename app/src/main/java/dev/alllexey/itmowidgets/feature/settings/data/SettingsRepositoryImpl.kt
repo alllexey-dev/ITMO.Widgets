@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
@@ -138,6 +139,14 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean) {
         settings.setFullWidgetTomorrowEnabled(enabled)
+    }
+
+    override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {
+        settings.setCompactWidgetTextSize(size)
+    }
+
+    override suspend fun setFullWidgetTextSize(size: WidgetTextSize) {
+        settings.setFullWidgetTextSize(size)
     }
 
     override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) {

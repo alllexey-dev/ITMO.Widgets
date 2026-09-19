@@ -69,11 +69,14 @@ class ScheduleSettingsPreview(
     override fun bind(settings: WidgetPreviewSettings) {
         val next = settings as WidgetPreviewSettings.Schedule
         if (next == appearance) return
-        if (next.format != appearance?.format) {
-            binding.schedulePreviewContent.removeAllViews()
-            // The day list needs a bounded area; the single lesson is as tall as the widget itself.
-            binding.schedulePreviewContent.updateLayoutParams {
-                height = if (next.format == ScheduleWidgetFormat.COMPACT) ViewGroup.LayoutParams.WRAP_CONTENT else fullHeight
+        if (next.format != appearance?.format) binding.schedulePreviewContent.removeAllViews()
+        // The day list needs a bounded area that grows with its text; the single lesson is as
+        // tall as the widget itself.
+        binding.schedulePreviewContent.updateLayoutParams {
+            height = if (next.format == ScheduleWidgetFormat.COMPACT) {
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            } else {
+                (fullHeight * next.appearance.full.textSize.scale).toInt()
             }
         }
         appearance = next
@@ -122,7 +125,9 @@ class ScheduleSettingsPreview(
                 override fun getItemId(position: Int) = position.toLong()
                 override fun isEnabled(position: Int) = false
                 override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                    val remote = checkNotNull(rowRenderer.render(getItem(position), content.lessonListStyle))
+                    val remote = checkNotNull(
+                        rowRenderer.render(getItem(position), content.lessonListStyle, content.resolvedFullTextSize)
+                    )
                     if (convertView != null && convertView.tag == remote.layoutId) {
                         remote.reapply(context, convertView)
                         return convertView

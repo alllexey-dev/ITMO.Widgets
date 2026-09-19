@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
@@ -213,6 +214,16 @@ class SettingsViewModel @Inject constructor(
                 val animation = QrAnimationType.entries.firstOrNull { it.name == optionKey } ?: return
                 updateWidgetSetting { repository.setQrAnimationType(animation) }
             }
+            KEY_COMPACT_WIDGET_TEXT_SIZE, KEY_FULL_WIDGET_TEXT_SIZE -> {
+                val size = WidgetTextSize.entries.firstOrNull { it.name == optionKey } ?: return
+                updateWidgetSetting {
+                    if (key == KEY_COMPACT_WIDGET_TEXT_SIZE) {
+                        repository.setCompactWidgetTextSize(size)
+                    } else {
+                        repository.setFullWidgetTextSize(size)
+                    }
+                }
+            }
             KEY_SCHEDULE_SHARING, KEY_SPORT_SHARING, KEY_FRIENDS_SHARING -> {
                 val visibility = SharingVisibility.entries.firstOrNull { it.name == optionKey } ?: return
                 val item = sections.value.flatMap(SettingSection::items)
@@ -389,7 +400,8 @@ class SettingsViewModel @Inject constructor(
                         key = KEY_COMPACT_WIDGET_HIDE_TEACHER,
                         title = UiText.Resource(R.string.settings_widget_hide_teacher_title),
                         checked = local.scheduleWidget.compact.hideTeacher
-                    )
+                    ),
+                    textSizeChoice(KEY_COMPACT_WIDGET_TEXT_SIZE, local.scheduleWidget.compact.textSize)
                 ),
                 footer = UiText.Resource(R.string.settings_compact_widget_footer)
             )
@@ -413,7 +425,8 @@ class SettingsViewModel @Inject constructor(
                         title = UiText.Resource(R.string.settings_widget_tomorrow_title),
                         description = UiText.Resource(R.string.settings_widget_tomorrow_description),
                         checked = local.scheduleWidget.full.showTomorrowWhenTodayIsOver
-                    )
+                    ),
+                    textSizeChoice(KEY_FULL_WIDGET_TEXT_SIZE, local.scheduleWidget.full.textSize)
                 ),
                 footer = UiText.Resource(R.string.settings_full_widget_footer)
             )
@@ -617,6 +630,24 @@ class SettingsViewModel @Inject constructor(
         page = page
     )
 
+    private fun textSizeChoice(key: String, size: WidgetTextSize) = SettingItem.Choice(
+        key = key,
+        title = UiText.Resource(R.string.settings_widget_text_size_title),
+        value = size.label(),
+        options = WidgetTextSize.entries.map { ChoiceOption(it.name, it.label()) },
+        selectedOptionKey = size.name
+    )
+
+    private fun WidgetTextSize.label(): UiText.Resource {
+        return UiText.Resource(
+            when (this) {
+                WidgetTextSize.NORMAL -> R.string.settings_widget_text_size_normal
+                WidgetTextSize.LARGE -> R.string.settings_widget_text_size_large
+                WidgetTextSize.EXTRA_LARGE -> R.string.settings_widget_text_size_extra_large
+            }
+        )
+    }
+
     private fun QrAnimationType.label(): UiText.Resource {
         return UiText.Resource(
             when (this) {
@@ -642,6 +673,8 @@ class SettingsViewModel @Inject constructor(
         const val KEY_FULL_WIDGET_HIDE_TEACHER = "full_widget_hide_teacher"
         const val KEY_FULL_WIDGET_HIDE_PAST = "full_widget_hide_past"
         const val KEY_FULL_WIDGET_SHOW_TOMORROW = "full_widget_show_tomorrow"
+        const val KEY_COMPACT_WIDGET_TEXT_SIZE = "compact_widget_text_size"
+        const val KEY_FULL_WIDGET_TEXT_SIZE = "full_widget_text_size"
         const val KEY_QR_DYNAMIC_COLORS = "qr_dynamic_colors"
         const val KEY_QR_SPOILER = "qr_spoiler"
         const val KEY_QR_ANIMATION = "qr_animation"

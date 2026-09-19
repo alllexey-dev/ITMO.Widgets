@@ -4,13 +4,15 @@ enum class ScheduleWidgetFormat { COMPACT, FULL }
 
 data class CompactScheduleWidgetSettings(
     val showNextLessonEarly: Boolean = true,
-    val hideTeacher: Boolean = false
+    val hideTeacher: Boolean = false,
+    val textSize: WidgetTextSize = WidgetTextSize.NORMAL
 )
 
 data class FullScheduleWidgetSettings(
     val hideTeacher: Boolean = false,
     val hidePastLessons: Boolean = false,
-    val showTomorrowWhenTodayIsOver: Boolean = false
+    val showTomorrowWhenTodayIsOver: Boolean = false,
+    val textSize: WidgetTextSize = WidgetTextSize.NORMAL
 )
 
 data class ScheduleWidgetSettings(
