@@ -1,8 +1,5 @@
 package dev.alllexey.itmowidgets.feature.settings
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -14,11 +11,11 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
-import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -108,18 +105,9 @@ class ProfileBackMotionTest {
         800f, progress, edge
     )
 
-    private fun capture(activity: SettingsNavigationTestActivity, name: String) {
-        val root = activity.findViewById<View>(R.id.main)
-        val bitmap = Bitmap.createBitmap(root.width, root.height, Bitmap.Config.ARGB_8888)
-        root.draw(Canvas(bitmap))
-        val folder = File(activity.externalCacheDir, "profile-back-screenshots").apply { mkdirs() }
-        File(folder, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
+    /** Called from the main thread inside `onActivity`. */
+    private fun capture(activity: SettingsNavigationTestActivity, name: String) =
+        Screenshots.draw("profile-back-screenshots", name, activity.findViewById(R.id.main))
 
-    private fun settle(milliseconds: Long = 400) {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(milliseconds)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
+    private fun settle(milliseconds: Long = 400) = TestUi.settle(milliseconds)
 }

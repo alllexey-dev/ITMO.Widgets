@@ -16,6 +16,7 @@ import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
 import java.io.File
+import dev.alllexey.itmowidgets.testing.TestUi
 import java.util.Base64
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -152,19 +153,8 @@ class MainActivitySessionRoutingTest {
             .encodeToString(value.toByteArray(Charsets.UTF_8))
     }
 
-    private fun eventually(assertion: () -> Unit) {
-        var lastFailure: Throwable? = null
-        repeat(RETRY_COUNT) {
-            try {
-                assertion()
-                return
-            } catch (failure: Throwable) {
-                lastFailure = failure
-                Thread.sleep(RETRY_DELAY_MILLIS)
-            }
-        }
-        throw AssertionError("Condition was not met in time", lastFailure)
-    }
+    private fun eventually(assertion: () -> Unit) =
+        TestUi.eventually(attempts = RETRY_COUNT, delayMillis = RETRY_DELAY_MILLIS, assertion = assertion)
 
     private companion object {
         const val TOKEN_FILE_NAME = "myitmo_tokens.enc"

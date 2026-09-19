@@ -16,7 +16,9 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.*
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleListRowRenderer
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSettingsPreview
+import dev.alllexey.itmowidgets.testing.Screenshots
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,8 +27,8 @@ import org.junit.runner.RunWith
 class ScheduleWidgetRenderingTest {
     @Test
     fun todayAndTomorrowHeadersAreCenteredInActualWidgetRows() {
-        for (dark in listOf(false, true)) for (fontScale in listOf(1f, 1.3f)) {
-            SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance(fontScale, dark)
+        for (spec in Appearances.default) {
+            SettingsPreviewActivity.appearance = spec.toSettingsPreview()
             ActivityScenario.launch(SettingsPreviewActivity::class.java).use { scenario ->
                 scenario.onActivity { activity ->
                     val renderer = ScheduleListRowRenderer(activity)
@@ -83,8 +85,8 @@ class ScheduleWidgetRenderingTest {
 
     @Test
     fun emptyMessageIsCenteredInBothStylesAndLessonLayoutRestoresOnReuse() {
-        for (dark in listOf(false, true)) for (fontScale in listOf(1f, 1.3f)) {
-            SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance(fontScale, dark)
+        for (spec in Appearances.default) {
+            SettingsPreviewActivity.appearance = spec.toSettingsPreview()
             val intent = Intent(ApplicationProvider.getApplicationContext(), SettingsPreviewActivity::class.java)
             ActivityScenario.launch<SettingsPreviewActivity>(intent).use { scenario ->
                 scenario.onActivity { activity ->
@@ -106,11 +108,9 @@ class ScheduleWidgetRenderingTest {
                             assertEquals(Gravity.CENTER, text.gravity)
                             assertTrue(text.layout.height <= text.height - text.compoundPaddingTop - text.compoundPaddingBottom)
                         }
-                        val image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                        root.draw(Canvas(image))
-                        val folder = File(activity.externalCacheDir, "widget-message-screenshots").apply { mkdirs() }
-                        File(folder, "${style.name}-$dark-$fontScale.png").outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
-                        image.recycle()
+                        Screenshots.save("widget-message-screenshots", "${style.name}-${spec.name}") {
+                            Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { root.draw(Canvas(it)) }
+                        }
                         val populated = snapshot.copy(singleLesson = SingleLessonWidgetContent(SingleLessonWidgetKind.LESSON, lesson(ScheduleWidgetLessonState.CURRENT)))
                         ScheduleWidgetRenderer.singleLessonViews(activity, populated).reapply(activity, root)
                         assertEquals(View.GONE, message.visibility)
@@ -124,8 +124,8 @@ class ScheduleWidgetRenderingTest {
 
     @Test
     fun pendingRowsUseBothWidgetLayoutsAndKeepUnconfirmedStatusAcrossReuse() {
-        for (dark in listOf(false, true)) for (fontScale in listOf(1f, 1.3f)) {
-            SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance(fontScale, dark)
+        for (spec in Appearances.default) {
+            SettingsPreviewActivity.appearance = spec.toSettingsPreview()
             ActivityScenario.launch(SettingsPreviewActivity::class.java).use { scenario ->
                 scenario.onActivity { activity ->
                     val width = (320 * activity.resources.displayMetrics.density).toInt()
@@ -152,13 +152,9 @@ class ScheduleWidgetRenderingTest {
                                 R.string.schedule_widget_pending_prediction else R.string.schedule_widget_pending_waiting), type.text)
                             assertTrue(type.contentDescription.contains("не подтвержден"))
                             assertEquals(0, type.layout.getEllipsisCount(0))
-                            val image = Bitmap.createBitmap(width, root.height, Bitmap.Config.ARGB_8888)
-                            root.draw(Canvas(image))
-                            val folder = File(activity.externalCacheDir, "widget-pending-screenshots").apply { mkdirs() }
-                            File(folder, "$single-${style.name}-${status.name}-$dark-$fontScale.png").outputStream().use {
-                                image.compress(Bitmap.CompressFormat.PNG, 100, it)
+                            Screenshots.save("widget-pending-screenshots", "$single-${style.name}-${status.name}-${spec.name}") {
+                                Bitmap.createBitmap(width, root.height, Bitmap.Config.ARGB_8888).also { root.draw(Canvas(it)) }
                             }
-                            image.recycle()
                             val official = pending.copy(pendingStatus = null)
                             if (single) ScheduleWidgetRenderer.singleLessonViews(activity, snapshot.copy(
                                 singleLesson = SingleLessonWidgetContent(SingleLessonWidgetKind.LESSON, official)

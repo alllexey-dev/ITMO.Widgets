@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.schedule
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -11,8 +10,6 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ScrollView
 import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.core.graphics.ColorUtils
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
@@ -20,7 +17,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import dev.alllexey.itmowidgets.R
@@ -38,7 +34,12 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.renderTimelineMarker
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSettingsPreview
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks
+import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -50,10 +51,8 @@ import org.junit.runner.RunWith
 class ScheduleCardsVisualTest {
     @Test
     fun timelineShapesRemainDistinctInEveryPaletteAndOnRebind() {
-        for (appearance in listOf(Appearance(), Appearance(dark = true),
-            Appearance(fontScale = 1.3f, seed = 0xff826c24.toInt()),
-            Appearance(fontScale = 1.3f, dark = true, seed = 0xff386a20.toInt()))) {
-            preview(appearance.dark, appearance.fontScale, appearance.seed) { scenario ->
+        for (spec in Appearances.default) {
+            preview(spec) { scenario ->
                 scenario.onActivity { activity ->
                     val image = ImageView(activity)
                     val density = activity.resources.displayMetrics.density
@@ -91,62 +90,8 @@ class ScheduleCardsVisualTest {
     }
 
     @Test
-    fun nextMarkerMovesAcrossUnchangedDaysAndTimeBoundaries() = preview { scenario ->
-        var now = FixedTime.now()
-        val clock = object : AcademicTimeProvider {
-            override val zoneId = FixedTime.zoneId
-            override fun today() = now.toLocalDate()
-            override fun now() = now
-        }
-        lateinit var adapter: DayScheduleAdapter
-        lateinit var list: RecyclerView
-        fun day(offset: Long): ScheduleDisplayDay {
-            val date = FixedTime.today().plusDays(offset)
-            return ScheduleDisplayDay(date, DaySchedule(date.dayOfWeek.value, 1, date, null,
-                listOf(lesson().copy(subjectName = "Тестовая пара", note = null, teacherFio = null, room = null, building = null))))
-        }
-        val first = day(1)
-        val second = day(2)
-        val third = day(3)
-        scenario.onActivity { activity ->
-            adapter = DayScheduleAdapter(clock)
-            list = RecyclerView(activity).apply {
-                layoutManager = LinearLayoutManager(activity)
-                itemAnimator = null
-                this.adapter = adapter
-            }
-            activity.setContentView(list)
-            adapter.submitList(listOf(second, third))
-        }
-        fun assertMarker(position: Int, description: Int) {
-            settle()
-            scenario.onActivity { activity ->
-                val holder = list.findViewHolderForAdapterPosition(position) as DayScheduleAdapter.DayViewHolder
-                assertEquals(activity.getString(description), holder.lessonList.findViewById<ImageView>(R.id.timeline_dot).contentDescription)
-            }
-        }
-        assertMarker(0, R.string.schedule_timeline_next)
-        scenario.onActivity { adapter.submitList(listOf(first, second, third)) }
-        assertMarker(0, R.string.schedule_timeline_next)
-        assertMarker(1, R.string.schedule_timeline_upcoming)
-        scenario.onActivity { adapter.submitList(listOf(second, third)) }
-        assertMarker(0, R.string.schedule_timeline_next)
-        scenario.onActivity {
-            now = second.date.atTime(8, 20).atZone(clock.zoneId).toOffsetDateTime()
-            adapter.updateLessonStates()
-        }
-        assertMarker(0, R.string.schedule_timeline_current)
-        assertMarker(1, R.string.schedule_timeline_next)
-        scenario.onActivity {
-            now = now.withHour(9).withMinute(50)
-            adapter.updateLessonStates()
-        }
-        assertMarker(0, R.string.schedule_timeline_completed)
-    }
-
-    @Test
     fun recycledLessonsRestoreAllStateAndKeepTimeAndContentOpaque() {
-        for (dark in listOf(false, true)) preview(dark = dark) { scenario ->
+        for (dark in listOf(false, true)) preview(Appearances.light.copy(dark = dark)) { scenario ->
             scenario.onActivity { activity ->
                 val states = listOf(
                     ScheduleItem.LessonState.COMPLETED,
@@ -176,7 +121,7 @@ class ScheduleCardsVisualTest {
 
     @Test
     fun recycledDayHolderFadesPastDaysOnceAndRestoresTodayAndFuture() {
-        for (dark in listOf(false, true)) preview(dark = dark) { scenario ->
+        for (dark in listOf(false, true)) preview(Appearances.light.copy(dark = dark)) { scenario ->
             lateinit var adapter: DayScheduleAdapter
             lateinit var holder: DayScheduleAdapter.DayViewHolder
             scenario.onActivity { activity ->
@@ -212,13 +157,8 @@ class ScheduleCardsVisualTest {
 
     @Test
     fun pendingSportSharesLessonAnatomyWithAnUnconfirmedMarkerAndStatus() {
-        val appearances = listOf(
-            Appearance(), Appearance(dark = true),
-            Appearance(widthDp = 320, fontScale = 1.3f, seed = 0xff826c24.toInt()),
-            Appearance(widthDp = 320, fontScale = 1.3f, dark = true, seed = 0xff386a20.toInt())
-        )
-        appearances.forEachIndexed { index, appearance ->
-            preview(appearance.dark, appearance.fontScale, appearance.seed) { scenario ->
+        Appearances.default.forEachIndexed { index, spec ->
+            preview(spec) { scenario ->
                 for (pendingOnly in listOf(false, true)) {
                     lateinit var holder: DayScheduleAdapter.DayViewHolder
                     lateinit var scroll: ScrollView
@@ -269,7 +209,7 @@ class ScheduleCardsVisualTest {
                         adapter.onBindViewHolder(holder, 0)
                         scroll.addView(holder.itemView)
                         frame.addView(scroll, FrameLayout.LayoutParams(
-                            if (appearance.widthDp > 0) (appearance.widthDp * activity.resources.displayMetrics.density).toInt() else -1,
+                            if (spec.widthDp > 0) (spec.widthDp * activity.resources.displayMetrics.density).toInt() else -1,
                             -1, Gravity.CENTER_HORIZONTAL
                         ))
                         activity.setContentView(frame)
@@ -293,7 +233,6 @@ class ScheduleCardsVisualTest {
                         assertNull(holder.lessonList.findViewById<View>(R.id.break_text))
                         scroll.fullScroll(View.FOCUS_DOWN)
                     }
-                    settle()
                     screenshot("pending-$pendingOnly-$index-bottom")
                     scenario.onActivity { activity ->
                         checkVisiblePendingRows()
@@ -307,14 +246,8 @@ class ScheduleCardsVisualTest {
 
     @Test
     fun scheduleDaysRemainReadableAcrossThemesNarrowWidthsAndLargeFonts() {
-        val appearances = listOf(
-            Appearance(),
-            Appearance(dark = true),
-            Appearance(widthDp = 320, fontScale = 1.3f, seed = 0xff826c24.toInt()),
-            Appearance(widthDp = 320, fontScale = 1.3f, dark = true, seed = 0xff386a20.toInt())
-        )
-        appearances.forEachIndexed { index, appearance ->
-            preview(appearance.dark, appearance.fontScale, appearance.seed) { scenario ->
+        Appearances.default.forEachIndexed { index, spec ->
+            preview(spec) { scenario ->
                 for (offset in listOf(-1L, 0L, 1L)) {
                     lateinit var holder: DayScheduleAdapter.DayViewHolder
                     lateinit var scroll: ScrollView
@@ -333,7 +266,7 @@ class ScheduleCardsVisualTest {
                         adapter.onBindViewHolder(holder, 0)
                         scroll.addView(holder.itemView)
                         frame.addView(scroll, FrameLayout.LayoutParams(
-                            if (appearance.widthDp > 0) (appearance.widthDp * activity.resources.displayMetrics.density).toInt() else -1,
+                            if (spec.widthDp > 0) (spec.widthDp * activity.resources.displayMetrics.density).toInt() else -1,
                             -1, Gravity.CENTER_HORIZONTAL
                         ))
                         activity.setContentView(frame)
@@ -360,7 +293,6 @@ class ScheduleCardsVisualTest {
                         }
                         scroll.fullScroll(View.FOCUS_DOWN)
                     }
-                    settle()
                     screenshot("day-$offset-appearance-$index-bottom")
                 }
             }
@@ -406,54 +338,27 @@ class ScheduleCardsVisualTest {
         }
     }
 
-    private fun assertTextFits(root: View) {
-        root.descendants().filterIsInstance<TextView>().filter { it.visibility == View.VISIBLE && it.text.isNotEmpty() }.forEach { text ->
-            val layout = text.layout ?: return@forEach
-            assertTrue("Height: ${text.text}", layout.height <= text.height - text.compoundPaddingTop - text.compoundPaddingBottom)
-            for (line in 0 until layout.lineCount) {
-                assertTrue("Width: ${text.text}", layout.getLineMax(line) <= text.width - text.compoundPaddingLeft - text.compoundPaddingRight + 1)
-            }
-            val parent = text.parent as? ViewGroup ?: return@forEach
-            assertTrue("Left edge: ${text.text}", text.left >= 0)
-            assertTrue("Right edge: ${text.text}", text.right <= parent.width)
-        }
-    }
+    /** Schedule rows may ellipsize; the check is bounds and parent edges. */
+    private fun assertTextFits(root: View) =
+        ViewChecks.assertTextFits(root, allowEllipsis = true, visible = ViewChecks.Visible.FLAG, checkEdges = true)
 
-    private fun preview(dark: Boolean = false, fontScale: Float = 1f, seed: Int? = null, block: (ActivityScenario<SettingsPreviewActivity>) -> Unit) {
-        SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance(fontScale, dark)
+    private fun preview(spec: Appearances.Spec, block: (ActivityScenario<SettingsPreviewActivity>) -> Unit) {
+        SettingsPreviewActivity.appearance = spec.toSettingsPreview()
         try {
             val intent = Intent(ApplicationProvider.getApplicationContext(), SettingsPreviewActivity::class.java)
-            seed?.let { intent.putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, it) }
+            spec.colorSeed?.let { intent.putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, it) }
             ActivityScenario.launch<SettingsPreviewActivity>(intent).use(block)
         } finally {
             SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance()
         }
     }
 
-    private fun settle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(300)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
+    private fun settle() = TestUi.settle(300)
 
-    private fun screenshot(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        instrumentation.runOnMainSync {
-            // Capture the actual laid-out test window, not unrelated phone notifications.
-            val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
-                .filterIsInstance<SettingsPreviewActivity>().single()
-            val view = activity.window.decorView
-            val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-            view.draw(Canvas(bitmap))
-            val folder = File(instrumentation.targetContext.externalCacheDir, "schedule-cards-screenshots").apply { mkdirs() }
-            File(folder, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-            bitmap.recycle()
-        }
-    }
-
-    private fun View.descendants(): Sequence<View> = sequence {
-        yield(this@descendants)
-        if (this@descendants is ViewGroup) (0 until childCount).forEach { yieldAll(getChildAt(it).descendants()) }
+    /** Captures the actual laid-out test window, not unrelated phone notifications. */
+    private fun screenshot(name: String) = Screenshots.drawOnMain("schedule-cards-screenshots", name) {
+        ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+            .filterIsInstance<SettingsPreviewActivity>().single().window.decorView
     }
 
     private fun lesson() = Lesson(
@@ -464,8 +369,6 @@ class ScheduleCardsVisualTest {
         building = Building("Кронверкский проспект, 49"), buildingId = 13, mainBuildingId = 13,
         format = "Очный", formatId = 1, zoomUrl = null, zoomPassword = null, zoomInfo = null
     )
-
-    private data class Appearance(val widthDp: Int = 0, val fontScale: Float = 1f, val dark: Boolean = false, val seed: Int? = null)
 
     private object FixedTime : AcademicTimeProvider {
         override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")

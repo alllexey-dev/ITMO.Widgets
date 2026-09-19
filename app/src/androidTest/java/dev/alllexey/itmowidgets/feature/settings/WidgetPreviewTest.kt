@@ -9,7 +9,6 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ListView
@@ -25,7 +24,6 @@ import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.DefaultWidgetPreviewFactory
 import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
@@ -53,6 +51,11 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsRenderer
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSettingsPreview
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import java.io.File
 import java.time.Clock
 import java.time.Instant
@@ -70,7 +73,6 @@ import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
 
 @RunWith(AndroidJUnit4::class)
 class WidgetPreviewTest {
-    private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
     @Test
@@ -251,12 +253,9 @@ class WidgetPreviewTest {
 
     @Test
     fun previewsFitLightDarkDynamicAndNarrowLargeTextWhileControlsScroll() {
-        for ((name, dark, scale) in listOf(
-            Triple("light", false, 1f), Triple("dark", true, 1f),
-            Triple("green-narrow", false, 1.3f), Triple("dark-narrow", true, 1.3f)
-        )) {
+        for (spec in Appearances.default) {
             for (page in listOf(SettingsPage.QR_WIDGET, SettingsPage.COMPACT_SCHEDULE_WIDGET, SettingsPage.FULL_SCHEDULE_WIDGET)) {
-                withScreen(page, dark, scale, name == "green-narrow") { screen ->
+                withScreen(page, spec) { screen ->
                     screen.scenario.onActivity { activity ->
                         val root = screen.preview.view
                         val scroll = activity.findViewById<ScrollView>(R.id.settings_scroll)
@@ -272,8 +271,7 @@ class WidgetPreviewTest {
                     }
                     settle()
                     screen.scenario.onActivity { it.findViewById<ScrollView>(R.id.settings_scroll).scrollTo(0, 0) }
-                    screen.capture("${page.name.lowercase()}-$name")
-
+                    screen.capture("${page.name.lowercase()}-${spec.name}")
                 }
             }
         }
@@ -281,15 +279,13 @@ class WidgetPreviewTest {
 
     private fun withScreen(
         page: SettingsPage,
-        dark: Boolean = false,
-        scale: Float = 1f,
-        green: Boolean = false,
+        spec: Appearances.Spec = Appearances.light,
         block: (Screen) -> Unit
     ) {
-        SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance(scale, dark)
+        SettingsPreviewActivity.appearance = spec.toSettingsPreview()
         val intent = Intent(context, SettingsPreviewActivity::class.java)
-            .putExtra(SettingsPreviewActivity.EXTRA_WIDTH_DP, if (scale > 1f) 320 else 0)
-        if (green) intent.putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, Color.rgb(25, 115, 75))
+            .putExtra(SettingsPreviewActivity.EXTRA_WIDTH_DP, spec.widthDp)
+        spec.colorSeed?.let { intent.putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, it) }
         ActivityScenario.launch<SettingsPreviewActivity>(intent).use { scenario ->
             val screen = Screen(scenario)
             try {
@@ -303,11 +299,7 @@ class WidgetPreviewTest {
         }
     }
 
-    private fun settle() {
-        instrumentation.waitForIdleSync()
-        SystemClock.sleep(650)
-        instrumentation.waitForIdleSync()
-    }
+    private fun settle() = TestUi.settle(650)
 
     private inner class Screen(val scenario: ActivityScenario<SettingsPreviewActivity>) {
         val files = File(context.cacheDir, "widget-preview-${System.nanoTime()}").apply { mkdirs() }
@@ -375,23 +367,10 @@ class WidgetPreviewTest {
 
         fun qrBitmap() = (preview.view.findViewById<ImageView>(R.id.qr_code_image).drawable as BitmapDrawable).bitmap
 
-        fun captureBitmap(name: String) {
-            val directory = File(context.externalCacheDir, "widget-preview-screenshots").apply { mkdirs() }
-            File(directory, "$name.png").outputStream().use { qrBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }
-        }
+        /** The live preview bitmap itself; it stays owned by the drawable. */
+        fun captureBitmap(name: String) = Screenshots.save(SCREENSHOTS, name, recycle = false) { qrBitmap() }
 
-        fun capture(name: String) {
-            settle()
-            val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-            val directory = File(context.externalCacheDir, "widget-preview-screenshots").apply { mkdirs() }
-            File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-            bitmap.recycle()
-        }
-    }
-
-    private fun View.descendants(): Sequence<View> = sequence {
-        yield(this@descendants)
-        if (this@descendants is ViewGroup) for (index in 0 until childCount) yieldAll(getChildAt(index).descendants())
+        fun capture(name: String) = Screenshots.capture(SCREENSHOTS, name) { settle() }
     }
 
     private object PreviewQrPreferences : QrAppearancePreferences {
@@ -423,5 +402,9 @@ class WidgetPreviewTest {
         override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
             local.value = local.value.copy(showSportAutoSign = enabled)
         }
+    }
+
+    private companion object {
+        const val SCREENSHOTS = "widget-preview-screenshots"
     }
 }

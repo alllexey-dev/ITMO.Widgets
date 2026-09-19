@@ -1,22 +1,19 @@
 package dev.alllexey.itmowidgets.app
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Rect
 import android.os.Bundle
-import android.os.SystemClock
 import android.view.View
-import java.io.File
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -178,23 +175,13 @@ class MainNavigationTest {
         }
     }
 
+    /** Called from the main thread inside `onActivity`. */
     private fun capture(activity: SettingsNavigationTestActivity, name: String) {
-        val view = activity.binding.root
-        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-        view.draw(Canvas(bitmap))
         val config = activity.resources.configuration
-        val folder = File(activity.externalCacheDir, "navigation-screenshots").apply { mkdirs() }
-        File(folder, "${config.uiMode}-${config.screenWidthDp}-${config.fontScale}-$name.png").outputStream().use {
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
-        }
-        bitmap.recycle()
+        Screenshots.draw("navigation-screenshots", "${config.uiMode}-${config.screenWidthDp}-${config.fontScale}-$name", activity.binding.root)
     }
 
     private fun bounds(view: View) = Rect(view.left, view.top, view.right, view.bottom)
 
-    private fun settle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(500)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
+    private fun settle() = TestUi.settle(500)
 }

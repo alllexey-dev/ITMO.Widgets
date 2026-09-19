@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.app.AppOverlayHostFragment
 import dev.alllexey.itmowidgets.app.OnboardingTestEntryPoint
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.testing.TestUi
 import java.util.Base64
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -154,11 +155,6 @@ class FcmNotificationFlowTest {
         }
     }
 
-    private fun eventually(assertion: () -> Unit) {
-        var failure: Throwable? = null
-        repeat(80) {
-            try { assertion(); return } catch (error: Throwable) { failure = error; Thread.sleep(100) }
-        }
-        throw AssertionError("Notification route did not settle", failure)
-    }
+    private fun eventually(assertion: () -> Unit) =
+        TestUi.eventually(attempts = 80, delayMillis = 100, message = "Notification route did not settle", assertion = assertion)
 }

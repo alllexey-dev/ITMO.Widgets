@@ -28,9 +28,11 @@ import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SpoilerCropActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SpoilerCropResult
 import dev.alllexey.itmowidgets.feature.settings.ui.SpoilerCropContract
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSettingsPreview
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
 import java.io.File
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,15 +44,12 @@ class ProfileAndSpoilerTest {
 
     @Test
     fun profileAppearanceAndLongNamesRemainCompactWithoutClipping() {
-        for ((name, dark, scale) in listOf(
-            Triple("light", false, 1f), Triple("dark", true, 1f),
-            Triple("green-narrow", false, 1.3f), Triple("dark-narrow", true, 1.3f)
-        )) {
-            SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance(scale, dark)
+        for (spec in Appearances.default) {
+            SettingsPreviewActivity.appearance = spec.toSettingsPreview()
             val intent = Intent(context, SettingsPreviewActivity::class.java)
                 .putExtra(SettingsPreviewActivity.EXTRA_PROFILE, true)
-                .putExtra(SettingsPreviewActivity.EXTRA_WIDTH_DP, if (scale > 1f) 320 else 0)
-            if (name == "green-narrow") intent.putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, Color.rgb(25, 115, 75))
+                .putExtra(SettingsPreviewActivity.EXTRA_WIDTH_DP, spec.widthDp)
+            spec.colorSeed?.let { intent.putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, it) }
             ActivityScenario.launch<SettingsPreviewActivity>(intent).use { scenario ->
                 scenario.onActivity {
                     val binding = FragmentMeBinding.bind(it.findViewById(R.id.main))
@@ -70,7 +69,7 @@ class ProfileAndSpoilerTest {
                         assertTrue(row.right <= (row.parent as View).width)
                     }
                 }
-                screenshot("profile-$name", scenario)
+                screenshot("profile-${spec.name}", scenario)
             }
         }
         SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance()
@@ -206,23 +205,12 @@ class ProfileAndSpoilerTest {
         fail("Crop image did not load")
     }
 
-    private fun <A : Activity> screenshot(name: String, scenario: ActivityScenario<A>) {
-        val committed = CountDownLatch(1)
-        scenario.onActivity { activity ->
-            val decor = activity.window.decorView
-            if (android.os.Build.VERSION.SDK_INT >= 29) {
-                decor.viewTreeObserver.registerFrameCommitCallback(committed::countDown)
-            } else {
-                decor.postOnAnimation { decor.postOnAnimation(committed::countDown) }
-            }
-            decor.invalidate()
+    private fun <A : Activity> screenshot(name: String, scenario: ActivityScenario<A>) =
+        Screenshots.capture("profile-verification", name, Screenshots.Location.FILES) {
+            lateinit var activity: Activity
+            scenario.onActivity { activity = it }
+            TestUi.awaitFrameCommit(activity)
+            instrumentation.waitForIdleSync()
+            SystemClock.sleep(350)
         }
-        assertTrue(committed.await(5, TimeUnit.SECONDS))
-        instrumentation.waitForIdleSync()
-        SystemClock.sleep(350)
-        val directory = File(context.getExternalFilesDir(null), "profile-verification").apply { mkdirs() }
-        val bitmap = instrumentation.uiAutomation.takeScreenshot()
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
 }

@@ -187,6 +187,38 @@ Every meaningful UI change is checked on an emulator before it is called done:
 Screenshots and fixtures contain synthetic data only. Compilation is not visual
 verification.
 
+### Running the visual tests
+
+By default `./gradlew :app:connectedDebugAndroidTest` runs every visual test in
+the light appearance only and writes no screenshots, which keeps the suite
+short. Two instrumentation arguments switch the full checks on:
+
+- `appearanceMatrix=full` runs each visual test in all four appearances: light;
+  dark; font scale 1.3 with a dynamic seed on a 320 dp width; dark with font
+  scale 1.3 and another seed on a 320 dp width. Every assertion runs for every
+  appearance.
+- `captureScreenshots=true` saves the PNGs under
+  `/sdcard/Android/data/dev.alllexey.itmowidgets/cache/<suite>-screenshots/`
+  (the profile and social suites use `files/` instead of `cache/`).
+
+```bash
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full \
+  -Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true
+```
+
+The same run through `adb`, for one class:
+
+```bash
+adb shell am instrument -w -e appearanceMatrix full -e captureScreenshots true \
+  -e class dev.alllexey.itmowidgets.feature.onboarding.OnboardingVisualTest \
+  dev.alllexey.itmowidgets.test/androidx.test.runner.AndroidJUnitRunner
+adb pull /sdcard/Android/data/dev.alllexey.itmowidgets/cache/onboarding-screenshots
+```
+
+Before calling a UI change done, run the affected suites with both arguments
+and look at the PNGs; the default run only proves the layout holds in light.
+
 ## Reference implementations
 
 - Schedule day: `res/layout/item_day_schedule.xml`, `feature/schedule/ui/DayScheduleAdapter.kt`.

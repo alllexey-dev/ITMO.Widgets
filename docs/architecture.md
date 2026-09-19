@@ -193,6 +193,13 @@ relying on review.
 - Instrumented tests cover what needs a device: Keystore, file storage, real
   layouts in an isolated debug host (`SportCardsVisualTest`,
   `RecordbookVisualTest`, `SelectionRowsTest`, `SportScoreCollapseTest`).
+- Visual tests share `app/src/androidTest/.../testing/`: `Appearances` (the
+  light/dark/dynamic/narrow matrix mapped onto each debug host's `Appearance`),
+  `Screenshots` (write-only PNGs), `TestUi` (`settle`, `eventually`,
+  `awaitFrameCommit`) and `ViewChecks` (`assertTextFits`, `assertTouchTargets`,
+  `descendants`). By default a visual test runs one appearance and takes no
+  screenshots; the full matrix and the PNGs are opt-in through instrumentation
+  arguments, see [Verification matrix](design.md#verification-matrix).
 
 ## Known gaps
 

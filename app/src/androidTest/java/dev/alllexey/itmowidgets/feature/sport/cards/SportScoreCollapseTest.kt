@@ -1,8 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.cards
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.os.SystemClock
 import android.view.ViewTreeObserver
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.test.core.app.ActivityScenario
@@ -13,10 +11,12 @@ import androidx.test.espresso.action.GeneralSwipeAction
 import androidx.test.espresso.action.Press
 import androidx.test.espresso.action.Swipe
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.feature.sport.ui.SportScoreCollapsePreviewActivity
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSportScoreCollapse
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,13 +25,8 @@ import org.junit.runner.RunWith
 class SportScoreCollapseTest {
 
     @Test fun scoreCardCollapsesWithScrollAndRestoresAtTheTop() {
-        listOf(
-            SportScoreCollapsePreviewActivity.Appearance(),
-            SportScoreCollapsePreviewActivity.Appearance(dark = true),
-            SportScoreCollapsePreviewActivity.Appearance(fontScale = 1.3f, seedColor = 0xFF008577.toInt()),
-            SportScoreCollapsePreviewActivity.Appearance(dark = true, fontScale = 1.3f, seedColor = 0xFF008577.toInt())
-        ).forEachIndexed { index, appearance ->
-            preview(appearance) { scenario ->
+        Appearances.default.forEachIndexed { index, spec ->
+            preview(spec.toSportScoreCollapse()) { scenario ->
                 lateinit var expanded: Snapshot
                 scenario.onActivity { it.showBookings((1L..12L).map { id -> SportCardFixtures.booking(id) }) }
                 settle()
@@ -332,17 +327,7 @@ class SportScoreCollapseTest {
         }
     }
 
-    private fun settle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(400)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
+    private fun settle() = TestUi.settle(400)
 
-    private fun screenshot(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val directory = File(instrumentation.targetContext.externalCacheDir, "sport-cards-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
+    private fun screenshot(name: String) = Screenshots.capture("sport-cards-screenshots", name)
 }

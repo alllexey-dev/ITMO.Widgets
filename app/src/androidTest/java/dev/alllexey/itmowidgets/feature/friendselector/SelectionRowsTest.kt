@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.friendselector
 
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
@@ -23,7 +22,8 @@ import dev.alllexey.itmowidgets.feature.friendselector.ui.RecentFriendItem
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.MultiSelectSearchableAdapter
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.SelectableItem
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Screenshots
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -130,48 +130,46 @@ class SelectionRowsTest {
 
     @Test
     fun longNamesAndFilterTargetsFitNarrowLightDarkAndDynamicPalettes() {
-        for (dark in listOf(false, true)) {
-            for (fontScale in listOf(1f, 1.3f)) {
-                preview(fontScale, dark, 0xff087f5b.toInt()) { scenario ->
-                    scenario.onActivity { activity ->
-                        val friendAdapter = FriendSelectorAdapter(onClick = {}, onOpenProfile = {})
-                        val friendHolder = friendAdapter.onCreateViewHolder(activity.sectionsContainer, 0)
-                        friendHolder.bind(friend())
-                        activity.sectionsContainer.addView(friendHolder.itemView)
-                        val filterAdapter = MultiSelectSearchableAdapter(listOf(SelectableItem(LONG_SPORT)))
-                        val filterHolder = filterAdapter.onCreateViewHolder(activity.sectionsContainer, 0)
-                        filterAdapter.onBindViewHolder(filterHolder, 0)
-                        activity.sectionsContainer.addView(filterHolder.itemView)
-                    }
-                    InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-                    scenario.onActivity { activity ->
-                        val container = activity.sectionsContainer
-                        for (index in 0 until container.childCount) {
-                            val row = container.getChildAt(index)
-                            assertTrue(row.height >= 48 * activity.resources.displayMetrics.density)
-                            assertTrue(row.width >= 48 * activity.resources.displayMetrics.density)
-                        }
-                        for (id in listOf(R.id.name, R.id.sharing_status, R.id.item_name_text_view)) {
-                            val text = container.findViewById<TextView>(id)
-                            assertTrue(text.layout.height <= text.height - text.compoundPaddingTop - text.compoundPaddingBottom)
-                            for (line in 0 until text.lineCount) assertEquals(0, text.layout.getEllipsisCount(line))
-                        }
-                        val title = container.findViewById<TextView>(R.id.name)
-                        assertTrue(title.lineCount > 1)
-                        val group = title.parent as ViewGroup
-                        val content = group.parent as ViewGroup
-                        assertEquals(content.paddingTop, content.paddingBottom)
-                        val topSpace = group.top - content.paddingTop
-                        val bottomSpace = content.height - content.paddingBottom - group.bottom
-                        assertTrue(kotlin.math.abs(topSpace - bottomSpace) <= 1)
-                        val filterTitle = container.findViewById<TextView>(R.id.item_name_text_view)
-                        assertEquals(
-                            MaterialColors.getColor(filterTitle, com.google.android.material.R.attr.colorOnSurface),
-                            filterTitle.currentTextColor
-                        )
-                    }
-                    screenshot("selection-${if (dark) "dark" else "light"}-font${(fontScale * 100).toInt()}")
+        for (spec in Appearances.default) {
+            preview(spec.fontScale, spec.dark, spec.colorSeed) { scenario ->
+                scenario.onActivity { activity ->
+                    val friendAdapter = FriendSelectorAdapter(onClick = {}, onOpenProfile = {})
+                    val friendHolder = friendAdapter.onCreateViewHolder(activity.sectionsContainer, 0)
+                    friendHolder.bind(friend())
+                    activity.sectionsContainer.addView(friendHolder.itemView)
+                    val filterAdapter = MultiSelectSearchableAdapter(listOf(SelectableItem(LONG_SPORT)))
+                    val filterHolder = filterAdapter.onCreateViewHolder(activity.sectionsContainer, 0)
+                    filterAdapter.onBindViewHolder(filterHolder, 0)
+                    activity.sectionsContainer.addView(filterHolder.itemView)
                 }
+                InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+                scenario.onActivity { activity ->
+                    val container = activity.sectionsContainer
+                    for (index in 0 until container.childCount) {
+                        val row = container.getChildAt(index)
+                        assertTrue(row.height >= 48 * activity.resources.displayMetrics.density)
+                        assertTrue(row.width >= 48 * activity.resources.displayMetrics.density)
+                    }
+                    for (id in listOf(R.id.name, R.id.sharing_status, R.id.item_name_text_view)) {
+                        val text = container.findViewById<TextView>(id)
+                        assertTrue(text.layout.height <= text.height - text.compoundPaddingTop - text.compoundPaddingBottom)
+                        for (line in 0 until text.lineCount) assertEquals(0, text.layout.getEllipsisCount(line))
+                    }
+                    val title = container.findViewById<TextView>(R.id.name)
+                    assertTrue(title.lineCount > 1)
+                    val group = title.parent as ViewGroup
+                    val content = group.parent as ViewGroup
+                    assertEquals(content.paddingTop, content.paddingBottom)
+                    val topSpace = group.top - content.paddingTop
+                    val bottomSpace = content.height - content.paddingBottom - group.bottom
+                    assertTrue(kotlin.math.abs(topSpace - bottomSpace) <= 1)
+                    val filterTitle = container.findViewById<TextView>(R.id.item_name_text_view)
+                    assertEquals(
+                        MaterialColors.getColor(filterTitle, com.google.android.material.R.attr.colorOnSurface),
+                        filterTitle.currentTextColor
+                    )
+                }
+                screenshot("selection-${spec.name}")
             }
         }
     }
@@ -203,14 +201,9 @@ class SelectionRowsTest {
         }
     }
 
-    private fun screenshot(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        instrumentation.waitForIdleSync()
+    private fun screenshot(name: String) = Screenshots.capture("selection-screenshots", name) {
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
         SystemClock.sleep(200)
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val directory = File(instrumentation.targetContext.externalCacheDir, "selection-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
     }
 
     private fun preview(

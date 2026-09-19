@@ -121,4 +121,8 @@ plans with `has_course_project` are rejected for now.
 Unit tests cover the Retrofit paths through an in-memory interceptor, nullable
 fields, HTTP-200 errors, the shared sport formula, period matching and ambiguity,
 the BARS merge, chip persistence, silent login and the 401 retry. Visual tests
-run the real Fragments in `RecordbookPreviewActivity` with synthetic data.
+run the real Fragments in `RecordbookPreviewActivity` with synthetic data; add
+`-Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full` and
+`-Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true` for all
+four appearances and the PNGs (see
+[Running the visual tests](../design.md#running-the-visual-tests)).

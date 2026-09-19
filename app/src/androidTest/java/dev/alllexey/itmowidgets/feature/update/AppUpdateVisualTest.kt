@@ -1,20 +1,21 @@
 package dev.alllexey.itmowidgets.feature.update
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.os.SystemClock
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdatePreviewActivity
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toAppUpdate
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
+import dev.alllexey.itmowidgets.testing.ViewChecks.assertTouchTargets
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -26,8 +27,8 @@ class AppUpdateVisualTest {
 
     @Test
     fun offerReadsAndFitsAcrossAppearances() {
-        appearances.forEachIndexed { index, appearance ->
-            preview(appearance, offer(note = "Виджет расписания обновляется быстрее, зачётка помнит выбранный семестр.")) { scenario ->
+        Appearances.default.forEachIndexed { index, spec ->
+            preview(spec.toAppUpdate(), offer(note = "Виджет расписания обновляется быстрее, зачётка помнит выбранный семестр.")) { scenario ->
                 scenario.onActivity { activity ->
                     val root = activity.fragment.requireView()
                     assertEquals("2.1 → 2.2", root.text(R.id.update_versions))
@@ -45,8 +46,9 @@ class AppUpdateVisualTest {
 
     @Test
     fun unsupportedBuildExplainsItselfAndDropsTheSkip() {
-        listOf(appearances.first(), appearances.last()).forEachIndexed { index, appearance ->
-            preview(appearance, offer(unsupported = true)) { scenario ->
+        // The two extremes of the matrix: plain light and dark, narrow, large font.
+        Appearances.default.let { listOf(it.first(), it.last()) }.distinct().forEachIndexed { index, spec ->
+            preview(spec.toAppUpdate(), offer(unsupported = true)) { scenario ->
                 scenario.onActivity { activity ->
                     val root = activity.fragment.requireView()
                     assertEquals(activity.getString(R.string.app_update_unsupported_title), root.text(R.id.update_title))
@@ -91,49 +93,8 @@ class AppUpdateVisualTest {
 
     private fun View.text(id: Int): String = findViewById<TextView>(id).text.toString()
 
-    private fun settle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(400)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
+    private fun settle() = TestUi.settle(400)
 
-    private fun screenshot(name: String) {
-        // Dynamic colours and night mode recreate the host; capture only after it has drawn again.
-        settle()
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val directory = File(instrumentation.targetContext.externalCacheDir, "app-update-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
-
-    private fun assertTextFits(root: View) {
-        root.descendants().filterIsInstance<TextView>().filter { it.isShown && it.text.isNotEmpty() }.forEach { view ->
-            val layout = view.layout ?: return@forEach
-            assertTrue("Height: ${view.text}", layout.height <= view.height - view.compoundPaddingTop - view.compoundPaddingBottom)
-            for (line in 0 until layout.lineCount) {
-                assertEquals("Ellipsis: ${view.text}", 0, layout.getEllipsisCount(line))
-                assertTrue("Width: ${view.text}", layout.getLineMax(line) <= view.width - view.compoundPaddingLeft - view.compoundPaddingRight + 1)
-            }
-        }
-    }
-
-    private fun assertTouchTargets(root: View) {
-        val min = 48 * root.resources.displayMetrics.density - 1
-        root.descendants().filter { it.isShown && it.isClickable }.forEach {
-            assertTrue("Touch target: ${it.javaClass.simpleName}", it.width >= min && it.height >= min)
-        }
-    }
-
-    private fun View.descendants(): Sequence<View> = sequence {
-        yield(this@descendants)
-        if (this@descendants is ViewGroup) (0 until childCount).forEach { yieldAll(getChildAt(it).descendants()) }
-    }
-
-    private val appearances = listOf(
-        AppUpdatePreviewActivity.Appearance(),
-        AppUpdatePreviewActivity.Appearance(dark = true),
-        AppUpdatePreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, colorSeed = 0xff826c24.toInt()),
-        AppUpdatePreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, dark = true, colorSeed = 0xff386a20.toInt())
-    )
+    /** Dynamic colours and night mode recreate the host; capture only after it has drawn again. */
+    private fun screenshot(name: String) = Screenshots.capture("app-update-screenshots", name) { settle() }
 }

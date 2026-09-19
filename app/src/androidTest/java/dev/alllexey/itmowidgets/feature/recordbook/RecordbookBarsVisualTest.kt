@@ -1,10 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.os.SystemClock
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -13,7 +10,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.allOf
 import com.google.android.material.chip.Chip
 import dev.alllexey.itmowidgets.R
@@ -31,19 +28,20 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toRecordbook
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class RecordbookBarsVisualTest {
     @Test fun chipOverlaysBarsInLightDarkNarrowAndDynamicThemes() {
-        listOf(
-            RecordbookPreviewActivity.Appearance(),
-            RecordbookPreviewActivity.Appearance(dark = true),
-            RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, colorSeed = 0xff826c24.toInt()),
-            RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, dark = true, colorSeed = 0xff386a20.toInt())
-        ).forEachIndexed { index, appearance ->
-            preview(appearance) { scenario, _ ->
+        Appearances.default.forEachIndexed { index, spec ->
+            preview(spec.toRecordbook()) { scenario, _ ->
                 settle()
                 scenario.onActivity { activity ->
                     val chip = activity.findViewById<Chip>(R.id.bars_chip)
@@ -140,31 +138,7 @@ class RecordbookBarsVisualTest {
                 RecordbookControl(-8, "", 2.0, null, null, false, null, null, additional = true)
             )))
     }
-    private fun settle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(550)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
-    private fun screenshot(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val directory = File(instrumentation.targetContext.externalCacheDir, "recordbook-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
-    private fun assertVisibleTextFits(root: View) {
-        fun check(view: View) {
-            if (view is TextView && view.isShown && view.text.isNotEmpty()) {
-                view.layout?.let { layout ->
-                    assertTrue("Text height", layout.height <= view.height - view.compoundPaddingTop - view.compoundPaddingBottom)
-                    for (line in 0 until layout.lineCount) {
-                        assertEquals("Ellipsis", 0, layout.getEllipsisCount(line))
-                        assertTrue("Text width", layout.getLineMax(line) <= view.width - view.compoundPaddingLeft - view.compoundPaddingRight + 1)
-                    }
-                }
-            }
-            if (view is ViewGroup) (0 until view.childCount).forEach { check(view.getChildAt(it)) }
-        }
-        check(root)
-    }
+    private fun settle() = TestUi.settle(550)
+    private fun screenshot(name: String) = Screenshots.capture("recordbook-screenshots", name)
+    private fun assertVisibleTextFits(root: View) = assertTextFits(root)
 }

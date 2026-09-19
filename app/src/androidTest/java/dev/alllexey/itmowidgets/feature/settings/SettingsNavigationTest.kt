@@ -1,8 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings
 
 import android.os.Bundle
-import android.os.SystemClock
-import android.graphics.Bitmap
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -17,14 +15,14 @@ import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.transition.MaterialSharedAxis
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -152,19 +150,7 @@ class SettingsNavigationTest {
         }
     }
 
-    private fun savePrivacyScreenshot(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        settle()
-        val bitmap = instrumentation.uiAutomation.takeScreenshot()
-        assertNotNull(bitmap)
-        val directory = File(instrumentation.targetContext.externalCacheDir, "settings-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
+    private fun savePrivacyScreenshot(name: String) = Screenshots.capture("settings-screenshots", name) { settle() }
 
-    private fun settle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(650)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
+    private fun settle() = TestUi.settle(650)
 }

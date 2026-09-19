@@ -1,9 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule
 
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Looper
-import android.os.SystemClock
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.TextView
@@ -29,7 +27,8 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleFragment
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
 import dev.alllexey.itmowidgets.feature.schedule.ui.DayScheduleAdapter
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
 import java.time.LocalDate
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -692,18 +691,8 @@ class ScheduleFragmentLifecycleTest {
         }
     }
 
-    private fun screenshot(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        instrumentation.waitForIdleSync()
-        // Layout can be committed before the device compositor presents its new buffer.
-        SystemClock.sleep(300)
-        instrumentation.waitForIdleSync()
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val directory = File(instrumentation.targetContext.externalCacheDir, "schedule-refresh-screenshots")
-            .apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
+    /** Layout can be committed before the device compositor presents its new buffer. */
+    private fun screenshot(name: String) = Screenshots.capture("schedule-refresh-screenshots", name) { TestUi.settle(300) }
 
     private fun ScheduleLifecycleTestActivity.anchor(): Pair<Int, Int> {
         val recycler = recycler()
@@ -749,20 +738,8 @@ class ScheduleFragmentLifecycleTest {
         supportFragmentManager.executePendingTransactions()
     }
 
-    private fun eventually(scenario: ActivityScenario<ScheduleLifecycleTestActivity>, assertion: (ScheduleLifecycleTestActivity) -> Unit) {
-        var failure: AssertionError? = null
-        repeat(40) {
-            InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-            try {
-                scenario.onActivity(assertion)
-                return
-            } catch (error: AssertionError) {
-                failure = error
-            }
-            Thread.sleep(50)
-        }
-        throw checkNotNull(failure)
-    }
+    private fun eventually(scenario: ActivityScenario<ScheduleLifecycleTestActivity>, assertion: (ScheduleLifecycleTestActivity) -> Unit) =
+        TestUi.eventually(attempts = 40, delayMillis = 50, idleBetween = true) { scenario.onActivity(assertion) }
 
     private fun sampleDays(count: Int = 30) = (0 until count).map { offset ->
         val date = LocalDate.of(2026, 9, 6).plusDays(offset.toLong())

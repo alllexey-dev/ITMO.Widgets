@@ -1,9 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.cards
 
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.Rect
-import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -14,7 +12,6 @@ import androidx.fragment.app.DialogFragment
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -30,7 +27,13 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import dev.alllexey.itmowidgets.feature.sport.ui.SportCardsPreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonItem
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSportCards
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
+import dev.alllexey.itmowidgets.testing.ViewChecks.assertTouchTargets
+import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignStateFactory
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignFilters
@@ -44,14 +47,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SportCardsVisualTest {
     @Test fun cardsAndDetailsInLightDarkAndNarrowDynamicPalettes() {
-        val appearances = listOf(
-            SportCardsPreviewActivity.Appearance(),
-            SportCardsPreviewActivity.Appearance(dark = true),
-            SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, colorSeed = 0xff826c24.toInt()),
-            SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, dark = true, colorSeed = 0xff386a20.toInt())
-        )
-        appearances.forEachIndexed { index, appearance ->
-            preview(appearance) { scenario ->
+        Appearances.default.forEachIndexed { index, spec ->
+            preview(spec.toSportCards()) { scenario ->
                 val queue = SportCardFixtures.booking(2).copy(signed = false,
                     sectionName = SectionName("""Современные танцы (Клуб парных танцев "Потанцуем")"""),
                     signEntry = SportCardFixtures.entry(SportQueueEntryStatus.NOTIFIED), friendsBookings = friends())
@@ -112,12 +109,6 @@ class SportCardsVisualTest {
     }
 
     @Test fun onlineAndExternalLocationsRenderAcrossThemesAndFilters() {
-        val appearances = listOf(
-            SportCardsPreviewActivity.Appearance(),
-            SportCardsPreviewActivity.Appearance(dark = true),
-            SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, colorSeed = 0xff826c24.toInt()),
-            SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, dark = true, colorSeed = 0xff386a20.toInt())
-        )
         val original = SportCardFixtures.lesson()
         val online = original.copy(lessonId = 101, sectionName = SectionName("Шахматы"), buildingId = null,
             roomId = -1, roomName = "Online")
@@ -136,8 +127,8 @@ class SportCardsVisualTest {
                 SportFilterOption(-1, "Онлайн"),
                 SportFilterOption(0, "Другие объекты")),
             sections = emptyList(), sportTypes = emptyList(), teachers = emptyList())
-        appearances.forEachIndexed { index, appearance ->
-            preview(appearance) { scenario ->
+        Appearances.default.forEachIndexed { index, spec ->
+            preview(spec.toSportCards()) { scenario ->
                 for ((filter, expected) in listOf("Онлайн" to listOf(online), "Другие объекты" to listOf(external, unknown))) {
                     val state = factory.create(listOf(online, external, unknown), catalog, emptyList(),
                         SportSignFilters(
@@ -332,14 +323,8 @@ class SportCardsVisualTest {
     }
 
     @Test fun predictionDetailsKeepLocationWithoutHistoricalFootnote() {
-        val appearances = listOf(
-            SportCardsPreviewActivity.Appearance(),
-            SportCardsPreviewActivity.Appearance(dark = true),
-            SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, colorSeed = 0xff826c24.toInt()),
-            SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, dark = true, colorSeed = 0xff386a20.toInt())
-        )
-        appearances.forEachIndexed { index, appearance ->
-            preview(appearance) { scenario ->
+        Appearances.default.forEachIndexed { index, spec ->
+            preview(spec.toSportCards()) { scenario ->
                 val predicted = SportCardFixtures.lesson().copy(isLessonReal = false, canSignIn = false)
                 scenario.onActivity { it.showDetails(predicted) }
                 settle()
@@ -434,37 +419,9 @@ class SportCardsVisualTest {
         }
     }
 
-    private fun settle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(600)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
+    private fun settle() = TestUi.settle(600)
 
-    private fun screenshot(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val directory = File(instrumentation.targetContext.externalCacheDir, "sport-cards-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
-
-    private fun assertTextFits(root: View, allowEllipsis: Boolean = false) {
-        root.descendants().filterIsInstance<TextView>().filter { it.isShown && it.text.isNotEmpty() }.forEach { view ->
-            val layout = view.layout ?: return@forEach
-            assertTrue("Height: ${view.text}", layout.height <= view.height - view.compoundPaddingTop - view.compoundPaddingBottom)
-            for (line in 0 until layout.lineCount) {
-                if (!allowEllipsis) assertEquals("Ellipsis: ${view.text}", 0, layout.getEllipsisCount(line))
-                assertTrue("Width: ${view.text}", layout.getLineMax(line) <= view.width - view.compoundPaddingLeft - view.compoundPaddingRight + 1)
-            }
-        }
-    }
-
-    private fun assertTouchTargets(root: View) {
-        val min = 48 * root.resources.displayMetrics.density - 1
-        root.descendants().filter { it.isShown && it.isClickable }.forEach {
-            assertTrue("Touch target: ${it.javaClass.simpleName}", it.width >= min && it.height >= min)
-        }
-    }
+    private fun screenshot(name: String) = Screenshots.capture("sport-cards-screenshots", name)
 
     private fun assertLessonActionInsets(root: View) {
         root.descendants().filterIsInstance<MaterialCardView>().filter { it.id == R.id.sport_lesson_card_view }.forEach { card ->
@@ -478,10 +435,5 @@ class SportCardsVisualTest {
             val minTarget = 48 * root.resources.displayMetrics.density - 1
             assertTrue("Button must retain its touch target", button.height >= minTarget && button.width >= minTarget)
         }
-    }
-
-    private fun View.descendants(): Sequence<View> = sequence {
-        yield(this@descendants)
-        if (this@descendants is ViewGroup) (0 until childCount).forEach { yieldAll(getChildAt(it).descendants()) }
     }
 }

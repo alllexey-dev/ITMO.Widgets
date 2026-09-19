@@ -2,14 +2,11 @@ package dev.alllexey.itmowidgets.feature.settings
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.graphics.Bitmap
 import android.graphics.Rect
-import android.os.Build
 import android.os.Parcelable
 import android.os.SystemClock
 import android.util.SparseArray
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.ScrollView
 import androidx.lifecycle.SavedStateHandle
@@ -42,9 +39,10 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsRenderer
-import java.io.File
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -251,15 +249,15 @@ class SettingsRendererTest {
 
     @Test
     fun captureRootAndDetailInLightDarkAndCustomDynamicPalette() {
-        for ((name, dark, seed) in listOf(Triple("light", false, null), Triple("dark", true, null), Triple("green", false, 0xFF087F5B.toInt()))) {
-            ActivityScenario.launch<SettingsPreviewActivity>(previewIntent(dark = dark, colorSeed = seed)).use { scenario ->
+        for (spec in Appearances.default) {
+            ActivityScenario.launch<SettingsPreviewActivity>(previewIntent(dark = spec.dark, colorSeed = spec.colorSeed)).use { scenario ->
                 scenario.onActivity { activity ->
-                    val expected = if (dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+                    val expected = if (spec.dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
                     assertEquals(expected, activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
                 }
                 for (page in listOf(SettingsPage.ROOT, SettingsPage.PRIVACY, SettingsPage.QR_WIDGET, SettingsPage.SCHEDULE)) {
                     renderProductionPage(scenario, page)
-                    saveScreenshot(scenario, "settings-${page.name.lowercase()}-$name")
+                    saveScreenshot(scenario, "settings-${page.name.lowercase()}-${spec.name}")
                 }
             }
         }
@@ -307,15 +305,10 @@ class SettingsRendererTest {
 
     @Test
     fun privacyAudienceChoicesFitLightDarkAndNarrowDynamicPalettes() {
-        val appearances = listOf(
-            Triple("light", false, null),
-            Triple("dark", true, null),
-            Triple("green", false, 0xFF087F5B.toInt()),
-            Triple("dark-green", true, 0xFF087F5B.toInt())
-        )
-        for ((name, dark, seed) in appearances) {
+        // Always narrow and at the large font scale; the matrix only varies the palette.
+        for (spec in Appearances.default) {
             ActivityScenario.launch<SettingsPreviewActivity>(
-                previewIntent(fontScale = 1.3f, widthDp = 320, dark = dark, colorSeed = seed)
+                previewIntent(fontScale = 1.3f, widthDp = 320, dark = spec.dark, colorSeed = spec.colorSeed)
             ).use { scenario ->
                 renderProductionPage(scenario, SettingsPage.PRIVACY, PreviewRepository(
                     SharingSettingsState.Content(SharingSettings(SharingVisibility.ALL, SharingVisibility.NOBODY))
@@ -339,7 +332,7 @@ class SettingsRendererTest {
                     }
                     assertTrue(activity.sectionsContainer.descendants().none { it is MaterialSwitch })
                 }
-                saveScreenshot(scenario, "settings-privacy-audience-$name-narrow-font130")
+                saveScreenshot(scenario, "settings-privacy-audience-${spec.name}-narrow-font130")
             }
         }
     }
@@ -458,13 +451,6 @@ class SettingsRendererTest {
         activity.sectionsContainer.descendants().filterIsInstance<TextView>()
             .first { it.id == R.id.setting_title && it.text.toString() == title }.parent.parent as View
 
-    private fun View.descendants(): Sequence<View> = sequence {
-        yield(this@descendants)
-        if (this@descendants is ViewGroup) {
-            for (index in 0 until childCount) yieldAll(getChildAt(index).descendants())
-        }
-    }
-
     private fun assertTextFits(view: TextView) {
         val layout = view.layout
         assertNotNull(layout)
@@ -476,27 +462,14 @@ class SettingsRendererTest {
         }
     }
 
-    private fun saveScreenshot(scenario: ActivityScenario<SettingsPreviewActivity>, name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val frameCommitted = CountDownLatch(1)
-        scenario.onActivity { activity ->
-            val decor = activity.window.decorView
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                decor.viewTreeObserver.registerFrameCommitCallback(frameCommitted::countDown)
-            } else {
-                decor.postOnAnimation { decor.postOnAnimation(frameCommitted::countDown) }
-            }
-            decor.invalidate()
+    private fun saveScreenshot(scenario: ActivityScenario<SettingsPreviewActivity>, name: String) =
+        Screenshots.capture("settings-screenshots", name) {
+            lateinit var activity: SettingsPreviewActivity
+            scenario.onActivity { activity = it }
+            TestUi.awaitFrameCommit(activity, "Updated settings frame must be submitted")
+            // A committed buffer may still be in the compositor behind the activity transition.
+            SystemClock.sleep(300)
         }
-        assertTrue("Updated settings frame must be submitted", frameCommitted.await(5, TimeUnit.SECONDS))
-        // A committed buffer may still be in the compositor behind the activity transition.
-        SystemClock.sleep(300)
-        val bitmap = instrumentation.uiAutomation.takeScreenshot()
-        assertNotNull("Device must provide a screenshot", bitmap)
-        val directory = File(instrumentation.targetContext.externalCacheDir, "settings-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
 
     private fun toggle(checked: Boolean = false) = SettingItem.Toggle("toggle", text("Расписание"), checked = checked)
 

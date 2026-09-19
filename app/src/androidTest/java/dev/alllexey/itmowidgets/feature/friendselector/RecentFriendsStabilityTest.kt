@@ -1,14 +1,11 @@
 package dev.alllexey.itmowidgets.feature.friendselector
 
-import android.graphics.Bitmap
 import android.graphics.Rect
-import android.os.SystemClock
 import android.view.View
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.FriendSelectorFixture
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
@@ -16,7 +13,10 @@ import dev.alllexey.itmowidgets.core.friend.FriendListState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment
 import dev.alllexey.itmowidgets.feature.friendselector.ui.RecentFriendAdapter
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,13 +25,8 @@ import org.junit.runner.RunWith
 class RecentFriendsStabilityTest {
     @Test fun recentTargetsStayPutUntilConfirmationAcrossThemesRefreshAndRecreation() {
         try {
-            listOf(
-                SettingsNavigationTestActivity.Appearance(),
-                SettingsNavigationTestActivity.Appearance(dark = true),
-                SettingsNavigationTestActivity.Appearance(fontScale = 1.3f, colorSeed = 0xff087f5b.toInt()),
-                SettingsNavigationTestActivity.Appearance(dark = true, fontScale = 1.3f, colorSeed = 0xff087f5b.toInt())
-            ).forEachIndexed { index, appearance ->
-                SettingsNavigationTestActivity.appearance = appearance
+            Appearances.default.forEachIndexed { index, spec ->
+                SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
                 val fixture = FriendSelectorFixture().apply { friendState.value = FriendListState.Loading }
                 SettingsNavigationTestActivity.friendSelectorFixture = fixture
                 ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
@@ -205,12 +200,6 @@ class RecentFriendsStabilityTest {
         val child = list.getChildAt(index)
         list.getChildViewHolder(child).itemId to Rect(child.left, child.top, child.right, child.bottom)
     }
-    private fun settle() { InstrumentationRegistry.getInstrumentation().waitForIdleSync(); SystemClock.sleep(400) }
-    private fun capture(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = instrumentation.uiAutomation.takeScreenshot()
-        val directory = File(instrumentation.targetContext.externalCacheDir, "recent-friends-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
+    private fun settle() = TestUi.settle(400)
+    private fun capture(name: String) = Screenshots.capture("recent-friends-screenshots", name)
 }

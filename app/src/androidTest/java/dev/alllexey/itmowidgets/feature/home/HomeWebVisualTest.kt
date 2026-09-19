@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.home
 
-import android.graphics.Bitmap
 import android.graphics.Rect
 import android.os.SystemClock
 import android.view.View
@@ -19,7 +18,10 @@ import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.feature.web.data.WebSessionDataCleaner
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebPreviewFragment
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
@@ -31,13 +33,8 @@ import org.junit.runner.RunWith
 class HomeWebVisualTest {
     @Test fun bothFabsAndBrowserStatesWorkAcrossThemesHistoryAndRecreation() {
         try {
-            listOf(
-                SettingsNavigationTestActivity.Appearance(),
-                SettingsNavigationTestActivity.Appearance(dark = true),
-                SettingsNavigationTestActivity.Appearance(fontScale = 1.3f, colorSeed = 0xff087f5b.toInt()),
-                SettingsNavigationTestActivity.Appearance(dark = true, fontScale = 1.3f, colorSeed = 0xff087f5b.toInt())
-            ).forEachIndexed { index, appearance ->
-                SettingsNavigationTestActivity.appearance = appearance
+            Appearances.default.forEachIndexed { index, spec ->
+                SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
                 MyItmoWebPreviewFragment.failMainFrame = false
                 val gate = CountDownLatch(1)
                 MyItmoWebPreviewFragment.gate = gate
@@ -161,12 +158,6 @@ class HomeWebVisualTest {
         fail("Browser state did not settle: requests=${MyItmoWebPreviewFragment.mainRequests.get()}, errors=${MyItmoWebPreviewFragment.errorResponses.get()}")
     }
 
-    private fun settle() { InstrumentationRegistry.getInstrumentation().waitForIdleSync(); SystemClock.sleep(350) }
-    private fun capture(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = instrumentation.uiAutomation.takeScreenshot()
-        val directory = File(instrumentation.targetContext.externalCacheDir, "home-web-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
+    private fun settle() = TestUi.settle(350)
+    private fun capture(name: String) = Screenshots.capture("home-web-screenshots", name)
 }

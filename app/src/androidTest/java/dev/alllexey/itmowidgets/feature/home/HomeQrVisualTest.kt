@@ -1,20 +1,20 @@
 package dev.alllexey.itmowidgets.feature.home
 
-import android.graphics.Bitmap
-import android.os.SystemClock
 import android.view.View
 import android.widget.ImageView
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,13 +23,8 @@ import org.junit.runner.RunWith
 class HomeQrVisualTest {
     @Test fun homeFabOpensQrAndAllStatesFitThemesAndRecreation() {
         try {
-            listOf(
-                SettingsNavigationTestActivity.Appearance(),
-                SettingsNavigationTestActivity.Appearance(dark = true),
-                SettingsNavigationTestActivity.Appearance(fontScale = 1.3f, colorSeed = 0xff087f5b.toInt()),
-                SettingsNavigationTestActivity.Appearance(dark = true, fontScale = 1.3f, colorSeed = 0xff087f5b.toInt())
-            ).forEachIndexed { index, appearance ->
-                SettingsNavigationTestActivity.appearance = appearance
+            Appearances.default.forEachIndexed { index, spec ->
+                SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
                 SettingsNavigationTestActivity.qrCode = QrCodeSnapshot("ITMO-TEST", 3_600_000)
                 SettingsNavigationTestActivity.qrRefreshResult = AppResult.Success(Unit)
                 ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
@@ -102,13 +97,7 @@ class HomeQrVisualTest {
     private fun qrRoot(activity: SettingsNavigationTestActivity) =
         activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment!!.requireView()
 
-    private fun settle() { InstrumentationRegistry.getInstrumentation().waitForIdleSync(); SystemClock.sleep(650) }
+    private fun settle() = TestUi.settle(650)
 
-    private fun capture(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = instrumentation.uiAutomation.takeScreenshot()
-        val directory = File(instrumentation.targetContext.externalCacheDir, "home-qr-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
+    private fun capture(name: String) = Screenshots.capture("home-qr-screenshots", name)
 }

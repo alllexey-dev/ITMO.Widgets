@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
-import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -20,12 +19,15 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.button.MaterialButton
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSettingsPreview
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,7 +36,7 @@ import org.junit.runner.RunWith
 class DesignComponentsVisualTest {
     @Test
     fun optInRefreshUsesAppForegroundAndBackgroundAcrossAppearances() {
-        appearances.forEach { appearance -> preview(appearance) { scenario ->
+        Appearances.default.forEach { spec -> preview(spec) { scenario ->
             scenario.onActivity { activity ->
                 for (layout in listOf(R.layout.fragment_schedule, R.layout.fragment_recordbook,
                     R.layout.fragment_recordbook_subject, R.layout.fragment_sport_my, R.layout.fragment_sport_sign)) {
@@ -54,7 +56,7 @@ class DesignComponentsVisualTest {
     }
 
     @Test
-    fun inflatedLightItmoIdRefreshKeepsLibraryDefaults() = preview(Appearance()) { scenario ->
+    fun inflatedLightItmoIdRefreshKeepsLibraryDefaults() = preview(Appearances.light) { scenario ->
         scenario.onActivity { activity ->
             val root = activity.layoutInflater.inflate(R.layout.activity_login, FrameLayout(activity), false)
             val webView = root.findViewById<WebView>(R.id.login_web_view)
@@ -76,7 +78,7 @@ class DesignComponentsVisualTest {
 
     @Test
     fun errorEmptyAndHomeStatesFitFullScreenAndInlineLayouts() {
-        appearances.forEachIndexed { index, appearance -> preview(appearance) { scenario ->
+        Appearances.default.forEachIndexed { index, spec -> preview(spec) { scenario ->
             val cases = listOf(
                 StateLayout("recordbook", R.layout.fragment_recordbook),
                 StateLayout("subject", R.layout.fragment_recordbook_subject),
@@ -117,7 +119,7 @@ class DesignComponentsVisualTest {
                         root.findViewById<View>(R.id.button_go_to_schedule).visibility = if (error) View.GONE else View.VISIBLE
                     }
                     if (error) state.descendants().filterIsInstance<ImageView>().first().setImageResource(R.drawable.ic_error)
-                    show(activity, root, appearance.widthDp, case.inline)
+                    show(activity, root, spec.widthDp, case.inline)
                 }
                 settle()
                 screenshot("${case.name}-${if (error) "error" else "empty"}-$index")
@@ -138,7 +140,7 @@ class DesignComponentsVisualTest {
             lateinit var home: View
             scenario.onActivity { activity ->
                 home = activity.layoutInflater.inflate(R.layout.fragment_home, FrameLayout(activity), false)
-                show(activity, home, appearance.widthDp)
+                show(activity, home, spec.widthDp)
             }
             settle()
             screenshot("home-$index")
@@ -199,45 +201,22 @@ class DesignComponentsVisualTest {
         }
     }
 
-    private fun preview(appearance: Appearance, block: (ActivityScenario<SettingsPreviewActivity>) -> Unit) {
-        SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance(appearance.fontScale, appearance.dark)
+    private fun preview(spec: Appearances.Spec, block: (ActivityScenario<SettingsPreviewActivity>) -> Unit) {
+        SettingsPreviewActivity.appearance = spec.toSettingsPreview()
         try {
             val intent = Intent(ApplicationProvider.getApplicationContext(), SettingsPreviewActivity::class.java)
-            appearance.seed?.let { intent.putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, it) }
+            spec.colorSeed?.let { intent.putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, it) }
             ActivityScenario.launch<SettingsPreviewActivity>(intent).use(block)
         } finally {
             SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance()
         }
     }
 
-    private fun settle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(250)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
+    private fun settle() = TestUi.settle(250)
 
-    private fun screenshot(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val folder = File(instrumentation.targetContext.externalCacheDir, "design-components-screenshots").apply { mkdirs() }
-        File(folder, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
-
-    private fun View.descendants(): Sequence<View> = sequence {
-        yield(this@descendants)
-        if (this@descendants is ViewGroup) (0 until childCount).forEach { yieldAll(getChildAt(it).descendants()) }
-    }
+    private fun screenshot(name: String) = Screenshots.capture("design-components-screenshots", name)
 
     private data class StateLayout(val name: String, val layout: Int, val container: Int = R.id.state_container,
         val title: Int = R.id.state_title, val description: Int = R.id.state_description,
         val action: Int = R.id.state_action, val inline: Boolean = false)
-
-    private data class Appearance(val widthDp: Int = 0, val fontScale: Float = 1f, val dark: Boolean = false, val seed: Int? = null)
-
-    private val appearances = listOf(
-        Appearance(), Appearance(dark = true),
-        Appearance(widthDp = 320, fontScale = 1.3f, seed = 0xff826c24.toInt()),
-        Appearance(widthDp = 320, fontScale = 1.3f, dark = true, seed = 0xff386a20.toInt())
-    )
 }

@@ -1,17 +1,20 @@
 package dev.alllexey.itmowidgets.feature.onboarding
 
-import android.graphics.Bitmap
-import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.materialswitch.MaterialSwitch
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks
+import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
+import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -32,8 +35,8 @@ class OnboardingVisualTest {
 
     @Test
     fun everyStepReadsAndFitsAcrossAppearances() {
-        appearances.forEachIndexed { index, appearance ->
-            launch(appearance) { scenario ->
+        Appearances.default.forEachIndexed { index, spec ->
+            launch(spec.toSettingsNavigation()) { scenario ->
                 // Three widget steps: preview, the widget's own rows, one pin button.
                 listOf(
                     R.string.onboarding_compact_widget_title to 2,
@@ -103,7 +106,7 @@ class OnboardingVisualTest {
 
     @Test
     fun aWidgetRowWritesThroughAndTheSwitchFollows() {
-        launch(appearances.first()) { scenario ->
+        launch(Appearances.light.toSettingsNavigation()) { scenario ->
             scenario.onActivity { activity ->
                 val rows = activity.currentPage().findViewById<ViewGroup>(R.id.setting_rows)
                 assertEquals(true, rows.switches().first().isChecked)
@@ -124,7 +127,7 @@ class OnboardingVisualTest {
         SettingsNavigationTestActivity.onboardingFixture =
             SettingsNavigationTestActivity.OnboardingFixture(pinSupported = false)
 
-        launch(appearances.first()) { scenario ->
+        launch(Appearances.light.toSettingsNavigation()) { scenario ->
             scenario.onActivity { activity ->
                 val page = activity.currentPage()
                 assertEquals(View.VISIBLE, page.findViewById<View>(R.id.pin_hint).visibility)
@@ -177,61 +180,10 @@ class OnboardingVisualTest {
 
     private fun View.text(id: Int): String = findViewById<TextView>(id).text.toString()
 
-    private fun settle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(650)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
+    private fun settle() = TestUi.settle(650)
 
-    private fun capture(name: String) {
-        settle()
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val directory = File(instrumentation.targetContext.externalCacheDir, "onboarding-screenshots")
-            .apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
+    private fun capture(name: String) = Screenshots.capture("onboarding-screenshots", name) { settle() }
 
-    private fun assertTextFits(root: View) {
-        root.descendants().filterIsInstance<TextView>().filter { it.isShown && it.text.isNotEmpty() }
-            .forEach { view ->
-                val layout = view.layout ?: return@forEach
-                assertTrue(
-                    "Height: ${view.text}",
-                    layout.height <= view.height - view.compoundPaddingTop - view.compoundPaddingBottom
-                )
-                for (line in 0 until layout.lineCount) {
-                    assertEquals("Ellipsis: ${view.text}", 0, layout.getEllipsisCount(line))
-                    assertTrue(
-                        "Width: ${view.text}",
-                        layout.getLineMax(line) <=
-                            view.width - view.compoundPaddingLeft - view.compoundPaddingRight + 1
-                    )
-                }
-            }
-    }
-
-    private fun assertTouchTargets(root: View) {
-        val min = 48 * root.resources.displayMetrics.density - 1
-        root.descendants().filter { it.isShown && it.isClickable }.forEach {
-            assertTrue("Touch target: ${it.javaClass.simpleName}", it.height >= min)
-        }
-    }
-
-    private fun View.descendants(): Sequence<View> = sequence {
-        yield(this@descendants)
-        if (this@descendants is ViewGroup) (0 until childCount).forEach { yieldAll(getChildAt(it).descendants()) }
-    }
-
-    private val appearances = listOf(
-        SettingsNavigationTestActivity.Appearance(),
-        SettingsNavigationTestActivity.Appearance(dark = true),
-        SettingsNavigationTestActivity.Appearance(fontScale = 1.3f, colorSeed = 0xff087f5b.toInt()),
-        SettingsNavigationTestActivity.Appearance(
-            dark = true,
-            fontScale = 1.3f,
-            colorSeed = 0xff826c24.toInt()
-        )
-    )
+    /** Onboarding rows span the width; only their height is a touch-target concern. */
+    private fun assertTouchTargets(root: View) = ViewChecks.assertTouchTargets(root, requireWidth = false)
 }

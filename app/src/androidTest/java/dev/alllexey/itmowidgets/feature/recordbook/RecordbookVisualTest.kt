@@ -1,8 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -13,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.color.MaterialColors
 import dev.alllexey.itmowidgets.R
@@ -32,7 +29,12 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewMo
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookScoreView
-import java.io.File
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toRecordbook
+import dev.alllexey.itmowidgets.testing.Screenshots
+import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
+import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.Assert.*
 import org.junit.Test
@@ -75,14 +77,8 @@ class RecordbookVisualTest {
     }
 
     @Test fun realFragmentsInLightDarkAndDynamicPalettesAtLargeFont() {
-        val appearances = listOf(
-            RecordbookPreviewActivity.Appearance(),
-            RecordbookPreviewActivity.Appearance(dark = true),
-            RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, colorSeed = 0xff826c24.toInt()),
-            RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, dark = true, colorSeed = 0xff386a20.toInt())
-        )
-        appearances.forEachIndexed { index, appearance ->
-            withPreview(appearance, configure = { repository ->
+        Appearances.default.forEachIndexed { index, spec ->
+            withPreview(spec.toRecordbook(), configure = { repository ->
                 repository.sportScore = AppResult.Success(when (index) {
                     1 -> SportScoreSummary(100, 20)
                     2 -> SportScoreSummary(66, 65)
@@ -322,36 +318,13 @@ class RecordbookVisualTest {
         }
     }
 
-    private fun settle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        SystemClock.sleep(600)
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
+    private fun settle() = TestUi.settle(600)
 
-    private fun screenshot(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val directory = File(instrumentation.targetContext.externalCacheDir, "recordbook-screenshots").apply { mkdirs() }
-        File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        bitmap.recycle()
-    }
+    private fun screenshot(name: String) = Screenshots.capture("recordbook-screenshots", name)
 
-    private fun assertVisibleTextFits(root: View) {
-        root.descendants().filterIsInstance<TextView>().filter { it.isShown && it.text.isNotEmpty() }.forEach { view ->
-            val layout = view.layout ?: return@forEach
-            assertTrue("Text height: ${view.text}", layout.height <= view.height - view.compoundPaddingTop - view.compoundPaddingBottom)
-            for (line in 0 until layout.lineCount) {
-                assertEquals("Ellipsis: ${view.text}", 0, layout.getEllipsisCount(line))
-                assertTrue("Text width (${layout.getLineMax(line)} / ${view.width - view.compoundPaddingLeft - view.compoundPaddingRight}): ${view.text}", layout.getLineMax(line) <= view.width - view.compoundPaddingLeft - view.compoundPaddingRight + 1)
-            }
-        }
-    }
+    private fun assertVisibleTextFits(root: View) = assertTextFits(root)
 
     private fun ViewGroup.children() = (0 until childCount).map(::getChildAt)
-    private fun View.descendants(): Sequence<View> = sequence {
-        yield(this@descendants)
-        if (this@descendants is ViewGroup) children().forEach { yieldAll(it.descendants()) }
-    }
 
     private class PreviewRepository : RecordbookRepository {
         @Volatile var sportScore: AppResult<SportScoreSummary> = AppResult.Success(SportScoreSummary(66, 28))
