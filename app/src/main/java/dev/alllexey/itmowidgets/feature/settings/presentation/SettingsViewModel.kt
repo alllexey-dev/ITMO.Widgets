@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -46,6 +47,7 @@ sealed interface SettingsEvent {
     data object ChooseCustomSpoiler : SettingsEvent
     data object ResetCustomSpoiler : SettingsEvent
     data object OpenDiagnostics : SettingsEvent
+    data object CloseOverlays : SettingsEvent
     data class ShowError(val error: AppError) : SettingsEvent
 }
 
@@ -53,6 +55,7 @@ sealed interface SettingsEvent {
 class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository,
     private val customServicesRepository: CustomServicesRepository,
+    private val onboardingRepository: OnboardingRepository,
     private val widgetRefreshRequester: WidgetRefreshRequester,
     private val appVersion: AppVersion,
     diagnostics: AppDiagnostics,
@@ -238,6 +241,11 @@ class SettingsViewModel @Inject constructor(
             KEY_QR_CUSTOM_IMAGE -> eventChannel.trySend(SettingsEvent.ChooseCustomSpoiler)
             KEY_QR_RESET_IMAGE -> eventChannel.trySend(SettingsEvent.ResetCustomSpoiler)
             KEY_DIAGNOSTICS -> eventChannel.trySend(SettingsEvent.OpenDiagnostics)
+            KEY_RESTART_ONBOARDING -> viewModelScope.launch {
+                // The stored flag is what the root gate reads; the overlay only has to get out of the way.
+                onboardingRepository.reset()
+                eventChannel.send(SettingsEvent.CloseOverlays)
+            }
             KEY_RETRY_PRIVACY -> viewModelScope.launch {
                 refreshPrivacySettings()
             }
@@ -504,6 +512,12 @@ class SettingsViewModel @Inject constructor(
                         trailingIconRes = R.drawable.ic_refresh
                     ),
                     SettingItem.Action(
+                        key = KEY_RESTART_ONBOARDING,
+                        title = UiText.Resource(R.string.settings_restart_onboarding_title),
+                        description = UiText.Resource(R.string.settings_restart_onboarding_description),
+                        trailingIconRes = R.drawable.ic_refresh
+                    ),
+                    SettingItem.Action(
                         key = KEY_DIAGNOSTICS,
                         title = UiText.Resource(R.string.settings_diagnostics_title),
                         description = UiText.Resource(R.string.settings_diagnostics_description),
@@ -636,6 +650,7 @@ class SettingsViewModel @Inject constructor(
         const val KEY_SPORT_TEACHER_FILTER = "sport_teacher_filter"
         const val KEY_SPORT_TIME_FILTER = "sport_time_filter"
         const val KEY_REFRESH_WIDGETS = "refresh_widgets"
+        const val KEY_RESTART_ONBOARDING = "restart_onboarding"
         const val KEY_VERSION = "app_version"
         const val KEY_DIAGNOSTICS = "diagnostics"
     }

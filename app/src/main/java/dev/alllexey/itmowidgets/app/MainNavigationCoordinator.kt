@@ -67,7 +67,7 @@ class MainNavigationCoordinator(
         return NavigationUI.onNavDestinationSelected(item, controller)
     }
 
-    fun dismissOverlays() {
+    override fun dismissOverlays() {
         if (fragments.isStateSaved) return
         fragments.executePendingTransactions()
         fragments.popBackStackImmediate(OVERLAY, FragmentManager.POP_BACK_STACK_INCLUSIVE)

@@ -113,6 +113,8 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
             .addToBackStack("subject").commit()
     }
 
+    override fun dismissOverlays() = Unit
+
     private object FixedTime : AcademicTimeProvider {
         override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
         override fun today(): LocalDate = LocalDate.of(2026, 6, 1)

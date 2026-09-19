@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -298,6 +299,7 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_SPORT_TIME_FILTER,
                     SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN,
                     SettingsViewModel.KEY_REFRESH_WIDGETS,
+                    SettingsViewModel.KEY_RESTART_ONBOARDING,
                     SettingsViewModel.KEY_DIAGNOSTICS,
                     SettingsViewModel.KEY_VERSION
                 ),
@@ -586,6 +588,34 @@ class SettingsViewModelTest {
                 .single { it.key == SettingsViewModel.KEY_VERSION }
             assertEquals(UiText.Dynamic("2.1-test"), version.value)
         }
+
+    @Test
+    fun `maintenance offers a replay that resets the flag and leaves the overlay`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.MAINTENANCE)
+            advanceUntilIdle()
+            assertEquals(
+                UiText.Resource(R.string.settings_restart_onboarding_title),
+                fixture.viewModel.action(SettingsViewModel.KEY_RESTART_ONBOARDING).title
+            )
+
+            fixture.viewModel.onAction(SettingsViewModel.KEY_RESTART_ONBOARDING)
+            advanceUntilIdle()
+
+            assertEquals(1, fixture.onboardingRepository.resetCount)
+            assertFalse(fixture.onboardingRepository.completed.value)
+            assertEquals(SettingsEvent.CloseOverlays, fixture.viewModel.events.first())
+        }
+
+    @Test
+    fun `the replay action stays out of every other page`() = runTest(mainDispatcherRule.dispatcher) {
+        val fixture = createFixture(page = SettingsPage.ROOT)
+        advanceUntilIdle()
+
+        assertTrue(
+            fixture.viewModel.allItems().none { it.key == SettingsViewModel.KEY_RESTART_ONBOARDING }
+        )
+    }
 
     @Test
     fun `image actions are disabled while saving without disabling animation`() = runTest(mainDispatcherRule.dispatcher) {
@@ -979,15 +1009,17 @@ class SettingsViewModelTest {
             )
         }
         val refresher = FakeWidgetRefreshRequester()
+        val onboarding = FakeOnboardingRepository()
         val viewModel = SettingsViewModel(
             repository = repository,
             customServicesRepository = customServicesRepository,
+            onboardingRepository = onboarding,
             widgetRefreshRequester = refresher,
             appVersion = AppVersion("2.1-test"),
             diagnostics = RecordingDiagnostics(),
             savedStateHandle = SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
         )
-        return Fixture(viewModel, repository, customServicesRepository, refresher)
+        return Fixture(viewModel, repository, customServicesRepository, refresher, onboarding)
     }
 
     private fun SettingsViewModel.allItems(): List<SettingItem> =
@@ -1006,8 +1038,25 @@ class SettingsViewModelTest {
         val viewModel: SettingsViewModel,
         val repository: FakeSettingsRepository,
         val customServicesRepository: FakeCustomServicesRepository,
-        val widgetRefresher: FakeWidgetRefreshRequester
+        val widgetRefresher: FakeWidgetRefreshRequester,
+        val onboardingRepository: FakeOnboardingRepository
     )
+
+    private class FakeOnboardingRepository : OnboardingRepository {
+        val completed = MutableStateFlow(true)
+        var resetCount = 0
+
+        override fun observeCompleted(): Flow<Boolean> = completed
+
+        override suspend fun complete() {
+            completed.value = true
+        }
+
+        override suspend fun reset() {
+            resetCount += 1
+            completed.value = false
+        }
+    }
 
     private class FakeSettingsRepository(
         initialLocal: LocalSettings,

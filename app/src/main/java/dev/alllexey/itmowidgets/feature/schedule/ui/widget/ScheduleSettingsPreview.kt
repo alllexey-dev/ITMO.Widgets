@@ -11,6 +11,7 @@ import android.widget.BaseAdapter
 import android.widget.FrameLayout
 import android.widget.ListView
 import androidx.core.view.isEmpty
+import androidx.core.view.updateLayoutParams
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
@@ -28,6 +29,7 @@ class ScheduleSettingsPreview(
     private val binding = ViewWidgetPreviewScheduleBinding.inflate(LayoutInflater.from(context))
     override val view: View = binding.root
     private var appearance: WidgetPreviewSettings.Schedule? = null
+    private val fullHeight: Int
     private var evening = false
     private var snapshot: ScheduleWidgetSnapshot? = null
     private val rowRenderer = ScheduleListRowRenderer(context)
@@ -45,7 +47,7 @@ class ScheduleSettingsPreview(
         val textSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_SP, 14f, context.resources.displayMetrics
         )
-        binding.schedulePreviewContent.layoutParams.height = (160f * textSize / 14f).toInt()
+        fullHeight = (160f * textSize / 14f).toInt()
         updateTimeLabel()
         binding.previewTime.setOnClickListener {
             MaterialAlertDialogBuilder(context)
@@ -67,7 +69,13 @@ class ScheduleSettingsPreview(
     override fun bind(settings: WidgetPreviewSettings) {
         val next = settings as WidgetPreviewSettings.Schedule
         if (next == appearance) return
-        if (next.format != appearance?.format) binding.schedulePreviewContent.removeAllViews()
+        if (next.format != appearance?.format) {
+            binding.schedulePreviewContent.removeAllViews()
+            // The day list needs a bounded area; the single lesson is as tall as the widget itself.
+            binding.schedulePreviewContent.updateLayoutParams {
+                height = if (next.format == ScheduleWidgetFormat.COMPACT) ViewGroup.LayoutParams.WRAP_CONTENT else fullHeight
+            }
+        }
         appearance = next
         updateSnapshot()
     }

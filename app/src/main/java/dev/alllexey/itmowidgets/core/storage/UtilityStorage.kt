@@ -9,13 +9,20 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import java.io.IOException
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 class UtilityStorage(
     private val dataStore: DataStore<Preferences>,
     private val appVersionName: String
 ) {
+
+    private val preferences = dataStore.data.catch { error ->
+        if (error is IOException) emit(emptyPreferences()) else throw error
+    }
 
     suspend fun getRegisteredFirebaseToken(): String? = read()[REGISTERED_FIREBASE_TOKEN]
 
@@ -48,6 +55,11 @@ class UtilityStorage(
     suspend fun getOnboardingCompleted(): Boolean =
         read()[ONBOARDING_COMPLETED] ?: false
 
+    fun observeOnboardingCompleted(): Flow<Boolean> =
+        preferences
+            .map { it[ONBOARDING_COMPLETED] ?: false }
+            .distinctUntilChanged()
+
     suspend fun setFirebaseToken(token: String?) {
         updateNullable(FIREBASE_TOKEN, token)
     }
@@ -72,13 +84,7 @@ class UtilityStorage(
         write(VERSION_NOTIFICATION_TIMESTAMP, notifiedAt)
     }
 
-    private suspend fun read(): Preferences {
-        return dataStore.data
-            .catch { error ->
-                if (error is IOException) emit(emptyPreferences()) else throw error
-            }
-            .first()
-    }
+    private suspend fun read(): Preferences = preferences.first()
 
     private suspend fun <T> write(key: Preferences.Key<T>, value: T) {
         dataStore.edit { preferences -> preferences[key] = value }

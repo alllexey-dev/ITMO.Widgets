@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:context=".feature.onboarding.ui.WidgetStepFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/design_screen_margin"
+        android:paddingTop="@dimen/design_spacing_compact"
+        android:paddingBottom="@dimen/design_spacing_group">
+
+        <TextView
+            android:id="@+id/step_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="@string/onboarding_compact_widget_title" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.ItmoWidgets.Card.Content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_group">
+
+            <FrameLayout
+                android:id="@+id/widget_preview_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/design_card_padding" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.ItmoWidgets.CompactSettingsCard"
+            android:layout_marginTop="@dimen/design_spacing_compact">
+
+            <LinearLayout
+                android:id="@+id/setting_rows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/pin_button"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_group"
+            android:minHeight="@dimen/design_touch_target"
+            android:text="@string/onboarding_widget_add"
+            app:icon="@drawable/ic_pin"
+            app:iconGravity="textStart" />
+
+        <TextView
+            android:id="@+id/pin_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_group"
+            android:paddingHorizontal="@dimen/design_spacing_group"
+            android:text="@string/onboarding_widget_manual_hint"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

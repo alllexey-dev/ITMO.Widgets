@@ -12,6 +12,9 @@ enum class AppScreen {
 /** Contextual screens belong to the transient overlay stack, never to a bottom tab's history. */
 interface AppNavigator {
     fun openScreen(screen: AppScreen, arguments: Bundle? = null)
+
+    /** Closes the whole contextual stack at once, for a screen that hands the window over. */
+    fun dismissOverlays()
 }
 
 interface ScreenTransitionHost {
@@ -24,6 +27,10 @@ interface ScreenTransitionHost {
 
 fun Fragment.openScreen(screen: AppScreen, arguments: Bundle? = null) {
     (requireActivity() as AppNavigator).openScreen(screen, arguments)
+}
+
+fun Fragment.dismissOverlays() {
+    (requireActivity() as AppNavigator).dismissOverlays()
 }
 
 fun Fragment.closeScreen() {

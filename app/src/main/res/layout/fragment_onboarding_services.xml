@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:context=".feature.onboarding.ui.ServicesStepFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/design_screen_margin"
+        android:paddingTop="@dimen/design_spacing_compact"
+        android:paddingBottom="@dimen/design_spacing_group">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/onboarding_services_title"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textColor="?attr/colorOnSurface" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_compact"
+            android:text="@string/onboarding_services_subtitle"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.ItmoWidgets.CompactSettingsCard"
+            android:layout_marginTop="@dimen/design_spacing_group">
+
+            <LinearLayout
+                android:id="@+id/services_row"
+                style="@style/Widget.ItmoWidgets.CompactSettingsRow"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <LinearLayout
+                    style="@style/Widget.ItmoWidgets.CompactSettingsRowText"
+                    android:importantForAccessibility="noHideDescendants">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/onboarding_services_toggle_title"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/design_spacing_related"
+                        android:text="@string/onboarding_services_toggle_description"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/services_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:importantForAccessibility="no"
+                        android:minHeight="0dp" />
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/services_progress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:indeterminate="true"
+                        android:visibility="gone"
+                        app:indicatorSize="24dp"
+                        app:trackThickness="3dp" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            style="@style/Widget.ItmoWidgets.CompactSettingsSectionFooter"
+            android:text="@string/onboarding_services_privacy_default" />
+
+        <TextView
+            style="@style/Widget.ItmoWidgets.CompactSettingsGroupLabel"
+            android:text="@string/onboarding_services_gives_title" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.ItmoWidgets.Card.Content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/design_card_padding">
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.FeatureRow"
+                    android:text="@string/onboarding_services_feature_friends"
+                    app:drawableStartCompat="@drawable/ic_group" />
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.FeatureRow"
+                    android:layout_marginTop="@dimen/design_spacing_content"
+                    android:text="@string/onboarding_services_feature_sport"
+                    app:drawableStartCompat="@drawable/ic_exercise" />
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.FeatureRow"
+                    android:layout_marginTop="@dimen/design_spacing_content"
+                    android:text="@string/onboarding_services_feature_notifications"
+                    app:drawableStartCompat="@drawable/ic_notification" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            style="@style/Widget.ItmoWidgets.CompactSettingsGroupLabel"
+            android:text="@string/onboarding_services_stored_title" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.ItmoWidgets.Card.Content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/design_card_padding">
+
+                <!-- One line per stored field: a new Backend table with user data adds a line here. -->
+                <TextView
+                    style="@style/Widget.ItmoWidgets.OnboardingStoredRow"
+                    android:text="@string/onboarding_services_stored_identity" />
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.OnboardingStoredRow"
+                    android:layout_marginTop="@dimen/design_spacing_compact"
+                    android:text="@string/onboarding_services_stored_group" />
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.OnboardingStoredRow"
+                    android:layout_marginTop="@dimen/design_spacing_compact"
+                    android:text="@string/onboarding_services_stored_schedule" />
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.OnboardingStoredRow"
+                    android:layout_marginTop="@dimen/design_spacing_compact"
+                    android:text="@string/onboarding_services_stored_sport" />
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.OnboardingStoredRow"
+                    android:layout_marginTop="@dimen/design_spacing_compact"
+                    android:text="@string/onboarding_services_stored_device" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/design_spacing_content"
+                    android:text="@string/onboarding_services_stored_footer"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/services_source_button"
+                    style="@style/Widget.ItmoWidgets.ProjectLink"
+                    android:layout_marginTop="@dimen/design_spacing_compact"
+                    android:text="@string/onboarding_services_source_link"
+                    app:icon="@drawable/ic_github" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

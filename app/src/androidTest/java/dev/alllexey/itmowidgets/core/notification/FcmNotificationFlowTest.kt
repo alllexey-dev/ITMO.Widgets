@@ -15,6 +15,7 @@ import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.app.AppOverlayHostFragment
+import dev.alllexey.itmowidgets.app.OnboardingTestEntryPoint
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.text.UiText
 import java.util.Base64
@@ -30,11 +31,16 @@ class FcmNotificationFlowTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val dependencies = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java)
+    private val onboarding = EntryPointAccessors
+        .fromApplication(context, OnboardingTestEntryPoint::class.java)
+        .onboarding()
 
     @Test
     fun notificationsGroupAndOpenTheirTargetsOnceAfterAuthenticationAndRecreation() {
         val originalServices = runBlocking { dependencies.settings().getCustomServicesEnabled() }
         runBlocking { dependencies.settings().setCustomServicesEnabled(false) }
+        // Notification routing is what this test is about; the first-run flow would hold the window.
+        runBlocking { onboarding.complete() }
         dependencies.tokens().clearTokens()
         val manager = context.getSystemService(NotificationManager::class.java)
         instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.POST_NOTIFICATIONS)
@@ -97,7 +103,10 @@ class FcmNotificationFlowTest {
             runCatching { onActivity { it.finish() } }
             dependencies.notifier().clear()
             dependencies.tokens().clearTokens()
-            runBlocking { dependencies.settings().setCustomServicesEnabled(originalServices) }
+            runBlocking {
+                dependencies.settings().setCustomServicesEnabled(originalServices)
+                onboarding.reset()
+            }
         }
     }
 

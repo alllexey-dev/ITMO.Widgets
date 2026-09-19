@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/onboarding_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    android:orientation="vertical"
+    tools:context=".feature.onboarding.ui.OnboardingFragment">
+
+    <dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingStepsView
+        android:id="@+id/onboarding_steps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/design_spacing_group"
+        android:paddingBottom="@dimen/design_spacing_compact" />
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/onboarding_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:id="@+id/onboarding_footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/design_screen_margin"
+        android:paddingTop="@dimen/design_spacing_compact"
+        android:paddingBottom="@dimen/design_spacing_group">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/skip_button"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/design_touch_target"
+            android:text="@string/onboarding_skip" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/next_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/design_touch_target"
+            android:minWidth="128dp"
+            android:text="@string/onboarding_next" />
+
+    </LinearLayout>
+
+</LinearLayout>

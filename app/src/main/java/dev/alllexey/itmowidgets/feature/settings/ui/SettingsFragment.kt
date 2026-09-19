@@ -29,6 +29,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.ScreenTransitionHost
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.dismissOverlays
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.ui.SettingsLevelMotion
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -172,6 +173,8 @@ class SettingsFragment : Fragment() {
                     SettingsEvent.ChooseCustomSpoiler -> chooseCustomSpoiler()
                     SettingsEvent.ResetCustomSpoiler -> spoilerViewModel.resetImage()
                     SettingsEvent.OpenDiagnostics -> openScreen(AppScreen.DIAGNOSTICS)
+                    // The root gate already switched to the flow; the overlay just has to leave.
+                    SettingsEvent.CloseOverlays -> dismissOverlays()
                     is SettingsEvent.ShowError -> {
                         restoreRenderedValues()
                         Snackbar.make(

@@ -106,13 +106,8 @@ class AuthFragment : Fragment() {
             !state.sessionTransitionInProgress
         binding.authProgress.isVisible = state.initializing
         binding.authContent.isVisible = !state.initializing
-        binding.authDescription.setText(
-            if (state.reauthenticationRequired) {
-                R.string.auth_reauthentication_description
-            } else {
-                R.string.auth_description
-            }
-        )
+        // The feature lines stay; only an expired session needs a line explaining itself.
+        binding.authReauthNotice.isVisible = state.reauthenticationRequired
         binding.itmoIdLoginButton.isEnabled = loginEnabled
         binding.refreshTokenLoginButton.isEnabled = loginEnabled
         binding.manualLoginProgress.isVisible = state.manualLoginInProgress ||

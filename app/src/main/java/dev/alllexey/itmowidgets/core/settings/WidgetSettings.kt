@@ -24,6 +24,12 @@ data class QrWidgetSettings(
     val animationType: QrAnimationType = QrAnimationType.CIRCLE
 )
 
+/** Every widget appearance at once, for screens that show more than one preview. */
+data class WidgetAppearance(
+    val schedule: ScheduleWidgetSettings = ScheduleWidgetSettings(),
+    val qr: QrWidgetSettings = QrWidgetSettings()
+)
+
 /** Appearance inputs shared by settings and the real widget preview renderers. */
 sealed interface WidgetPreviewSettings {
     data class Qr(val appearance: QrWidgetSettings) : WidgetPreviewSettings

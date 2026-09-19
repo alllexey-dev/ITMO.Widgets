@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -40,18 +41,48 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:gravity="center"
-                android:text="@string/auth_title"
+                android:text="@string/app_name"
                 android:textAppearance="?attr/textAppearanceHeadlineSmall" />
 
             <TextView
-                android:id="@+id/auth_description"
+                android:id="@+id/auth_reauth_notice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:gravity="center"
-                android:text="@string/auth_description"
+                android:text="@string/auth_reauthentication_description"
                 android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/design_spacing_section"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.FeatureRow"
+                    android:layout_width="wrap_content"
+                    android:text="@string/auth_feature_widgets"
+                    app:drawableStartCompat="@drawable/ic_schedule" />
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.FeatureRow"
+                    android:layout_width="wrap_content"
+                    android:layout_marginTop="@dimen/design_spacing_content"
+                    android:text="@string/auth_feature_sport"
+                    app:drawableStartCompat="@drawable/ic_exercise" />
+
+                <TextView
+                    style="@style/Widget.ItmoWidgets.FeatureRow"
+                    android:layout_width="wrap_content"
+                    android:layout_marginTop="@dimen/design_spacing_content"
+                    android:text="@string/auth_feature_friends"
+                    app:drawableStartCompat="@drawable/ic_group" />
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/auth_error"

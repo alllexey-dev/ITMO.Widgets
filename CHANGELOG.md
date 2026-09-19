@@ -6,6 +6,18 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ## Unreleased (2.1-SNAPSHOT)
 
 ### 2026-09-17
+- First-run flow after sign-in: one screen per widget with its live preview,
+  its own settings rows and a pin straight to the launcher; the ITMO.Widgets
+  opt-in as a switch with the stored data named in full; the notification
+  permission on its own step behind the opt-in. No summary screen. Every
+  choice is stored when it is made, so skipping leaves a consistent app. The
+  flow is a root destination gated on a per-installation flag that survives
+  sign-out; `Повторить первоначальную настройку` in maintenance replays it.
+- The single-lesson widget preview is now as tall as the widget; only the day
+  list keeps the bounded preview area.
+- Signed-out welcome now names what the app does in three lines instead of one
+  sentence; the expired-session notice appears only when the session expired.
+
 - People search shows Cyrillic names: MyItmoApi 1.8.1 sends `Accept-Language: ru`
   with every MyITMO request (without it the directory transliterates).
 

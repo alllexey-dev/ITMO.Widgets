@@ -30,7 +30,8 @@ core/           cross-cutting; knows nothing about features
   diagnostics/  AppDiagnostics journal, sanitizer, crash handler
   friend/       FriendRepository — the schedule picker's narrow view of friends
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState
-  navigation/   contracts between features (FriendSelectionContract, UserScreenArgs)
+  navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders)
+  onboarding/   OnboardingRepository — whether the first-run flow was passed
   network/      WidgetsClient, error mapping, serialization adapters
   notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
   result/       AppError, AppResult
@@ -47,9 +48,9 @@ di/             Hilt modules, one per feature or concern
 feature/<name>/ ui | presentation | domain | data
 ```
 
-Features: `auth`, `debug`, `friendselector`, `home`, `me`, `qr`, `recordbook`,
-`schedule`, `settings`, `social`, `sport`, `update`, `widget`. A feature does not
-need all four layers.
+Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
+`recordbook`, `schedule`, `settings`, `social`, `sport`, `update`, `widget`. A
+feature does not need all four layers.
 
 Placement rules:
 
@@ -195,8 +196,8 @@ relying on review.
 
 ## Known gaps
 
-Toward v2.0.1 parity: authentication and onboarding polish. The home feed is a
-stub with QR and MyITMO web quick actions.
+Toward v2.0.1 parity: authentication polish. The home feed is a stub with QR and
+MyITMO web quick actions.
 
 Structural debt, in priority order:
 

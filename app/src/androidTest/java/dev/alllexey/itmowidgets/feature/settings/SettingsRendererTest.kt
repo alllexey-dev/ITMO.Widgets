@@ -23,6 +23,7 @@ import com.google.android.material.materialswitch.MaterialSwitch
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -394,6 +395,11 @@ class SettingsRendererTest {
                         override fun observeEnabled() = MutableStateFlow(true)
                         override suspend fun isEnabled() = true
                         override suspend fun setEnabled(enabled: Boolean) = Unit
+                    },
+                    object : OnboardingRepository {
+                        override fun observeCompleted() = MutableStateFlow(true)
+                        override suspend fun complete() = Unit
+                        override suspend fun reset() = Unit
                     },
                     object : WidgetRefreshRequester {
                         override fun refreshAll() = Unit

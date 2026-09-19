@@ -55,6 +55,7 @@ import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
@@ -63,7 +64,13 @@ import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
+import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
+import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
+import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
+import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
 import dev.alllexey.itmowidgets.feature.settings.domain.*
 import dev.alllexey.itmowidgets.feature.settings.presentation.*
@@ -86,10 +93,21 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     val groupedProfileFrames = mutableListOf<Boolean>()
     private val repository = FixtureRepository()
     private val refresh = object : WidgetRefreshRequester { override fun refreshAll() = Unit }
+    private val onboardingServices = FixtureOnboardingServices()
+    private val onboardingAppearance = FixtureWidgetAppearance()
 
     data class Appearance(val dark: Boolean = false, val fontScale: Float = 1f, val colorSeed: Int? = null)
+
+    /** The first-run flow with no stored preferences and no backend behind the opt-in. */
+    data class OnboardingFixture(
+        val servicesEnabled: Boolean = false,
+        val pinSupported: Boolean = true
+    )
+
     companion object {
         @Volatile var appearance = Appearance()
+        @Volatile var startDestination = R.id.navigation_home
+        @Volatile var onboardingFixture = OnboardingFixture()
         @Volatile var friendSelectorFixture = FriendSelectorFixture()
         @Volatile var friendsResult: AppResult<List<UserProfile>> = AppResult.Success(emptyList())
         @Volatile var friendsDelayMs = 0L
@@ -172,12 +190,24 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                     })[MeViewModel::class.java]
                     return
                 }
+                if (f is OnboardingFragment) {
+                    ViewModelProvider(f, object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = OnboardingViewModel(
+                            onboardingRepository = Onboarding,
+                            customServicesRepository = onboardingServices,
+                            widgetAppearanceRepository = onboardingAppearance,
+                            savedStateHandle = SavedStateHandle()
+                        ) as T
+                    })[OnboardingViewModel::class.java]
+                    return
+                }
                 if (f !is SettingsFragment) return
                 val page = SettingsPage.fromArgument(f.arguments?.getString(SettingsPage.ARGUMENT))
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, refresh, AppVersion("test"), NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
+                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
                         CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(object : CustomSpoilerRepository {
                             override suspend fun hasImage() = false
                             override suspend fun saveImage(sourceUri: String) = false
@@ -191,6 +221,12 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
             }
 
             override fun onFragmentViewCreated(fm: FragmentManager, f: Fragment, v: View, state: Bundle?) {
+                if (f is OnboardingFragment) {
+                    // The Fragment reports the real launcher in onCreate; the fixture decides here.
+                    ViewModelProvider(f)[OnboardingViewModel::class.java]
+                        .onPinSupportChanged(onboardingFixture.pinSupported)
+                    return
+                }
                 if (f is AppOverlayHostFragment) {
                     (f.enterTransition as? Transition)?.addListener(object : TransitionListenerAdapter() {
                         override fun onTransitionStart(transition: Transition) {
@@ -247,7 +283,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         }
         if (host.navController.currentDestination == null) {
             host.navController.graph = host.navController.navInflater.inflate(R.navigation.main_nav_graph).apply {
-                setStartDestination(R.id.navigation_home)
+                setStartDestination(startDestination)
                 // Root routing is real; unrelated roots use the static Home view to avoid API calls.
                 listOf(R.id.navigation_schedule, R.id.navigation_recordbook, R.id.navigation_sport).forEach {
                     (findNode(it) as FragmentNavigator.Destination).setClassName(
@@ -258,11 +294,14 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         }
         binding.sessionProgress.isVisible = false
         binding.navHostFragment.isVisible = true
-        binding.bottomNavView.isVisible = true
+        // The first-run flow owns the whole window, exactly as it does in MainActivity.
+        binding.bottomNavView.isVisible = startDestination != R.id.onboarding
         navigation = MainNavigationCoordinator(binding, supportFragmentManager, host)
     }
 
     override fun openScreen(screen: AppScreen, arguments: Bundle?) = navigation.openScreen(screen, arguments)
+
+    override fun dismissOverlays() = navigation.dismissOverlays()
 
     val host: NavHostFragment
         get() = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -309,6 +348,48 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         override fun observeEnabled() = MutableStateFlow(true)
         override suspend fun isEnabled() = true
         override suspend fun setEnabled(enabled: Boolean) = Unit
+    }
+
+    private object Onboarding : OnboardingRepository {
+        val resets = mutableListOf<Unit>()
+        override fun observeCompleted() = MutableStateFlow(true)
+        override suspend fun complete() = Unit
+        override suspend fun reset() { resets += Unit }
+    }
+
+    /** The opt-in really flips here, but nothing behind it reaches Backend. */
+    private class FixtureOnboardingServices : CustomServicesRepository {
+        private val enabled = MutableStateFlow(onboardingFixture.servicesEnabled)
+        override fun observeEnabled() = enabled
+        override suspend fun isEnabled() = enabled.value
+        override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
+    }
+
+    private class FixtureWidgetAppearance : WidgetAppearanceRepository {
+        private val appearance = MutableStateFlow(WidgetAppearance())
+        override fun observeAppearance() = appearance
+        override suspend fun setCompactNextLessonEarly(enabled: Boolean) =
+            schedule { copy(compact = compact.copy(showNextLessonEarly = enabled)) }
+        override suspend fun setCompactTeacherHidden(hidden: Boolean) =
+            schedule { copy(compact = compact.copy(hideTeacher = hidden)) }
+        override suspend fun setFullTeacherHidden(hidden: Boolean) =
+            schedule { copy(full = full.copy(hideTeacher = hidden)) }
+        override suspend fun setFullPastLessonsHidden(hidden: Boolean) =
+            schedule { copy(full = full.copy(hidePastLessons = hidden)) }
+        override suspend fun setFullTomorrowEnabled(enabled: Boolean) =
+            schedule { copy(full = full.copy(showTomorrowWhenTodayIsOver = enabled)) }
+        override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) =
+            qr { copy(dynamicColors = enabled) }
+        override suspend fun setQrSpoilerEnabled(enabled: Boolean) =
+            qr { copy(spoilerEnabled = enabled) }
+
+        private fun schedule(block: ScheduleWidgetSettings.() -> ScheduleWidgetSettings) {
+            appearance.value = appearance.value.copy(schedule = appearance.value.schedule.block())
+        }
+
+        private fun qr(block: QrWidgetSettings.() -> QrWidgetSettings) {
+            appearance.value = appearance.value.copy(qr = appearance.value.qr.block())
+        }
     }
 
     private object ProfileSocial : SocialRepository {

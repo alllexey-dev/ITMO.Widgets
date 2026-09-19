@@ -7,11 +7,13 @@ import org.junit.Test
 
 class ArchitectureTest {
 
-    private val productionScope = Konsist.scopeFromProduction()
+    // Agent worktrees under .claude/ are separate checkouts, not this app's sources.
+    private val productionFiles = Konsist.scopeFromProduction().files.filterNot { "/.claude/" in it.path }
+    private val productionClasses = productionFiles.flatMap { it.classes() }
 
     @Test
     fun `domain is independent from Android and transport details`() {
-        productionScope.files
+        productionFiles
             .filter { it.packagee?.name?.contains(".domain") == true }
             .assertFalse { file ->
                 file.imports.any { import ->
@@ -26,7 +28,7 @@ class ArchitectureTest {
 
     @Test
     fun `ui depends on presentation and domain instead of infrastructure`() {
-        productionScope.files
+        productionFiles
             .filter { it.packagee?.name?.contains(".ui") == true }
             .assertFalse { file ->
                 file.imports.any { import ->
@@ -37,7 +39,7 @@ class ArchitectureTest {
 
     @Test
     fun `presentation does not depend on data or transport`() {
-        productionScope.files
+        productionFiles
             .filter { it.packagee?.name?.contains(".presentation") == true }
             .assertFalse { file ->
                 file.imports.any { import ->
@@ -50,7 +52,7 @@ class ArchitectureTest {
 
     @Test
     fun `data does not depend on ui or presentation`() {
-        productionScope.files
+        productionFiles
             .filter { it.packagee?.name?.contains(".data") == true }
             .assertFalse { file ->
                 file.imports.any { import ->
@@ -62,7 +64,7 @@ class ArchitectureTest {
 
     @Test
     fun `features do not depend directly on other features`() {
-        productionScope.files
+        productionFiles
             .filter { it.packagee?.name?.startsWith(FEATURE_PACKAGE_PREFIX) == true }
             .assertFalse { file ->
                 val sourceFeature = file.packagee
@@ -85,7 +87,7 @@ class ArchitectureTest {
 
     @Test
     fun `core does not depend on features`() {
-        productionScope.files
+        productionFiles
             .filter { it.packagee?.name?.startsWith(CORE_PACKAGE_PREFIX) == true }
             .assertFalse { file ->
                 file.imports.any { it.name.startsWith(FEATURE_PACKAGE_PREFIX) }
@@ -94,7 +96,7 @@ class ArchitectureTest {
 
     @Test
     fun `legacy global data and domain buckets stay empty`() {
-        productionScope.files.assertFalse { file ->
+        productionFiles.assertFalse { file ->
             val packageName = file.packagee?.name.orEmpty()
             packageName == LEGACY_DATA_PACKAGE ||
                 packageName.startsWith("$LEGACY_DATA_PACKAGE.") ||
@@ -105,7 +107,7 @@ class ArchitectureTest {
 
     @Test
     fun `view models live in presentation packages`() {
-        productionScope.classes()
+        productionClasses
             .filter { declaration ->
                 declaration.name.endsWith("ViewModel") &&
                     declaration.text.contains(": ViewModel")
@@ -117,7 +119,7 @@ class ArchitectureTest {
 
     @Test
     fun `repository implementations stay in data and implement matching contracts`() {
-        productionScope.classes()
+        productionClasses
             .filter { it.name.endsWith("RepositoryImpl") }
             .assertTrue { repository ->
                 val contractName = repository.name.removeSuffix("Impl")
@@ -128,7 +130,7 @@ class ArchitectureTest {
 
     @Test
     fun `fragments with nullable binding clear it in onDestroyView`() {
-        productionScope.classes()
+        productionClasses
             .filter { it.name.endsWith("Fragment") }
             .filter { "_binding" in it.text }
             .assertTrue { fragment ->
@@ -139,7 +141,7 @@ class ArchitectureTest {
 
     @Test
     fun `feature and storage code use injected time`() {
-        productionScope.files
+        productionFiles
             .filter { file ->
                 val packageName = file.packagee?.name.orEmpty()
                 packageName.startsWith(FEATURE_PACKAGE_PREFIX) ||
@@ -152,7 +154,7 @@ class ArchitectureTest {
 
     @Test
     fun `production code does not use legacy preferences`() {
-        productionScope.files.assertFalse { file ->
+        productionFiles.assertFalse { file ->
             "SharedPreferences" in file.text ||
                 "PreferenceManager" in file.text ||
                 "SharedPreferencesMigration" in file.text
@@ -161,7 +163,7 @@ class ArchitectureTest {
 
     @Test
     fun `settings utility and friend history use DataStore`() {
-        productionScope.files
+        productionFiles
             .filter {
                 it.name == "AppSettingsStorage.kt" ||
                     it.name == "UtilityStorage.kt" ||

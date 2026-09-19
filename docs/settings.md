@@ -197,7 +197,11 @@ system `geo:` intent and lets Android resolve the installed mapping application.
   which redacts bearer headers, JWTs and named token/password fields before
   the write. The screen copies the whole journal to the clipboard or clears it
   after confirmation; nothing is uploaded. The row shows the entry count.
-- `Повторить первоначальную настройку` starts onboarding again.
+- `Повторить первоначальную настройку` (`Виджеты, подключение и уведомления`)
+  clears the first-run flag, closes the settings overlay and returns the root
+  graph to the first-run flow with an empty back stack. Nothing else is reset:
+  the opt-in, pinned widgets and preferences stay as they are. See
+  [features/onboarding.md](features/onboarding.md).
 - `Версия` displays the application version.
 
 ## Debug-only controls

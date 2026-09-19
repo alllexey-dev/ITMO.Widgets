@@ -13,6 +13,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.navOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
@@ -21,6 +22,8 @@ import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
+import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGate
+import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGateViewModel
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateGateViewModel
 import dev.alllexey.itmowidgets.feature.update.ui.toScreenArguments
 import javax.inject.Inject
@@ -35,6 +38,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     lateinit var sessionRepository: SessionRepository
 
     private val updateGate: AppUpdateGateViewModel by viewModels()
+    private val onboardingGate: OnboardingGateViewModel by viewModels()
     private lateinit var binding: ActivityMainBinding
     private lateinit var navigation: MainNavigationCoordinator
     private var pendingRootDestination: Int? = null
@@ -69,6 +73,11 @@ class MainActivity : AppCompatActivity(), AppNavigator {
             .flowWithLifecycle(lifecycle)
             .onEach(::renderSession)
             .launchIn(lifecycleScope)
+        // The gate resolves and later flips on its own; the session state alone never reports it.
+        onboardingGate.state
+            .flowWithLifecycle(lifecycle)
+            .onEach { renderSession(sessionRepository.state.value) }
+            .launchIn(lifecycleScope)
         // Only while resumed: opening the offer runs a Fragment transaction.
         updateGate.offers
             .flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
@@ -77,7 +86,14 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     }
 
     override fun openScreen(screen: AppScreen, arguments: Bundle?) {
-        if (sessionRepository.state.value is SessionState.SignedIn) navigation.openScreen(screen, arguments)
+        if (sessionRepository.state.value !is SessionState.SignedIn) return
+        // The first-run flow owns the whole window; overlays would appear over a hidden container.
+        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        navigation.openScreen(screen, arguments)
+    }
+
+    override fun dismissOverlays() {
+        navigation.dismissOverlays()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -123,28 +139,55 @@ class MainActivity : AppCompatActivity(), AppNavigator {
             }
 
             is SessionState.SignedIn -> {
-                if (controller.currentDestination == null || controller.currentDestination?.id == R.id.auth) {
-                    controller.graph = controller.navInflater.inflate(R.navigation.main_nav_graph).apply {
-                        setStartDestination(R.id.navigation_home)
-                    }
+                val gate = onboardingGate.state.value
+                if (gate == OnboardingGate.Unknown) {
+                    // The stored flag decides the start destination; do not guess it for one frame.
+                    binding.bottomNavView.isVisible = false
+                    binding.navHostFragment.isVisible = false
+                    binding.overlayContainer.isVisible = false
+                    binding.sessionProgress.isVisible = true
+                    return
                 }
-                pendingRootDestination?.let { destination ->
-                    if (navigation.selectRoot(destination)) {
-                        pendingRootDestination = null
-                        val userIsu = pendingUserIsu
-                        pendingUserIsu = null
-                        if (userIsu != null) {
-                            navigation.openScreen(AppScreen.USER_PROFILE, Bundle().apply {
-                                putInt(UserScreenArgs.ISU, userIsu)
-                            })
+                val onboarding = gate == OnboardingGate.Required
+                val current = controller.currentDestination?.id
+                if (current == null || current == R.id.auth) {
+                    controller.graph = controller.navInflater.inflate(R.navigation.main_nav_graph).apply {
+                        setStartDestination(if (onboarding) R.id.onboarding else R.id.navigation_home)
+                    }
+                } else if (!onboarding && current == R.id.onboarding) {
+                    controller.navigate(
+                        R.id.navigation_home,
+                        null,
+                        navOptions { popUpTo(R.id.onboarding) { inclusive = true } }
+                    )
+                } else if (onboarding && current != R.id.onboarding) {
+                    // A replay from maintenance: the flow takes the window back, without history.
+                    navigation.dismissOverlays()
+                    controller.navigate(
+                        R.id.onboarding,
+                        null,
+                        navOptions { popUpTo(controller.graph.id) { inclusive = true } }
+                    )
+                }
+                if (!onboarding) {
+                    pendingRootDestination?.let { destination ->
+                        if (navigation.selectRoot(destination)) {
+                            pendingRootDestination = null
+                            val userIsu = pendingUserIsu
+                            pendingUserIsu = null
+                            if (userIsu != null) {
+                                navigation.openScreen(AppScreen.USER_PROFILE, Bundle().apply {
+                                    putInt(UserScreenArgs.ISU, userIsu)
+                                })
+                            }
                         }
                     }
+                    // A signed-in session is what the update check needs; it runs once per process.
+                    updateGate.checkForUpdate()
                 }
-                // A signed-in session is what the update check needs; it runs once per process.
-                updateGate.checkForUpdate()
                 // Contextual navigation covers this surface instead of resizing it.
-                binding.bottomNavView.isVisible = true
-                binding.overlayContainer.isVisible = true
+                binding.bottomNavView.isVisible = !onboarding
+                binding.overlayContainer.isVisible = !onboarding
                 revealResolvedGraph()
             }
         }

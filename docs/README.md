@@ -20,6 +20,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 
 ## Features
 
+- [First-run flow](features/onboarding.md) — the three steps after sign-in, the
+  root gate and the replay from maintenance.
 - [Schedule](features/schedule.md) — academic schedule, friends' schedules,
   pending sport rows.
 - [Sport](features/sport.md) — catalog, bookings, queues, cards and details.
