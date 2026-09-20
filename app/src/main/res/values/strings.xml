@@ -420,6 +420,8 @@
     <string name="recordbook_sport_no_period">Учебный и спортивный семестры не совпали.</string>
     <string name="recordbook_sport_retry_description">Спортивные баллы не загрузились.</string>
     <string name="recordbook_controls_title">Контрольные мероприятия</string>
+    <string name="subject_tab_scores">Баллы</string>
+    <string name="subject_tab_schedule">Расписание</string>
     <string name="subject_lessons_title">Ближайшие пары</string>
     <string name="subject_lessons_unmatched">В расписании на ближайшие четыре недели этот предмет не нашёлся.</string>
     <string name="subject_lessons_loading">Смотрим расписание…</string>

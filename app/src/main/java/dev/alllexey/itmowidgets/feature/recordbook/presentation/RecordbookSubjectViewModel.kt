@@ -77,6 +77,9 @@ class RecordbookSubjectViewModel @Inject constructor(
     }
     private val _uiState = MutableStateFlow<RecordbookSubjectUiState>(RecordbookSubjectUiState.Loading)
     val uiState = _uiState.asStateFlow()
+    private val _tab = MutableStateFlow(savedStateHandle.get<String>(KEY_TAB)?.let(SubjectTab::valueOf) ?: SubjectTab.SCORES)
+    val tab = _tab.asStateFlow()
+    private val handle = savedStateHandle
     private var loadJob: Job? = null
     private var hubJob: Job? = null
     /** Bumped after a binding is written so the lesson flow is re-evaluated. */
@@ -121,6 +124,11 @@ class RecordbookSubjectViewModel @Inject constructor(
             )
             loadHub(official)
         }
+    }
+
+    fun selectTab(tab: SubjectTab) {
+        _tab.value = tab
+        handle[KEY_TAB] = tab.name
     }
 
     /** The user agrees that [subjectId] in the schedule is this discipline. */
@@ -210,6 +218,7 @@ class RecordbookSubjectViewModel @Inject constructor(
 
     companion object {
         private const val WINDOW_DAYS = 28L
+        private const val KEY_TAB = "subject_tab"
         private const val MAX_LESSONS = 10
         const val ARG_ENTRY_ID = "entry_id"
         const val ARG_PROGRAM_ID = "program_id"

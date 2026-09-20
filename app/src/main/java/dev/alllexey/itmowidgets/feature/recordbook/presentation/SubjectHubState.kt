@@ -23,8 +23,15 @@ sealed interface SubjectLessonsState {
     data class Error(val error: AppError) : SubjectLessonsState
 }
 
+/** The two halves of the subject screen; the schedule tab exists only when the hub has something. */
+enum class SubjectTab { SCORES, SCHEDULE }
+
 data class SubjectHubState(
     val lessons: SubjectLessonsState = SubjectLessonsState.Hidden,
     val teachers: List<SubjectTeacher> = emptyList(),
     val resources: List<SubjectResource> = emptyList()
 )
+
+/** Whether there is anything to put on the schedule tab. */
+val SubjectHubState.hasScheduleContent: Boolean
+    get() = lessons != SubjectLessonsState.Hidden || teachers.isNotEmpty() || resources.isNotEmpty()

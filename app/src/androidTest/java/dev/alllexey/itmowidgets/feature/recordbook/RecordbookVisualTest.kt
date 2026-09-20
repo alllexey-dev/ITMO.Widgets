@@ -13,6 +13,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.tabs.TabLayout
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -144,11 +145,10 @@ class RecordbookVisualTest {
                     assertEquals(score.creditedBonus.toString(), it.findViewById<TextView>(R.id.bonus).text.toString())
                     assertEquals(it.getString(if (index == 1) R.string.recordbook_rate_credit else R.string.recordbook_official_pending),
                         it.findViewById<TextView>(R.id.official_result).text.toString())
-                    // Sport overview, then the teachers heading and the recordbook teacher; no empty controls card.
+                    // The scores tab is the sport overview alone; the recordbook teacher lives on the schedule tab.
                     val items = (it.findViewById<RecyclerView>(R.id.recycler_view).adapter as RecordbookControlAdapter).currentList
-                    assertEquals(3, items.size)
-                    assertTrue(items[0] is DetailItem.SportOverview)
-                    assertTrue(items.none { item -> item is DetailItem.Notice })
+                    assertEquals(listOf(true), items.map { item -> item is DetailItem.SportOverview })
+                    assertEquals(View.VISIBLE, it.findViewById<View>(R.id.tabs).visibility)
                 }
                 screenshot("subject-sport-$index")
                 scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
@@ -235,6 +235,8 @@ class RecordbookVisualTest {
             withPreview(spec.toRecordbook()) { scenario, _ ->
                 settle()
                 openSubject(scenario, "Математический")
+                scenario.onActivity { assertEquals(0, it.hubItems().count { item -> item is DetailItem.Lesson }) }
+                selectScheduleTab(scenario)
                 scrollToEnd(scenario)
                 scenario.onActivity { activity ->
                     val root = activity.window.decorView
@@ -265,6 +267,7 @@ class RecordbookVisualTest {
         withPreview(Appearances.light.toRecordbook()) { scenario, _ ->
             settle()
             openSubject(scenario, "Алгоритмы")
+            selectScheduleTab(scenario)
             scrollToEnd(scenario)
             scenario.onActivity { activity ->
                 val root = activity.window.decorView
@@ -292,6 +295,15 @@ class RecordbookVisualTest {
 
     private fun RecordbookPreviewActivity.hubItems(): List<DetailItem> =
         (findViewById<RecyclerView>(R.id.recycler_view).adapter as RecordbookControlAdapter).currentList
+
+    private fun selectScheduleTab(scenario: ActivityScenario<RecordbookPreviewActivity>) {
+        scenario.onActivity { activity ->
+            val tabs = activity.findViewById<TabLayout>(R.id.tabs)
+            assertEquals(View.VISIBLE, tabs.visibility)
+            tabs.getTabAt(1)!!.select()
+        }
+        settle()
+    }
 
     private fun scrollToEnd(scenario: ActivityScenario<RecordbookPreviewActivity>) {
         scenario.onActivity { activity ->

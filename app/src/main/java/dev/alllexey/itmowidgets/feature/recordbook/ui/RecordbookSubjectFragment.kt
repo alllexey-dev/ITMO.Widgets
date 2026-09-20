@@ -17,6 +17,10 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import kotlinx.coroutines.flow.combine
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.hasScheduleContent
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTab
+import com.google.android.material.tabs.TabLayout
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -59,7 +63,16 @@ class RecordbookSubjectFragment : Fragment() {
         binding.sourceButton.setOnClickListener { showRecordbookSourceInfo(requireContext()) }
         binding.swipeRefreshLayout.setOnRefreshListener(viewModel::refresh)
         binding.stateAction.setOnClickListener { viewModel.refresh() }
-        viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
+        binding.tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                viewModel.selectTab(if (tab.position == 0) SubjectTab.SCORES else SubjectTab.SCHEDULE)
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab) = Unit
+            override fun onTabReselected(tab: TabLayout.Tab) = Unit
+        })
+        combine(viewModel.uiState, viewModel.tab) { state, tab -> state to tab }
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .onEach { (state, tab) -> render(state, tab) }
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
@@ -81,7 +94,7 @@ class RecordbookSubjectFragment : Fragment() {
         }
     }
 
-    private fun render(state: RecordbookSubjectUiState) {
+    private fun render(state: RecordbookSubjectUiState, tab: SubjectTab) {
         if (state !is RecordbookSubjectUiState.Content) binding.loading.isVisible = state is RecordbookSubjectUiState.Loading
         binding.swipeRefreshLayout.isRefreshing = (state as? RecordbookSubjectUiState.Content)?.refreshing == true
         val refreshError = (state as? RecordbookSubjectUiState.Content)?.refreshError
@@ -106,7 +119,13 @@ class RecordbookSubjectFragment : Fragment() {
             }
             is RecordbookSubjectUiState.Content -> {
                 val currentBinding = binding
-                adapter.submitContent(state) {
+                // The schedule tab appears once the hub has anything to show; a selection is kept across reloads.
+                val tabsVisible = state.hub.hasScheduleContent
+                binding.tabs.isVisible = tabsVisible
+                val shownTab = if (tabsVisible) tab else SubjectTab.SCORES
+                val position = if (shownTab == SubjectTab.SCORES) 0 else 1
+                if (binding.tabs.selectedTabPosition != position) binding.tabs.getTabAt(position)?.select()
+                adapter.submitContent(state, shownTab) {
                     if (_binding !== currentBinding || viewModel.uiState.value != state) return@submitContent
                     currentBinding.loading.isVisible = false
                     currentBinding.stateContainer.isVisible = false

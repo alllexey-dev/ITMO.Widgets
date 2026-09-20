@@ -6,7 +6,7 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ## Unreleased (2.1-SNAPSHOT)
 
 ### 2026-09-20
-- Subject hub in `Учёба`: below the controls, the subject's upcoming lessons
+- Subject hub in `Учёба`: a `Расписание` tab next to `Баллы` with the subject's upcoming lessons
   (next four weeks) with type, room and building, its teachers with the lesson
   types they run, and the LMS link when MyITMO sends one. A discipline whose
   id matches the schedule binds silently; a name-only match is offered as

@@ -38,6 +38,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookProgress
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonsState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectResource
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTab
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacher
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -74,18 +75,21 @@ class RecordbookControlAdapter(
 
     init { stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY }
 
-    fun submitContent(state: RecordbookSubjectUiState.Content, onCommitted: () -> Unit = {}) {
+    fun submitContent(state: RecordbookSubjectUiState.Content, tab: SubjectTab = SubjectTab.SCORES, onCommitted: () -> Unit = {}) {
         submitList(buildList {
-            if (state.subject.isPhysicalEducation) add(DetailItem.SportOverview(state.subject, state.sport))
-            else add(DetailItem.Overview(state.subject))
-            if (state.controlsError != null || state.controls.isEmpty()) {
-                // PE often has no control tree by design; do not add a second empty card.
-                if (state.controlsError != null || !state.subject.isPhysicalEducation) {
-                    add(DetailItem.Notice(state.controlsError?.messageRes()))
+            if (tab == SubjectTab.SCORES) {
+                if (state.subject.isPhysicalEducation) add(DetailItem.SportOverview(state.subject, state.sport))
+                else add(DetailItem.Overview(state.subject))
+                if (state.controlsError != null || state.controls.isEmpty()) {
+                    // PE often has no control tree by design; do not add a second empty card.
+                    if (state.controlsError != null || !state.subject.isPhysicalEducation) {
+                        add(DetailItem.Notice(state.controlsError?.messageRes()))
+                    }
+                } else {
+                    add(DetailItem.Heading)
+                    addAll(recordbookControlOutline(state.controls).map { DetailItem.Control(it, state.subject.teacherName) })
                 }
-            } else {
-                add(DetailItem.Heading)
-                addAll(recordbookControlOutline(state.controls).map { DetailItem.Control(it, state.subject.teacherName) })
+                return@buildList
             }
             val hub = state.hub
             // People first: a short, stable section before the list that grows with the schedule.

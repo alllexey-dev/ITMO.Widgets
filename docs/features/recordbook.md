@@ -70,8 +70,9 @@ subject's own `discipline_id` comes with the reloaded official subject.
 
 ## Subject hub
 
-Below the controls the subject screen adds three sections (teachers, lessons,
-resources), all built in the
+The subject screen has two tabs: `Баллы` (overview and controls, the screen as
+before) and `Расписание` with three sections (teachers, lessons, resources), all
+built in the
 recordbook feature (Konsist forbids cross-feature imports, so the schedule side
 is reached through `core/schedule/SubjectLessonsGateway`, implemented in
 `feature/schedule/data`):
@@ -95,6 +96,8 @@ is reached through `core/schedule/SubjectLessonsGateway`, implemented in
   normalisation, shared with the BARS merge.
 - `Ресурсы`: only the MyITMO `lms_link`, so usually absent.
 
+The schedule tab appears only when the hub has something to show, the chosen
+tab survives recreation, and pull-to-refresh reloads both tabs at once.
 Lesson rows are informational: the details sheet belongs to the schedule
 feature, and teacher profiles wait for Stage 29. Review or resource tabs do not
 exist yet.
