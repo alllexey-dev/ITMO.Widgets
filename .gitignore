@@ -20,3 +20,4 @@ app/release/
 app/debug/
 .DS_Store
 .kotlin/
+.claude/
