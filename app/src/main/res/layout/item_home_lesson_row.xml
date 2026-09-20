@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/row_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_home_row_plain"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/design_touch_target"
+    android:orientation="horizontal"
+    android:paddingHorizontal="@dimen/design_spacing_compact"
+    android:paddingVertical="6dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="48dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/row_time_start"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold"
+            tools:text="09:30" />
+
+        <TextView
+            android:id="@+id/row_time_end"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="11:00" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/row_type_bar"
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:layout_marginHorizontal="@dimen/design_spacing_compact"
+        android:background="@drawable/bg_home_type_bar" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/row_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Математический анализ" />
+
+        <TextView
+            android:id="@+id/row_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Лекция · 1506 · Кронверкский" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/row_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/design_spacing_compact"
+        android:background="@drawable/bg_home_badge"
+        android:paddingHorizontal="@dimen/design_spacing_compact"
+        android:paddingVertical="2dp"
+        android:textAppearance="?attr/textAppearanceLabelSmall"
+        android:textColor="?attr/colorOnSecondaryContainer"
+        android:visibility="gone"
+        tools:text="Сейчас"
+        tools:visibility="visible" />
+
+</LinearLayout>

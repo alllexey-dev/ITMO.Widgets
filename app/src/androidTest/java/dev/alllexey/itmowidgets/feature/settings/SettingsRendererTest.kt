@@ -19,6 +19,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.materialswitch.MaterialSwitch
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -509,6 +510,10 @@ class SettingsRendererTest {
         override suspend fun setTimeSelectorHidden(hidden: Boolean) = Unit
         override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
             local.value = local.value.copy(showSportAutoSign = enabled)
+        }
+
+        override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
+            local.value = local.value.copy(hiddenHomeCards = if (visible) local.value.hiddenHomeCards - kind else local.value.hiddenHomeCards + kind)
         }
     }
 

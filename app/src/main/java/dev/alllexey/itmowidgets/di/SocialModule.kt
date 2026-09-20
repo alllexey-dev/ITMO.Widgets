@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
+import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
@@ -16,6 +17,7 @@ import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
 import javax.inject.Singleton
 
 @Module
@@ -38,6 +40,13 @@ abstract class SocialModule {
     abstract fun bindSocialRepositorySessionDataCleaner(
         impl: SocialRepositoryImpl
     ): SessionDataCleaner
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindSocialHomeCards(
+        impl: SocialHomeCardSource
+    ): HomeCardSource
 
     @Binds
     @Singleton

@@ -155,6 +155,27 @@ class AppSettingsStorageTest {
         assertTrue(restored.full.showTomorrowWhenTodayIsOver)
     }
 
+    @Test
+    fun `home hints and hidden cards are string sets that survive a restart`() = runTest {
+        val file = temporaryFolder.newFile("home.preferences_pb").apply { delete() }
+        val storageJob = Job()
+        val storage = createStorage(file, CoroutineScope(backgroundScope.coroutineContext + storageJob))
+        try {
+            assertTrue(storage.observeDismissedHomeHints().first().isEmpty())
+            assertTrue(storage.observeHiddenHomeCards().first().isEmpty())
+            storage.dismissHomeHint("WIDGETS")
+            storage.dismissHomeHint("SERVICES")
+            storage.setHomeCardHidden("QR", true)
+            storage.setHomeCardHidden("SPORT", true)
+            storage.setHomeCardHidden("QR", false)
+        } finally {
+            storageJob.cancelAndJoin()
+        }
+        val restored = createStorage(file)
+        assertEquals(setOf("WIDGETS", "SERVICES"), restored.observeDismissedHomeHints().first())
+        assertEquals(setOf("SPORT"), restored.observeHiddenHomeCards().first())
+    }
+
     private fun kotlinx.coroutines.test.TestScope.createStorage(
         file: File = temporaryFolder.newFile("settings.preferences_pb").apply { delete() },
         scope: CoroutineScope = backgroundScope

@@ -8,12 +8,14 @@ import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushHandler
 import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.sport.data.repository.PendingSportBookingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.debug.DefaultSportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
+import dev.alllexey.itmowidgets.feature.sport.data.home.SportHomeCardSource
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositoryImpl
@@ -52,6 +54,13 @@ abstract class SportModule {
     abstract fun bindSportBookingsSessionDataCleaner(
         impl: SportBookingRepositoryImpl
     ): SessionDataCleaner
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindSportHomeCards(
+        impl: SportHomeCardSource
+    ): HomeCardSource
 
     @Binds
     abstract fun bindSportScoreRepository(

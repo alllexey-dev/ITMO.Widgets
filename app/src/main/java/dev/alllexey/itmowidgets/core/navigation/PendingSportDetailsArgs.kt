@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.schedule.ui.details
+package dev.alllexey.itmowidgets.core.navigation
 
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import java.io.Serializable

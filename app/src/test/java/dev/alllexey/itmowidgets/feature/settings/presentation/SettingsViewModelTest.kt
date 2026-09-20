@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
@@ -161,7 +162,7 @@ class SettingsViewModelTest {
 
             assertEquals(SettingsPage.ROOT, fixture.viewModel.page)
             assertEquals(3, fixture.viewModel.sections.value.size)
-            assertEquals(9, fixture.viewModel.allItems().size)
+            assertEquals(10, fixture.viewModel.allItems().size)
             assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
             val navigation = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
             assertEquals(
@@ -175,7 +176,7 @@ class SettingsViewModelTest {
                 it.title == UiText.Resource(R.string.me_group_app)
             }
             assertEquals(
-                listOf(SettingsPage.SCHEDULE, SettingsPage.SPORT, SettingsPage.MAINTENANCE),
+                listOf(SettingsPage.HOME, SettingsPage.SCHEDULE, SettingsPage.SPORT, SettingsPage.MAINTENANCE),
                 applicationSection.items.filterIsInstance<SettingItem.Navigation>().map { it.page }
             )
             assertEquals(0, fixture.repository.refreshSharingCount)
@@ -314,6 +315,10 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_SPORT_TEACHER_FILTER,
                     SettingsViewModel.KEY_SPORT_TIME_FILTER,
                     SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN,
+                    SettingsViewModel.KEY_HOME_CARD_SCHEDULE,
+                    SettingsViewModel.KEY_HOME_CARD_QR,
+                    SettingsViewModel.KEY_HOME_CARD_SPORT,
+                    SettingsViewModel.KEY_HOME_CARD_FRIENDS,
                     SettingsViewModel.KEY_REFRESH_WIDGETS,
                     SettingsViewModel.KEY_RESTART_ONBOARDING,
                     SettingsViewModel.KEY_DIAGNOSTICS,
@@ -684,6 +689,32 @@ class SettingsViewModelTest {
         assertTrue(fixture.viewModel.action(SettingsViewModel.KEY_QR_CUSTOM_IMAGE).enabled)
         assertTrue(fixture.viewModel.action(SettingsViewModel.KEY_QR_RESET_IMAGE).enabled)
     }
+
+    @Test
+    fun `home page lists one switch per card and hides a card without touching widgets`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.HOME, local = LocalSettings(hiddenHomeCards = setOf(HomeCardKind.SPORT)))
+            advanceUntilIdle()
+
+            val section = fixture.viewModel.sections.value.single()
+            assertEquals(UiText.Resource(R.string.settings_group_home), fixture.viewModel.page.title)
+            assertEquals(UiText.Resource(R.string.settings_home_footer), section.footer)
+            assertEquals(
+                listOf(
+                    SettingsViewModel.KEY_HOME_CARD_SCHEDULE, SettingsViewModel.KEY_HOME_CARD_QR,
+                    SettingsViewModel.KEY_HOME_CARD_SPORT, SettingsViewModel.KEY_HOME_CARD_FRIENDS
+                ),
+                section.items.map { it.key }
+            )
+            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_SCHEDULE).checked)
+            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_SPORT).checked)
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_HOME_CARD_SCHEDULE, false)
+            advanceUntilIdle()
+            assertEquals(listOf(HomeCardKind.SCHEDULE to false), fixture.repository.homeCardRequests)
+            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_SCHEDULE).checked)
+            assertEquals(0, fixture.widgetRefresher.refreshCount)
+        }
 
     @Test
     fun `schedule auto sign display remains local and refreshes widgets for explicit toggles with services disabled`() =
@@ -1292,6 +1323,13 @@ class SettingsViewModelTest {
             scheduleSportAutoSignRequests += enabled
             scheduleSportAutoSignWrite()
             local.value = local.value.copy(showSportAutoSign = enabled)
+        }
+
+        val homeCardRequests = mutableListOf<Pair<HomeCardKind, Boolean>>()
+
+        override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
+            homeCardRequests += kind to visible
+            local.value = local.value.copy(hiddenHomeCards = if (visible) local.value.hiddenHomeCards - kind else local.value.hiddenHomeCards + kind)
         }
     }
 

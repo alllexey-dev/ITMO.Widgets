@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.domain
 
+import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -12,7 +13,8 @@ data class LocalSettings(
     val scheduleWidget: ScheduleWidgetSettings = ScheduleWidgetSettings(),
     val qrWidget: QrWidgetSettings = QrWidgetSettings(),
     val sport: SportDisplaySettings = SportDisplaySettings(),
-    val showSportAutoSign: Boolean = false
+    val showSportAutoSign: Boolean = false,
+    val hiddenHomeCards: Set<HomeCardKind> = emptySet()
 )
 
 /** Stored as `hide*` to preserve the existing preference keys. */
@@ -57,6 +59,8 @@ interface SettingsRepository {
     suspend fun setSportVisibility(visibility: SharingVisibility): AppResult<Unit>
 
     suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean)
+
+    suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean)
 
     suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean)
 

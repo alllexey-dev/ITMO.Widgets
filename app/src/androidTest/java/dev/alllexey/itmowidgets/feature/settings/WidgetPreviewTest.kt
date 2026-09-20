@@ -27,6 +27,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.DefaultWidgetPreviewFactory
 import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
+import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -405,6 +406,10 @@ class WidgetPreviewTest {
         override suspend fun setTimeSelectorHidden(hidden: Boolean) = Unit
         override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
             local.value = local.value.copy(showSportAutoSign = enabled)
+        }
+
+        override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
+            local.value = local.value.copy(hiddenHomeCards = if (visible) local.value.hiddenHomeCards - kind else local.value.hiddenHomeCards + kind)
         }
     }
 

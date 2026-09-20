@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.home
 
-import android.graphics.Rect
 import android.os.SystemClock
 import android.view.View
 import android.webkit.CookieManager
@@ -31,7 +30,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class HomeWebVisualTest {
-    @Test fun bothFabsAndBrowserStatesWorkAcrossThemesHistoryAndRecreation() {
+    @Test fun webFabAndBrowserStatesWorkAcrossThemesHistoryAndRecreation() {
         try {
             Appearances.default.forEachIndexed { index, spec ->
                 SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
@@ -42,11 +41,7 @@ class HomeWebVisualTest {
                     settle()
                     capture("home-web-$index")
                     scenario.onActivity {
-                        val qr = it.findViewById<View>(R.id.qr_fab)
                         val web = it.findViewById<View>(R.id.web_fab)
-                        val qrBounds = Rect().also(qr::getGlobalVisibleRect)
-                        val webBounds = Rect().also(web::getGlobalVisibleRect)
-                        assertFalse(Rect.intersects(qrBounds, webBounds))
                         assertTrue(web.height >= 48 * it.resources.displayMetrics.density)
                         assertEquals(it.getString(R.string.home_open_my_itmo), web.contentDescription)
                         web.performClick()
@@ -93,7 +88,7 @@ class HomeWebVisualTest {
                     scenario.onActivity {
                         assertNull(it.navigation.overlayHost)
                         assertTrue(it.findViewById<View>(R.id.web_fab).isShown)
-                        assertTrue(it.findViewById<View>(R.id.qr_fab).isShown)
+                        assertTrue(it.findViewById<View>(R.id.home_feed).isShown)
                     }
                 }
             }

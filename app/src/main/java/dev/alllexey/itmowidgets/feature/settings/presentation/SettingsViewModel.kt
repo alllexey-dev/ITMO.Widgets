@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -177,6 +178,10 @@ class SettingsViewModel @Inject constructor(
             KEY_CUSTOM_SERVICES -> updateCustomServices(checked)
             KEY_SCHEDULE_SPORT_AUTO_SIGN -> updateWidgetSetting {
                 repository.setScheduleSportAutoSignEnabled(checked)
+            }
+            KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_QR, KEY_HOME_CARD_SPORT, KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
+                val kind = HOME_CARDS.first { it.first == key }.second
+                repository.setHomeCardVisible(kind, checked)
             }
             KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY -> updateWidgetSetting {
                 repository.setCompactWidgetNextLessonEarlyEnabled(checked)
@@ -361,6 +366,7 @@ class SettingsViewModel @Inject constructor(
             SettingSection(
                 title = UiText.Resource(R.string.me_group_app),
                 items = listOf(
+                    navigation(SettingsPage.HOME),
                     navigation(SettingsPage.SCHEDULE),
                     navigation(SettingsPage.SPORT),
                     navigation(SettingsPage.MAINTENANCE)
@@ -480,6 +486,19 @@ class SettingsViewModel @Inject constructor(
                         enabled = local.qrWidget.spoilerEnabled && hasCustomSpoiler && !imageBusy
                     )
                 )
+            )
+        )
+        SettingsPage.HOME -> listOf(
+            SettingSection(
+                title = null,
+                items = HOME_CARDS.map { (key, kind, titleRes) ->
+                    SettingItem.Toggle(
+                        key = key,
+                        title = UiText.Resource(titleRes),
+                        checked = kind !in local.hiddenHomeCards
+                    )
+                },
+                footer = UiText.Resource(R.string.settings_home_footer)
             )
         )
         SettingsPage.SCHEDULE -> listOf(
@@ -667,6 +686,18 @@ class SettingsViewModel @Inject constructor(
         const val KEY_SPORT_SHARING = "sport_sharing"
         const val KEY_FRIENDS_SHARING = "friends_sharing"
         const val KEY_SCHEDULE_SPORT_AUTO_SIGN = "schedule_sport_auto_sign"
+        const val KEY_HOME_CARD_SCHEDULE = "home_card_schedule"
+        const val KEY_HOME_CARD_QR = "home_card_qr"
+        const val KEY_HOME_CARD_SPORT = "home_card_sport"
+        const val KEY_HOME_CARD_FRIENDS = "home_card_friends"
+
+        /** Row key, the kind it hides, its title; the feed order is the row order. */
+        private val HOME_CARDS = listOf(
+            Triple(KEY_HOME_CARD_SCHEDULE, HomeCardKind.SCHEDULE, R.string.settings_home_card_schedule_title),
+            Triple(KEY_HOME_CARD_QR, HomeCardKind.QR, R.string.settings_home_card_qr_title),
+            Triple(KEY_HOME_CARD_SPORT, HomeCardKind.SPORT, R.string.settings_home_card_sport_title),
+            Triple(KEY_HOME_CARD_FRIENDS, HomeCardKind.FRIEND_REQUESTS, R.string.settings_home_card_friends_title)
+        )
         const val KEY_RETRY_PRIVACY = "retry_privacy"
         const val KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY = "compact_widget_next_lesson_early"
         const val KEY_COMPACT_WIDGET_HIDE_TEACHER = "compact_widget_hide_teacher"

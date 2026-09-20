@@ -21,11 +21,14 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
 import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
 import dev.alllexey.itmowidgets.databinding.FragmentOnboardingBinding
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingEvent
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingUiState
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
+import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetKind
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -56,7 +59,9 @@ class OnboardingFragment : Fragment() {
         pinRequester = WidgetPinRequester(requireContext())
         // The launcher confirms the pin while this screen is stopped, so the receiver
         // lives as long as the Fragment, not as long as its view.
-        pinRequester.start(viewModel::onWidgetPinned)
+        pinRequester.start { provider ->
+            WidgetKind.entries.firstOrNull { it.providerClassName == provider }?.let(viewModel::onWidgetPinned)
+        }
         viewModel.onPinSupportChanged(pinRequester.isSupported)
     }
 
@@ -146,7 +151,7 @@ class OnboardingFragment : Fragment() {
 
     private fun handle(event: OnboardingEvent) {
         when (event) {
-            is OnboardingEvent.RequestPinWidget -> pinRequester.request(event.kind)
+            is OnboardingEvent.RequestPinWidget -> pinRequester.request(event.kind.providerClassName)
             OnboardingEvent.RequestNotificationPermission -> requestNotificationPermission()
             OnboardingEvent.OpenNotificationSettings -> openNotificationSettings()
             is OnboardingEvent.ShowError -> Snackbar.make(
@@ -172,3 +177,10 @@ class OnboardingFragment : Fragment() {
         )
     }
 }
+
+private val WidgetKind.providerClassName: String
+    get() = when (this) {
+        WidgetKind.SINGLE_LESSON -> WidgetProviders.SINGLE_LESSON
+        WidgetKind.DAY_SCHEDULE -> WidgetProviders.DAY_SCHEDULE
+        WidgetKind.QR -> WidgetProviders.QR_CODE
+    }

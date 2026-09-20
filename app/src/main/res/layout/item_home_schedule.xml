@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="@dimen/design_screen_margin"
+    android:paddingVertical="@dimen/design_spacing_related">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/home_schedule_card"
+        style="@style/Widget.ItmoWidgets.Card.Content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/design_spacing_compact"
+            android:paddingVertical="@dimen/design_card_padding">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/design_spacing_compact">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="@dimen/design_spacing_compact"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_schedule"
+                    app:tint="?attr/colorPrimary" />
+
+                <TextView
+                    android:id="@+id/schedule_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="Сегодня" />
+
+                <TextView
+                    android:id="@+id/schedule_date"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/design_spacing_compact"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="понедельник, 7 сентября" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/schedule_rows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/design_spacing_compact"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/schedule_footer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/design_spacing_compact"
+                android:paddingHorizontal="@dimen/design_spacing_compact"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone"
+                tools:text="2 пары прошли"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>

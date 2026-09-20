@@ -298,6 +298,12 @@
     <string name="settings_sport_time_filter_description">Добавляет выбор времени на экран записи.</string>
     <string name="settings_group_about">О приложении</string>
     <string name="settings_group_schedule">Расписание</string>
+    <string name="settings_group_home">Главный экран</string>
+    <string name="settings_home_card_schedule_title">Расписание на сегодня</string>
+    <string name="settings_home_card_qr_title">QR-пропуск</string>
+    <string name="settings_home_card_sport_title">Спорт</string>
+    <string name="settings_home_card_friends_title">Заявки в друзья</string>
+    <string name="settings_home_footer">Подсказки на главном закрываются крестиком и больше не возвращаются.</string>
     <string name="settings_schedule_sport_auto_sign_title">Автозапись на спорт</string>
     <string name="settings_schedule_sport_auto_sign_description">Показывать ожидание записи в своём расписании и виджетах.</string>
     <string name="settings_schedule_footer">Нужно подключение к ITMO.Widgets. Ожидание — это ещё не подтверждённая запись.</string>
@@ -511,8 +517,6 @@
     <string name="sport_capacity_card">Занято %1$d/%2$d</string>
     <string name="sport_prediction_matching">Тот же преподаватель и время</string>
     <string name="sport_prediction_waiting">Ждём расписание</string>
-    <string name="home_placeholder_title">Всё нужное — в разделах</string>
-    <string name="home_placeholder_description">Откройте зачётку, расписание, спорт или профиль в меню внизу.</string>
 
     <string name="spoiler_crop_title">Спойлер</string>
     <string name="spoiler_crop_done">Готово</string>
@@ -673,6 +677,45 @@
     <string name="qr_pass_empty_title">QR-код пока недоступен</string>
     <string name="qr_pass_empty_description">Попробуйте обновить пропуск через MyITMO</string>
     <string name="home_open_my_itmo">Открыть сайт Мой ИТМО</string>
+    <string name="home_empty_title">Пока пусто</string>
+    <string name="home_empty_description">Карточки появятся, когда будет что показать. Потяните вниз, чтобы обновить.</string>
+    <string name="home_schedule_today">Сегодня</string>
+    <string name="home_schedule_tomorrow">Завтра</string>
+    <string name="home_schedule_now">Сейчас</string>
+    <string name="home_schedule_next">Далее</string>
+    <string name="home_schedule_empty">Пар сегодня нет</string>
+    <string name="home_schedule_done">На сегодня всё</string>
+    <plurals name="home_schedule_completed">
+        <item quantity="one">%1$d пара прошла</item>
+        <item quantity="few">%1$d пары прошли</item>
+        <item quantity="many">%1$d пар прошло</item>
+        <item quantity="other">%1$d пары прошли</item>
+    </plurals>
+    <string name="home_pending_waiting">ждём запись</string>
+    <string name="home_pending_predicted">прогноз</string>
+    <string name="home_qr_hint">Нажмите, чтобы открыть</string>
+    <string name="home_qr_unavailable">Код не загружен</string>
+    <string name="home_qr_open">Открыть</string>
+    <string name="home_sport_title">Спорт</string>
+    <string name="home_sport_score">%1$d из 100</string>
+    <plurals name="home_sport_more">
+        <item quantity="one">ещё %1$d запись</item>
+        <item quantity="few">ещё %1$d записи</item>
+        <item quantity="many">ещё %1$d записей</item>
+        <item quantity="other">ещё %1$d записи</item>
+    </plurals>
+    <string name="home_friends_title">Заявки в друзья</string>
+    <string name="home_friends_all">Все заявки</string>
+    <string name="home_hint_dismiss">Скрыть подсказку</string>
+    <string name="home_hint_widgets_title">Добавьте виджет</string>
+    <string name="home_hint_widgets_description">Ближайшая пара и QR-пропуск прямо на домашнем экране.</string>
+    <string name="home_hint_widgets_action">Добавить</string>
+    <string name="home_hint_notifications_title">Уведомления выключены</string>
+    <string name="home_hint_notifications_description">Без них не придут результаты автозаписи на спорт и заявки в друзья.</string>
+    <string name="home_hint_notifications_action">Включить</string>
+    <string name="home_hint_services_title">Друзья и автозапись</string>
+    <string name="home_hint_services_description">Включите сервисы ITMO.Widgets: друзья на паре, очереди на спорт, уведомления.</string>
+    <string name="home_hint_services_action">Включить</string>
     <string name="my_itmo_web_title">Мой ИТМО</string>
     <string name="my_itmo_web_reload">Обновить страницу</string>
     <string name="my_itmo_web_external">Открыть в браузере</string>

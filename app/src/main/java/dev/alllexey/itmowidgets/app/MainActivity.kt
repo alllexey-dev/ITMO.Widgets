@@ -16,6 +16,8 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.navOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
@@ -101,6 +103,18 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
         if (onboardingGate.state.value != OnboardingGate.Passed) return
         navigation.openRoot(root)
+    }
+
+    override fun openLessonDetails(args: LessonDetailsArgs) {
+        if (sessionRepository.state.value !is SessionState.SignedIn) return
+        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        navigation.openLessonDetails(args)
+    }
+
+    override fun openPendingSportDetails(args: PendingSportDetailsArgs) {
+        if (sessionRepository.state.value !is SessionState.SignedIn) return
+        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        navigation.openPendingSportDetails(args)
     }
 
     override fun onNewIntent(intent: Intent) {

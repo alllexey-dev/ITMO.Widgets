@@ -3,6 +3,8 @@ package dev.alllexey.itmowidgets.core.ui.navigation
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 
 enum class AppScreen {
     SETTINGS, DIAGNOSTICS, DEBUG_TOOLS, RECORDBOOK_SUBJECT, APP_UPDATE, QR_PASS, MY_ITMO_WEB,
@@ -20,6 +22,11 @@ interface AppNavigator {
 
     /** Closes the whole contextual stack at once, for a screen that hands the window over. */
     fun dismissOverlays()
+
+    /** Sheets sit above whatever is open; they belong to no back stack and take no history. */
+    fun openLessonDetails(args: LessonDetailsArgs)
+
+    fun openPendingSportDetails(args: PendingSportDetailsArgs)
 }
 
 interface ScreenTransitionHost {
@@ -40,6 +47,14 @@ fun Fragment.openRoot(root: AppRoot) {
 
 fun Fragment.dismissOverlays() {
     (requireActivity() as AppNavigator).dismissOverlays()
+}
+
+fun Fragment.openLessonDetails(args: LessonDetailsArgs) {
+    (requireActivity() as AppNavigator).openLessonDetails(args)
+}
+
+fun Fragment.openPendingSportDetails(args: PendingSportDetailsArgs) {
+    (requireActivity() as AppNavigator).openPendingSportDetails(args)
 }
 
 fun Fragment.closeScreen() {

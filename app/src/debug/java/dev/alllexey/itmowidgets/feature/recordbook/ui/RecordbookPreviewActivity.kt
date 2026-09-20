@@ -19,6 +19,8 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
@@ -126,6 +128,10 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
     override fun dismissOverlays() = Unit
 
     override fun openRoot(root: AppRoot) = Unit
+
+    override fun openLessonDetails(args: LessonDetailsArgs) = Unit
+
+    override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
 
     private object FixedTime : AcademicTimeProvider {
         override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")

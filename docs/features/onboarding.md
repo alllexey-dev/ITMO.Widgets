@@ -57,8 +57,8 @@ installed widgets. The single-lesson preview is as tall as the widget
 itself; only the day list gets the bounded 160 dp area.
 
 The pin button calls `AppWidgetManager.requestPinAppWidget` with a broadcast
-`PendingIntent`; `WidgetPinRequester` owns that receiver for the whole Fragment
-lifetime, because the launcher confirms the pin while this screen is stopped. A
+`PendingIntent`; `core/ui/widget/WidgetPinRequester` (shared with the home feed
+hint) owns that receiver for the whole Fragment lifetime, because the launcher confirms the pin while this screen is stopped. A
 confirmed pin changes only the button's label and icon; nothing moves. When
 `isRequestPinAppWidgetSupported` is false the button is replaced by one hint
 line pointing at the launcher's widget menu. Providers are addressed by name

@@ -25,6 +25,14 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   `discipline_id == subject_id` for every discipline except PE, so the exact id
   is the primary binding and name confirmation is the fallback. Lesson rows in
   the hub are informational; resources are only the MyITMO `lms_link`.
+- Stage 43 (feed part) and Stage 44 (feed tests): delivered early on 2026-09-20
+  through `vibe/home-feed-plan.md` with the cards available in v2.1: schedule,
+  QR pass, sport, friend requests, three dismissible hints, and a
+  `Главный экран` settings page. The feed is fed through `core/home/HomeCardSource`
+  multibindings, so the v2.2 cards (schedule changes, BARS marks, moderation
+  results, subject resources) plug in without touching `feature/home`. The QR
+  quick-settings tile, the app shortcuts, the study-root renaming and the
+  bottom-bar/back-stack rules of Stage 43 remain open.
 
 ## Plan Structure
 

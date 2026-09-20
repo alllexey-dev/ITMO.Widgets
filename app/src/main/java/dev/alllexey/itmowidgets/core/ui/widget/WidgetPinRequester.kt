@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.onboarding.ui
+package dev.alllexey.itmowidgets.core.ui.widget
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -9,12 +9,12 @@ import android.content.Intent
 import android.content.IntentFilter
 import androidx.core.content.ContextCompat
 import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
-import dev.alllexey.itmowidgets.feature.onboarding.presentation.WidgetKind
 
 /**
- * Asks the launcher to pin a widget and reports the ones it accepted.
+ * Asks the launcher to pin a widget and reports the ones it accepted, by
+ * provider class name (see [WidgetProviders]).
  *
- * The confirmation happens in the launcher, with this screen stopped, so the
+ * The confirmation happens in the launcher, with the screen stopped, so the
  * receiver is tied to the Fragment instance rather than to its view.
  */
 class WidgetPinRequester(context: Context) {
@@ -30,14 +30,11 @@ class WidgetPinRequester(context: Context) {
             false
         }
 
-    fun start(onPinned: (WidgetKind) -> Unit) {
+    fun start(onPinned: (providerClassName: String) -> Unit) {
         if (receiver != null) return
         val created = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                val kind = WidgetKind.entries
-                    .firstOrNull { it.name == intent.getStringExtra(EXTRA_KIND) }
-                    ?: return
-                onPinned(kind)
+                onPinned(intent.getStringExtra(EXTRA_PROVIDER) ?: return)
             }
         }
         receiver = created
@@ -55,32 +52,26 @@ class WidgetPinRequester(context: Context) {
     }
 
     /** Returns false when the launcher refused to show the dialog at all. */
-    fun request(kind: WidgetKind): Boolean {
-        val provider = ComponentName(appContext, kind.providerClassName())
+    fun request(providerClassName: String): Boolean {
+        val provider = ComponentName(appContext, providerClassName)
         return try {
-            manager.requestPinAppWidget(provider, null, successCallback(kind))
+            manager.requestPinAppWidget(provider, null, successCallback(providerClassName))
         } catch (_: IllegalStateException) {
             false
         }
     }
 
-    private fun successCallback(kind: WidgetKind): PendingIntent = PendingIntent.getBroadcast(
+    private fun successCallback(providerClassName: String): PendingIntent = PendingIntent.getBroadcast(
         appContext,
-        kind.ordinal,
+        providerClassName.hashCode(),
         Intent(ACTION_PINNED)
             .setPackage(appContext.packageName)
-            .putExtra(EXTRA_KIND, kind.name),
+            .putExtra(EXTRA_PROVIDER, providerClassName),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 
-    private fun WidgetKind.providerClassName(): String = when (this) {
-        WidgetKind.SINGLE_LESSON -> WidgetProviders.SINGLE_LESSON
-        WidgetKind.DAY_SCHEDULE -> WidgetProviders.DAY_SCHEDULE
-        WidgetKind.QR -> WidgetProviders.QR_CODE
-    }
-
     private companion object {
         const val ACTION_PINNED = "dev.alllexey.itmowidgets.action.WIDGET_PINNED"
-        const val EXTRA_KIND = "widget_kind"
+        const val EXTRA_PROVIDER = "widget_provider"
     }
 }

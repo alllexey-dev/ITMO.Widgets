@@ -8,6 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
@@ -16,12 +17,11 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleFragment
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsArgs
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.toDetailsArgs
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks

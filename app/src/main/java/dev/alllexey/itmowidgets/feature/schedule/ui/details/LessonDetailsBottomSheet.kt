@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.location.MapDestination
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
@@ -38,6 +39,7 @@ import dev.alllexey.itmowidgets.databinding.ItemLessonFriendBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportDetailFactBinding
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonFriendsState

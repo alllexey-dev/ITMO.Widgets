@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorViewModel
 import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment
 import java.time.Clock
@@ -53,6 +55,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
+import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
@@ -74,6 +77,8 @@ import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
+import dev.alllexey.itmowidgets.feature.home.presentation.HomeViewModel
+import dev.alllexey.itmowidgets.feature.home.ui.HomeFragment
 import dev.alllexey.itmowidgets.feature.settings.domain.*
 import dev.alllexey.itmowidgets.feature.settings.presentation.*
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
@@ -117,6 +122,11 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         @Volatile var qrCode: QrCodeSnapshot? = QrCodeSnapshot("ITMO-TEST", 3_600_000)
         @Volatile var qrRefreshResult: AppResult<Unit> = AppResult.Success(Unit)
         @Volatile var qrDelayMs = 0L
+        @Volatile var homeFixture = HomeFixture()
+        /** The last feed source the host built, for tests that swap cards while the screen is up. */
+        @Volatile var homeSource: FixtureHomeCardSource? = null
+        @Volatile var homePreferences: FixtureHomeCardPreferences? = null
+        @Volatile var homeHintStore: FixtureHomeHintStore? = null
         const val LONG_NAME = "Александра Константиновна Константинопольская"
     }
 
@@ -182,6 +192,18 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                     }
                     if (f is UserFriendsFragment) ViewModelProvider(f, factory)[UserFriendsViewModel::class.java]
                     else ViewModelProvider(f, factory)[UserProfileViewModel::class.java]
+                    return
+                }
+                if (f is HomeFragment) {
+                    ViewModelProvider(f, object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            val source = FixtureHomeCardSource(homeFixture).also { homeSource = it }
+                            val preferences = FixtureHomeCardPreferences(homeFixture.hidden).also { homePreferences = it }
+                            val hints = FixtureHomeHintStore().also { homeHintStore = it }
+                            return HomeViewModel(setOf(source), preferences, hints, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)) as T
+                        }
+                    })[HomeViewModel::class.java]
                     return
                 }
                 if (f is MeFragment) {
@@ -286,11 +308,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         if (host.navController.currentDestination == null) {
             host.navController.graph = host.navController.navInflater.inflate(R.navigation.main_nav_graph).apply {
                 setStartDestination(startDestination)
-                // Root routing is real; unrelated roots use the static Home view to avoid API calls.
+                // Root routing is real; unrelated roots get a blank view to avoid API calls.
                 listOf(R.id.navigation_schedule, R.id.navigation_recordbook, R.id.navigation_sport).forEach {
-                    (findNode(it) as FragmentNavigator.Destination).setClassName(
-                        "dev.alllexey.itmowidgets.feature.home.ui.HomeFragment"
-                    )
+                    (findNode(it) as FragmentNavigator.Destination).setClassName(BlankTabFragment::class.java.name)
                 }
             }
         }
@@ -306,6 +326,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     override fun dismissOverlays() = navigation.dismissOverlays()
 
     override fun openRoot(root: AppRoot) = Unit
+
+    override fun openLessonDetails(args: LessonDetailsArgs) = navigation.openLessonDetails(args)
+
+    override fun openPendingSportDetails(args: PendingSportDetailsArgs) = navigation.openPendingSportDetails(args)
 
     val host: NavHostFragment
         get() = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -345,6 +369,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         override suspend fun setTimeSelectorHidden(hidden: Boolean) = Unit
         override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
             local.value = local.value.copy(showSportAutoSign = enabled)
+        }
+
+        override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
+            local.value = local.value.copy(hiddenHomeCards = if (visible) local.value.hiddenHomeCards - kind else local.value.hiddenHomeCards + kind)
         }
 
         override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {

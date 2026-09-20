@@ -1,29 +1,7 @@
-package dev.alllexey.itmowidgets.feature.schedule.ui.details
+package dev.alllexey.itmowidgets.feature.schedule.domain.model
 
-import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import java.io.Serializable
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import java.time.LocalDate
-
-/** Everything the sheet shows without Backend; times and the date travel as ISO strings. */
-data class LessonDetailsArgs(
-    val pairId: Long,
-    val date: String,
-    val subjectName: String,
-    val typeId: Int,
-    val format: String,
-    val start: String,
-    val end: String,
-    val teacherFio: String?,
-    val teacherIsu: Long?,
-    val room: String?,
-    val building: String?,
-    val buildingId: Int?,
-    val mainBuildingId: Int?,
-    val note: String?,
-    val zoomUrl: String?,
-    val zoomPassword: String?,
-    val zoomInfo: String?
-) : Serializable
 
 fun Lesson.toDetailsArgs(date: LocalDate) = LessonDetailsArgs(
     pairId = pairId,

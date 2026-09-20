@@ -9,9 +9,11 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.app.WidgetRefreshCoordinator
+import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSourceImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSource
@@ -74,6 +76,13 @@ abstract class ScheduleModule {
     abstract fun bindScheduleRefreshGateway(
         impl: ScheduleRepositoryImpl
     ): ScheduleRefreshGateway
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindScheduleHomeCards(
+        impl: ScheduleHomeCardSource
+    ): HomeCardSource
 
     @Binds
     @Singleton

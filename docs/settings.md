@@ -142,6 +142,18 @@ only among installed instances of that same format:
 - `Сбросить изображение спойлера` removes the custom image.
 - Animation and custom-image controls are disabled when the spoiler is disabled.
 
+## Home screen
+
+- `Главный экран` lists one switch per feed card: `Расписание на сегодня`,
+  `QR-пропуск`, `Спорт`, `Заявки в друзья`. A switched-off card leaves the feed
+  at once; nothing else changes and no widget is refreshed.
+- Stored as the string set `home_hidden_cards` (card kind names; absent means
+  shown). The page is an offline category; its footer explains that hints on
+  the home screen are closed with their own button and do not return.
+- The hints themselves are not settings. Closed hints are remembered per
+  installation in `home_dismissed_hints`; sign-out and `Повторить первоначальную
+  настройку` leave them alone.
+
 ## Schedule
 
 - `Автозапись на спорт` displays pending sport auto-sign entries in the user's own

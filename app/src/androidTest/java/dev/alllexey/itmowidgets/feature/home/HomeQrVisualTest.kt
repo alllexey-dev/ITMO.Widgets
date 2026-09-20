@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class HomeQrVisualTest {
-    @Test fun homeFabOpensQrAndAllStatesFitThemesAndRecreation() {
+    @Test fun homeCardOpensQrAndAllStatesFitThemesAndRecreation() {
         try {
             Appearances.default.forEachIndexed { index, spec ->
                 SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
@@ -31,10 +31,10 @@ class HomeQrVisualTest {
                     settle()
                     capture("home-$index")
                     scenario.onActivity {
-                        val fab = it.findViewById<View>(R.id.qr_fab)
-                        assertTrue(fab.height >= 48 * it.resources.displayMetrics.density)
-                        assertEquals(it.getString(R.string.home_open_qr), fab.contentDescription)
-                        fab.performClick()
+                        val card = it.findViewById<View>(R.id.home_qr_card)
+                        assertTrue(card.height >= 48 * it.resources.displayMetrics.density)
+                        assertEquals(it.getString(R.string.home_open_qr), card.contentDescription)
+                        card.performClick()
                     }
                     settle()
                     scenario.onActivity {
@@ -83,7 +83,7 @@ class HomeQrVisualTest {
                     settle()
                     scenario.onActivity {
                         assertNull(it.navigation.overlayHost)
-                        assertTrue(it.findViewById<View>(R.id.qr_fab).isShown)
+                        assertTrue(it.findViewById<View>(R.id.home_qr_card).isShown)
                     }
                 }
             }

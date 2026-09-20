@@ -158,8 +158,12 @@ the geometry.
 - Settings and the profile use quiet group cards with stable row updates.
 - Widgets and the QR pass keep their own launcher-adapted palette and readability
   rules; sign-in branding is a separate exception.
-- The home feed is a placeholder and must not promise a working refresh; quick
-  actions stay in a separate bottom-end FAB group.
+- The home feed shows only cards with something to say, in a fixed order, each
+  on `Card.Content` with rows of at least 48 dp; hints use `Card.Content.Outlined`
+  and close with a trailing icon button. The lesson in progress sits on
+  `colorSecondaryContainer` with its own on-colours. Pull-to-refresh keeps the
+  cards; one snackbar reports a partial failure. The `Мой ИТМО` FAB stays at the
+  bottom end and the list reserves space under it.
 
 ## Shared components
 
@@ -228,5 +232,7 @@ and look at the PNGs; the default run only proves the layout holds in light.
 - Recordbook card: `res/layout/item_recordbook_subject.xml`.
 - User row and public profile: `res/layout/item_user_row.xml`, `res/layout/fragment_user_profile.xml`.
 - Friend picker: `res/layout/dialog_friend_selector.xml`.
+- Home feed: `res/layout/fragment_home.xml`, `res/layout/item_home_*.xml`,
+  `feature/home/ui/HomeFeedAdapter.kt`, `feature/home/HomeFeedVisualTest.kt`.
 - Visual tests: `feature/sport/cards/SportCardsVisualTest.kt`,
   `feature/recordbook/RecordbookVisualTest.kt`, `feature/friendselector/SelectionRowsTest.kt`.

@@ -9,10 +9,14 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.setupWithNavController
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
+import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
+import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
 
 class MainNavigationCoordinator(
     private val binding: ActivityMainBinding,
@@ -86,6 +90,16 @@ class MainNavigationCoordinator(
         fragments.executePendingTransactions()
         fragments.popBackStackImmediate(OVERLAY, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         updateAccessibility()
+    }
+
+    override fun openLessonDetails(args: LessonDetailsArgs) {
+        if (fragments.isStateSaved || fragments.findFragmentByTag(LessonDetailsBottomSheet.TAG) != null) return
+        LessonDetailsBottomSheet.newInstance(args).show(fragments, LessonDetailsBottomSheet.TAG)
+    }
+
+    override fun openPendingSportDetails(args: PendingSportDetailsArgs) {
+        if (fragments.isStateSaved || fragments.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) != null) return
+        PendingSportDetailsBottomSheet.newInstance(args).show(fragments, PendingSportDetailsBottomSheet.TAG)
     }
 
     private fun updateAccessibility() {

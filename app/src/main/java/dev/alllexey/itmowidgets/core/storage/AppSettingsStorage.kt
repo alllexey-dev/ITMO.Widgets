@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
@@ -170,6 +171,25 @@ class AppSettingsStorage(
         write(SPORT_SIGN_TIME_SELECTOR_ENABLED, enabled)
     }
 
+    /** Names of the home hints the user closed; the set belongs to the installation. */
+    fun observeDismissedHomeHints(): Flow<Set<String>> =
+        preferences.map { it[HOME_DISMISSED_HINTS].orEmpty() }.distinctUntilChanged()
+
+    suspend fun dismissHomeHint(name: String) {
+        dataStore.edit { it[HOME_DISMISSED_HINTS] = it[HOME_DISMISSED_HINTS].orEmpty() + name }
+    }
+
+    /** Names of the home card kinds hidden in settings; absent means shown. */
+    fun observeHiddenHomeCards(): Flow<Set<String>> =
+        preferences.map { it[HOME_HIDDEN_CARDS].orEmpty() }.distinctUntilChanged()
+
+    suspend fun setHomeCardHidden(name: String, hidden: Boolean) {
+        dataStore.edit {
+            val current = it[HOME_HIDDEN_CARDS].orEmpty()
+            it[HOME_HIDDEN_CARDS] = if (hidden) current + name else current - name
+        }
+    }
+
     private suspend fun read(): Preferences = preferences.first()
 
     private suspend fun <T> write(key: Preferences.Key<T>, value: T) {
@@ -206,5 +226,7 @@ class AppSettingsStorage(
             booleanPreferencesKey("sport_sign_teacher_selector_enabled")
         private val SPORT_SIGN_TIME_SELECTOR_ENABLED =
             booleanPreferencesKey("sport_sign_hide_time_selector_enabled")
+        private val HOME_DISMISSED_HINTS = stringSetPreferencesKey("home_dismissed_hints")
+        private val HOME_HIDDEN_CARDS = stringSetPreferencesKey("home_hidden_cards")
     }
 }

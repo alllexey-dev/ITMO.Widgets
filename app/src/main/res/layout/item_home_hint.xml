@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="@dimen/design_screen_margin"
+    android:paddingVertical="@dimen/design_spacing_related">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/home_hint_card"
+        style="@style/Widget.ItmoWidgets.Card.Content.Outlined"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/design_card_padding"
+            android:paddingTop="@dimen/design_card_padding"
+            android:paddingEnd="@dimen/design_spacing_related"
+            android:paddingBottom="@dimen/design_card_padding">
+
+            <ImageView
+                android:id="@+id/hint_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="@null"
+                app:tint="?attr/colorPrimary"
+                tools:src="@drawable/ic_widgets" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/design_spacing_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/hint_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="Добавьте виджет" />
+
+                <TextView
+                    android:id="@+id/hint_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/design_spacing_related"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="Ближайшая пара и QR-пропуск прямо на домашнем экране." />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/hint_action"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/design_spacing_compact"
+                    android:minHeight="@dimen/design_touch_target"
+                    tools:text="Добавить" />
+
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/hint_dismiss"
+                android:layout_width="@dimen/design_touch_target"
+                android:layout_height="@dimen/design_touch_target"
+                android:layout_marginTop="-8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/home_hint_dismiss"
+                android:padding="@dimen/design_spacing_content"
+                android:src="@drawable/ic_close_rounded"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>

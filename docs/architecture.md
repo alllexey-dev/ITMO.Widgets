@@ -31,8 +31,10 @@ core/           cross-cutting; knows nothing about features
   location/     BuildingDirectory (res/raw/itmo_buildings.json), MapDestination geo URIs
   ui/           LessonTypes and LocationTitles shared by schedule and recordbook rows
   friend/       FriendRepository — the schedule picker's narrow view of friends
+  home/         HomeCard model and the HomeCardSource contract every feature contributes to
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
-  navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders)
+  navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders,
+                LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs)
   onboarding/   OnboardingRepository — whether the first-run flow was passed
   network/      WidgetsClient, error mapping, serialization adapters
   notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
@@ -45,7 +47,8 @@ core/           cross-cutting; knows nothing about features
   storage/      DataStore wrappers, encrypted token storage
   text/         UiText
   time/         AcademicTimeProvider, WallClock
-  ui/           AvatarView, state helpers, AppNavigator port
+  qr/           CustomSpoilerManager, QrPassImages — the pass rendered for other screens
+  ui/           AvatarView, state helpers, AppNavigator port, WidgetPinRequester
 di/             Hilt modules, one per feature or concern
 feature/<name>/ ui | presentation | domain | data
 ```
@@ -142,8 +145,9 @@ debug-only academic date override exists.
 
 `@Binds` with constructor injection by default, `@Provides` for types the project
 does not construct, one module per feature or concern, `@HiltWorker` for
-workers, `@IntoSet` multibindings for open sets such as `SessionDataCleaner` and
-`FcmPayloadHandler`.
+workers, `@IntoSet` multibindings for open sets such as `SessionDataCleaner`,
+`FcmPayloadHandler` and `HomeCardSource` (the home feed knows its sources only as
+a set; each feature registers its own in its module).
 
 ### Navigation
 
@@ -155,7 +159,10 @@ and sport) live in `overlay_nav_graph` inside a full-screen `AppOverlayHostFragm
 that slides above the unchanged root and bottom bar.
 
 Features open contextual screens through `core/ui/navigation.AppNavigator`,
-implemented by `MainActivity` and `MainNavigationCoordinator`. Selecting or
+implemented by `MainActivity` and `MainNavigationCoordinator`. The same port
+shows the lesson and pending-sport sheets (`openLessonDetails`,
+`openPendingSportDetails`) on the Activity's FragmentManager, so a screen in
+another feature can open them without importing `feature/schedule`. Selecting or
 reselecting a root tab discards the whole overlay stack; Back pops one overlay
 level; rotation restores the current level. Widget and notification intents are
 parsed by `MainActivityIntentRouting`, queued until the session is signed in,
@@ -205,8 +212,7 @@ relying on review.
 
 ## Known gaps
 
-Toward v2.0.1 parity: authentication polish. The home feed is a stub with QR and
-MyITMO web quick actions.
+Toward v2.0.1 parity: authentication polish.
 
 Structural debt, in priority order:
 

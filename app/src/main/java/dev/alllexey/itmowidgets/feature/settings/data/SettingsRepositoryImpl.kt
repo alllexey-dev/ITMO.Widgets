@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.UserPrivacySettings
 import dev.alllexey.itmowidgets.core.model.SharingVisibility as ApiSharingVisibility
@@ -10,6 +11,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.util.safeEnumOf
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
@@ -60,19 +62,27 @@ class SettingsRepositoryImpl @Inject constructor(
             )
         }
 
+        val app = combine(
+            settings.observeScheduleSportAutoSignEnabled(),
+            settings.observeHiddenHomeCards()
+        ) { showSportAutoSign, hiddenHomeCards ->
+            showSportAutoSign to hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet()
+        }
+
         return combine(
             settings.observeCustomServicesEnabled(),
             scheduleWidget,
             qrWidget,
             sport,
-            settings.observeScheduleSportAutoSignEnabled()
-        ) { customServices, schedule, qr, sportSettings, showSportAutoSign ->
+            app
+        ) { customServices, schedule, qr, sportSettings, (showSportAutoSign, hiddenHomeCards) ->
             LocalSettings(
                 customServicesEnabled = customServices,
                 scheduleWidget = schedule,
                 qrWidget = qr,
                 sport = sportSettings,
-                showSportAutoSign = showSportAutoSign
+                showSportAutoSign = showSportAutoSign,
+                hiddenHomeCards = hiddenHomeCards
             )
         }
     }
@@ -119,6 +129,10 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
         settings.setScheduleSportAutoSignEnabled(enabled)
+    }
+
+    override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
+        settings.setHomeCardHidden(kind.name, hidden = !visible)
     }
 
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) {
