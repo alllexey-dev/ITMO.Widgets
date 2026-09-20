@@ -25,12 +25,13 @@ sorts by `HomeCardKind`, whose declaration order is the feed order. Nothing in
 Lesson and pending rows open sheets through `AppNavigator.openLessonDetails` /
 `openPendingSportDetails`; their arguments live in `core/navigation`. A pending
 row resolves to the sport tab's own `SportCommonDetailsBottomSheet` when the
-sport data knows the queue (`MainActivity` looks the lesson up in
-`SportBookingRepository`, refreshing once if nothing is cached), so the queue
+sport data knows the queue (`MainActivity` loads the sport tab's data through the shared
+`SportMyViewModel` when needed and looks the lesson up in `SportBookingRepository`), so the queue
 position, history and `Отменить` work from the feed and the schedule alike; the
 cancellation goes through the shared `SportMyViewModel` after the usual
 confirmation. The schedule's own `PendingSportDetailsBottomSheet` is the
-fallback. The sport card opens the sport tab, a friend row the public profile.
+fallback. A booked sport lesson in the schedule card takes the same road by its
+date and start time, so an existing booking can be cancelled from the feed. The sport card opens the sport tab, a friend row the public profile.
 
 Refresh: the first show refreshes every source once; pull-to-refresh and a
 return to the screen after five minutes do it again; every return also calls

@@ -39,6 +39,8 @@ import dev.alllexey.itmowidgets.feature.update.ui.toScreenArguments
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.dataOrNull
+import java.time.LocalDate
+import java.time.LocalTime
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
@@ -133,10 +135,18 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         navigation.openRoot(root)
     }
 
+    /** A sport lesson in the schedule is a booking: it gets the sport sheet with `Отменить`. */
     override fun openLessonDetails(args: LessonDetailsArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
         if (onboardingGate.state.value != OnboardingGate.Passed) return
-        navigation.openLessonDetails(args)
+        if (args.typeId != SPORT_TYPE_ID) {
+            navigation.openLessonDetails(args)
+            return
+        }
+        lifecycleScope.launch {
+            val booking = findSportBookingAt(LocalDate.parse(args.date), LocalTime.parse(args.start))
+            if (booking != null) navigation.openSportDetails(booking) else navigation.openLessonDetails(args)
+        }
     }
 
     /** The sport tab's sheet when the sport data knows the queue; the schedule's own sheet otherwise. */
@@ -149,14 +159,25 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         }
     }
 
-    private suspend fun findSportBooking(lessonId: Long): SportBooking? {
-        val cached = withTimeoutOrNull(CACHED_BOOKINGS_WAIT_MILLIS) { sportBookings.observeSportBookings().first() }
-        val state = cached ?: run {
-            sportBookings.refreshSportBookings()
-            withTimeoutOrNull(LOADED_BOOKINGS_WAIT_MILLIS) { sportBookings.observeSportBookings().first() }
-        }
-        return state?.dataOrNull()?.firstOrNull { it.lessonId == lessonId }
+    /**
+     * The sport tab's merged bookings. Every source behind them is a replay flow
+     * that only emits after its own refresh, so the first caller loads the tab's
+     * data exactly as opening the tab would; afterwards the answer is immediate.
+     */
+    private suspend fun sportBookingsSnapshot(): List<SportBooking>? {
+        sportMy.ensureDataLoaded()
+        val state = withTimeoutOrNull(BOOKINGS_WAIT_MILLIS) { sportBookings.observeSportBookings().first() }
+        return state?.dataOrNull()
     }
+
+    private suspend fun findSportBooking(lessonId: Long): SportBooking? =
+        sportBookingsSnapshot()?.firstOrNull { it.lessonId == lessonId }
+
+    private suspend fun findSportBookingAt(date: LocalDate, start: LocalTime): SportBooking? =
+        sportBookingsSnapshot()?.firstOrNull { booking ->
+            val local = booking.start.atZoneSameInstant(timeProvider.zoneId)
+            local.toLocalDate() == date && local.toLocalTime() == start
+        }
 
     private fun onSportSheetAction(lessonId: Long, action: String?) {
         lifecycleScope.launch {
@@ -281,8 +302,8 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     }
 
     companion object {
-        private const val CACHED_BOOKINGS_WAIT_MILLIS = 300L
-        private const val LOADED_BOOKINGS_WAIT_MILLIS = 4_000L
+        private const val BOOKINGS_WAIT_MILLIS = 8_000L
+        private const val SPORT_TYPE_ID = 11
         const val ACTION_OPEN_SPORT = "dev.alllexey.itmowidgets.action.OPEN_SPORT"
         const val ACTION_OPEN_USER_PROFILE = "dev.alllexey.itmowidgets.action.OPEN_USER_PROFILE"
         const val ACTION_OPEN_SCHEDULE = "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE"

@@ -17,7 +17,8 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
   same header: title, kind, the date with the time range and duration, teacher,
   place, `Открыть на карте`. A pending sport row on the home feed or in the
   schedule opens the sport tab's own sheet with the queue position, history and
-  `Отменить`; the schedule's simpler sheet remains only when the sport data has
+  `Отменить`, and so does a booked sport lesson (matched by date and start);
+  the sport data loads on first use exactly as the sport tab loads it; the schedule's simpler sheet remains only when the sport data has
   nothing about the queue. The QR pass screen shows the code at up to 300 dp
   instead of the full width.
 - Subject hub in `Учёба`: a swipeable `Расписание` tab next to `Баллы` with the subject's upcoming lessons

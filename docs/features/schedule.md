@@ -80,7 +80,10 @@ or the official cache.
 
 - Every ordinary lesson card opens `LessonDetailsBottomSheet` from the schedule
   fragment's child fragment manager, in the own and in a friend's schedule alike.
-  Pending sport rows never open it. The sheet gets a `Serializable`
+  Pending sport rows never open it. A sport lesson (type 11) goes through
+  `AppNavigator.openLessonDetails` to `MainActivity`, which finds the booking
+  with the same date and start in the sport tab's data and opens the sport
+  sheet with `Отменить`; without a match the lesson sheet appears. The sheet gets a `Serializable`
   `LessonDetailsArgs` built from the `Lesson` plus the day's date; nothing is
   fetched for the lesson itself.
 - The sheet starts with the header every details sheet shares
