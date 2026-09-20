@@ -16,10 +16,10 @@ import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHis
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Shared only by the isolated debug host so recreation cannot replace a test's history or sources. */
-class FriendSelectorFixture {
+class FriendSelectorFixture(people: List<UserSummary>? = null) {
     init { check(BuildConfig.DEBUG) }
 
-    val friends = listOf("Александра", "Борис", "Виктория", "Григорий", "Дарья", "Евгений", "Жанна", "Захар").mapIndexed { index, name ->
+    val friends = people ?: listOf("Александра", "Борис", "Виктория", "Григорий", "Дарья", "Евгений", "Жанна", "Захар").mapIndexed { index, name ->
         UserSummary(100001 + index, "$name Константинович Оченьдлиннаяфамилия", null,
             listOf(UserGroup("TEST", 2, "ТЕСТ")), UserSharing(true, true))
     }

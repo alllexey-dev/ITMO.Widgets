@@ -123,6 +123,14 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         @Volatile var qrRefreshResult: AppResult<Unit> = AppResult.Success(Unit)
         @Volatile var qrDelayMs = 0L
         @Volatile var homeFixture = HomeFixture()
+        /** Social fixtures for the profile tab, public profiles and the friend picker. */
+        @Volatile var sessionUser = CurrentUser(123456, "Александрова Мария Александровна", null)
+        @Volatile var socialFriends: List<UserProfile> = emptyList()
+        @Volatile var socialRequests: FriendRequests = FriendRequests.EMPTY
+        @Volatile var socialCurrentUser: UserSummary? = null
+        @Volatile var profileFor: (Int) -> UserProfile = { isu ->
+            UserProfile(UserSummary(isu, LONG_NAME, null, emptyList(), UserSharing(true, true, friendsOpen)), RelationshipState.NONE)
+        }
         /** The last feed source the host built, for tests that swap cards while the screen is up. */
         @Volatile var homeSource: FixtureHomeCardSource? = null
         @Volatile var homePreferences: FixtureHomeCardPreferences? = null
@@ -439,18 +447,16 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     }
 
     private object ProfileSocial : SocialRepository {
-        override fun observeFriends() = MutableStateFlow<SocialState<List<UserProfile>>>(SocialState.Content(emptyList()))
-        override fun observeRequests() = MutableStateFlow<SocialState<FriendRequests>>(SocialState.Content(FriendRequests.EMPTY))
-        override fun observeCurrentUser() = MutableStateFlow<UserSummary?>(null)
-        override val currentFriends: List<UserProfile> = emptyList()
+        override fun observeFriends() = MutableStateFlow<SocialState<List<UserProfile>>>(SocialState.Content(socialFriends))
+        override fun observeRequests() = MutableStateFlow<SocialState<FriendRequests>>(SocialState.Content(socialRequests))
+        override fun observeCurrentUser() = MutableStateFlow(socialCurrentUser)
+        override val currentFriends: List<UserProfile> get() = socialFriends
         override suspend fun refresh() = Unit
         override suspend fun userFriends(isu: Int): AppResult<List<UserProfile>> {
             delay(friendsDelayMs)
             return friendsResult
         }
-        override suspend fun profile(isu: Int): AppResult<UserProfile> = AppResult.Success(UserProfile(
-            UserSummary(isu, LONG_NAME, null, emptyList(), UserSharing(true, true, friendsOpen)), RelationshipState.NONE
-        ))
+        override suspend fun profile(isu: Int): AppResult<UserProfile> = AppResult.Success(profileFor(isu))
         override suspend fun lookup(isus: List<Int>): AppResult<List<UserProfile>> = AppResult.Success(emptyList())
         override suspend fun sendRequest(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")
         override suspend fun acceptRequest(isu: Int): AppResult<UserProfile> = error("Social data is unavailable in this fixture")
@@ -460,9 +466,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     }
 
     private object ProfileSession : SessionRepository {
-        override val state = MutableStateFlow<SessionState>(
-            SessionState.SignedIn(CurrentUser(123456, "Александрова Мария Александровна", null))
-        )
+        override val state = MutableStateFlow<SessionState>(SessionState.SignedIn(sessionUser))
         override suspend fun initialize() = Unit
         override suspend fun completeItmoIdLogin(tokenResponseJson: String): AppResult<Unit> =
             error("Authentication is unavailable in this fixture")

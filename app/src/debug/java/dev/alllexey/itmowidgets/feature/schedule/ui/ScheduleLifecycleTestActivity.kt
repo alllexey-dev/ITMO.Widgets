@@ -2,7 +2,9 @@ package dev.alllexey.itmowidgets.feature.schedule.ui
 
 import android.os.Bundle
 import android.widget.FrameLayout
+import android.content.res.Configuration
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -52,6 +54,11 @@ class ScheduleLifecycleTestActivity : AppCompatActivity() {
         val container = FrameLayout(this).apply { id = R.id.schedule_test_container }
         setContentView(container)
         // MainActivity keeps content out of the system bars; screenshots must show the same.
+        val night = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        WindowCompat.getInsetsController(window, container).apply {
+            isAppearanceLightStatusBars = !night
+            isAppearanceLightNavigationBars = !night
+        }
         ViewCompat.setOnApplyWindowInsetsListener(container) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
