@@ -23,7 +23,7 @@ object ScheduleWidgetWork {
     private const val MIN_ENQUEUE_INTERVAL_MILLIS = 60_000L
     private const val NEVER = Long.MIN_VALUE
     private const val PERIODIC_UPDATE_HOURS = 1L
-    private val FOLLOW_UP_DELAY: Duration = Duration.ofSeconds(3)
+    private val FOLLOW_UP_DELAY: Duration = Duration.ofSeconds(1)
 
     private val lastEnqueuedAt = AtomicLong(NEVER)
 

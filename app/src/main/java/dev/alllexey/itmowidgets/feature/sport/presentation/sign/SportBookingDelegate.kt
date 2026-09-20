@@ -183,7 +183,7 @@ class SportBookingDelegate @Inject constructor(
     }
 
     private companion object {
-        val FOLLOW_UP_DELAY: Duration = 3.seconds
+        val FOLLOW_UP_DELAY: Duration = 1.seconds
     }
 
     private suspend fun AppResult<Unit>.refreshOnSuccess(

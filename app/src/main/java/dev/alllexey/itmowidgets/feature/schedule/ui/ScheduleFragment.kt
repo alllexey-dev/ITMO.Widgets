@@ -22,10 +22,12 @@ import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.openPendingSportDetails
 import dev.alllexey.itmowidgets.databinding.FragmentScheduleBinding
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
@@ -133,8 +135,18 @@ class ScheduleFragment : Fragment() {
         fabFriend.visibility = if (userIsu == null) View.VISIBLE else View.GONE
     }
 
+    /**
+     * The own schedule's sport lessons are bookings: the navigator hands them to the
+     * sport tab's sheet with `Отменить`. Everything else, and a friend's schedule,
+     * opens the lesson sheet here.
+     */
     private fun showLessonDetails(lesson: Lesson, date: LocalDate) {
         if (childFragmentManager.findFragmentByTag(LessonDetailsBottomSheet.TAG) != null) return
+        val navigator = activity as? AppNavigator
+        if (navigator != null && userIsu == null && lesson.typeId.raw == SPORT_TYPE_ID) {
+            navigator.openLessonDetails(lesson.toDetailsArgs(date))
+            return
+        }
         LessonDetailsBottomSheet.newInstance(lesson, date).show(childFragmentManager, LessonDetailsBottomSheet.TAG)
     }
 
@@ -463,6 +475,7 @@ class ScheduleFragment : Fragment() {
     private data class DayAnchor(val date: LocalDate, val offset: Int)
 
     companion object {
+        private const val SPORT_TYPE_ID = 11
 
         private const val KEY_LIST_STATE = "list_state"
         private const val MAX_ANCHOR_PAGE_REQUESTS = 4

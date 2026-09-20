@@ -72,7 +72,7 @@ class SportBookingDelegateTest {
             assertEquals(1, scheduleRefreshGateway.refreshCount)
             assertEquals(1, bookingRepository.refreshCount)
 
-            followUpScope.advanceTimeBy(2_999)
+            followUpScope.advanceTimeBy(999)
             followUpScope.runCurrent()
             assertEquals(1, scheduleRefreshGateway.refreshCount)
 

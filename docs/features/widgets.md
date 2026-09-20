@@ -26,7 +26,7 @@ the app.
   written into a new session.
 - Successful sport actions, preference changes and the services gate enqueue a
   forced schedule-widget update through `WidgetRefreshCoordinator`; QR widgets
-  are not touched. A sport action also enqueues a follow-up update 3 s later,
+  are not touched. A sport action also enqueues a follow-up update 1 s later,
   because MyITMO can answer the first fetch with the schedule from before the
   change. A refresh that fails or falls back to the previous snapshot leaves a
   `ScheduleWidget` warning in the diagnostics journal.
