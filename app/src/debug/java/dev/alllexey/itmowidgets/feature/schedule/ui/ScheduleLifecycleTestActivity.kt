@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.feature.schedule.ui
 
 import android.os.Bundle
 import android.widget.FrameLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -47,7 +49,14 @@ class ScheduleLifecycleTestActivity : AppCompatActivity() {
             }
         }, false)
         super.onCreate(savedInstanceState)
-        setContentView(FrameLayout(this).apply { id = R.id.schedule_test_container })
+        val container = FrameLayout(this).apply { id = R.id.schedule_test_container }
+        setContentView(container)
+        // MainActivity keeps content out of the system bars; screenshots must show the same.
+        ViewCompat.setOnApplyWindowInsetsListener(container) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.schedule_test_container, ScheduleFragment(), SCHEDULE_TAG)

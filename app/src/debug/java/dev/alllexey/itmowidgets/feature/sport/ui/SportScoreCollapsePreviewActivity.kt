@@ -6,6 +6,8 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.color.DynamicColors
@@ -51,6 +53,11 @@ class SportScoreCollapsePreviewActivity : AppCompatActivity(), SportBookingListe
         }
         binding = FragmentSportMyBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
 
         adapter = SportBookingAdapter(SportCardsPreviewActivity.FixedTime, this)
         binding.mainRecyclerView.layoutManager = LinearLayoutManager(this)
