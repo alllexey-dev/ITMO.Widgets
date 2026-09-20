@@ -13,6 +13,9 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
   notifications and disabled user services. Pull-to-refresh asks every source
   at once and a partial failure is one snackbar. Both FABs stay.
   `Настройки → Главный экран` hides card kinds (`home_hidden_cards`).
+- Widget previews in the launcher picker match the current widgets: rebuilt
+  Android 12+ preview layouts for all three widgets (the QR widget had none) and
+  preview images rendered from the real widget renderers, with a night variant.
 - The second fetch after a sport action (bookings, own schedule, schedule widgets)
   now runs 1 s later instead of 3 s and also reloads the sport catalogue, so a
   lesson that was full no longer stays full after cancelling.

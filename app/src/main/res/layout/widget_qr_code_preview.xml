@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher picker preview (Android 12+): widget_qr_code.xml showing the sample pass image. -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:padding="8dp">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_qr_code_description"
+        android:scaleType="fitCenter"
+        android:src="@drawable/widget_qr_code_preview" />
+
+</RelativeLayout>

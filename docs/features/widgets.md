@@ -60,6 +60,20 @@ is picked through the photo picker, cropped square and stored as a bounded
 420 × 420 PNG; saving is atomic and refreshes widgets only after success.
 Expiry is passive: an expired code stops being emitted (known gap).
 
+## Launcher picker previews
+
+The picker shows the real widgets. On Android 12+ each descriptor names a
+`previewLayout` (`widget_single_lesson_preview.xml`, `widget_lesson_list_preview.xml`,
+`widget_qr_code_preview.xml`): static copies of the widget layouts filled with
+the settings preview scenario (a current `Математический анализ` lesson, three
+lessons and `На сегодня всё`, the sample pass). Older launchers get
+`previewImage` PNGs under `drawable-420dpi` and `drawable-night-420dpi`, rendered
+by the real widget renderers through the instrumentation class
+`WidgetPreviewImageCapture` (run with `captureScreenshots=true`, pull
+`widget-previews-light` and `-night` from the cache). The same class draws the
+static layouts next to the real renders, so a drift between them is visible in
+one glance. Regenerate both whenever a widget layout changes.
+
 ## Previews in settings
 
 Separate compact and full settings pages each show only their own live preview,

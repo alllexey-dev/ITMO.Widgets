@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher picker preview (Android 12+): widget_single_lesson_dot.xml with the settings preview scenario filled in.
+     Keep it in step with that layout; WidgetPreviewImageCapture draws both for comparison. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -9,7 +11,7 @@
     android:orientation="vertical"
     android:paddingHorizontal="12dp"
     android:paddingVertical="8dp"
-    tools:ignore="UseAppTint">
+    tools:ignore="HardcodedText,UseAppTint">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,29 +19,61 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <ImageView
-            android:layout_width="7dp"
-            android:layout_height="7dp"
-            android:layout_marginEnd="6dp"
-            android:contentDescription="@null"
-            android:src="@drawable/shape_circle_filled"
-            android:tint="@color/lesson_type_practice" />
-
-        <TextView
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Практика"
-            android:textColor="@color/widget_on_surface_variant"
-            android:textSize="11sp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <TextView
+            <ImageView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:layout_marginEnd="6dp"
+                android:contentDescription="@null"
+                android:src="@drawable/shape_circle_filled"
+                android:tint="@color/lesson_type_lecture" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:text="@string/schedule_lesson_type_lecture"
+                android:textColor="@color/widget_on_surface_variant"
+                android:textSize="11sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="11:30–13:00"
-            android:textColor="@color/widget_on_surface"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="11:30"
+                android:textColor="@color/widget_on_surface"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="–"
+                android:textColor="@color/widget_on_surface_variant"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="13:00"
+                android:textColor="@color/widget_on_surface_variant"
+                android:textSize="12sp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -48,8 +82,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
         android:maxLines="1"
-        android:text="Математический анализ"
+        android:text="@string/widget_preview_subject_math"
         android:textColor="@color/widget_on_surface"
         android:textSize="14sp"
         android:textStyle="bold" />
@@ -58,6 +93,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <TextView
@@ -66,7 +102,7 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="1506 Кронва · Попов А. И."
+            android:text="1506 Кронва · Иванов И. И."
             android:textColor="@color/widget_on_surface_variant"
             android:textSize="10sp" />
 
@@ -74,7 +110,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="Сейчас · ещё 3"
+            android:maxLines="1"
+            android:text="Сейчас · ещё 1"
             android:textColor="@color/widget_primary"
             android:textSize="10sp" />
 
