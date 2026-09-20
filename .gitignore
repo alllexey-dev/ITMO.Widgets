@@ -19,3 +19,4 @@ app-keystore.jks
 app/release/
 app/debug/
 .DS_Store
+.kotlin/
