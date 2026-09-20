@@ -16,6 +16,7 @@ import com.google.android.material.color.MaterialColors
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
@@ -27,6 +28,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgra
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.ui.DetailItem
+import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookControlAdapter
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookScoreView
 import dev.alllexey.itmowidgets.testing.Appearances
@@ -35,6 +38,8 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
+import java.time.LocalDate
+import java.time.LocalTime
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.Assert.*
 import org.junit.Test
@@ -139,7 +144,11 @@ class RecordbookVisualTest {
                     assertEquals(score.creditedBonus.toString(), it.findViewById<TextView>(R.id.bonus).text.toString())
                     assertEquals(it.getString(if (index == 1) R.string.recordbook_rate_credit else R.string.recordbook_official_pending),
                         it.findViewById<TextView>(R.id.official_result).text.toString())
-                    assertEquals(1, it.findViewById<RecyclerView>(R.id.recycler_view).adapter!!.itemCount)
+                    // Sport overview, then the teachers heading and the recordbook teacher; no empty controls card.
+                    val items = (it.findViewById<RecyclerView>(R.id.recycler_view).adapter as RecordbookControlAdapter).currentList
+                    assertEquals(3, items.size)
+                    assertTrue(items[0] is DetailItem.SportOverview)
+                    assertTrue(items.none { item -> item is DetailItem.Notice })
                 }
                 screenshot("subject-sport-$index")
                 scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
@@ -215,6 +224,97 @@ class RecordbookVisualTest {
             screenshot("sport-no-period")
         }
     }
+
+    @Test fun subjectHubListsUpcomingLessonsAndTheirTeachersForAnExactMatch() {
+        for (spec in Appearances.default) {
+            RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons(listOf(
+                hubLesson(1, "2026-06-02", subjectId = 1, typeId = 1, teacher = "Лектор Лекторович Лекторов", isu = 1),
+                hubLesson(2, "2026-06-04", subjectId = 1, typeId = 3, teacher = "Практик Практикович Практиков", isu = 2),
+                hubLesson(3, "2026-06-05", subjectId = 2, typeId = 1, teacher = "Чужой преподаватель", isu = 3)
+            ))
+            withPreview(spec.toRecordbook()) { scenario, _ ->
+                settle()
+                openSubject(scenario, "Математический")
+                scrollToEnd(scenario)
+                scenario.onActivity { activity ->
+                    val root = activity.window.decorView
+                    val items = activity.hubItems()
+                    assertEquals(2, items.count { it is DetailItem.Lesson })
+                    assertEquals(2, items.count { it is DetailItem.Teacher })
+                    val texts = root.descendants().filterIsInstance<TextView>().map { it.text.toString() }.toList()
+                    assertTrue(activity.getString(R.string.subject_lessons_title) in texts)
+                    assertTrue(activity.getString(R.string.subject_teachers_title) in texts)
+                    assertEquals(2, root.descendants().count { it.id == R.id.type_indicator })
+                    assertEquals(2, root.descendants().count { it.id == R.id.avatar })
+                    assertTrue(texts.any { it.startsWith("Лекция · 1506") })
+                    assertTrue(activity.getString(R.string.schedule_lesson_type_practice) in texts)
+                    assertVisibleTextFits(root)
+                    root.descendants().filter { it.isShown && it.isClickable }.forEach {
+                        assertTrue("Touch target ${it.javaClass.simpleName}", it.height >= 48 * activity.resources.displayMetrics.density - 1)
+                    }
+                }
+                screenshot("subject-hub-${spec.name}")
+            }
+        }
+    }
+
+    @Test fun subjectHubProposesANameMatchAndConfirmingItShowsTheLessons() {
+        RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons(listOf(
+            hubLesson(7, "2026-06-03", subjectId = 555, typeId = 2, teacher = "Лаборант Л. Л.", isu = 9, name = "Алгоритмы и структуры данных")
+        ))
+        withPreview(Appearances.light.toRecordbook()) { scenario, _ ->
+            settle()
+            openSubject(scenario, "Алгоритмы")
+            scrollToEnd(scenario)
+            scenario.onActivity { activity ->
+                val root = activity.window.decorView
+                assertTrue(activity.hubItems().any { it is DetailItem.BindingProposal })
+                assertEquals(View.VISIBLE, root.findViewById<View>(R.id.confirm).visibility)
+                assertEquals(activity.getString(R.string.subject_binding_proposal, "Алгоритмы и структуры данных"),
+                    root.findViewById<TextView>(R.id.message).text.toString())
+                assertEquals(0, root.descendants().count { it.id == R.id.type_indicator })
+                assertVisibleTextFits(root)
+            }
+            screenshot("subject-hub-proposal")
+            scenario.onActivity { it.window.decorView.findViewById<View>(R.id.confirm).performClick() }
+            settle()
+            scrollToEnd(scenario)
+            scenario.onActivity { activity ->
+                val root = activity.window.decorView
+                assertTrue(activity.hubItems().none { it is DetailItem.BindingProposal })
+                assertEquals(1, activity.hubItems().count { it is DetailItem.Lesson })
+                assertEquals(1, root.descendants().count { it.id == R.id.type_indicator })
+                assertEquals(mapOf(2L to 555L), (RecordbookPreviewActivity.bindingStore as RecordbookPreviewActivity.MemoryBindings).bindings)
+            }
+            screenshot("subject-hub-bound")
+        }
+    }
+
+    private fun RecordbookPreviewActivity.hubItems(): List<DetailItem> =
+        (findViewById<RecyclerView>(R.id.recycler_view).adapter as RecordbookControlAdapter).currentList
+
+    private fun scrollToEnd(scenario: ActivityScenario<RecordbookPreviewActivity>) {
+        scenario.onActivity { activity ->
+            val list = activity.findViewById<RecyclerView>(R.id.recycler_view)
+            list.scrollToPosition(list.adapter!!.itemCount - 1)
+        }
+        settle()
+    }
+
+    private fun openSubject(scenario: ActivityScenario<RecordbookPreviewActivity>, namePart: String) {
+        scenario.onActivity { activity ->
+            activity.findViewById<RecyclerView>(R.id.main_recycler_view).children().first {
+                it.findViewById<TextView>(R.id.name)?.text?.contains(namePart) == true
+            }.performClick()
+        }
+        settle()
+    }
+
+    private fun hubLesson(pairId: Long, date: String, subjectId: Long, typeId: Int, teacher: String, isu: Long, name: String = "Предмет $subjectId") = SubjectLesson(
+        pairId = pairId, date = LocalDate.parse(date), start = LocalTime.of(9, 30), end = LocalTime.of(11, 0), typeId = typeId, type = "",
+        subjectId = subjectId, subjectName = name, flowId = subjectId * 10, teacherIsu = isu, teacherFio = teacher,
+        room = "1506", building = "Кронверкский проспект, 49", formatId = 1
+    )
 
     @Test fun resultRingRebindingPreservesOfficialGradesAndMissingScores() {
         withPreview(RecordbookPreviewActivity.Appearance(fontScale = 1.3f)) { scenario, _ ->
@@ -315,6 +415,8 @@ class RecordbookVisualTest {
             RecordbookPreviewActivity.bars = null
             RecordbookPreviewActivity.repository = null
             RecordbookPreviewActivity.sportRepository = null
+            RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons()
+            RecordbookPreviewActivity.bindingStore = RecordbookPreviewActivity.MemoryBindings()
         }
     }
 

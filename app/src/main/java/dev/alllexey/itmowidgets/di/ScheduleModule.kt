@@ -7,9 +7,11 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
+import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.app.WidgetRefreshCoordinator
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSourceImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSource
@@ -53,6 +55,12 @@ abstract class ScheduleModule {
     abstract fun bindLessonFriendsRepository(
         impl: LessonFriendsRepositoryImpl
     ): LessonFriendsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSubjectLessonsGateway(
+        impl: SubjectLessonsGatewayImpl
+    ): SubjectLessonsGateway
 
     @Binds
     @IntoSet

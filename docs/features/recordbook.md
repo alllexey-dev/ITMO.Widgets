@@ -65,9 +65,37 @@ hierarchy with quiet cards and progress relative to each control's maximum, and
 show a differing teacher or date per control. Rings are Material
 `CircularProgressIndicator`s that jump to the final value on rebind.
 
-Subjects open with `program_id`, `semester`, `study_year`, `entry_id` and keep
-`discipline_id`, the context for the future subject hub. No schedule, resource or
-review tabs exist yet.
+Subjects open with `program_id`, `semester`, `study_year` and `entry_id`; the
+subject's own `discipline_id` comes with the reloaded official subject.
+
+## Subject hub
+
+Below the controls the subject screen adds three sections, all built in the
+recordbook feature (Konsist forbids cross-feature imports, so the schedule side
+is reached through `core/schedule/SubjectLessonsGateway`, implemented in
+`feature/schedule/data`):
+
+- `Ближайшие пары`: the viewer's academic lessons of this subject within
+  today … +28 days. The view model refreshes that window through
+  `ScheduleRefreshGateway` (a failed refresh with an empty cache is an error
+  with `Повторить`; with cached lessons the cache is shown) and observes the
+  gateway. The section exists only for the current period and never for
+  physical education.
+- The link between a recordbook discipline and a schedule subject is
+  `SubjectContextResolver`: an exact `discipline_id == subject_id` binds
+  silently (on live data this holds for every discipline except PE); a
+  confirmed binding from `SubjectBindingStore` (DataStore, cleared on sign-out)
+  wins over it; otherwise a single normalised-name match is *proposed* in an
+  outlined card (`Связать` / `Нет`, nothing is stored on `Нет`), several
+  matches ask which one, none reads as not found. `subjectNameKey` is the one
+  normalisation, shared with the BARS merge.
+- `Преподаватели`: distinct people from the subject's lessons in schedule
+  order, each with the lesson types they run; without lessons the recordbook
+  teacher stands in. `Ресурсы`: only the MyITMO `lms_link`, so usually absent.
+
+Lesson rows are informational: the details sheet belongs to the schedule
+feature, and teacher profiles wait for Stage 29. Review or resource tabs do not
+exist yet.
 
 ## BARS overlay
 
@@ -120,7 +148,8 @@ plans with `has_course_project` are rejected for now.
 
 Unit tests cover the Retrofit paths through an in-memory interceptor, nullable
 fields, HTTP-200 errors, the shared sport formula, period matching and ambiguity,
-the BARS merge, chip persistence, silent login and the 401 retry. Visual tests
+the BARS merge, chip persistence, silent login and the 401 retry, the subject
+context resolver, the binding store and every hub state of the view model. Visual tests
 run the real Fragments in `RecordbookPreviewActivity` with synthetic data; add
 `-Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full` and
 `-Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true` for all

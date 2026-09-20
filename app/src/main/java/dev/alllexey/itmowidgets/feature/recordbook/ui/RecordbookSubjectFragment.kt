@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.feature.recordbook.ui
 
 import android.app.Activity
 import android.content.Intent
+import androidx.core.net.toUri
+import android.content.ActivityNotFoundException
 import androidx.activity.result.contract.ActivityResultContracts
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -44,7 +46,12 @@ class RecordbookSubjectFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        adapter = RecordbookControlAdapter(viewModel::refresh)
+        adapter = RecordbookControlAdapter(viewModel::refresh, SubjectHubActions(
+            onConfirmBinding = viewModel::confirmBinding,
+            onRejectProposal = viewModel::rejectProposal,
+            onRetryLessons = viewModel::retryLessons,
+            onOpenResource = { openResource(it.url) }
+        ))
         binding.recyclerView.adapter = adapter
         binding.recyclerView.itemAnimator = null
         binding.swipeRefreshLayout.applyAppRefreshColors()
@@ -64,6 +71,14 @@ class RecordbookSubjectFragment : Fragment() {
         lastBarsError = null
         _binding = null
         super.onDestroyView()
+    }
+
+    private fun openResource(url: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+        } catch (_: ActivityNotFoundException) {
+            Snackbar.make(binding.root, R.string.link_open_failed, Snackbar.LENGTH_SHORT).show()
+        }
     }
 
     private fun render(state: RecordbookSubjectUiState) {

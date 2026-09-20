@@ -52,7 +52,9 @@ data class RecordbookSubject(
     val hasDetails: Boolean,
     val teacherName: String?,
     val barsJournal: BarsJournalReference? = null,
-    val absent: Boolean = false
+    val absent: Boolean = false,
+    /** MyITMO LMS link; usually empty. */
+    val lmsLink: String? = null
 ) {
     val assessmentKind: RecordbookAssessmentKind
         get() = when {

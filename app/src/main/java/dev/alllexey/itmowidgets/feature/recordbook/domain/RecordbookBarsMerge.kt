@@ -14,7 +14,7 @@ object RecordbookBarsMerge {
         }
     }
 
-    fun key(name: String): String = name.lowercase().replace('ё', 'е').replace(Regex("\\s+"), " ").trim()
+    fun key(name: String): String = subjectNameKey(name)
 }
 
 fun RecordbookSubject.withBars(journal: RecordbookSubject): RecordbookSubject = copy(

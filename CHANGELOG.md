@@ -6,6 +6,12 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ## Unreleased (2.1-SNAPSHOT)
 
 ### 2026-09-20
+- Subject hub in `Учёба`: below the controls, the subject's upcoming lessons
+  (next four weeks) with type, room and building, its teachers with the lesson
+  types they run, and the LMS link when MyITMO sends one. A discipline whose
+  id matches the schedule binds silently; a name-only match is offered as
+  `Связать`, several matches ask which one, and confirmed links persist until
+  sign-out.
 - Lesson details: every schedule card opens a sheet with the subject, type and
   format, time, teacher, room and building, Zoom link and note; `Открыть на
   карте` hands the building to any map app through a `geo:` URI, using a

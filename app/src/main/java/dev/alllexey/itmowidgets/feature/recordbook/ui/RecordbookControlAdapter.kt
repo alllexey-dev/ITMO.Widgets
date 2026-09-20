@@ -1,20 +1,34 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
+import android.widget.Button
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
+import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
+import dev.alllexey.itmowidgets.core.ui.buildingShortTitle
+import dev.alllexey.itmowidgets.core.ui.lessonTypeColorRes
+import dev.alllexey.itmowidgets.core.ui.lessonTypeNameRes
 import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.roomShortTitle
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookControlBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookNoteBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookOverviewBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookSectionBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookSportBinding
+import dev.alllexey.itmowidgets.databinding.ItemSubjectBindingBinding
+import dev.alllexey.itmowidgets.databinding.ItemSubjectLessonBinding
+import dev.alllexey.itmowidgets.databinding.ItemSubjectMessageBinding
+import dev.alllexey.itmowidgets.databinding.ItemSubjectResourceBinding
+import dev.alllexey.itmowidgets.databinding.ItemSubjectTeacherBinding
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControlRow
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
@@ -22,6 +36,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.recordbookControlOutline
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookProgress
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonsState
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectResource
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacher
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -31,10 +48,29 @@ sealed interface DetailItem {
     data object Heading : DetailItem
     data class Control(val row: RecordbookControlRow, val subjectTeacher: String?) : DetailItem
     data class Notice(val errorRes: Int?) : DetailItem
+    /** Hub sections: a heading with its own string, then one of the rows below. */
+    data class Section(val titleRes: Int) : DetailItem
+    data class Lesson(val lesson: SubjectLesson) : DetailItem
+    /** Loading, empty, unmatched or failed lessons; never used for content. */
+    data class LessonsMessage(val state: SubjectLessonsState) : DetailItem
+    data class BindingProposal(val candidate: ScheduleSubject) : DetailItem
+    data class BindingChoice(val candidates: List<ScheduleSubject>) : DetailItem
+    data class Teacher(val teacher: SubjectTeacher) : DetailItem
+    data class Resource(val resource: SubjectResource) : DetailItem
 }
 
-class RecordbookControlAdapter(private val onRetry: () -> Unit = {}) :
-    ListAdapter<DetailItem, RecyclerView.ViewHolder>(Diff) {
+/** Hub actions the subject screen forwards to its view model. */
+data class SubjectHubActions(
+    val onConfirmBinding: (Long) -> Unit = {},
+    val onRejectProposal: () -> Unit = {},
+    val onRetryLessons: () -> Unit = {},
+    val onOpenResource: (SubjectResource) -> Unit = {}
+)
+
+class RecordbookControlAdapter(
+    private val onRetry: () -> Unit = {},
+    private val hubActions: SubjectHubActions = SubjectHubActions()
+) : ListAdapter<DetailItem, RecyclerView.ViewHolder>(Diff) {
 
     init { stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY }
 
@@ -51,15 +87,38 @@ class RecordbookControlAdapter(private val onRetry: () -> Unit = {}) :
                 add(DetailItem.Heading)
                 addAll(recordbookControlOutline(state.controls).map { DetailItem.Control(it, state.subject.teacherName) })
             }
+            val hub = state.hub
+            if (hub.lessons != SubjectLessonsState.Hidden) {
+                add(DetailItem.Section(R.string.subject_lessons_title))
+                when (val lessons = hub.lessons) {
+                    is SubjectLessonsState.Content -> addAll(lessons.lessons.map { DetailItem.Lesson(it) })
+                    is SubjectLessonsState.Proposed -> add(DetailItem.BindingProposal(lessons.candidate))
+                    is SubjectLessonsState.Ambiguous -> add(DetailItem.BindingChoice(lessons.candidates))
+                    else -> add(DetailItem.LessonsMessage(lessons))
+                }
+            }
+            if (hub.teachers.isNotEmpty()) {
+                add(DetailItem.Section(R.string.subject_teachers_title))
+                addAll(hub.teachers.map { DetailItem.Teacher(it) })
+            }
+            if (hub.resources.isNotEmpty()) {
+                add(DetailItem.Section(R.string.subject_resources_title))
+                addAll(hub.resources.map { DetailItem.Resource(it) })
+            }
         }, onCommitted)
     }
 
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
         is DetailItem.Overview -> 0
         is DetailItem.Notice -> 1
-        DetailItem.Heading -> 2
+        DetailItem.Heading, is DetailItem.Section -> 2
         is DetailItem.SportOverview -> 4
-        else -> 3
+        is DetailItem.Lesson -> 5
+        is DetailItem.LessonsMessage -> 6
+        is DetailItem.BindingProposal, is DetailItem.BindingChoice -> 7
+        is DetailItem.Teacher -> 8
+        is DetailItem.Resource -> 9
+        is DetailItem.Control -> 3
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -69,6 +128,11 @@ class RecordbookControlAdapter(private val onRetry: () -> Unit = {}) :
             1 -> NoteHolder(ItemRecordbookNoteBinding.inflate(inflater, parent, false))
             2 -> HeadingHolder(ItemRecordbookSectionBinding.inflate(inflater, parent, false))
             4 -> RecordbookSportHolder(ItemRecordbookSportBinding.inflate(inflater, parent, false), onRetry)
+            5 -> LessonHolder(ItemSubjectLessonBinding.inflate(inflater, parent, false))
+            6 -> LessonsMessageHolder(ItemSubjectMessageBinding.inflate(inflater, parent, false))
+            7 -> BindingHolder(ItemSubjectBindingBinding.inflate(inflater, parent, false))
+            8 -> TeacherHolder(ItemSubjectTeacherBinding.inflate(inflater, parent, false))
+            9 -> ResourceHolder(ItemSubjectResourceBinding.inflate(inflater, parent, false))
             else -> ControlHolder(ItemRecordbookControlBinding.inflate(inflater, parent, false))
         }
     }
@@ -79,7 +143,85 @@ class RecordbookControlAdapter(private val onRetry: () -> Unit = {}) :
             is DetailItem.SportOverview -> (holder as RecordbookSportHolder).bind(item.subject, item.sport)
             is DetailItem.Notice -> (holder as NoteHolder).bindNotice(item.errorRes)
             DetailItem.Heading -> (holder as HeadingHolder).binding.title.setText(R.string.recordbook_controls_title)
+            is DetailItem.Section -> (holder as HeadingHolder).binding.title.setText(item.titleRes)
             is DetailItem.Control -> (holder as ControlHolder).bind(item)
+            is DetailItem.Lesson -> (holder as LessonHolder).bind(item.lesson)
+            is DetailItem.LessonsMessage -> (holder as LessonsMessageHolder).bind(item.state)
+            is DetailItem.BindingProposal -> (holder as BindingHolder).bindProposal(item.candidate)
+            is DetailItem.BindingChoice -> (holder as BindingHolder).bindChoice(item.candidates)
+            is DetailItem.Teacher -> (holder as TeacherHolder).bind(item.teacher)
+            is DetailItem.Resource -> (holder as ResourceHolder).bind(item.resource)
+        }
+    }
+
+    private class LessonHolder(val binding: ItemSubjectLessonBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(lesson: SubjectLesson) {
+            val context = binding.root.context
+            binding.date.text = lesson.date.format(DateTimeFormatter.ofPattern(context.getString(R.string.subject_lesson_date), Locale.forLanguageTag("ru")))
+            binding.time.text = context.getString(R.string.schedule_break_range_short, lesson.start.format(TIME_FORMAT), lesson.end.format(TIME_FORMAT))
+            binding.typeIndicator.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context, lessonTypeColorRes(lesson.typeId)))
+            binding.type.text = listOfNotNull(
+                context.getString(lessonTypeNameRes(lesson.typeId)),
+                lesson.room?.let { roomShortTitle(context, it) },
+                lesson.building?.let { buildingShortTitle(context, it, maxLength = 10) }
+            ).joinToString(" · ")
+            binding.teacher.text = lesson.teacherFio
+            binding.teacher.isVisible = !lesson.teacherFio.isNullOrBlank()
+        }
+    }
+
+    private inner class LessonsMessageHolder(val binding: ItemSubjectMessageBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(state: SubjectLessonsState) {
+            binding.progress.isVisible = state == SubjectLessonsState.Loading
+            binding.retry.isVisible = state is SubjectLessonsState.Error
+            binding.retry.setOnClickListener { hubActions.onRetryLessons() }
+            binding.message.setText(when (state) {
+                SubjectLessonsState.Loading -> R.string.subject_lessons_loading
+                is SubjectLessonsState.Error -> state.error.messageRes()
+                else -> R.string.subject_lessons_unmatched
+            })
+        }
+    }
+
+    private inner class BindingHolder(val binding: ItemSubjectBindingBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bindProposal(candidate: ScheduleSubject) {
+            binding.message.text = binding.root.context.getString(R.string.subject_binding_proposal, candidate.name)
+            binding.choices.removeAllViews()
+            binding.choices.isVisible = false
+            binding.actions.isVisible = true
+            binding.confirm.setOnClickListener { hubActions.onConfirmBinding(candidate.subjectId) }
+            binding.reject.setOnClickListener { hubActions.onRejectProposal() }
+        }
+
+        fun bindChoice(candidates: List<ScheduleSubject>) {
+            binding.message.setText(R.string.subject_binding_ambiguous)
+            binding.actions.isVisible = false
+            binding.choices.isVisible = true
+            binding.choices.removeAllViews()
+            val inflater = LayoutInflater.from(binding.root.context)
+            candidates.forEach { candidate ->
+                val button = inflater.inflate(R.layout.item_subject_choice, binding.choices, false) as Button
+                button.text = candidate.name
+                button.setOnClickListener { hubActions.onConfirmBinding(candidate.subjectId) }
+                binding.choices.addView(button)
+            }
+        }
+    }
+
+    private class TeacherHolder(val binding: ItemSubjectTeacherBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(teacher: SubjectTeacher) {
+            val context = binding.root.context
+            binding.avatar.setUser(teacher.name, null)
+            binding.name.text = teacher.name
+            binding.roles.text = teacher.roles.joinToString(" · ") { context.getString(lessonTypeNameRes(it)) }
+            binding.roles.isVisible = teacher.roles.isNotEmpty()
+        }
+    }
+
+    private inner class ResourceHolder(val binding: ItemSubjectResourceBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(resource: SubjectResource) {
+            binding.title.setText(R.string.subject_resource_lms)
+            binding.root.setOnClickListener { hubActions.onOpenResource(resource) }
         }
     }
 
@@ -139,6 +281,10 @@ class RecordbookControlAdapter(private val onRetry: () -> Unit = {}) :
     private object Diff : DiffUtil.ItemCallback<DetailItem>() {
         override fun areItemsTheSame(old: DetailItem, new: DetailItem): Boolean = when {
             old is DetailItem.Control && new is DetailItem.Control -> old.row.control.id == new.row.control.id && old.row.control.name == new.row.control.name
+            old is DetailItem.Section && new is DetailItem.Section -> old.titleRes == new.titleRes
+            old is DetailItem.Lesson && new is DetailItem.Lesson -> old.lesson.pairId == new.lesson.pairId
+            old is DetailItem.Teacher && new is DetailItem.Teacher -> old.teacher.name == new.teacher.name
+            old is DetailItem.Resource && new is DetailItem.Resource -> old.resource.url == new.resource.url
             else -> old::class == new::class
         }
         override fun areContentsTheSame(old: DetailItem, new: DetailItem) = old == new
@@ -146,5 +292,6 @@ class RecordbookControlAdapter(private val onRetry: () -> Unit = {}) :
 
     private companion object {
         val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.forLanguageTag("ru"))
+        val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
     }
 }

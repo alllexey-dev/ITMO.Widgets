@@ -82,7 +82,8 @@ class RecordbookRepositoryImpl @Inject constructor(
         attempt = attempt,
         examDate = examDate,
         hasDetails = isHaveTree,
-        teacherName = teacher?.displayName()
+        teacherName = teacher?.displayName(),
+        lmsLink = lmsLink?.trim()?.takeIf { it.isNotBlank() }
     )
 
     private fun ControlEntry.toModel() = RecordbookControl(

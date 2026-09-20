@@ -1,0 +1,31 @@
+package dev.alllexey.itmowidgets.core.ui
+
+import androidx.annotation.ColorRes
+import androidx.annotation.StringRes
+import dev.alllexey.itmowidgets.R
+
+/** MyITMO lesson type ids as every feature shows them: 1 лекция, 2 лаб., 3 практика, 4–9 аттестация, 10 консультация, 11 спорт. */
+@ColorRes
+fun lessonTypeColorRes(typeId: Int): Int = when (typeId) {
+    -1 -> R.color.lesson_type_free
+    1 -> R.color.lesson_type_lecture
+    2 -> R.color.lesson_type_lab
+    3 -> R.color.lesson_type_practice
+    4, 5, 6, 7, 8, 9 -> R.color.lesson_type_assessment
+    10 -> R.color.lesson_type_consultation
+    11 -> R.color.lesson_type_sport
+    else -> R.color.lesson_type_default
+}
+
+@StringRes
+fun lessonTypeNameRes(typeId: Int): Int = when (typeId) {
+    -1 -> R.string.schedule_no_lessons
+    1 -> R.string.schedule_lesson_type_lecture
+    2 -> R.string.schedule_lesson_type_lab
+    3 -> R.string.schedule_lesson_type_practice
+    5 -> R.string.schedule_lesson_type_exam
+    6 -> R.string.schedule_lesson_type_credit
+    10 -> R.string.schedule_lesson_type_consultation
+    11 -> R.string.title_sport
+    else -> R.string.schedule_lesson_type_default
+}

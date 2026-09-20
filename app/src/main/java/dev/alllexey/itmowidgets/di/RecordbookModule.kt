@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsSessionRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
@@ -24,6 +25,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceReposito
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -38,6 +40,18 @@ abstract class RecordbookModule {
     abstract fun bindRecordbookRepository(
         impl: RecordbookRepositoryImpl
     ): RecordbookRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSubjectBindingStore(
+        impl: DataStoreSubjectBindingStore
+    ): SubjectBindingStore
+
+    @Binds
+    @IntoSet
+    abstract fun bindSubjectBindingCleaner(
+        impl: DataStoreSubjectBindingStore
+    ): SessionDataCleaner
 
     @Binds
     @Singleton

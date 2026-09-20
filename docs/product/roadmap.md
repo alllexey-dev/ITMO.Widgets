@@ -18,6 +18,13 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   the date only guards stale rows; no server-side lesson-details endpoint, the
   app already holds the lesson; friends on a lesson appear only inside the
   details sheet. Schedule changes in the sheet wait for Stage 35.
+- Stages 17–18: delivered on 2026-09-20 through `vibe/subject-hub-plan.md`.
+  The hub lives in `feature/recordbook` (cross-feature imports are forbidden;
+  the schedule side comes through `core/schedule/SubjectLessonsGateway`), the
+  study root already had its target shape, and on live data
+  `discipline_id == subject_id` for every discipline except PE, so the exact id
+  is the primary binding and name confirmation is the fallback. Lesson rows in
+  the hub are informational; resources are only the MyITMO `lms_link`.
 
 ## Plan Structure
 

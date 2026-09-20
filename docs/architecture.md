@@ -29,6 +29,7 @@ core/           cross-cutting; knows nothing about features
   debug/        BuildConfig.DEBUG fixtures (provider / controller / store)
   diagnostics/  AppDiagnostics journal, sanitizer, crash handler
   location/     BuildingDirectory (res/raw/itmo_buildings.json), MapDestination geo URIs
+  ui/           LessonTypes and LocationTitles shared by schedule and recordbook rows
   friend/       FriendRepository — the schedule picker's narrow view of friends
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
   navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders)
@@ -36,7 +37,7 @@ core/           cross-cutting; knows nothing about features
   network/      WidgetsClient, error mapping, serialization adapters
   notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
   result/       AppError, AppResult
-  schedule/     schedule preferences and widget-refresh contracts
+  schedule/     schedule preferences, widget-refresh and SubjectLessonsGateway contracts
   services/     CustomServicesRepository — the Backend opt-in
   session/      token store, session repository, current user, device registration
   social/       SocialRepository, PeopleSearchRepository

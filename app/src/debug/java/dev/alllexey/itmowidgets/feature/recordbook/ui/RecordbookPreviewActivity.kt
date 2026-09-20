@@ -21,6 +21,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
+import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
+import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
@@ -30,6 +33,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceReposito
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
+import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
@@ -37,6 +42,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolve
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import java.time.LocalDate
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
 import java.time.ZoneId
 
 /** Real production Fragments with test-supplied in-memory repositories; never reads a session. */
@@ -75,7 +83,8 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
                                 values["bars_identifier"] = checkNotNull(args.getString("bars_identifier"))
                             }
                             val handle = SavedStateHandle(values)
-                            RecordbookSubjectViewModel(checkNotNull(repository), bars ?: NoBars, handle, resolver) as T
+                            RecordbookSubjectViewModel(checkNotNull(repository), bars ?: NoBars, handle, resolver,
+                                lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime) as T
                         }
                     }
                 }
@@ -144,5 +153,24 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         @Volatile var repository: RecordbookRepository? = null
         @Volatile var bars: BarsRecordbookRepository? = null
         @Volatile var sportRepository: SportScoreRepository? = null
+        @Volatile var lessonsGateway: SubjectLessonsGateway = MemoryLessons()
+        @Volatile var scheduleRefresh: ScheduleRefreshGateway = object : ScheduleRefreshGateway {
+            override suspend fun refreshOwnSchedule(startDate: LocalDate, endDate: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
+        }
+        @Volatile var bindingStore: SubjectBindingStore = MemoryBindings()
+    }
+
+    /** Lessons a test hands in; the window filter mirrors the real cache read. */
+    class MemoryLessons(initial: List<SubjectLesson> = emptyList()) : SubjectLessonsGateway {
+        val lessons = MutableStateFlow(initial)
+        override fun observeOwnLessons(start: LocalDate, end: LocalDate): Flow<List<SubjectLesson>> =
+            lessons.map { list -> list.filter { !it.date.isBefore(start) && !it.date.isAfter(end) } }
+    }
+
+    class MemoryBindings : SubjectBindingStore {
+        val bindings = mutableMapOf<Long, Long>()
+        override suspend fun get(disciplineId: Long): Long? = bindings[disciplineId]
+        override suspend fun put(disciplineId: Long, subjectId: Long) { bindings[disciplineId] = subjectId }
+        override suspend fun remove(disciplineId: Long) { bindings.remove(disciplineId) }
     }
 }
