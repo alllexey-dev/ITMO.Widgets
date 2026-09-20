@@ -10,9 +10,9 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
   format, time, teacher, room and building, Zoom link and note; `Открыть на
   карте` hands the building to any map app through a `geo:` URI, using a
   curated directory of ITMO buildings with verified coordinates.
-- The meeting link is shown by host (`bbb.itmo.ru`, not "Zoom"), the button is
-  `Открыть ссылку` with a camera icon, and schedule cards mark linked lessons
-  with the same icon. Pending sport rows open their own sheet with the status
+- Lessons with a meeting link get `Открыть видеозвонок` (no "Zoom" wording, the
+  link itself is not shown) with the Material `videocam` icon, and schedule
+  cards mark such lessons with the same icon. Pending sport rows open their own sheet with the status
   explanation, time, place and `Открыть в спорте`.
 - `Друзья на паре` inside the sheet: the viewer's friends who attend the same
   lesson and share their schedule, from Backend `GET

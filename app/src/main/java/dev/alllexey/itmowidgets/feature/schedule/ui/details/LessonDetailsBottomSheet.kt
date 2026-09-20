@@ -107,12 +107,11 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
         )
         teacherFact.bind(R.string.schedule_lesson_details_teacher, lesson.teacherFio.orEmpty(), R.drawable.ic_person_rounded)
         locationFact.bind(R.string.schedule_lesson_details_location, locationText(), R.drawable.ic_location_on_rounded)
-        // The link may lead anywhere, not only to Zoom: its host is the fact, the info and password follow.
+        // The button is the link; only what the reader has to type or know is a fact.
         linkFact.bind(R.string.schedule_lesson_details_link, listOfNotNull(
-            lesson.zoomUrl?.let(::lessonLinkHost),
             lesson.zoomInfo,
             lesson.zoomPassword?.let { getString(R.string.schedule_lesson_details_link_password, it) }
-        ).joinToString("\n"), R.drawable.ic_videocam_rounded)
+        ).joinToString("\n"), R.drawable.ic_videocam)
 
         val destination = mapDestination()
         mapButton.isVisible = destination != null

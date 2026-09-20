@@ -134,7 +134,7 @@ class LessonDetailsVisualTest {
             settle()
             scenario.onActivity { activity ->
                 val root = activity.sheet().requireView()
-                assertEquals("bbb.itmo.ru\nПароль: 1234", root.fact(R.id.link_fact))
+                assertEquals("Пароль: 1234", root.fact(R.id.link_fact))
                 assertEquals(View.VISIBLE, root.findViewById<View>(R.id.link_button).visibility)
                 assertEquals(View.GONE, root.findViewById<View>(R.id.map_button).visibility)
                 assertEquals(View.GONE, root.findViewById<View>(R.id.location_fact).visibility)

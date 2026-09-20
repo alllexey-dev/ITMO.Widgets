@@ -101,7 +101,7 @@
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
                     android:text="@string/schedule_open_link"
-                    app:icon="@drawable/ic_videocam_rounded"
+                    app:icon="@drawable/ic_videocam"
                     android:visibility="gone" />
             </LinearLayout>
             <LinearLayout
