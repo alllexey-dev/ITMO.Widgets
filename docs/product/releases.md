@@ -20,8 +20,9 @@ Achievements, messaging, posts, followers and free-window discovery are outside
 the roadmap. Do not add them opportunistically.
 
 The Android branch `itmo-widgets-v2.1` is the public-release branch. The app
-currently builds as `2.1-SNAPSHOT` (version code 4); the branch name does not
-imply release readiness.
+builds as `2.1` (version code 4). A release APK is signed with `app-keystore.jks`
+(alias `key0`, the same certificate as 2.0.1) through the ignored
+`keystore.properties`; the checklist is in `vibe/release-2.1.md`.
 
 ## Version compatibility
 
@@ -30,10 +31,11 @@ the minimum Core and Backend it needs.
 
 | Android | Core | Backend | MyItmoApi | Notes |
 |---|---|---|---|---|
-| 2.1-SNAPSHOT (current branch) | 1.2.0-SNAPSHOT, commit `28bcb92` | 1.2.0-SNAPSHOT, commit `79da56a` | 1.8.0 | Snapshot numbers stay fixed until 2.1 ships; a matching number alone does not prove the API is present. See decision 0003. |
+| 2.1 | 1.2.0 (Maven Central, tag `1.2.0`) | 1.2.0, commit `a70cab1` or later | 1.8.1 (Maven Central, tag `1.8.1`) | Backend 1.2.0 requires the PostgreSQL cutover; 2.0.x clients are rejected by it and are told to update through `GET /api/app/version`. |
 | 2.0.x (legacy) | 1.1.x | 1.1.6 | 1.6.0 | MariaDB backend, reciprocal friend requests, boolean privacy. |
 
-Core is published to Maven Local during development. Public publication of Core
+Core is published to Maven Local during development and to Maven Central for a
+release (decision 0003 covers the snapshot period). Public publication of Core
 or MyItmoApi and any deployment happen only on explicit request.
 
 ## What each release must not break

@@ -3,7 +3,12 @@
 Reference documents in `docs/` describe the current state; this file records
 what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
-## Unreleased (2.1-SNAPSHOT)
+## 2.1 — 2026-09-21
+
+### 2026-09-21
+- Version `2.1` (version code 4) on Core `1.2.0` and MyItmoApi `1.8.1`, both on
+  Maven Central. Release signing reads `keystore.properties` (ignored; see
+  `keystore.properties.example`), so `assembleRelease` produces a signed APK.
 
 ### 2026-09-20
 - First-run flow: the QR widget step offers `Изображение спойлера`, the same

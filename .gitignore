@@ -21,3 +21,4 @@ app/debug/
 .DS_Store
 .kotlin/
 .claude/
+keystore.properties

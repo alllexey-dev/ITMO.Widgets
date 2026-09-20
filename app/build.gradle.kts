@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -6,6 +7,12 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.hilt.android)
     kotlin("kapt")
+}
+
+// Release signing reads the ignored keystore.properties; a debug build needs none.
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use(::load)
 }
 
 android {
@@ -17,13 +24,24 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 4
-        versionName = "2.1-SNAPSHOT"
+        versionName = "2.1"
         resValue("string", "app_version", versionName!!)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // ActivityScenario.launchActivityForResult waits the full lifecycle timeout (45 s) on
         // close; observed transitions on the emulator stay under 2 s.
         testInstrumentationRunnerArguments["activityLifecycleChangeTimeoutMillis"] = "5000"
+    }
+
+    signingConfigs {
+        if (keystoreProperties.isNotEmpty()) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile", "app-keystore.jks"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias", "key0")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -35,6 +53,7 @@ android {
             )
         }
         release {
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = false
             buildConfigField(
                 "String",
