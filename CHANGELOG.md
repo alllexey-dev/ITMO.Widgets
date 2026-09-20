@@ -7,7 +7,7 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
 ### 2026-09-20
 - Home tab: a feed of cards instead of the placeholder. `Сегодня`/`Завтра` with
-  the current lesson marked `Сейчас`, the rest of the day, pending sport rows
+  the current lesson marked `сейчас`, the rest of the day, pending sport rows
   and a count of finished lessons; `Спорт` with the score progress and own
   queues; `Заявки в друзья`; dismissible hints for a missing widget, disabled
   notifications and disabled user services. Pull-to-refresh asks every source
@@ -20,7 +20,8 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
   same header: title, kind, the date with the time range and duration, teacher,
   place, `Открыть на карте`. A pending sport row on the home feed or in the
   schedule opens the sport tab's own sheet with the queue position, history and
-  `Отменить`, and so does a booked sport lesson (matched by date and start);
+  `Отменить`, and so does a booked sport lesson (matched by date and start, a confirmed
+  booking before a queue for the same slot, then by section name);
   the sport data loads on first use exactly as the sport tab loads it; the schedule's simpler sheet remains only when the sport data has
   nothing about the queue. The QR pass screen shows the code at up to 300 dp
   instead of the full width.

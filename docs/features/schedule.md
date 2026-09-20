@@ -82,8 +82,9 @@ or the official cache.
   fragment's child fragment manager, in the own and in a friend's schedule alike.
   Pending sport rows never open it. A sport lesson (type 11) in the own schedule goes through
   `AppNavigator.openLessonDetails` to `MainActivity`, which finds the booking
-  with the same date and start in the sport tab's data and opens the sport
-  sheet with `Отменить`; without a match the lesson sheet appears. The sheet gets a `Serializable`
+  with the same date and start in the sport tab's data (a confirmed booking
+  before a queue, then the matching section name) and opens the sport sheet
+  with `Отменить`; without a match the lesson sheet appears. The sheet gets a `Serializable`
   `LessonDetailsArgs` built from the `Lesson` plus the day's date; nothing is
   fetched for the lesson itself.
 - The sheet starts with the header every details sheet shares

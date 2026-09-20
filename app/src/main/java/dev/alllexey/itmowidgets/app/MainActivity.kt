@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
             return
         }
         lifecycleScope.launch {
-            val booking = findSportBookingAt(LocalDate.parse(args.date), LocalTime.parse(args.start))
+            val booking = findSportBookingAt(LocalDate.parse(args.date), LocalTime.parse(args.start), args.subjectName)
             if (booking != null) navigation.openSportDetails(booking) else navigation.openLessonDetails(args)
         }
     }
@@ -173,11 +173,22 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private suspend fun findSportBooking(lessonId: Long): SportBooking? =
         sportBookingsSnapshot()?.firstOrNull { it.lessonId == lessonId }
 
-    private suspend fun findSportBookingAt(date: LocalDate, start: LocalTime): SportBooking? =
-        sportBookingsSnapshot()?.firstOrNull { booking ->
+    /**
+     * Several items can share a slot: a confirmed booking and a queue for another
+     * section. The confirmed one wins, and the section name breaks the remaining ties.
+     */
+    private suspend fun findSportBookingAt(date: LocalDate, start: LocalTime, subject: String): SportBooking? {
+        val candidates = sportBookingsSnapshot()?.filter { booking ->
             val local = booking.start.atZoneSameInstant(timeProvider.zoneId)
             local.toLocalDate() == date && local.toLocalTime() == start
-        }
+        }.orEmpty()
+        val wanted = subject.trim().lowercase()
+        fun SportBooking.named() = wanted.isNotEmpty() && sectionName.raw.trim().lowercase().let { it in wanted || wanted in it }
+        return candidates.firstOrNull { it.signed && it.named() }
+            ?: candidates.firstOrNull { it.signed }
+            ?: candidates.firstOrNull { it.named() }
+            ?: candidates.firstOrNull()
+    }
 
     private fun onSportSheetAction(lessonId: Long, action: String?) {
         lifecycleScope.launch {

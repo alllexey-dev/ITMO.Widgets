@@ -17,7 +17,7 @@ sorts by `HomeCardKind`, whose declaration order is the feed order. Nothing in
 
 | Card | Source | Shown when |
 |---|---|---|
-| `Сегодня` / `Завтра` | `feature/schedule/data/home/ScheduleHomeCardSource` on `HomeScheduleSelector`: today's remaining lessons and pending sport rows, the lesson in progress marked `Сейчас`, the next one `Далее`, finished lessons counted in the footer; tomorrow once today is over; a one-minute ticker moves the focus | always (an empty day says so) |
+| `Сегодня` / `Завтра` | `feature/schedule/data/home/ScheduleHomeCardSource` on `HomeScheduleSelector`: today's remaining lessons and pending sport rows, the lesson in progress marked `сейчас`, the next one `далее`, finished lessons counted in the footer; tomorrow once today is over; a one-minute ticker moves the focus | always (an empty day says so) |
 | `Спорт` | `feature/sport/data/home/SportHomeCardSource`: score progress out of 100 and own queues (three, then `ещё N`) | a score below 100 or a non-empty queue |
 | `Заявки в друзья` | `feature/social/data/home/SocialHomeCardSource`: incoming requests as `item_user_row.xml` rows, `Все заявки` opens the friends screen | at least one incoming request behind the opt-in |
 | Hints | `feature/home/data/HintHomeCardSource`: no widget on the launcher (`Добавить` pins the single-lesson widget through `core/ui/widget/WidgetPinRequester`), notifications off (`Включить` asks for the permission while the dialog can still appear, otherwise opens the app's notification page), user services off (`Включить` opens the services settings page) | while the reason holds and the hint was not closed; closed hints are kept per installation in `home_dismissed_hints` |

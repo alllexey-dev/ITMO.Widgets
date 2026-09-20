@@ -675,8 +675,8 @@
     <string name="home_empty_description">Карточки появятся, когда будет что показать. Потяните вниз, чтобы обновить.</string>
     <string name="home_schedule_today">Сегодня</string>
     <string name="home_schedule_tomorrow">Завтра</string>
-    <string name="home_schedule_now">Сейчас</string>
-    <string name="home_schedule_next">Далее</string>
+    <string name="home_schedule_now">сейчас</string>
+    <string name="home_schedule_next">далее</string>
     <string name="home_schedule_empty">Пар сегодня нет</string>
     <string name="home_schedule_done">На сегодня всё</string>
     <plurals name="home_schedule_completed">
