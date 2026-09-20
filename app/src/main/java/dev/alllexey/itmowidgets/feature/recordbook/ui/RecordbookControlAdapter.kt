@@ -88,6 +88,11 @@ class RecordbookControlAdapter(
                 addAll(recordbookControlOutline(state.controls).map { DetailItem.Control(it, state.subject.teacherName) })
             }
             val hub = state.hub
+            // People first: a short, stable section before the list that grows with the schedule.
+            if (hub.teachers.isNotEmpty()) {
+                add(DetailItem.Section(R.string.subject_teachers_title))
+                addAll(hub.teachers.map { DetailItem.Teacher(it) })
+            }
             if (hub.lessons != SubjectLessonsState.Hidden) {
                 add(DetailItem.Section(R.string.subject_lessons_title))
                 when (val lessons = hub.lessons) {
@@ -96,10 +101,6 @@ class RecordbookControlAdapter(
                     is SubjectLessonsState.Ambiguous -> add(DetailItem.BindingChoice(lessons.candidates))
                     else -> add(DetailItem.LessonsMessage(lessons))
                 }
-            }
-            if (hub.teachers.isNotEmpty()) {
-                add(DetailItem.Section(R.string.subject_teachers_title))
-                addAll(hub.teachers.map { DetailItem.Teacher(it) })
             }
             if (hub.resources.isNotEmpty()) {
                 add(DetailItem.Section(R.string.subject_resources_title))

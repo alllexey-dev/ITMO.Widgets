@@ -70,11 +70,15 @@ subject's own `discipline_id` comes with the reloaded official subject.
 
 ## Subject hub
 
-Below the controls the subject screen adds three sections, all built in the
+Below the controls the subject screen adds three sections (teachers, lessons,
+resources), all built in the
 recordbook feature (Konsist forbids cross-feature imports, so the schedule side
 is reached through `core/schedule/SubjectLessonsGateway`, implemented in
 `feature/schedule/data`):
 
+- `Преподаватели` comes first: distinct people from the subject's lessons in
+  schedule order, each with the lesson types they run; without lessons the
+  recordbook teacher stands in.
 - `Ближайшие пары`: the viewer's academic lessons of this subject within
   today … +28 days. The view model refreshes that window through
   `ScheduleRefreshGateway` (a failed refresh with an empty cache is an error
@@ -89,9 +93,7 @@ is reached through `core/schedule/SubjectLessonsGateway`, implemented in
   outlined card (`Связать` / `Нет`, nothing is stored on `Нет`), several
   matches ask which one, none reads as not found. `subjectNameKey` is the one
   normalisation, shared with the BARS merge.
-- `Преподаватели`: distinct people from the subject's lessons in schedule
-  order, each with the lesson types they run; without lessons the recordbook
-  teacher stands in. `Ресурсы`: only the MyITMO `lms_link`, so usually absent.
+- `Ресурсы`: only the MyITMO `lms_link`, so usually absent.
 
 Lesson rows are informational: the details sheet belongs to the schedule
 feature, and teacher profiles wait for Stage 29. Review or resource tabs do not
