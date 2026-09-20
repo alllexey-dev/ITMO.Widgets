@@ -1,15 +1,10 @@
-package dev.alllexey.itmowidgets.feature.social.data
+package dev.alllexey.itmowidgets.core.model
 
-import dev.alllexey.itmowidgets.core.model.GroupData
-import dev.alllexey.itmowidgets.core.model.UserCapabilities
-import dev.alllexey.itmowidgets.core.model.UserData
-import dev.alllexey.itmowidgets.core.model.UserGroup
-import dev.alllexey.itmowidgets.core.model.UserSharing
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-class UserMappersTest {
+class UserSummaryMappingTest {
 
     @Test
     fun `maps each viewer capability independently without widening access`() {
@@ -19,7 +14,7 @@ class UserMappersTest {
 
                 assertEquals(
                     UserSharing(sport = sport, schedule = schedule),
-                    source.toModel().sharing
+                    source.toUserSummary().sharing
                 )
             }
         }
@@ -27,7 +22,7 @@ class UserMappersTest {
 
     @Test
     fun `normalizes identity metadata without changing permissions`() {
-        val mapped = user(UserCapabilities(false, true)).toModel()
+        val mapped = user(UserCapabilities(false, true)).toUserSummary()
 
         assertEquals(123456, mapped.isu)
         assertEquals("Тестовый пользователь", mapped.name)
@@ -44,7 +39,7 @@ class UserMappersTest {
                 groups = emptyList()
             )
 
-            val mapped = source.toModel()
+            val mapped = source.toUserSummary()
 
             assertNull(mapped.pictureUrl)
             assertEquals(emptyList<UserGroup>(), mapped.groups)

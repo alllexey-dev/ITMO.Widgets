@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
@@ -128,10 +130,15 @@ class ScheduleFragment : Fragment() {
         fabFriend.visibility = if (userIsu == null) View.VISIBLE else View.GONE
     }
 
+    private fun showLessonDetails(lesson: Lesson, date: LocalDate) {
+        if (childFragmentManager.findFragmentByTag(LessonDetailsBottomSheet.TAG) != null) return
+        LessonDetailsBottomSheet.newInstance(lesson, date).show(childFragmentManager, LessonDetailsBottomSheet.TAG)
+    }
+
     private fun setupRecycler() {
         recycler.itemAnimator = null
 
-        scheduleAdapter = DayScheduleAdapter(timeProvider).apply {
+        scheduleAdapter = DayScheduleAdapter(timeProvider, ::showLessonDetails).apply {
             stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         }
 

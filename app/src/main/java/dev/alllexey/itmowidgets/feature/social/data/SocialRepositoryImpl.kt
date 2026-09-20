@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.model.toUserSummary
 import dev.alllexey.itmowidgets.core.model.social.UserLookupRequest
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -53,7 +54,7 @@ class SocialRepositoryImpl @Inject constructor(
 
         coroutineScope {
             // The own profile only decorates screens: its failure must not hide the lists.
-            val profile = async { call { widgetsApi.myUserData() }.valueOrNull()?.toModel() }
+            val profile = async { call { widgetsApi.myUserData() }.valueOrNull()?.toUserSummary() }
             val incoming = async { call { widgetsApi.incomingFriendRequests() } }
             val outgoing = async { call { widgetsApi.outgoingFriendRequests() } }
             val friendList = call { widgetsApi.friends() }

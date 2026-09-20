@@ -5,6 +5,16 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
 ## Unreleased (2.1-SNAPSHOT)
 
+### 2026-09-20
+- Lesson details: every schedule card opens a sheet with the subject, type and
+  format, time, teacher, room and building, Zoom link and note; `Открыть на
+  карте` hands the building to any map app through a `geo:` URI, using a
+  curated directory of ITMO buildings with verified coordinates.
+- `Друзья на паре` inside the sheet: the viewer's friends who attend the same
+  lesson and share their schedule, from Backend `GET
+  /api/schedule/lessons/{pairId}/friends?date=` (requires Core 1.2.0-SNAPSHOT
+  with `friendsOnLesson`). Hidden without the opt-in; a row opens the profile.
+
 ### 2026-09-19
 - Schedule widgets get a `Размер текста` choice per format (`Обычный`,
   `Крупный`, `Очень крупный`) on their settings pages and on the first-run

@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.core.util.dp
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
+import java.time.LocalDate
 import java.time.Duration
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -23,7 +24,8 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 class DayScheduleAdapter(
-    private val timeProvider: AcademicTimeProvider
+    private val timeProvider: AcademicTimeProvider,
+    private val onLessonClick: (Lesson, LocalDate) -> Unit = { _, _ -> }
 ) :
     ListAdapter<ScheduleDisplayDay, DayScheduleAdapter.DayViewHolder>(ScheduleDiffCallback) {
 
@@ -107,7 +109,7 @@ class DayScheduleAdapter(
         val states = if (timelineDays === currentList) timelineStates
         else resolveScheduleTimeline(currentList, timeProvider.now().toLocalDateTime())
         val processed = processLessonsWithBreaks(lessons, states[position], daySchedule.pendingSport)
-        val lessonAdapter = LessonAdapter(processed)
+        val lessonAdapter = LessonAdapter(processed) { lesson -> onLessonClick(lesson, date) }
         // Days are recycled by the outer list. A day's bounded rows must all
         // contribute their natural height; a nested wrap-content RecyclerView
         // can stop measuring at the viewport and silently hide large-font rows.

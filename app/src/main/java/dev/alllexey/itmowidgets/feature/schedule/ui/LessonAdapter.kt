@@ -14,12 +14,16 @@ import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.core.util.dp
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.ceil
 
-class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class LessonAdapter(
+    private val scheduleList: List<ScheduleItem>,
+    /** Only real lessons open details; pending sport rows stay inert. */
+    private val onLessonClick: (Lesson) -> Unit = {}
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_LESSON = 1
@@ -57,7 +61,7 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
         when (val item = scheduleList[position]) {
             is ScheduleItem.LessonItem -> {
                 updateTimelineGuide(holder.itemView, R.id.timeline_guide)
-                (holder as LessonViewHolder).bind(item)
+                (holder as LessonViewHolder).bind(item, onLessonClick)
             }
             is ScheduleItem.BreakItem -> {
                 updateTimelineGuide(holder.itemView, R.id.timeline_guide_break)
@@ -109,8 +113,10 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
         private val typeIndicator: ImageView = itemView.findViewById(R.id.type_indicator)
         private val typeLabel: TextView = itemView.findViewById(R.id.type)
 
-        fun bind(item: ScheduleItem.LessonItem) {
+        fun bind(item: ScheduleItem.LessonItem, onClick: (Lesson) -> Unit) {
             val lesson = item.lesson
+            card.setOnClickListener { onClick(lesson) }
+            card.isFocusable = true
 
             (card.layoutParams as? ViewGroup.MarginLayoutParams?)?.bottomMargin = if (item.isLastLesson) 0 else 16.dp
 
@@ -198,6 +204,10 @@ class LessonAdapter(private val scheduleList: List<ScheduleItem>) :
 
         fun bind(item: ScheduleItem.PendingSportItem) {
             val booking = item.booking
+            // A pending booking has no details sheet; a recycled lesson row must not keep its click.
+            content.setOnClickListener(null)
+            content.isClickable = false
+            content.isFocusable = false
             title.text = booking.sectionName
             start.text = booking.start.format(TIME_FORMATTER)
             end.text = booking.end.format(TIME_FORMATTER)

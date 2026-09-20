@@ -28,8 +28,9 @@ app/            Application, MainActivity, navigation coordinator, notifier, wid
 core/           cross-cutting; knows nothing about features
   debug/        BuildConfig.DEBUG fixtures (provider / controller / store)
   diagnostics/  AppDiagnostics journal, sanitizer, crash handler
+  location/     BuildingDirectory (res/raw/itmo_buildings.json), MapDestination geo URIs
   friend/       FriendRepository — the schedule picker's narrow view of friends
-  model/        transport DTOs, UserSummary, UserProfile, RelationshipState
+  model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
   navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders)
   onboarding/   OnboardingRepository — whether the first-run flow was passed
   network/      WidgetsClient, error mapping, serialization adapters

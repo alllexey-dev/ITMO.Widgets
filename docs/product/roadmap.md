@@ -12,6 +12,12 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
 - Stages 5–10: delivered on 2026-09-15 through `vibe/friends-public-profile-plan.md`
   (blocking deferred; FCM implemented locally via `vibe/fcm-foundation-plan.md`,
   with live two-account dev verification pending deployment approval).
+- Stages 11–16: delivered on 2026-09-20 through `vibe/lesson-context-plan.md`
+  with three corrections: a MyITMO `pair_id` already names one occurrence
+  (verified on live data), so no occurrence key or V4 migration was needed and
+  the date only guards stale rows; no server-side lesson-details endpoint, the
+  app already holds the lesson; friends on a lesson appear only inside the
+  details sheet. Schedule changes in the sheet wait for Stage 35.
 
 ## Plan Structure
 

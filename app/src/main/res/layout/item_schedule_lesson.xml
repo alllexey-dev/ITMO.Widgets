@@ -70,7 +70,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:layout_marginBottom="16dp"
-        android:background="@android:color/transparent"
+        android:background="?attr/selectableItemBackground"
         android:orientation="vertical"
         android:paddingHorizontal="4dp"
         app:layout_constraintBottom_toBottomOf="parent"

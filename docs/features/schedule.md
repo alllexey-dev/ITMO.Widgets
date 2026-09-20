@@ -75,3 +75,25 @@ or the official cache.
   the schedule on today instead.
 - After the first successful load, later refresh failures show a snackbar while
   content stays; the initial failure is an explicit error state.
+
+## Lesson details
+
+- Every ordinary lesson card opens `LessonDetailsBottomSheet` from the schedule
+  fragment's child fragment manager, in the own and in a friend's schedule alike.
+  Pending sport rows never open it. The sheet gets a `Serializable`
+  `LessonDetailsArgs` built from the `Lesson` plus the day's date; nothing is
+  fetched for the lesson itself.
+- Shown, each only when present: subject, type and format with the type colour,
+  weekday and date with the time range, teacher, room and the full building
+  name, Zoom info and password, note. Buttons: `Открыть на карте` (a known
+  building from `core/location/BuildingDirectory`, else the raw building text)
+  through the generic `geo:` intent in `core/ui/navigation/MapLauncher`, and
+  `Открыть в Zoom` when the lesson carries a link. No map provider setting.
+- `Друзья на паре` is the only place friends on a lesson appear.
+  `LessonDetailsViewModel` asks `LessonFriendsRepository` for
+  `GET /api/schedule/lessons/{pairId}/friends?date=`; Backend answers with the
+  viewer's accepted friends who attend that occurrence and share their schedule
+  with the viewer. Without the ITMO.Widgets opt-in the block is absent; while
+  loading it shows a spinner; an error offers `Повторить`; an empty answer says
+  so. A friend row opens the public profile.
+- Schedule changes are not shown here; their detection belongs to v2.2.
