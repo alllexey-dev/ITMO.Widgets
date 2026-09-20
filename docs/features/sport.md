@@ -19,8 +19,11 @@ custom-services gate.
 
 `SportBookingDelegate` performs an action, then requests a schedule-widget
 refresh through `ScheduleWidgetRefreshRequester` and refreshes the screens.
-Failed actions enqueue nothing. Queue mutations never invalidate the official
-schedule cache.
+MyITMO often answers the first fetch with the state from before the change, so
+a MyITMO booking or cancellation fetches the bookings, the own schedule and the
+sport catalogue a second time 1 s later in the application scope, outside the
+screen that asked. Failed actions enqueue nothing. Queue mutations never
+invalidate the official schedule cache.
 
 ## Cards and details
 

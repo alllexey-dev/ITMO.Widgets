@@ -66,7 +66,7 @@ class SportBookingDelegateTest {
     }
 
     @Test
-    fun `a sign-up fetches the schedule and bookings again after the follow-up delay, outside the caller`() =
+    fun `a sign-up fetches the schedule, bookings and catalogue again after the follow-up delay, outside the caller`() =
         runTest(scheduler) {
             delegate.signIn(lesson())
             assertEquals(1, scheduleRefreshGateway.refreshCount)
@@ -80,8 +80,8 @@ class SportBookingDelegateTest {
             followUpScope.runCurrent()
             assertEquals(2, scheduleRefreshGateway.refreshCount)
             assertEquals(2, bookingRepository.refreshCount)
-            // The sport catalogue and the widgets are not asked twice.
-            assertEquals(1, sportScheduleRepository.scheduleRefreshCount)
+            // The catalogue's free places lag like the bookings; only the widgets are not asked twice.
+            assertEquals(2, sportScheduleRepository.scheduleRefreshCount)
             assertEquals(1, widgetRefreshCount)
         }
 

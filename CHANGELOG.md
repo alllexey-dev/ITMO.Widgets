@@ -14,7 +14,8 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
   at once and a partial failure is one snackbar. Both FABs stay.
   `Настройки → Главный экран` hides card kinds (`home_hidden_cards`).
 - The second fetch after a sport action (bookings, own schedule, schedule widgets)
-  now runs 1 s later instead of 3 s.
+  now runs 1 s later instead of 3 s and also reloads the sport catalogue, so a
+  lesson that was full no longer stays full after cancelling.
 - Every details sheet (lesson, pending sport, sport lesson) now starts with the
   same header: title, kind, the date with the time range and duration, teacher,
   place, `Открыть на карте`. A pending sport row on the home feed or in the

@@ -163,7 +163,9 @@ class SportBookingDelegate @Inject constructor(
             coroutineScope {
                 awaitAll(
                     async { sportBookingRepository.refreshSportBookings() },
-                    async { scheduleRefreshGateway.refreshOwnSchedule(startDate, endDate) }
+                    async { scheduleRefreshGateway.refreshOwnSchedule(startDate, endDate) },
+                    // The catalog's free places lag the same way; a full lesson stays full otherwise.
+                    async { sportScheduleRepository.refreshSportSchedule() }
                 )
             }
         }
