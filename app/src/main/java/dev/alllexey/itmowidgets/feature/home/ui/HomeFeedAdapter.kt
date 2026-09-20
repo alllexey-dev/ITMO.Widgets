@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.home.ui
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.Bitmap
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,12 +16,10 @@ import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.home.HomeLessonState
 import dev.alllexey.itmowidgets.core.home.HomeScheduleRow
-import dev.alllexey.itmowidgets.core.home.QrPass
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
-import dev.alllexey.itmowidgets.core.qr.QrPassImages
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.ui.buildingShortTitle
 import dev.alllexey.itmowidgets.core.ui.lessonTypeColorRes
@@ -31,7 +28,6 @@ import dev.alllexey.itmowidgets.core.ui.roomShortTitle
 import dev.alllexey.itmowidgets.databinding.ItemHomeFriendRequestsBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeHintBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeLessonRowBinding
-import dev.alllexey.itmowidgets.databinding.ItemHomeQrBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeScheduleBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeSportBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeSportRowBinding
@@ -41,15 +37,11 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 
 /** Everything a card can ask the screen to do; navigation stays in the Fragment. */
 data class HomeFeedActions(
     val onLesson: (LessonDetailsArgs) -> Unit = {},
     val onPendingSport: (PendingSportDetailsArgs) -> Unit = {},
-    val onOpenQr: () -> Unit = {},
     val onOpenSport: () -> Unit = {},
     val onOpenFriends: () -> Unit = {},
     val onOpenUser: (UserSummary) -> Unit = {},
@@ -64,12 +56,8 @@ data class HomeFeedActions(
  */
 class HomeFeedAdapter(
     private val actions: HomeFeedActions,
-    private val qrImages: QrPassImages,
-    private val scope: CoroutineScope,
     private val zoneId: ZoneId
 ) : ListAdapter<HomeCard, RecyclerView.ViewHolder>(Diff) {
-
-    private val qrCache = HashMap<String, Bitmap>()
 
     init {
         stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
@@ -79,7 +67,6 @@ class HomeFeedAdapter(
 
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
         is HomeCard.Schedule -> TYPE_SCHEDULE
-        is HomeCard.Qr -> TYPE_QR
         is HomeCard.Sport -> TYPE_SPORT
         is HomeCard.FriendRequests -> TYPE_FRIENDS
         is HomeCard.Hint -> TYPE_HINT
@@ -89,7 +76,6 @@ class HomeFeedAdapter(
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
             TYPE_SCHEDULE -> ScheduleHolder(ItemHomeScheduleBinding.inflate(inflater, parent, false))
-            TYPE_QR -> QrHolder(ItemHomeQrBinding.inflate(inflater, parent, false))
             TYPE_SPORT -> SportHolder(ItemHomeSportBinding.inflate(inflater, parent, false))
             TYPE_FRIENDS -> FriendsHolder(ItemHomeFriendRequestsBinding.inflate(inflater, parent, false))
             else -> HintHolder(ItemHomeHintBinding.inflate(inflater, parent, false))
@@ -99,15 +85,10 @@ class HomeFeedAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val card = getItem(position)) {
             is HomeCard.Schedule -> (holder as ScheduleHolder).bind(card)
-            is HomeCard.Qr -> (holder as QrHolder).bind(card)
             is HomeCard.Sport -> (holder as SportHolder).bind(card)
             is HomeCard.FriendRequests -> (holder as FriendsHolder).bind(card)
             is HomeCard.Hint -> (holder as HintHolder).bind(card)
         }
-    }
-
-    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
-        (holder as? QrHolder)?.cancel()
     }
 
     inner class ScheduleHolder(private val binding: ItemHomeScheduleBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -193,50 +174,6 @@ class HomeFeedAdapter(
             binding.rowBadge.setTextColor(
                 MaterialColors.getColor(root, if (focused) com.google.android.material.R.attr.colorOnPrimary else com.google.android.material.R.attr.colorOnSecondaryContainer)
             )
-        }
-    }
-
-    inner class QrHolder(private val binding: ItemHomeQrBinding) : RecyclerView.ViewHolder(binding.root) {
-        private var job: Job? = null
-        private var shown: String? = null
-
-        fun bind(card: HomeCard.Qr) {
-            binding.homeQrCard.setOnClickListener { actions.onOpenQr() }
-            binding.homeQrOpen.setOnClickListener { actions.onOpenQr() }
-            val pass = card.pass
-            binding.homeQrOpen.isVisible = pass == null
-            binding.homeQrPlaceholder.isVisible = pass == null
-            binding.homeQrImage.isVisible = pass != null
-            binding.homeQrHint.setText(if (pass == null) R.string.home_qr_unavailable else R.string.home_qr_hint)
-            if (pass == null) {
-                cancel()
-                binding.homeQrImage.setImageBitmap(null)
-                return
-            }
-            render(pass)
-        }
-
-        private fun render(pass: QrPass) {
-            val key = if (pass.spoiler) SPOILER_KEY else pass.hex
-            if (key == shown) return
-            cancel()
-            qrCache[key]?.let {
-                binding.homeQrImage.setImageBitmap(it)
-                shown = key
-                return
-            }
-            job = scope.launch {
-                val bitmap = if (pass.spoiler) qrImages.spoiler() else qrImages.qr(pass.hex)
-                qrCache[key] = bitmap
-                binding.homeQrImage.setImageBitmap(bitmap)
-                shown = key
-            }
-        }
-
-        fun cancel() {
-            job?.cancel()
-            job = null
-            shown = null
         }
     }
 
@@ -331,7 +268,6 @@ class HomeFeedAdapter(
 
     private companion object {
         const val TYPE_SCHEDULE = 1
-        const val TYPE_QR = 2
         const val TYPE_SPORT = 3
         const val TYPE_FRIENDS = 4
         const val TYPE_HINT = 5
@@ -339,7 +275,6 @@ class HomeFeedAdapter(
         const val FRIENDS_LIMIT = 3
         const val SPORT_TYPE_ID = 11
         const val SEPARATOR = " · "
-        const val SPOILER_KEY = "spoiler"
         val RUSSIAN: Locale = Locale.forLanguageTag("ru")
         val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
         val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", RUSSIAN)

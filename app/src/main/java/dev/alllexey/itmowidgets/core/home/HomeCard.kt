@@ -9,7 +9,7 @@ import java.time.LocalDate
 
 /** Feed order is the declaration order; a kind is also the unit the user can hide. */
 enum class HomeCardKind {
-    SCHEDULE, QR, SPORT, FRIEND_REQUESTS, HINT_WIDGETS, HINT_NOTIFICATIONS, HINT_SERVICES
+    SCHEDULE, SPORT, FRIEND_REQUESTS, HINT_WIDGETS, HINT_NOTIFICATIONS, HINT_SERVICES
 }
 
 /** A dismissible nudge; each one has its own card kind so it sorts and hides on its own. */
@@ -27,9 +27,6 @@ sealed interface HomeScheduleRow {
     data class PendingSport(val args: PendingSportDetailsArgs, val predicted: Boolean) : HomeScheduleRow
 }
 
-/** A still-valid pass; [spoiler] mirrors the widget preference, the card never reveals on its own. */
-data class QrPass(val hex: String, val expiresAtMillis: Long, val spoiler: Boolean)
-
 /** One card of the home feed; every field is ready to render, sources do the selection. */
 sealed interface HomeCard {
     val kind: HomeCardKind
@@ -42,11 +39,6 @@ sealed interface HomeCard {
         val completed: Int
     ) : HomeCard {
         override val kind: HomeCardKind get() = HomeCardKind.SCHEDULE
-    }
-
-    /** Always present; a `null` pass renders the unavailable state with a way to the full screen. */
-    data class Qr(val pass: QrPass?) : HomeCard {
-        override val kind: HomeCardKind get() = HomeCardKind.QR
     }
 
     data class Sport(val score: SportScoreSummary?, val queue: List<PendingSportBooking>) : HomeCard {

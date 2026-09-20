@@ -179,7 +179,7 @@ class SettingsViewModel @Inject constructor(
             KEY_SCHEDULE_SPORT_AUTO_SIGN -> updateWidgetSetting {
                 repository.setScheduleSportAutoSignEnabled(checked)
             }
-            KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_QR, KEY_HOME_CARD_SPORT, KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
+            KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SPORT, KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
                 val kind = HOME_CARDS.first { it.first == key }.second
                 repository.setHomeCardVisible(kind, checked)
             }
@@ -687,14 +687,12 @@ class SettingsViewModel @Inject constructor(
         const val KEY_FRIENDS_SHARING = "friends_sharing"
         const val KEY_SCHEDULE_SPORT_AUTO_SIGN = "schedule_sport_auto_sign"
         const val KEY_HOME_CARD_SCHEDULE = "home_card_schedule"
-        const val KEY_HOME_CARD_QR = "home_card_qr"
         const val KEY_HOME_CARD_SPORT = "home_card_sport"
         const val KEY_HOME_CARD_FRIENDS = "home_card_friends"
 
         /** Row key, the kind it hides, its title; the feed order is the row order. */
         private val HOME_CARDS = listOf(
             Triple(KEY_HOME_CARD_SCHEDULE, HomeCardKind.SCHEDULE, R.string.settings_home_card_schedule_title),
-            Triple(KEY_HOME_CARD_QR, HomeCardKind.QR, R.string.settings_home_card_qr_title),
             Triple(KEY_HOME_CARD_SPORT, HomeCardKind.SPORT, R.string.settings_home_card_sport_title),
             Triple(KEY_HOME_CARD_FRIENDS, HomeCardKind.FRIEND_REQUESTS, R.string.settings_home_card_friends_title)
         )

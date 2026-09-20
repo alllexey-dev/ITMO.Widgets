@@ -8,13 +8,18 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ### 2026-09-20
 - Home tab: a feed of cards instead of the placeholder. `Сегодня`/`Завтра` with
   the current lesson marked `Сейчас`, the rest of the day, pending sport rows
-  and a count of finished lessons; the QR pass itself (spoiler when the widget
-  preference asks for it); `Спорт` with the score progress and own queues;
-  `Заявки в друзья`; dismissible hints for a missing widget, disabled
-  notifications and disabled user services. Rows open the same lesson and
-  pending-sport sheets as the schedule; pull-to-refresh asks every source at
-  once and a partial failure is one snackbar. The QR FAB is gone, `Мой ИТМО`
-  stays. `Настройки → Главный экран` hides card kinds (`home_hidden_cards`).
+  and a count of finished lessons; `Спорт` with the score progress and own
+  queues; `Заявки в друзья`; dismissible hints for a missing widget, disabled
+  notifications and disabled user services. Pull-to-refresh asks every source
+  at once and a partial failure is one snackbar. Both FABs stay.
+  `Настройки → Главный экран` hides card kinds (`home_hidden_cards`).
+- Every details sheet (lesson, pending sport, sport lesson) now starts with the
+  same header: title, kind, the date with the time range and duration, teacher,
+  place, `Открыть на карте`. A pending sport row on the home feed or in the
+  schedule opens the sport tab's own sheet with the queue position, history and
+  `Отменить`; the schedule's simpler sheet remains only when the sport data has
+  nothing about the queue. The QR pass screen shows the code at up to 300 dp
+  instead of the full width.
 - Subject hub in `Учёба`: a swipeable `Расписание` tab next to `Баллы` with the subject's upcoming lessons
   (next four weeks) with type, room and building, its teachers with the lesson
   types they run, and the LMS link when MyITMO sends one. A discipline whose

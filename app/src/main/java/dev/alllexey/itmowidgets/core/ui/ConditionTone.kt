@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.sport.ui.common
+package dev.alllexey.itmowidgets.core.ui
 
 import android.content.Context
 import androidx.annotation.ColorRes
@@ -7,8 +7,8 @@ import androidx.core.graphics.ColorUtils
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.util.color
 
-/** Stable domain semantics, deliberately independent of the wallpaper's primary color. */
-enum class SportConditionTone(@param:ColorRes private val colorRes: Int) {
+/** Stable status semantics for condition cards, deliberately independent of the wallpaper's primary colour. */
+enum class ConditionTone(@param:ColorRes private val colorRes: Int) {
     ALLOWED(R.color.sport_condition_allowed),
     WAITING(R.color.sport_condition_waiting),
     WARNING(R.color.sport_condition_warning),
@@ -21,10 +21,4 @@ enum class SportConditionTone(@param:ColorRes private val colorRes: Int) {
         accent(context),
         0.12f
     )
-}
-
-fun occupancyTone(available: Int, limit: Int): SportConditionTone = when {
-    available == 0 -> SportConditionTone.BLOCKED
-    available.toDouble() / limit <= 0.2 -> SportConditionTone.WARNING
-    else -> SportConditionTone.WAITING
 }

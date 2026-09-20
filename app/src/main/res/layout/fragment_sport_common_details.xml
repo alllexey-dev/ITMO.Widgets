@@ -32,94 +32,9 @@
             android:orientation="vertical"
             android:paddingHorizontal="16dp"
             android:paddingBottom="24dp">
-            <TextView
-                android:id="@+id/section_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceTitleLarge"
-                android:textColor="?attr/colorOnSurface"
-                android:layout_marginTop="8dp" />
-            <TextView
-                android:id="@+id/kind"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:layout_marginTop="4dp" />
-            <LinearLayout
-                android:id="@+id/time_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="top"
-                android:layout_marginTop="8dp">
-                <ImageView
-                    android:id="@+id/time_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginEnd="8dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_schedule_rounded"
-                    app:tint="?attr/colorOnSurfaceVariant" />
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-                    <TextView
-                        android:id="@+id/date"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceBodyMedium"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="bottom"
-                        android:layout_marginTop="2dp">
-                        <TextView
-                            android:id="@+id/time"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-                        <TextView
-                            android:id="@+id/duration"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:textAppearance="?attr/textAppearanceBodySmall"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:layout_weight="1"
-                            android:gravity="end"
-                            android:layout_marginStart="12dp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/place_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="vertical">
-                <include
-                    android:id="@+id/teacher_fact"
-                    layout="@layout/item_sport_detail_fact" />
-                <include
-                    android:id="@+id/location_fact"
-                    layout="@layout/item_sport_detail_fact" />
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/map_button"
-                    style="@style/Widget.Material3.Button.ElevatedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:layout_marginStart="16dp"
-                    android:text="@string/sport_open_map"
-                    app:icon="@drawable/ic_location_on_rounded"
-                    app:iconGravity="textStart"
-                    android:layout_gravity="start" />
-            </LinearLayout>
+            <include
+                android:id="@+id/header"
+                layout="@layout/view_details_header" />
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/registration_card"
                 android:layout_width="match_parent"

@@ -6,7 +6,6 @@ import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.home.HomeLessonState
 import dev.alllexey.itmowidgets.core.home.HomeScheduleRow
-import dev.alllexey.itmowidgets.core.home.QrPass
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
@@ -76,7 +75,6 @@ data class HomeFixture(
             HomeCard.Hint(HomeHint.WIDGETS),
             HomeCard.FriendRequests(listOf(user(300001, "Александра Константинопольская"), user(300002, "Иван Петров"))),
             HomeCard.Sport(SportScoreSummary(attendances = 50, bonus = 22), listOf(booking(1, 16), booking(2, 18, prediction = true))),
-            HomeCard.Qr(QrPass("ITMO-TEST", 3_600_000, spoiler = false)),
             schedule()
         )
     }

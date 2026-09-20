@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.home.ui
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -8,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -22,7 +24,6 @@ import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.navigation.SettingsScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
-import dev.alllexey.itmowidgets.core.qr.QrPassImages
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
@@ -58,13 +59,16 @@ class HomeFragment : Fragment() {
     private var feedbackSnackbar: Snackbar? = null
 
     @Inject
-    lateinit var qrImages: QrPassImages
-
-    @Inject
     lateinit var timeProvider: AcademicTimeProvider
 
     private val notificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.onScreenResumed() }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            // A denial without a dialog means the permission is locked; only the system page can undo that.
+            if (!granted && !shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)) {
+                openNotificationSettings()
+            }
+            viewModel.onScreenResumed()
+        }
 
     // endregion
 
@@ -125,7 +129,6 @@ class HomeFragment : Fragment() {
             actions = HomeFeedActions(
                 onLesson = ::openLessonDetails,
                 onPendingSport = ::openPendingSportDetails,
-                onOpenQr = { openScreen(AppScreen.QR_PASS) },
                 onOpenSport = { openRoot(AppRoot.SPORT) },
                 onOpenFriends = { openScreen(AppScreen.FRIENDS) },
                 onOpenUser = { user ->
@@ -134,8 +137,6 @@ class HomeFragment : Fragment() {
                 onHint = ::actOnHint,
                 onDismissHint = viewModel::dismissHint
             ),
-            qrImages = qrImages,
-            scope = viewLifecycleOwner.lifecycleScope,
             zoneId = timeProvider.zoneId
         )
         adapter = feed
@@ -147,6 +148,7 @@ class HomeFragment : Fragment() {
     private fun setupListeners() {
         binding.swipeRefresh.setOnRefreshListener { viewModel.refresh() }
         binding.webFab.setOnClickListener { openScreen(AppScreen.MY_ITMO_WEB) }
+        binding.qrFab.setOnClickListener { openScreen(AppScreen.QR_PASS) }
     }
 
     private fun setupObservers() {
@@ -192,7 +194,7 @@ class HomeFragment : Fragment() {
     private fun showFeedback() {
         feedbackSnackbar?.dismiss()
         feedbackSnackbar = Snackbar.make(binding.root, R.string.common_partial_load_error, Snackbar.LENGTH_LONG)
-            .setAnchorView(binding.webFab)
+            .setAnchorView(binding.quickActions)
             .setAction(R.string.common_retry) { viewModel.refresh() }
             .also(Snackbar::show)
     }
@@ -205,15 +207,20 @@ class HomeFragment : Fragment() {
         }
     }
 
+    /** The permission dialog when it can still appear; otherwise the app's notification page. */
     private fun requestNotifications() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        } else {
-            startActivity(
-                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                    .putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
-            )
-        }
+        val permissionGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (permissionGranted) openNotificationSettings()
+        else notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+    }
+
+    private fun openNotificationSettings() {
+        startActivity(
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
+        )
     }
 
     // endregion

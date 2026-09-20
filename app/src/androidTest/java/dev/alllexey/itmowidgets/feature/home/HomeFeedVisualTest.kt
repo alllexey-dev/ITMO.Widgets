@@ -51,7 +51,7 @@ class HomeFeedVisualTest {
             launch { scenario ->
                 scenario.onActivity { activity ->
                     assertEquals(
-                        listOf(HomeCardKind.SCHEDULE, HomeCardKind.QR, HomeCardKind.SPORT, HomeCardKind.FRIEND_REQUESTS, HomeCardKind.HINT_WIDGETS),
+                        listOf(HomeCardKind.SCHEDULE, HomeCardKind.SPORT, HomeCardKind.FRIEND_REQUESTS, HomeCardKind.HINT_WIDGETS),
                         activity.adapter().currentList.map { it.kind }
                     )
                     assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.home_feed).visibility)
@@ -60,7 +60,7 @@ class HomeFeedVisualTest {
                     ViewChecks.assertTouchTargets(activity.feed())
                 }
                 capture("feed-$index")
-                scenario.onActivity { it.feed().scrollToPosition(4) }
+                scenario.onActivity { it.feed().scrollToPosition(3) }
                 settle()
                 scenario.onActivity { activity ->
                     assertTextFits(activity.feed(), allowEllipsis = true)
@@ -69,7 +69,7 @@ class HomeFeedVisualTest {
                 capture("feed-end-$index")
                 scenario.recreate()
                 settle()
-                scenario.onActivity { assertEquals(5, it.adapter().itemCount) }
+                scenario.onActivity { assertEquals(4, it.adapter().itemCount) }
             }
         }
     }
@@ -102,7 +102,7 @@ class HomeFeedVisualTest {
     @Test
     fun dismissingAHintWritesTheStoreAndTheCardLeaves() {
         launch { scenario ->
-            scenario.onActivity { it.feed().scrollToPosition(4) }
+            scenario.onActivity { it.feed().scrollToPosition(3) }
             settle()
             scenario.onActivity { activity ->
                 activity.feed().descendants().first { it.id == R.id.hint_dismiss }.performClick()
@@ -115,7 +115,7 @@ class HomeFeedVisualTest {
                 source.cards.value = source.cards.value.filterNot { it is HomeCard.Hint }
             }
             settle()
-            scenario.onActivity { assertEquals(4, it.adapter().itemCount) }
+            scenario.onActivity { assertEquals(3, it.adapter().itemCount) }
         }
     }
 
@@ -131,17 +131,17 @@ class HomeFeedVisualTest {
             capture("empty")
         }
 
-        SettingsNavigationTestActivity.homeFixture = HomeFixture(hidden = setOf(HomeCardKind.SPORT, HomeCardKind.QR))
+        SettingsNavigationTestActivity.homeFixture = HomeFixture(hidden = setOf(HomeCardKind.SPORT, HomeCardKind.FRIEND_REQUESTS))
         launch { scenario ->
             scenario.onActivity { activity ->
                 assertEquals(
-                    listOf(HomeCardKind.SCHEDULE, HomeCardKind.FRIEND_REQUESTS, HomeCardKind.HINT_WIDGETS),
+                    listOf(HomeCardKind.SCHEDULE, HomeCardKind.HINT_WIDGETS),
                     activity.adapter().currentList.map { it.kind }
                 )
                 SettingsNavigationTestActivity.homePreferences!!.hidden.value = emptySet()
             }
             settle()
-            scenario.onActivity { assertEquals(5, it.adapter().itemCount) }
+            scenario.onActivity { assertEquals(4, it.adapter().itemCount) }
         }
     }
 
@@ -150,7 +150,7 @@ class HomeFeedVisualTest {
         SettingsNavigationTestActivity.homeFixture = HomeFixture(refreshResult = AppResult.Failure(AppError.Network))
         launch { scenario ->
             scenario.onActivity { activity ->
-                assertEquals(5, activity.adapter().itemCount)
+                assertEquals(4, activity.adapter().itemCount)
                 assertEquals(1, SettingsNavigationTestActivity.homeSource!!.refreshes)
                 assertTrue(activity.hasRetrySnackbar())
                 assertFalse(activity.findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.swipe_refresh).isRefreshing)

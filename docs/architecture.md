@@ -47,8 +47,9 @@ core/           cross-cutting; knows nothing about features
   storage/      DataStore wrappers, encrypted token storage
   text/         UiText
   time/         AcademicTimeProvider, WallClock
-  qr/           CustomSpoilerManager, QrPassImages — the pass rendered for other screens
-  ui/           AvatarView, state helpers, AppNavigator port, WidgetPinRequester
+  qr/           CustomSpoilerManager
+  ui/           AvatarView, state helpers, AppNavigator port, WidgetPinRequester,
+                the details-sheet header (view_details_header.xml + DetailsHeader.kt), ConditionTone
 di/             Hilt modules, one per feature or concern
 feature/<name>/ ui | presentation | domain | data
 ```

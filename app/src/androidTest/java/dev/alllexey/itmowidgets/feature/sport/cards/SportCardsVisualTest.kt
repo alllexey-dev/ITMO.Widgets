@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.widget.NestedScrollView
 import androidx.core.graphics.ColorUtils
-import dev.alllexey.itmowidgets.feature.sport.ui.common.SportConditionTone
+import dev.alllexey.itmowidgets.core.ui.ConditionTone
 import androidx.fragment.app.DialogFragment
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -53,7 +53,7 @@ class SportCardsVisualTest {
                     sectionName = SectionName("""Современные танцы (Клуб парных танцев "Потанцуем")"""),
                     signEntry = SportCardFixtures.entry(SportQueueEntryStatus.NOTIFIED), friendsBookings = friends())
                 scenario.onActivity {
-                    SportConditionTone.entries.forEach { tone ->
+                    ConditionTone.entries.forEach { tone ->
                         assertTrue("Contrast $tone", ColorUtils.calculateContrast(tone.accent(it), tone.container(it)) >= 4.5)
                     }
                     it.showBookings(listOf(SportCardFixtures.booking(), queue))

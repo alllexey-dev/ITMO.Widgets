@@ -128,15 +128,10 @@
     <string name="schedule_lesson_type_default">Пара</string>
     <string name="schedule_unknown_subject">Предмет не указан</string>
     <string name="schedule_lesson_details_title">Пара</string>
-    <string name="schedule_lesson_details_time">Время</string>
-    <string name="schedule_lesson_details_time_value">%1$s, %2$s–%3$s</string>
-    <string name="schedule_lesson_details_teacher">Преподаватель</string>
-    <string name="schedule_lesson_details_location">Место</string>
     <string name="schedule_lesson_details_link">Видеозвонок</string>
     <string name="schedule_lesson_details_link_password">Пароль: %1$s</string>
     <string name="schedule_lesson_link_indicator">Есть ссылка на занятие</string>
     <string name="schedule_lesson_note_title">Примечание</string>
-    <string name="schedule_open_map">Открыть на карте</string>
     <string name="schedule_open_link">Открыть видеозвонок</string>
     <string name="schedule_open_sport">Открыть в спорте</string>
     <string name="schedule_map_unavailable">Нет приложения для карт</string>
@@ -300,7 +295,6 @@
     <string name="settings_group_schedule">Расписание</string>
     <string name="settings_group_home">Главный экран</string>
     <string name="settings_home_card_schedule_title">Расписание на сегодня</string>
-    <string name="settings_home_card_qr_title">QR-пропуск</string>
     <string name="settings_home_card_sport_title">Спорт</string>
     <string name="settings_home_card_friends_title">Заявки в друзья</string>
     <string name="settings_home_footer">Подсказки на главном закрываются крестиком и больше не возвращаются.</string>
@@ -693,9 +687,6 @@
     </plurals>
     <string name="home_pending_waiting">ждём запись</string>
     <string name="home_pending_predicted">прогноз</string>
-    <string name="home_qr_hint">Нажмите, чтобы открыть</string>
-    <string name="home_qr_unavailable">Код не загружен</string>
-    <string name="home_qr_open">Открыть</string>
     <string name="home_sport_title">Спорт</string>
     <string name="home_sport_score">%1$d из 100</string>
     <plurals name="home_sport_more">

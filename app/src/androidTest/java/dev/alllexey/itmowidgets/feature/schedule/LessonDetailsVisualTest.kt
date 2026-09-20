@@ -72,9 +72,11 @@ class LessonDetailsVisualTest {
             scenario.onActivity { activity ->
                 val sheet = activity.sheet()
                 val root = sheet.requireView()
-                assertEquals(lesson().subjectName, root.text(R.id.subject_name))
-                assertEquals("Лекция · Очный", root.text(R.id.lesson_kind))
-                assertTrue(root.fact(R.id.time_fact), root.fact(R.id.time_fact).endsWith("08:20–09:50"))
+                assertEquals(lesson().subjectName, root.text(R.id.section_name))
+                assertEquals("Лекция · Очный", root.text(R.id.kind))
+                assertEquals("08:20–09:50", root.text(R.id.time))
+                assertEquals("Понедельник, 7 сентября 2026", root.text(R.id.date))
+                assertEquals("90 мин", root.text(R.id.duration))
                 assertEquals(lesson().teacherFio, root.fact(R.id.teacher_fact))
                 assertEquals("1506 · Кронверкский проспект, 49", root.fact(R.id.location_fact))
                 assertEquals(View.VISIBLE, root.findViewById<View>(R.id.map_button).visibility)
@@ -89,7 +91,7 @@ class LessonDetailsVisualTest {
             scenario.recreate()
             settle()
             scenario.onActivity { activity ->
-                assertEquals(lesson().subjectName, activity.sheet().requireView().text(R.id.subject_name))
+                assertEquals(lesson().subjectName, activity.sheet().requireView().text(R.id.section_name))
             }
         }
     }
@@ -108,9 +110,9 @@ class LessonDetailsVisualTest {
             settle()
             scenario.onActivity { activity ->
                 val root = (activity.supportFragmentManager.findFragmentByTag(LessonDetailsBottomSheet.TAG) as LessonDetailsBottomSheet).requireView()
-                assertEquals(activity.getString(R.string.schedule_unknown_subject), root.text(R.id.subject_name))
-                assertEquals(View.VISIBLE, root.findViewById<View>(R.id.time_fact).visibility)
-                for (id in listOf(R.id.teacher_fact, R.id.location_fact, R.id.link_fact, R.id.actions, R.id.note_card, R.id.friends_card)) {
+                assertEquals(activity.getString(R.string.schedule_unknown_subject), root.text(R.id.section_name))
+                assertEquals(View.VISIBLE, root.findViewById<View>(R.id.time_card).visibility)
+                for (id in listOf(R.id.place_card, R.id.link_fact, R.id.actions, R.id.note_card, R.id.friends_card)) {
                     assertEquals(View.GONE, root.findViewById<View>(id).visibility)
                 }
                 ViewChecks.assertTextFits(root)
@@ -163,9 +165,10 @@ class LessonDetailsVisualTest {
                 val sheet = activity.supportFragmentManager.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) as PendingSportDetailsBottomSheet
                 val root = sheet.requireView()
                 assertEquals("Современные танцы", root.text(R.id.section_name))
-                assertEquals(activity.getString(R.string.schedule_auto_sign_prediction), root.text(R.id.status))
-                assertTrue(root.text(R.id.status_description).contains(activity.getString(R.string.sport_queue_future_hint)))
-                assertTrue(root.fact(R.id.time_fact).endsWith("16:00–17:30"))
+                assertEquals(activity.getString(R.string.schedule_auto_sign_prediction), root.text(R.id.kind))
+                assertEquals(activity.getString(R.string.sport_prediction_waiting), root.text(R.id.condition_title))
+                assertEquals(activity.getString(R.string.sport_prediction_hint), root.text(R.id.condition_note))
+                assertEquals("16:00–17:30", root.text(R.id.time))
                 assertEquals("Кронверкский проспект, 49, зал 1", root.fact(R.id.location_fact))
                 assertEquals(View.VISIBLE, root.findViewById<View>(R.id.map_button).visibility)
                 assertEquals(View.VISIBLE, root.findViewById<View>(R.id.open_sport).visibility)

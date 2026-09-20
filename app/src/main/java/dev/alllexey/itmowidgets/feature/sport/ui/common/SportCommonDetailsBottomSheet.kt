@@ -9,13 +9,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
-import androidx.core.view.updateLayoutParams
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -25,10 +22,13 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.ui.ConditionTone
+import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
+import dev.alllexey.itmowidgets.core.ui.alignRailIcon
+import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportCommonDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportBookingFriendStatusBinding
-import dev.alllexey.itmowidgets.databinding.ItemSportDetailFactBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportHistoryFactBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportConditionBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
@@ -80,22 +80,19 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         actionSubmitted = savedInstanceState?.getBoolean(STATE_SUBMITTED) == true
         bindAction()
         toolbar.setNavigationOnClickListener { dismiss() }
-        sectionName.text = item.sectionName
-        sectionName.setTextColor(requireContext().color.onSurface)
-        kind.text = item.kind?.let { getString(it.titleRes()) }
-        kind.isVisible = item.kind != null
         val timing = SportSessionTiming(OffsetDateTime.parse(item.start), OffsetDateTime.parse(item.end), timeProvider)
-        date.text = timing.fullDateText()
-        time.text = timing.timeText()
-        time.setTextColor(requireContext().color.onSurface)
-        duration.isVisible = timing.durationMinutes != null
-        duration.text = timing.durationMinutes?.let { getString(R.string.sport_duration, it) }
-        alignRailIcon(timeIcon, date)
-        teacherFact.bind(R.string.sport_details_teacher, item.teacherFio, R.drawable.ic_person_rounded)
-        locationFact.bind(R.string.sport_details_location, item.roomName, R.drawable.ic_location_on_rounded)
-        mapButton.isVisible = item.mapAddress != null
-        mapButton.setOnClickListener { openMap() }
-        placeCard.isVisible = item.teacherFio.isNotBlank() || item.roomName.isNotBlank()
+        header.bind(
+            DetailsHeaderContent(
+                title = item.sectionName,
+                kind = item.kind?.let { getString(it.titleRes()) },
+                date = timing.start.toLocalDate(),
+                start = timing.start.toLocalTime(),
+                end = timing.end.toLocalTime(),
+                teacher = item.teacherFio,
+                location = item.roomName,
+                mapAvailable = item.mapAddress != null
+            )
+        ) { openMap() }
         bindRegistration()
         bindConditions()
         commentCard.isVisible = !item.comment.isNullOrBlank()
@@ -194,21 +191,21 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         }.joinToString("\n")
         if (!item.signed && availability != null) {
             when {
-                availability.manual -> conditionCard(SportConditionTone.ALLOWED, R.string.sport_booking_allowed,
+                availability.manual -> conditionCard(ConditionTone.ALLOWED, R.string.sport_booking_allowed,
                     icon = R.drawable.ic_check_rounded)
-                availability.mayWait -> conditionCard(SportConditionTone.WAITING,
+                availability.mayWait -> conditionCard(ConditionTone.WAITING,
                     if (item.isReal) R.string.sport_booking_wait else R.string.sport_prediction_waiting,
                     getString(if (item.isReal) R.string.sport_booking_wait_place else R.string.sport_prediction_hint),
                     prerequisites, R.drawable.ic_schedule_rounded)
                 availability.restrictions.any { it.kind == SportBookingObstacle.STARTED } ->
-                    conditionCard(SportConditionTone.BLOCKED, R.string.sport_rule_started,
+                    conditionCard(ConditionTone.BLOCKED, R.string.sport_rule_started,
                         getString(R.string.sport_rule_started_hint), icon = R.drawable.ic_error_rounded)
                 availability.restrictions.isNotEmpty() -> {
                     val unknown = availability.restrictions.all { it.kind == SportBookingObstacle.UNKNOWN }
                     val reasons = availability.restrictions.map { restriction ->
                         restriction.detail?.takeIf { it.isNotBlank() } ?: getString(restriction.kind.titleRes())
                     }.distinct().joinToString("\n")
-                    conditionCard(if (unknown) SportConditionTone.WARNING else SportConditionTone.BLOCKED,
+                    conditionCard(if (unknown) ConditionTone.WARNING else ConditionTone.BLOCKED,
                         if (unknown) R.string.sport_booking_uncertain else R.string.sport_booking_no_bypass,
                         if (unknown) getString(R.string.sport_booking_uncertain_hint) else reasons,
                         if (unknown) null else getString(R.string.sport_booking_no_bypass_hint),
@@ -218,20 +215,20 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         }
         if (availability?.mayWait == true && item.isReal && !item.signed &&
             !timeProvider.now().isBefore(OffsetDateTime.parse(item.start).minusHours(1))) {
-            conditionCard(SportConditionTone.WARNING, R.string.sport_booking_late_auto,
+            conditionCard(ConditionTone.WARNING, R.string.sport_booking_late_auto,
                 getString(R.string.sport_booking_late_auto_hint), icon = R.drawable.ic_schedule_rounded)
         }
-        if (item.intersectsSchedule) conditionCard(SportConditionTone.WARNING, R.string.sport_booking_warning,
+        if (item.intersectsSchedule) conditionCard(ConditionTone.WARNING, R.string.sport_booking_warning,
             getString(R.string.sport_booking_warning_hint), icon = R.drawable.ic_error_rounded)
         if (!item.isReal && availability?.mayWait != true) {
-            conditionCard(SportConditionTone.WAITING, R.string.sport_prediction_matching,
+            conditionCard(ConditionTone.WAITING, R.string.sport_prediction_matching,
                 getString(R.string.sport_prediction_hint),
                 if (availability?.restrictions?.isNotEmpty() == true) getString(R.string.sport_booking_prediction_rules) else null,
                 R.drawable.ic_schedule_rounded)
         }
     }
 
-    private fun conditionCard(tone: SportConditionTone, title: Int, description: String? = null,
+    private fun conditionCard(tone: ConditionTone, title: Int, description: String? = null,
         note: String? = null, icon: Int) {
         val row = ItemSportConditionBinding.inflate(layoutInflater, binding.attentionContainer, false)
         row.root.setCardBackgroundColor(tone.container(requireContext()))
@@ -273,25 +270,6 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     private fun openFriendProfile(isu: Int) {
         dismiss()
         openScreen(AppScreen.USER_PROFILE, bundleOf(UserScreenArgs.ISU to isu))
-    }
-
-    /** The icon carries the category, so [title] only survives for screen readers. */
-    private fun ItemSportDetailFactBinding.bind(title: Int, value: String, icon: Int) {
-        root.isVisible = value.isNotBlank()
-        factValue.text = value
-        factValue.contentDescription = getString(R.string.sport_detail_fact_description, getString(title), value)
-        factIcon.setImageResource(icon)
-        alignRailIcon(factIcon, factValue)
-    }
-
-    /**
-     * Centres a fixed-dp rail icon on the first line of its text. The line box grows with the font
-     * scale while the icon does not, so a constant top margin only lines up at one scale.
-     */
-    private fun alignRailIcon(icon: ImageView, text: TextView) {
-        icon.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            topMargin = ((text.lineHeight - icon.layoutParams.height) / 2).coerceAtLeast(0)
-        }
     }
 
     private fun openMap() {

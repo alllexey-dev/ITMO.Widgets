@@ -9,13 +9,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
-import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -29,6 +26,9 @@ import dev.alllexey.itmowidgets.core.location.MapDestination
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
+import dev.alllexey.itmowidgets.core.ui.bind
+import dev.alllexey.itmowidgets.core.ui.bindFact
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.MapLauncher
@@ -36,7 +36,6 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentLessonDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemLessonFriendBinding
-import dev.alllexey.itmowidgets.databinding.ItemSportDetailFactBinding
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
@@ -49,8 +48,6 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.shortTitle
 import java.io.Serializable
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -94,33 +91,30 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?): Unit = with(binding) {
         toolbar.setNavigationOnClickListener { dismiss() }
-        subjectName.text = lesson.subjectName.ifBlank { getString(R.string.schedule_unknown_subject) }
         val typeId = Lesson.TypeId(lesson.typeId)
-        typeIndicator.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), typeId.colorRes()))
-        lessonKind.text = listOf(getString(typeId.nameRes()), lesson.format).filter { it.isNotBlank() }.joinToString(" · ")
-
-        val date = LocalDate.parse(lesson.date)
-        val start = LocalTime.parse(lesson.start)
-        val end = LocalTime.parse(lesson.end)
-        timeFact.bind(
-            R.string.schedule_lesson_details_time,
-            getString(R.string.schedule_lesson_details_time_value, date.format(DATE_FORMATTER), start.format(TIME_FORMATTER), end.format(TIME_FORMATTER)),
-            R.drawable.ic_schedule_rounded
-        )
-        teacherFact.bind(R.string.schedule_lesson_details_teacher, lesson.teacherFio.orEmpty(), R.drawable.ic_person_rounded)
-        locationFact.bind(R.string.schedule_lesson_details_location, locationText(), R.drawable.ic_location_on_rounded)
+        val destination = mapDestination()
+        header.bind(
+            DetailsHeaderContent(
+                title = lesson.subjectName.ifBlank { getString(R.string.schedule_unknown_subject) },
+                kind = listOf(getString(typeId.nameRes()), lesson.format).filter { it.isNotBlank() }.joinToString(" · "),
+                typeColor = ContextCompat.getColor(requireContext(), typeId.colorRes()),
+                date = LocalDate.parse(lesson.date),
+                start = LocalTime.parse(lesson.start),
+                end = LocalTime.parse(lesson.end),
+                teacher = lesson.teacherFio,
+                location = locationText(),
+                mapAvailable = destination != null
+            )
+        ) { destination?.let(::openMap) }
         // The button is the link; only what the reader has to type or know is a fact.
-        linkFact.bind(R.string.schedule_lesson_details_link, listOfNotNull(
+        linkFact.bindFact(R.string.schedule_lesson_details_link, listOfNotNull(
             lesson.zoomInfo,
             lesson.zoomPassword?.let { getString(R.string.schedule_lesson_details_link_password, it) }
         ).joinToString("\n"), R.drawable.ic_videocam)
 
-        val destination = mapDestination()
-        mapButton.isVisible = destination != null
-        mapButton.setOnClickListener { destination?.let(::openMap) }
         linkButton.isVisible = lesson.zoomUrl != null
         linkButton.setOnClickListener { lesson.zoomUrl?.let(::openLink) }
-        actions.isVisible = mapButton.isVisible || linkButton.isVisible
+        actions.isVisible = linkButton.isVisible
 
         noteCard.isVisible = lesson.note != null
         note.text = lesson.note
@@ -194,22 +188,6 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    /** The icon carries the category, so [title] only survives for screen readers. */
-    private fun ItemSportDetailFactBinding.bind(title: Int, value: String, icon: Int) {
-        root.isVisible = value.isNotBlank()
-        factValue.text = value
-        factValue.contentDescription = getString(R.string.sport_detail_fact_description, getString(title), value)
-        factIcon.setImageResource(icon)
-        alignRailIcon(factIcon, factValue)
-    }
-
-    /** Centres a fixed-dp rail icon on the first text line at any font scale. */
-    private fun alignRailIcon(icon: ImageView, text: TextView) {
-        icon.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            topMargin = ((text.lineHeight - icon.layoutParams.height) / 2).coerceAtLeast(0)
-        }
-    }
-
     override fun onDestroyView() {
         _binding = null
         super.onDestroyView()
@@ -218,8 +196,6 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
     companion object {
         const val TAG = "LessonDetailsBottomSheet"
         private const val ARG_LESSON = "arg_lesson"
-        private val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
-        private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.forLanguageTag("ru"))
 
         fun newInstance(lesson: Lesson, date: LocalDate): LessonDetailsBottomSheet = newInstance(lesson.toDetailsArgs(date))
 

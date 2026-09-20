@@ -316,7 +316,6 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_SPORT_TIME_FILTER,
                     SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN,
                     SettingsViewModel.KEY_HOME_CARD_SCHEDULE,
-                    SettingsViewModel.KEY_HOME_CARD_QR,
                     SettingsViewModel.KEY_HOME_CARD_SPORT,
                     SettingsViewModel.KEY_HOME_CARD_FRIENDS,
                     SettingsViewModel.KEY_REFRESH_WIDGETS,
@@ -701,8 +700,8 @@ class SettingsViewModelTest {
             assertEquals(UiText.Resource(R.string.settings_home_footer), section.footer)
             assertEquals(
                 listOf(
-                    SettingsViewModel.KEY_HOME_CARD_SCHEDULE, SettingsViewModel.KEY_HOME_CARD_QR,
-                    SettingsViewModel.KEY_HOME_CARD_SPORT, SettingsViewModel.KEY_HOME_CARD_FRIENDS
+                    SettingsViewModel.KEY_HOME_CARD_SCHEDULE, SettingsViewModel.KEY_HOME_CARD_SPORT,
+                    SettingsViewModel.KEY_HOME_CARD_FRIENDS
                 ),
                 section.items.map { it.key }
             )

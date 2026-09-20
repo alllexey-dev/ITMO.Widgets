@@ -12,15 +12,11 @@ import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSourceImp
 import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
 import dev.alllexey.itmowidgets.feature.qr.data.repository.QrAppearancePreferencesImpl
 import dev.alllexey.itmowidgets.feature.qr.data.QrWidgetStateStoreImpl
-import dev.alllexey.itmowidgets.feature.qr.data.home.QrHomeCardSource
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCache
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCacheImpl
-import dev.alllexey.itmowidgets.feature.qr.ui.rendering.ToolkitQrPassImages
-import dev.alllexey.itmowidgets.core.home.HomeCardSource
-import dev.alllexey.itmowidgets.core.qr.QrPassImages
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import javax.inject.Singleton
 
@@ -77,16 +73,4 @@ abstract class QrModule {
     abstract fun bindQrWidgetStateStore(
         impl: QrWidgetStateStoreImpl
     ): QrWidgetStateStore
-
-    @Binds
-    abstract fun bindQrPassImages(
-        impl: ToolkitQrPassImages
-    ): QrPassImages
-
-    @Binds
-    @IntoSet
-    @Singleton
-    abstract fun bindQrHomeCards(
-        impl: QrHomeCardSource
-    ): HomeCardSource
 }

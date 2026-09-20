@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
+import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.navigation.openPendingSportDetails
 import dev.alllexey.itmowidgets.databinding.FragmentScheduleBinding
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleEvent
@@ -137,10 +138,8 @@ class ScheduleFragment : Fragment() {
         LessonDetailsBottomSheet.newInstance(lesson, date).show(childFragmentManager, LessonDetailsBottomSheet.TAG)
     }
 
-    private fun showPendingSportDetails(booking: PendingSportBooking) {
-        if (childFragmentManager.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) != null) return
-        PendingSportDetailsBottomSheet.newInstance(booking).show(childFragmentManager, PendingSportDetailsBottomSheet.TAG)
-    }
+    /** Through the navigator, so the sport tab's sheet with its actions can answer when it knows the queue. */
+    private fun showPendingSportDetails(booking: PendingSportBooking) = openPendingSportDetails(booking.toDetailsArgs())
 
     private fun setupRecycler() {
         recycler.itemAnimator = null

@@ -170,7 +170,9 @@ the geometry.
 Keep XML, Material components and the current architecture. The shared layer is
 deliberately small: card variants, named dimensions, refresh helper, content-state
 styles, the accessible selection row (`bindSelectionAccessibility`), the user row
-(`item_user_row.xml`) and the contextual screen header. Shared helpers belong to
+(`item_user_row.xml`), the contextual screen header and the details-sheet header
+(`view_details_header.xml`: title, kind, date with the time range and duration,
+teacher, place, map button) that every bottom sheet with a session starts with. Shared helpers belong to
 `core/ui`; screen-specific behaviour to `feature/<name>/ui`. Extract only rules
 that genuinely repeat; do not build a universal renderer.
 

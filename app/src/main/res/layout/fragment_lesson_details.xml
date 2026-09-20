@@ -32,76 +32,27 @@
             android:orientation="vertical"
             android:paddingHorizontal="16dp"
             android:paddingBottom="24dp">
-            <TextView
-                android:id="@+id/subject_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textAppearance="?attr/textAppearanceTitleLarge"
-                android:textColor="?attr/colorOnSurface" />
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-                <ImageView
-                    android:id="@+id/type_indicator"
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:layout_marginEnd="8dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/shape_circle_filled" />
-                <TextView
-                    android:id="@+id/lesson_kind"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="vertical">
-                <include
-                    android:id="@+id/time_fact"
-                    layout="@layout/item_sport_detail_fact" />
-                <include
-                    android:id="@+id/teacher_fact"
-                    layout="@layout/item_sport_detail_fact" />
-                <include
-                    android:id="@+id/location_fact"
-                    layout="@layout/item_sport_detail_fact" />
-                <include
-                    android:id="@+id/link_fact"
-                    layout="@layout/item_sport_detail_fact" />
-            </LinearLayout>
+            <include
+                android:id="@+id/header"
+                layout="@layout/view_details_header" />
+            <include
+                android:id="@+id/link_fact"
+                layout="@layout/item_sport_detail_fact" />
             <LinearLayout
                 android:id="@+id/actions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:orientation="horizontal">
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/map_button"
-                    style="@style/Widget.Material3.Button.ElevatedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:minHeight="48dp"
-                    android:text="@string/schedule_open_map"
-                    app:icon="@drawable/ic_location_on_rounded"
-                    android:visibility="gone" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/link_button"
                     style="@style/Widget.Material3.Button.ElevatedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
                     android:minHeight="48dp"
                     android:text="@string/schedule_open_link"
                     app:icon="@drawable/ic_videocam"
+                    app:iconGravity="textStart"
                     android:visibility="gone" />
             </LinearLayout>
             <LinearLayout

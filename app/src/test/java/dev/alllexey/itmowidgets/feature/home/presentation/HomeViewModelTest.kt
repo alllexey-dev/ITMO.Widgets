@@ -33,7 +33,7 @@ class HomeViewModelTest {
 
     private val schedule = FakeHomeCardSource(homeScheduleCard())
     private val hints = FakeHomeCardSource(HomeCard.Hint(HomeHint.WIDGETS))
-    private val qr = FakeHomeCardSource(HomeCard.Qr(null))
+    private val sport = FakeHomeCardSource(HomeCard.Sport(null, emptyList()))
     private val preferences = FakeHomeCardPreferences()
     private val hintStore = FakeHomeHintStore()
     private var nowMillis = 1_000_000L
@@ -43,7 +43,7 @@ class HomeViewModelTest {
         override fun instant(): Instant = Instant.ofEpochMilli(nowMillis)
     }
 
-    private fun model(vararg sources: FakeHomeCardSource = arrayOf(hints, qr, schedule)) =
+    private fun model(vararg sources: FakeHomeCardSource = arrayOf(hints, sport, schedule)) =
         HomeViewModel(sources.toSet(), preferences, hintStore, clock)
 
     private fun kotlinx.coroutines.test.TestScope.subscribe(vm: HomeViewModel): Job =
@@ -58,7 +58,7 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         assertEquals(
-            listOf(HomeCardKind.SCHEDULE, HomeCardKind.QR, HomeCardKind.HINT_WIDGETS),
+            listOf(HomeCardKind.SCHEDULE, HomeCardKind.SPORT, HomeCardKind.HINT_WIDGETS),
             vm.content().cards.map { it.kind }
         )
     }
@@ -77,7 +77,7 @@ class HomeViewModelTest {
     fun `hidden kinds drop out and return with the preference`() = runTest {
         val vm = model()
         subscribe(vm)
-        preferences.hidden.value = setOf(HomeCardKind.QR)
+        preferences.hidden.value = setOf(HomeCardKind.SPORT)
         advanceUntilIdle()
         assertEquals(listOf(HomeCardKind.SCHEDULE, HomeCardKind.HINT_WIDGETS), vm.content().cards.map { it.kind })
 
@@ -90,7 +90,7 @@ class HomeViewModelTest {
     fun `an empty feed is content not loading`() = runTest {
         schedule.cards.value = emptyList()
         hints.cards.value = emptyList()
-        qr.cards.value = emptyList()
+        sport.cards.value = emptyList()
         val vm = model()
         subscribe(vm)
         advanceUntilIdle()
@@ -101,7 +101,7 @@ class HomeViewModelTest {
     @Test
     fun `refresh asks every source and reports one failure for two`() = runTest {
         schedule.refreshResult = AppResult.Failure(AppError.Network)
-        qr.refreshResult = AppResult.Failure(AppError.Unauthorized)
+        sport.refreshResult = AppResult.Failure(AppError.Unauthorized)
         val vm = model()
         subscribe(vm)
         val events = mutableListOf<HomeEvent>()
@@ -110,7 +110,7 @@ class HomeViewModelTest {
         vm.refresh()
         advanceUntilIdle()
 
-        assertEquals(listOf(1, 1, 1), listOf(schedule.refreshes, qr.refreshes, hints.refreshes))
+        assertEquals(listOf(1, 1, 1), listOf(schedule.refreshes, sport.refreshes, hints.refreshes))
         assertEquals(1, events.size)
         assertTrue(events.single() is HomeEvent.RefreshFailed)
         assertFalse(vm.content().refreshing)

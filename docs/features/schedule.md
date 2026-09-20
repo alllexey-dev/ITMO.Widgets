@@ -83,20 +83,27 @@ or the official cache.
   Pending sport rows never open it. The sheet gets a `Serializable`
   `LessonDetailsArgs` built from the `Lesson` plus the day's date; nothing is
   fetched for the lesson itself.
-- Shown, each only when present: subject, type and format with the type colour,
-  weekday and date with the time range, teacher, room and the full building
-  name, the meeting info and password when MyITMO sends them, note. Buttons:
+- The sheet starts with the header every details sheet shares
+  (`view_details_header.xml`, bound through `core/ui/DetailsHeader.kt`): subject,
+  type and format with the type colour, the weekday and date with the time
+  range and duration, teacher, room with the full building name and
+  `Открыть на карте`. Then, each only when present: the meeting info and
+  password when MyITMO sends them, note. Buttons:
   `Открыть на карте` (a known building from `core/location/BuildingDirectory`,
   else the raw building text) through the generic `geo:` intent in
   `core/ui/navigation/MapLauncher`, and `Открыть видеозвонок` when the lesson
   carries a link (MyITMO calls the field `zoom_url`, but lessons run on any
   platform, so the link itself is not shown). No map provider setting. A card
   whose lesson carries a link shows a small camera icon next to the type.
-- A pending sport row (queue or auto-sign prediction) opens
-  `PendingSportDetailsBottomSheet` instead: section, status with its
-  explanation, time, teacher, place with the map button, and `Открыть в спорте`,
-  which selects the sport tab through `AppNavigator.openRoot(AppRoot.SPORT)`.
-  Managing the booking stays on the sport tab.
+- A pending sport row (queue or auto-sign prediction) goes through
+  `AppNavigator.openPendingSportDetails`. `MainActivity` looks the lesson up in
+  the sport tab's `SportBookingRepository` (refreshing once when nothing is
+  cached) and opens the sport tab's own `SportCommonDetailsBottomSheet` with its
+  queue position, history and `Отменить`; the cancellation runs through the
+  shared `SportMyViewModel` after the usual confirmation. Only when the sport
+  data has nothing about the queue does the schedule's own
+  `PendingSportDetailsBottomSheet` appear: the shared header, the status as
+  the kind line, one `Условия записи` card and `Открыть в спорте`.
 - `Друзья на паре` is the only place friends on a lesson appear.
   `LessonDetailsViewModel` asks `LessonFriendsRepository` for
   `GET /api/schedule/lessons/{pairId}/friends?date=`; Backend answers with the

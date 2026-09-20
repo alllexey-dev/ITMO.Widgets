@@ -6,6 +6,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.ConditionTone
+import dev.alllexey.itmowidgets.core.ui.fullDateText
+import dev.alllexey.itmowidgets.core.ui.timeRangeText
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemSportFriendsBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
@@ -19,8 +22,7 @@ private val RUSSIAN_LOCALE: Locale = Locale.forLanguageTag("ru")
 /** `DateTimeFormatter` renders Russian weekday and month names in lower case. */
 private fun String.capitalizeFirst(): String = replaceFirstChar { it.uppercase(RUSSIAN_LOCALE) }
 
-fun SportSessionTiming.timeText(): String =
-    start.format(DateTimeFormatter.ofPattern("HH:mm")) + "–" + end.format(DateTimeFormatter.ofPattern("HH:mm"))
+fun SportSessionTiming.timeText(): String = timeRangeText(start.toLocalTime(), end.toLocalTime())
 
 fun SportSessionTiming.dateText(context: Context): String {
     val date = start.format(DateTimeFormatter.ofPattern("d MMMM", RUSSIAN_LOCALE))
@@ -38,8 +40,7 @@ fun SportSessionTiming.weekdayText(context: Context): String = when {
     else -> start.format(DateTimeFormatter.ofPattern("EEEE", RUSSIAN_LOCALE)).capitalizeFirst()
 }
 
-fun SportSessionTiming.fullDateText(): String =
-    start.format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", RUSSIAN_LOCALE)).capitalizeFirst()
+fun SportSessionTiming.fullDateText(): String = fullDateText(start.toLocalDate())
 
 fun SportRegistrationStatus.label(context: Context): String = context.getString(when (this) {
     SportRegistrationStatus.SIGNED -> R.string.sport_status_signed
@@ -53,10 +54,10 @@ fun SportRegistrationStatus.label(context: Context): String = context.getString(
 })
 
 /** Statuses that carry no outcome yet stay neutral rather than borrowing a semantic accent. */
-fun SportRegistrationStatus.tone(): SportConditionTone? = when (this) {
-    SportRegistrationStatus.SIGNED, SportRegistrationStatus.AUTO_SIGNED -> SportConditionTone.ALLOWED
-    SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED -> SportConditionTone.WAITING
-    SportRegistrationStatus.FAILED, SportRegistrationStatus.EXPIRED -> SportConditionTone.BLOCKED
+fun SportRegistrationStatus.tone(): ConditionTone? = when (this) {
+    SportRegistrationStatus.SIGNED, SportRegistrationStatus.AUTO_SIGNED -> ConditionTone.ALLOWED
+    SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED -> ConditionTone.WAITING
+    SportRegistrationStatus.FAILED, SportRegistrationStatus.EXPIRED -> ConditionTone.BLOCKED
     SportRegistrationStatus.CANCELLED, SportRegistrationStatus.NOT_SIGNED -> null
 }
 

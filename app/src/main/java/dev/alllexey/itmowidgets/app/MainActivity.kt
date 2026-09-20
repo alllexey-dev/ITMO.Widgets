@@ -28,7 +28,19 @@ import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGate
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGateViewModel
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateGateViewModel
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
+import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
+import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
+import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
+import dev.alllexey.itmowidgets.feature.sport.ui.common.bookingAction
+import dev.alllexey.itmowidgets.feature.sport.ui.common.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.update.ui.toScreenArguments
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.util.dataOrNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -39,6 +51,15 @@ class MainActivity : AppCompatActivity(), AppNavigator {
 
     @Inject
     lateinit var sessionRepository: SessionRepository
+
+    @Inject
+    lateinit var sportBookings: SportBookingRepository
+
+    @Inject
+    lateinit var timeProvider: AcademicTimeProvider
+
+    /** Shared with the sport tab, so a cancellation from the feed or the schedule goes the same way. */
+    private val sportMy: SportMyViewModel by viewModels()
 
     private val updateGate: AppUpdateGateViewModel by viewModels()
     private val onboardingGate: OnboardingGateViewModel by viewModels()
@@ -70,6 +91,13 @@ class MainActivity : AppCompatActivity(), AppNavigator {
 
         val rootHost = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navigation = MainNavigationCoordinator(binding, supportFragmentManager, rootHost)
+        // Sheets opened from the feed or the schedule report their action here, not to a sport Fragment.
+        supportFragmentManager.setFragmentResultListener(SportCommonDetailsBottomSheet.ACTION_REQUEST, this) { _, result ->
+            onSportSheetAction(
+                result.getLong(SportCommonDetailsBottomSheet.RESULT_LESSON_ID),
+                result.getString(SportCommonDetailsBottomSheet.RESULT_ACTION)
+            )
+        }
 
         lifecycleScope.launch { sessionRepository.initialize() }
         sessionRepository.state
@@ -111,10 +139,36 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         navigation.openLessonDetails(args)
     }
 
+    /** The sport tab's sheet when the sport data knows the queue; the schedule's own sheet otherwise. */
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
         if (onboardingGate.state.value != OnboardingGate.Passed) return
-        navigation.openPendingSportDetails(args)
+        lifecycleScope.launch {
+            val item = findSportBooking(args.lessonId)
+            if (item != null) navigation.openSportDetails(item) else navigation.openPendingSportDetails(args)
+        }
+    }
+
+    private suspend fun findSportBooking(lessonId: Long): SportBooking? {
+        val cached = withTimeoutOrNull(CACHED_BOOKINGS_WAIT_MILLIS) { sportBookings.observeSportBookings().first() }
+        val state = cached ?: run {
+            sportBookings.refreshSportBookings()
+            withTimeoutOrNull(LOADED_BOOKINGS_WAIT_MILLIS) { sportBookings.observeSportBookings().first() }
+        }
+        return state?.dataOrNull()?.firstOrNull { it.lessonId == lessonId }
+    }
+
+    private fun onSportSheetAction(lessonId: Long, action: String?) {
+        lifecycleScope.launch {
+            val booking = findSportBooking(lessonId) ?: return@launch
+            val expected = booking.toDetailsArgs().bookingAction(timeProvider.now())
+            if (expected == SportBookingAction.NONE || expected.name != action) return@launch
+            MaterialAlertDialogBuilder(this@MainActivity)
+                .setMessage(R.string.sport_cancel_booking_question)
+                .setNegativeButton(R.string.common_back, null)
+                .setPositiveButton(R.string.sport_cancel_booking_action) { _, _ -> sportMy.cancelBooking(booking) }
+                .show()
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -227,6 +281,8 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     }
 
     companion object {
+        private const val CACHED_BOOKINGS_WAIT_MILLIS = 300L
+        private const val LOADED_BOOKINGS_WAIT_MILLIS = 4_000L
         const val ACTION_OPEN_SPORT = "dev.alllexey.itmowidgets.action.OPEN_SPORT"
         const val ACTION_OPEN_USER_PROFILE = "dev.alllexey.itmowidgets.action.OPEN_USER_PROFILE"
         const val ACTION_OPEN_SCHEDULE = "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE"

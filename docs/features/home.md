@@ -2,12 +2,12 @@
 
 The home tab is a feed of cards built from what the application already knows.
 Each card reads like a home-screen widget: one object in focus, secondary
-context, a tap that opens the details. The `Мой ИТМО` FAB at the bottom end
-stays; the QR pass has its own card.
+context, a tap that opens the details. The QR pass and `Мой ИТМО` stay as the
+two FABs at the bottom end; the list reserves space under them.
 
 ## Feed
 
-`core/home` holds the contract: `HomeCard` (`Schedule`, `Qr`, `Sport`,
+`core/home` holds the contract: `HomeCard` (`Schedule`, `Sport`,
 `FriendRequests`, `Hint`) and `HomeCardSource` with `observe`, `refresh` and
 `revalidate`. Every feature that owns data contributes a source from its `data`
 package through the `@IntoSet` multibinding in its Hilt module; `HomeViewModel`
@@ -18,20 +18,23 @@ sorts by `HomeCardKind`, whose declaration order is the feed order. Nothing in
 | Card | Source | Shown when |
 |---|---|---|
 | `Сегодня` / `Завтра` | `feature/schedule/data/home/ScheduleHomeCardSource` on `HomeScheduleSelector`: today's remaining lessons and pending sport rows, the lesson in progress marked `Сейчас`, the next one `Далее`, finished lessons counted in the footer; tomorrow once today is over; a one-minute ticker moves the focus | always (an empty day says so) |
-| `QR-пропуск` | `feature/qr/data/home/QrHomeCardSource`: the cached code while it is valid by the wall clock, rendered through `core/qr/QrPassImages`; the widget's spoiler preference shows the spoiler picture instead | always; without a valid code the card only offers `Открыть` |
 | `Спорт` | `feature/sport/data/home/SportHomeCardSource`: score progress out of 100 and own queues (three, then `ещё N`) | a score below 100 or a non-empty queue |
 | `Заявки в друзья` | `feature/social/data/home/SocialHomeCardSource`: incoming requests as `item_user_row.xml` rows, `Все заявки` opens the friends screen | at least one incoming request behind the opt-in |
-| Hints | `feature/home/data/HintHomeCardSource`: no widget on the launcher (`Добавить` pins the single-lesson widget through `core/ui/widget/WidgetPinRequester`), notifications off (`Включить` asks for the permission or opens the system page), user services off (`Включить` opens the services settings page) | while the reason holds and the hint was not closed; closed hints are kept per installation in `home_dismissed_hints` |
+| Hints | `feature/home/data/HintHomeCardSource`: no widget on the launcher (`Добавить` pins the single-lesson widget through `core/ui/widget/WidgetPinRequester`), notifications off (`Включить` asks for the permission while the dialog can still appear, otherwise opens the app's notification page), user services off (`Включить` opens the services settings page) | while the reason holds and the hint was not closed; closed hints are kept per installation in `home_dismissed_hints` |
 
-Lesson and pending rows open the same sheets as the schedule through
-`AppNavigator.openLessonDetails` / `openPendingSportDetails`; their arguments
-live in `core/navigation`. The sport card opens the sport tab, a friend row the
-public profile.
+Lesson and pending rows open sheets through `AppNavigator.openLessonDetails` /
+`openPendingSportDetails`; their arguments live in `core/navigation`. A pending
+row resolves to the sport tab's own `SportCommonDetailsBottomSheet` when the
+sport data knows the queue (`MainActivity` looks the lesson up in
+`SportBookingRepository`, refreshing once if nothing is cached), so the queue
+position, history and `Отменить` work from the feed and the schedule alike; the
+cancellation goes through the shared `SportMyViewModel` after the usual
+confirmation. The schedule's own `PendingSportDetailsBottomSheet` is the
+fallback. The sport card opens the sport tab, a friend row the public profile.
 
 Refresh: the first show refreshes every source once; pull-to-refresh and a
 return to the screen after five minutes do it again; every return also calls
-`revalidate` on all sources (an expired pass, a permission the user just
-granted). Sources refresh in parallel; a failure leaves the cached card in place
+`revalidate` on all sources (a permission the user just granted). Sources refresh in parallel; a failure leaves the cached card in place
 and the feed shows one `Часть данных не загрузилась` snackbar with `Повторить`.
 The state is `Loading` only until every source has answered from its cache; an
 empty list of cards is content and shows the `Пока пусто` state. The list and
@@ -60,7 +63,7 @@ test screenshots use synthetic non-credential payloads only.
 
 ## MyITMO web
 
-The FAB opens the official `https://my.itmo.ru/` website in the
+The second FAB opens the official `https://my.itmo.ru/` website in the
 `MY_ITMO_WEB` overlay. The toolbar provides close, reload and an external-browser
 fallback. Android Back follows web history first; rotation restores web history
 and an error state retains retry. A thin loading indicator reserves its space.

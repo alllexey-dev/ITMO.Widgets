@@ -23,7 +23,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditi
 import dev.alllexey.itmowidgets.feature.sport.ui.common.titleRes
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportOccupancy
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
-import dev.alllexey.itmowidgets.feature.sport.ui.common.SportConditionTone
+import dev.alllexey.itmowidgets.core.ui.ConditionTone
 import dev.alllexey.itmowidgets.feature.sport.ui.common.occupancyTone
 import dev.alllexey.itmowidgets.feature.sport.ui.common.bind
 import dev.alllexey.itmowidgets.feature.sport.ui.common.timeText
@@ -65,7 +65,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener, private val ti
             binding.teacherTextView.text = item.teacherFio
             binding.locationTextView.text = item.roomName
             binding.intersectionIndicator.isVisible = item.intersection
-            binding.intersectionIndicator.imageTintList = ColorStateList.valueOf(SportConditionTone.WARNING.accent(itemView.context))
+            binding.intersectionIndicator.imageTintList = ColorStateList.valueOf(ConditionTone.WARNING.accent(itemView.context))
             binding.teacherRow.isVisible = item.teacherFio.isNotBlank()
             binding.locationRow.isVisible = item.roomName.isNotBlank()
 
@@ -103,7 +103,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener, private val ti
                 signedUpTextView.text = root.context.getString(R.string.sport_capacity_card, it.occupied, it.limit)
                 // Only a scarce or full lesson is worth an accent; a roomy one stays quiet.
                 signedUpTextView.setTextColor(
-                    if (tone == SportConditionTone.WAITING) color.onSurfaceVariant else tone.accent(root.context)
+                    if (tone == ConditionTone.WAITING) color.onSurfaceVariant else tone.accent(root.context)
                 )
             }
         }
@@ -121,7 +121,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener, private val ti
                     statusText.text = availability.restrictions.firstOrNull()?.let {
                         it.detail ?: root.context.getString(it.kind.titleRes())
                     } ?: root.context.getString(R.string.sport_lesson_unavailable)
-                    statusText.setTextColor(SportConditionTone.BLOCKED.accent(root.context))
+                    statusText.setTextColor(ConditionTone.BLOCKED.accent(root.context))
                     return
                 }
                 val label = when (action) {
@@ -137,7 +137,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener, private val ti
                         statusText.text = item.signEntry?.let {
                             root.context.getString(R.string.sport_card_queue, it.position, it.total)
                         }
-                        statusText.setTextColor(SportConditionTone.WAITING.accent(root.context))
+                        statusText.setTextColor(ConditionTone.WAITING.accent(root.context))
                     } else {
                         statusText.text = root.context.getString(R.string.sport_lesson_prediction)
                     }
@@ -145,8 +145,8 @@ class SportLessonsAdapter(val listener: SportSignActionsListener, private val ti
                 setupButton(
                     text = root.context.getString(label),
                     tone = when (action) {
-                        SportBookingAction.SIGN -> SportConditionTone.ALLOWED
-                        SportBookingAction.AUTO, SportBookingAction.CANCEL_AUTO -> SportConditionTone.WAITING
+                        SportBookingAction.SIGN -> ConditionTone.ALLOWED
+                        SportBookingAction.AUTO, SportBookingAction.CANCEL_AUTO -> ConditionTone.WAITING
                         else -> null
                     },
                     onClick = {
@@ -167,7 +167,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener, private val ti
 
         private fun setupButton(
             text: String,
-            tone: SportConditionTone?,
+            tone: ConditionTone?,
             onClick: () -> Unit,
             isBusy: Boolean
         ) {

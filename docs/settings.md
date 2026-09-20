@@ -145,7 +145,7 @@ only among installed instances of that same format:
 ## Home screen
 
 - `Главный экран` lists one switch per feed card: `Расписание на сегодня`,
-  `QR-пропуск`, `Спорт`, `Заявки в друзья`. A switched-off card leaves the feed
+  `Спорт`, `Заявки в друзья`. A switched-off card leaves the feed
   at once; nothing else changes and no widget is refreshed.
 - Stored as the string set `home_hidden_cards` (card kind names; absent means
   shown). The page is an offline category; its footer explains that hints on

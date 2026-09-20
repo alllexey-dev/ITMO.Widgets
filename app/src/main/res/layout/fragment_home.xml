@@ -20,7 +20,7 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:paddingTop="@dimen/design_spacing_compact"
-                android:paddingBottom="96dp"
+                android:paddingBottom="152dp"
                 android:visibility="gone"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
@@ -29,7 +29,7 @@
                 style="@style/Widget.ItmoWidgets.ContentState"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingBottom="96dp"
+                android:paddingBottom="152dp"
                 android:visibility="gone">
 
                 <ImageView
@@ -59,14 +59,32 @@
         android:indeterminate="true"
         android:visibility="gone" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/web_fab"
+    <LinearLayout
+        android:id="@+id/quick_actions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:contentDescription="@string/home_open_my_itmo"
-        app:backgroundTint="?attr/colorSecondaryContainer"
-        app:srcCompat="@drawable/ic_language"
-        app:tint="?attr/colorOnSecondaryContainer" />
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="end"
+        android:orientation="vertical">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/web_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:contentDescription="@string/home_open_my_itmo"
+            app:backgroundTint="?attr/colorSecondaryContainer"
+            app:srcCompat="@drawable/ic_language"
+            app:tint="?attr/colorOnSecondaryContainer" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/qr_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/home_open_qr"
+            app:srcCompat="@drawable/ic_qr_code" />
+    </LinearLayout>
 </FrameLayout>

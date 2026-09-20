@@ -7,10 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.core.view.isVisible
-import androidx.core.view.updateLayoutParams
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.snackbar.Snackbar
@@ -21,19 +18,25 @@ import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.ui.ConditionTone
+import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
+import dev.alllexey.itmowidgets.core.ui.alignRailIcon
+import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.MapLauncher
 import dev.alllexey.itmowidgets.core.ui.navigation.openRoot
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentPendingSportDetailsBinding
-import dev.alllexey.itmowidgets.databinding.ItemSportDetailFactBinding
+import dev.alllexey.itmowidgets.databinding.ItemSportConditionBinding
 import java.io.Serializable
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import javax.inject.Inject
 
-/** A queued or predicted sport booking from the schedule; managing it happens on the sport tab. */
+/**
+ * A queued or predicted sport booking from the schedule, laid out like the sport
+ * tab's own details: the shared header, then the booking conditions as one
+ * condition card. Managing the queue happens on the sport tab.
+ */
 @AndroidEntryPoint
 class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
     private var _binding: FragmentPendingSportDetailsBinding? = null
@@ -67,46 +70,56 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?): Unit = with(binding) {
         toolbar.setNavigationOnClickListener { dismiss() }
-        sectionName.text = booking.sectionName
-        status.setText(if (booking.isPrediction) R.string.schedule_auto_sign_prediction else R.string.schedule_auto_sign_waiting)
-        statusDescription.text = listOf(
-            getString(if (booking.isPrediction) R.string.schedule_auto_sign_prediction_description else R.string.schedule_auto_sign_waiting_description),
-            getString(if (booking.autoSign) R.string.sport_queue_future_hint else R.string.sport_queue_free_hint)
-        ).joinToString("\n")
-
         val zone = timeProvider.zoneId
         val start = OffsetDateTime.parse(booking.start).atZoneSameInstant(zone)
         val end = OffsetDateTime.parse(booking.end).atZoneSameInstant(zone)
-        timeFact.bind(
-            R.string.schedule_lesson_details_time,
-            getString(R.string.schedule_lesson_details_time_value, start.format(DATE_FORMATTER), start.format(TIME_FORMATTER), end.format(TIME_FORMATTER)),
-            R.drawable.ic_schedule_rounded
-        )
-        teacherFact.bind(R.string.schedule_lesson_details_teacher, booking.teacherFio, R.drawable.ic_person_rounded)
-        locationFact.bind(R.string.schedule_lesson_details_location, booking.roomName, R.drawable.ic_location_on_rounded)
-        mapButton.isVisible = booking.roomName.isNotBlank()
-        mapButton.setOnClickListener {
+        header.bind(
+            DetailsHeaderContent(
+                title = booking.sectionName,
+                kind = getString(if (booking.isPrediction) R.string.schedule_auto_sign_prediction else R.string.schedule_auto_sign_waiting),
+                date = start.toLocalDate(),
+                start = start.toLocalTime(),
+                end = end.toLocalTime(),
+                teacher = booking.teacherFio,
+                location = booking.roomName,
+                mapAvailable = booking.roomName.isNotBlank()
+            )
+        ) {
             val opened = MapLauncher.open(requireContext(), MapDestination(label = booking.sectionName, address = booking.roomName))
             if (!opened) Snackbar.make(root, R.string.schedule_map_unavailable, Snackbar.LENGTH_SHORT).show()
         }
+        bindConditions()
         openSport.setOnClickListener {
             dismiss()
             openRoot(AppRoot.SPORT)
         }
     }
 
-    private fun ItemSportDetailFactBinding.bind(title: Int, value: String, icon: Int) {
-        root.isVisible = value.isNotBlank()
-        factValue.text = value
-        factValue.contentDescription = getString(R.string.sport_detail_fact_description, getString(title), value)
-        factIcon.setImageResource(icon)
-        alignRailIcon(factIcon, factValue)
-    }
-
-    private fun alignRailIcon(icon: ImageView, text: TextView) {
-        icon.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            topMargin = ((text.lineHeight - icon.layoutParams.height) / 2).coerceAtLeast(0)
-        }
+    /** One waiting card, the same one the sport tab shows for a queue or a prediction. */
+    private fun bindConditions() = with(binding) {
+        attentionContainer.removeAllViews()
+        val row = ItemSportConditionBinding.inflate(layoutInflater, attentionContainer, false)
+        val tone = ConditionTone.WAITING
+        row.root.setCardBackgroundColor(tone.container(requireContext()))
+        row.conditionTitle.setText(if (booking.isPrediction) R.string.sport_prediction_waiting else R.string.sport_registration_waiting)
+        row.conditionTitle.setTextColor(tone.accent(requireContext()))
+        row.conditionBody.text = getString(
+            if (booking.isPrediction) R.string.schedule_auto_sign_prediction_description
+            else R.string.schedule_auto_sign_waiting_description
+        )
+        row.conditionBody.setTextColor(requireContext().color.onSurface)
+        row.conditionNote.text = getString(
+            when {
+                booking.isPrediction -> R.string.sport_prediction_hint
+                booking.autoSign -> R.string.sport_queue_future_hint
+                else -> R.string.sport_queue_free_hint
+            }
+        )
+        row.conditionNote.isVisible = true
+        row.conditionIcon.setImageResource(R.drawable.ic_schedule_rounded)
+        row.conditionIcon.imageTintList = ColorStateList.valueOf(tone.accent(requireContext()))
+        alignRailIcon(row.conditionIcon, row.conditionTitle)
+        attentionContainer.addView(row.root)
     }
 
     override fun onDestroyView() {
@@ -117,8 +130,6 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
     companion object {
         const val TAG = "PendingSportDetailsBottomSheet"
         private const val ARG_BOOKING = "arg_pending_booking"
-        private val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
-        private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.forLanguageTag("ru"))
 
         fun newInstance(booking: PendingSportBooking): PendingSportDetailsBottomSheet = newInstance(booking.toDetailsArgs())
 

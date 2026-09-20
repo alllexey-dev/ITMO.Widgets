@@ -17,6 +17,8 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
+import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
 
 class MainNavigationCoordinator(
     private val binding: ActivityMainBinding,
@@ -97,10 +99,21 @@ class MainNavigationCoordinator(
         LessonDetailsBottomSheet.newInstance(args).show(fragments, LessonDetailsBottomSheet.TAG)
     }
 
+    /** The schedule's own fallback sheet, for a queue the sport data does not know yet. */
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) {
-        if (fragments.isStateSaved || fragments.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) != null) return
+        if (fragments.isStateSaved || sportSheetShown()) return
         PendingSportDetailsBottomSheet.newInstance(args).show(fragments, PendingSportDetailsBottomSheet.TAG)
     }
+
+    /** The sport tab's full sheet with its actions; results arrive on the Activity's FragmentManager. */
+    fun openSportDetails(item: SportCommon) {
+        if (fragments.isStateSaved || sportSheetShown()) return
+        SportCommonDetailsBottomSheet.newInstance(item, actionsEnabled = true).show(fragments, SportCommonDetailsBottomSheet.TAG)
+    }
+
+    private fun sportSheetShown(): Boolean =
+        fragments.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) != null ||
+            fragments.findFragmentByTag(SportCommonDetailsBottomSheet.TAG) != null
 
     private fun updateAccessibility() {
         val importance = if (overlayHost != null) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
