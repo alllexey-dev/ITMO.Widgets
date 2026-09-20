@@ -96,8 +96,9 @@ is reached through `core/schedule/SubjectLessonsGateway`, implemented in
   normalisation, shared with the BARS merge.
 - `Ресурсы`: only the MyITMO `lms_link`, so usually absent.
 
-The schedule tab appears only when the hub has something to show, the chosen
-tab survives recreation, and pull-to-refresh reloads both tabs at once.
+The tabs are pages of a `ViewPager2` (swipe or tap), each page its own list
+and pull-to-refresh over the shared view model; the schedule page exists only
+when the hub has something to show, and the chosen tab survives recreation.
 Lesson rows are informational: the details sheet belongs to the schedule
 feature, and teacher profiles wait for Stage 29. Review or resource tabs do not
 exist yet.

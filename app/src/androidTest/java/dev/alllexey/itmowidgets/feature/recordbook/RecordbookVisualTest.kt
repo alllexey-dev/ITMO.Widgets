@@ -8,6 +8,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -146,7 +147,7 @@ class RecordbookVisualTest {
                     assertEquals(it.getString(if (index == 1) R.string.recordbook_rate_credit else R.string.recordbook_official_pending),
                         it.findViewById<TextView>(R.id.official_result).text.toString())
                     // The scores tab is the sport overview alone; the recordbook teacher lives on the schedule tab.
-                    val items = (it.findViewById<RecyclerView>(R.id.recycler_view).adapter as RecordbookControlAdapter).currentList
+                    val items = it.hubItems()
                     assertEquals(listOf(true), items.map { item -> item is DetailItem.SportOverview })
                     assertEquals(View.VISIBLE, it.findViewById<View>(R.id.tabs).visibility)
                 }
@@ -293,8 +294,15 @@ class RecordbookVisualTest {
         }
     }
 
+    /** The list of the page the pager currently shows; offscreen pages may also be attached. */
+    private fun RecordbookPreviewActivity.currentPageList(): RecyclerView {
+        val pager = findViewById<ViewPager2>(R.id.pager)
+        val pages = pager.getChildAt(0) as RecyclerView
+        return checkNotNull(pages.findViewHolderForAdapterPosition(pager.currentItem)).itemView.findViewById(R.id.recycler_view)
+    }
+
     private fun RecordbookPreviewActivity.hubItems(): List<DetailItem> =
-        (findViewById<RecyclerView>(R.id.recycler_view).adapter as RecordbookControlAdapter).currentList
+        (currentPageList().adapter as RecordbookControlAdapter).currentList
 
     private fun selectScheduleTab(scenario: ActivityScenario<RecordbookPreviewActivity>) {
         scenario.onActivity { activity ->
@@ -307,7 +315,7 @@ class RecordbookVisualTest {
 
     private fun scrollToEnd(scenario: ActivityScenario<RecordbookPreviewActivity>) {
         scenario.onActivity { activity ->
-            val list = activity.findViewById<RecyclerView>(R.id.recycler_view)
+            val list = activity.currentPageList()
             list.scrollToPosition(list.adapter!!.itemCount - 1)
         }
         settle()
