@@ -85,10 +85,18 @@ or the official cache.
   fetched for the lesson itself.
 - Shown, each only when present: subject, type and format with the type colour,
   weekday and date with the time range, teacher, room and the full building
-  name, Zoom info and password, note. Buttons: `Открыть на карте` (a known
-  building from `core/location/BuildingDirectory`, else the raw building text)
-  through the generic `geo:` intent in `core/ui/navigation/MapLauncher`, and
-  `Открыть в Zoom` when the lesson carries a link. No map provider setting.
+  name, the meeting link as its host (MyITMO calls the field `zoom_url`, but
+  lessons run on any platform) with info and password, note. Buttons:
+  `Открыть на карте` (a known building from `core/location/BuildingDirectory`,
+  else the raw building text) through the generic `geo:` intent in
+  `core/ui/navigation/MapLauncher`, and `Открыть ссылку` when the lesson
+  carries a link. No map provider setting. A card whose lesson carries a link
+  shows a small camera icon next to the type, so the reader knows before opening.
+- A pending sport row (queue or auto-sign prediction) opens
+  `PendingSportDetailsBottomSheet` instead: section, status with its
+  explanation, time, teacher, place with the map button, and `Открыть в спорте`,
+  which selects the sport tab through `AppNavigator.openRoot(AppRoot.SPORT)`.
+  Managing the booking stays on the sport tab.
 - `Друзья на паре` is the only place friends on a lesson appear.
   `LessonDetailsViewModel` asks `LessonFriendsRepository` for
   `GET /api/schedule/lessons/{pairId}/friends?date=`; Backend answers with the

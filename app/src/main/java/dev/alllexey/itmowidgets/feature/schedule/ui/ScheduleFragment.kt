@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
@@ -135,10 +137,15 @@ class ScheduleFragment : Fragment() {
         LessonDetailsBottomSheet.newInstance(lesson, date).show(childFragmentManager, LessonDetailsBottomSheet.TAG)
     }
 
+    private fun showPendingSportDetails(booking: PendingSportBooking) {
+        if (childFragmentManager.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) != null) return
+        PendingSportDetailsBottomSheet.newInstance(booking).show(childFragmentManager, PendingSportDetailsBottomSheet.TAG)
+    }
+
     private fun setupRecycler() {
         recycler.itemAnimator = null
 
-        scheduleAdapter = DayScheduleAdapter(timeProvider, ::showLessonDetails).apply {
+        scheduleAdapter = DayScheduleAdapter(timeProvider, ::showLessonDetails, ::showPendingSportDetails).apply {
             stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         }
 

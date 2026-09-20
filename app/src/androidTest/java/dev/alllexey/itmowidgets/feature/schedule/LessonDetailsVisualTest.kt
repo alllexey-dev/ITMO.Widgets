@@ -10,6 +10,7 @@ import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
@@ -19,6 +20,7 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleFragment
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsArgs
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
+import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.toDetailsArgs
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -63,6 +65,7 @@ class LessonDetailsVisualTest {
             scenario.onActivity { activity ->
                 val card = activity.recycler().descendants().first { it.id == R.id.card_container && it.isShown }
                 assertTrue(card.isClickable)
+                assertEquals(View.GONE, card.findViewById<View>(R.id.link_indicator).visibility)
                 card.performClick()
             }
             settle()
@@ -75,7 +78,7 @@ class LessonDetailsVisualTest {
                 assertEquals(lesson().teacherFio, root.fact(R.id.teacher_fact))
                 assertEquals("1506 · Кронверкский проспект, 49", root.fact(R.id.location_fact))
                 assertEquals(View.VISIBLE, root.findViewById<View>(R.id.map_button).visibility)
-                assertEquals(View.GONE, root.findViewById<View>(R.id.zoom_button).visibility)
+                assertEquals(View.GONE, root.findViewById<View>(R.id.link_button).visibility)
                 assertEquals(View.VISIBLE, root.findViewById<View>(R.id.note_card).visibility)
                 assertEquals(View.GONE, root.findViewById<View>(R.id.friends_card).visibility)
                 ViewChecks.assertTextFits(root)
@@ -107,12 +110,69 @@ class LessonDetailsVisualTest {
                 val root = (activity.supportFragmentManager.findFragmentByTag(LessonDetailsBottomSheet.TAG) as LessonDetailsBottomSheet).requireView()
                 assertEquals(activity.getString(R.string.schedule_unknown_subject), root.text(R.id.subject_name))
                 assertEquals(View.VISIBLE, root.findViewById<View>(R.id.time_fact).visibility)
-                for (id in listOf(R.id.teacher_fact, R.id.location_fact, R.id.zoom_fact, R.id.actions, R.id.note_card, R.id.friends_card)) {
+                for (id in listOf(R.id.teacher_fact, R.id.location_fact, R.id.link_fact, R.id.actions, R.id.note_card, R.id.friends_card)) {
                     assertEquals(View.GONE, root.findViewById<View>(id).visibility)
                 }
                 ViewChecks.assertTextFits(root)
             }
             Screenshots.capture("lesson-details-screenshots", "minimal") { settle() }
+        }
+    }
+
+    @Test
+    fun aLinkedLessonShowsTheHostAndTheCardMarksIt() {
+        val date = LocalDate.of(2026, 9, 7)
+        // An online lesson: no room, no building, MyITMO's "virtual rooms" id that the directory does not know.
+        val linked = lesson().copy(pairId = 2, zoomUrl = "https://bbb.itmo.ru/b/abc", zoomPassword = "1234",
+            room = null, building = null, buildingId = null, mainBuildingId = 319)
+        withSchedule(lessons = listOf(linked)) { scenario ->
+            scenario.onActivity { activity ->
+                val card = activity.recycler().descendants().first { it.id == R.id.card_container && it.isShown }
+                assertEquals(View.VISIBLE, card.findViewById<View>(R.id.link_indicator).visibility)
+                card.performClick()
+            }
+            settle()
+            scenario.onActivity { activity ->
+                val root = activity.sheet().requireView()
+                assertEquals("bbb.itmo.ru\nПароль: 1234", root.fact(R.id.link_fact))
+                assertEquals(View.VISIBLE, root.findViewById<View>(R.id.link_button).visibility)
+                assertEquals(View.GONE, root.findViewById<View>(R.id.map_button).visibility)
+                assertEquals(View.GONE, root.findViewById<View>(R.id.location_fact).visibility)
+                ViewChecks.assertTextFits(root)
+                ViewChecks.assertTouchTargets(root)
+            }
+            Screenshots.capture("lesson-details-screenshots", "linked") { settle() }
+        }
+        assertEquals("2026-09-07", linked.toDetailsArgs(date).date)
+    }
+
+    @Test
+    fun aPendingSportRowOpensItsOwnSheetWithTheSportHandOff() {
+        val start = LocalDate.of(2026, 9, 7).atTime(16, 0).atOffset(java.time.ZoneOffset.ofHours(3))
+        val booking = PendingSportBooking(
+            queueId = 1, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100,
+            sectionName = "Современные танцы", start = start, end = start.plusMinutes(90),
+            teacherFio = "Тестовый преподаватель", roomName = "Кронверкский проспект, 49, зал 1", isPrediction = true
+        )
+        withSchedule { scenario ->
+            scenario.onActivity {
+                PendingSportDetailsBottomSheet.newInstance(booking).show(it.supportFragmentManager, PendingSportDetailsBottomSheet.TAG)
+            }
+            settle()
+            scenario.onActivity { activity ->
+                val sheet = activity.supportFragmentManager.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) as PendingSportDetailsBottomSheet
+                val root = sheet.requireView()
+                assertEquals("Современные танцы", root.text(R.id.section_name))
+                assertEquals(activity.getString(R.string.schedule_auto_sign_prediction), root.text(R.id.status))
+                assertTrue(root.text(R.id.status_description).contains(activity.getString(R.string.sport_queue_future_hint)))
+                assertTrue(root.fact(R.id.time_fact).endsWith("16:00–17:30"))
+                assertEquals("Кронверкский проспект, 49, зал 1", root.fact(R.id.location_fact))
+                assertEquals(View.VISIBLE, root.findViewById<View>(R.id.map_button).visibility)
+                assertEquals(View.VISIBLE, root.findViewById<View>(R.id.open_sport).visibility)
+                ViewChecks.assertTextFits(root)
+                ViewChecks.assertTouchTargets(root)
+            }
+            Screenshots.capture("lesson-details-screenshots", "pending") { settle() }
         }
     }
 
@@ -127,9 +187,12 @@ class LessonDetailsVisualTest {
         assertEquals(null, args.zoomUrl)
     }
 
-    private fun withSchedule(block: (ActivityScenario<ScheduleLifecycleTestActivity>) -> Unit) {
+    private fun withSchedule(
+        lessons: List<Lesson> = listOf(lesson()),
+        block: (ActivityScenario<ScheduleLifecycleTestActivity>) -> Unit
+    ) {
         val date = LocalDate.of(2026, 9, 7)
-        ScheduleLifecycleTestActivity.days = MutableStateFlow(listOf(DaySchedule(date.dayOfWeek.value, 1, date, null, listOf(lesson()))))
+        ScheduleLifecycleTestActivity.days = MutableStateFlow(listOf(DaySchedule(date.dayOfWeek.value, 1, date, null, lessons)))
         ScheduleLifecycleTestActivity.friendDays = MutableStateFlow(emptyList())
         ScheduleLifecycleTestActivity.refreshOutcome = { AppResult.Success(Unit) }
         ScheduleLifecycleTestActivity.clearOutcome = {}

@@ -107,16 +107,19 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
         )
         teacherFact.bind(R.string.schedule_lesson_details_teacher, lesson.teacherFio.orEmpty(), R.drawable.ic_person_rounded)
         locationFact.bind(R.string.schedule_lesson_details_location, locationText(), R.drawable.ic_location_on_rounded)
-        zoomFact.bind(R.string.schedule_lesson_details_zoom, listOfNotNull(lesson.zoomInfo, lesson.zoomPassword?.let {
-            getString(R.string.schedule_lesson_details_zoom_password, it)
-        }).joinToString("\n"), R.drawable.ic_globe)
+        // The link may lead anywhere, not only to Zoom: its host is the fact, the info and password follow.
+        linkFact.bind(R.string.schedule_lesson_details_link, listOfNotNull(
+            lesson.zoomUrl?.let(::lessonLinkHost),
+            lesson.zoomInfo,
+            lesson.zoomPassword?.let { getString(R.string.schedule_lesson_details_link_password, it) }
+        ).joinToString("\n"), R.drawable.ic_videocam_rounded)
 
         val destination = mapDestination()
         mapButton.isVisible = destination != null
         mapButton.setOnClickListener { destination?.let(::openMap) }
-        zoomButton.isVisible = lesson.zoomUrl != null
-        zoomButton.setOnClickListener { lesson.zoomUrl?.let(::openLink) }
-        actions.isVisible = mapButton.isVisible || zoomButton.isVisible
+        linkButton.isVisible = lesson.zoomUrl != null
+        linkButton.setOnClickListener { lesson.zoomUrl?.let(::openLink) }
+        actions.isVisible = mapButton.isVisible || linkButton.isVisible
 
         noteCard.isVisible = lesson.note != null
         note.text = lesson.note

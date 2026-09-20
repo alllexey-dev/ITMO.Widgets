@@ -170,7 +170,9 @@ class ScheduleCardsVisualTest {
                         assertTrue("The last lesson must fit inside the measured day", lastRow.bottom <= holder.lessonList.height)
                         val rows = holder.lessonList.descendants().filter { it.id == R.id.pending_sport_root }.toList()
                         rows.forEach { row ->
-                            assertFalse(row.descendants().any { it.isClickable })
+                            // A pending row opens its own sheet, so the card is the one clickable view.
+                            assertTrue(row.findViewById<View>(R.id.card_container).isClickable)
+                            assertEquals(View.GONE, row.findViewById<View>(R.id.link_indicator).visibility)
                             assertEquals(1f, row.alpha, 0f)
                             assertEquals(activity.color.onSurface, row.findViewById<TextView>(R.id.time_start).currentTextColor)
                             assertTrue(row.findViewById<TextView>(R.id.title).typeface.isBold)

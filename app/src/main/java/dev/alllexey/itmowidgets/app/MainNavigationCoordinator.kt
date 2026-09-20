@@ -10,6 +10,7 @@ import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.setupWithNavController
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
+import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 
@@ -66,6 +67,19 @@ class MainNavigationCoordinator(
         val item = binding.bottomNavView.menu.findItem(destination) ?: return false
         return NavigationUI.onNavDestinationSelected(item, controller)
     }
+
+    override fun openRoot(root: AppRoot) {
+        selectRoot(root.destinationId)
+    }
+
+    private val AppRoot.destinationId: Int
+        get() = when (this) {
+            AppRoot.RECORDBOOK -> R.id.navigation_recordbook
+            AppRoot.SCHEDULE -> R.id.navigation_schedule
+            AppRoot.HOME -> R.id.navigation_home
+            AppRoot.SPORT -> R.id.navigation_sport
+            AppRoot.ME -> R.id.navigation_me
+        }
 
     override fun dismissOverlays() {
         if (fragments.isStateSaved) return

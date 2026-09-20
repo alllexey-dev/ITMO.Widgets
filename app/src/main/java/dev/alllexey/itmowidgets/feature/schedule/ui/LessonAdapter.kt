@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.core.util.dp
+import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -21,8 +22,8 @@ import kotlin.math.ceil
 
 class LessonAdapter(
     private val scheduleList: List<ScheduleItem>,
-    /** Only real lessons open details; pending sport rows stay inert. */
-    private val onLessonClick: (Lesson) -> Unit = {}
+    private val onLessonClick: (Lesson) -> Unit = {},
+    private val onPendingClick: (PendingSportBooking) -> Unit = {}
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -70,7 +71,7 @@ class LessonAdapter(
             is ScheduleItem.NoLessonsItem -> (holder as EmptyDayViewHolder).bind(item)
             is ScheduleItem.PendingSportItem -> {
                 updateTimelineGuide(holder.itemView, R.id.timeline_guide)
-                (holder as PendingSportViewHolder).bind(item)
+                (holder as PendingSportViewHolder).bind(item, onPendingClick)
             }
         }
     }
@@ -112,11 +113,13 @@ class LessonAdapter(
         private val timelineDot: ImageView = itemView.findViewById(R.id.timeline_dot)
         private val typeIndicator: ImageView = itemView.findViewById(R.id.type_indicator)
         private val typeLabel: TextView = itemView.findViewById(R.id.type)
+        private val linkIndicator: View = itemView.findViewById(R.id.link_indicator)
 
         fun bind(item: ScheduleItem.LessonItem, onClick: (Lesson) -> Unit) {
             val lesson = item.lesson
             card.setOnClickListener { onClick(lesson) }
             card.isFocusable = true
+            linkIndicator.visibility = if (lesson.zoomUrl.isNullOrBlank()) View.GONE else View.VISIBLE
 
             (card.layoutParams as? ViewGroup.MarginLayoutParams?)?.bottomMargin = if (item.isLastLesson) 0 else 16.dp
 
@@ -202,12 +205,11 @@ class LessonAdapter(
         private val typeIndicator: ImageView = itemView.findViewById(R.id.type_indicator)
         private val content: View = itemView.findViewById(R.id.card_container)
 
-        fun bind(item: ScheduleItem.PendingSportItem) {
+        fun bind(item: ScheduleItem.PendingSportItem, onClick: (PendingSportBooking) -> Unit) {
             val booking = item.booking
-            // A pending booking has no details sheet; a recycled lesson row must not keep its click.
-            content.setOnClickListener(null)
-            content.isClickable = false
-            content.isFocusable = false
+            content.setOnClickListener { onClick(booking) }
+            content.isFocusable = true
+            itemView.findViewById<View>(R.id.link_indicator).visibility = View.GONE
             title.text = booking.sectionName
             start.text = booking.start.format(TIME_FORMATTER)
             end.text = booking.end.format(TIME_FORMATTER)

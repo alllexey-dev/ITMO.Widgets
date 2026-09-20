@@ -50,6 +50,7 @@ import androidx.transition.TransitionListenerAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
+import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -303,6 +304,8 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     override fun openScreen(screen: AppScreen, arguments: Bundle?) = navigation.openScreen(screen, arguments)
 
     override fun dismissOverlays() = navigation.dismissOverlays()
+
+    override fun openRoot(root: AppRoot) = Unit
 
     val host: NavHostFragment
         get() = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment

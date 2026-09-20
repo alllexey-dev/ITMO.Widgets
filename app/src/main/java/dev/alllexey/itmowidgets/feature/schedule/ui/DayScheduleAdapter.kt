@@ -25,7 +25,8 @@ import java.util.Locale
 
 class DayScheduleAdapter(
     private val timeProvider: AcademicTimeProvider,
-    private val onLessonClick: (Lesson, LocalDate) -> Unit = { _, _ -> }
+    private val onLessonClick: (Lesson, LocalDate) -> Unit = { _, _ -> },
+    private val onPendingClick: (PendingSportBooking) -> Unit = {}
 ) :
     ListAdapter<ScheduleDisplayDay, DayScheduleAdapter.DayViewHolder>(ScheduleDiffCallback) {
 
@@ -109,7 +110,7 @@ class DayScheduleAdapter(
         val states = if (timelineDays === currentList) timelineStates
         else resolveScheduleTimeline(currentList, timeProvider.now().toLocalDateTime())
         val processed = processLessonsWithBreaks(lessons, states[position], daySchedule.pendingSport)
-        val lessonAdapter = LessonAdapter(processed) { lesson -> onLessonClick(lesson, date) }
+        val lessonAdapter = LessonAdapter(processed, { lesson -> onLessonClick(lesson, date) }, onPendingClick)
         // Days are recycled by the outer list. A day's bounded rows must all
         // contribute their natural height; a nested wrap-content RecyclerView
         // can stop measuring at the viewport and silently hide large-font rows.

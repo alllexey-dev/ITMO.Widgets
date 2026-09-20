@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
+import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGate
@@ -94,6 +95,12 @@ class MainActivity : AppCompatActivity(), AppNavigator {
 
     override fun dismissOverlays() {
         navigation.dismissOverlays()
+    }
+
+    override fun openRoot(root: AppRoot) {
+        if (sessionRepository.state.value !is SessionState.SignedIn) return
+        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        navigation.openRoot(root)
     }
 
     override fun onNewIntent(intent: Intent) {

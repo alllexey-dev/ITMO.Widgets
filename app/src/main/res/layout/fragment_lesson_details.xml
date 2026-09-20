@@ -75,7 +75,7 @@
                     android:id="@+id/location_fact"
                     layout="@layout/item_sport_detail_fact" />
                 <include
-                    android:id="@+id/zoom_fact"
+                    android:id="@+id/link_fact"
                     layout="@layout/item_sport_detail_fact" />
             </LinearLayout>
             <LinearLayout
@@ -95,13 +95,13 @@
                     app:icon="@drawable/ic_location_on_rounded"
                     android:visibility="gone" />
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/zoom_button"
+                    android:id="@+id/link_button"
                     style="@style/Widget.Material3.Button.ElevatedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
-                    android:text="@string/schedule_open_zoom"
-                    app:icon="@drawable/ic_globe"
+                    android:text="@string/schedule_open_link"
+                    app:icon="@drawable/ic_videocam_rounded"
                     android:visibility="gone" />
             </LinearLayout>
             <LinearLayout

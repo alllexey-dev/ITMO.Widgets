@@ -117,6 +117,18 @@
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="Консультация" />
+
+            <!-- The lesson carries a meeting link; details open it. -->
+            <ImageView
+                android:id="@+id/link_indicator"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/schedule_lesson_link_indicator"
+                android:src="@drawable/ic_videocam_rounded"
+                android:visibility="gone"
+                app:tint="?attr/colorOnSurfaceVariant"
+                tools:visibility="visible" />
         </LinearLayout>
 
         <!-- Teacher -->

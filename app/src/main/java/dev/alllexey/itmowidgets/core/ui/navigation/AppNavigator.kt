@@ -9,9 +9,14 @@ enum class AppScreen {
     FRIENDS, USER_FRIENDS, USER_SEARCH, USER_PROFILE, USER_SCHEDULE, USER_SPORT
 }
 
+/** The bottom tabs; selecting one discards the contextual stack. */
+enum class AppRoot { RECORDBOOK, SCHEDULE, HOME, SPORT, ME }
+
 /** Contextual screens belong to the transient overlay stack, never to a bottom tab's history. */
 interface AppNavigator {
     fun openScreen(screen: AppScreen, arguments: Bundle? = null)
+
+    fun openRoot(root: AppRoot)
 
     /** Closes the whole contextual stack at once, for a screen that hands the window over. */
     fun dismissOverlays()
@@ -27,6 +32,10 @@ interface ScreenTransitionHost {
 
 fun Fragment.openScreen(screen: AppScreen, arguments: Bundle? = null) {
     (requireActivity() as AppNavigator).openScreen(screen, arguments)
+}
+
+fun Fragment.openRoot(root: AppRoot) {
+    (requireActivity() as AppNavigator).openRoot(root)
 }
 
 fun Fragment.dismissOverlays() {

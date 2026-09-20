@@ -132,11 +132,13 @@
     <string name="schedule_lesson_details_time_value">%1$s, %2$s–%3$s</string>
     <string name="schedule_lesson_details_teacher">Преподаватель</string>
     <string name="schedule_lesson_details_location">Место</string>
-    <string name="schedule_lesson_details_zoom">Zoom</string>
-    <string name="schedule_lesson_details_zoom_password">Пароль: %1$s</string>
+    <string name="schedule_lesson_details_link">Ссылка на занятие</string>
+    <string name="schedule_lesson_details_link_password">Пароль: %1$s</string>
+    <string name="schedule_lesson_link_indicator">Есть ссылка на занятие</string>
     <string name="schedule_lesson_note_title">Примечание</string>
     <string name="schedule_open_map">Открыть на карте</string>
-    <string name="schedule_open_zoom">Открыть в Zoom</string>
+    <string name="schedule_open_link">Открыть ссылку</string>
+    <string name="schedule_open_sport">Открыть в спорте</string>
     <string name="schedule_map_unavailable">Нет приложения для карт</string>
     <string name="schedule_lesson_friends_title">Друзья на паре</string>
     <string name="schedule_lesson_friends_count">Друзья на паре · %1$d</string>
