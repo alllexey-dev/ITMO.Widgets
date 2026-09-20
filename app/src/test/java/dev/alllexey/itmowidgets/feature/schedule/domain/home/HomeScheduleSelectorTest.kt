@@ -35,6 +35,9 @@ class HomeScheduleSelectorTest {
             listOf(HomeLessonState.CURRENT, HomeLessonState.UPCOMING, HomeLessonState.UPCOMING),
             card.rows.map { (it as HomeScheduleRow.Lesson).state }
         )
+        // 30 of 90 minutes have passed; only the current lesson reports progress.
+        assertEquals(1f / 3, (card.rows.first() as HomeScheduleRow.Lesson).progress!!, 0.01f)
+        assertEquals(listOf(null, null), card.rows.drop(1).map { (it as HomeScheduleRow.Lesson).progress })
     }
 
     @Test
@@ -49,6 +52,7 @@ class HomeScheduleSelectorTest {
         val row = card.rows.single() as HomeScheduleRow.Lesson
         assertEquals(2L, row.args.pairId)
         assertEquals(HomeLessonState.NEXT, row.state)
+        assertEquals(null, row.progress)
     }
 
     @Test

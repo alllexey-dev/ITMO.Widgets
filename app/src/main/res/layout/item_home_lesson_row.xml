@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/row_root"
     android:layout_width="match_parent"
@@ -70,6 +71,18 @@
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?attr/colorOnSurfaceVariant"
             tools:text="Лекция · 1506 · Кронверкский" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/row_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:max="100"
+            android:visibility="gone"
+            app:trackCornerRadius="2dp"
+            app:trackThickness="3dp"
+            tools:progress="40"
+            tools:visibility="visible" />
 
     </LinearLayout>
 

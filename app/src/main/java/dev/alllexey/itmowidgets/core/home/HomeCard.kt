@@ -22,7 +22,8 @@ enum class HomeHint(val kind: HomeCardKind) {
 enum class HomeLessonState { CURRENT, NEXT, UPCOMING }
 
 sealed interface HomeScheduleRow {
-    data class Lesson(val args: LessonDetailsArgs, val state: HomeLessonState) : HomeScheduleRow
+    /** [progress] is the elapsed share of a [HomeLessonState.CURRENT] lesson, 0..1; `null` otherwise. */
+    data class Lesson(val args: LessonDetailsArgs, val state: HomeLessonState, val progress: Float? = null) : HomeScheduleRow
 
     data class PendingSport(val args: PendingSportDetailsArgs, val predicted: Boolean) : HomeScheduleRow
 }

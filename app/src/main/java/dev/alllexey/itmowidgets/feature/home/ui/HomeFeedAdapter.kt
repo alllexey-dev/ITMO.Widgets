@@ -135,7 +135,7 @@ class HomeFeedAdapter(
                     }
                     binding.rowBadge.isVisible = badge != null
                     badge?.let(binding.rowBadge::setText)
-                    styleFocus(binding, focused = row.state == HomeLessonState.CURRENT)
+                    styleFocus(binding, progress = row.progress)
                     binding.rowRoot.setOnClickListener { actions.onLesson(args) }
                 }
                 is HomeScheduleRow.PendingSport -> {
@@ -151,29 +151,28 @@ class HomeFeedAdapter(
                         ContextCompat.getColorStateList(context, lessonTypeColorRes(SPORT_TYPE_ID))
                     binding.rowBadge.isVisible = true
                     binding.rowBadge.setText(if (row.predicted) R.string.home_pending_predicted else R.string.home_pending_waiting)
-                    styleFocus(binding, focused = false)
+                    styleFocus(binding, progress = null)
                     binding.rowRoot.setOnClickListener { actions.onPendingSport(args) }
                 }
             }
             return binding.root
         }
 
-        /** The lesson in progress sits on the secondary container; everything on it follows that palette. */
-        private fun styleFocus(binding: ItemHomeLessonRowBinding, focused: Boolean) {
+        /** The lesson in progress is told by its time, its badge and how far it has run, not by a fill. */
+        private fun styleFocus(binding: ItemHomeLessonRowBinding, progress: Float?) {
             val root = binding.rowRoot
-            root.setBackgroundResource(if (focused) R.drawable.bg_home_row_focus else R.drawable.bg_home_row_plain)
-            val primary = MaterialColors.getColor(root, if (focused) com.google.android.material.R.attr.colorOnSecondaryContainer else com.google.android.material.R.attr.colorOnSurface)
-            val secondary = MaterialColors.getColor(root, if (focused) com.google.android.material.R.attr.colorOnSecondaryContainer else com.google.android.material.R.attr.colorOnSurfaceVariant)
-            binding.rowTimeStart.setTextColor(primary)
-            binding.rowTitle.setTextColor(primary)
-            binding.rowTimeEnd.setTextColor(secondary)
-            binding.rowSubtitle.setTextColor(secondary)
+            val focused = progress != null
+            binding.rowTimeStart.setTextColor(
+                MaterialColors.getColor(root, if (focused) androidx.appcompat.R.attr.colorPrimary else com.google.android.material.R.attr.colorOnSurface)
+            )
             binding.rowBadge.backgroundTintList = ColorStateList.valueOf(
                 MaterialColors.getColor(root, if (focused) androidx.appcompat.R.attr.colorPrimary else com.google.android.material.R.attr.colorSecondaryContainer)
             )
             binding.rowBadge.setTextColor(
                 MaterialColors.getColor(root, if (focused) com.google.android.material.R.attr.colorOnPrimary else com.google.android.material.R.attr.colorOnSecondaryContainer)
             )
+            binding.rowProgress.isVisible = focused
+            binding.rowProgress.progress = ((progress ?: 0f) * PROGRESS_MAX).toInt()
         }
     }
 
@@ -275,6 +274,7 @@ class HomeFeedAdapter(
         const val FRIENDS_LIMIT = 3
         const val SPORT_TYPE_ID = 11
         const val SEPARATOR = " · "
+        const val PROGRESS_MAX = 100
         val RUSSIAN: Locale = Locale.forLanguageTag("ru")
         val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
         val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", RUSSIAN)

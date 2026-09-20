@@ -63,7 +63,7 @@ data class HomeFixture(
             date = DATE,
             tomorrow = false,
             rows = listOf(
-                HomeScheduleRow.Lesson(lesson(1, "09:30", "11:00", "Математический анализ"), HomeLessonState.CURRENT),
+                HomeScheduleRow.Lesson(lesson(1, "09:30", "11:00", "Математический анализ"), HomeLessonState.CURRENT, progress = 0.55f),
                 HomeScheduleRow.Lesson(lesson(2, "11:20", "12:50", "Дискретная математика и основы алгоритмов", 3), HomeLessonState.UPCOMING),
                 HomeScheduleRow.PendingSport(pending(1, 12), predicted = false),
                 HomeScheduleRow.Lesson(lesson(3, "13:30", "15:00", "Физика", 2, room = null), HomeLessonState.UPCOMING)

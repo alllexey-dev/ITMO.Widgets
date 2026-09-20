@@ -160,8 +160,9 @@ the geometry.
   rules; sign-in branding is a separate exception.
 - The home feed shows only cards with something to say, in a fixed order, each
   on `Card.Content` with rows of at least 48 dp; hints use `Card.Content.Outlined`
-  and close with a trailing icon button. The lesson in progress sits on
-  `colorSecondaryContainer` with its own on-colours. Pull-to-refresh keeps the
+  and close with a trailing icon button. The lesson in progress is told
+  by its time in `colorPrimary`, a filled badge and a thin progress line under
+  the row, never by a filled row. Pull-to-refresh keeps the
   cards; one snackbar reports a partial failure. The `Мой ИТМО` FAB stays at the
   bottom end and the list reserves space under it.
 

@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -71,8 +72,15 @@ class HomeScheduleSelector @Inject constructor() {
         val focus = timeline.indexOfFirst { it is HomeScheduleRow.Lesson }
         if (focus < 0) return timeline
         val lesson = timeline[focus] as HomeScheduleRow.Lesson
-        val started = lessons.first { it.pairId == lesson.args.pairId }.start <= time
-        val state = if (started) HomeLessonState.CURRENT else HomeLessonState.NEXT
-        return timeline.toMutableList().apply { set(focus, lesson.copy(state = state)) }
+        val source = lessons.first { it.pairId == lesson.args.pairId }
+        val started = source.start <= time
+        val focused = if (started) {
+            val total = Duration.between(source.start, source.end).toMinutes().coerceAtLeast(1)
+            val elapsed = Duration.between(source.start, time).toMinutes().coerceIn(0, total)
+            lesson.copy(state = HomeLessonState.CURRENT, progress = elapsed.toFloat() / total)
+        } else {
+            lesson.copy(state = HomeLessonState.NEXT)
+        }
+        return timeline.toMutableList().apply { set(focus, focused) }
     }
 }
