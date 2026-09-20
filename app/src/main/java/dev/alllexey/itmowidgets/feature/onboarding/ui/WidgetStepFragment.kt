@@ -1,9 +1,12 @@
 package dev.alllexey.itmowidgets.feature.onboarding.ui
 
+import android.content.ActivityNotFoundException
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -11,12 +14,15 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
+import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
 import dev.alllexey.itmowidgets.databinding.FragmentOnboardingWidgetBinding
@@ -36,7 +42,8 @@ import kotlinx.coroutines.flow.onEach
  * One widget: its real preview, the choices that shape it, and a pin to the launcher.
  *
  * The rows are the settings screen's own toggle rows, so a choice made here looks
- * exactly like the place it can be changed later.
+ * exactly like the place it can be changed later. The QR step also offers the
+ * spoiler image through the same picker and crop screen as settings.
  */
 @AndroidEntryPoint
 class WidgetStepFragment : Fragment() {
@@ -56,7 +63,23 @@ class WidgetStepFragment : Fragment() {
     private val rows = linkedMapOf<WidgetOption, ItemSettingToggleBinding>()
     private var textSizeRow: ItemSettingRowBinding? = null
     private var textSize: WidgetTextSize? = null
+    private var spoilerRow: ItemSettingRowBinding? = null
+    /** The revision the preview last drew; a newer one re-reads the stored image. */
+    private var drawnSpoilerRevision: Int? = null
     private var preview: WidgetPreview? = null
+
+    private val cropImageLauncher = registerForActivityResult(SpoilerCropContract()) { result ->
+        when (result) {
+            is SpoilerCropResult.Image -> viewModel.saveSpoilerImage(result.uri.toString())
+            SpoilerCropResult.Failed -> showImageError()
+            SpoilerCropResult.Cancelled -> Unit
+        }
+    }
+
+    private val imagePickerLauncher =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) cropImageLauncher.launch(uri)
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -92,6 +115,15 @@ class WidgetStepFragment : Fragment() {
             row.root.isClickable = true
             row.root.setOnClickListener { chooseTextSize() }
             textSizeRow = row
+        } else {
+            layoutInflater.inflate(R.layout.item_setting_divider, binding.settingRows, true)
+            val row = ItemSettingRowBinding.inflate(layoutInflater, binding.settingRows, true)
+            row.settingTitle.setText(R.string.settings_qr_custom_image_title)
+            row.settingDescription.isVisible = false
+            row.settingChevron.isVisible = true
+            row.root.isClickable = true
+            row.root.setOnClickListener { chooseSpoilerImage() }
+            spoilerRow = row
         }
 
         binding.pinButton.setOnClickListener { viewModel.pinWidget(kind) }
@@ -113,7 +145,48 @@ class WidgetStepFragment : Fragment() {
         preview = null
         rows.clear()
         textSizeRow = null
+        spoilerRow = null
+        drawnSpoilerRevision = null
         _binding = null
+    }
+
+    /** A custom image offers a replacement or the default; otherwise straight to the picker. */
+    private fun chooseSpoilerImage() {
+        val state = viewModel.state.value
+        if (state.spoilerBusy) return
+        if (state.customSpoiler != true) {
+            pickSpoilerImage()
+            return
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.settings_qr_custom_image_title)
+            .setItems(
+                arrayOf(
+                    getString(R.string.onboarding_spoiler_image_replace),
+                    getString(R.string.onboarding_spoiler_image_reset)
+                )
+            ) { dialog, index ->
+                if (index == 0) pickSpoilerImage() else viewModel.resetSpoilerImage()
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.common_cancel, null)
+            .show()
+    }
+
+    private fun pickSpoilerImage() {
+        try {
+            imagePickerLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        } catch (_: ActivityNotFoundException) {
+            showImageError()
+        }
+    }
+
+    private fun showImageError() {
+        _binding?.let {
+            Snackbar.make(it.root, R.string.settings_qr_custom_image_failed, Snackbar.LENGTH_LONG).show()
+        }
     }
 
     private fun chooseTextSize() {
@@ -147,6 +220,21 @@ class WidgetStepFragment : Fragment() {
             textSize = size
             textSizeRow?.settingValue?.setText(size.labelRes())
         }
+        spoilerRow?.let { row ->
+            val configured = state.customSpoiler
+            row.settingValue.isVisible = configured != null
+            configured?.let {
+                row.settingValue.setText(
+                    if (it) R.string.settings_qr_custom_image_selected else R.string.settings_qr_custom_image_default
+                )
+            }
+            // No image without the spoiler; the row dims exactly like the settings row.
+            val enabled = appearance.qr.spoilerEnabled && configured != null && !state.spoilerBusy
+            row.root.isEnabled = enabled
+            row.root.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
+        }
+        if (drawnSpoilerRevision != null && drawnSpoilerRevision != state.spoilerRevision) preview?.refresh()
+        drawnSpoilerRevision = state.spoilerRevision
     }
 
     private fun WidgetTextSize.labelRes(): Int = when (this) {
@@ -199,6 +287,8 @@ class WidgetStepFragment : Fragment() {
 
     companion object {
         private const val ARG_KIND = "widget_kind"
+        private const val ENABLED_ALPHA = 1f
+        private const val DISABLED_ALPHA = 0.6f
 
         fun newInstance(kind: WidgetKind): WidgetStepFragment = WidgetStepFragment().apply {
             arguments = bundleOf(ARG_KIND to kind.name)

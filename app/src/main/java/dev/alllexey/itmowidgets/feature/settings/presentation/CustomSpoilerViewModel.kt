@@ -3,8 +3,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.alllexey.itmowidgets.feature.settings.domain.CustomSpoilerRepository
-import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
+import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,8 +17,7 @@ enum class CustomSpoilerEvent { SAVED, RESET, FAILED }
 
 @HiltViewModel
 class CustomSpoilerViewModel @Inject constructor(
-    private val repository: CustomSpoilerRepository,
-    private val widgetRefreshRequester: WidgetRefreshRequester
+    private val repository: CustomSpoilerRepository
 ) : ViewModel() {
 
     private val mutableState = MutableStateFlow(CustomSpoilerUiState())
@@ -50,7 +48,6 @@ class CustomSpoilerViewModel @Inject constructor(
             try {
                 if (update()) {
                     mutableState.value = mutableState.value.copy(configured = configured)
-                    widgetRefreshRequester.refreshAll()
                     eventChannel.send(if (configured) CustomSpoilerEvent.SAVED else CustomSpoilerEvent.RESET)
                 } else {
                     eventChannel.send(CustomSpoilerEvent.FAILED)

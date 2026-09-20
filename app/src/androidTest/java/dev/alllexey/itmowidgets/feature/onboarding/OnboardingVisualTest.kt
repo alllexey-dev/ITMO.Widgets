@@ -49,8 +49,9 @@ class OnboardingVisualTest {
                         val page = activity.currentPage()
                         assertEquals(activity.getString(titleRes), page.text(R.id.step_title))
                         assertEquals(rows, page.findViewById<ViewGroup>(R.id.setting_rows).switches().size)
-                        // Schedule widgets also offer their text size; the QR widget has none.
+                        // Schedule widgets also offer their text size; the QR widget offers its spoiler image instead.
                         assertEquals(step < 2, page.findViewById<ViewGroup>(R.id.setting_rows).hasTextSizeRow(activity))
+                        assertEquals(step == 2, page.findViewById<ViewGroup>(R.id.setting_rows).hasSpoilerImageRow(activity))
                         assertPreviewDrawn(page, compact = step == 0)
                         assertEquals(View.VISIBLE, page.findViewById<View>(R.id.pin_button).visibility)
                         assertEquals(View.GONE, page.findViewById<View>(R.id.pin_hint).visibility)
@@ -125,6 +126,48 @@ class OnboardingVisualTest {
     }
 
     @Test
+    fun theSpoilerImageRowFollowsTheSpoilerSwitch() {
+        launch(Appearances.light.toSettingsNavigation()) { scenario ->
+            repeat(2) { next(scenario) }
+            scenario.onActivity { activity ->
+                val rows = activity.currentPage().findViewById<ViewGroup>(R.id.setting_rows)
+                val row = rows.spoilerImageRow(activity)
+                assertTrue("Enabled with the spoiler", row.isEnabled)
+                assertEquals(
+                    activity.getString(R.string.settings_qr_custom_image_default),
+                    row.findViewById<TextView>(R.id.setting_value).text.toString()
+                )
+                // The spoiler switch is the second row of the QR step.
+                rows.rows()[1].performClick()
+            }
+            settle()
+            scenario.onActivity { activity ->
+                val rows = activity.currentPage().findViewById<ViewGroup>(R.id.setting_rows)
+                assertEquals(false, rows.switches()[1].isChecked)
+                assertEquals(false, rows.spoilerImageRow(activity).isEnabled)
+            }
+            capture("widget-2-no-spoiler")
+        }
+    }
+
+    @Test
+    fun aStoredSpoilerImageReadsAsChosen() {
+        SettingsNavigationTestActivity.onboardingFixture =
+            SettingsNavigationTestActivity.OnboardingFixture(customSpoiler = true)
+        launch(Appearances.light.toSettingsNavigation()) { scenario ->
+            repeat(2) { next(scenario) }
+            scenario.onActivity { activity ->
+                val row = activity.currentPage().findViewById<ViewGroup>(R.id.setting_rows).spoilerImageRow(activity)
+                assertEquals(
+                    activity.getString(R.string.settings_qr_custom_image_selected),
+                    row.findViewById<TextView>(R.id.setting_value).text.toString()
+                )
+                assertTextFits(activity.onboardingRoot())
+            }
+        }
+    }
+
+    @Test
     fun aLauncherWithoutPinningExplainsItselfInsteadOfOfferingButtons() {
         SettingsNavigationTestActivity.onboardingFixture =
             SettingsNavigationTestActivity.OnboardingFixture(pinSupported = false)
@@ -181,6 +224,17 @@ class OnboardingVisualTest {
     private fun ViewGroup.hasTextSizeRow(activity: SettingsNavigationTestActivity): Boolean =
         descendants().filterIsInstance<TextView>()
             .any { it.text == activity.getString(R.string.settings_widget_text_size_title) }
+
+    private fun ViewGroup.hasSpoilerImageRow(activity: SettingsNavigationTestActivity): Boolean =
+        descendants().filterIsInstance<TextView>()
+            .any { it.text == activity.getString(R.string.settings_qr_custom_image_title) }
+
+    /** The clickable row whose title is the spoiler image. */
+    private fun ViewGroup.spoilerImageRow(activity: SettingsNavigationTestActivity): View =
+        rows().single { row ->
+            row.findViewById<TextView>(R.id.setting_title)?.text ==
+                activity.getString(R.string.settings_qr_custom_image_title)
+        }
 
     private fun ViewGroup.rows(): List<View> = (0 until childCount).map(::getChildAt).filter { it.isClickable }
 

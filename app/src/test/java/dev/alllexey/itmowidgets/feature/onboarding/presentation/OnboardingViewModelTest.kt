@@ -3,17 +3,20 @@ package dev.alllexey.itmowidgets.feature.onboarding.presentation
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -178,6 +181,63 @@ class OnboardingViewModelTest {
     }
 
     @Test
+    fun `the stored spoiler image is read once and a save marks it for the preview`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture()
+            assertEquals(null, fixture.viewModel.state.value.customSpoiler)
+            advanceUntilIdle()
+            assertEquals(false, fixture.viewModel.state.value.customSpoiler)
+            assertEquals(0, fixture.viewModel.state.value.spoilerRevision)
+
+            fixture.viewModel.saveSpoilerImage("content://test/image")
+            fixture.viewModel.saveSpoilerImage("content://test/duplicate")
+            fixture.viewModel.resetSpoilerImage()
+            runCurrent()
+            assertTrue(fixture.viewModel.state.value.spoilerBusy)
+            assertEquals(listOf("content://test/image"), fixture.spoiler.saved)
+
+            fixture.spoiler.result.complete(true)
+            advanceUntilIdle()
+
+            val state = fixture.viewModel.state.value
+            assertEquals(true, state.customSpoiler)
+            assertFalse(state.spoilerBusy)
+            assertEquals(1, state.spoilerRevision)
+            assertEquals(0, fixture.spoiler.resets)
+        }
+
+    @Test
+    fun `a failed image keeps the previous one and explains itself`() = runTest(mainDispatcherRule.dispatcher) {
+        val fixture = createFixture(spoiler = FakeCustomSpoilerRepository(hasImage = true))
+        advanceUntilIdle()
+
+        fixture.viewModel.saveSpoilerImage("content://test/broken")
+        fixture.spoiler.result.complete(false)
+        advanceUntilIdle()
+
+        val state = fixture.viewModel.state.value
+        assertEquals(true, state.customSpoiler)
+        assertFalse(state.spoilerBusy)
+        assertEquals(0, state.spoilerRevision)
+        assertEquals(OnboardingEvent.SpoilerImageFailed, fixture.viewModel.events.first())
+    }
+
+    @Test
+    fun `a reset returns to the default image`() = runTest(mainDispatcherRule.dispatcher) {
+        val fixture = createFixture(spoiler = FakeCustomSpoilerRepository(hasImage = true))
+        advanceUntilIdle()
+        assertEquals(true, fixture.viewModel.state.value.customSpoiler)
+
+        fixture.viewModel.resetSpoilerImage()
+        fixture.spoiler.result.complete(true)
+        advanceUntilIdle()
+
+        assertEquals(false, fixture.viewModel.state.value.customSpoiler)
+        assertEquals(1, fixture.spoiler.resets)
+        assertEquals(1, fixture.viewModel.state.value.spoilerRevision)
+    }
+
+    @Test
     fun `each widget step offers its own options`() {
         assertEquals(listOf(WidgetOption.COMPACT_NEXT_LESSON_EARLY, WidgetOption.COMPACT_HIDE_TEACHER), WidgetKind.SINGLE_LESSON.options)
         assertEquals(
@@ -228,7 +288,10 @@ class OnboardingViewModelTest {
             assertEquals(OnboardingEvent.OpenNotificationSettings, fixture.viewModel.events.first())
         }
 
-    private fun createFixture(savedStateHandle: SavedStateHandle = SavedStateHandle()): Fixture {
+    private fun createFixture(
+        savedStateHandle: SavedStateHandle = SavedStateHandle(),
+        spoiler: FakeCustomSpoilerRepository = FakeCustomSpoilerRepository()
+    ): Fixture {
         val onboarding = FakeOnboardingRepository()
         val services = FakeCustomServicesRepository()
         val appearance = FakeWidgetAppearanceRepository()
@@ -236,10 +299,12 @@ class OnboardingViewModelTest {
             onboarding = onboarding,
             services = services,
             appearance = appearance,
+            spoiler = spoiler,
             viewModel = OnboardingViewModel(
                 onboardingRepository = onboarding,
                 customServicesRepository = services,
                 widgetAppearanceRepository = appearance,
+                customSpoilerRepository = spoiler,
                 savedStateHandle = savedStateHandle
             )
         )
@@ -249,8 +314,28 @@ class OnboardingViewModelTest {
         val onboarding: FakeOnboardingRepository,
         val services: FakeCustomServicesRepository,
         val appearance: FakeWidgetAppearanceRepository,
+        val spoiler: FakeCustomSpoilerRepository,
         val viewModel: OnboardingViewModel
     )
+
+    /** Writes wait for [result], so a test sees the busy frame before the answer. */
+    private class FakeCustomSpoilerRepository(private val hasImage: Boolean = false) : CustomSpoilerRepository {
+        val result = CompletableDeferred<Boolean>()
+        val saved = mutableListOf<String>()
+        var resets = 0
+
+        override suspend fun hasImage(): Boolean = hasImage
+
+        override suspend fun saveImage(sourceUri: String): Boolean {
+            saved += sourceUri
+            return result.await()
+        }
+
+        override suspend fun resetImage(): Boolean {
+            resets++
+            return result.await()
+        }
+    }
 
     private class FakeOnboardingRepository : OnboardingRepository {
         private val completed = MutableStateFlow(false)

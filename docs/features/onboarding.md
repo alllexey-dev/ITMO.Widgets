@@ -56,6 +56,16 @@ row writes through `WidgetAppearanceRepository`, which also refreshes the
 installed widgets. The single-lesson preview is as tall as the widget
 itself; only the day list gets the bounded 160 dp area.
 
+The QR step ends with `Изображение спойлера` instead: the same row shape with
+`Стандартное` or `Своё изображение` as its value, dimmed while the spoiler is
+off or while an image is being written. A tap opens the Android photo picker
+and the square crop screen shared with settings (`core/ui/spoiler`); with a
+custom image already stored the tap first asks `Выбрать другое` or `Вернуть
+стандартное`. The write goes through `core/settings/CustomSpoilerRepository`,
+which refreshes the installed widgets itself; the ViewModel counts every
+successful change in `spoilerRevision` so the preview re-reads the image, and
+a failed one is a snackbar from the host.
+
 The pin button calls `AppWidgetManager.requestPinAppWidget` with a broadcast
 `PendingIntent`; `core/ui/widget/WidgetPinRequester` (shared with the home feed
 hint) owns that receiver for the whole Fragment lifetime, because the launcher confirms the pin while this screen is stopped. A

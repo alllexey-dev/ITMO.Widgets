@@ -19,7 +19,7 @@ import dev.alllexey.itmowidgets.feature.settings.data.CustomSpoilerRepositoryImp
 import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.WidgetAppearanceRepositoryImpl
-import dev.alllexey.itmowidgets.feature.settings.domain.CustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion

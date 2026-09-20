@@ -25,9 +25,9 @@ import dev.alllexey.itmowidgets.databinding.FragmentMeBinding
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
 import dev.alllexey.itmowidgets.feature.me.ui.MeRenderer
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
-import dev.alllexey.itmowidgets.feature.settings.ui.SpoilerCropActivity
-import dev.alllexey.itmowidgets.feature.settings.ui.SpoilerCropResult
-import dev.alllexey.itmowidgets.feature.settings.ui.SpoilerCropContract
+import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropActivity
+import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
+import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Appearances.toSettingsPreview
 import dev.alllexey.itmowidgets.testing.Screenshots

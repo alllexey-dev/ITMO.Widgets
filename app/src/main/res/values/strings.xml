@@ -724,6 +724,8 @@
     <string name="onboarding_qr_widget_title">Виджет QR-пропуска</string>
     <string name="onboarding_widget_add">Добавить на главный экран</string>
     <string name="onboarding_widget_added">Добавлен на главный экран</string>
+    <string name="onboarding_spoiler_image_replace">Выбрать другое</string>
+    <string name="onboarding_spoiler_image_reset">Вернуть стандартное</string>
     <string name="onboarding_widget_manual_hint">Этот лаунчер не даёт добавить виджет отсюда. Добавьте его через меню виджетов на главном экране.</string>
 
     <string name="onboarding_services_title">Сервисы ITMO.Widgets</string>

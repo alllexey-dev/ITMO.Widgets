@@ -57,6 +57,11 @@ data class OnboardingUiState(
     val servicesBusy: Boolean = false,
     val notificationsGranted: Boolean = false,
     val notificationsAsked: Boolean = false,
+    /** Null until the stored spoiler image answers; the row shows no value until then. */
+    val customSpoiler: Boolean? = null,
+    val spoilerBusy: Boolean = false,
+    /** Grows with every stored image change so the QR preview knows to re-read it. */
+    val spoilerRevision: Int = 0,
     val finished: Boolean = false
 ) {
     /** Notifications carry what services send; without the opt-in there is nothing to ask for. */
@@ -72,5 +77,6 @@ sealed interface OnboardingEvent {
     data class RequestPinWidget(val kind: WidgetKind) : OnboardingEvent
     data object RequestNotificationPermission : OnboardingEvent
     data object OpenNotificationSettings : OnboardingEvent
+    data object SpoilerImageFailed : OnboardingEvent
     data class ShowError(val error: AppError) : OnboardingEvent
 }

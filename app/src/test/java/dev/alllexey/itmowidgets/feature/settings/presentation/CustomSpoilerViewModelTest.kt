@@ -1,8 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.feature.settings.domain.CustomSpoilerRepository
-import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
+import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -18,10 +17,9 @@ class CustomSpoilerViewModelTest {
     @get:Rule val main = MainDispatcherRule()
 
     @Test
-    fun `save updates state and refreshes widgets exactly once even with repeated taps`() = runTest(main.dispatcher) {
+    fun `save updates state and writes exactly once even with repeated taps`() = runTest(main.dispatcher) {
         val repository = FakeRepository()
-        val refresh = Refresh()
-        val vm = CustomSpoilerViewModel(repository, refresh)
+        val vm = CustomSpoilerViewModel(repository)
         advanceUntilIdle()
         assertEquals(false, vm.state.value.configured)
         vm.saveImage("content://test/image")
@@ -33,36 +31,31 @@ class CustomSpoilerViewModelTest {
         repository.result.complete(true)
         advanceUntilIdle()
         assertEquals(CustomSpoilerUiState(configured = true), vm.state.value)
-        assertEquals(1, refresh.count)
         assertEquals(CustomSpoilerEvent.SAVED, vm.events.first())
     }
 
     @Test
-    fun `failed replacement preserves configured image and does not refresh widgets`() = runTest(main.dispatcher) {
+    fun `failed replacement preserves configured image`() = runTest(main.dispatcher) {
         val repository = FakeRepository(hasImage = true)
-        val refresh = Refresh()
-        val vm = CustomSpoilerViewModel(repository, refresh)
+        val vm = CustomSpoilerViewModel(repository)
         advanceUntilIdle()
         vm.saveImage("content://test/invalid")
         repository.result.complete(false)
         advanceUntilIdle()
         assertEquals(CustomSpoilerUiState(configured = true), vm.state.value)
-        assertEquals(0, refresh.count)
         assertEquals(CustomSpoilerEvent.FAILED, vm.events.first())
     }
 
     @Test
-    fun `reset clears custom image and refreshes widgets`() = runTest(main.dispatcher) {
+    fun `reset clears custom image`() = runTest(main.dispatcher) {
         val repository = FakeRepository(hasImage = true)
-        val refresh = Refresh()
-        val vm = CustomSpoilerViewModel(repository, refresh)
+        val vm = CustomSpoilerViewModel(repository)
         advanceUntilIdle()
         vm.resetImage()
         repository.result.complete(true)
         advanceUntilIdle()
         assertEquals(CustomSpoilerUiState(configured = false), vm.state.value)
         assertEquals(CustomSpoilerEvent.RESET, vm.events.first())
-        assertEquals(1, refresh.count)
     }
 
     private class FakeRepository(val hasImage: Boolean = false) : CustomSpoilerRepository {
@@ -74,10 +67,5 @@ class CustomSpoilerViewModelTest {
             return result.await()
         }
         override suspend fun resetImage() = result.await()
-    }
-
-    private class Refresh : WidgetRefreshRequester {
-        var count = 0
-        override fun refreshAll() { count++ }
     }
 }

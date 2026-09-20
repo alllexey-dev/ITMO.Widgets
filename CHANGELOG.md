@@ -6,6 +6,11 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 ## Unreleased (2.1-SNAPSHOT)
 
 ### 2026-09-20
+- First-run flow: the QR widget step offers `Изображение спойлера`, the same
+  photo picker and crop screen as settings, with `Выбрать другое` / `Вернуть
+  стандартное` once an image is stored. The crop screen and the spoiler image
+  contract moved to `core` (`core/ui/spoiler`, `core/settings`), and the
+  repository now refreshes the widgets itself instead of the settings ViewModel.
 - Home tab: a feed of cards instead of the placeholder. `Сегодня`/`Завтра` with
   the current lesson marked `сейчас`, the rest of the day, pending sport rows
   and a count of finished lessons; `Спорт` with the score progress and own

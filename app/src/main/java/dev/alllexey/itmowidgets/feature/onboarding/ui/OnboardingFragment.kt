@@ -154,6 +154,11 @@ class OnboardingFragment : Fragment() {
             is OnboardingEvent.RequestPinWidget -> pinRequester.request(event.kind.providerClassName)
             OnboardingEvent.RequestNotificationPermission -> requestNotificationPermission()
             OnboardingEvent.OpenNotificationSettings -> openNotificationSettings()
+            OnboardingEvent.SpoilerImageFailed -> Snackbar.make(
+                binding.root,
+                R.string.settings_qr_custom_image_failed,
+                Snackbar.LENGTH_LONG
+            ).show()
             is OnboardingEvent.ShowError -> Snackbar.make(
                 binding.root,
                 event.error.messageRes(),

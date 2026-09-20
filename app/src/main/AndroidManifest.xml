@@ -43,7 +43,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".feature.settings.ui.SpoilerCropActivity"
+            android:name=".core.ui.spoiler.SpoilerCropActivity"
             android:exported="false" />
 
         <activity

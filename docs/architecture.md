@@ -41,6 +41,8 @@ core/           cross-cutting; knows nothing about features
   result/       AppError, AppResult
   schedule/     schedule preferences, widget-refresh and SubjectLessonsGateway contracts
   services/     CustomServicesRepository — the Backend opt-in
+  settings/     WidgetAppearanceRepository and CustomSpoilerRepository — widget appearance
+                for screens outside settings (the first-run flow)
   session/      token store, session repository, current user, device registration
   social/       SocialRepository, PeopleSearchRepository
   sport/        SportScoreRepository, PendingSportBookingsRepository
@@ -48,7 +50,7 @@ core/           cross-cutting; knows nothing about features
   text/         UiText
   time/         AcademicTimeProvider, WallClock
   qr/           CustomSpoilerManager
-  ui/           AvatarView, state helpers, AppNavigator port, WidgetPinRequester,
+  ui/           AvatarView, state helpers, AppNavigator port, WidgetPinRequester, the spoiler crop screen,
                 the details-sheet header (view_details_header.xml + DetailsHeader.kt), ConditionTone
 di/             Hilt modules, one per feature or concern
 feature/<name>/ ui | presentation | domain | data

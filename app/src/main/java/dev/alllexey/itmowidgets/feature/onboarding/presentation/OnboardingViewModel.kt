@@ -7,6 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import javax.inject.Inject
@@ -35,6 +36,7 @@ class OnboardingViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val customServicesRepository: CustomServicesRepository,
     private val widgetAppearanceRepository: WidgetAppearanceRepository,
+    private val customSpoilerRepository: CustomSpoilerRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -57,6 +59,13 @@ class OnboardingViewModel @Inject constructor(
         widgetAppearanceRepository.observeAppearance()
             .onEach { appearance -> mutableState.update { it.copy(appearance = appearance) } }
             .launchIn(viewModelScope)
+        viewModelScope.launch {
+            val configured = customSpoilerRepository.hasImage()
+            // A picked image may be saved before the initial disk read answers.
+            mutableState.update {
+                if (it.customSpoiler == null && !it.spoilerBusy) it.copy(customSpoiler = configured) else it
+            }
+        }
     }
 
     /** The footer's primary action: one step forward, or the end of the flow on its last step. */
@@ -110,6 +119,37 @@ class OnboardingViewModel @Inject constructor(
             } catch (error: Exception) {
                 eventChannel.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
             }
+        }
+    }
+
+    /** The picked and cropped image; the repository refreshes the pinned widgets itself. */
+    fun saveSpoilerImage(sourceUri: String) = updateSpoilerImage(configured = true) {
+        customSpoilerRepository.saveImage(sourceUri)
+    }
+
+    fun resetSpoilerImage() = updateSpoilerImage(configured = false) {
+        customSpoilerRepository.resetImage()
+    }
+
+    private fun updateSpoilerImage(configured: Boolean, write: suspend () -> Boolean) {
+        if (mutableState.value.spoilerBusy) return
+        mutableState.update { it.copy(spoilerBusy = true) }
+        viewModelScope.launch {
+            val changed = try {
+                write()
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: Exception) {
+                false
+            }
+            mutableState.update {
+                if (changed) {
+                    it.copy(spoilerBusy = false, customSpoiler = configured, spoilerRevision = it.spoilerRevision + 1)
+                } else {
+                    it.copy(spoilerBusy = false)
+                }
+            }
+            if (!changed) eventChannel.send(OnboardingEvent.SpoilerImageFailed)
         }
     }
 

@@ -67,6 +67,7 @@ import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
@@ -102,13 +103,16 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     private val refresh = object : WidgetRefreshRequester { override fun refreshAll() = Unit }
     private val onboardingServices = FixtureOnboardingServices()
     private val onboardingAppearance = FixtureWidgetAppearance()
+    private val customSpoiler = FixtureCustomSpoiler()
 
     data class Appearance(val dark: Boolean = false, val fontScale: Float = 1f, val colorSeed: Int? = null)
 
     /** The first-run flow with no stored preferences and no backend behind the opt-in. */
     data class OnboardingFixture(
         val servicesEnabled: Boolean = false,
-        val pinSupported: Boolean = true
+        val pinSupported: Boolean = true,
+        /** Whether a custom spoiler image is already stored. */
+        val customSpoiler: Boolean = false
     )
 
     companion object {
@@ -229,6 +233,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                             onboardingRepository = Onboarding,
                             customServicesRepository = onboardingServices,
                             widgetAppearanceRepository = onboardingAppearance,
+                            customSpoilerRepository = customSpoiler,
                             savedStateHandle = SavedStateHandle()
                         ) as T
                     })[OnboardingViewModel::class.java]
@@ -240,11 +245,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
                         SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
-                        CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(object : CustomSpoilerRepository {
-                            override suspend fun hasImage() = false
-                            override suspend fun saveImage(sourceUri: String) = false
-                            override suspend fun resetImage() = false
-                        }, refresh)
+                        CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(customSpoiler)
                         else -> error("Unexpected ViewModel")
                     } as T
                 }
@@ -413,6 +414,14 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         override fun observeEnabled() = enabled
         override suspend fun isEnabled() = enabled.value
         override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
+    }
+
+    /** The image flips in memory; nothing is written and no widget exists to refresh. */
+    private class FixtureCustomSpoiler : CustomSpoilerRepository {
+        private var configured = onboardingFixture.customSpoiler
+        override suspend fun hasImage() = configured
+        override suspend fun saveImage(sourceUri: String): Boolean { configured = true; return true }
+        override suspend fun resetImage(): Boolean { configured = false; return true }
     }
 
     private class FixtureWidgetAppearance : WidgetAppearanceRepository {

@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.settings.ui
+package dev.alllexey.itmowidgets.core.ui.spoiler
 
 import android.content.Intent
 import android.net.Uri
