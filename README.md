@@ -31,9 +31,9 @@
 </p>
 
 <p align="center">
-  <img height="50" alt="Виджет «Пара»" src="https://widgets.alllexey.dev/img/night/widget_single_lesson_preview.webp" />
+  <img height="70" alt="Виджет «Пара»" src="https://widgets.alllexey.dev/img/night/widget_single_lesson_preview.webp" />
   <img height="150" alt="Виджет «Расписание»" src="https://widgets.alllexey.dev/img/night/widget_lesson_list_preview.webp" />
-  <img height="150" alt="Виджет «QR-код»" src="https://widgets.alllexey.dev/img/night/widget_qr_code_preview.webp" />
+  <img height="100" alt="Виджет «QR-код»" src="https://widgets.alllexey.dev/img/night/widget_qr_code_preview.webp" />
 </p>
 
 ## Возможности
