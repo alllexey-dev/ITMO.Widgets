@@ -26,13 +26,12 @@
 <p align="center">
   <img height="420" alt="Главный экран" src="https://widgets.alllexey.dev/img/night/home.webp" />
   <img height="420" alt="Расписание" src="https://widgets.alllexey.dev/img/night/schedule.webp" />
-  <img height="420" alt="Детали пары" src="https://widgets.alllexey.dev/img/night/lesson.webp" />
   <img height="420" alt="Запись на спорт" src="https://widgets.alllexey.dev/img/night/sport-catalog.webp" />
   <img height="420" alt="Зачётка" src="https://widgets.alllexey.dev/img/night/recordbook.webp" />
 </p>
 
 <p align="center">
-  <img height="150" alt="Виджет «Пара»" src="https://widgets.alllexey.dev/img/night/widget_single_lesson_preview.webp" />
+  <img height="50" alt="Виджет «Пара»" src="https://widgets.alllexey.dev/img/night/widget_single_lesson_preview.webp" />
   <img height="150" alt="Виджет «Расписание»" src="https://widgets.alllexey.dev/img/night/widget_lesson_list_preview.webp" />
   <img height="150" alt="Виджет «QR-код»" src="https://widgets.alllexey.dev/img/night/widget_qr_code_preview.webp" />
 </p>
