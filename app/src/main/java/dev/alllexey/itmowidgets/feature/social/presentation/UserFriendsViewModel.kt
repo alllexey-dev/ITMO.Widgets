@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -39,19 +40,13 @@ class UserFriendsViewModel @Inject constructor(
 
     fun load() {
         if (request?.isActive == true) return
+        // The last answer for this person renders at once; the network only updates the list.
         val previous = state.value as? UserFriendsUiState.Content
+            ?: repository.cachedUserFriends(isu)?.let { UserFriendsUiState.Content(it.toItems()) }
         state.value = previous?.copy(refreshing = true) ?: UserFriendsUiState.Loading
         request = viewModelScope.launch {
             when (val result = repository.userFriends(isu)) {
-                is AppResult.Success -> state.value = UserFriendsUiState.Content(result.value.map { profile ->
-                    UserListItem.User(UserRowUi(
-                        isu = profile.isu,
-                        name = profile.user.name,
-                        pictureUrl = profile.user.pictureUrl,
-                        subtitle = profile.user.subtitleText(),
-                        status = profile.relationship.statusText()
-                    ))
-                })
+                is AppResult.Success -> state.value = UserFriendsUiState.Content(result.value.toItems())
                 is AppResult.Failure -> {
                     // A revoked permission or session must discard content, not keep a private stale list.
                     if (previous != null && result.error !in setOf(
@@ -63,5 +58,15 @@ class UserFriendsViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun List<UserProfile>.toItems(): List<UserListItem> = map { profile ->
+        UserListItem.User(UserRowUi(
+            isu = profile.isu,
+            name = profile.user.name,
+            pictureUrl = profile.user.pictureUrl,
+            subtitle = profile.user.subtitleText(),
+            status = profile.relationship.statusText()
+        ))
     }
 }

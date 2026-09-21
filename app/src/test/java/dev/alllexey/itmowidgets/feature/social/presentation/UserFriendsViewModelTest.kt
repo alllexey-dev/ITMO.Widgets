@@ -6,6 +6,8 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -32,6 +34,26 @@ class UserFriendsViewModelTest {
         assertNull(row.primary)
         assertNull(row.secondary)
         assertTrue(row.opensProfile)
+    }
+
+    @Test fun `a list seen before opens with content while the network refreshes it`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val repository = FakeSocialRepository().apply {
+            cachedUserFriends = mapOf(42 to listOf(profile(12, RelationshipState.NONE)))
+            userFriendsResult = AppResult.Success(listOf(profile(12, RelationshipState.NONE), profile(13, RelationshipState.NONE)))
+            userFriendsGate = { gate.await() }
+        }
+        val vm = create(repository)
+        runCurrent()
+        val seeded = vm.uiState.value as UserFriendsUiState.Content
+        assertTrue(seeded.refreshing)
+        assertEquals(listOf(12), seeded.items.map { (it as UserListItem.User).row.isu })
+        gate.complete(Unit)
+        advanceUntilIdle()
+        val fresh = vm.uiState.value as UserFriendsUiState.Content
+        assertFalse(fresh.refreshing)
+        assertEquals(listOf(12, 13), fresh.items.map { (it as UserListItem.User).row.isu })
+        assertEquals(listOf(42), repository.userFriendsCalls)
     }
 
     @Test fun `empty first failure and retry remain distinct`() = runTest {

@@ -24,6 +24,11 @@ internal class FakeSocialRepository : SocialRepository {
     var refreshes = 0
     var actionError: AppError? = null
     var profiles: Map<Int, UserProfile> = emptyMap()
+    var cachedProfiles: Map<Int, UserProfile> = emptyMap()
+    var cachedUserFriends: Map<Int, List<UserProfile>> = emptyMap()
+    var userFriendsGate: (suspend () -> Unit)? = null
+    var profileGate: (suspend () -> Unit)? = null
+    var profileError: AppError? = null
 
     override fun observeFriends(): Flow<SocialState<List<UserProfile>>> = friends
     override fun observeRequests(): Flow<SocialState<FriendRequests>> = requests
@@ -36,11 +41,18 @@ internal class FakeSocialRepository : SocialRepository {
 
     override suspend fun userFriends(isu: Int): AppResult<List<UserProfile>> {
         userFriendsCalls += isu
+        userFriendsGate?.invoke()
         return userFriendsResult
     }
 
-    override suspend fun profile(isu: Int): AppResult<UserProfile> =
-        profiles[isu]?.let { AppResult.Success(it) } ?: AppResult.Failure(AppError.NotFound)
+    override fun cachedProfile(isu: Int): UserProfile? = cachedProfiles[isu]
+    override fun cachedUserFriends(isu: Int): List<UserProfile>? = cachedUserFriends[isu]
+
+    override suspend fun profile(isu: Int): AppResult<UserProfile> {
+        profileGate?.invoke()
+        profileError?.let { return AppResult.Failure(it) }
+        return profiles[isu]?.let { AppResult.Success(it) } ?: AppResult.Failure(AppError.NotFound)
+    }
 
     override suspend fun lookup(isus: List<Int>): AppResult<List<UserProfile>> =
         AppResult.Success(isus.mapNotNull(profiles::get))

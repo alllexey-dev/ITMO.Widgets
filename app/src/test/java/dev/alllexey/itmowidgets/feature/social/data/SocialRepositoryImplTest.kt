@@ -47,6 +47,38 @@ class SocialRepositoryImplTest {
     }
 
     @Test
+    fun `people seen in lists profiles and actions are cached until the session is cleared`() = runTest {
+        val api = FakeApi().apply {
+            friends = listOf(profile(1, CoreRelationshipState.FRIENDS))
+            incoming = listOf(profile(2, CoreRelationshipState.INCOMING))
+            userFriends = listOf(profile(7, CoreRelationshipState.NONE))
+            actionResult = { isu -> profile(isu, CoreRelationshipState.OUTGOING) }
+        }
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance)
+        assertNull(repository.cachedProfile(1))
+        assertNull(repository.cachedUserFriends(1))
+
+        repository.refresh()
+        assertEquals(RelationshipState.FRIENDS, repository.cachedProfile(1)?.relationship)
+        assertEquals(RelationshipState.INCOMING, repository.cachedProfile(2)?.relationship)
+        assertNull(repository.cachedProfile(5))
+
+        repository.profile(5)
+        assertEquals(RelationshipState.OUTGOING, repository.cachedProfile(5)?.relationship)
+        repository.userFriends(1)
+        assertEquals(listOf(7), repository.cachedUserFriends(1)?.map(UserProfile::isu))
+
+        api.actionResult = { isu -> profile(isu, CoreRelationshipState.NONE) }
+        repository.cancelRequest(5)
+        assertEquals(RelationshipState.NONE, repository.cachedProfile(5)?.relationship)
+
+        repository.clearSessionData()
+        assertNull(repository.cachedProfile(1))
+        assertNull(repository.cachedProfile(5))
+        assertNull(repository.cachedUserFriends(1))
+    }
+
+    @Test
     fun `disabled services skip the backend entirely`() = runTest {
         val api = FakeApi()
         val repository = SocialRepositoryImpl(services(enabled = false), api.instance)

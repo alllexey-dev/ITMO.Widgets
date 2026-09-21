@@ -49,11 +49,6 @@ class UserFriendsFragment : Fragment() {
         }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    override fun onStart() {
-        super.onStart()
-        viewModel.load()
-    }
-
     override fun onDestroyView() {
         binding.recyclerView.adapter = null
         _binding = null

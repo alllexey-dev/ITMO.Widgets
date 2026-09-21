@@ -58,12 +58,22 @@ class UserProfileViewModel @Inject constructor(
     }
 
     fun load() {
-        _uiState.value = UserProfileUiState.Loading
+        // A person already seen in a list opens without a spinner; the network only updates the page.
+        val seeded = content() ?: repository.cachedProfile(isu)?.let { UserProfileUiState.Content(it, isSelf, busy = false) }
+        _uiState.value = seeded ?: UserProfileUiState.Loading
         viewModelScope.launch {
             isSelf = currentUserProvider.getCurrentUser()?.isu == isu
-            _uiState.value = when (val result = repository.profile(isu)) {
-                is AppResult.Success -> UserProfileUiState.Content(result.value, isSelf, busy = false)
-                is AppResult.Failure -> UserProfileUiState.Error(result.error)
+            seeded?.let { _uiState.value = it.copy(isSelf = isSelf) }
+            when (val result = repository.profile(isu)) {
+                is AppResult.Success -> _uiState.value = UserProfileUiState.Content(result.value, isSelf, busy = false)
+                is AppResult.Failure -> {
+                    // A revoked permission or session must discard content, not keep a private stale page.
+                    if (seeded != null && result.error !in REVOKING_ERRORS) {
+                        events.send(UserProfileEvent.ActionFailed(result.error))
+                    } else {
+                        _uiState.value = UserProfileUiState.Error(result.error)
+                    }
+                }
             }
         }
     }
@@ -106,4 +116,8 @@ class UserProfileViewModel @Inject constructor(
     }
 
     private fun content() = _uiState.value as? UserProfileUiState.Content
+
+    private companion object {
+        val REVOKING_ERRORS = setOf(AppError.Forbidden, AppError.Unauthorized, AppError.CustomServicesDisabled, AppError.NotFound)
+    }
 }

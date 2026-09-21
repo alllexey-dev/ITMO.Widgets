@@ -45,6 +45,10 @@ interface SocialRepository {
 
     /** The last loaded friend list, for callers that cannot collect a flow. */
     val currentFriends: List<UserProfile>?
+    /** The last answer for one person, from any list or screen, for the first frame of a profile. */
+    fun cachedProfile(isu: Int): UserProfile? = null
+    /** The last loaded friend list of another user, for the first frame of that screen. */
+    fun cachedUserFriends(isu: Int): List<UserProfile>? = null
 
     suspend fun refresh()
 

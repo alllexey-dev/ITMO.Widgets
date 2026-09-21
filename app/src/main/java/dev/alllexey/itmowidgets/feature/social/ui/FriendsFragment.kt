@@ -84,12 +84,14 @@ class FriendsFragment : Fragment() {
     }
 
     private fun render(state: FriendsUiState) = with(binding) {
-        loading.isVisible = state is FriendsUiState.Loading
-        swipeRefreshLayout.isRefreshing = (state as? FriendsUiState.Content)?.refreshing == true
-        tabs.isVisible = state is FriendsUiState.Content
+        // A list already on screen stays while the repository reloads; only an empty screen shows the placeholder.
+        val keepsList = state is FriendsUiState.Loading && adapter.itemCount > 0
+        loading.isVisible = state is FriendsUiState.Loading && !keepsList
+        swipeRefreshLayout.isRefreshing = (state as? FriendsUiState.Content)?.refreshing == true || keepsList
+        tabs.isVisible = state is FriendsUiState.Content || keepsList
         when (state) {
             FriendsUiState.Loading -> {
-                swipeRefreshLayout.isVisible = false
+                swipeRefreshLayout.isVisible = keepsList
                 stateContainer.isVisible = false
             }
             FriendsUiState.Disabled -> showState(

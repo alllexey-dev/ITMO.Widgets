@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 class SocialRepositoryImpl @Inject constructor(
@@ -34,6 +35,8 @@ class SocialRepositoryImpl @Inject constructor(
     private val friends = MutableStateFlow<SocialState<List<UserProfile>>>(SocialState.Loading)
     private val requests = MutableStateFlow<SocialState<FriendRequests>>(SocialState.Loading)
     private val currentUser = MutableStateFlow<UserSummary?>(null)
+    private val profiles = ConcurrentHashMap<Int, UserProfile>()
+    private val userFriendsCache = ConcurrentHashMap<Int, List<UserProfile>>()
 
     override fun observeFriends(): Flow<SocialState<List<UserProfile>>> = friends.asStateFlow()
 
@@ -43,6 +46,16 @@ class SocialRepositoryImpl @Inject constructor(
 
     override val currentFriends: List<UserProfile>?
         get() = (friends.value as? SocialState.Content)?.value
+
+    override fun cachedProfile(isu: Int): UserProfile? {
+        profiles[isu]?.let { return it }
+        val requestLists = (requests.value as? SocialState.Content)?.value
+        return currentFriends?.firstOrNull { it.isu == isu }
+            ?: requestLists?.incoming?.firstOrNull { it.isu == isu }
+            ?: requestLists?.outgoing?.firstOrNull { it.isu == isu }
+    }
+
+    override fun cachedUserFriends(isu: Int): List<UserProfile>? = userFriendsCache[isu]
 
     override suspend fun refresh() {
         if (!customServices.isEnabled()) {
@@ -67,10 +80,11 @@ class SocialRepositoryImpl @Inject constructor(
 
     override suspend fun userFriends(isu: Int): AppResult<List<UserProfile>> = gated {
         call { widgetsApi.userFriends(isu) }.map { list -> list.map(CoreUserProfile::toModel) }
-    }
+    }.also { result -> if (result is AppResult.Success) userFriendsCache[isu] = result.value }
 
     override suspend fun profile(isu: Int): AppResult<UserProfile> {
         return gated { call { widgetsApi.userProfile(isu) }.map(CoreUserProfile::toModel) }
+            .also { result -> if (result is AppResult.Success) profiles[isu] = result.value }
     }
 
     override suspend fun lookup(isus: List<Int>): AppResult<List<UserProfile>> {
@@ -99,6 +113,8 @@ class SocialRepositoryImpl @Inject constructor(
     override suspend fun removeFriend(isu: Int) = act { widgetsApi.removeFriend(isu) }
 
     override suspend fun clearSessionData() {
+        profiles.clear()
+        userFriendsCache.clear()
         currentUser.value = null
         friends.value = SocialState.Loading
         requests.value = SocialState.Loading
@@ -112,6 +128,7 @@ class SocialRepositoryImpl @Inject constructor(
 
     /** Moves [profile] into the list its relationship belongs to; other lists drop it. */
     private fun applyRelationship(profile: UserProfile) {
+        profiles[profile.isu] = profile
         friends.value = friends.value.update { list ->
             list.without(profile.isu).withIf(profile, profile.relationship == RelationshipState.FRIENDS)
         }
