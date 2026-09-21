@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.me.ui
 
 import androidx.core.view.isVisible
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.databinding.FragmentMeBinding
 import dev.alllexey.itmowidgets.feature.me.presentation.MeFriendsSummary
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
@@ -18,7 +19,7 @@ object MeRenderer {
         )
         binding.profileName.text = user?.name ?: backendName
             ?: context.getString(R.string.me_unknown_user)
-        val group = backendUser?.groups?.firstOrNull()
+        val group = backendUser?.primaryGroup()
         binding.profileGroup.isVisible = group != null
         binding.profileGroup.text = group?.let {
             context.getString(R.string.me_group_format, it.name, it.course, it.facultyShortName)

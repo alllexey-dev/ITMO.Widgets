@@ -14,6 +14,13 @@ data class UserGroup(
     val facultyShortName: String
 )
 
+/**
+ * The group to show when a user has several: Backend may still carry earlier
+ * years' groups, and the highest course is the current programme.
+ */
+fun UserSummary.primaryGroup(): UserGroup? =
+    groups.sortedWith(compareByDescending<UserGroup> { it.course }.thenBy { it.name }).firstOrNull()
+
 /** Viewer-scoped permissions returned by Backend, not another user's privacy settings. */
 data class UserSharing(
     val sport: Boolean,

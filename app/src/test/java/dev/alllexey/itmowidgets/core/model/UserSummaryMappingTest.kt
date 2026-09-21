@@ -47,6 +47,16 @@ class UserSummaryMappingTest {
         }
     }
 
+    @Test
+    fun `primary group is the highest course then the first by name`() {
+        val summary = user(UserCapabilities(false, false)).toUserSummary().copy(
+            groups = listOf(UserGroup("P3119", 1, "ФПИ"), UserGroup("Z3244", 2, "ФизФ"), UserGroup("P3219", 2, "ФПИ"))
+        )
+
+        assertEquals(UserGroup("P3219", 2, "ФПИ"), summary.primaryGroup())
+        assertNull(summary.copy(groups = emptyList()).primaryGroup())
+    }
+
     private fun user(capabilities: UserCapabilities) = UserData(
         isu = 123456,
         name = "  Тестовый пользователь  ",

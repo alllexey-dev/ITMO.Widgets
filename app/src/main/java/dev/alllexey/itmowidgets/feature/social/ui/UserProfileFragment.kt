@@ -18,6 +18,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -99,7 +100,7 @@ class UserProfileFragment : Fragment() {
         val user = state.profile.user
         avatar.setUser(user)
         name.text = requireContext().userDisplayName(user.name, user.isu)
-        val firstGroup = user.groups.firstOrNull()
+        val firstGroup = user.primaryGroup()
         group.isVisible = firstGroup != null
         group.text = firstGroup?.let {
             getString(R.string.me_group_format, it.name, it.course, it.facultyShortName)

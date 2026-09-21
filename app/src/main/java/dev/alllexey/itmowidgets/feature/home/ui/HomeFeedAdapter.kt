@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.color.MaterialColors
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.home.HomeLessonState
@@ -222,7 +223,7 @@ class HomeFeedAdapter(
                 val row = ItemUserRowBinding.inflate(LayoutInflater.from(binding.root.context), binding.friendsRows, false)
                 row.avatar.setUser(user)
                 row.name.text = user.name
-                val group = user.groups.firstOrNull()?.name
+                val group = user.primaryGroup()?.name
                 row.subtitle.isVisible = !group.isNullOrBlank()
                 row.subtitle.text = group
                 row.trailingIcon.isVisible = true

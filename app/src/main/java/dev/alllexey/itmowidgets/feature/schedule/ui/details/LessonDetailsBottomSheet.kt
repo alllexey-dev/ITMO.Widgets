@@ -21,6 +21,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.location.MapDestination
 import dev.alllexey.itmowidgets.core.model.UserSummary
@@ -150,7 +151,7 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
         val row = ItemLessonFriendBinding.inflate(layoutInflater, binding.friendsContainer, false)
         row.friendAvatar.setUser(friend.name, friend.pictureUrl)
         row.friendName.text = friend.name.ifBlank { getString(R.string.user_name_placeholder, friend.isu) }
-        val group = friend.groups.firstOrNull()?.name
+        val group = friend.primaryGroup()?.name
         row.friendGroup.isVisible = !group.isNullOrBlank()
         row.friendGroup.text = group
         row.root.setOnClickListener { openFriendProfile(friend.isu) }
