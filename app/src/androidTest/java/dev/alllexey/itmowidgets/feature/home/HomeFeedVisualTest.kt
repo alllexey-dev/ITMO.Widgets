@@ -75,6 +75,22 @@ class HomeFeedVisualTest {
     }
 
     @Test
+    fun firstLoadWithoutAnyAnswerShowsTheSkeletonInEveryAppearance() {
+        SettingsNavigationTestActivity.homeFixture = HomeFixture(neverAnswers = true)
+        Appearances.default.forEachIndexed { index, spec ->
+            SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
+            launch { scenario ->
+                scenario.onActivity { activity ->
+                    assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loading).visibility)
+                    assertEquals(View.GONE, activity.findViewById<View>(R.id.home_feed).visibility)
+                    assertEquals(View.GONE, activity.findViewById<View>(R.id.empty_state).visibility)
+                }
+                capture("loading-$index")
+            }
+        }
+    }
+
+    @Test
     fun rowsOpenTheLessonAndPendingSheetsThroughTheNavigator() {
         launch { scenario ->
             scenario.onActivity { it.scheduleRows().getChildAt(0).performClick() }

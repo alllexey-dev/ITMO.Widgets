@@ -115,6 +115,26 @@
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
 
+    <!-- First-load placeholders take the content area and its screen margin; refresh with data never shows them. -->
+
+    <style name="Widget.ItmoWidgets.Skeleton" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:padding">@dimen/design_screen_margin</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.Skeleton.List">
+        <item name="skeletonStyle">list</item>
+        <item name="skeletonRows">6</item>
+        <item name="skeletonRowHeight">64dp</item>
+    </style>
+
+    <style name="Widget.ItmoWidgets.Skeleton.Cards">
+        <item name="skeletonStyle">card</item>
+        <item name="skeletonRows">4</item>
+        <item name="skeletonRowHeight">96dp</item>
+    </style>
+
     <!-- Empty, error and loading blocks share one vertical rhythm across every screen. -->
 
     <style name="Widget.ItmoWidgets.ContentState" parent="">

@@ -318,13 +318,11 @@
 
         </ScrollView>
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
+        <dev.alllexey.itmowidgets.core.ui.SkeletonView
             android:id="@+id/loading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:indeterminate="true"
-            android:visibility="gone" />
+            style="@style/Widget.ItmoWidgets.Skeleton.List"
+            android:visibility="gone"
+            app:skeletonRows="3" />
 
         <LinearLayout
             android:id="@+id/state_container"

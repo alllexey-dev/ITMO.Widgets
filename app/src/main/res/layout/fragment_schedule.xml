@@ -117,6 +117,19 @@
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
+    <dev.alllexey.itmowidgets.core.ui.SkeletonView
+        android:id="@+id/schedule_skeleton"
+        style="@style/Widget.ItmoWidgets.Skeleton.Cards"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/selected_user_card"
+        app:skeletonRows="3"
+        app:skeletonRowHeight="180dp" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_scroll_to_top"
         style="?attr/floatingActionButtonSurfaceStyle"

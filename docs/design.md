@@ -102,8 +102,13 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
 | Schedule, both sport tabs, recordbook and subject details | `applyAppRefreshColors()` from `core/ui/RefreshAppearance.kt`: indicator `colorPrimary`, background `android.R.attr.colorBackground` |
 | ITMO.ID web sign-in | Explicit exception: light theme, library default indicator |
 
-- First load: a Material indicator in the bounded content area, no flash of an
-  empty state before it.
+- First load without any cache: a skeleton (`core/ui/SkeletonView`, styles
+  `Widget.ItmoWidgets.Skeleton.List` and `.Cards`) in the bounded content area
+  that the content will take, pulsing between 55 % and full opacity every 1.2 s
+  and static when the system has animations off; no flash of an empty state
+  before it. A screen that has a cached answer never shows it: the cache renders
+  in the first frame and the refresh reports through the pull-to-refresh
+  indicator over the content.
 - Refresh: existing data and scroll position stay; the indicator reports work
   without replacing the screen. The schedule keeps its loaded range including
   pagination and replaces it with one snapshot; an error keeps the old data.

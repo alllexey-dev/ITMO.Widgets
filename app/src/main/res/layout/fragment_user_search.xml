@@ -75,12 +75,9 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:listitem="@layout/item_user_row" />
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
+        <dev.alllexey.itmowidgets.core.ui.SkeletonView
             android:id="@+id/loading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:indeterminate="true"
+            style="@style/Widget.ItmoWidgets.Skeleton.List"
             android:visibility="gone" />
 
         <com.google.android.material.progressindicator.LinearProgressIndicator

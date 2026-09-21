@@ -18,16 +18,20 @@ import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 
 /** The whole feed from one in-memory source; a test replaces the cards and watches the same flows. */
 data class HomeFixture(
     val cards: List<HomeCard> = defaultCards(),
     val refreshResult: AppResult<Unit> = AppResult.Success(Unit),
     val refreshDelayMs: Long = 0,
-    val hidden: Set<HomeCardKind> = emptySet()
+    val hidden: Set<HomeCardKind> = emptySet(),
+    /** The source never answers: the feed stays on its first-load placeholder. */
+    val neverAnswers: Boolean = false
 ) {
     companion object {
         val DATE: LocalDate = LocalDate.of(2026, 9, 7)
@@ -86,8 +90,9 @@ class FixtureHomeCardSource(fixture: HomeFixture) : HomeCardSource {
     var refreshDelayMs = fixture.refreshDelayMs
     var refreshes = 0
     var revalidations = 0
+    private val neverAnswers = fixture.neverAnswers
 
-    override fun observe(): Flow<List<HomeCard>> = cards
+    override fun observe(): Flow<List<HomeCard>> = if (neverAnswers) flow { awaitCancellation() } else cards
 
     override suspend fun refresh(): AppResult<Unit> {
         refreshes++

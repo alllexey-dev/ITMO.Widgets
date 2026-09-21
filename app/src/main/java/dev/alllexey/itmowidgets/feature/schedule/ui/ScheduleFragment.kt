@@ -304,6 +304,7 @@ class ScheduleFragment : Fragment() {
         swipe.isRefreshing = state.loadingMore
 
         binding.scheduleStateContainer.isVisible = false
+        binding.scheduleSkeleton.isVisible = false
 
         val renderedBinding = binding
         adapter.submitList(state.displayDays) {
@@ -332,6 +333,8 @@ class ScheduleFragment : Fragment() {
     private fun renderNonContent(state: ScheduleUiState) {
         swipe.isRefreshing = state is ScheduleUiState.Loading
         binding.scheduleStateContainer.isVisible = false
+        // Only a first load without any cache shows the placeholder; a refresh keeps its rows.
+        binding.scheduleSkeleton.isVisible = state is ScheduleUiState.Loading
         // Only Content may retain rows during a refresh. Pending-only rows may
         // already be disabled/private while an academic request is still running.
         // Hide them immediately and reconcile the list before showing a state.

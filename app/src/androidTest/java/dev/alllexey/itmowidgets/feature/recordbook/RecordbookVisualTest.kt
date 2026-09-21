@@ -49,6 +49,17 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class RecordbookVisualTest {
+    @Test fun firstLoadWithoutAnyAnswerShowsTheSkeleton() {
+        withPreview(RecordbookPreviewActivity.Appearance(), configure = { it.pending = CompletableDeferred() }) { scenario, _ ->
+            settle()
+            scenario.onActivity { activity ->
+                assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loading).visibility)
+                assertEquals(View.GONE, activity.findViewById<View>(R.id.state_container).visibility)
+            }
+            screenshot("root-loading")
+        }
+    }
+
     @Test fun semesterNumbersStayContinuousInPickerAndHeading() {
         withPreview(RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario, repository ->
             settle()

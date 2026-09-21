@@ -11,4 +11,13 @@
         <attr name="sectorGapAngle" format="float" />
     </declare-styleable>
 
+    <declare-styleable name="SkeletonView">
+        <attr name="skeletonRows" format="integer" />
+        <attr name="skeletonRowHeight" format="dimension" />
+        <attr name="skeletonStyle" format="enum">
+            <enum name="list" value="0" />
+            <enum name="card" value="1" />
+        </attr>
+    </declare-styleable>
+
 </resources>

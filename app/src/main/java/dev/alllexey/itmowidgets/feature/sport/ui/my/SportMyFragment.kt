@@ -208,14 +208,16 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     /** Only before the first snapshot: a refresh with data arrives as `Content(refreshing = true)`. */
     private fun showLoading() {
-        swipe.isRefreshing = true
+        swipe.isRefreshing = false
         binding.emptyStateLayout.isVisible = false
         binding.pointsCard.isVisible = false
         recycler.isVisible = false
+        binding.skeleton.isVisible = true
     }
 
     private fun onContent(state: SportMyUiState.Content) {
         swipe.isRefreshing = state.refreshing
+        binding.skeleton.isVisible = false
         val renderedBinding = binding
         adapter.submitList(state.bookings) {
             // Loading/error retain the latest successful submission. AsyncListDiffer
@@ -232,6 +234,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     private fun showError(state: SportMyUiState.Error) {
         swipe.isRefreshing = false
+        binding.skeleton.isVisible = false
         recycler.isVisible = false
         binding.pointsCard.isVisible = false
         binding.emptyStateLayout.isVisible = true

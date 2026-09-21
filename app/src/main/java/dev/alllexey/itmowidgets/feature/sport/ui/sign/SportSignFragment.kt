@@ -16,6 +16,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
+import dev.alllexey.itmowidgets.core.ui.SkeletonListAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -67,6 +68,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     private lateinit var headerAdapter: FiltersHeaderAdapter
     private lateinit var lessonsAdapter: SportLessonsAdapter
     private lateinit var contentStateAdapter: ContentStateAdapter
+    private val skeletonAdapter = SkeletonListAdapter()
     private lateinit var concatAdapter: ConcatAdapter
     private var feedbackSnackbar: Snackbar? = null
 
@@ -135,7 +137,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         )
         lessonsAdapter = SportLessonsAdapter(this, timeProvider)
         contentStateAdapter = ContentStateAdapter { viewModel.refreshAllData() }
-        concatAdapter = ConcatAdapter(headerAdapter, lessonsAdapter, contentStateAdapter)
+        concatAdapter = ConcatAdapter(headerAdapter, skeletonAdapter, lessonsAdapter, contentStateAdapter)
 
         binding.mainRecyclerView.apply {
             adapter = concatAdapter
@@ -202,12 +204,14 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     /** Only before the first snapshot: a refresh with data arrives as `Content(refreshing = true)`. */
     private fun showLoading() {
-        swipe.isRefreshing = true
+        swipe.isRefreshing = false
         contentStateAdapter.submitState(null)
+        skeletonAdapter.setVisible(true)
     }
 
     private fun onContent(state: SportSignUiState.Content) {
         swipe.isRefreshing = state.refreshing
+        skeletonAdapter.setVisible(false)
         headerAdapter.updateState(state)
         val contentState = if (state.displayedLessons.isEmpty()) {
             ContentState(
@@ -231,6 +235,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     private fun showError(state: SportSignUiState.Error) {
         swipe.isRefreshing = false
+        skeletonAdapter.setVisible(false)
         val contentState = ContentState(
             iconRes = R.drawable.ic_error_rounded,
             title = getString(R.string.common_load_error_title),
