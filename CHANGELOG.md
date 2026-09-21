@@ -3,6 +3,29 @@
 Reference documents in `docs/` describe the current state; this file records
 what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
+## 2.1.1 — 2026-09-21
+
+### 2026-09-21
+- Sign-in follows ITMO.ID to any https page, so VK and the other providers on
+  the ITMO.ID page work inside the app; the token is still accepted only on
+  `https://my.itmo.ru/login/callback`. The BARS sign-in does the same
+  (`core/util/HttpsNavigationPolicy`).
+- A user with several groups is shown with the highest-course one everywhere
+  (`UserSummary.primaryGroup()`): feed, lesson sheet, profile, `Профиль`.
+- Screens keep their content while they refresh instead of replacing it with
+  an indicator: both sport tabs carry `refreshing` inside `Content` and a
+  failed refresh keeps the last snapshot with a snackbar; the schedule renders
+  its memory cache in the first frame (`ScheduleRepository.peekScheduleForRange`);
+  the QR pass, the recordbook and its subject hub, a public profile and another
+  user's friends open from the last answer (`RecordbookRepository` memory
+  cache, `SocialRepository.cachedProfile` / `cachedUserFriends`, all cleared on
+  sign-out). `UserFriendsFragment` no longer reloads on every start.
+- A first load without any cache shows a skeleton (`core/ui/SkeletonView`,
+  `SkeletonListAdapter` for the sport catalogue) instead of a circular
+  indicator on the feed, schedule, both sport tabs, recordbook, subject hub,
+  friends, people search, public profile, another user's friends and sport.
+- Version `2.1.1` (version code 5); no Core, Backend or wire change.
+
 ## 2.1 — 2026-09-21
 
 ### 2026-09-21

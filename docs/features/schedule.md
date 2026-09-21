@@ -18,6 +18,11 @@ schedule chosen through the picker, and optional pending sport rows.
   cache and visible content without touching own or other users' data. A
   generation check prevents a late concurrent response from restoring a revoked
   cache. Ordinary network failures keep cached content.
+- The first frame comes from memory: `ScheduleRepository.peekScheduleForRange`
+  returns the range without touching the disk when every date is already
+  hydrated, so `loadInitialSchedule` publishes `Content(loadingMore = true)` at
+  once and only a screen with nothing cached shows the skeleton
+  (`schedule_skeleton`) until the cache flow answers.
 
 ## Friend picker
 

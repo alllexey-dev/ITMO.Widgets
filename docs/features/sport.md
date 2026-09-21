@@ -1,7 +1,13 @@
 # Sport
 
 `feature/sport` has two tabs in a `ViewPager2`: `Мой спорт` (score, official
-bookings, own queues) and `Запись` (catalog with filters). Official data comes
+bookings, own queues) and `Запись` (catalog with filters). Both keep their
+content while they refresh: `SportMyUiState.Content.refreshing` and
+`SportSignUiState.Content.refreshing` drive the pull-to-refresh indicator,
+`Loading` exists only before the first snapshot and shows a skeleton
+(`skeleton` in `Мой спорт`, `SkeletonListAdapter` under the filter header in
+`Запись`), and a refresh whose sources fail keeps the last snapshot with
+`hasPartialError` and its snackbar instead of an error screen. Official data comes
 from MyItmoApi; queues, friends' bookings and quota come from Backend behind the
 custom-services gate.
 

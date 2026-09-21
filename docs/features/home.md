@@ -48,8 +48,10 @@ one in-memory source (`HomeFixture`) and never touch MyITMO or Backend.
 ## QR pass
 
 `feature/qr` uses the existing MyItmoApi repository and QR renderer, not a second
-API client. The screen shows a valid cached code immediately after rendering,
-can force a refresh, and distinguishes loading, content, empty and error. A
+API client. The screen shows a valid cached code immediately after rendering
+(a fresh view model reads the cache before it writes `Loading`, so the pass
+appears in the first frame with `refreshing`), can force a refresh, and
+distinguishes loading, content, empty and error. A
 refresh failure keeps only a still-valid code and offers retry feedback.
 
 `QrCodeSnapshot` carries the cache deadline from the local source. The screen

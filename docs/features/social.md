@@ -79,7 +79,11 @@ to the signed-in viewer. Rows open public profiles; the list has no mutation
 buttons or request tabs. First loading, empty, denied, disabled services and
 retryable errors are distinct. Refresh retains content on network failure,
 but discards it if authorization is revoked; returning to the screen rechecks
-access. No target list is stored in the viewer’s own friends cache.
+access. No target list is stored in the viewer’s own friends cache, but the
+repository keeps the last answer per ISU (`cachedUserFriends`) and the last
+profile per ISU from any list, screen or action (`cachedProfile`), both cleared
+on sign-out, so a reopened profile or list renders at once with `refreshing`
+and only an unseen person shows the skeleton.
 
 `Кто видит список друзей` is an independent privacy choice: `Все` (the default
 for both existing and new accounts), `Друзья`, `Никто`. Backend enforces it before

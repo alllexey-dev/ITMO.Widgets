@@ -96,6 +96,13 @@ is reached through `core/schedule/SubjectLessonsGateway`, implemented in
   normalisation, shared with the BARS merge.
 - `Ресурсы`: only the MyITMO `lms_link`, so usually absent.
 
+`RecordbookRepositoryImpl` is a singleton with a memory cache of the last
+programs, subjects per `(programId, semester)` and controls per entry
+(`cachedPrograms`, `cachedSubjects`, `cachedControls`, cleared on sign-out as a
+`SessionDataCleaner`). Both the root and the hub seed `Content(refreshing =
+true)` from it before the network answers, so a screen opened a second time
+never shows the skeleton; the sport card waits for the refresh.
+
 The tabs are pages of a `ViewPager2` (swipe or tap), each page its own list
 and pull-to-refresh over the shared view model; the schedule page exists only
 when the hub has something to show, and the chosen tab survives recreation.

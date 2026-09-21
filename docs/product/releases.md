@@ -11,7 +11,11 @@
 3. **v2.1** adds the social and study-context layer: explicit friendships and
    privacy, own and public profiles, friends on a lesson, lesson details, map
    hand-off and the subject hub.
-4. **v2.2** adds moderated community resources and reviews, legacy review
+4. **v2.1.1** is a bug-fix release on top of v2.1: current study groups on
+   every screen, sign-in through third-party providers on the ITMO.ID page,
+   cached content kept on screen during refresh, skeleton first loads. No
+   product features, no Core or Backend change.
+5. **v2.2** adds moderated community resources and reviews, legacy review
    import, personal Google Sheet mappings, schedule change tracking, BARS mark
    notifications, range calendar export, verified App Links, sharing, the QR
    quick-settings tile with app shortcuts, and the home feed.
@@ -31,6 +35,7 @@ the minimum Core and Backend it needs.
 
 | Android | Core | Backend | MyItmoApi | Notes |
 |---|---|---|---|---|
+| 2.1.1 | 1.2.0 | 1.2.1 (`770293b`, current groups in every profile response) | 1.8.1 | Client-only release; works against Backend 1.2.0 as well, then lesson friends may show an older group. |
 | 2.1 | 1.2.0 (Maven Central, tag `1.2.0`) | 1.2.0, commit `a70cab1` or later | 1.8.1 (Maven Central, tag `1.8.1`) | Backend 1.2.0 requires the PostgreSQL cutover; 2.0.x clients are rejected by it and are told to update through `GET /api/app/version`. |
 | 2.0.x (legacy) | 1.1.x | 1.1.6 | 1.6.0 | MariaDB backend, reciprocal friend requests, boolean privacy. |
 
