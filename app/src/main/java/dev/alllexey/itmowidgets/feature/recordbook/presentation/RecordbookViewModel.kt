@@ -96,6 +96,7 @@ class RecordbookViewModel @Inject constructor(
         loadJob?.cancel()
         val previous = (_uiState.value as? RecordbookUiState.Content)
             ?.takeIf { it.selection == selection }?.copy(refreshing = false)
+            ?: seedFromCache()
         _uiState.value = previous?.copy(refreshing = true, refreshError = null)
             ?: RecordbookUiState.Loading(programs, selection)
         loadJob = viewModelScope.launch {
@@ -148,6 +149,20 @@ class RecordbookViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /** A fresh screen renders the last answers at once; the sport card waits for the refresh. */
+    private fun seedFromCache(): RecordbookUiState.Content? {
+        val cachedPrograms = repository.cachedPrograms() ?: return null
+        programs = cachedPrograms
+        val selected = selection?.let { old ->
+            cachedPrograms.firstOrNull { it.id == old.program.id }?.let { program ->
+                program.periods.firstOrNull { it.semester == old.period.semester }?.let { RecordbookSelection(program, it) }
+            }
+        } ?: restoreSelection() ?: defaultSelection() ?: return null
+        val subjects = repository.cachedSubjects(selected.program.id, selected.period.semester) ?: return null
+        selection = selected
+        return RecordbookUiState.Content(cachedPrograms, selected, subjects, sport = null)
     }
 
     private fun restoreSelection(): RecordbookSelection? {

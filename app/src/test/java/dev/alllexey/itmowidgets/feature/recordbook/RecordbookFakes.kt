@@ -41,10 +41,17 @@ class FakeRecordbookRepository : RecordbookRepository {
     var subjects: AppResult<List<RecordbookSubject>> = AppResult.Success(listOf(recordbookSubject()))
     var controls: AppResult<List<RecordbookControl>> = AppResult.Success(emptyList())
     var subjectLoader: (suspend (Int) -> AppResult<List<RecordbookSubject>>)? = null
+    var programLoader: (suspend () -> AppResult<List<RecordbookProgram>>)? = null
+    var cachedPrograms: List<RecordbookProgram>? = null
+    var cachedSubjects: List<RecordbookSubject>? = null
+    var cachedControls: List<RecordbookControl>? = null
     var programRequests = 0
     var controlRequests = 0
     val subjectRequests = mutableListOf<Int>()
-    override suspend fun getPrograms(): AppResult<List<RecordbookProgram>> { programRequests++; return programs }
+    override suspend fun getPrograms(): AppResult<List<RecordbookProgram>> { programRequests++; return programLoader?.invoke() ?: programs }
+    override fun cachedPrograms() = cachedPrograms
+    override fun cachedSubjects(programId: Long, semester: Int) = cachedSubjects
+    override fun cachedControls(entryId: Long) = cachedControls
     override suspend fun getSubjects(programId: Long, semester: Int): AppResult<List<RecordbookSubject>> {
         subjectRequests += semester
         return subjectLoader?.invoke(semester) ?: subjects

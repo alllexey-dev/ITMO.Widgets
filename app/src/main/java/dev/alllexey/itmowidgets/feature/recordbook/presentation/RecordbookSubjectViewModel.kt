@@ -91,6 +91,7 @@ class RecordbookSubjectViewModel @Inject constructor(
     fun refresh() {
         loadJob?.cancel()
         val previous = (_uiState.value as? RecordbookSubjectUiState.Content)?.copy(refreshing = false)
+            ?: seedFromCache()
         _uiState.value = previous?.copy(refreshing = true, refreshError = null)
             ?: RecordbookSubjectUiState.Loading
         loadJob = viewModelScope.launch {
@@ -124,6 +125,17 @@ class RecordbookSubjectViewModel @Inject constructor(
             )
             loadHub(official)
         }
+    }
+
+    /** The list's last answer for this subject, so the hub opens without a spinner. */
+    private fun seedFromCache(): RecordbookSubjectUiState.Content? {
+        val subject = repository.cachedSubjects(programId, period.semester)
+            ?.firstOrNull { it.entryId == entryId } ?: return null
+        return RecordbookSubjectUiState.Content(
+            subject = subject,
+            controls = repository.cachedControls(entryId).orEmpty(),
+            sport = null
+        )
     }
 
     fun selectTab(tab: SubjectTab) {

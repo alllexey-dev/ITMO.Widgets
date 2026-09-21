@@ -9,6 +9,8 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FixedAcademicTime
+import dev.alllexey.itmowidgets.feature.recordbook.recordbookProgram
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
@@ -57,6 +59,28 @@ class RecordbookViewModelTest {
         repository.programs = AppResult.Failure(AppError.Network)
         val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
         assertEquals(RecordbookUiState.Error(AppError.Network), vm.uiState.value)
+    }
+
+    @Test fun `a fresh screen shows the cached period before the network answers`() = runTest {
+        repository.cachedPrograms = listOf(recordbookProgram())
+        repository.cachedSubjects = listOf(recordbookSubject(name = "Из кэша"))
+        val gate = CompletableDeferred<AppResult<List<RecordbookProgram>>>()
+        repository.programLoader = { gate.await() }
+        val vm = model(); vm.ensureDataLoaded(); runCurrent()
+        val seeded = vm.uiState.value as RecordbookUiState.Content
+        assertTrue(seeded.refreshing)
+        assertEquals("Из кэша", seeded.subjects.single().name)
+        assertEquals(3, seeded.selection.period.semester)
+        gate.complete(repository.programs); advanceUntilIdle()
+        val fresh = vm.uiState.value as RecordbookUiState.Content
+        assertFalse(fresh.refreshing)
+        assertEquals(listOf(recordbookSubject()), fresh.subjects)
+    }
+
+    @Test fun `a cached catalog without the selected period still starts loading`() = runTest {
+        repository.cachedPrograms = listOf(recordbookProgram())
+        val vm = model(); vm.ensureDataLoaded()
+        assertTrue(vm.uiState.value is RecordbookUiState.Loading)
     }
 
     @Test fun `refresh keeps content and ends spinner even when identical result arrives`() = runTest {

@@ -24,6 +24,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -64,6 +66,23 @@ class RecordbookSubjectViewModelTest {
         assertEquals(AppError.Network, state.barsError)
         assertEquals(1, repository.controlRequests)
     }
+    @Test fun `a fresh hub shows the cached subject and controls before the network answers`() = runTest {
+        val control = RecordbookControl(6, "Работа", 7.5, 0.0, 10.0, true, null, null)
+        repository.cachedSubjects = listOf(recordbookSubject(name = "Из кэша"))
+        repository.cachedControls = listOf(control)
+        val gate = CompletableDeferred<AppResult<List<RecordbookSubject>>>()
+        repository.subjectLoader = { gate.await() }
+        val vm = model(); runCurrent()
+        val seeded = vm.uiState.value as RecordbookSubjectUiState.Content
+        assertTrue(seeded.refreshing)
+        assertEquals("Из кэша", seeded.subject.name)
+        assertEquals(listOf(control), seeded.controls)
+        gate.complete(repository.subjects); advanceUntilIdle()
+        val fresh = vm.uiState.value as RecordbookSubjectUiState.Content
+        assertFalse(fresh.refreshing)
+        assertEquals(recordbookSubject(), fresh.subject)
+    }
+
     @Test fun `subject without a BARS journal never asks BARS`() = runTest {
         model(); advanceUntilIdle()
         assertTrue(bars.journalRequests.isEmpty())
