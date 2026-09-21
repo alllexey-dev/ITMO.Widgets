@@ -38,6 +38,12 @@ class ScheduleRepositoryImpl @Inject constructor(
         return local.observeRange(userIsu, startDate, endDate)
     }
 
+    override fun peekScheduleForRange(
+        userIsu: Int?,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): List<DaySchedule>? = local.peekRange(userIsu, startDate, endDate)
+
     override suspend fun refreshSchedule(
         userIsu: Int?,
         startDate: LocalDate,

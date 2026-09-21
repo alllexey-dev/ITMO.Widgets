@@ -7,6 +7,11 @@ import java.time.LocalDate
 interface ScheduleLocalDataSource {
 
     fun observeRange(userIsu: Int?, start: LocalDate, end: LocalDate): Flow<List<DaySchedule>>
+    /**
+     * The range from memory only, without touching the disk: what a screen can
+     * show in its first frame. Null until [observeRange] has hydrated every date.
+     */
+    fun peekRange(userIsu: Int?, start: LocalDate, end: LocalDate): List<DaySchedule>? = null
 
     suspend fun save(schedule: DaySchedule, userIsu: Int?)
 

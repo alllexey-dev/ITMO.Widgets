@@ -71,6 +71,35 @@ class ScheduleViewModelTest {
         }
 
     @Test
+    fun `the first state is content from memory while the refresh is still running`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val repository = FakeScheduleRepository().apply {
+                schedules.value = listOf(daySchedule())
+                memorySnapshot = true
+                refreshHandler = { CompletableDeferred<AppResult<Unit>>().await() }
+            }
+            val viewModel = createViewModel(repository)
+
+            viewModel.ensureDataLoaded()
+
+            val state = viewModel.uiState.value as ScheduleUiState.Content
+            assertEquals(repository.schedules.value, state.schedule)
+            assertTrue(state.loadingMore)
+        }
+
+    @Test
+    fun `without a memory snapshot the first state is loading until the cache answers`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val repository = FakeScheduleRepository().apply { schedules.value = listOf(daySchedule()) }
+            val viewModel = createViewModel(repository)
+
+            viewModel.ensureDataLoaded()
+            assertEquals(ScheduleUiState.Loading(null), viewModel.uiState.value)
+            runCurrent()
+            assertTrue(viewModel.uiState.value is ScheduleUiState.Content)
+        }
+
+    @Test
     fun `renders typed error when initial refresh fails`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeScheduleRepository().apply {
@@ -374,6 +403,7 @@ class ScheduleViewModelTest {
         var refreshResult: AppResult<Unit> = AppResult.Success(Unit)
         var refreshHandler: suspend (ScheduleRequest) -> AppResult<Unit> = { refreshResult }
         var cachesCleared = false
+        var memorySnapshot = false
 
         fun schedulesFor(userIsu: Int?): MutableStateFlow<List<DaySchedule>> =
             schedulesByUser.getOrPut(userIsu) { MutableStateFlow(emptyList()) }
@@ -388,6 +418,9 @@ class ScheduleViewModelTest {
                 days.filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) }
             }
         }
+
+        override fun peekScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate): List<DaySchedule>? =
+            if (memorySnapshot) schedulesFor(userIsu).value.filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) } else null
 
         override suspend fun refreshSchedule(
             userIsu: Int?,

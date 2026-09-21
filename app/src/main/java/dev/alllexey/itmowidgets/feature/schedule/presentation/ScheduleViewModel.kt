@@ -92,6 +92,10 @@ class ScheduleViewModel @Inject constructor(
             resetRange()
         }
         prepareForUser(userIsu)
+        if (!keepLoadedRange && currentDays.isEmpty()) {
+            // The first frame comes from memory; the cache flow and the network follow.
+            repository.peekScheduleForRange(userIsu, currentStart, currentEnd)?.let { currentDays = it }
+        }
         isLoading = true
         lastError = null
         emitCurrentState()

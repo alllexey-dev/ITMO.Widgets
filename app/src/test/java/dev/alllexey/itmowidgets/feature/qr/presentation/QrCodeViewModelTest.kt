@@ -39,6 +39,19 @@ class QrCodeViewModelTest {
         vm.stop()
     }
 
+    @Test fun `a fresh screen shows the cached pass before the network answers`() = runTest {
+        val repository = FakeRepository()
+        repository.pending = CompletableDeferred()
+        val vm = QrCodeViewModel(repository, clock())
+        vm.start()
+        runCurrent()
+        assertEquals(QrCodeUiState.Content(repository.code!!, refreshing = true), vm.uiState.value)
+        repository.pending!!.complete(AppResult.Success(Unit))
+        runCurrent()
+        assertEquals(QrCodeUiState.Content(repository.code!!), vm.uiState.value)
+        vm.stop()
+    }
+
     @Test fun `expiry hides the pass even during a pending refresh and failed refresh never revives it`() = runTest {
         val repository = FakeRepository()
         val vm = QrCodeViewModel(repository, clock())

@@ -73,6 +73,13 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
         }.flowOn(Dispatchers.IO)
     }
 
+    override fun peekRange(userIsu: Int?, start: LocalDate, end: LocalDate): List<DaySchedule>? {
+        val snapshot = memoryCache.value
+        val keys = ScheduleUtil.generateDates(start, end).map { key(userIsu, it) }
+        if (!keys.all(snapshot::containsKey)) return null
+        return keys.mapNotNull { key -> snapshot[key]?.takeUnless(::isExpired)?.let(::deserialize) }
+    }
+
     override suspend fun save(schedule: DaySchedule, userIsu: Int?) {
         withContext(Dispatchers.IO) {
             cacheMutex.withLock {

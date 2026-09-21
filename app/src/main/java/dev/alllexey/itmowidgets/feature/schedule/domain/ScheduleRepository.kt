@@ -14,6 +14,13 @@ interface ScheduleRepository : ScheduleRefreshGateway {
         endDate: LocalDate
     ): Flow<List<DaySchedule>>
 
+    /** The already loaded range, or null when it is not in memory yet; never touches the disk. */
+    fun peekScheduleForRange(
+        userIsu: Int?,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): List<DaySchedule>? = null
+
     /** Fetches fresh data and replaces this user's cached range without clearing other data first. */
     suspend fun refreshSchedule(
         userIsu: Int?,

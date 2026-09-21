@@ -56,8 +56,13 @@ class QrCodeViewModel @Inject constructor(
     fun refresh(force: Boolean = true) {
         if (!visible || request?.isActive == true) return
         val previous = (state.value as? QrCodeUiState.Content)?.takeIf { it.code.expiresAtMillis > clock.millis() }
-        state.value = previous?.copy(refreshing = true) ?: QrCodeUiState.Loading
+        if (previous != null) state.value = previous.copy(refreshing = true)
         request = viewModelScope.launch {
+            if (previous == null) {
+                // A fresh screen shows the cached pass at once; only an absent or expired cache waits.
+                val cached = repository.currentQr()?.takeIf { it.expiresAtMillis > clock.millis() && it.hex.isNotBlank() }
+                state.value = cached?.let { QrCodeUiState.Content(it, refreshing = true) } ?: QrCodeUiState.Loading
+            }
             val result = repository.refreshQrHex(force)
             val code = repository.currentQr()?.takeIf { it.expiresAtMillis > clock.millis() && it.hex.isNotBlank() }
             state.value = when {
