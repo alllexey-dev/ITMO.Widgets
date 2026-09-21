@@ -7,16 +7,20 @@ import org.junit.Test
 class ItmoAuthUrlPolicyTest {
 
     @Test
-    fun `allows only official https login hosts`() {
-        assertTrue(ItmoAuthUrlPolicy.isAllowed("https://my.itmo.ru/"))
+    fun `navigates to any https page including third-party sign-in providers`() {
+        assertTrue(ItmoAuthUrlPolicy.isNavigable("https://my.itmo.ru/"))
         assertTrue(
-            ItmoAuthUrlPolicy.isAllowed(
+            ItmoAuthUrlPolicy.isNavigable(
                 "https://id.itmo.ru/auth/realms/itmo/protocol/openid-connect/auth"
             )
         )
-        assertFalse(ItmoAuthUrlPolicy.isAllowed("http://my.itmo.ru/"))
-        assertFalse(ItmoAuthUrlPolicy.isAllowed("https://my.itmo.ru.example.com/"))
-        assertFalse(ItmoAuthUrlPolicy.isAllowed("file:///tmp/login.html"))
+        assertTrue(ItmoAuthUrlPolicy.isNavigable("https://oauth.vk.com/authorize?client_id=1"))
+        assertTrue(ItmoAuthUrlPolicy.isNavigable("https://id.vk.com/auth"))
+        assertFalse(ItmoAuthUrlPolicy.isNavigable("http://my.itmo.ru/"))
+        assertFalse(ItmoAuthUrlPolicy.isNavigable("file:///tmp/login.html"))
+        assertFalse(ItmoAuthUrlPolicy.isNavigable("vk://authorize"))
+        assertFalse(ItmoAuthUrlPolicy.isNavigable("javascript:alert(1)"))
+        assertFalse(ItmoAuthUrlPolicy.isNavigable("https:///no-host"))
     }
 
     @Test

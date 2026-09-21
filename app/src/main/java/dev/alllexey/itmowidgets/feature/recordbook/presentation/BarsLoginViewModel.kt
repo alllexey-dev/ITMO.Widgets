@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.util.HttpsNavigationPolicy
 import api.bars.utils.BarsAuthHelper
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
 import java.util.UUID
@@ -35,7 +36,8 @@ class BarsLoginViewModel @Inject constructor(
 
     fun isCallback(url: String): Boolean = auth.isCallback(url)
 
-    fun isAllowedPage(url: String): Boolean = auth.isAllowedPage(url)
+    /** Any https page may show during sign-in; only the exact callback completes it. */
+    fun isNavigable(url: String): Boolean = HttpsNavigationPolicy.isNavigable(url)
 
     fun complete(url: String) {
         if (state.value.completing) return

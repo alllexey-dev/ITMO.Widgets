@@ -87,7 +87,7 @@ class BarsLoginActivity : AppCompatActivity() {
         CookieManager.getInstance().setAcceptThirdPartyCookies(binding.loginWebView, false)
         binding.loginWebView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                if (!request.isForMainFrame) return !viewModel.isAllowedPage(request.url.toString())
+                if (!request.isForMainFrame) return !viewModel.isNavigable(request.url.toString())
                 return handleUrl(request.url.toString())
             }
             override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
@@ -107,7 +107,7 @@ class BarsLoginActivity : AppCompatActivity() {
             viewModel.complete(url)
             return true
         }
-        if (viewModel.isAllowedPage(url)) return false
+        if (viewModel.isNavigable(url)) return false
         showBrowserError()
         return true
     }

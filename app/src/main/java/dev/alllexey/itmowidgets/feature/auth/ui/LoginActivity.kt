@@ -110,7 +110,7 @@ class LoginActivity : AppCompatActivity() {
                 request: WebResourceRequest
             ): Boolean {
                 val url = request.url
-                if (ItmoAuthUrlPolicy.isAllowed(url.toString())) return false
+                if (ItmoAuthUrlPolicy.isNavigable(url.toString())) return false
                 openExternal(url)
                 return true
             }
@@ -118,7 +118,7 @@ class LoginActivity : AppCompatActivity() {
             override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 val uri = url?.let(Uri::parse)
-                if (uri == null || !ItmoAuthUrlPolicy.isAllowed(uri.toString())) {
+                if (uri == null || !ItmoAuthUrlPolicy.isNavigable(uri.toString())) {
                     view.stopLoading()
                     showBrowserError()
                     return

@@ -38,6 +38,16 @@ class BarsLoginViewModelTest {
         pending.complete(AppResult.Success(Unit)); advanceUntilIdle()
         assertEquals(Unit, event.await())
     }
+    @Test fun `any https page is navigable and other schemes are not`() {
+        val repo = object : BarsSessionRepository {
+            override suspend fun completeLogin(callbackUrl: String, expectedState: String) = AppResult.Failure(AppError.Forbidden)
+        }
+        val vm = BarsLoginViewModel(repo, Bars().authHelper, SavedStateHandle())
+        assertTrue(vm.isNavigable("https://id.itmo.ru/auth/realms/itmo/protocol/openid-connect/auth"))
+        assertTrue(vm.isNavigable("https://oauth.vk.com/authorize"))
+        assertFalse(vm.isNavigable("http://id.itmo.ru/"))
+        assertFalse(vm.isNavigable("vk://authorize"))
+    }
     @Test fun `failed sign in is retryable with a new state and no completion event`() = runTest {
         val repo = object : BarsSessionRepository {
             override suspend fun completeLogin(callbackUrl: String, expectedState: String) = AppResult.Failure(AppError.Forbidden)
