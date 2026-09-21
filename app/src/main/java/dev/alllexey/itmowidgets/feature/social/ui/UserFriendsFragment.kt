@@ -39,8 +39,8 @@ class UserFriendsFragment : Fragment() {
         val adapter = UserListAdapter(onAction = { _, _ -> }, onOpen = { UserProfileNavigation.open(this, it.isu) })
         binding.recyclerView.adapter = adapter
         binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener(viewModel::load)
-        val renderer = UserFriendsRenderer(binding, adapter, viewModel::load) { openScreen(AppScreen.SETTINGS) }
+        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.load() })
+        val renderer = UserFriendsRenderer(binding, adapter, { viewModel.load() }) { openScreen(AppScreen.SETTINGS) }
         viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(renderer::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
         viewModel.refreshErrors.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { error ->

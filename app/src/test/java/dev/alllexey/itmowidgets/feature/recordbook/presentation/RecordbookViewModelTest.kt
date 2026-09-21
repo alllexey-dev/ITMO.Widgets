@@ -68,7 +68,7 @@ class RecordbookViewModelTest {
         repository.programLoader = { gate.await() }
         val vm = model(); vm.ensureDataLoaded(); runCurrent()
         val seeded = vm.uiState.value as RecordbookUiState.Content
-        assertTrue(seeded.refreshing)
+        assertFalse(seeded.refreshing)
         assertEquals("Из кэша", seeded.subjects.single().name)
         assertEquals(3, seeded.selection.period.semester)
         gate.complete(repository.programs); advanceUntilIdle()

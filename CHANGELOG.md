@@ -20,6 +20,11 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
   user's friends open from the last answer (`RecordbookRepository` memory
   cache, `SocialRepository.cachedProfile` / `cachedUserFriends`, all cleared on
   sign-out). `UserFriendsFragment` no longer reloads on every start.
+- Automatic refreshes are silent: the first load of a screen, a stale resume,
+  a period change and the BARS switch no longer show the pull-to-refresh
+  indicator over the content (or after the skeleton); only a pull or
+  `Повторить` does. The sport catalogue shows its filters and week calendar
+  before the lessons answer (`SportSignUiState.Content.initialLoading`).
 - A first load without any cache shows a skeleton (`core/ui/SkeletonView`,
   `SkeletonListAdapter` for the sport catalogue) instead of a circular
   indicator on the feed, schedule, both sport tabs, recordbook, subject hub,

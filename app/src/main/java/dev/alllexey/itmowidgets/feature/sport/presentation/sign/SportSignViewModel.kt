@@ -27,8 +27,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -58,7 +61,10 @@ class SportSignViewModel @Inject constructor(
     val usedSportNames: Set<SectionName>
         get() = (uiState.value as? SportSignUiState.Content)?.usedSportNames.orEmpty()
 
+    /** Any refresh in flight. */
     private val activeOperations = MutableStateFlow(0)
+    /** Only user-initiated refreshes; drives `Content.refreshing`. */
+    private val userOperations = MutableStateFlow(0)
     private val inFlightLessons = InFlightLessons()
     private var refreshJob: Job? = null
     private var autoSignJob: Job? = null
@@ -67,11 +73,12 @@ class SportSignViewModel @Inject constructor(
 
     init {
         observeData()
-        refreshAllData()
+        refreshAllData(silent = true)
     }
 
-    fun refreshAllData() {
-        launchRefresh {
+    /** A pull shows the indicator; the first load stays silent under the calendar. */
+    fun refreshAllData(silent: Boolean = false) {
+        launchRefresh(silent) {
             coroutineScope {
                 awaitAll(
                     async { sportScheduleRepository.refreshSportFilters() },
@@ -205,30 +212,43 @@ class SportSignViewModel @Inject constructor(
 
     private fun observeData() {
         viewModelScope.launch {
+            val operations = combine(activeOperations, userOperations) { all, user -> all to user }
+            // Every source starts as "not answered yet", so the header renders before the catalogue.
             val contentState = combine(
-                sportScheduleRepository.observeSportFilters(),
-                sportScheduleRepository.observeSportTimeSlots(),
-                sportScheduleRepository.observeSportSchedule(),
-                activeOperations,
+                sportScheduleRepository.observeSportFilters().unansweredFirst(),
+                sportScheduleRepository.observeSportTimeSlots().unansweredFirst(),
+                sportScheduleRepository.observeSportSchedule().unansweredFirst(),
+                operations,
                 filterController.filters
-            ) { filtersState, timeSlotsState, scheduleState, operationCount, userFilters ->
+            ) { filtersState, timeSlotsState, scheduleState, (operationCount, userCount), userFilters ->
                 val refreshing = operationCount > 0
-                val filters = filtersState.dataOrNull()
-                val timeSlots = timeSlotsState.dataOrNull()
-                val lessons = scheduleState.dataOrNull()
+                val byUser = userCount > 0
+                val filters = filtersState?.dataOrNull()
+                val timeSlots = timeSlotsState?.dataOrNull()
+                val lessons = scheduleState?.dataOrNull()
                 val errors = listOfNotNull(
-                    filtersState.errorOrNull(),
-                    timeSlotsState.errorOrNull(),
-                    scheduleState.errorOrNull()
+                    filtersState?.errorOrNull(),
+                    timeSlotsState?.errorOrNull(),
+                    scheduleState?.errorOrNull()
                 )
 
                 if (lessons == null || filters == null || timeSlots == null) {
                     val previous = lastContent
                     when {
                         // Sources that failed keep the last content on screen with a snackbar.
-                        refreshing -> previous?.copy(refreshing = true) ?: SportSignUiState.Loading
+                        refreshing && previous != null -> previous.copy(refreshing = byUser)
+                        // The calendar is deterministic: it shows at once over a placeholder list.
+                        refreshing -> stateFactory.create(
+                            lessons = emptyList(),
+                            catalog = filters ?: EMPTY_CATALOG,
+                            timeSlots = timeSlots.orEmpty(),
+                            userFilters = userFilters,
+                            hasPartialError = false
+                        ).copy(initialLoading = true)
                         previous != null -> previous.copy(hasPartialError = true, refreshing = false)
-                        else -> SportSignUiState.Error(errors.firstOrNull() ?: AppError.Unknown())
+                        errors.isNotEmpty() -> SportSignUiState.Error(errors.first())
+                        // Nothing answered and nothing running: the screen has not started loading yet.
+                        else -> SportSignUiState.Loading
                     }
                 } else {
                     stateFactory.create(
@@ -237,7 +257,7 @@ class SportSignViewModel @Inject constructor(
                         timeSlots = timeSlots,
                         userFilters = userFilters,
                         hasPartialError = errors.isNotEmpty()
-                    ).copy(refreshing = refreshing).also { lastContent = it }
+                    ).copy(refreshing = byUser).also { lastContent = it }
                 }
             }
 
@@ -259,10 +279,22 @@ class SportSignViewModel @Inject constructor(
         }
     }
 
-    private fun launchRefresh(action: suspend () -> Unit) {
+    /** Null until the source answers for the first time. */
+    private fun <T> Flow<T>.unansweredFirst(): Flow<T?> = map<T, T?> { it }.onStart { emit(null) }
+
+    private fun launchRefresh(silent: Boolean = false, action: suspend () -> Unit) {
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
+            if (silent) trackOperation(action) else trackUserOperation(action)
+        }
+    }
+
+    private suspend fun trackUserOperation(action: suspend () -> Unit) {
+        userOperations.value += 1
+        try {
             trackOperation(action)
+        } finally {
+            userOperations.value = (userOperations.value - 1).coerceAtLeast(0)
         }
     }
 
@@ -392,5 +424,9 @@ class SportSignViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private companion object {
+        val EMPTY_CATALOG = SportFilterCatalog(emptyList(), emptyList(), emptyList(), emptyList())
     }
 }

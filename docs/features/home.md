@@ -37,6 +37,8 @@ Refresh: the first show refreshes every source once; pull-to-refresh and a
 return to the screen after five minutes do it again; every return also calls
 `revalidate` on all sources (a permission the user just granted). Sources refresh in parallel; a failure leaves the cached card in place
 and the feed shows one `Часть данных не загрузилась` snackbar with `Повторить`.
+The first show and a stale resume refresh silently (`refresh(silent = true)`);
+only a pull sets `Content.refreshing`.
 The state is `Loading` only until every source has answered from its cache; an
 empty list of cards is content and shows the `Пока пусто` state. The list and
 the empty state switch atomically after `submitList` commits.

@@ -48,6 +48,7 @@ class FriendsViewModel @Inject constructor(
 
     private val tab = MutableStateFlow(FriendsTab.FRIENDS)
     private val refreshing = MutableStateFlow(false)
+    private var inFlight = false
     private val busy = MutableStateFlow<Set<Int>>(emptySet())
     private val events = Channel<FriendsEvent>(Channel.BUFFERED)
 
@@ -64,20 +65,23 @@ class FriendsViewModel @Inject constructor(
     val eventFlow: Flow<FriendsEvent> = events.receiveAsFlow()
 
     init {
-        refresh()
+        refresh(silent = true)
     }
 
     fun selectTab(selected: FriendsTab) {
         tab.value = selected
     }
 
-    fun refresh() {
-        if (refreshing.value) return
-        refreshing.value = true
+    /** A pull shows the indicator; the automatic refresh on entry stays silent behind the list. */
+    fun refresh(silent: Boolean = false) {
+        if (inFlight) return
+        inFlight = true
+        if (!silent) refreshing.value = true
         viewModelScope.launch {
             try {
                 repository.refresh()
             } finally {
+                inFlight = false
                 refreshing.value = false
             }
         }

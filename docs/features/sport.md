@@ -7,7 +7,12 @@ content while they refresh: `SportMyUiState.Content.refreshing` and
 `Loading` exists only before the first snapshot and shows a skeleton
 (`skeleton` in `Мой спорт`, `SkeletonListAdapter` under the filter header in
 `Запись`), and a refresh whose sources fail keeps the last snapshot with
-`hasPartialError` and its snackbar instead of an error screen. Official data comes
+`hasPartialError` and its snackbar instead of an error screen. The first load
+and background reloads are silent (`refreshAllData(silent = true)`); only a
+pull or `Повторить` sets `refreshing`. In `Запись` the header and the week
+calendar are deterministic, so while the catalogue has not answered the state
+is `Content(initialLoading = true)` with an empty list: the filters and days
+render at once and only the list area is a placeholder. Official data comes
 from MyItmoApi; queues, friends' bookings and quota come from Backend behind the
 custom-services gate.
 

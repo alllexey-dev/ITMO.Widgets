@@ -59,7 +59,10 @@ class SportMyViewModel @Inject constructor(
     private val eventChannel = Channel<SportMyEvent>(Channel.BUFFERED)
     val events: Flow<SportMyEvent> = eventChannel.receiveAsFlow()
 
+    /** Any refresh in flight (keeps `Loading` from turning into an error before the first snapshot). */
     private val isRefreshing = MutableStateFlow(false)
+    /** Only a user-initiated refresh; drives `Content.refreshing`. */
+    private val userRefreshing = MutableStateFlow(false)
 
     private var observeJob: Job? = null
     private var lastContent: SportMyUiState.Content? = null
@@ -70,13 +73,15 @@ class SportMyViewModel @Inject constructor(
 
     fun ensureDataLoaded() {
         if (_uiState.value is SportMyUiState.Loading && !isRefreshing.value) {
-            refreshAllData()
+            refreshAllData(silent = true)
         }
     }
 
-    fun refreshAllData() {
+    /** A pull shows the indicator; the first load and background reloads stay silent. */
+    fun refreshAllData(silent: Boolean = false) {
         viewModelScope.launch {
             isRefreshing.value = true
+            if (!silent) userRefreshing.value = true
             try {
                 awaitAll(
                     async { sportDataRepository.refreshSportAttempts() },
@@ -88,6 +93,7 @@ class SportMyViewModel @Inject constructor(
                 )
             } finally {
                 isRefreshing.value = false
+                userRefreshing.value = false
             }
         }
     }
@@ -146,8 +152,9 @@ class SportMyViewModel @Inject constructor(
                 sportDataRepository.observeSportAttempts(),
                 sportDataRepository.observeSportScore(),
                 sportBookingRepository.observeSportBookings(),
-                isRefreshing
-            ) { attemptsState, scoreState, bookingsState, refreshing ->
+                isRefreshing,
+                userRefreshing
+            ) { attemptsState, scoreState, bookingsState, refreshing, byUser ->
                 val attempts = attemptsState.dataOrNull()
                 val score = scoreState.dataOrNull()
                 val bookings = bookingsState.dataOrNull()
@@ -161,7 +168,7 @@ class SportMyViewModel @Inject constructor(
                 when {
                     attempts == null || score == null || bookings == null -> when {
                         // Sources that failed keep the last content on screen with a snackbar.
-                        refreshing -> lastContent?.copy(refreshing = true) ?: SportMyUiState.Loading
+                        refreshing -> lastContent?.copy(refreshing = byUser) ?: SportMyUiState.Loading
                         lastContent != null -> lastContent!!.copy(hasPartialError = true, refreshing = false)
                         errors.isNotEmpty() -> SportMyUiState.Error(errors.first())
                         else -> SportMyUiState.Loading
@@ -173,7 +180,7 @@ class SportMyViewModel @Inject constructor(
                             score = score,
                             bookings = bookings,
                             hasPartialError = errors.isNotEmpty(),
-                            refreshing = refreshing
+                            refreshing = byUser
                         ).also { lastContent = it }
                     }
                 }

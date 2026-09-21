@@ -45,6 +45,7 @@ class ScheduleViewModel @Inject constructor(
     private var currentDays = emptyList<DaySchedule>()
     private var observedUserIsu: Int? = activeUserIsu()
     private var isLoading = false
+    private var silentLoad = false
     private var hasSuccessfulOfficialLoad = false
     private var lastError: AppError? = null
     private var observeJob: Job? = null
@@ -75,7 +76,7 @@ class ScheduleViewModel @Inject constructor(
 
     fun ensureDataLoaded() {
         if (observeJob == null) {
-            loadInitialSchedule()
+            loadInitialSchedule(silent = true)
         }
     }
 
@@ -83,8 +84,10 @@ class ScheduleViewModel @Inject constructor(
         if (hasStarted) emitCurrentState()
     }
 
-    fun loadInitialSchedule(forceRefresh: Boolean = false) {
+    /** A pull or retry shows the indicator; the load on entry stays silent behind the cached days. */
+    fun loadInitialSchedule(forceRefresh: Boolean = false, silent: Boolean = false) {
         hasStarted = true
+        silentLoad = silent
         refreshJob?.cancel()
         val userIsu = activeUserIsu()
         val keepLoadedRange = forceRefresh && observedUserIsu == userIsu && observeJob != null
@@ -208,6 +211,7 @@ class ScheduleViewModel @Inject constructor(
 
     private suspend fun handleRefreshResult(result: AppResult<Unit>) {
         isLoading = false
+        silentLoad = false
 
         when (result) {
             is AppResult.Success -> {
@@ -254,7 +258,7 @@ class ScheduleViewModel @Inject constructor(
         _uiState.value = when {
             hasDisplayableContent(displayDays) -> ScheduleUiState.Content(
                 schedule = currentDays,
-                loadingMore = isLoading,
+                loadingMore = isLoading && !silentLoad,
                 selectedUser = selectedUser,
                 displayDays = displayDays
             )

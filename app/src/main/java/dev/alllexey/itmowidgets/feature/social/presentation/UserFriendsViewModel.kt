@@ -36,14 +36,15 @@ class UserFriendsViewModel @Inject constructor(
     val refreshErrors = errors.receiveAsFlow()
     private var request: Job? = null
 
-    init { load() }
+    init { load(silent = true) }
 
-    fun load() {
+    /** A pull shows the indicator; the load on entry stays silent behind the cached list. */
+    fun load(silent: Boolean = false) {
         if (request?.isActive == true) return
         // The last answer for this person renders at once; the network only updates the list.
         val previous = state.value as? UserFriendsUiState.Content
             ?: repository.cachedUserFriends(isu)?.let { UserFriendsUiState.Content(it.toItems()) }
-        state.value = previous?.copy(refreshing = true) ?: UserFriendsUiState.Loading
+        state.value = previous?.copy(refreshing = !silent) ?: UserFriendsUiState.Loading
         request = viewModelScope.launch {
             when (val result = repository.userFriends(isu)) {
                 is AppResult.Success -> state.value = UserFriendsUiState.Content(result.value.toItems())

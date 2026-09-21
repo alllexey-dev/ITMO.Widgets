@@ -71,7 +71,7 @@ class ScheduleViewModelTest {
         }
 
     @Test
-    fun `the first state is content from memory while the refresh is still running`() =
+    fun `the first state is content from memory and the entry refresh shows no indicator`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeScheduleRepository().apply {
                 schedules.value = listOf(daySchedule())
@@ -84,7 +84,10 @@ class ScheduleViewModelTest {
 
             val state = viewModel.uiState.value as ScheduleUiState.Content
             assertEquals(repository.schedules.value, state.schedule)
-            assertTrue(state.loadingMore)
+            assertFalse(state.loadingMore)
+
+            viewModel.loadInitialSchedule(forceRefresh = true)
+            assertTrue((viewModel.uiState.value as ScheduleUiState.Content).loadingMore)
         }
 
     @Test

@@ -37,7 +37,9 @@ sealed interface SportSignUiState {
         /** Lessons with a booking request in flight; their action is blocked. */
         val busyLessonIds: Set<Long> = emptySet(),
         /** A refresh is running behind content that stays on screen. */
-        val refreshing: Boolean = false
+        val refreshing: Boolean = false,
+        /** The catalogue has not answered yet: the header and calendar show, the list is a placeholder. */
+        val initialLoading: Boolean = false
     ) : SportSignUiState
 
     data class Error(val error: AppError) : SportSignUiState

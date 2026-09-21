@@ -211,8 +211,14 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     private fun onContent(state: SportSignUiState.Content) {
         swipe.isRefreshing = state.refreshing
-        skeletonAdapter.setVisible(false)
         headerAdapter.updateState(state)
+        if (state.initialLoading) {
+            // Header and calendar are real; the list area waits for the catalogue.
+            skeletonAdapter.setVisible(true)
+            submitLessonsWithState(emptyList(), null)
+            return
+        }
+        skeletonAdapter.setVisible(false)
         val contentState = if (state.displayedLessons.isEmpty()) {
             ContentState(
                 iconRes = R.drawable.ic_event_note,

@@ -89,7 +89,8 @@ class RecordbookBarsOverlayTest {
         bars.subjectLoader = { slow.await() }
         val vm = content; advanceUntilIdle()
         val pending = vm.uiState.value as RecordbookUiState.Content
-        assertTrue(pending.refreshing)
+        // The load on entry waits for BARS silently; only a pull shows the indicator.
+        assertFalse(pending.refreshing)
         assertFalse(pending.barsApplied)
         assertEquals(75.0, pending.subjects[0].score!!, 0.0)
         slow.complete(AppResult.Success(listOf(barsSubject()))); advanceUntilIdle()

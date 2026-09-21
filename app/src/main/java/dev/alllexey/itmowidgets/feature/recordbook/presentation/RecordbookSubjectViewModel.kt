@@ -86,13 +86,14 @@ class RecordbookSubjectViewModel @Inject constructor(
     private val bindingVersion = MutableStateFlow(0)
     private var proposalRejected = false
 
-    init { refresh() }
+    init { refresh(silent = true) }
 
-    fun refresh() {
+    /** A pull shows the indicator; the load on entry stays silent behind the cached subject. */
+    fun refresh(silent: Boolean = false) {
         loadJob?.cancel()
         val previous = (_uiState.value as? RecordbookSubjectUiState.Content)?.copy(refreshing = false)
             ?: seedFromCache()
-        _uiState.value = previous?.copy(refreshing = true, refreshError = null)
+        _uiState.value = previous?.copy(refreshing = !silent, refreshError = null)
             ?: RecordbookSubjectUiState.Loading
         loadJob = viewModelScope.launch {
             val journal = barsJournal?.let { async { bars.getSubject(it) } }

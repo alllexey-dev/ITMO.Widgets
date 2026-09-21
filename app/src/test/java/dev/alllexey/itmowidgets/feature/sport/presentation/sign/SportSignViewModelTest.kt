@@ -66,14 +66,33 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun `without a snapshot the screen stays loading through the initial refresh`() = runTest(mainDispatcherRule.dispatcher) {
+    fun `before the catalogue answers the calendar shows over a placeholder without an indicator`() = runTest(mainDispatcherRule.dispatcher) {
         schedule.gate = CompletableDeferred()
         val viewModel = viewModel()
         runCurrent()
-        assertEquals(SportSignUiState.Loading, viewModel.uiState.value)
+        val initial = viewModel.uiState.value as SportSignUiState.Content
+        assertTrue(initial.initialLoading)
+        assertFalse(initial.refreshing)
+        assertEquals(7, initial.displayedWeek.size)
+        assertTrue(initial.displayedLessons.isEmpty())
         schedule.gate.complete(Unit)
         advanceUntilIdle()
         assertEquals(SportSignUiState.Loading, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `the entry refresh is silent and a pull shows the indicator`() = runTest(mainDispatcherRule.dispatcher) {
+        emitSnapshot()
+        val viewModel = viewModel()
+        runCurrent()
+        assertFalse((viewModel.uiState.value as SportSignUiState.Content).refreshing)
+        advanceUntilIdle()
+        schedule.gate = CompletableDeferred()
+        viewModel.refreshAllData()
+        runCurrent()
+        assertTrue((viewModel.uiState.value as SportSignUiState.Content).refreshing)
+        schedule.gate.complete(Unit)
+        advanceUntilIdle()
     }
 
     @Test

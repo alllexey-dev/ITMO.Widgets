@@ -38,6 +38,7 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val refreshing = MutableStateFlow(false)
+    private var inFlight = false
     private val eventChannel = Channel<HomeEvent>(Channel.BUFFERED)
     private var loaded = false
     private var lastRefreshMillis = 0L
@@ -55,12 +56,14 @@ class HomeViewModel @Inject constructor(
     fun ensureDataLoaded() {
         if (loaded) return
         loaded = true
-        refresh()
+        refresh(silent = true)
     }
 
-    fun refresh() {
-        if (refreshing.value) return
-        refreshing.value = true
+    /** A pull shows the indicator; an automatic refresh on entry or resume stays silent behind the cards. */
+    fun refresh(silent: Boolean = false) {
+        if (inFlight) return
+        inFlight = true
+        if (!silent) refreshing.value = true
         viewModelScope.launch {
             try {
                 val failure = supervisorScope {
@@ -69,6 +72,7 @@ class HomeViewModel @Inject constructor(
                 lastRefreshMillis = clock.millis()
                 failure?.let { eventChannel.send(HomeEvent.RefreshFailed(it)) }
             } finally {
+                inFlight = false
                 refreshing.value = false
             }
         }
@@ -77,7 +81,7 @@ class HomeViewModel @Inject constructor(
     /** Cheap checks always; the network only when the feed is stale. */
     fun onScreenResumed() {
         viewModelScope.launch { sources.forEach { it.revalidate() } }
-        if (loaded && clock.millis() - lastRefreshMillis >= STALE_AFTER_MILLIS) refresh()
+        if (loaded && clock.millis() - lastRefreshMillis >= STALE_AFTER_MILLIS) refresh(silent = true)
     }
 
     fun dismissHint(hint: HomeHint) {

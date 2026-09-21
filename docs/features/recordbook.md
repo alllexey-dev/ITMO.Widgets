@@ -121,9 +121,10 @@ teachers, PE and sport stay MyITMO.
   Unmatched subjects keep MyITMO values with a `нет в БАРС` note; PE gets no note;
   duplicate titles on either side are not matched. An empty BARS journal
   (`total = 0`, no marks) shows as "no marks", not 0.
-- The MyITMO list appears immediately; the refresh indicator stays until BARS
-  answers, journals are requested in parallel, and the note appears only after a
-  successful BARS response for that period.
+- The MyITMO list appears immediately; after a pull the refresh indicator stays
+  until BARS answers (the load on entry, a period change and the switch itself
+  wait silently), journals are requested in parallel, and the note appears only
+  after a successful BARS response for that period.
 - A BARS failure keeps the MyITMO list and shows a snackbar; when the ITMO.ID
   session has ended the snackbar offers `Войти в БАРС` (`BarsLoginActivity`).
   Nothing is silently substituted in either direction.

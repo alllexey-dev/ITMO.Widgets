@@ -88,7 +88,7 @@ class RecordbookSubjectFragment : Fragment() {
                 Snackbar.make(binding.root, getString(R.string.recordbook_refresh_error, getString(it.messageRes())), Snackbar.LENGTH_LONG)
                     .setAction(R.string.common_retry) { viewModel.refresh() }.also(Snackbar::show)
             } ?: barsError?.let { error ->
-                recordbookBarsSnackbar(binding.root, error, viewModel::refresh) {
+                recordbookBarsSnackbar(binding.root, error, { viewModel.refresh() }) {
                     barsLogin.launch(Intent(requireContext(), BarsLoginActivity::class.java))
                 }
             }

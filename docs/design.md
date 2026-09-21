@@ -109,8 +109,11 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
   before it. A screen that has a cached answer never shows it: the cache renders
   in the first frame and the refresh reports through the pull-to-refresh
   indicator over the content.
-- Refresh: existing data and scroll position stay; the indicator reports work
-  without replacing the screen. The schedule keeps its loaded range including
+- Refresh: existing data and scroll position stay. Only a refresh the user asked
+  for (pull-to-refresh, `Повторить`) shows the indicator; the automatic refresh
+  on entry, on resume, after a period change or the BARS switch is silent and
+  the new data simply replaces the old. A skeleton is therefore never followed
+  by an indicator. The schedule keeps its loaded range including
   pagination and replaces it with one snapshot; an error keeps the old data.
 - Card actions show local progress inside their button without changing its
   geometry and ignore a second tap.

@@ -55,7 +55,7 @@ class FriendsFragment : Fragment() {
         )
         binding.recyclerView.adapter = adapter
         binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener(viewModel::refresh)
+        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh() })
         binding.backButton.setOnClickListener { closeScreen() }
         binding.searchButton.setOnClickListener { openScreen(AppScreen.USER_SEARCH) }
         binding.tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {

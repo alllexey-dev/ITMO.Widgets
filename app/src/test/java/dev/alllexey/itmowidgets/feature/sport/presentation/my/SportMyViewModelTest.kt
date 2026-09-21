@@ -63,6 +63,19 @@ class SportMyViewModelTest {
     }
 
     @Test
+    fun `the first load is silent and a pull shows the indicator`() = runTest(mainDispatcherRule.dispatcher) {
+        emitSnapshot()
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        bookings.gate = CompletableDeferred()
+        viewModel.refreshAllData(silent = true)
+        runCurrent()
+        assertFalse((viewModel.uiState.value as SportMyUiState.Content).refreshing)
+        bookings.gate.complete(Unit)
+        advanceUntilIdle()
+    }
+
+    @Test
     fun `without a snapshot the screen stays loading through the refresh`() = runTest(mainDispatcherRule.dispatcher) {
         val viewModel = viewModel()
         bookings.gate = CompletableDeferred()

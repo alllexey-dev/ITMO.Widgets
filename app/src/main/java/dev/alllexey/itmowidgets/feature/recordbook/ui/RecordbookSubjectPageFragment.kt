@@ -38,7 +38,7 @@ class RecordbookSubjectPageFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        adapter = RecordbookControlAdapter(viewModel::refresh, SubjectHubActions(
+        adapter = RecordbookControlAdapter({ viewModel.refresh() }, SubjectHubActions(
             onConfirmBinding = viewModel::confirmBinding,
             onRejectProposal = viewModel::rejectProposal,
             onRetryLessons = viewModel::retryLessons,
@@ -47,7 +47,7 @@ class RecordbookSubjectPageFragment : Fragment() {
         binding.recyclerView.adapter = adapter
         binding.recyclerView.itemAnimator = null
         binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener(viewModel::refresh)
+        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh() })
         viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }

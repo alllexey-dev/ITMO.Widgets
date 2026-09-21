@@ -46,7 +46,7 @@ class UserFriendsViewModelTest {
         val vm = create(repository)
         runCurrent()
         val seeded = vm.uiState.value as UserFriendsUiState.Content
-        assertTrue(seeded.refreshing)
+        assertFalse(seeded.refreshing)
         assertEquals(listOf(12), seeded.items.map { (it as UserListItem.User).row.isu })
         gate.complete(Unit)
         advanceUntilIdle()

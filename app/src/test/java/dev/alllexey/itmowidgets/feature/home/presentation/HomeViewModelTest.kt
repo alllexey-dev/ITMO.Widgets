@@ -117,6 +117,21 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `the first load and a stale resume refresh silently`() = runTest {
+        val gate = CompletableDeferred<AppResult<Unit>>()
+        schedule.pendingRefresh = gate
+        val vm = model()
+        subscribe(vm)
+        vm.ensureDataLoaded()
+        advanceUntilIdle()
+        assertFalse(vm.content().refreshing)
+        assertEquals(1, schedule.refreshes)
+        gate.complete(AppResult.Success(Unit))
+        advanceUntilIdle()
+        assertFalse(vm.content().refreshing)
+    }
+
+    @Test
     fun `refreshing shows while sources answer and a second call waits`() = runTest {
         val gate = CompletableDeferred<AppResult<Unit>>()
         schedule.pendingRefresh = gate

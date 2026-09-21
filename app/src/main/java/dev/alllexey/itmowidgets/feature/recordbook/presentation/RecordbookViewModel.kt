@@ -70,7 +70,7 @@ class RecordbookViewModel @Inject constructor(
     private var loadJob: Job? = null
 
     fun ensureDataLoaded() {
-        if (_uiState.value is RecordbookUiState.Loading && loadJob?.isActive != true) refresh()
+        if (_uiState.value is RecordbookUiState.Loading && loadJob?.isActive != true) refresh(silent = true)
     }
 
     fun setBarsEnabled(enabled: Boolean) {
@@ -78,7 +78,7 @@ class RecordbookViewModel @Inject constructor(
         barsLoaded = true
         _barsEnabled.value = enabled
         viewModelScope.launch { barsPreference.setEnabled(enabled) }
-        refresh()
+        refresh(silent = true)
     }
 
     fun selectPeriod(programId: Long, semester: Int) {
@@ -89,15 +89,16 @@ class RecordbookViewModel @Inject constructor(
         selection = selected
         savedStateHandle[KEY_PROGRAM_ID] = programId
         savedStateHandle[KEY_SEMESTER] = semester
-        refresh()
+        refresh(silent = true)
     }
 
-    fun refresh() {
+    /** A pull shows the indicator; loads on entry, period change and the BARS switch stay silent behind the list. */
+    fun refresh(silent: Boolean = false) {
         loadJob?.cancel()
         val previous = (_uiState.value as? RecordbookUiState.Content)
             ?.takeIf { it.selection == selection }?.copy(refreshing = false)
             ?: seedFromCache()
-        _uiState.value = previous?.copy(refreshing = true, refreshError = null)
+        _uiState.value = previous?.copy(refreshing = !silent, refreshError = null)
             ?: RecordbookUiState.Loading(programs, selection)
         loadJob = viewModelScope.launch {
             if (!barsLoaded) {
@@ -133,8 +134,8 @@ class RecordbookViewModel @Inject constructor(
                         _uiState.value = RecordbookUiState.Content(programs, selected, official, sport)
                         return@launch
                     }
-                    // MyITMO is on screen at once; the spinner stays until BARS answers.
-                    _uiState.value = RecordbookUiState.Content(programs, selected, official, sport, refreshing = true)
+                    // MyITMO is on screen at once; a pull keeps its indicator until BARS answers.
+                    _uiState.value = RecordbookUiState.Content(programs, selected, official, sport, refreshing = !silent)
                     _uiState.value = when (val overlay = journals.await()) {
                         is AppResult.Success -> RecordbookUiState.Content(programs, selected,
                             RecordbookBarsMerge.apply(official, overlay.value), sport, barsApplied = true)

@@ -74,7 +74,7 @@ class RecordbookSubjectViewModelTest {
         repository.subjectLoader = { gate.await() }
         val vm = model(); runCurrent()
         val seeded = vm.uiState.value as RecordbookSubjectUiState.Content
-        assertTrue(seeded.refreshing)
+        assertFalse(seeded.refreshing)
         assertEquals("Из кэша", seeded.subject.name)
         assertEquals(listOf(control), seeded.controls)
         gate.complete(repository.subjects); advanceUntilIdle()
