@@ -63,6 +63,7 @@ class SportSignViewModel @Inject constructor(
     private var refreshJob: Job? = null
     private var autoSignJob: Job? = null
     private var autoSignCommandJob: Job? = null
+    private var lastContent: SportSignUiState.Content? = null
 
     init {
         observeData()
@@ -211,10 +212,7 @@ class SportSignViewModel @Inject constructor(
                 activeOperations,
                 filterController.filters
             ) { filtersState, timeSlotsState, scheduleState, operationCount, userFilters ->
-                if (operationCount > 0) {
-                    return@combine SportSignUiState.Loading
-                }
-
+                val refreshing = operationCount > 0
                 val filters = filtersState.dataOrNull()
                 val timeSlots = timeSlotsState.dataOrNull()
                 val lessons = scheduleState.dataOrNull()
@@ -225,7 +223,13 @@ class SportSignViewModel @Inject constructor(
                 )
 
                 if (lessons == null || filters == null || timeSlots == null) {
-                    SportSignUiState.Error(errors.firstOrNull() ?: AppError.Unknown())
+                    val previous = lastContent
+                    when {
+                        // Sources that failed keep the last content on screen with a snackbar.
+                        refreshing -> previous?.copy(refreshing = true) ?: SportSignUiState.Loading
+                        previous != null -> previous.copy(hasPartialError = true, refreshing = false)
+                        else -> SportSignUiState.Error(errors.firstOrNull() ?: AppError.Unknown())
+                    }
                 } else {
                     stateFactory.create(
                         lessons = lessons,
@@ -233,7 +237,7 @@ class SportSignViewModel @Inject constructor(
                         timeSlots = timeSlots,
                         userFilters = userFilters,
                         hasPartialError = errors.isNotEmpty()
-                    )
+                    ).copy(refreshing = refreshing).also { lastContent = it }
                 }
             }
 

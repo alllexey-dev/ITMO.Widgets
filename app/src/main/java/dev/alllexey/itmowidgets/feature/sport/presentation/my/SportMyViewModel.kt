@@ -34,7 +34,9 @@ sealed class SportMyUiState {
         val attempts: SportAttempts,
         val score: SportScore,
         val bookings: List<SportBooking>,
-        val hasPartialError: Boolean = false
+        val hasPartialError: Boolean = false,
+        /** A refresh is running behind content that stays on screen. */
+        val refreshing: Boolean = false
     ) : SportMyUiState()
 
     data class Error(val error: AppError) : SportMyUiState()
@@ -60,6 +62,7 @@ class SportMyViewModel @Inject constructor(
     private val isRefreshing = MutableStateFlow(false)
 
     private var observeJob: Job? = null
+    private var lastContent: SportMyUiState.Content? = null
 
     init {
         observeData()
@@ -145,11 +148,6 @@ class SportMyViewModel @Inject constructor(
                 sportBookingRepository.observeSportBookings(),
                 isRefreshing
             ) { attemptsState, scoreState, bookingsState, refreshing ->
-
-                if (refreshing) {
-                    return@combine SportMyUiState.Loading
-                }
-
                 val attempts = attemptsState.dataOrNull()
                 val score = scoreState.dataOrNull()
                 val bookings = bookingsState.dataOrNull()
@@ -161,12 +159,12 @@ class SportMyViewModel @Inject constructor(
                 )
 
                 when {
-                    attempts == null || score == null || bookings == null -> {
-                        if (errors.isNotEmpty()) {
-                            SportMyUiState.Error(errors.first())
-                        } else {
-                            SportMyUiState.Loading
-                        }
+                    attempts == null || score == null || bookings == null -> when {
+                        // Sources that failed keep the last content on screen with a snackbar.
+                        refreshing -> lastContent?.copy(refreshing = true) ?: SportMyUiState.Loading
+                        lastContent != null -> lastContent!!.copy(hasPartialError = true, refreshing = false)
+                        errors.isNotEmpty() -> SportMyUiState.Error(errors.first())
+                        else -> SportMyUiState.Loading
                     }
 
                     else -> {
@@ -174,8 +172,9 @@ class SportMyViewModel @Inject constructor(
                             attempts = attempts,
                             score = score,
                             bookings = bookings,
-                            hasPartialError = errors.isNotEmpty()
-                        )
+                            hasPartialError = errors.isNotEmpty(),
+                            refreshing = refreshing
+                        ).also { lastContent = it }
                     }
                 }
             }

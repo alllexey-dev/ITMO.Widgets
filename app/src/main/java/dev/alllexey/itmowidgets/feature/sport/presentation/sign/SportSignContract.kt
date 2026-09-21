@@ -35,7 +35,9 @@ sealed interface SportSignUiState {
         val hideTeacherSelector: Boolean = true,
         val hideTimeSelector: Boolean = true,
         /** Lessons with a booking request in flight; their action is blocked. */
-        val busyLessonIds: Set<Long> = emptySet()
+        val busyLessonIds: Set<Long> = emptySet(),
+        /** A refresh is running behind content that stays on screen. */
+        val refreshing: Boolean = false
     ) : SportSignUiState
 
     data class Error(val error: AppError) : SportSignUiState

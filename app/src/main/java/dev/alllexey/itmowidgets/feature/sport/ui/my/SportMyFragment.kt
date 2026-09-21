@@ -63,7 +63,6 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     private lateinit var adapter: SportBookingAdapter
     private var scoreCollapse: SportScoreCollapseController? = null
-    private var hasRenderedContent = false
     private var feedbackSnackbar: Snackbar? = null
     private var scoreAnimator: ValueAnimator? = null
     private var lastRenderedScore: SportScore? = null
@@ -117,7 +116,6 @@ class SportMyFragment : Fragment(), SportBookingListener {
     override fun onDestroyView() {
         feedbackSnackbar?.dismiss()
         feedbackSnackbar = null
-        hasRenderedContent = false
         scoreCollapse?.detach()
         scoreCollapse = null
         scoreAnimator?.cancel()
@@ -184,7 +182,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
                 viewModel.uiState.collect { state ->
                     val message = when (state) {
                         is SportMyUiState.Content -> if (state.hasPartialError) R.string.common_partial_load_error else null
-                        is SportMyUiState.Error -> state.error.messageRes().takeIf { hasRenderedContent }
+                        is SportMyUiState.Error -> null
                         SportMyUiState.Loading -> null
                     }
                     if (message == lastMessage) return@collect
@@ -208,18 +206,16 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     // region UI
 
+    /** Only before the first snapshot: a refresh with data arrives as `Content(refreshing = true)`. */
     private fun showLoading() {
         swipe.isRefreshing = true
-        if (!hasRenderedContent) {
-            binding.emptyStateLayout.isVisible = false
-            binding.pointsCard.isVisible = false
-            recycler.isVisible = false
-        }
+        binding.emptyStateLayout.isVisible = false
+        binding.pointsCard.isVisible = false
+        recycler.isVisible = false
     }
 
     private fun onContent(state: SportMyUiState.Content) {
-        swipe.isRefreshing = false
-        hasRenderedContent = true
+        swipe.isRefreshing = state.refreshing
         val renderedBinding = binding
         adapter.submitList(state.bookings) {
             // Loading/error retain the latest successful submission. AsyncListDiffer
@@ -236,7 +232,6 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     private fun showError(state: SportMyUiState.Error) {
         swipe.isRefreshing = false
-        if (hasRenderedContent) return
         recycler.isVisible = false
         binding.pointsCard.isVisible = false
         binding.emptyStateLayout.isVisible = true
