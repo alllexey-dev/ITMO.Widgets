@@ -83,6 +83,24 @@ class RecordbookSubjectViewModelTest {
         assertEquals(recordbookSubject(), fresh.subject)
     }
 
+    @Test fun `a cached subject without cached controls still starts from the placeholder`() = runTest {
+        repository.cachedSubjects = listOf(recordbookSubject(name = "Из кэша"))
+        val gate = CompletableDeferred<AppResult<List<RecordbookSubject>>>()
+        repository.subjectLoader = { gate.await() }
+        val vm = model(); runCurrent()
+        assertEquals(RecordbookSubjectUiState.Loading, vm.uiState.value)
+        gate.complete(repository.subjects); advanceUntilIdle()
+        assertTrue(vm.uiState.value is RecordbookSubjectUiState.Content)
+    }
+
+    @Test fun `the schedule tab is expected for a current period before anything loads`() = runTest {
+        val current = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(mapOf(
+            "entry_id" to 42L, "program_id" to 1L, "semester" to 3, "study_year" to "2026/2027"
+        )), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime())
+        assertTrue(current.scheduleTabExpected)
+        assertFalse(model().scheduleTabExpected)
+    }
+
     @Test fun `subject without a BARS journal never asks BARS`() = runTest {
         model(); advanceUntilIdle()
         assertTrue(bars.journalRequests.isEmpty())

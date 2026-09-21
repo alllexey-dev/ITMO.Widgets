@@ -82,6 +82,9 @@ class RecordbookSubjectViewModel @Inject constructor(
     private val handle = savedStateHandle
     private var loadJob: Job? = null
     private var hubJob: Job? = null
+
+    /** Known from the arguments alone: a current period gets the schedule tab before anything loads. */
+    val scheduleTabExpected: Boolean get() = period.isCurrent()
     /** Bumped after a binding is written so the lesson flow is re-evaluated. */
     private val bindingVersion = MutableStateFlow(0)
     private var proposalRejected = false
@@ -128,14 +131,19 @@ class RecordbookSubjectViewModel @Inject constructor(
         }
     }
 
-    /** The list's last answer for this subject, so the hub opens without a spinner. */
+    /**
+     * The list's last answer for this subject, so the hub opens without a spinner.
+     * Only when the controls are known too: an empty list would read as "no details".
+     */
     private fun seedFromCache(): RecordbookSubjectUiState.Content? {
         val subject = repository.cachedSubjects(programId, period.semester)
             ?.firstOrNull { it.entryId == entryId } ?: return null
+        val controls = repository.cachedControls(entryId) ?: if (subject.hasDetails) return null else emptyList()
         return RecordbookSubjectUiState.Content(
             subject = subject,
-            controls = repository.cachedControls(entryId).orEmpty(),
-            sport = null
+            controls = controls,
+            sport = null,
+            hub = SubjectHubState(lessons = if (scheduleTabExpected) SubjectLessonsState.Loading else SubjectLessonsState.Hidden)
         )
     }
 

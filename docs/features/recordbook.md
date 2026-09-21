@@ -106,6 +106,9 @@ never shows the skeleton; the sport card waits for the refresh.
 The tabs are pages of a `ViewPager2` (swipe or tap), each page its own list
 and pull-to-refresh over the shared view model; the schedule page exists only
 when the hub has something to show, and the chosen tab survives recreation.
+For a current period the tab strip is already there while the subject loads
+(`scheduleTabExpected` from the arguments), so the header does not jump in
+after the data.
 Lesson rows are informational: the details sheet belongs to the schedule
 feature, and teacher profiles wait for Stage 29. Review or resource tabs do not
 exist yet.

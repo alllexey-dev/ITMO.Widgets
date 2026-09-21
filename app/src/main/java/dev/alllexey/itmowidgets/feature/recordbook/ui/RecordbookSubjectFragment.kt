@@ -97,13 +97,16 @@ class RecordbookSubjectFragment : Fragment() {
         }
         when (state) {
             RecordbookSubjectUiState.Loading -> {
+                // The tab strip is deterministic for the period; only the pages wait for the subject.
+                val tabs = tabsFor(viewModel.scheduleTabExpected)
+                pages.submit(tabs)
+                binding.tabs.isVisible = tabs.size > 1
                 binding.pager.isVisible = false
-                binding.tabs.isVisible = false
                 binding.stateContainer.isVisible = false
             }
             is RecordbookSubjectUiState.Content -> {
                 // The schedule tab exists once the hub has anything; the chosen tab is kept across reloads.
-                val tabs = if (state.hub.hasScheduleContent) listOf(SubjectTab.SCORES, SubjectTab.SCHEDULE) else listOf(SubjectTab.SCORES)
+                val tabs = tabsFor(state.hub.hasScheduleContent)
                 pages.submit(tabs)
                 binding.tabs.isVisible = tabs.size > 1
                 val position = tabs.indexOf(tab).coerceAtLeast(0)
@@ -123,6 +126,9 @@ class RecordbookSubjectFragment : Fragment() {
             }
         }
     }
+
+    private fun tabsFor(withSchedule: Boolean) =
+        if (withSchedule) listOf(SubjectTab.SCORES, SubjectTab.SCHEDULE) else listOf(SubjectTab.SCORES)
 
     /** Pages are the tabs; ids are stable per tab so a reload does not recreate the current page. */
     private class SubjectPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {

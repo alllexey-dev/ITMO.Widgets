@@ -25,6 +25,8 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
   indicator over the content (or after the skeleton); only a pull or
   `Повторить` does. The sport catalogue shows its filters and week calendar
   before the lessons answer (`SportSignUiState.Content.initialLoading`).
+- The subject hub shows its `Баллы` / `Расписание` tab strip at once for a
+  current period instead of after the subject answers.
 - A first load without any cache shows a skeleton (`core/ui/SkeletonView`,
   `SkeletonListAdapter` for the sport catalogue) instead of a circular
   indicator on the feed, schedule, both sport tabs, recordbook, subject hub,
