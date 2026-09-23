@@ -63,7 +63,13 @@ object Screenshots {
             Location.FILES -> context.getExternalFilesDir(null)
         }
         val directory = File(root, dirName).apply { mkdirs() }
-        File(directory, "$fileName.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        val file = File(directory, "$fileName.png")
+        file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        // UTP uninstalls the target APK after a run, so export before its private/external cache is removed.
+        InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")?.let { output ->
+            val exported = File(output, dirName).apply { mkdirs() }
+            file.copyTo(File(exported, "$fileName.png"), overwrite = true)
+        }
         if (recycle) bitmap.recycle()
     }
 }
