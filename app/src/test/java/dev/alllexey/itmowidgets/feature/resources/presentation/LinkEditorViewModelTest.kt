@@ -18,6 +18,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -65,6 +66,15 @@ class LinkEditorViewModelTest {
 
         show(linksSnapshot(audiences = listOf(group))); runCurrent()
         assertEquals(listOf(LinkVisibility.PRIVATE, LinkVisibility.GROUP, LinkVisibility.ALL), vm.uiState.value.visibilities)
+    }
+
+    @Test fun `premoderation of the period reaches the form`() = runTest(main.dispatcher) {
+        show(linksSnapshot(audiences = listOf(group)).copy(premoderation = false))
+        val vm = model()
+        assertFalse(vm.uiState.value.premoderation)
+
+        show(linksSnapshot(audiences = listOf(group))); runCurrent()
+        assertTrue(vm.uiState.value.premoderation)
     }
 
     @Test fun `without the connection only private remains and a public choice falls back`() = runTest(main.dispatcher) {

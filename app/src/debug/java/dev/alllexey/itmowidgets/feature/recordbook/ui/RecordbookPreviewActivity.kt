@@ -131,6 +131,10 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
 
     override fun openSubjectLinks(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs) = Unit
 
+    override fun openLinkEditor(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs, linkId: String?) = Unit
+
+    override fun openLinkActions(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs, linkId: String) = Unit
+
     override fun openLessonDetails(args: LessonDetailsArgs) = Unit
 
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit

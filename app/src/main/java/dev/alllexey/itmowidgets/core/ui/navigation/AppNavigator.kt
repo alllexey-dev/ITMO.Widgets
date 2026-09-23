@@ -29,7 +29,13 @@ interface AppNavigator {
 
     fun openPendingSportDetails(args: PendingSportDetailsArgs)
 
+    /** All links of a subject period. */
     fun openSubjectLinks(args: SubjectLinksArgs)
+
+    /** Adds a link, or edits the viewer's own link [linkId]. */
+    fun openLinkEditor(args: SubjectLinksArgs, linkId: String? = null)
+
+    fun openLinkActions(args: SubjectLinksArgs, linkId: String)
 }
 
 interface ScreenTransitionHost {
@@ -68,4 +74,12 @@ fun Fragment.closeScreen() {
 
 fun Fragment.openSubjectLinks(args: SubjectLinksArgs) {
     (requireActivity() as AppNavigator).openSubjectLinks(args)
+}
+
+fun Fragment.openLinkEditor(args: SubjectLinksArgs, linkId: String? = null) {
+    (requireActivity() as AppNavigator).openLinkEditor(args, linkId)
+}
+
+fun Fragment.openLinkActions(args: SubjectLinksArgs, linkId: String) {
+    (requireActivity() as AppNavigator).openLinkActions(args, linkId)
 }

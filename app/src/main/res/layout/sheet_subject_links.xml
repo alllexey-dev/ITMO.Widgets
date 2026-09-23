@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/design_spacing_group">
+
+    <View
+        android:id="@+id/drag_handle"
+        style="@style/Widget.ItmoWidgets.SheetHandle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/design_screen_margin"
+        android:layout_marginTop="@dimen/design_spacing_group"
+        android:text="@string/links_title"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
+        android:textColor="?attr/colorOnSurface"
+        app:layout_constraintEnd_toStartOf="@id/close_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/drag_handle" />
+
+    <TextView
+        android:id="@+id/subject"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/design_screen_margin"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        app:layout_constraintEnd_toStartOf="@id/close_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        tools:text="Математический анализ" />
+
+    <ImageButton
+        android:id="@+id/close_button"
+        android:layout_width="@dimen/design_touch_target"
+        android:layout_height="@dimen/design_touch_target"
+        android:layout_marginEnd="@dimen/design_spacing_related"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/common_close"
+        android:src="@drawable/ic_close"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/title"
+        app:tint="?attr/colorOnSurfaceVariant" />
+
+    <FrameLayout
+        android:id="@+id/content"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/design_spacing_compact"
+        app:layout_constrainedHeight="true"
+        app:layout_constraintBottom_toTopOf="@id/add_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/subject"
+        app:layout_constraintVertical_bias="0">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/design_spacing_compact"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_subject_link"
+            tools:visibility="visible" />
+
+        <dev.alllexey.itmowidgets.core.ui.SkeletonView
+            android:id="@+id/loading"
+            style="@style/Widget.ItmoWidgets.Skeleton.List"
+            android:layout_height="256dp"
+            android:visibility="gone"
+            app:skeletonRows="3" />
+
+        <include
+            android:id="@+id/state"
+            layout="@layout/item_content_state"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/add_button"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/design_screen_margin"
+        android:minHeight="@dimen/design_touch_target"
+        android:text="@string/links_add"
+        app:icon="@drawable/ic_add"
+        app:iconGravity="textStart"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/content" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

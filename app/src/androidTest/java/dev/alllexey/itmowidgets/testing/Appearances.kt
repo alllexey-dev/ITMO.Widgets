@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.testing
 
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.ui.SportCardsPreviewActivity
@@ -61,4 +62,7 @@ object Appearances {
 
     fun Spec.toRecordbook() =
         RecordbookPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
+
+    fun Spec.toSubjectLinks() =
+        SubjectLinksPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
 }

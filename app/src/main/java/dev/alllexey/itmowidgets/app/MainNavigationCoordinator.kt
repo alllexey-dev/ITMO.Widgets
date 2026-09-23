@@ -11,10 +11,14 @@ import androidx.navigation.ui.setupWithNavController
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
+import dev.alllexey.itmowidgets.feature.resources.ui.LinkActionsBottomSheet
+import dev.alllexey.itmowidgets.feature.resources.ui.LinkEditorBottomSheet
+import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
@@ -94,8 +98,20 @@ class MainNavigationCoordinator(
         updateAccessibility()
     }
 
-    // TODO(subject-links Stage 14): show SubjectLinksBottomSheet.
-    override fun openSubjectLinks(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs) = Unit
+    override fun openSubjectLinks(args: SubjectLinksArgs) {
+        if (fragments.isStateSaved || fragments.findFragmentByTag(SubjectLinksBottomSheet.TAG) != null) return
+        SubjectLinksBottomSheet.newInstance(args).show(fragments, SubjectLinksBottomSheet.TAG)
+    }
+
+    override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) {
+        if (fragments.isStateSaved || fragments.findFragmentByTag(LinkEditorBottomSheet.TAG) != null) return
+        LinkEditorBottomSheet.newInstance(args, linkId).show(fragments, LinkEditorBottomSheet.TAG)
+    }
+
+    override fun openLinkActions(args: SubjectLinksArgs, linkId: String) {
+        if (fragments.isStateSaved || fragments.findFragmentByTag(LinkActionsBottomSheet.TAG) != null) return
+        LinkActionsBottomSheet.newInstance(args, linkId).show(fragments, LinkActionsBottomSheet.TAG)
+    }
 
     override fun openLessonDetails(args: LessonDetailsArgs) {
         if (fragments.isStateSaved || fragments.findFragmentByTag(LessonDetailsBottomSheet.TAG) != null) return

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="@dimen/design_spacing_section"
+    android:paddingTop="@dimen/design_spacing_compact">
+
+    <RadioGroup
+        android:id="@+id/reasons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/reason_broken"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/design_touch_target"
+            android:text="@string/links_report_broken" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/reason_wrong_subject"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/design_touch_target"
+            android:text="@string/links_report_wrong_subject" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/reason_spam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/design_touch_target"
+            android:text="@string/links_report_spam" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/reason_other"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/design_touch_target"
+            android:text="@string/links_report_other" />
+
+    </RadioGroup>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/comment_layout"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/design_spacing_compact"
+        android:hint="@string/links_report_comment"
+        app:counterEnabled="true"
+        app:counterMaxLength="500">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/comment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine|textCapSentences"
+            android:maxLength="500"
+            android:maxLines="4" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>

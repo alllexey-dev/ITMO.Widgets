@@ -15,7 +15,9 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
+import dev.alllexey.itmowidgets.core.ui.navigation.openSubjectLinks
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookSubjectPageBinding
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
@@ -43,10 +45,7 @@ class RecordbookSubjectPageFragment : Fragment() {
             onRejectProposal = viewModel::rejectProposal,
             onRetryLessons = viewModel::retryLessons,
             onOpenResource = { openResource(it.url) },
-            onOpenResources = { scope ->
-                (requireActivity() as dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator).openSubjectLinks(
-                    dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs(scope.subjectId, scope.subjectName, scope.periodKey))
-            }
+            onOpenResources = { scope -> openSubjectLinks(SubjectLinksArgs(scope.subjectId, scope.subjectName, scope.periodKey)) }
         ))
         binding.recyclerView.adapter = adapter
         binding.recyclerView.itemAnimator = null

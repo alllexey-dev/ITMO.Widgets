@@ -32,6 +32,8 @@ import kotlinx.coroutines.launch
 sealed interface LinkEvent {
     data class Failed(val text: UiText) : LinkEvent
     data object Saved : LinkEvent
+    /** An action of the links sheet succeeded; a sheet opened for one action may close. */
+    data object Done : LinkEvent
 }
 
 sealed interface LinkSection {
@@ -136,7 +138,10 @@ class SubjectLinksViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val result = block()
-                if (result is AppResult.Failure) channel.send(LinkEvent.Failed(result.error.toUiText()))
+                channel.send(when (result) {
+                    is AppResult.Success -> LinkEvent.Done
+                    is AppResult.Failure -> LinkEvent.Failed(result.error.toUiText())
+                })
             } finally {
                 busy = false
             }

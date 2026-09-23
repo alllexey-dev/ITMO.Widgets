@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:longClickable="true"
+    android:minHeight="@dimen/design_touch_target"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/design_spacing_related"
+    android:paddingEnd="@dimen/design_spacing_related">
+
+    <!-- Reddit-style score: the arrows keep 48 dp targets and overlap the number by 12 dp each. -->
+    <LinearLayout
+        android:id="@+id/vote_column"
+        android:layout_width="@dimen/design_touch_target"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <ImageButton
+            android:id="@+id/vote_up"
+            android:layout_width="@dimen/design_touch_target"
+            android:layout_height="@dimen/design_touch_target"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/links_vote_up"
+            android:src="@drawable/ic_arrow_upward_alt"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:id="@+id/score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="-12dp"
+            android:maxLines="1"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="12" />
+
+        <ImageButton
+            android:id="@+id/vote_down"
+            android:layout_width="@dimen/design_touch_target"
+            android:layout_height="@dimen/design_touch_target"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/links_vote_down"
+            android:src="@drawable/ic_arrow_downward_alt"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+        <ImageView
+            android:id="@+id/private_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_lock"
+            android:visibility="gone"
+            app:tint="?attr/colorOnSurfaceVariant" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/design_spacing_related"
+        android:layout_marginEnd="@dimen/design_spacing_compact"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingVertical="@dimen/design_spacing_compact">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Баллы потока" />
+
+        <TextView
+            android:id="@+id/meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="docs.google.com · P3119" />
+
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/save_button"
+        android:layout_width="@dimen/design_touch_target"
+        android:layout_height="@dimen/design_touch_target"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/links_save_own"
+        android:src="@drawable/ic_add"
+        app:tint="?attr/colorOnSurfaceVariant" />
+
+</LinearLayout>

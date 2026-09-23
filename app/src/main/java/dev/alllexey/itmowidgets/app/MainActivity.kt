@@ -17,6 +17,7 @@ import androidx.navigation.navOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.session.SessionRepository
@@ -135,13 +136,25 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         navigation.openRoot(root)
     }
 
-    /** A sport lesson in the schedule is a booking: it gets the sport sheet with `Отменить`. */
-    override fun openSubjectLinks(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs) {
+    override fun openSubjectLinks(args: SubjectLinksArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
         if (onboardingGate.state.value != OnboardingGate.Passed) return
         navigation.openSubjectLinks(args)
     }
 
+    override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) {
+        if (sessionRepository.state.value !is SessionState.SignedIn) return
+        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        navigation.openLinkEditor(args, linkId)
+    }
+
+    override fun openLinkActions(args: SubjectLinksArgs, linkId: String) {
+        if (sessionRepository.state.value !is SessionState.SignedIn) return
+        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        navigation.openLinkActions(args, linkId)
+    }
+
+    /** A sport lesson in the schedule is a booking: it gets the sport sheet with `Отменить`. */
     override fun openLessonDetails(args: LessonDetailsArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
         if (onboardingGate.state.value != OnboardingGate.Passed) return

@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/design_spacing_group">
+
+        <View style="@style/Widget.ItmoWidgets.SheetHandle" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:layout_marginTop="@dimen/design_spacing_group"
+            android:text="@string/links_editor_new"
+            android:textAppearance="?attr/textAppearanceTitleLarge"
+            android:textColor="?attr/colorOnSurface" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/url_layout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:layout_marginTop="@dimen/design_spacing_group"
+            android:hint="@string/links_url_hint"
+            app:endIconMode="clear_text">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/url"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="textUri" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <HorizontalScrollView
+            android:id="@+id/categories_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_compact"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/design_screen_margin"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/categories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/category_scores"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/links_category_scores"
+                    app:checkedIconVisible="false"
+                    app:chipIcon="@drawable/ic_table"
+                    app:chipIconTint="?attr/colorOnSurfaceVariant"
+                    app:chipIconVisible="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/category_queue"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/links_category_queue"
+                    app:checkedIconVisible="false"
+                    app:chipIcon="@drawable/ic_format_list_numbered"
+                    app:chipIconTint="?attr/colorOnSurfaceVariant"
+                    app:chipIconVisible="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/category_materials"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/links_category_materials"
+                    app:checkedIconVisible="false"
+                    app:chipIcon="@drawable/ic_folder"
+                    app:chipIconTint="?attr/colorOnSurfaceVariant"
+                    app:chipIconVisible="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/category_tasks"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/links_category_tasks"
+                    app:checkedIconVisible="false"
+                    app:chipIcon="@drawable/ic_assignment"
+                    app:chipIconTint="?attr/colorOnSurfaceVariant"
+                    app:chipIconVisible="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/category_recordings"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/links_category_recordings"
+                    app:checkedIconVisible="false"
+                    app:chipIcon="@drawable/ic_videocam"
+                    app:chipIconTint="?attr/colorOnSurfaceVariant"
+                    app:chipIconVisible="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/category_notes"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/links_category_notes"
+                    app:checkedIconVisible="false"
+                    app:chipIcon="@drawable/ic_edit_note"
+                    app:chipIconTint="?attr/colorOnSurfaceVariant"
+                    app:chipIconVisible="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/category_exam"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/links_category_exam"
+                    app:checkedIconVisible="false"
+                    app:chipIcon="@drawable/ic_school"
+                    app:chipIconTint="?attr/colorOnSurfaceVariant"
+                    app:chipIconVisible="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/category_chat"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/links_category_chat"
+                    app:checkedIconVisible="false"
+                    app:chipIcon="@drawable/ic_chat"
+                    app:chipIconTint="?attr/colorOnSurfaceVariant"
+                    app:chipIconVisible="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/category_other"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/links_category_other"
+                    app:checkedIconVisible="false"
+                    app:chipIcon="@drawable/ic_link"
+                    app:chipIconTint="?attr/colorOnSurfaceVariant"
+                    app:chipIconVisible="true" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+        </HorizontalScrollView>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/name_layout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:layout_marginTop="@dimen/design_spacing_compact"
+            android:hint="@string/links_name_hint">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="textCapSentences" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/visibility_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:layout_marginTop="@dimen/design_spacing_compact"
+            android:accessibilityHeading="true"
+            android:text="@string/links_who_sees"
+            tools:targetApi="p"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <!-- Segments share the spare width on top of their labels, so «Только я» fits a narrow screen. -->
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/visibility"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:layout_marginTop="@dimen/design_spacing_related"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/visibility_private"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:minWidth="0dp"
+                android:minHeight="@dimen/design_touch_target"
+                android:paddingHorizontal="@dimen/design_spacing_related"
+                android:text="@string/links_visibility_private" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/visibility_group"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:minWidth="0dp"
+                android:minHeight="@dimen/design_touch_target"
+                android:paddingHorizontal="@dimen/design_spacing_related"
+                android:text="@string/links_visibility_group" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/visibility_flow"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:minWidth="0dp"
+                android:minHeight="@dimen/design_touch_target"
+                android:paddingHorizontal="@dimen/design_spacing_related"
+                android:text="@string/links_visibility_flow" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/visibility_all"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:minWidth="0dp"
+                android:minHeight="@dimen/design_touch_target"
+                android:paddingHorizontal="@dimen/design_spacing_related"
+                android:text="@string/links_visibility_all" />
+
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <TextView
+            android:id="@+id/audience"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:layout_marginTop="@dimen/design_spacing_related"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Группа P3119" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/save_button"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:layout_marginTop="@dimen/design_spacing_group"
+            android:minHeight="@dimen/design_touch_target"
+            android:text="@string/links_save" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

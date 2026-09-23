@@ -27,6 +27,19 @@ fun LinkCategory.title(): UiText = UiText.Resource(when (this) {
     LinkCategory.OTHER -> R.string.links_category_other
 })
 
+/** A Material Symbols drawable; the same icon marks the category in chips, sections and the editor. */
+fun LinkCategory.iconRes(): Int = when (this) {
+    LinkCategory.SCORES -> R.drawable.ic_table
+    LinkCategory.QUEUE -> R.drawable.ic_format_list_numbered
+    LinkCategory.MATERIALS -> R.drawable.ic_folder
+    LinkCategory.TASKS -> R.drawable.ic_assignment
+    LinkCategory.RECORDINGS -> R.drawable.ic_videocam
+    LinkCategory.NOTES -> R.drawable.ic_edit_note
+    LinkCategory.EXAM -> R.drawable.ic_school
+    LinkCategory.CHAT -> R.drawable.ic_chat
+    LinkCategory.OTHER -> R.drawable.ic_link
+}
+
 /** With an [audience] a group or flow is named by its schedule groups, e.g. «Группа P3119». */
 fun LinkVisibility.label(audience: LinkAudience? = null): UiText = when {
     this == LinkVisibility.GROUP && audience != null -> UiText.Resource(R.string.links_visibility_group_audience, listOf(audience.label))

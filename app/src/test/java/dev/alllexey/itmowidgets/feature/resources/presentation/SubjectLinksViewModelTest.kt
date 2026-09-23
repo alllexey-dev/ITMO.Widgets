@@ -97,6 +97,15 @@ class SubjectLinksViewModelTest {
         assertEquals(before, vm.uiState.value)
     }
 
+    @Test fun `a successful action sends Done`() = runTest(main.dispatcher) {
+        show(linksSnapshot(shared = listOf(shared)))
+        val vm = model()
+
+        vm.toggleSaved("shared"); runCurrent()
+
+        assertEquals(LinkEvent.Done, vm.events.first())
+    }
+
     @Test fun `a second action while one is in flight is ignored`() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared)))
         val gate = CompletableDeferred<Unit>()

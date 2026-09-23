@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/design_spacing_group">
+
+        <View style="@style/Widget.ItmoWidgets.SheetHandle" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:layout_marginTop="@dimen/design_spacing_group"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Баллы потока" />
+
+        <TextView
+            android:id="@+id/meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:layout_marginTop="@dimen/design_spacing_related"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="docs.google.com · Все · отклонена" />
+
+        <TextView
+            android:id="@+id/review_note"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:layout_marginTop="@dimen/design_spacing_related"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorError"
+            android:visibility="gone"
+            tools:text="Причина: ссылка не открывается"
+            tools:visibility="visible" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/design_spacing_compact" />
+
+        <TextView
+            android:id="@+id/action_open"
+            style="@style/Widget.ItmoWidgets.SheetAction"
+            android:text="@string/links_open"
+            app:drawableStartCompat="@drawable/ic_open_in_new" />
+
+        <TextView
+            android:id="@+id/action_save"
+            style="@style/Widget.ItmoWidgets.SheetAction"
+            android:text="@string/links_save_own"
+            app:drawableStartCompat="@drawable/ic_add" />
+
+        <TextView
+            android:id="@+id/action_pin"
+            style="@style/Widget.ItmoWidgets.SheetAction"
+            android:text="@string/links_pin"
+            app:drawableStartCompat="@drawable/ic_keep" />
+
+        <TextView
+            android:id="@+id/action_edit"
+            style="@style/Widget.ItmoWidgets.SheetAction"
+            android:text="@string/links_edit"
+            app:drawableStartCompat="@drawable/ic_edit" />
+
+        <TextView
+            android:id="@+id/action_delete"
+            style="@style/Widget.ItmoWidgets.SheetAction"
+            android:text="@string/links_delete"
+            app:drawableStartCompat="@drawable/ic_delete" />
+
+        <TextView
+            android:id="@+id/action_report"
+            style="@style/Widget.ItmoWidgets.SheetAction"
+            android:text="@string/links_report"
+            app:drawableStartCompat="@drawable/ic_flag" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

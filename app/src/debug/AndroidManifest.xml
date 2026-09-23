@@ -5,6 +5,7 @@
         <activity android:name=".feature.sport.ui.SportCardsPreviewActivity" android:exported="false" />
         <activity android:name=".feature.sport.ui.SportScoreCollapsePreviewActivity" android:exported="false" />
         <activity android:name=".feature.recordbook.ui.RecordbookPreviewActivity" android:exported="false" />
+        <activity android:name=".app.SubjectLinksPreviewActivity" android:exported="false" />
         <activity android:name=".feature.update.ui.AppUpdatePreviewActivity" android:exported="false" />
         <activity
             android:name=".app.SettingsNavigationTestActivity"

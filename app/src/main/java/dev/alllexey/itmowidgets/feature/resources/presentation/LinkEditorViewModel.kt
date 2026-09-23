@@ -36,6 +36,8 @@ data class LinkEditorUiState(
     /** PRIVATE, the viewer's group and flow audiences, ALL; only PRIVATE without the ITMO.Widgets connection. */
     val visibilities: List<LinkVisibility> = listOf(LinkVisibility.PRIVATE),
     val audiences: List<LinkAudience> = emptyList(),
+    /** Links for everyone wait for review first. */
+    val premoderation: Boolean = true,
     val urlError: UiText? = null,
     val titleError: UiText? = null,
     val saving: Boolean = false,
@@ -121,7 +123,7 @@ class LinkEditorViewModel @Inject constructor(
         val audiences = if (snapshot?.servicesEnabled == true) snapshot.audiences else emptyList()
         val options = if (snapshot?.servicesEnabled != true) listOf(LinkVisibility.PRIVATE) else
             (listOf(LinkVisibility.PRIVATE) + audiences.map { it.visibility } + LinkVisibility.ALL).distinct().sortedBy { it.ordinal }
-        return copy(visibilities = options, audiences = audiences,
+        return copy(visibilities = options, audiences = audiences, premoderation = snapshot?.premoderation ?: true,
             visibility = visibility.takeIf { it in options } ?: LinkVisibility.PRIVATE)
     }
 
