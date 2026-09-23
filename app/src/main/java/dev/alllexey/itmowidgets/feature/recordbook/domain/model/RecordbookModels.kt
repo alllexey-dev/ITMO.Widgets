@@ -30,6 +30,7 @@ enum class RecordbookSubjectStatus {
 
 enum class RecordbookAssessmentKind {
     EXAM,
+    GRADED_CREDIT,
     CREDIT,
     OTHER
 }
@@ -60,6 +61,8 @@ data class RecordbookSubject(
         get() = when {
             controlType.contains("экзамен", ignoreCase = true) ->
                 RecordbookAssessmentKind.EXAM
+            controlType.contains("диф", ignoreCase = true) ->
+                RecordbookAssessmentKind.GRADED_CREDIT
             controlType.contains("зач", ignoreCase = true) ->
                 RecordbookAssessmentKind.CREDIT
             else -> RecordbookAssessmentKind.OTHER

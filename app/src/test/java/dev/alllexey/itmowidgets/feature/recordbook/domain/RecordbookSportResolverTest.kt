@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
+import java.time.OffsetDateTime
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
@@ -20,6 +21,17 @@ class RecordbookSportResolverTest {
         val state = resolver.resolve(period(), listOf(pe)) as RecordbookSportState.Content
         assertEquals(listOf(10L), sport.scoreRequests)
         assertEquals("Весна 2025/2026", state.periodLabel)
+    }
+
+    @Test fun `end date and current flag come from the matched period`() = runTest {
+        val endsAt = OffsetDateTime.parse("2026-06-28T00:00:00+03:00")
+        sport.periods = AppResult.Success(listOf(SportScorePeriod(9, "Осень 2025/2026"), SportScorePeriod(10, "Весна 2025/2026", endsAt, current = true)))
+        val current = resolver.resolve(period(), listOf(pe)) as RecordbookSportState.Content
+        assertEquals(endsAt, current.endsAt)
+        assertTrue(current.current)
+        val past = resolver.resolve(period(1), listOf(pe)) as RecordbookSportState.Content
+        assertNull(past.endsAt)
+        assertFalse(past.current)
     }
 
     @Test fun `global odd semester maps to autumn within the selected year`() = runTest {

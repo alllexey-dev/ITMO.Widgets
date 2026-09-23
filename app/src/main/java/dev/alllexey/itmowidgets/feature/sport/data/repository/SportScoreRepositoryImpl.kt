@@ -20,8 +20,20 @@ class SportScoreRepositoryImpl @Inject constructor(
     private val overrideProvider: SportScoreOverrideProvider
 ) : SportScoreRepository {
     override suspend fun getScorePeriods(): AppResult<List<SportScorePeriod>> = request {
-        myItmo.execute(myItmo.api.sportSemesters).requireResult()
-            .map { SportScorePeriod(it.id, it.value.trim()) }
+        val periods = myItmo.execute(myItmo.api.sportSemesters).requireResult()
+        // Without the current semester every period stays "current" with no end date,
+        // so the recordbook never raises a sport alarm it cannot justify.
+        val current = try {
+            myItmo.execute(myItmo.api.currentSportSemester).requireResult()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: Exception) {
+            null
+        }
+        periods.map {
+            val isCurrent = current == null || it.id == current.id
+            SportScorePeriod(it.id, it.value.trim(), current?.dateEnd?.takeIf { isCurrent }, isCurrent)
+        }
     }
 
     override suspend fun getScoreSummary(semesterId: Long): AppResult<SportScoreSummary> {

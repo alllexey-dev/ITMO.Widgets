@@ -376,7 +376,7 @@ class RecordbookVisualTest {
                 assertEquals("—", view.findViewById<TextView>(R.id.rate).text.toString())
                 assertTrue(view.contentDescription.contains("Неявка по уважительной причине"))
                 val pe = subject.copy(name = "Физическая культура и спорт (базовая)", score = null, rate = null)
-                view.bind(pe, RecordbookSportState.Content("Весна 2025/2026", SportScoreSummary(100, 20)))
+                view.bind(pe, RecordbookSportState.Content("Весна 2025/2026", SportScoreSummary(100, 20), endsAt = null, current = false))
                 assertEquals(1000, ring.progress)
                 assertEquals("120", view.findViewById<TextView>(R.id.points).text.toString())
                 assertEquals(View.GONE, view.findViewById<View>(R.id.rate_icon).visibility)

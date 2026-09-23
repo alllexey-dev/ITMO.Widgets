@@ -5,10 +5,16 @@ import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import java.time.OffsetDateTime
 import javax.inject.Inject
 
 sealed interface RecordbookSportState {
-    data class Content(val periodLabel: String, val score: SportScoreSummary) : RecordbookSportState
+    data class Content(
+        val periodLabel: String,
+        val score: SportScoreSummary,
+        val endsAt: OffsetDateTime?,
+        val current: Boolean
+    ) : RecordbookSportState
     data object Unavailable : RecordbookSportState
     data object Error : RecordbookSportState
 }
@@ -27,7 +33,8 @@ class RecordbookSportResolver @Inject constructor(private val repository: SportS
         val match = periods.singleOrNull { it.label.trim().equals(expected, ignoreCase = true) }
             ?: return RecordbookSportState.Unavailable
         return when (val result = repository.getScoreSummary(match.id)) {
-            is AppResult.Success -> RecordbookSportState.Content(match.label, result.value)
+            is AppResult.Success ->
+                RecordbookSportState.Content(match.label, result.value, match.endsAt, match.current)
             is AppResult.Failure -> RecordbookSportState.Error
         }
     }

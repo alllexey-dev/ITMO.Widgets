@@ -34,6 +34,16 @@ class RecordbookModelsTest {
     }
 
     @Test
+    fun `differentiated credit is graded credit and plain credit stays credit`() {
+        fun kind(controlType: String) = subject(rate = null).copy(controlType = controlType).assessmentKind
+        assertEquals(RecordbookAssessmentKind.GRADED_CREDIT, kind("Дифференцированный зачет"))
+        assertEquals(RecordbookAssessmentKind.GRADED_CREDIT, kind("Диф. зачёт"))
+        assertEquals(RecordbookAssessmentKind.CREDIT, kind("Зачет"))
+        assertEquals(RecordbookAssessmentKind.EXAM, kind("Экзамен"))
+        assertEquals(RecordbookAssessmentKind.OTHER, kind("Курсовой проект"))
+    }
+
+    @Test
     fun `missing rate is in progress`() {
         assertEquals(RecordbookSubjectStatus.IN_PROGRESS, subject(rate = null).status)
     }

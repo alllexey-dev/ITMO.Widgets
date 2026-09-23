@@ -1,9 +1,18 @@
 package dev.alllexey.itmowidgets.core.sport
 
 import dev.alllexey.itmowidgets.core.result.AppResult
+import java.time.OffsetDateTime
 
-/** Official sport periods use their own IDs, not recordbook semester numbers. */
-data class SportScorePeriod(val id: Long, val label: String)
+/**
+ * Official sport periods use their own IDs, not recordbook semester numbers.
+ * Only the current period knows its [endsAt]; the list API carries no dates.
+ */
+data class SportScorePeriod(
+    val id: Long,
+    val label: String,
+    val endsAt: OffsetDateTime? = null,
+    val current: Boolean = false
+)
 
 /** Same calculation as “Мой спорт”; this is progress, never an official academic grade. */
 data class SportScoreSummary(val attendances: Int, val bonus: Int) {

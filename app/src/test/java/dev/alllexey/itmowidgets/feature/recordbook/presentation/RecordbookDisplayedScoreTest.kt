@@ -59,5 +59,5 @@ class RecordbookDisplayedScoreTest {
         assertEquals(1f, progress.bonusPercentage, 0.001f)
     }
 
-    private fun sport(attendance: Int, bonus: Int) = RecordbookSportState.Content("Весна 2025/2026", SportScoreSummary(attendance, bonus))
+    private fun sport(attendance: Int, bonus: Int) = RecordbookSportState.Content("Весна 2025/2026", SportScoreSummary(attendance, bonus), endsAt = null, current = false)
 }
