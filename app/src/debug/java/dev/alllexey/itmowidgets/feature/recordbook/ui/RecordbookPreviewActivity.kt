@@ -21,6 +21,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
@@ -129,11 +132,11 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
 
     override fun openRoot(root: AppRoot) = Unit
 
-    override fun openSubjectLinks(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs) = Unit
+    override fun openSubjectLinks(args: SubjectLinksArgs) { linkNavigation += "links" }
 
-    override fun openLinkEditor(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs, linkId: String?) = Unit
+    override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) { linkNavigation += "editor" }
 
-    override fun openLinkActions(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs, linkId: String) = Unit
+    override fun openLinkActions(args: SubjectLinksArgs, linkId: String) { linkNavigation += "actions:$linkId" }
 
     override fun openLessonDetails(args: LessonDetailsArgs) = Unit
 
@@ -141,7 +144,7 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
 
     private object FixedTime : AcademicTimeProvider {
         override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.of(2026, 6, 1)
+        override fun today(): LocalDate = RecordbookPreviewActivity.today
         override fun now() = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
     }
 
@@ -169,7 +172,11 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         @Volatile var scheduleRefresh: ScheduleRefreshGateway = object : ScheduleRefreshGateway {
             override suspend fun refreshOwnSchedule(startDate: LocalDate, endDate: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
         }
-        @Volatile var resourceRepository: dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository = dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository()
+        @Volatile var resourceRepository: SubjectLinksRepository = MemorySubjectLinksRepository()
+        /** The host's clock; spring 2025/2026 by default. */
+        @Volatile var today: LocalDate = LocalDate.of(2026, 6, 1)
+        /** Link sheets the page asked for: `links`, `editor` or `actions:<id>`. */
+        val linkNavigation: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
         @Volatile var bindingStore: SubjectBindingStore = MemoryBindings()
     }
 

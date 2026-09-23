@@ -181,7 +181,6 @@
     <string name="recordbook_back">К зачётке</string>
     <string name="recordbook_control_score">%1$s / %2$s</string>
     <string name="recordbook_control_minimum">минимум %1$s</string>
-    <string name="recordbook_required">обязательная</string>
     <string name="recordbook_details_empty_description">My ITMO не присылает детализацию по этому предмету.</string>
     <string name="recordbook_attention_section">Требуют внимания</string>
     <string name="recordbook_disciplines_section">Дисциплины</string>
@@ -386,15 +385,10 @@
     <string name="schedule_timeline_current">Пара идёт сейчас</string>
     <string name="schedule_timeline_next">Следующая пара</string>
     <string name="schedule_timeline_upcoming">Предстоящая пара</string>
-    <string name="recordbook_subject_title">Предмет</string>
-    <string name="recordbook_source_title">Откуда данные</string>
-    <string name="recordbook_source_description">Оценки — из зачётки My ITMO. С включённым «БАРС» баллы и работы берутся из БАРС: там они появляются раньше.\n\nФизкультура — баллы из «Мой спорт».</string>
     <string name="recordbook_summary_closed">Сдано %1$d из %2$d</string>
-    <string name="recordbook_summary_pending">Без оценки: %1$d · не сдано: %2$d</string>
     <string name="recordbook_score_pending">—</string>
     <string name="recordbook_points_missing">Баллы не выставлены</string>
     <string name="recordbook_points_out_of">%1$s из %2$s баллов</string>
-    <string name="recordbook_result_accessibility">%1$s. %2$s</string>
     <string name="recordbook_sport_source">Мой спорт</string>
     <string name="recordbook_sport_attendance">Посещения</string>
     <string name="recordbook_sport_bonus">Бонусы</string>
@@ -405,9 +399,6 @@
     <string name="recordbook_sport_error">Спортивные баллы не загрузились</string>
     <string name="recordbook_sport_no_period">Учебный и спортивный семестры не совпали.</string>
     <string name="recordbook_sport_retry_description">Спортивные баллы не загрузились.</string>
-    <string name="recordbook_controls_title">Контрольные мероприятия</string>
-    <string name="subject_tab_scores">Баллы</string>
-    <string name="subject_tab_schedule">Расписание</string>
     <string name="subject_lessons_title">Ближайшие пары</string>
     <string name="subject_lessons_unmatched">В расписании на ближайшие четыре недели этот предмет не нашёлся.</string>
     <string name="subject_lessons_loading">Смотрим расписание…</string>
@@ -418,8 +409,6 @@
     <string name="subject_lesson_date">EEE, d MMM</string>
     <string name="schedule_break_range_short">%1$s–%2$s</string>
     <string name="subject_teachers_title">Преподаватели</string>
-    <string name="subject_resources_title">Ресурсы</string>
-    <string name="subject_resource_lms">Курс в LMS</string>
     <string name="recordbook_refresh_error">Не удалось обновить, показываем прежние данные. %1$s</string>
     <string name="recordbook_period_program">%1$s\n%2$s</string>
     <string name="sport_details_title">Занятие</string>
@@ -735,10 +724,6 @@
     <string name="settings_restart_onboarding_title">Повторить первоначальную настройку</string>
     <string name="settings_restart_onboarding_description">Виджеты, подключение и уведомления</string>
     <string name="common_error_restricted">Действие ограничено модерацией</string>
-    <string name="resources_title">Ресурсы предмета</string>
-    <string name="resources_add">Добавить ссылку</string>
-    <string name="resources_community_count">Ссылки сообщества · %1$d</string>
-    <string name="resources_selected_title">Моя ссылка: %1$s</string>
     <string name="links_category_scores">Таблица баллов</string>
     <string name="links_category_queue">Очередь на сдачу</string>
     <string name="links_category_materials">Материалы курса</string>
@@ -798,4 +783,26 @@
     <string name="links_report_other">Другое</string>
     <string name="links_report_comment">Комментарий</string>
     <string name="links_report_send">Отправить</string>
+    <string name="recordbook_reason_failed">Пересдача</string>
+    <string name="recordbook_reason_below_minimum">%1$s ниже минимума</string>
+    <plurals name="recordbook_reason_sport">
+        <item quantity="one">Спорт: ещё %1$d балл</item>
+        <item quantity="few">Спорт: ещё %1$d балла</item>
+        <item quantity="many">Спорт: ещё %1$d баллов</item>
+        <item quantity="other">Спорт: ещё %1$d балла</item>
+    </plurals>
+    <string name="recordbook_group_labs">Лабораторные</string>
+    <string name="recordbook_group_tests">Контрольные</string>
+    <string name="recordbook_group_practicals">Практические</string>
+    <string name="recordbook_group_homework">Домашние задания</string>
+    <string name="recordbook_group_below_minimum">ниже минимума</string>
+    <string name="subject_subtitle">%1$s · %2$d семестр</string>
+    <string name="subject_semester">%1$d семестр</string>
+    <string name="subject_score_out_of">из 100</string>
+    <string name="subject_grade_next">до %1$s ещё %2$s</string>
+    <string name="subject_credit_next">до зачёта ещё %1$s</string>
+    <string name="subject_credit_mark">зачёт</string>
+    <string name="subject_scores_title">Баллы</string>
+    <string name="subject_lessons_all">Все пары · %1$d</string>
+    <string name="subject_link_lms">LMS</string>
 </resources>

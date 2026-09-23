@@ -13,8 +13,10 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookBarsMerge
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -41,8 +43,13 @@ sealed interface RecordbookUiState {
         /** BARS overlay failed; the list still holds MyITMO values. */
         val barsError: AppError? = null,
         /** BARS answered for this period, so subjects without a journal are genuinely absent there. */
-        val barsApplied: Boolean = false
-    ) : RecordbookUiState
+        val barsApplied: Boolean = false,
+        /** Subjects for «Требуют внимания» by `entryId`; everything else is the regular list. */
+        val attention: Map<Long, RecordbookAttentionReason> = emptyMap()
+    ) : RecordbookUiState {
+        /** The pass count means something only once a final grade or credit exists. */
+        val showSummary: Boolean get() = subjects.any { it.normalizedRate != RecordbookRate.InProgress }
+    }
     data object Empty : RecordbookUiState
     data class Error(
         val error: AppError,
@@ -131,15 +138,15 @@ class RecordbookViewModel @Inject constructor(
                     val official = result.value
                     val sport = sportResolver.resolve(selected.period, official)
                     if (journals == null) {
-                        _uiState.value = RecordbookUiState.Content(programs, selected, official, sport)
+                        _uiState.value = content(selected, official, sport)
                         return@launch
                     }
                     // MyITMO is on screen at once; a pull keeps its indicator until BARS answers.
-                    _uiState.value = RecordbookUiState.Content(programs, selected, official, sport, refreshing = !silent)
+                    _uiState.value = content(selected, official, sport).copy(refreshing = !silent)
                     _uiState.value = when (val overlay = journals.await()) {
-                        is AppResult.Success -> RecordbookUiState.Content(programs, selected,
-                            RecordbookBarsMerge.apply(official, overlay.value), sport, barsApplied = true)
-                        is AppResult.Failure -> RecordbookUiState.Content(programs, selected, official, sport, barsError = overlay.error)
+                        is AppResult.Success ->
+                            content(selected, RecordbookBarsMerge.apply(official, overlay.value), sport).copy(barsApplied = true)
+                        is AppResult.Failure -> content(selected, official, sport).copy(barsError = overlay.error)
                     }
                 }
                 is AppResult.Failure -> {
@@ -163,8 +170,17 @@ class RecordbookViewModel @Inject constructor(
         } ?: restoreSelection() ?: defaultSelection() ?: return null
         val subjects = repository.cachedSubjects(selected.program.id, selected.period.semester) ?: return null
         selection = selected
-        return RecordbookUiState.Content(cachedPrograms, selected, subjects, sport = null)
+        return content(selected, subjects, sport = null)
     }
+
+    private fun content(selected: RecordbookSelection, subjects: List<RecordbookSubject>, sport: RecordbookSportState?) =
+        RecordbookUiState.Content(programs, selected, subjects, sport, attention = subjects.mapNotNull { subject ->
+            attentionReason(subject, sport, knownControls(subject), time.now())?.let { subject.entryId to it }
+        }.toMap())
+
+    /** Only controls an earlier answer brought; the list never asks for them. */
+    private fun knownControls(subject: RecordbookSubject): List<RecordbookControl>? =
+        subject.barsJournal?.let(bars::cachedControls) ?: repository.cachedControls(subject.entryId)
 
     private fun restoreSelection(): RecordbookSelection? {
         val programId = savedStateHandle.get<Long>(KEY_PROGRAM_ID) ?: return null

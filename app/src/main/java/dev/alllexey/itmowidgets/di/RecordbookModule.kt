@@ -76,6 +76,10 @@ abstract class RecordbookModule {
     @IntoSet
     abstract fun bindRecordbookCacheCleaner(impl: RecordbookRepositoryImpl): SessionDataCleaner
 
+    @Binds
+    @IntoSet
+    abstract fun bindBarsCacheCleaner(impl: BarsRecordbookRepositoryImpl): SessionDataCleaner
+
     companion object {
         /** Library client with the app's encrypted, owner-bound session; no shared cookie jar with MyITMO. */
         @Provides

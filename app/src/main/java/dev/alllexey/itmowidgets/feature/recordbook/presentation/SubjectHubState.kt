@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.resources.SubjectLink
+import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
@@ -9,9 +11,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContext
 
 /** A person teaching the subject, with the lesson types they run (`typeId`s), most frequent first. */
 data class SubjectTeacher(val name: String, val isu: Long?, val roles: List<Int>)
-
-/** Something to open outside the app; in 2.1 only the MyITMO LMS link, when it exists. */
-data class SubjectResource(val url: String)
 
 sealed interface SubjectLessonsState {
     /** Past period or physical education: the section does not exist. */
@@ -25,17 +24,30 @@ sealed interface SubjectLessonsState {
     data class Error(val error: AppError) : SubjectLessonsState
 }
 
-/** The two halves of the subject screen; the schedule tab exists only when the hub has something. */
-enum class SubjectTab { SCORES, SCHEDULE }
-
+/**
+ * The schedule and links half of the subject page. Physical education has no [resourceScope]:
+ * no links, chips or chats. [chips] also hold the MyITMO LMS page while the links load or fail.
+ */
 data class SubjectHubState(
     val lessons: SubjectLessonsState = SubjectLessonsState.Hidden,
+    val lessonsExpanded: Boolean = false,
     val teachers: List<SubjectTeacher> = emptyList(),
-    val resources: List<SubjectResource> = emptyList(),
     val resourceScope: ResourceScope? = null,
-    val links: SubjectLinksState? = null
-)
+    val links: SubjectLinksState? = null,
+    val chips: SubjectLinkChips = SubjectLinkChips(emptyList(), 0),
+    val chats: List<SubjectLink> = emptyList()
+) {
+    /** The nearest lessons first; the rest only after «Все пары». */
+    val visibleLessons: List<SubjectLesson>
+        get() = (lessons as? SubjectLessonsState.Content)?.lessons.orEmpty()
+            .let { if (lessonsExpanded) it else it.take(COLLAPSED_LESSONS) }
 
-/** Whether there is anything to put on the schedule tab. */
-val SubjectHubState.hasScheduleContent: Boolean
-    get() = lessons != SubjectLessonsState.Hidden || teachers.isNotEmpty() || resources.isNotEmpty() || resourceScope != null
+    /** How many lessons «Все пары · N» would show; 0 when nothing is hidden. */
+    val allLessonsCount: Int
+        get() = (lessons as? SubjectLessonsState.Content)?.lessons?.size
+            ?.takeIf { !lessonsExpanded && it > COLLAPSED_LESSONS } ?: 0
+
+    companion object {
+        const val COLLAPSED_LESSONS = 2
+    }
+}

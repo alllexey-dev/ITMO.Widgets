@@ -6,7 +6,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.google.android.material.tabs.TabLayout
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.FriendSelectorFixture
 import dev.alllexey.itmowidgets.app.HomeFixture
@@ -239,7 +238,7 @@ class SiteScreenshotCapture {
         RecordbookPreviewActivity.appearance = RecordbookPreviewActivity.Appearance(dark = night)
         RecordbookPreviewActivity.repository = SiteRecordbook()
         RecordbookPreviewActivity.sportRepository = object : SportScoreRepository {
-            override suspend fun getScorePeriods() = AppResult.Success(listOf(SportScorePeriod(7, "Весна 2025/2026")))
+            override suspend fun getScorePeriods() = AppResult.Success(listOf(SportScorePeriod(7, "Весна 2025/2026", current = true)))
             override suspend fun getScoreSummary(semesterId: Long) = AppResult.Success(SportScoreSummary(48, 16))
         }
         RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons(listOf(
@@ -261,7 +260,11 @@ class SiteScreenshotCapture {
                 }
                 settle()
                 capture("subject-scores")
-                scenario.onActivity { it.findViewById<TabLayout>(R.id.tabs).getTabAt(1)!!.select() }
+                // One page now: the second shot is its lower half with teachers and lessons.
+                scenario.onActivity { activity ->
+                    val list = activity.findViewById<RecyclerView>(R.id.recycler_view)
+                    list.scrollToPosition(list.adapter!!.itemCount - 1)
+                }
                 settle()
                 capture("subject-schedule")
             }

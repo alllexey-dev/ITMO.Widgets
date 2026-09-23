@@ -14,6 +14,10 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgra
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
+import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
+import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
+import java.time.OffsetDateTime
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -129,5 +133,68 @@ class RecordbookViewModelTest {
         val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
         vm.selectPeriod(1, 3); advanceUntilIdle()
         assertEquals(listOf(3), repository.subjectRequests)
+    }
+
+    // --- attention and summary
+
+    private val pe = recordbookSubject(id = 7, name = "Физическая культура и спорт (элективная)").copy(controlType = "Зачёт", rate = null, score = null)
+
+    private fun sportPeriodEndingOn(date: String) {
+        sport.periods = AppResult.Success(listOf(SportScorePeriod(11, "Осень 2026/2027", OffsetDateTime.parse("${date}T00:00:00+03:00"), current = true)))
+        sport.score = AppResult.Success(SportScoreSummary(30, 10))
+    }
+
+    @Test fun `physical education short of points early in the semester stays in the regular list`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject(), pe))
+        sportPeriodEndingOn("2026-12-28")
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        assertTrue((vm.uiState.value as RecordbookUiState.Content).attention.isEmpty())
+    }
+
+    @Test fun `physical education four weeks before the end needs attention with the missing points`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject(), pe))
+        sportPeriodEndingOn("2026-12-28")
+        val vm = model(date = "2026-12-01"); vm.ensureDataLoaded(); advanceUntilIdle()
+        val state = vm.uiState.value as RecordbookUiState.Content
+        assertEquals(mapOf(7L to RecordbookAttentionReason.SportShort(60)), state.attention)
+    }
+
+    @Test fun `a credited physical education never needs attention`() = runTest {
+        repository.subjects = AppResult.Success(listOf(pe.copy(rate = "зачет")))
+        sportPeriodEndingOn("2026-12-28")
+        val vm = model(date = "2026-12-01"); vm.ensureDataLoaded(); advanceUntilIdle()
+        assertTrue((vm.uiState.value as RecordbookUiState.Content).attention.isEmpty())
+    }
+
+    @Test fun `a known control under its minimum names the reason`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = 30.0)))
+        repository.cachedControls = listOf(
+            RecordbookControl(1, "Лабораторная 1", 8.0, 5.0, 10.0, true, null, null),
+            RecordbookControl(2, "КР 1", 3.0, 6.0, 15.0, true, null, null)
+        )
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        assertEquals(mapOf(42L to RecordbookAttentionReason.BelowMinimum("КР 1")),
+            (vm.uiState.value as RecordbookUiState.Content).attention)
+    }
+
+    @Test fun `failed and absent subjects need attention, passed ones do not`() = runTest {
+        repository.subjects = AppResult.Success(listOf(
+            recordbookSubject(id = 1).copy(rate = "2/FX"),
+            recordbookSubject(id = 2).copy(rate = null, absent = true),
+            recordbookSubject(id = 3)
+        ))
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        assertEquals(mapOf(1L to RecordbookAttentionReason.Failed, 2L to RecordbookAttentionReason.Absent),
+            (vm.uiState.value as RecordbookUiState.Content).attention)
+    }
+
+    @Test fun `the summary waits for the first final grade or credit`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject(id = 1).copy(rate = null), recordbookSubject(id = 2).copy(rate = null, score = null)))
+        val midSemester = model(); midSemester.ensureDataLoaded(); advanceUntilIdle()
+        assertFalse((midSemester.uiState.value as RecordbookUiState.Content).showSummary)
+
+        repository.subjects = AppResult.Success(listOf(recordbookSubject(id = 1).copy(rate = "зачет"), recordbookSubject(id = 2).copy(rate = null)))
+        val session = model(); session.ensureDataLoaded(); advanceUntilIdle()
+        assertTrue((session.uiState.value as RecordbookUiState.Content).showSummary)
     }
 }

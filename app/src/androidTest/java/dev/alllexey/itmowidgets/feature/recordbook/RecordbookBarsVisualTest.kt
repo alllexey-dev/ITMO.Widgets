@@ -13,6 +13,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.allOf
 import com.google.android.material.chip.Chip
+import com.google.android.material.progressindicator.CircularProgressIndicator
+import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -61,6 +63,10 @@ class RecordbookBarsVisualTest {
                     val other = cards.first { it.findViewById<TextView>(R.id.name).text.startsWith("Философия") }
                     assertFalse(matched.findViewById<TextView>(R.id.meta).text.contains(activity.getString(R.string.recordbook_bars_missing)))
                     assertTrue(other.findViewById<TextView>(R.id.meta).text.contains(activity.getString(R.string.recordbook_bars_missing)))
+                    // Rows carry a badge or a number with a thin bar, never a ring.
+                    assertEquals("5A", matched.findViewById<TextView>(R.id.grade).text.toString())
+                    assertEquals(View.GONE, matched.findViewById<View>(R.id.score_group).visibility)
+                    assertTrue(cards.none { card -> card.descendants().any { it is CircularProgressIndicator } })
                     assertVisibleTextFits(activity.window.decorView)
                 }
                 screenshot("bars-on-$index")
@@ -140,5 +146,12 @@ class RecordbookBarsVisualTest {
     }
     private fun settle() = TestUi.settle(550)
     private fun screenshot(name: String) = Screenshots.capture("recordbook-screenshots", name)
-    private fun assertVisibleTextFits(root: View) = assertTextFits(root)
+    /** Subject names are two lines at most and may end in an ellipsis; nothing else may. */
+    private fun assertVisibleTextFits(root: View) {
+        assertTextFits(root, allowEllipsis = true)
+        root.descendants().filterIsInstance<TextView>().filter { it.isShown && it.id != R.id.name && it.id != R.id.title }.forEach { view ->
+            val layout = view.layout ?: return@forEach
+            (0 until layout.lineCount).forEach { assertEquals("Ellipsis: ${view.text}", 0, layout.getEllipsisCount(it)) }
+        }
+    }
 }

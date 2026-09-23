@@ -25,7 +25,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/design_spacing_content"
-            android:layout_marginBottom="@dimen/design_spacing_compact"
             android:importantForAccessibility="no"
             android:max="1000"
             app:trackThickness="4dp"
@@ -33,13 +32,6 @@
             app:trackStopIndicatorSize="0dp"
             app:indicatorTrackGapSize="0dp"
             app:trackColor="?attr/colorOutlineVariant" />
-
-        <TextView android:id="@+id/pending_value"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            tools:text="Без оценки: 2 · не сдано: 1" />
 
     </LinearLayout>
 

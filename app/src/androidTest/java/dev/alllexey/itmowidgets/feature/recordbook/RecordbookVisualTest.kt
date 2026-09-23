@@ -8,13 +8,14 @@ import androidx.fragment.app.DialogFragment
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.color.MaterialColors
-import com.google.android.material.tabs.TabLayout
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -31,9 +32,10 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.ui.DetailItem
-import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookControlAdapter
+import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewFixtures
+import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewFixtures.Phase
+import dev.alllexey.itmowidgets.feature.recordbook.ui.SubjectHubAdapter
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
-import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookScoreView
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Appearances.toRecordbook
 import dev.alllexey.itmowidgets.testing.Screenshots
@@ -94,92 +96,197 @@ class RecordbookVisualTest {
         }
     }
 
-    @Test fun realFragmentsInLightDarkAndDynamicPalettesAtLargeFont() {
-        Appearances.default.forEachIndexed { index, spec ->
-            withPreview(spec.toRecordbook(), configure = { repository ->
-                repository.sportScore = AppResult.Success(when (index) {
-                    1 -> SportScoreSummary(100, 20)
-                    2 -> SportScoreSummary(66, 65)
-                    3 -> SportScoreSummary(0, 0)
-                    else -> SportScoreSummary(66, 28)
-                })
-                repository.sportRate = "зачет".takeIf { index == 1 }
-            }) { scenario, repository ->
-                settle()
+    @Test fun sessionRowsShowBadgesTheSummaryAndAttentionWithoutRings() {
+        Appearances.default.forEach { spec ->
+            withFixture(Phase.SESSION, spec.toRecordbook()) { scenario ->
                 scenario.onActivity { activity ->
+                    val list = activity.findViewById<RecyclerView>(R.id.main_recycler_view)
+                    assertEquals(0, list.descendants().count { it is CircularProgressIndicator })
+                    val texts = list.texts()
+                    assertTrue(activity.getString(R.string.recordbook_summary_closed, 4, 6) in texts)
+                    assertEquals(activity.getString(R.string.recordbook_attention_section), texts[1])
+                    val math = activity.row(RecordbookPreviewFixtures.MATH)
+                    assertEquals(activity.getString(R.string.recordbook_reason_failed), math.findViewById<TextView>(R.id.meta).text.toString())
+                    assertEquals("2FX", math.findViewById<TextView>(R.id.grade).text.toString())
+                    assertEquals(View.GONE, math.findViewById<View>(R.id.score_group).visibility)
+                    assertEquals(activity.getString(R.string.recordbook_absent), activity.row("История").findViewById<TextView>(R.id.meta).text.toString())
+                    assertEquals("5A", activity.row("Проектирование").findViewById<TextView>(R.id.grade).text.toString())
+                    assertTouchTargets(activity)
                     assertVisibleTextFits(activity.window.decorView)
-                    val period = activity.findViewById<View>(R.id.period_button)
-                    val info = activity.findViewById<View>(R.id.source_button)
-                    val minimum = 48 * activity.resources.displayMetrics.density
-                    assertTrue(period.height >= minimum - 1)
-                    assertTrue(info.width >= minimum - 1 && info.height >= minimum - 1)
-                    assertNotNull(info.contentDescription)
-                    val ring = activity.findViewById<CircularProgressIndicator>(R.id.score_ring)
-                    assertFalse(ring.isIndeterminate)
-                    assertEquals(485, ring.progress)
-                    assertTrue(ring.indicatorSize <= ring.width && ring.indicatorSize <= ring.height)
-                    assertTrue(ColorUtils.calculateContrast(ring.indicatorColor.first(), MaterialColors.getColor(
-                        ring, com.google.android.material.R.attr.colorSurfaceContainerLow)) >= 3.0)
-                    assertEquals("2FX", activity.findViewById<TextView>(R.id.rate).text.toString())
                 }
-                screenshot("root-$index")
-                scenario.onActivity { it.findViewById<View>(R.id.period_button).performClick() }
-                settle()
-                scenario.onActivity { activity ->
-                    val sheet = activity.supportFragmentManager.findFragmentByTag("RecordbookPeriodBottomSheet") as DialogFragment
-                    assertVisibleTextFits(checkNotNull(sheet.dialog).window!!.decorView)
-                }
-                screenshot("period-$index")
-                scenario.onActivity { activity ->
-                    (activity.supportFragmentManager.findFragmentByTag("RecordbookPeriodBottomSheet") as DialogFragment).dismiss()
-                }
-                settle()
+                screenshot("root-session-${spec.name}")
+            }
+        }
+    }
+
+    @Test fun middleOfTheSemesterShowsNumbersAndPutsShortSportUnderAttention() {
+        Appearances.default.forEach { spec ->
+            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
                 scenario.onActivity { activity ->
                     val list = activity.findViewById<RecyclerView>(R.id.main_recycler_view)
-                    list.scrollToPosition(4)
+                    val texts = list.texts()
+                    val summaryPrefix = activity.getString(R.string.recordbook_summary_closed, 0, 0).substringBefore(" 0")
+                    assertTrue(texts.none { it.startsWith(summaryPrefix) })
+                    assertEquals(activity.getString(R.string.recordbook_attention_section), texts.first())
+                    val pe = activity.row("Физическая")
+                    assertEquals(activity.resources.getQuantityString(R.plurals.recordbook_reason_sport, 36, 36),
+                        pe.findViewById<TextView>(R.id.meta).text.toString())
+                    assertEquals("64", pe.findViewById<TextView>(R.id.score).text.toString())
+                    val math = activity.row(RecordbookPreviewFixtures.MATH)
+                    assertEquals(activity.getString(R.string.recordbook_reason_below_minimum, "Контрольная работа 1"),
+                        math.findViewById<TextView>(R.id.meta).text.toString())
+                    assertEquals("72", math.findViewById<TextView>(R.id.score).text.toString())
+                    assertEquals(720, math.findViewById<LinearProgressIndicator>(R.id.progress).progress)
+                    val bar = math.findViewById<View>(R.id.progress)
+                    assertEquals(64 * activity.resources.displayMetrics.density, bar.width.toFloat(), 1f)
+                    assertEquals(View.GONE, math.findViewById<View>(R.id.grade).visibility)
+                    val history = activity.row("История")
+                    assertEquals(activity.getString(R.string.recordbook_score_pending), history.findViewById<TextView>(R.id.grade).text.toString())
+                    assertVisibleTextFits(activity.window.decorView)
                 }
-                settle()
-                screenshot("root-sport-$index")
+                screenshot("root-middle-${spec.name}")
+            }
+        }
+    }
+
+    @Test fun startOfTheSemesterKeepsShortSportInTheRegularList() {
+        withFixture(Phase.START, Appearances.light.toRecordbook()) { scenario ->
+            scenario.onActivity { activity ->
+                val texts = activity.findViewById<RecyclerView>(R.id.main_recycler_view).texts()
+                assertFalse(activity.getString(R.string.recordbook_attention_section) in texts)
+                val pe = activity.row("Физическая")
+                assertEquals("Зачёт", pe.findViewById<TextView>(R.id.meta).text.toString())
+                assertEquals("12", pe.findViewById<TextView>(R.id.score).text.toString())
+                assertVisibleTextFits(activity.window.decorView)
+            }
+            screenshot("root-start")
+        }
+    }
+
+    @Test fun subjectIsOnePageWithHeroChipsChatsGroupsAndLessons() {
+        Appearances.default.forEach { spec ->
+            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
+                openSubject(scenario, "Математический")
                 scenario.onActivity { activity ->
-                    val list = activity.findViewById<RecyclerView>(R.id.main_recycler_view)
-                    val sport = list.children().first { row -> row.findViewById<TextView>(R.id.name)?.text?.contains("Физическая") == true }
-                    val score = (repository.sportScore as AppResult.Success).value
-                    assertEquals(score.total.toString(), sport.findViewById<TextView>(R.id.points).text.toString())
-                    assertEquals(score.totalCapped * 10, sport.findViewById<CircularProgressIndicator>(R.id.score_ring).progress)
-                    assertEquals(if (index == 1) View.VISIBLE else View.GONE, sport.findViewById<View>(R.id.rate_icon).visibility)
-                    sport.performClick()
+                    assertEquals(RecordbookPreviewFixtures.MATH, activity.findViewById<TextView>(R.id.title).text.toString())
+                    assertEquals(activity.getString(R.string.subject_subtitle, "Экзамен", 2), activity.findViewById<TextView>(R.id.subtitle).text.toString())
+                    assertEquals(0, activity.window.decorView.descendants().count { it.javaClass.simpleName == "TabLayout" })
+                    val items = activity.hubItems()
+                    assertTrue(items.first() is DetailItem.Hero)
+                    assertTrue(items[1] is DetailItem.LinkChips)
+                    assertEquals("72", activity.findViewById<TextView>(R.id.points).text.toString())
+                    assertEquals(activity.getString(R.string.subject_grade_next, "4C", "3"), activity.findViewById<TextView>(R.id.hint).text.toString())
+                    val chips = activity.findViewById<ChipGroup>(R.id.chips).descendants().filterIsInstance<Chip>().toList()
+                    assertEquals(listOf(activity.getString(R.string.subject_link_lms), "Таблица баллов потока", "Задания на семестр",
+                        "Записи лекций весны 2026 года с разбором задач", activity.getString(R.string.links_more, 2), ""),
+                        chips.map { it.text.toString() })
+                    assertEquals(activity.getString(R.string.links_add), chips.last().contentDescription)
+                    chips.forEach { assertTrue(it.height >= 48 * activity.resources.displayMetrics.density - 1) }
+                    chips[4].performClick()
+                    chips.last().performClick()
+                    chips[1].performLongClick()
+                    assertEquals(listOf("links", "editor", "actions:own-table"), RecordbookPreviewActivity.linkNavigation.toList())
+                    assertEquals(2, items.count { it is DetailItem.Chat })
+                    val groups = items.filterIsInstance<DetailItem.Group>()
+                    assertEquals(3, groups.size)
+                    assertEquals(listOf(false, true, false), groups.map { it.group.belowMinimum.isNotEmpty() })
+                    assertEquals(2, items.count { it is DetailItem.Lesson })
+                    assertEquals(DetailItem.AllLessons(4), items.last())
+                    assertVisibleTextFits(activity.window.decorView)
                 }
-                settle()
-                scenario.onActivity {
-                    assertVisibleTextFits(it.window.decorView)
-                    val score = (repository.sportScore as AppResult.Success).value
-                    assertEquals(score.total.toString(), it.findViewById<TextView>(R.id.total).text.toString())
-                    assertEquals(score.creditedBonus.toString(), it.findViewById<TextView>(R.id.bonus).text.toString())
-                    assertEquals(it.getString(if (index == 1) R.string.recordbook_rate_credit else R.string.recordbook_official_pending),
-                        it.findViewById<TextView>(R.id.official_result).text.toString())
-                    // The scores tab is the sport overview alone; the recordbook teacher lives on the schedule tab.
-                    val items = it.hubItems()
-                    assertEquals(listOf(true), items.map { item -> item is DetailItem.SportOverview })
-                    assertEquals(View.VISIBLE, it.findViewById<View>(R.id.tabs).visibility)
-                }
-                screenshot("subject-sport-$index")
-                scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-                settle()
+                screenshot("subject-top-${spec.name}")
+                scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.Group } }
                 scenario.onActivity { activity ->
-                    val list = activity.findViewById<RecyclerView>(R.id.main_recycler_view)
-                    list.scrollToPosition(2)
+                    assertTrue(activity.hubList().texts().contains(activity.getString(R.string.recordbook_group_labs)))
+                    assertVisibleTextFits(activity.window.decorView)
                 }
-                settle()
+                screenshot("subject-groups-${spec.name}")
+                scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.Group && it.group.belowMinimum.isNotEmpty() } }
                 scenario.onActivity { activity ->
-                    val list = activity.findViewById<RecyclerView>(R.id.main_recycler_view)
-                    list.children().first { it.findViewById<TextView>(R.id.name)?.text?.contains("Математический") == true }.performClick()
+                    val badge = activity.hubList().descendants().first { it.id == R.id.below_minimum && it.isShown } as TextView
+                    assertEquals(activity.getString(R.string.recordbook_group_below_minimum), badge.text.toString())
+                    assertTrue(activity.hubList().texts().contains(activity.getString(R.string.recordbook_group_tests)))
+                    assertVisibleTextFits(activity.window.decorView)
+                }
+                screenshot("subject-below-minimum-${spec.name}")
+                scrollToEnd(scenario)
+                scenario.onActivity { activity ->
+                    activity.hubList().descendants().first { it.id == R.id.more && it.isShown }.performClick()
                 }
                 settle()
-                scenario.onActivity { assertVisibleTextFits(it.window.decorView) }
-                screenshot("subject-controls-$index")
+                scrollToEnd(scenario)
+                scenario.onActivity { activity ->
+                    assertEquals(4, activity.hubItems().count { it is DetailItem.Lesson })
+                    assertTrue(activity.hubItems().none { it is DetailItem.AllLessons })
+                    assertTouchTargets(activity)
+                    assertVisibleTextFits(activity.window.decorView)
+                }
+                screenshot("subject-lessons-${spec.name}")
                 scenario.recreate()
                 settle()
                 scenario.onActivity { assertVisibleTextFits(it.window.decorView) }
+            }
+        }
+    }
+
+    @Test fun creditSubjectCountsDownToTheCredit() {
+        withFixture(Phase.MIDDLE, RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario ->
+            openSubject(scenario, "Иностранный")
+            scenario.onActivity { activity ->
+                assertEquals(activity.getString(R.string.subject_credit_next, "8"), activity.findViewById<TextView>(R.id.hint).text.toString())
+                // Without links yet the add chip explains itself.
+                val chips = activity.findViewById<ChipGroup>(R.id.chips).descendants().filterIsInstance<Chip>().toList()
+                assertEquals(listOf(activity.getString(R.string.links_add)), chips.map { it.text.toString() })
+                assertVisibleTextFits(activity.window.decorView)
+            }
+            screenshot("subject-credit-narrow")
+        }
+    }
+
+    @Test fun sessionSubjectShowsItsGradeAndNoHint() {
+        withFixture(Phase.SESSION, Appearances.light.toRecordbook()) { scenario ->
+            openSubject(scenario, "Алгоритмы")
+            scenario.onActivity { activity ->
+                assertEquals("4C", activity.findViewById<TextView>(R.id.grade).text.toString())
+                assertEquals(View.GONE, activity.findViewById<View>(R.id.hint).visibility)
+                assertVisibleTextFits(activity.window.decorView)
+            }
+            screenshot("subject-session")
+        }
+    }
+
+    @Test fun pastPeriodKeepsLinksWithoutLessons() {
+        withFixture(Phase.MIDDLE, Appearances.light.toRecordbook()) { scenario ->
+            scenario.onActivity { activity ->
+                val fragment = activity.supportFragmentManager.findFragmentByTag(RecordbookPreviewActivity.ROOT_TAG)!!
+                ViewModelProvider(fragment)[RecordbookViewModel::class.java].selectPeriod(1, 1)
+            }
+            settle()
+            openSubject(scenario, "Математический")
+            scenario.onActivity { activity ->
+                val items = activity.hubItems()
+                assertTrue(items.any { it is DetailItem.LinkChips })
+                assertTrue(items.none { it is DetailItem.Lesson || it is DetailItem.LessonsMessage })
+                val chips = activity.findViewById<ChipGroup>(R.id.chips).descendants().filterIsInstance<Chip>().map { it.text.toString() }.toList()
+                assertTrue("Таблица баллов осени" in chips)
+            }
+            screenshot("subject-past-period")
+        }
+    }
+
+    @Test fun physicalEducationPageHasTheSportOverviewAndNoLinks() {
+        Appearances.default.forEach { spec ->
+            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
+                openSubject(scenario, "Физическая")
+                scenario.onActivity { activity ->
+                    val items = activity.hubItems()
+                    assertTrue(items.first() is DetailItem.SportOverview)
+                    assertTrue(items.none { it is DetailItem.LinkChips || it is DetailItem.Chat || it is DetailItem.Hero })
+                    assertEquals("64", activity.findViewById<TextView>(R.id.total).text.toString())
+                    assertEquals(RecordbookPreviewFixtures.PE, activity.findViewById<TextView>(R.id.title).text.toString())
+                    assertVisibleTextFits(activity.window.decorView)
+                }
+                screenshot("subject-sport-${spec.name}")
             }
         }
     }
@@ -237,41 +344,6 @@ class RecordbookVisualTest {
         }
     }
 
-    @Test fun subjectHubListsUpcomingLessonsAndTheirTeachersForAnExactMatch() {
-        for (spec in Appearances.default) {
-            RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons(listOf(
-                hubLesson(1, "2026-06-02", subjectId = 1, typeId = 1, teacher = "Лектор Лекторович Лекторов", isu = 1),
-                hubLesson(2, "2026-06-04", subjectId = 1, typeId = 3, teacher = "Практик Практикович Практиков", isu = 2),
-                hubLesson(3, "2026-06-05", subjectId = 2, typeId = 1, teacher = "Чужой преподаватель", isu = 3)
-            ))
-            withPreview(spec.toRecordbook()) { scenario, _ ->
-                settle()
-                openSubject(scenario, "Математический")
-                scenario.onActivity { assertEquals(0, it.hubItems().count { item -> item is DetailItem.Lesson }) }
-                selectScheduleTab(scenario)
-                scrollToEnd(scenario)
-                scenario.onActivity { activity ->
-                    val root = activity.window.decorView
-                    val items = activity.hubItems()
-                    assertEquals(2, items.count { it is DetailItem.Lesson })
-                    assertEquals(2, items.count { it is DetailItem.Teacher })
-                    val texts = root.descendants().filterIsInstance<TextView>().map { it.text.toString() }.toList()
-                    assertTrue(activity.getString(R.string.subject_lessons_title) in texts)
-                    assertTrue(activity.getString(R.string.subject_teachers_title) in texts)
-                    assertEquals(2, root.descendants().count { it.id == R.id.type_indicator })
-                    assertEquals(2, root.descendants().count { it.id == R.id.avatar })
-                    assertTrue(texts.any { it.startsWith("Лекция · 1506") })
-                    assertTrue(activity.getString(R.string.schedule_lesson_type_practice) in texts)
-                    assertVisibleTextFits(root)
-                    root.descendants().filter { it.isShown && it.isClickable }.forEach {
-                        assertTrue("Touch target ${it.javaClass.simpleName}", it.height >= 48 * activity.resources.displayMetrics.density - 1)
-                    }
-                }
-                screenshot("subject-hub-${spec.name}")
-            }
-        }
-    }
-
     @Test fun subjectHubProposesANameMatchAndConfirmingItShowsTheLessons() {
         RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons(listOf(
             hubLesson(7, "2026-06-03", subjectId = 555, typeId = 2, teacher = "Лаборант Л. Л.", isu = 9, name = "Алгоритмы и структуры данных")
@@ -279,7 +351,6 @@ class RecordbookVisualTest {
         withPreview(Appearances.light.toRecordbook()) { scenario, _ ->
             settle()
             openSubject(scenario, "Алгоритмы")
-            selectScheduleTab(scenario)
             scrollToEnd(scenario)
             scenario.onActivity { activity ->
                 val root = activity.window.decorView
@@ -305,28 +376,46 @@ class RecordbookVisualTest {
         }
     }
 
-    /** The list of the page the pager currently shows; offscreen pages may also be attached. */
-    private fun RecordbookPreviewActivity.currentPageList(): RecyclerView {
-        val pager = findViewById<ViewPager2>(R.id.pager)
-        val pages = pager.getChildAt(0) as RecyclerView
-        return checkNotNull(pages.findViewHolderForAdapterPosition(pager.currentItem)).itemView.findViewById(R.id.recycler_view)
+    private fun withFixture(phase: Phase, appearance: RecordbookPreviewActivity.Appearance, block: (ActivityScenario<RecordbookPreviewActivity>) -> Unit) {
+        RecordbookPreviewActivity.appearance = appearance
+        RecordbookPreviewFixtures.install(phase)
+        try {
+            ActivityScenario.launch<RecordbookPreviewActivity>(Intent(ApplicationProvider.getApplicationContext(), RecordbookPreviewActivity::class.java)).use {
+                settle()
+                block(it)
+            }
+        } finally {
+            RecordbookPreviewFixtures.reset()
+        }
     }
 
-    private fun RecordbookPreviewActivity.hubItems(): List<DetailItem> =
-        (currentPageList().adapter as RecordbookControlAdapter).currentList
+    private fun RecordbookPreviewActivity.hubList(): RecyclerView = findViewById(R.id.recycler_view)
 
-    private fun selectScheduleTab(scenario: ActivityScenario<RecordbookPreviewActivity>) {
+    private fun RecordbookPreviewActivity.hubItems(): List<DetailItem> = (hubList().adapter as SubjectHubAdapter).currentList
+
+    private fun RecordbookPreviewActivity.row(namePart: String): View =
+        findViewById<RecyclerView>(R.id.main_recycler_view).children().first { it.findViewById<TextView>(R.id.name)?.text?.contains(namePart) == true }
+
+    private fun View.texts(): List<String> = descendants().filterIsInstance<TextView>().filter { it.isShown }.map { it.text.toString() }.toList()
+
+    private fun assertTouchTargets(activity: RecordbookPreviewActivity) {
+        val minimum = 48 * activity.resources.displayMetrics.density - 1
+        activity.window.decorView.descendants().filter { it.isShown && it.isClickable }.forEach {
+            assertTrue("Touch target ${it.javaClass.simpleName}", it.height >= minimum)
+        }
+    }
+
+    private fun scrollTo(scenario: ActivityScenario<RecordbookPreviewActivity>, position: (List<DetailItem>) -> Int) {
         scenario.onActivity { activity ->
-            val tabs = activity.findViewById<TabLayout>(R.id.tabs)
-            assertEquals(View.VISIBLE, tabs.visibility)
-            tabs.getTabAt(1)!!.select()
+            (activity.hubList().layoutManager as androidx.recyclerview.widget.LinearLayoutManager)
+                .scrollToPositionWithOffset(position(activity.hubItems()), 0)
         }
         settle()
     }
 
     private fun scrollToEnd(scenario: ActivityScenario<RecordbookPreviewActivity>) {
         scenario.onActivity { activity ->
-            val list = activity.currentPageList()
+            val list = activity.hubList()
             list.scrollToPosition(list.adapter!!.itemCount - 1)
         }
         settle()
@@ -346,51 +435,6 @@ class RecordbookVisualTest {
         subjectId = subjectId, subjectName = name, flowId = subjectId * 10, teacherIsu = isu, teacherFio = teacher,
         room = "1506", building = "Кронверкский проспект, 49", formatId = 1
     )
-
-    @Test fun resultRingRebindingPreservesOfficialGradesAndMissingScores() {
-        withPreview(RecordbookPreviewActivity.Appearance(fontScale = 1.3f)) { scenario, _ ->
-            scenario.onActivity { activity ->
-                val view = RecordbookScoreView(activity)
-                val subject = RecordbookSubject("Предмет", 1, 1, "Экзамен", 100.0, "5/A", null, null, false, null)
-                val ring = view.findViewById<CircularProgressIndicator>(R.id.score_ring)
-                view.bind(subject)
-                assertEquals(1000, ring.progress)
-                assertEquals("5A", view.findViewById<TextView>(R.id.rate).text.toString())
-                view.bind(subject.copy(score = 116.5, rate = "зачет"))
-                assertEquals(1000, ring.progress)
-                assertEquals("116,5", view.findViewById<TextView>(R.id.points).text.toString())
-                assertEquals(View.VISIBLE, view.findViewById<View>(R.id.rate_icon).visibility)
-                view.bind(subject.copy(score = null, rate = "зачет"))
-                assertEquals(0, ring.progress)
-                assertEquals("—", view.findViewById<TextView>(R.id.points).text.toString())
-                assertEquals(View.GONE, view.findViewById<View>(R.id.points).visibility)
-                assertEquals(View.VISIBLE, view.findViewById<View>(R.id.rate_icon).visibility)
-                assertTrue(view.contentDescription.contains(activity.getString(R.string.recordbook_points_missing)))
-                view.bind(subject.copy(score = 0.0, rate = null))
-                assertEquals(View.GONE, view.findViewById<View>(R.id.rate_icon).visibility)
-                assertEquals("0", view.findViewById<TextView>(R.id.points).text.toString())
-                assertEquals(View.VISIBLE, view.findViewById<View>(R.id.points).visibility)
-                assertTrue(view.contentDescription.contains(activity.getString(R.string.recordbook_rate_in_progress)))
-                view.bind(subject.copy(score = 62.0, rate = "Неявка по уважительной причине"))
-                assertEquals(620, ring.progress)
-                assertEquals("—", view.findViewById<TextView>(R.id.rate).text.toString())
-                assertTrue(view.contentDescription.contains("Неявка по уважительной причине"))
-                val pe = subject.copy(name = "Физическая культура и спорт (базовая)", score = null, rate = null)
-                view.bind(pe, RecordbookSportState.Content("Весна 2025/2026", SportScoreSummary(100, 20), endsAt = null, current = false))
-                assertEquals(1000, ring.progress)
-                assertEquals("120", view.findViewById<TextView>(R.id.points).text.toString())
-                assertEquals(View.GONE, view.findViewById<View>(R.id.rate_icon).visibility)
-                view.bind(pe.copy(rate = "зачет"), RecordbookSportState.Error)
-                assertEquals(0, ring.progress)
-                assertEquals(View.GONE, view.findViewById<View>(R.id.points).visibility)
-                assertEquals(View.VISIBLE, view.findViewById<View>(R.id.rate_icon).visibility)
-                view.bind(subject)
-                assertEquals(1000, ring.progress)
-                assertEquals("100", view.findViewById<TextView>(R.id.points).text.toString())
-                assertFalse(view.contentDescription.contains(activity.getString(R.string.recordbook_sport_source)))
-            }
-        }
-    }
 
     @Test fun emptyErrorLoadingAndContentTransitionsStayInTheContentArea() {
         withPreview(RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario, repository ->
@@ -455,7 +499,16 @@ class RecordbookVisualTest {
 
     private fun screenshot(name: String) = Screenshots.capture("recordbook-screenshots", name)
 
-    private fun assertVisibleTextFits(root: View) = assertTextFits(root)
+    /** Only subject names (two lines) and link chips (bounded width) may end in an ellipsis. */
+    private fun assertVisibleTextFits(root: View) {
+        assertTextFits(root, allowEllipsis = true)
+        root.descendants().filterIsInstance<TextView>()
+            .filter { it.isShown && it !is Chip && it.id != R.id.name && it.id != R.id.title }
+            .forEach { view ->
+                val layout = view.layout ?: return@forEach
+                (0 until layout.lineCount).forEach { line -> assertEquals("Ellipsis: ${view.text}", 0, layout.getEllipsisCount(line)) }
+            }
+    }
 
     private fun ViewGroup.children() = (0 until childCount).map(::getChildAt)
 

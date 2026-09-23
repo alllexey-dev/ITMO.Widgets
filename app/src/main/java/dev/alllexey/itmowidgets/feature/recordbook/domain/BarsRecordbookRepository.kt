@@ -12,4 +12,7 @@ data class BarsSubjectDetails(val subject: RecordbookSubject, val controls: List
 interface BarsRecordbookRepository {
     suspend fun getSubjects(period: RecordbookPeriod): AppResult<List<RecordbookSubject>>
     suspend fun getSubject(journal: BarsJournalReference): AppResult<BarsSubjectDetails>
+
+    /** Controls of a journal the last answer already carried; null before any. */
+    fun cachedControls(journal: BarsJournalReference): List<RecordbookControl>? = null
 }

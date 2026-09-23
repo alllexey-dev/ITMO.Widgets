@@ -8,22 +8,35 @@ sealed interface ControlEntry {
     data class Single(val control: RecordbookControl) : ControlEntry
 }
 
+/** Groups the UI names with its own string; any other group keeps [ControlGroup.title]. */
+enum class ControlGroupKind { LABS, TESTS, PRACTICALS, HOMEWORK }
+
 data class ControlGroup(
+    /** The shared control name without its number, or the tree node's name. */
     val title: String,
     val controls: List<RecordbookControl>,
     /** Sum of known scores only; `null` while none of them is graded. */
     val score: Double?,
     val maximum: Double?,
-    val belowMinimum: List<RecordbookControl>
+    val belowMinimum: List<RecordbookControl>,
+    val kind: ControlGroupKind? = null
 ) : ControlEntry
+
+/** A graded control under its positive minimum; an ungraded one is not below anything yet. */
+val RecordbookControl.isBelowMinimum: Boolean
+    get() {
+        val score = score ?: return false
+        val minimum = minimum ?: return false
+        return minimum > 0 && score < minimum
+    }
 
 object RecordbookControlGroups {
     private val trailingNumber = Regex("\\s*(№\\s*)?\\d+$")
-    private val titles = mapOf(
-        "лабораторная работа" to "Лабораторные",
-        "контрольная работа" to "Контрольные",
-        "практическая работа" to "Практические",
-        "домашнее задание" to "Домашние задания"
+    private val kinds = mapOf(
+        "лабораторная работа" to ControlGroupKind.LABS,
+        "контрольная работа" to ControlGroupKind.TESTS,
+        "практическая работа" to ControlGroupKind.PRACTICALS,
+        "домашнее задание" to ControlGroupKind.HOMEWORK
     )
 
     /** Keeps server order; a group takes the place of its first control. */
@@ -49,22 +62,19 @@ object RecordbookControlGroups {
                 when {
                     leaves.isNotEmpty() -> add(group(root.name, leaves))
                     key !in numbered -> add(ControlEntry.Single(root))
-                    emitted.add(key) -> add(group(titles[key] ?: stripNumber(root.name), numbered.getValue(key)))
+                    emitted.add(key) -> add(group(stripNumber(root.name), numbered.getValue(key), kinds[key]))
                 }
             }
         }
     }
 
-    private fun group(title: String, controls: List<RecordbookControl>) = ControlGroup(
+    private fun group(title: String, controls: List<RecordbookControl>, kind: ControlGroupKind? = null) = ControlGroup(
         title = title,
         controls = controls,
         score = controls.mapNotNull { it.score }.takeIf { it.isNotEmpty() }?.sum(),
         maximum = controls.mapNotNull { it.maximum }.takeIf { it.isNotEmpty() }?.sum(),
-        belowMinimum = controls.filter { control ->
-            val score = control.score
-            val minimum = control.minimum
-            score != null && minimum != null && minimum > 0 && score < minimum
-        }
+        belowMinimum = controls.filter { it.isBelowMinimum },
+        kind = kind
     )
 
     private fun key(name: String): String = subjectNameKey(stripNumber(name))

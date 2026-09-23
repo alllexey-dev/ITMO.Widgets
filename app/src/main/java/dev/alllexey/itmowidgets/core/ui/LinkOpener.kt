@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.resources.ui
+package dev.alllexey.itmowidgets.core.ui
 
 import android.content.ActivityNotFoundException
 import android.content.Intent

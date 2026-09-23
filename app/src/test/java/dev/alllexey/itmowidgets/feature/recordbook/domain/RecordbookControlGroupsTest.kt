@@ -14,16 +14,18 @@ class RecordbookControlGroupsTest {
         parent: Long? = null
     ) = RecordbookControl(id, name, score, minimum, maximum, false, null, null, parent)
 
-    @Test fun `numbered top-level controls form a group titled by the dictionary`() {
+    @Test fun `numbered top-level controls form a group of a known kind`() {
         val labs = listOf(control(1, "Лабораторная работа №1"), control(2, "Лабораторная работа № 2"), control(3, "лабораторная  работа 3"))
         val entries = RecordbookControlGroups.groupControls(labs + control(4, "Контрольная работа №1") + control(5, "Контрольная работа №2"))
-        assertEquals(listOf("Лабораторные", "Контрольные"), entries.map { (it as ControlGroup).title })
+        assertEquals(listOf(ControlGroupKind.LABS, ControlGroupKind.TESTS), entries.map { (it as ControlGroup).kind })
+        assertEquals("Лабораторная работа", (entries.first() as ControlGroup).title)
         assertEquals(listOf(1L, 2L, 3L), (entries.first() as ControlGroup).controls.map { it.id })
     }
 
     @Test fun `unknown repeated names keep their own title without the number`() {
         val entries = RecordbookControlGroups.groupControls(listOf(control(1, "Тест 1"), control(2, "Тест 2")))
         assertEquals("Тест", (entries.single() as ControlGroup).title)
+        assertNull((entries.single() as ControlGroup).kind)
     }
 
     @Test fun `tree node with children becomes a group of its leaves`() {

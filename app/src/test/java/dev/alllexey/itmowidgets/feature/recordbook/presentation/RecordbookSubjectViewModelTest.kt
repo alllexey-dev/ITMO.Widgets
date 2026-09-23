@@ -3,7 +3,15 @@ package dev.alllexey.itmowidgets.feature.recordbook.presentation
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.resources.LinkCategory
+import dev.alllexey.itmowidgets.core.resources.LinkVisibility
+import dev.alllexey.itmowidgets.core.resources.SubjectLinkChip
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
+import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroup
+import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroupKind
+import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
+import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookGradeScale
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.feature.resources.presentation.FakeSubjectLinksRepository
 import dev.alllexey.itmowidgets.feature.resources.presentation.linksSnapshot
@@ -108,14 +116,6 @@ class RecordbookSubjectViewModelTest {
         assertTrue(vm.uiState.value is RecordbookSubjectUiState.Content)
     }
 
-    @Test fun `the schedule tab is expected for a current period before anything loads`() = runTest {
-        val current = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(mapOf(
-            "entry_id" to 42L, "program_id" to 1L, "semester" to 3, "study_year" to "2026/2027"
-        )), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources)
-        assertTrue(current.scheduleTabExpected)
-        assertFalse(model().scheduleTabExpected)
-    }
-
     @Test fun `subject without a BARS journal never asks BARS`() = runTest {
         model(); advanceUntilIdle()
         assertTrue(bars.journalRequests.isEmpty())
@@ -189,7 +189,7 @@ class RecordbookSubjectViewModelTest {
         // Teachers keep the order the schedule shows them in; roles are their lesson types.
         assertEquals(listOf(SubjectTeacher("Лектор Л. Л.", 1, listOf(1)), SubjectTeacher("Практик П. П.", 2, listOf(3))), hub.teachers)
         assertEquals(listOf(LocalDate.parse("2026-09-07") to LocalDate.parse("2026-10-05")), scheduleRefresh.requests)
-        assertTrue(hub.resources.isEmpty())
+        assertTrue(hub.chips.visible.none { it is SubjectLinkChip.Lms })
     }
 
     @Test fun `a name match is proposed, confirming stores it and rejecting leaves it unmatched`() = runTest {
@@ -272,8 +272,101 @@ class RecordbookSubjectViewModelTest {
         val model = currentPeriodModel(recordbookSubject(details = false).copy(lmsLink = "https://lms.itmo.ru/course/1"))
         advanceUntilIdle()
 
-        assertEquals(listOf(SubjectResource("https://lms.itmo.ru/course/1")), model.hub().resources)
+        assertEquals(SubjectLinkChip.Lms("https://lms.itmo.ru/course/1"), model.hub().chips.visible.first())
         assertTrue(model.hub().lessons is SubjectLessonsState.Content)
         assertEquals(0, repository.controlRequests)
+    }
+
+    // --- links, grade step, control groups, lessons
+
+    @Test fun `chips and chats come from the links snapshot`() = runTest {
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(
+            mine = listOf(subjectLink("table", LinkCategory.SCORES), subjectLink("chat", LinkCategory.CHAT)),
+            shared = listOf(
+                subjectLink("group-chat", LinkCategory.CHAT, LinkVisibility.GROUP, isMine = false),
+                subjectLink("tasks", LinkCategory.TASKS, LinkVisibility.FLOW, isMine = false),
+                subjectLink("notes", LinkCategory.NOTES, LinkVisibility.ALL, isMine = false, score = 3),
+                subjectLink("video", LinkCategory.RECORDINGS, LinkVisibility.ALL, isMine = false),
+                subjectLink("exam", LinkCategory.EXAM, LinkVisibility.ALL, isMine = false)
+            )
+        ))
+        val vm = model(); advanceUntilIdle()
+        val hub = vm.hub()
+        assertEquals(listOf("table", "tasks", "video", "notes"),
+            hub.chips.visible.map { (it as SubjectLinkChip.Link).link.id })
+        assertEquals(1, hub.chips.moreCount)
+        assertEquals(listOf("chat", "group-chat"), hub.chats.map { it.id })
+        assertEquals(1, resources.refreshes)
+    }
+
+    @Test fun `new links reach the open page without a reload`() = runTest {
+        resources.state.value = SubjectLinksState.Content(linksSnapshot())
+        val vm = model(); advanceUntilIdle()
+        assertTrue(vm.hub().chips.visible.isEmpty())
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(mine = listOf(subjectLink("new"))))
+        advanceUntilIdle()
+        assertEquals(listOf("new"), vm.hub().chips.visible.map { (it as SubjectLinkChip.Link).link.id })
+    }
+
+    @Test fun `physical education has no links, chips or chats`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Физическая культура и спорт (базовая)")
+            .copy(lmsLink = "https://lms.itmo.ru/course/1")))
+        val vm = model(); advanceUntilIdle()
+        val hub = vm.hub()
+        assertNull(hub.resourceScope)
+        assertNull(hub.links)
+        assertTrue(hub.chips.visible.isEmpty())
+        assertTrue(hub.chats.isEmpty())
+        assertEquals(0, resources.refreshes)
+        assertNull((vm.uiState.value as RecordbookSubjectUiState.Content).gradeStep)
+    }
+
+    @Test fun `the grade step follows the score and the kind of assessment`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = 72.0)))
+        val exam = model(); advanceUntilIdle()
+        assertEquals(GradeStep("4C", 3.0), (exam.uiState.value as RecordbookSubjectUiState.Content).gradeStep)
+
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(controlType = "Зачёт", rate = null, score = 52.0)))
+        val credit = model(); advanceUntilIdle()
+        assertEquals(GradeStep(RecordbookGradeScale.CREDIT_TARGET, 8.0), (credit.uiState.value as RecordbookSubjectUiState.Content).gradeStep)
+
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = "4/C", score = 76.0)))
+        val graded = model(); advanceUntilIdle()
+        assertNull((graded.uiState.value as RecordbookSubjectUiState.Content).gradeStep)
+
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = null)))
+        val unknown = model(); advanceUntilIdle()
+        assertNull((unknown.uiState.value as RecordbookSubjectUiState.Content).gradeStep)
+    }
+
+    @Test fun `numbered controls are grouped and lone ones stay rows`() = runTest {
+        repository.controls = AppResult.Success(listOf(
+            RecordbookControl(1, "Лабораторная работа 1", 8.0, 5.0, 10.0, true, null, null),
+            RecordbookControl(2, "Лабораторная работа 2", 3.0, 5.0, 10.0, true, null, null),
+            RecordbookControl(3, "Экзамен", null, 20.0, 40.0, true, null, null)
+        ))
+        val vm = model(); advanceUntilIdle()
+        val entries = (vm.uiState.value as RecordbookSubjectUiState.Content).controlGroups
+        val labs = entries.first() as ControlGroup
+        assertEquals(ControlGroupKind.LABS, labs.kind)
+        assertEquals(11.0, labs.score!!, 0.0)
+        assertEquals(20.0, labs.maximum!!, 0.0)
+        assertEquals(listOf(2L), labs.belowMinimum.map { it.id })
+        assertTrue(entries.last() is ControlEntry.Single)
+    }
+
+    @Test fun `two nearest lessons first and the rest after show all`() = runTest {
+        lessons.lessons.value = (1L..5L).map { subjectLesson(it, "2026-09-${(7 + it).toString().padStart(2, '0')}", subjectId = 1L) }
+        val model = currentPeriodModel()
+        advanceUntilIdle()
+        assertEquals(listOf(1L, 2L), model.hub().visibleLessons.map { it.pairId })
+        assertEquals(5, model.hub().allLessonsCount)
+
+        model.showAllLessons()
+        assertEquals((1L..5L).toList(), model.hub().visibleLessons.map { it.pairId })
+        assertEquals(0, model.hub().allLessonsCount)
+
+        model.refresh(); advanceUntilIdle()
+        assertTrue(model.hub().lessonsExpanded)
     }
 }

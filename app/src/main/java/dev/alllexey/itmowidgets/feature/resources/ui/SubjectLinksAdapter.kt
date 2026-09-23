@@ -26,9 +26,9 @@ import dev.alllexey.itmowidgets.databinding.ItemSubjectLinkSectionBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkSection
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.badge
-import dev.alllexey.itmowidgets.feature.resources.presentation.iconRes
-import dev.alllexey.itmowidgets.feature.resources.presentation.label
-import dev.alllexey.itmowidgets.feature.resources.presentation.title
+import dev.alllexey.itmowidgets.core.ui.iconRes
+import dev.alllexey.itmowidgets.core.ui.label
+import dev.alllexey.itmowidgets.core.ui.title
 import java.net.URI
 import java.util.Locale
 

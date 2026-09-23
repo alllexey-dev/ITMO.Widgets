@@ -26,8 +26,8 @@ import dev.alllexey.itmowidgets.databinding.SheetLinkEditorBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
-import dev.alllexey.itmowidgets.feature.resources.presentation.label
-import dev.alllexey.itmowidgets.feature.resources.presentation.title
+import dev.alllexey.itmowidgets.core.ui.label
+import dev.alllexey.itmowidgets.core.ui.title
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 

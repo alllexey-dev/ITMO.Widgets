@@ -62,7 +62,6 @@ class RecordbookFragment : Fragment() {
         binding.swipeRefreshLayout.applyAppRefreshColors()
         binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh() })
         binding.stateAction.setOnClickListener { viewModel.refresh() }
-        binding.sourceButton.setOnClickListener { showRecordbookSourceInfo(requireContext()) }
         binding.barsChip.setOnCheckedChangeListener { _, checked -> if (!renderingBars) viewModel.setBarsEnabled(checked) }
         viewModel.barsEnabled.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { enabled ->
             renderingBars = true
@@ -120,7 +119,7 @@ class RecordbookFragment : Fragment() {
             is RecordbookUiState.Content -> {
                 renderPeriod(state.programs, state.selection)
                 val currentBinding = binding
-                adapter.submitData(state.subjects, state.sport, state.barsApplied) {
+                adapter.submitData(state) {
                     if (_binding !== currentBinding || viewModel.uiState.value != state) return@submitData
                     currentBinding.loading.isVisible = false
                     currentBinding.swipeRefreshLayout.isVisible = state.subjects.isNotEmpty()

@@ -12,23 +12,9 @@
         android:orientation="vertical"
         android:padding="@dimen/design_card_padding">
 
-        <TextView android:id="@+id/name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceTitleLarge"
-            android:textColor="?attr/colorOnSurface" />
-
-        <TextView android:id="@+id/teacher"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/design_spacing_compact"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/design_spacing_section"
             android:text="@string/recordbook_sport_source"
             android:textAppearance="?attr/textAppearanceTitleSmall" />
 

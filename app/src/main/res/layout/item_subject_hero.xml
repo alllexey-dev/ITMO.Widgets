@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.ItmoWidgets.Card.Summary"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="@dimen/design_spacing_compact">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:padding="@dimen/design_summary_padding">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:importantForAccessibility="noHideDescendants"
+            android:orientation="horizontal">
+
+            <TextView android:id="@+id/points"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFeatureSettings="tnum"
+                android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="38" />
+
+            <TextView android:id="@+id/out_of"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/design_spacing_compact"
+                android:text="@string/subject_score_out_of"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <TextView android:id="@+id/grade"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/design_spacing_compact"
+                android:background="@drawable/bg_grade_badge"
+                android:fontFeatureSettings="tnum"
+                android:gravity="center"
+                android:maxLines="1"
+                android:minWidth="48dp"
+                android:paddingHorizontal="@dimen/design_spacing_compact"
+                android:paddingVertical="@dimen/design_spacing_related"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:visibility="gone"
+                tools:text="4C"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+        <dev.alllexey.itmowidgets.feature.recordbook.ui.GradeScaleView
+            android:id="@+id/scale"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_content"
+            android:importantForAccessibility="no" />
+
+        <TextView android:id="@+id/hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_content"
+            android:importantForAccessibility="no"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="до 4C ещё 3" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

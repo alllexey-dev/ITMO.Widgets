@@ -60,7 +60,7 @@ class DesignCardResourcesTest {
             "item_recordbook_control" to "Content",
             "item_recordbook_note" to "Content",
             "item_recordbook_summary" to "CompactSummary",
-            "item_recordbook_overview" to "Summary",
+            "item_subject_hero" to "Summary",
             "item_recordbook_sport" to "Summary",
             "item_day_schedule" to "ScheduleDay"
         )

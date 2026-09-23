@@ -4,7 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
+import dev.alllexey.itmowidgets.core.resources.subjectLinkChips
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -15,6 +19,10 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.subjectsIn
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
+import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookControlGroups
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookGradeScale
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
@@ -24,6 +32,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.withBars
 import javax.inject.Inject
@@ -47,9 +56,17 @@ sealed interface RecordbookSubjectUiState {
         val refreshError: AppError? = null,
         /** BARS journal failed; subject and controls are MyITMO values. */
         val barsError: AppError? = null,
-        /** Schedule-side sections: upcoming lessons, teachers, resources. */
+        /** Schedule and links sections: links, chats, teachers, upcoming lessons. */
         val hub: SubjectHubState = SubjectHubState()
-    ) : RecordbookSubjectUiState
+    ) : RecordbookSubjectUiState {
+        /** Lone controls and groups of related ones, in server order. */
+        val controlGroups: List<ControlEntry> = RecordbookControlGroups.groupControls(controls)
+
+        /** The hint to the next grade; none once a final result is set or for physical education. */
+        val gradeStep: GradeStep?
+            get() = if (subject.isPhysicalEducation || subject.normalizedRate != RecordbookRate.InProgress) null
+                else RecordbookGradeScale.nextStep(subject.score, subject.assessmentKind)
+    }
     data class Error(val error: AppError) : RecordbookSubjectUiState
 }
 
@@ -81,15 +98,9 @@ class RecordbookSubjectViewModel @Inject constructor(
     }
     private val _uiState = MutableStateFlow<RecordbookSubjectUiState>(RecordbookSubjectUiState.Loading)
     val uiState = _uiState.asStateFlow()
-    private val _tab = MutableStateFlow(savedStateHandle.get<String>(KEY_TAB)?.let(SubjectTab::valueOf) ?: SubjectTab.SCORES)
-    val tab = _tab.asStateFlow()
-    private val handle = savedStateHandle
     private var loadJob: Job? = null
     private var hubJob: Job? = null
-    private var resourcesJob: Job? = null
-
-    /** Known from the arguments alone: a current period gets the schedule tab before anything loads. */
-    val scheduleTabExpected: Boolean get() = period.isCurrent()
+    private var linksJob: Job? = null
     /** Bumped after a binding is written so the lesson flow is re-evaluated. */
     private val bindingVersion = MutableStateFlow(0)
     private var proposalRejected = false
@@ -148,14 +159,13 @@ class RecordbookSubjectViewModel @Inject constructor(
             subject = subject,
             controls = controls,
             sport = null,
-            hub = SubjectHubState(lessons = if (scheduleTabExpected) SubjectLessonsState.Loading else SubjectLessonsState.Hidden)
+            hub = SubjectHubState(lessons = if (period.isCurrent() && !subject.isPhysicalEducation)
+                SubjectLessonsState.Loading else SubjectLessonsState.Hidden)
         )
     }
 
-    fun selectTab(tab: SubjectTab) {
-        _tab.value = tab
-        handle[KEY_TAB] = tab.name
-    }
+    /** «Все пары»: the rest of the window's lessons open under the first two. */
+    fun showAllLessons() = updateHub { copy(lessonsExpanded = true) }
 
     /** The user agrees that [subjectId] in the schedule is this discipline. */
     fun confirmBinding(subjectId: Long) {
@@ -180,21 +190,12 @@ class RecordbookSubjectViewModel @Inject constructor(
     private fun loadHub(subject: RecordbookSubject) {
         hubJob?.cancel()
         val fallbackTeachers = listOfNotNull(subject.teacherName?.let { SubjectTeacher(it, isu = null, roles = emptyList()) })
-        val resources = if (subject.isPhysicalEducation) emptyList() else listOfNotNull(subject.lmsLink?.let(::SubjectResource))
-        resourcesJob?.cancel()
-        val scope = if (subject.isPhysicalEducation) null else ResourceScope(subject.disciplineId,
-            subject.name, ResourceScope.periodKey(period.studyYear, period.semesterInCourse))
-        updateHub { copy(resourceScope = scope, links = scope?.let { key ->
-            subjectLinks.peek(key)?.let { SubjectLinksState.Content(it) } ?: SubjectLinksState.Loading }) }
-        if (scope != null) resourcesJob = viewModelScope.launch {
-            launch { subjectLinks.refresh(scope) }
-            subjectLinks.observe(scope).collect { state -> updateHub { copy(links = state) } }
-        }
+        loadLinks(subject)
         if (!period.isCurrent() || subject.isPhysicalEducation) {
-            updateHub { copy(lessons = SubjectLessonsState.Hidden, teachers = fallbackTeachers, resources = resources) }
+            updateHub { copy(lessons = SubjectLessonsState.Hidden, teachers = fallbackTeachers) }
             return
         }
-        updateHub { copy(lessons = SubjectLessonsState.Loading, teachers = fallbackTeachers, resources = resources) }
+        updateHub { copy(lessons = SubjectLessonsState.Loading, teachers = fallbackTeachers) }
         hubJob = viewModelScope.launch {
             val today = time.today()
             val end = today.plusDays(WINDOW_DAYS)
@@ -211,7 +212,7 @@ class RecordbookSubjectViewModel @Inject constructor(
                     val state = when (context) {
                         is SubjectContext.Bound ->
                             if (own.isNullOrEmpty()) SubjectLessonsState.Unmatched
-                            else SubjectLessonsState.Content(own.take(MAX_LESSONS), context.source)
+                            else SubjectLessonsState.Content(own, context.source)
                         is SubjectContext.Proposed ->
                             if (proposalRejected) SubjectLessonsState.Unmatched else SubjectLessonsState.Proposed(context.candidate)
                         is SubjectContext.Ambiguous ->
@@ -219,9 +220,37 @@ class RecordbookSubjectViewModel @Inject constructor(
                         SubjectContext.Unmatched -> SubjectLessonsState.Unmatched
                         SubjectContext.NotApplicable -> SubjectLessonsState.Hidden
                     }
-                    updateHub { copy(lessons = state, teachers = teachers, resources = resources) }
+                    updateHub { copy(lessons = state, teachers = teachers) }
                 }
         }
+    }
+
+    /** Past periods keep their links; physical education has none, not even the LMS page. */
+    private fun loadLinks(subject: RecordbookSubject) {
+        linksJob?.cancel()
+        if (subject.isPhysicalEducation) {
+            updateHub { copy(resourceScope = null, links = null, chips = SubjectLinkChips(emptyList(), 0), chats = emptyList()) }
+            return
+        }
+        val scope = ResourceScope(subject.disciplineId, subject.name,
+            ResourceScope.periodKey(period.studyYear, period.semesterInCourse))
+        val cached = subjectLinks.peek(scope)?.let { SubjectLinksState.Content(it) } ?: SubjectLinksState.Loading
+        updateHub { withLinks(scope, cached, subject.lmsLink) }
+        linksJob = viewModelScope.launch {
+            launch { subjectLinks.refresh(scope) }
+            subjectLinks.observe(scope).collect { state -> updateHub { withLinks(scope, state, subject.lmsLink) } }
+        }
+    }
+
+    private fun SubjectHubState.withLinks(scope: ResourceScope, state: SubjectLinksState, lmsUrl: String?): SubjectHubState {
+        val snapshot = (state as? SubjectLinksState.Content)?.snapshot
+        return copy(
+            resourceScope = scope,
+            links = state,
+            chips = subjectLinkChips(snapshot ?: EMPTY_LINKS, lmsUrl),
+            chats = snapshot?.let { (it.mine + it.shared).filter { link -> link.category == LinkCategory.CHAT }.distinctBy { link -> link.id } }
+                .orEmpty()
+        )
     }
 
     /** Distinct people by ISU (or name without one), each with the lesson types they run. */
@@ -253,8 +282,8 @@ class RecordbookSubjectViewModel @Inject constructor(
 
     companion object {
         private const val WINDOW_DAYS = 28L
-        private const val KEY_TAB = "subject_tab"
-        private const val MAX_LESSONS = 10
+        private val EMPTY_LINKS = SubjectLinksSnapshot(emptyList(), emptyList(), emptyList(), null, emptyList(),
+            premoderation = false, servicesEnabled = false)
         const val ARG_ENTRY_ID = "entry_id"
         const val ARG_PROGRAM_ID = "program_id"
         const val ARG_SEMESTER = "semester"

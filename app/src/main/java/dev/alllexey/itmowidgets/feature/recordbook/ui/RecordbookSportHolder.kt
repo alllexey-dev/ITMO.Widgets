@@ -19,9 +19,6 @@ internal class RecordbookSportHolder(
 ) : RecyclerView.ViewHolder(binding.root) {
     fun bind(subject: RecordbookSubject, sport: RecordbookSportState?) {
         val context = binding.root.context
-        binding.name.text = subject.name
-        binding.teacher.text = subject.teacherName
-        binding.teacher.isVisible = !subject.teacherName.isNullOrBlank()
         val content = sport as? RecordbookSportState.Content
         binding.scoreContent.isVisible = content != null
         binding.errorContent.isVisible = content == null
