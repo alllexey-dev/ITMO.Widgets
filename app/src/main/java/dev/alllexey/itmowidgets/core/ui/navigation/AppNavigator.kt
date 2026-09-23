@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 
 enum class AppScreen {
     SETTINGS, DIAGNOSTICS, DEBUG_TOOLS, RECORDBOOK_SUBJECT, APP_UPDATE, QR_PASS, MY_ITMO_WEB,
@@ -27,6 +28,8 @@ interface AppNavigator {
     fun openLessonDetails(args: LessonDetailsArgs)
 
     fun openPendingSportDetails(args: PendingSportDetailsArgs)
+
+    fun openSubjectLinks(args: SubjectLinksArgs)
 }
 
 interface ScreenTransitionHost {
@@ -61,4 +64,8 @@ fun Fragment.closeScreen() {
     val controller = findNavController()
     if (controller.previousBackStackEntry != null) controller.navigateUp()
     else requireActivity().onBackPressedDispatcher.onBackPressed()
+}
+
+fun Fragment.openSubjectLinks(args: SubjectLinksArgs) {
+    (requireActivity() as AppNavigator).openSubjectLinks(args)
 }

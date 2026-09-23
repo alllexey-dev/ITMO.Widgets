@@ -136,6 +136,12 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     }
 
     /** A sport lesson in the schedule is a booking: it gets the sport sheet with `Отменить`. */
+    override fun openSubjectLinks(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs) {
+        if (sessionRepository.state.value !is SessionState.SignedIn) return
+        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        navigation.openSubjectLinks(args)
+    }
+
     override fun openLessonDetails(args: LessonDetailsArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
         if (onboardingGate.state.value != OnboardingGate.Passed) return

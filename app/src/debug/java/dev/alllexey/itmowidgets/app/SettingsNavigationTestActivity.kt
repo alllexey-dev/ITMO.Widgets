@@ -336,6 +336,8 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
 
     override fun openRoot(root: AppRoot) = Unit
 
+    override fun openSubjectLinks(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs) = Unit
+
     override fun openLessonDetails(args: LessonDetailsArgs) = navigation.openLessonDetails(args)
 
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) = navigation.openPendingSportDetails(args)

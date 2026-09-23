@@ -9,7 +9,7 @@ import java.io.IOException
 internal fun Throwable.toAppError(): AppError = when (this) {
     is IOException -> AppError.Network
     is TokenRefreshException -> AppError.Unauthorized
-    is HttpException -> code().toAppError(cause = this)
+    is HttpException -> if (code() == 403 && backendErrorCode() == "restricted") AppError.Restricted else code().toAppError(cause = this)
     is ApiException -> {
         errorCode?.toAppError(cause = this)
             ?: cause?.toAppError()

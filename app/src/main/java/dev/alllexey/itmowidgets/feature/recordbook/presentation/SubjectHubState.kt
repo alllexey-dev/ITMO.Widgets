@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
@@ -29,9 +31,11 @@ enum class SubjectTab { SCORES, SCHEDULE }
 data class SubjectHubState(
     val lessons: SubjectLessonsState = SubjectLessonsState.Hidden,
     val teachers: List<SubjectTeacher> = emptyList(),
-    val resources: List<SubjectResource> = emptyList()
+    val resources: List<SubjectResource> = emptyList(),
+    val resourceScope: ResourceScope? = null,
+    val links: SubjectLinksState? = null
 )
 
 /** Whether there is anything to put on the schedule tab. */
 val SubjectHubState.hasScheduleContent: Boolean
-    get() = lessons != SubjectLessonsState.Hidden || teachers.isNotEmpty() || resources.isNotEmpty()
+    get() = lessons != SubjectLessonsState.Hidden || teachers.isNotEmpty() || resources.isNotEmpty() || resourceScope != null

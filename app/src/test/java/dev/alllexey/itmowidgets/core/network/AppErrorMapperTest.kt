@@ -41,6 +41,13 @@ class AppErrorMapperTest {
         assertSame(cause, (error as AppError.Unknown).cause)
     }
 
+    @Test
+    fun `restricted code is preserved even when an error body is parsed twice`() {
+        val error = HttpException(Response.error<Unit>(403, """{"error":{"code":"restricted"}}""".toResponseBody()))
+        assertEquals(AppError.Restricted, error.toAppError())
+        assertEquals(AppError.Restricted, error.toAppError())
+    }
+
     private fun httpException(statusCode: Int): HttpException {
         return HttpException(
             Response.error<Unit>(

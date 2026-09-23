@@ -42,7 +42,11 @@ class RecordbookSubjectPageFragment : Fragment() {
             onConfirmBinding = viewModel::confirmBinding,
             onRejectProposal = viewModel::rejectProposal,
             onRetryLessons = viewModel::retryLessons,
-            onOpenResource = { openResource(it.url) }
+            onOpenResource = { openResource(it.url) },
+            onOpenResources = { scope ->
+                (requireActivity() as dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator).openSubjectLinks(
+                    dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs(scope.subjectId, scope.subjectName, scope.periodKey))
+            }
         ))
         binding.recyclerView.adapter = adapter
         binding.recyclerView.itemAnimator = null

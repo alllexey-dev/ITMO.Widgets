@@ -4,6 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
@@ -60,7 +63,8 @@ class RecordbookSubjectViewModel @Inject constructor(
     private val scheduleRefresh: ScheduleRefreshGateway,
     private val bindings: SubjectBindingStore,
     private val contextResolver: SubjectContextResolver,
-    private val time: AcademicTimeProvider
+    private val time: AcademicTimeProvider,
+    private val subjectLinks: SubjectLinksRepository
 ) : ViewModel() {
     private val entryId = checkNotNull(savedStateHandle.get<Long>(ARG_ENTRY_ID))
     private val programId = checkNotNull(savedStateHandle.get<Long>(ARG_PROGRAM_ID))
@@ -82,6 +86,7 @@ class RecordbookSubjectViewModel @Inject constructor(
     private val handle = savedStateHandle
     private var loadJob: Job? = null
     private var hubJob: Job? = null
+    private var resourcesJob: Job? = null
 
     /** Known from the arguments alone: a current period gets the schedule tab before anything loads. */
     val scheduleTabExpected: Boolean get() = period.isCurrent()
@@ -175,12 +180,21 @@ class RecordbookSubjectViewModel @Inject constructor(
     private fun loadHub(subject: RecordbookSubject) {
         hubJob?.cancel()
         val fallbackTeachers = listOfNotNull(subject.teacherName?.let { SubjectTeacher(it, isu = null, roles = emptyList()) })
-        val resources = listOfNotNull(subject.lmsLink?.let(::SubjectResource))
+        val resources = if (subject.isPhysicalEducation) emptyList() else listOfNotNull(subject.lmsLink?.let(::SubjectResource))
+        resourcesJob?.cancel()
+        val scope = if (subject.isPhysicalEducation) null else ResourceScope(subject.disciplineId,
+            subject.name, ResourceScope.periodKey(period.studyYear, period.semesterInCourse))
+        updateHub { copy(resourceScope = scope, links = scope?.let { key ->
+            subjectLinks.peek(key)?.let { SubjectLinksState.Content(it) } ?: SubjectLinksState.Loading }) }
+        if (scope != null) resourcesJob = viewModelScope.launch {
+            launch { subjectLinks.refresh(scope) }
+            subjectLinks.observe(scope).collect { state -> updateHub { copy(links = state) } }
+        }
         if (!period.isCurrent() || subject.isPhysicalEducation) {
-            updateHub { SubjectHubState(SubjectLessonsState.Hidden, fallbackTeachers, resources) }
+            updateHub { copy(lessons = SubjectLessonsState.Hidden, teachers = fallbackTeachers, resources = resources) }
             return
         }
-        updateHub { SubjectHubState(SubjectLessonsState.Loading, fallbackTeachers, resources) }
+        updateHub { copy(lessons = SubjectLessonsState.Loading, teachers = fallbackTeachers, resources = resources) }
         hubJob = viewModelScope.launch {
             val today = time.today()
             val end = today.plusDays(WINDOW_DAYS)
@@ -205,7 +219,7 @@ class RecordbookSubjectViewModel @Inject constructor(
                         SubjectContext.Unmatched -> SubjectLessonsState.Unmatched
                         SubjectContext.NotApplicable -> SubjectLessonsState.Hidden
                     }
-                    updateHub { SubjectHubState(state, teachers, resources) }
+                    updateHub { copy(lessons = state, teachers = teachers, resources = resources) }
                 }
         }
     }

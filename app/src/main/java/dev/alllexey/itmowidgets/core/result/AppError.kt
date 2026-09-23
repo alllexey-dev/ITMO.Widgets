@@ -8,6 +8,8 @@ sealed interface AppError {
 
     data object Forbidden : AppError
 
+    data object Restricted : AppError
+
     data object NotFound : AppError
 
     /** Requested data lives on the project backend, which the user has not opted into. */

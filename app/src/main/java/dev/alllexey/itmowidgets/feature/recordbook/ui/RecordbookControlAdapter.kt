@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.ui.buildingShortTitle
@@ -58,6 +60,7 @@ sealed interface DetailItem {
     data class BindingChoice(val candidates: List<ScheduleSubject>) : DetailItem
     data class Teacher(val teacher: SubjectTeacher) : DetailItem
     data class Resource(val resource: SubjectResource) : DetailItem
+    data class CommunityResources(val scope: ResourceScope, val selectedTitle: String?, val count: Int?) : DetailItem
 }
 
 /** Hub actions the subject screen forwards to its view model. */
@@ -65,7 +68,8 @@ data class SubjectHubActions(
     val onConfirmBinding: (Long) -> Unit = {},
     val onRejectProposal: () -> Unit = {},
     val onRetryLessons: () -> Unit = {},
-    val onOpenResource: (SubjectResource) -> Unit = {}
+    val onOpenResource: (SubjectResource) -> Unit = {},
+    val onOpenResources: (ResourceScope) -> Unit = {}
 )
 
 class RecordbookControlAdapter(
@@ -106,9 +110,14 @@ class RecordbookControlAdapter(
                     else -> add(DetailItem.LessonsMessage(lessons))
                 }
             }
-            if (hub.resources.isNotEmpty()) {
+            if (hub.resources.isNotEmpty() || hub.resourceScope != null) {
                 add(DetailItem.Section(R.string.subject_resources_title))
                 addAll(hub.resources.map { DetailItem.Resource(it) })
+                hub.resourceScope?.let { scope ->
+                    val data = (hub.links as? SubjectLinksState.Content)?.snapshot
+                    val pinned = data?.let { (it.mine + it.shared).firstOrNull { link -> link.id == it.pinnedId } }
+                    add(DetailItem.CommunityResources(scope, pinned?.let { it.title ?: it.url }, data?.let { it.mine.size + it.shared.size }))
+                }
             }
         }, onCommitted)
     }
@@ -123,6 +132,7 @@ class RecordbookControlAdapter(
         is DetailItem.BindingProposal, is DetailItem.BindingChoice -> 7
         is DetailItem.Teacher -> 8
         is DetailItem.Resource -> 9
+        is DetailItem.CommunityResources -> 10
         is DetailItem.Control -> 3
     }
 
@@ -137,6 +147,7 @@ class RecordbookControlAdapter(
             6 -> LessonsMessageHolder(ItemSubjectMessageBinding.inflate(inflater, parent, false))
             7 -> BindingHolder(ItemSubjectBindingBinding.inflate(inflater, parent, false))
             8 -> TeacherHolder(ItemSubjectTeacherBinding.inflate(inflater, parent, false))
+            10 -> CommunityResourcesHolder(ItemSubjectResourceBinding.inflate(inflater, parent, false))
             9 -> ResourceHolder(ItemSubjectResourceBinding.inflate(inflater, parent, false))
             else -> ControlHolder(ItemRecordbookControlBinding.inflate(inflater, parent, false))
         }
@@ -155,6 +166,7 @@ class RecordbookControlAdapter(
             is DetailItem.BindingProposal -> (holder as BindingHolder).bindProposal(item.candidate)
             is DetailItem.BindingChoice -> (holder as BindingHolder).bindChoice(item.candidates)
             is DetailItem.Teacher -> (holder as TeacherHolder).bind(item.teacher)
+            is DetailItem.CommunityResources -> (holder as CommunityResourcesHolder).bind(item)
             is DetailItem.Resource -> (holder as ResourceHolder).bind(item.resource)
         }
     }
@@ -227,6 +239,16 @@ class RecordbookControlAdapter(
         fun bind(resource: SubjectResource) {
             binding.title.setText(R.string.subject_resource_lms)
             binding.root.setOnClickListener { hubActions.onOpenResource(resource) }
+        }
+    }
+
+    private inner class CommunityResourcesHolder(private val binding: ItemSubjectResourceBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: DetailItem.CommunityResources) {
+            val context = binding.root.context
+            binding.title.text = listOfNotNull(item.selectedTitle?.let { context.getString(R.string.resources_selected_title, it) },
+                if (item.count == null) context.getString(R.string.resources_title) else if (item.count == 0) context.getString(R.string.resources_add)
+                else context.getString(R.string.resources_community_count, item.count)).joinToString("\n")
+            binding.root.setOnClickListener { hubActions.onOpenResources(item.scope) }
         }
     }
 

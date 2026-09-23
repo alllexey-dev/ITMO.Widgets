@@ -3,7 +3,11 @@ package dev.alllexey.itmowidgets.feature.recordbook.presentation
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.feature.resources.presentation.FakeSubjectLinksRepository
+import dev.alllexey.itmowidgets.feature.resources.presentation.linksSnapshot
+import dev.alllexey.itmowidgets.feature.resources.presentation.subjectLink
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
@@ -38,13 +42,24 @@ class RecordbookSubjectViewModelTest {
     @get:Rule val mainDispatcherRule = MainDispatcherRule()
     private val repository = FakeRecordbookRepository()
     private val bars = FakeBarsRepository()
+    private val resources = FakeSubjectLinksRepository()
     private fun model(withBars: Boolean = false) = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
         put("entry_id", 42L); put("program_id", 1L); put("semester", 2); put("study_year", "2025/2026")
         if (withBars) { put("bars_plan", 8L); put("bars_type", "flow"); put("bars_identifier", "7") }
-    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime())
+    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources)
     private val lessons = FakeSubjectLessonsGateway()
     private val scheduleRefresh = FakeScheduleRefreshGateway()
     private val bindingStore = FakeSubjectBindingStore()
+
+    @Test fun `past periods expose private links independently from the schedule binding`() = runTest {
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(mine = listOf(subjectLink("own")), servicesEnabled = false))
+        val vm = model(); advanceUntilIdle()
+        val content = vm.uiState.value as RecordbookSubjectUiState.Content
+        assertNotNull(content.hub.resourceScope)
+        assertEquals("2025-2", content.hub.resourceScope!!.periodKey)
+        assertFalse((content.hub.links as SubjectLinksState.Content).snapshot.servicesEnabled)
+        assertFalse(content.refreshing)
+    }
 
     @Test fun `BARS journal overlays the official subject and supplies its controls`() = runTest {
         val control = RecordbookControl(6, "Работа", 7.5, 0.0, 10.0, true, null, null)
@@ -96,7 +111,7 @@ class RecordbookSubjectViewModelTest {
     @Test fun `the schedule tab is expected for a current period before anything loads`() = runTest {
         val current = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(mapOf(
             "entry_id" to 42L, "program_id" to 1L, "semester" to 3, "study_year" to "2026/2027"
-        )), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime())
+        )), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources)
         assertTrue(current.scheduleTabExpected)
         assertFalse(model().scheduleTabExpected)
     }
@@ -155,7 +170,7 @@ class RecordbookSubjectViewModelTest {
         repository.subjects = AppResult.Success(listOf(subject))
         return RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
             put("entry_id", 42L); put("program_id", 1L); put("semester", 3); put("study_year", "2026/2027")
-        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime())
+        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources)
     }
 
     @Test fun `an exact discipline id shows the upcoming lessons and their teachers without asking`() = runTest {

@@ -86,7 +86,7 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
                             }
                             val handle = SavedStateHandle(values)
                             RecordbookSubjectViewModel(checkNotNull(repository), bars ?: NoBars, handle, resolver,
-                                lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime) as T
+                                lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime, resourceRepository) as T
                         }
                     }
                 }
@@ -129,6 +129,8 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
 
     override fun openRoot(root: AppRoot) = Unit
 
+    override fun openSubjectLinks(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs) = Unit
+
     override fun openLessonDetails(args: LessonDetailsArgs) = Unit
 
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
@@ -163,6 +165,7 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         @Volatile var scheduleRefresh: ScheduleRefreshGateway = object : ScheduleRefreshGateway {
             override suspend fun refreshOwnSchedule(startDate: LocalDate, endDate: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
         }
+        @Volatile var resourceRepository: dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository = dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository()
         @Volatile var bindingStore: SubjectBindingStore = MemoryBindings()
     }
 

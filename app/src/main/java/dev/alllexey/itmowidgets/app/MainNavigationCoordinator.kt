@@ -94,6 +94,9 @@ class MainNavigationCoordinator(
         updateAccessibility()
     }
 
+    // TODO(subject-links Stage 14): show SubjectLinksBottomSheet.
+    override fun openSubjectLinks(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs) = Unit
+
     override fun openLessonDetails(args: LessonDetailsArgs) {
         if (fragments.isStateSaved || fragments.findFragmentByTag(LessonDetailsBottomSheet.TAG) != null) return
         LessonDetailsBottomSheet.newInstance(args).show(fragments, LessonDetailsBottomSheet.TAG)
