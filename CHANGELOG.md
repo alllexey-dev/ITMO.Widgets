@@ -3,6 +3,17 @@
 Reference documents in `docs/` describe the current state; this file records
 what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
 
+## 2.2 — development
+
+### 2026-09-23
+
+- Trimmed app copy: no pull-to-refresh or tap instructions, no settings
+  descriptions and footers that repeat their titles, shorter recordbook source,
+  diagnostics, consent, privacy and auto-sign texts, title-only empty states
+  where the title is enough.
+- One name per thing: `My ITMO` for the university site and
+  `Подключение к ITMO.Widgets` for the server opt-in.
+
 ## 2.1.1 — 2026-09-21
 
 ### 2026-09-21

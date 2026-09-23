@@ -408,8 +408,7 @@ class SettingsViewModel @Inject constructor(
                         checked = local.scheduleWidget.compact.hideTeacher
                     ),
                     textSizeChoice(KEY_COMPACT_WIDGET_TEXT_SIZE, local.scheduleWidget.compact.textSize)
-                ),
-                footer = UiText.Resource(R.string.settings_compact_widget_footer)
+                )
             )
         )
         SettingsPage.FULL_SCHEDULE_WIDGET -> listOf(
@@ -433,8 +432,7 @@ class SettingsViewModel @Inject constructor(
                         checked = local.scheduleWidget.full.showTomorrowWhenTodayIsOver
                     ),
                     textSizeChoice(KEY_FULL_WIDGET_TEXT_SIZE, local.scheduleWidget.full.textSize)
-                ),
-                footer = UiText.Resource(R.string.settings_full_widget_footer)
+                )
             )
         )
         SettingsPage.QR_WIDGET -> listOf(
@@ -497,8 +495,7 @@ class SettingsViewModel @Inject constructor(
                         title = UiText.Resource(titleRes),
                         checked = kind !in local.hiddenHomeCards
                     )
-                },
-                footer = UiText.Resource(R.string.settings_home_footer)
+                }
             )
         )
         SettingsPage.SCHEDULE -> listOf(
@@ -529,8 +526,7 @@ class SettingsViewModel @Inject constructor(
                         title = UiText.Resource(R.string.settings_sport_time_filter_title),
                         checked = !local.sport.hideTimeSelector
                     )
-                ),
-                footer = UiText.Resource(R.string.settings_sport_footer)
+                )
             )
         )
         SettingsPage.MAINTENANCE -> listOf(
@@ -540,7 +536,6 @@ class SettingsViewModel @Inject constructor(
                     SettingItem.Action(
                         key = KEY_REFRESH_WIDGETS,
                         title = UiText.Resource(R.string.settings_refresh_widgets_title),
-                        description = UiText.Resource(R.string.settings_refresh_widgets_description),
                         trailingIconRes = R.drawable.ic_refresh
                     ),
                     SettingItem.Action(
@@ -552,7 +547,6 @@ class SettingsViewModel @Inject constructor(
                     SettingItem.Action(
                         key = KEY_DIAGNOSTICS,
                         title = UiText.Resource(R.string.settings_diagnostics_title),
-                        description = UiText.Resource(R.string.settings_diagnostics_description),
                         value = UiText.Resource(R.string.settings_diagnostics_count, listOf(diagnosticsCount)),
                         trailingIconRes = R.drawable.ic_chevron_right
                     ),

@@ -265,12 +265,13 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         )
     }
 
-    private fun showState(icon: Int, title: String, description: String, retry: Boolean = false) {
+    private fun showState(icon: Int, title: String, description: String?, retry: Boolean = false) {
         binding.recyclerView.isVisible = false
         binding.progress.isVisible = false
         binding.stateContainer.isVisible = true
         binding.stateIcon.setImageResource(icon)
         binding.stateTitle.text = title
+        binding.stateDescription.isVisible = description != null
         binding.stateDescription.text = description
         binding.stateAction.isVisible = retry
     }
@@ -302,7 +303,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
             showState(
                 icon = R.drawable.ic_search,
                 title = getString(R.string.friend_picker_empty_title),
-                description = getString(R.string.friend_picker_empty_description)
+                description = null
             )
         } else {
             binding.stateContainer.isVisible = false

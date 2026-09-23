@@ -2,7 +2,7 @@
 
 The home tab is a feed of cards built from what the application already knows.
 Each card reads like a home-screen widget: one object in focus, secondary
-context, a tap that opens the details. The QR pass and `Мой ИТМО` stay as the
+context, a tap that opens the details. The QR pass and `My ITMO` stay as the
 two FABs at the bottom end; the list reserves space under them.
 
 ## Feed

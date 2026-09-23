@@ -89,7 +89,7 @@ class UserSearchFragment : Fragment() {
             UserSearchUiState.Empty -> showState(
                 icon = R.drawable.ic_person,
                 title = getString(R.string.user_search_empty_title),
-                description = getString(R.string.user_search_empty_description),
+                description = null,
                 action = null
             )
             is UserSearchUiState.Error -> showState(
@@ -109,7 +109,7 @@ class UserSearchFragment : Fragment() {
     private fun showState(
         icon: Int,
         title: String,
-        description: String,
+        description: String?,
         action: String?,
         onAction: () -> Unit = {}
     ) = with(binding) {
@@ -117,6 +117,7 @@ class UserSearchFragment : Fragment() {
         stateContainer.isVisible = true
         stateIcon.setImageResource(icon)
         stateTitle.text = title
+        stateDescription.isVisible = description != null
         stateDescription.text = description
         stateAction.isVisible = action != null
         stateAction.text = action

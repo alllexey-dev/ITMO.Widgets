@@ -167,7 +167,7 @@ class LessonDetailsVisualTest {
                 assertEquals("Современные танцы", root.text(R.id.section_name))
                 assertEquals(activity.getString(R.string.schedule_auto_sign_prediction), root.text(R.id.kind))
                 assertEquals(activity.getString(R.string.sport_prediction_waiting), root.text(R.id.condition_title))
-                assertEquals(activity.getString(R.string.sport_prediction_hint), root.text(R.id.condition_note))
+                assertEquals(activity.getString(R.string.sport_prediction_hint), root.text(R.id.condition_body))
                 assertEquals("16:00–17:30", root.text(R.id.time))
                 assertEquals("Кронверкский проспект, 49, зал 1", root.fact(R.id.location_fact))
                 assertEquals(View.VISIBLE, root.findViewById<View>(R.id.map_button).visibility)

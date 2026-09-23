@@ -56,30 +56,14 @@
                         android:src="@drawable/ic_notification"
                         app:tint="?attr/colorOnSurfaceVariant" />
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/notifications_status"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/notifications_status"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textColor="?attr/colorOnSurface"
-                            tools:text="@string/onboarding_notifications_off" />
-
-                        <TextView
-                            android:id="@+id/notifications_status_description"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/design_spacing_related"
-                            android:textAppearance="?attr/textAppearanceBodyMedium"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            tools:text="@string/onboarding_notifications_off_description" />
-
-                    </LinearLayout>
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorOnSurface"
+                        tools:text="@string/onboarding_notifications_off" />
 
                 </LinearLayout>
 

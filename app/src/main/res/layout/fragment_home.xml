@@ -41,10 +41,6 @@
                     style="@style/Widget.ItmoWidgets.ContentState.Title"
                     android:text="@string/home_empty_title" />
 
-                <TextView
-                    style="@style/Widget.ItmoWidgets.ContentState.Description"
-                    android:text="@string/home_empty_description" />
-
             </LinearLayout>
 
         </FrameLayout>

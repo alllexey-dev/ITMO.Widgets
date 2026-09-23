@@ -128,9 +128,7 @@ class FriendsFragment : Fragment() {
             showState(
                 icon = if (friends) R.drawable.ic_group else R.drawable.ic_how_to_reg,
                 title = getString(if (friends) R.string.friends_empty_title else R.string.friends_requests_empty_title),
-                description = getString(
-                    if (friends) R.string.friends_empty_description else R.string.friends_requests_empty_description
-                ),
+                description = getString(R.string.friends_empty_description).takeIf { friends },
                 action = getString(R.string.friends_find_people).takeIf { friends }
             ) { openScreen(AppScreen.USER_SEARCH) }
         } else {
@@ -142,7 +140,7 @@ class FriendsFragment : Fragment() {
     private fun showState(
         icon: Int,
         title: String,
-        description: String,
+        description: String?,
         action: String?,
         onAction: () -> Unit
     ) = with(binding) {
@@ -150,6 +148,7 @@ class FriendsFragment : Fragment() {
         stateContainer.isVisible = true
         stateIcon.setImageResource(icon)
         stateTitle.text = title
+        stateDescription.isVisible = description != null
         stateDescription.text = description
         stateAction.isVisible = action != null
         stateAction.text = action

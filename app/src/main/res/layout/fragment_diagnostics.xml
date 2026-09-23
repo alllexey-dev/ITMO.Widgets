@@ -118,10 +118,6 @@
                 style="@style/Widget.ItmoWidgets.ContentState.Title"
                 android:text="@string/diagnostics_empty_title" />
 
-            <TextView
-                style="@style/Widget.ItmoWidgets.ContentState.Description"
-                android:text="@string/diagnostics_empty_description" />
-
         </LinearLayout>
 
     </FrameLayout>

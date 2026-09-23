@@ -76,7 +76,7 @@ through `core/navigation/WidgetProviders`: the flow is its own feature and must
 not import `feature/schedule` or `feature/qr`; `WidgetProvidersTest` fails if a
 provider is renamed.
 
-**Services.** One switch row, `Подключить сервисы`, in the same card as any
+**Services.** One switch row, `Подключиться`, in the same card as any
 settings toggle; while the opt-in runs a spinner takes the switch's slot so the
 row never changes height. Below it the privacy default line, `Что даёт` with
 three capability rows, and `Что хранит сервер` with one line per stored field

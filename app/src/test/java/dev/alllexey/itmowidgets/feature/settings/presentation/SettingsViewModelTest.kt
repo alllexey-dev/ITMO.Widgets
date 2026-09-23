@@ -697,7 +697,7 @@ class SettingsViewModelTest {
 
             val section = fixture.viewModel.sections.value.single()
             assertEquals(UiText.Resource(R.string.settings_group_home), fixture.viewModel.page.title)
-            assertEquals(UiText.Resource(R.string.settings_home_footer), section.footer)
+            assertEquals(null, section.footer)
             assertEquals(
                 listOf(
                     SettingsViewModel.KEY_HOME_CARD_SCHEDULE, SettingsViewModel.KEY_HOME_CARD_SPORT,

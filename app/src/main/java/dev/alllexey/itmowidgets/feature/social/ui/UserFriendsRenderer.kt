@@ -53,7 +53,7 @@ class UserFriendsRenderer(
                 if (revision != generation) return@submitList
                 if (state.items.isEmpty()) {
                     showState(R.drawable.ic_group, R.string.user_friends_empty_title,
-                        R.string.user_friends_empty_description, R.string.user_friends_refresh, onRetry)
+                        null, R.string.user_friends_refresh, onRetry)
                 } else {
                     stateContainer.isVisible = false
                     swipeRefreshLayout.isVisible = true
@@ -62,12 +62,13 @@ class UserFriendsRenderer(
         }
     }
 
-    private fun showState(icon: Int, title: Int, description: Int, action: Int?, click: () -> Unit) = with(binding) {
+    private fun showState(icon: Int, title: Int, description: Int?, action: Int?, click: () -> Unit) = with(binding) {
         swipeRefreshLayout.isVisible = false
         stateContainer.isVisible = true
         stateIcon.setImageResource(icon)
         stateTitle.setText(title)
-        stateDescription.setText(description)
+        stateDescription.isVisible = description != null
+        description?.let(stateDescription::setText)
         stateAction.isVisible = action != null
         action?.let(stateAction::setText)
         stateAction.setOnClickListener { click() }

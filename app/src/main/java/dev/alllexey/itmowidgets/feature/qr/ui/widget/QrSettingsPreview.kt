@@ -127,7 +127,7 @@ class QrSettingsPreview(
             revealed -> R.string.widget_preview_qr_open_hint
             else -> R.string.widget_preview_qr_hint
         }
-        binding.qrPreviewHint.setText(text)
+        binding.qrPreviewHint.setText(R.string.widget_preview_qr_plain_hint)
         image.contentDescription = context.getString(text)
     }
 

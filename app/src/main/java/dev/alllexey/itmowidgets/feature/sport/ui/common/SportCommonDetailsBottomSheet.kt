@@ -199,7 +199,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
                     prerequisites, R.drawable.ic_schedule_rounded)
                 availability.restrictions.any { it.kind == SportBookingObstacle.STARTED } ->
                     conditionCard(ConditionTone.BLOCKED, R.string.sport_rule_started,
-                        getString(R.string.sport_rule_started_hint), icon = R.drawable.ic_error_rounded)
+                        icon = R.drawable.ic_error_rounded)
                 availability.restrictions.isNotEmpty() -> {
                     val unknown = availability.restrictions.all { it.kind == SportBookingObstacle.UNKNOWN }
                     val reasons = availability.restrictions.map { restriction ->
@@ -207,7 +207,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
                     }.distinct().joinToString("\n")
                     conditionCard(if (unknown) ConditionTone.WARNING else ConditionTone.BLOCKED,
                         if (unknown) R.string.sport_booking_uncertain else R.string.sport_booking_no_bypass,
-                        if (unknown) getString(R.string.sport_booking_uncertain_hint) else reasons,
+                        reasons.takeUnless { unknown },
                         if (unknown) null else getString(R.string.sport_booking_no_bypass_hint),
                         R.drawable.ic_error_rounded)
                 }

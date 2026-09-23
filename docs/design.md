@@ -75,6 +75,12 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
   in the details; an important status is never shortened into ambiguity.
 - User-visible strings live in resources and are Russian. Remote names are
   trimmed at the mapper.
+- Copy is short and says what the user needs, not how the app works: no
+  instructions for standard gestures (pull to refresh, tap), no descriptions or
+  footers that repeat the title, no internals (matching rules, token handling,
+  sync mechanics) outside the consent and privacy screens.
+- Fixed names: the university site is `My ITMO`; the project server opt-in is
+  `Подключение к ITMO.Widgets` (not "сервисы").
 - Grade codes are contiguous: `2FX`, `3E`, `3D`. Short status plus number pairs
   do not wrap into ambiguous lines. One number is not repeated in neighbouring views.
 
@@ -130,7 +136,8 @@ description and optional action. `Widget.ItmoWidgets.ContentState.*` styles hold
 the geometry.
 
 - Loading, content, empty and error occupy the same bounded area.
-- Empty explains why there is nothing and what to do. An error is never shown as
+- Empty has a title; a description only when the reason or the next step is
+  not obvious from it. An error is never shown as
   "nothing found"; an unknown value is never shown as zero.
 - Retry is a tonal action; a primary action leading out of an empty screen may be
   filled; a text button is fine in a compact secondary message.

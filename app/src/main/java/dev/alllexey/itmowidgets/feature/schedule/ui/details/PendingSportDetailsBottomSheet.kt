@@ -104,18 +104,13 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
         row.conditionTitle.setText(if (booking.isPrediction) R.string.sport_prediction_waiting else R.string.sport_registration_waiting)
         row.conditionTitle.setTextColor(tone.accent(requireContext()))
         row.conditionBody.text = getString(
-            if (booking.isPrediction) R.string.schedule_auto_sign_prediction_description
-            else R.string.schedule_auto_sign_waiting_description
-        )
-        row.conditionBody.setTextColor(requireContext().color.onSurface)
-        row.conditionNote.text = getString(
             when {
                 booking.isPrediction -> R.string.sport_prediction_hint
                 booking.autoSign -> R.string.sport_queue_future_hint
                 else -> R.string.sport_queue_free_hint
             }
         )
-        row.conditionNote.isVisible = true
+        row.conditionBody.setTextColor(requireContext().color.onSurface)
         row.conditionIcon.setImageResource(R.drawable.ic_schedule_rounded)
         row.conditionIcon.imageTintList = ColorStateList.valueOf(tone.accent(requireContext()))
         alignRailIcon(row.conditionIcon, row.conditionTitle)

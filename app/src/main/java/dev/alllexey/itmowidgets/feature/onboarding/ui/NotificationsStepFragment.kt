@@ -65,10 +65,6 @@ class NotificationsStepFragment : Fragment() {
                 if (granted) android.R.attr.colorPrimary else com.google.android.material.R.attr.colorOnSurface
             )
         )
-        binding.notificationsStatusDescription.setText(
-            if (granted) R.string.onboarding_notifications_on_description
-            else R.string.onboarding_notifications_off_description
-        )
         // Android will not show the dialog a second time; older Android has no dialog at all.
         val canAsk = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !state.notificationsAsked
         binding.notificationsButton.setText(
