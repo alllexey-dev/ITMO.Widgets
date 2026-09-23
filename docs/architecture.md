@@ -29,15 +29,17 @@ core/           cross-cutting; knows nothing about features
   debug/        BuildConfig.DEBUG fixtures (provider / controller / store)
   diagnostics/  AppDiagnostics journal, sanitizer, crash handler
   location/     BuildingDirectory (res/raw/itmo_buildings.json), MapDestination geo URIs
-  ui/           LessonTypes and LocationTitles shared by schedule and recordbook rows
+  ui/           LessonTypes and LocationTitles shared by schedule and recordbook rows;
+                LinkOpener and SubjectLinkTexts shared by the recordbook and the link sheets
   friend/       FriendRepository — the schedule picker's narrow view of friends
   home/         HomeCard model and the HomeCardSource contract every feature contributes to
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
   navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders,
-                LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs)
+                LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs)
   onboarding/   OnboardingRepository — whether the first-run flow was passed
   network/      WidgetsClient, error mapping, serialization adapters
   notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
+  resources/    SubjectLinksRepository, link models, ResourceScope, subjectLinkChips
   result/       AppError, AppResult
   schedule/     schedule preferences, widget-refresh and SubjectLessonsGateway contracts
   services/     CustomServicesRepository — the Backend opt-in
@@ -57,8 +59,8 @@ feature/<name>/ ui | presentation | domain | data
 ```
 
 Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
-`recordbook`, `schedule`, `settings`, `social`, `sport`, `update`, `widget`. A
-feature does not need all four layers.
+`recordbook`, `resources`, `schedule`, `settings`, `social`, `sport`, `update`,
+`widget`. A feature does not need all four layers.
 
 Placement rules:
 
@@ -100,7 +102,10 @@ repository flow with an explicit in-flight flag (`FriendSelectorViewModel`).
 Exceptions become `AppError` at the `data` boundary via `Throwable.toAppError()`;
 the UI renders `AppError.messageRes()`. `presentation` never references
 `Throwable` or `.message`. *Enforced.* `AppError.CustomServicesDisabled` makes a
-refusal caused by the opt-in read as an instruction, not a generic error.
+refusal caused by the opt-in read as an instruction, not a generic error;
+`AppError.Restricted` is a Backend `restricted` answer (a moderation
+restriction). A Backend error body is decoded once (`backendErrorCode`); server
+messages are never shown as UI text.
 
 ### Threading
 
@@ -116,6 +121,7 @@ thread until it suspends.
 | Settings, flags, one-off values | DataStore (`AppSettingsStorage`, `UtilityStorage`) |
 | ITMO.ID tokens, BARS session | Encrypted files via Android Keystore |
 | Schedule and QR caches | Files under `cacheDir`, observed through flows |
+| Device-only subject links and the last links answer per subject period | `filesDir/subject_links/cache.json`, atomic writes, excluded from backup and device transfer |
 
 `SharedPreferences` is banned. *Enforced.* Anything caching user-scoped data
 implements `SessionDataCleaner`; sign-out and account change invoke every
@@ -164,8 +170,10 @@ that slides above the unchanged root and bottom bar.
 Features open contextual screens through `core/ui/navigation.AppNavigator`,
 implemented by `MainActivity` and `MainNavigationCoordinator`. The same port
 shows the lesson and pending-sport sheets (`openLessonDetails`,
-`openPendingSportDetails`) on the Activity's FragmentManager, so a screen in
-another feature can open them without importing `feature/schedule`. Selecting or
+`openPendingSportDetails`) and the subject link sheets (`openSubjectLinks`,
+`openLinkEditor`, `openLinkActions`) on the Activity's FragmentManager, so a
+screen in another feature can open them without importing `feature/schedule`
+or `feature/resources`. Selecting or
 reselecting a root tab discards the whole overlay stack; Back pops one overlay
 level; rotation restores the current level. Widget and notification intents are
 parsed by `MainActivityIntentRouting`, queued until the session is signed in,

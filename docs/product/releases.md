@@ -23,10 +23,10 @@
 Achievements, messaging, posts, followers and free-window discovery are outside
 the roadmap. Do not add them opportunistically.
 
-The Android branch `itmo-widgets-v2.1` is the public-release branch. The app
-builds as `2.1` (version code 4). A release APK is signed with `app-keystore.jks`
-(alias `key0`, the same certificate as 2.0.1) through the ignored
-`keystore.properties`; the checklist is in `vibe/release-2.1.md`.
+Development happens on `master`, which builds as `2.2-SNAPSHOT` (version code
+5); the latest release is `2.1.1`. A release APK is signed with
+`app-keystore.jks` (alias `key0`, the same certificate as 2.0.1) through the
+ignored `keystore.properties`; the checklist is in `vibe/release-2.1.md`.
 
 ## Version compatibility
 
@@ -35,6 +35,7 @@ the minimum Core and Backend it needs.
 
 | Android | Core | Backend | MyItmoApi | Notes |
 |---|---|---|---|---|
+| 2.2-SNAPSHOT (development) | 1.7.0-SNAPSHOT (Maven Local) | 1.7.0-SNAPSHOT, PostgreSQL V4 (`V4__subject_links.sql`) | 1.8.1 | Subject links need the V4 schema and the links API; debug builds only, not released. |
 | 2.1.1 | 1.2.0 | 1.2.1 (`770293b`, current groups in every profile response) | 1.8.1 | Client-only release; works against Backend 1.2.0 as well, then lesson friends may show an older group. |
 | 2.1 | 1.2.0 (Maven Central, tag `1.2.0`) | 1.2.0, commit `a70cab1` or later | 1.8.1 (Maven Central, tag `1.8.1`) | Backend 1.2.0 requires the PostgreSQL cutover; 2.0.x clients are rejected by it and are told to update through `GET /api/app/version`. |
 | 2.0.x (legacy) | 1.1.x | 1.1.6 | 1.6.0 | MariaDB backend, reciprocal friend requests, boolean privacy. |

@@ -38,8 +38,10 @@ Future v2.2 categories appear only when their functionality is delivered.
 
 ## Account and services
 
-- `Пользовательские сервисы` enables Backend-dependent features. It is disabled
-  by default and requires explicit consent.
+- `Подключение к ITMO.Widgets` enables Backend-dependent features. It is disabled
+  by default and requires explicit consent. Without it subject links stay
+  private on the device; turning it on uploads them as private links on the
+  next refresh of a subject (see [resources](features/resources.md)).
 - `Уведомления` shows the current Android notification-permission state and opens
   the system application settings when permission is missing.
 - `Выйти` remains an account action in the profile and requires confirmation.

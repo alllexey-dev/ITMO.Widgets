@@ -57,7 +57,7 @@ The grid is 4 dp. Compactness never shrinks the touch target.
 |---|---|---|
 | `Card.Content` | 20 dp radius, no stroke | Subject, control, user rows |
 | `Card.Content.Outlined` | 20 dp radius, 1 dp `colorOutlineVariant` | Sport lesson and booking cards, debug cards |
-| `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius | Recordbook summary and overview |
+| `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius | Recordbook summary; subject result and PE sport card |
 | `Card.SettingsGroup` | 20 dp radius, no stroke, inner dividers | One card per settings or profile group, never per row |
 | `Card.ScheduleDay` | 16 dp radius, 16 dp between days | A day of lessons with its timeline |
 
@@ -247,10 +247,17 @@ and look at the PNGs; the default run only proves the layout holds in light.
 - Sport cards: `res/layout/item_sport_lesson.xml`, `res/layout/item_sport_booking.xml`,
   details sheet `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt`.
 - Settings and profile groups: `res/values/styles.xml`, `feature/settings/ui/SettingsRenderer.kt`.
-- Recordbook card: `res/layout/item_recordbook_subject.xml`.
+- Recordbook row: `res/layout/item_recordbook_subject.xml` (name, metadata, a number
+  with a thin bar or a grade badge), `feature/recordbook/ui/RecordbookAdapter.kt`.
+- Subject page: `feature/recordbook/ui/SubjectHubAdapter.kt` (result card with
+  `GradeScaleView`, link chips, chats, control groups, teachers, lessons),
+  `res/layout/item_subject_hero.xml`, `res/layout/item_recordbook_control_group.xml`.
+- Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt`,
+  `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`, `res/layout/item_subject_link.xml`.
 - User row and public profile: `res/layout/item_user_row.xml`, `res/layout/fragment_user_profile.xml`.
 - Friend picker: `res/layout/dialog_friend_selector.xml`.
 - Home feed: `res/layout/fragment_home.xml`, `res/layout/item_home_*.xml`,
   `feature/home/ui/HomeFeedAdapter.kt`, `feature/home/HomeFeedVisualTest.kt`.
 - Visual tests: `feature/sport/cards/SportCardsVisualTest.kt`,
-  `feature/recordbook/RecordbookVisualTest.kt`, `feature/friendselector/SelectionRowsTest.kt`.
+  `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
+  `feature/friendselector/SelectionRowsTest.kt`.

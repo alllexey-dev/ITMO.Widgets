@@ -9,8 +9,8 @@ in a sibling repository adds repository-specific rules and never contradicts thi
 
 | Component | Local path | Remote | Owns |
 |---|---|---|---|
-| Android app | `/Users/alllexey/proj/ITMO.Widgets.copy` | `alllexey-dev/ITMO.Widgets` | UI, local caches, widgets, debug fixtures, this guide |
-| Legacy app | `/Users/alllexey/proj/ITMO.Widgets` | same remote, old branch | Read-only reference for v2.0.1 parity. Never edit it |
+| Android app | `/Users/alllexey/proj/ITMO.Widgets` | `alllexey-dev/ITMO.Widgets` | UI, local caches, widgets, debug fixtures, this guide |
+| Legacy app | tag `v2.0.1` in the same repository | same remote | Read-only reference for v2.0.1 parity (`git show v2.0.1:<path>`); no separate checkout |
 | Core | `/Users/alllexey/proj/itmo-widgets-core` | `alllexey-dev/itmo-widgets-core` | Typed Retrofit contract and client for Backend |
 | Backend | `/Users/alllexey/proj/itmo-widgets-backend` | `alllexey123/itmo-widgets-backend` | Users, friendships, privacy, sport queues, FCM delivery |
 | MyItmoApi | `/Users/alllexey/proj/MyItmoApi` | `alllexey123/MyItmoApi` | Typed Java client for official MyITMO and BARS |

@@ -26,7 +26,9 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
   pending sport rows.
 - [Sport](features/sport.md) — catalog, bookings, queues, cards and details.
 - [Recordbook](features/recordbook.md) — MyITMO recordbook, BARS overlay,
-  physical-education link.
+  physical-education link, the one-page subject screen.
+- [Subject links](features/resources.md) — link categories and audiences,
+  chips, sheets, the local mode without the connection.
 - [Social](features/social.md) — friends, requests, people search, public profiles.
 - [Notifications](features/notifications.md) — FCM receiver, token sync, handlers.
 - [Widgets](features/widgets.md) — schedule and QR widgets and their previews.
@@ -44,6 +46,7 @@ editing an old one when a decision changes.
 - [0005 Explicit friendships, crossed request accepts](decisions/0005-friendships.md)
 - [0006 People search via MyITMO plus lookup](decisions/0006-people-search.md)
 - [0007 Push delivery guard by recipient ISU](decisions/0007-push-guard.md)
+- [0008 Subject links: schedule-flow audiences, premoderation only for everybody](decisions/0008-community-moderation.md)
 
 ## Sibling repositories
 

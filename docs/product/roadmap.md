@@ -24,7 +24,26 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   study root already had its target shape, and on live data
   `discipline_id == subject_id` for every discipline except PE, so the exact id
   is the primary binding and name confirmation is the fallback. Lesson rows in
-  the hub are informational; resources are only the MyITMO `lms_link`.
+  the hub are informational. The hub became a one-page subject screen in the
+  Stages 19–24 delivery below.
+- Stages 19–24: implemented on 2026-09-23 through
+  `vibe/subject-links-redesign-plan.md` (Backend and Core 1.7.0-SNAPSHOT,
+  Android 2.2-SNAPSHOT), with these corrections to the stage texts:
+  resources are subject links with a category and a visibility
+  (`Только я`, `Группа`, `Поток`, `Все`) instead of selections and
+  confirmations; audiences are MyITMO schedule `flow_id`s behind the Backend
+  `FlowMembership` interface fed by uploaded schedules; only links for everybody
+  are premoderated; votes are +1/−1; any HTTPS host is accepted; chats are
+  links with category `CHAT`. There is no `My links` screen and no home card for
+  moderation results; the owner sees the review state on the link itself.
+  Without the ITMO.Widgets connection links stay private on the device and are
+  uploaded on connect. The same delivery redesigned the recordbook: compact
+  rows, `Требуют внимания` (including PE short of sport points near the end of
+  its period), the summary only in the session, and the subject on one page with
+  the grade scale, link chips, chats, control groups, teachers and the two
+  nearest lessons. The Backend schema is one migration,
+  `V4__subject_links.sql`. Strict flow verification (ISU or zkTLS) is
+  deferred, see decision 0008. Not released to production.
 - Stage 43 (feed part) and Stage 44 (feed tests): delivered early on 2026-09-20
   through `vibe/home-feed-plan.md` with the cards available in v2.1: schedule,
   QR pass, sport, friend requests, three dismissible hints, and a
@@ -862,7 +881,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 * `app/src/main/java/dev/alllexey/itmowidgets/app/MainActivityIntentRouting.kt` - route to the recordbook subject with the chip on.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/settings/presentation/SettingsViewModel.kt` - the tracking toggle.
 * `app/src/main/java/dev/alllexey/itmowidgets/di/RecordbookModule.kt` - bindings and the worker entry point.
-* `docs/decisions/0008-bars-background-renewal.md` - cookie replay through OkHttp is the only background renewal path.
+* `docs/decisions/0009-bars-background-renewal.md` - cookie replay through OkHttp is the only background renewal path.
 * `docs/features/recordbook.md`, `docs/features/notifications.md`, `docs/settings.md` - current-state documentation of tracking, the channel, and the toggle.
 
 **Framework/Library Documentation:**

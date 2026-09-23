@@ -1,7 +1,8 @@
 # Changelog
 
 Reference documents in `docs/` describe the current state; this file records
-what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
+what changed and when. Unreleased entries describe local development, not a
+publication or deployment.
 
 ## 2.2 — development
 
@@ -13,6 +14,28 @@ what changed and when. Dates are commit dates on `itmo-widgets-v2.1`.
   where the title is enough.
 - One name per thing: `My ITMO` for the university site and
   `Подключение к ITMO.Widgets` for the server opt-in.
+- Builds as `2.2-SNAPSHOT` on Core `1.7.0-SNAPSHOT`; Backend `1.7.0-SNAPSHOT`
+  with the `V4__subject_links.sql` schema is required for links.
+- Recordbook rows are compact: the points with a thin bar, or a grade badge once
+  the result is final, instead of rings. `Требуют внимания` lists no-shows,
+  subjects with a known control under its minimum (from MyITMO or BARS controls
+  already loaded), failed subjects and PE short of 100 sport points in the last
+  28 days of its period or after it. The summary appears only in the session;
+  the source info button is gone.
+- The subject is one page without tabs: the name in the toolbar, the ITMO grade
+  scale (5A/4B/4C/3D/3E, a plain credit at 60) with a hint to the next grade,
+  link chips, chats, controls grouped by tree or by numbered names with the sum
+  of known scores, teachers, and the two nearest lessons with `Все пары`.
+  A control shows its minimum only when it is not met.
+- Subject links: a category and a visibility (`Только я`, `Группа`, `Поток`,
+  `Все`), chips on the subject page, a sheet with every link, chats and links
+  from past years, an editor that pastes the copied link and guesses its
+  category, an actions sheet (open, add to own, pin, edit, delete, report) and
+  +1/−1 votes. Without the connection links stay private on the device and are
+  uploaded on the next refresh with it.
+- Shared `LinkOpener` and link texts in `core/ui`; the BARS repository keeps
+  the controls it has read; the current sport period carries its end date.
+- Instrumentation screenshots are exported before the test APK is uninstalled.
 
 ## 2.1.1 — 2026-09-21
 
