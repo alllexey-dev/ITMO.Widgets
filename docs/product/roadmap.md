@@ -631,7 +631,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 **Files to edit/create:**
 
-* `../itmo-widgets-backend/src/main/resources/db/migration/V6__teacher_reviews.sql` - teacher and review tables.
+* `../itmo-widgets-backend/src/main/resources/db/migration/V8__teacher_reviews.sql` - teacher and review tables.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/model/TeacherEntity.kt` - canonical teacher.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/model/TeacherReviewEntity.kt` - review identity and lifecycle.
 * `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/model/TeacherReviewRevisionEntity.kt` - immutable revision data.
