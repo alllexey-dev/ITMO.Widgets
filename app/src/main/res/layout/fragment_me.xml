@@ -297,6 +297,45 @@
                 android:orientation="vertical">
 
                 <LinearLayout
+                    android:id="@+id/web_login_row"
+                    style="@style/Widget.ItmoWidgets.CompactSettingsRow"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_computer"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+
+                    <TextView
+                        style="@style/Widget.ItmoWidgets.SettingsRowText"
+                        android:text="@string/me_web_login_title"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/web_login_divider"
+                    style="@style/Widget.ItmoWidgets.CompactSettingsDivider"
+                    android:layout_marginStart="56dp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <LinearLayout
                     android:id="@+id/settings_row"
                     style="@style/Widget.ItmoWidgets.CompactSettingsRow"
                     android:background="?attr/selectableItemBackground"

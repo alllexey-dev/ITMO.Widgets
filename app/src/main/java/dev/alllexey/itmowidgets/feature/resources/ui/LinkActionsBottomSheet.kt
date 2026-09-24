@@ -25,6 +25,7 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewM
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import dev.alllexey.itmowidgets.core.ui.openLink
+import dev.alllexey.itmowidgets.core.ui.expandToContent
 
 /**
  * What can be done with one link. Own: open, pin, edit, delete, with the review state and the reason

@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openWebLogin
 import dev.alllexey.itmowidgets.databinding.FragmentMeBinding
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
@@ -57,6 +58,7 @@ class MeFragment : Fragment() {
             binding.findPeopleRow,
             binding.privacyRow,
             binding.servicesDisabledRow,
+            binding.webLoginRow,
             binding.settingsRow,
             binding.debugToolsRow
         ).forEach { ViewCompat.setScreenReaderFocusable(it, true) }
@@ -67,6 +69,7 @@ class MeFragment : Fragment() {
             openScreen(AppScreen.SETTINGS, bundleOf(SETTINGS_PAGE_ARGUMENT to SETTINGS_PAGE_PRIVACY))
         }
         binding.servicesDisabledRow.setOnClickListener { openScreen(AppScreen.SETTINGS) }
+        binding.webLoginRow.setOnClickListener { openWebLogin() }
         binding.settingsRow.setOnClickListener { openScreen(AppScreen.SETTINGS) }
         binding.debugToolsRow.setOnClickListener { openScreen(AppScreen.DEBUG_TOOLS) }
         binding.signOutRow.setOnClickListener { showSignOutConfirmation() }

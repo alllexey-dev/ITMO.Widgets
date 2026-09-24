@@ -102,6 +102,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.firebase.messaging)
+    implementation(libs.play.services.code.scanner)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

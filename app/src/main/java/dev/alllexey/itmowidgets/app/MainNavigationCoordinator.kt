@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomS
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
+import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginBottomSheet
 
 class MainNavigationCoordinator(
     private val binding: ActivityMainBinding,
@@ -111,6 +112,11 @@ class MainNavigationCoordinator(
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) {
         if (fragments.isStateSaved || fragments.findFragmentByTag(LinkActionsBottomSheet.TAG) != null) return
         LinkActionsBottomSheet.newInstance(args, linkId).show(fragments, LinkActionsBottomSheet.TAG)
+    }
+
+    override fun openWebLogin() {
+        if (fragments.isStateSaved || fragments.findFragmentByTag(WebLoginBottomSheet.TAG) != null) return
+        WebLoginBottomSheet().show(fragments, WebLoginBottomSheet.TAG)
     }
 
     override fun openLessonDetails(args: LessonDetailsArgs) {

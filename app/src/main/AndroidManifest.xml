@@ -16,6 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- Play installs the QR scanner module with the app instead of on the first scan. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode_ui" />
+
         <service
             android:name=".core.notification.MyFirebaseMessagingService"
             android:exported="false">

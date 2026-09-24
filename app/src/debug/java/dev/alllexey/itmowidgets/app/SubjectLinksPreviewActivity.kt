@@ -74,6 +74,8 @@ class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator {
 
     override fun openScreen(screen: AppScreen, arguments: Bundle?) = Unit
 
+    override fun openWebLogin() = Unit
+
     override fun openRoot(root: AppRoot) = Unit
 
     override fun dismissOverlays() = Unit

@@ -801,4 +801,34 @@
     <string name="subject_scores_title">Баллы</string>
     <string name="subject_lessons_all">Все пары · %1$d</string>
     <string name="subject_link_lms">LMS</string>
+    <string name="me_web_login_title">Вход на сайт</string>
+    <string name="web_login_title">Вход на сайт</string>
+    <string name="web_login_scan">Сканировать QR</string>
+    <string name="web_login_code_hint">Код с сайта</string>
+    <string name="web_login_continue">Продолжить</string>
+    <string name="web_login_code_invalid">Нужен код из 8 символов</string>
+    <string name="web_login_qr_unknown">Это не QR для входа на сайт</string>
+    <string name="web_login_scanner_unavailable">Сканер недоступен, введите код</string>
+    <string name="web_login_not_found">Код не найден или устарел</string>
+    <string name="web_login_services_disabled">Нужно подключение к ITMO.Widgets</string>
+    <string name="web_login_requested_at">Запрошен в %1$s</string>
+    <string name="web_login_own_only">Подтверждайте только свой вход</string>
+    <string name="web_login_approve">Войти</string>
+    <string name="web_login_done">Готово — вернитесь в браузер</string>
+    <string name="web_login_browser_unknown">Браузер</string>
+    <string name="web_login_browser_on_platform">%1$s на %2$s</string>
+    <string name="web_login_browser_yandex">Яндекс Браузер</string>
+    <string name="web_login_browser_edge" translatable="false">Edge</string>
+    <string name="web_login_browser_opera" translatable="false">Opera</string>
+    <string name="web_login_browser_samsung" translatable="false">Samsung Internet</string>
+    <string name="web_login_browser_firefox" translatable="false">Firefox</string>
+    <string name="web_login_browser_chrome" translatable="false">Chrome</string>
+    <string name="web_login_browser_safari" translatable="false">Safari</string>
+    <string name="web_login_platform_windows" translatable="false">Windows</string>
+    <string name="web_login_platform_macos" translatable="false">macOS</string>
+    <string name="web_login_platform_linux" translatable="false">Linux</string>
+    <string name="web_login_platform_chrome_os" translatable="false">ChromeOS</string>
+    <string name="web_login_platform_android" translatable="false">Android</string>
+    <string name="web_login_platform_ios" translatable="false">iOS</string>
+    <string name="web_login_platform_ipados" translatable="false">iPadOS</string>
 </resources>

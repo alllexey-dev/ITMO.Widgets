@@ -36,6 +36,9 @@ interface AppNavigator {
     fun openLinkEditor(args: SubjectLinksArgs, linkId: String? = null)
 
     fun openLinkActions(args: SubjectLinksArgs, linkId: String)
+
+    /** Approves a browser's sign-in to the web version. */
+    fun openWebLogin()
 }
 
 interface ScreenTransitionHost {
@@ -82,4 +85,8 @@ fun Fragment.openLinkEditor(args: SubjectLinksArgs, linkId: String? = null) {
 
 fun Fragment.openLinkActions(args: SubjectLinksArgs, linkId: String) {
     (requireActivity() as AppNavigator).openLinkActions(args, linkId)
+}
+
+fun Fragment.openWebLogin() {
+    (requireActivity() as AppNavigator).openWebLogin()
 }

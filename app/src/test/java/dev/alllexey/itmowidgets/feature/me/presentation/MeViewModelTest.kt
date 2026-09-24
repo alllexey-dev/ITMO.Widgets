@@ -86,6 +86,19 @@ class MeViewModelTest {
     }
 
     @Test
+    fun `web sign-in is offered only with the connection`() = runTest(mainDispatcherRule.dispatcher) {
+        val services = FakeServices(false)
+        val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), FakeSocialRepository(), services)
+        advanceUntilIdle()
+        assertEquals(false, viewModel.uiState.value.webLoginAvailable)
+
+        services.enabled.value = true
+        advanceUntilIdle()
+
+        assertEquals(true, viewModel.uiState.value.webLoginAvailable)
+    }
+
+    @Test
     fun `delegates sign out once`() = runTest(mainDispatcherRule.dispatcher) {
         val repository = FakeSessionRepository(SessionState.SignedIn(null))
         val viewModel = MeViewModel(repository, FakeSocialRepository(), FakeServices(true))

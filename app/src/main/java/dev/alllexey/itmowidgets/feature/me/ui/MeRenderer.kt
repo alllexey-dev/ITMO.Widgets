@@ -53,6 +53,9 @@ object MeRenderer {
         binding.requestsBadge.contentDescription =
             context.getString(R.string.me_requests_badge_accessibility, incoming)
 
+        binding.webLoginRow.isVisible = state.webLoginAvailable
+        binding.webLoginDivider.isVisible = state.webLoginAvailable
+
         binding.signOutRow.isEnabled = !state.signOutInProgress
     }
 }

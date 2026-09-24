@@ -99,6 +99,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     val entered = mutableListOf<Pair<SettingsPage, Boolean>>()
     val offlineLoadingFrames = mutableListOf<SettingsPage>()
     val groupedProfileFrames = mutableListOf<Boolean>()
+    val webLoginOpened = mutableListOf<Unit>()
     private val repository = FixtureRepository()
     private val refresh = object : WidgetRefreshRequester { override fun refreshAll() = Unit }
     private val onboardingServices = FixtureOnboardingServices()
@@ -128,6 +129,8 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         @Volatile var qrDelayMs = 0L
         @Volatile var homeFixture = HomeFixture()
         /** Social fixtures for the profile tab, public profiles and the friend picker. */
+        /** The opt-in as the profile tab sees it; settings keep their own always-on fixture. */
+        @Volatile var profileServicesEnabled = true
         @Volatile var sessionUser = CurrentUser(123456, "Александрова Мария Александровна", null)
         @Volatile var socialFriends: List<UserProfile> = emptyList()
         @Volatile var socialRequests: FriendRequests = FriendRequests.EMPTY
@@ -222,7 +225,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                     ViewModelProvider(f, object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            MeViewModel(ProfileSession, ProfileSocial, Services) as T
+                            MeViewModel(ProfileSession, ProfileSocial, ProfileServices()) as T
                     })[MeViewModel::class.java]
                     return
                 }
@@ -344,6 +347,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
 
     override fun openLessonDetails(args: LessonDetailsArgs) = navigation.openLessonDetails(args)
 
+    /** Only recorded: the sheet itself talks to Backend and has its own preview host. */
+    override fun openWebLogin() { webLoginOpened += Unit }
+
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) = navigation.openPendingSportDetails(args)
 
     val host: NavHostFragment
@@ -405,6 +411,13 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         override fun observeEnabled() = MutableStateFlow(true)
         override suspend fun isEnabled() = true
         override suspend fun setEnabled(enabled: Boolean) = Unit
+    }
+
+    private class ProfileServices : CustomServicesRepository {
+        private val enabled = MutableStateFlow(profileServicesEnabled)
+        override fun observeEnabled() = enabled
+        override suspend fun isEnabled() = enabled.value
+        override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
     }
 
     private object Onboarding : OnboardingRepository {

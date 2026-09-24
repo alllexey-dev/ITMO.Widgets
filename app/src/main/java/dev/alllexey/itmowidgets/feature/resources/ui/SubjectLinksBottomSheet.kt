@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewM
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import dev.alllexey.itmowidgets.core.ui.openLink
+import dev.alllexey.itmowidgets.core.ui.expandToContent
 
 /** All links of one subject period: sections by category, chats, links of past years and «Добавить ссылку». */
 @AndroidEntryPoint

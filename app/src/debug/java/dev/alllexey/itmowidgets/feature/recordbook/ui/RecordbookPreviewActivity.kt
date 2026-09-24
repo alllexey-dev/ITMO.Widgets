@@ -140,6 +140,8 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
 
     override fun openLessonDetails(args: LessonDetailsArgs) = Unit
 
+    override fun openWebLogin() = Unit
+
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
 
     private object FixedTime : AcademicTimeProvider {

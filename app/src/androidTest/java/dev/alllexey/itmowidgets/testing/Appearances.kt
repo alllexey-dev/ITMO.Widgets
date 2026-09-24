@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.ui.SportCardsPreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.ui.SportScoreCollapsePreviewActivity
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdatePreviewActivity
+import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginPreviewActivity
 
 /**
  * The appearance matrix shared by the visual tests.
@@ -65,4 +66,7 @@ object Appearances {
 
     fun Spec.toSubjectLinks() =
         SubjectLinksPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
+
+    fun Spec.toWebLogin() =
+        WebLoginPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
 }

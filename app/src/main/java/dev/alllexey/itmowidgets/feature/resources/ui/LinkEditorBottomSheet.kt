@@ -38,6 +38,7 @@ import dev.alllexey.itmowidgets.core.ui.linkIconRes
 import dev.alllexey.itmowidgets.core.ui.title
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import dev.alllexey.itmowidgets.core.ui.expandToContent
 
 /** Adds a link or edits an own one: address, category chips, optional title and who sees it. */
 @AndroidEntryPoint

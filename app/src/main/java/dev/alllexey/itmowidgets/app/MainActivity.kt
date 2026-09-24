@@ -154,6 +154,12 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         navigation.openLinkActions(args, linkId)
     }
 
+    override fun openWebLogin() {
+        if (sessionRepository.state.value !is SessionState.SignedIn) return
+        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        navigation.openWebLogin()
+    }
+
     /** A sport lesson in the schedule is a booking: it gets the sport sheet with `Отменить`. */
     override fun openLessonDetails(args: LessonDetailsArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return

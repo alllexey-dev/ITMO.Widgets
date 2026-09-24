@@ -33,14 +33,16 @@ data class MeUiState(
     /** Backend's view of the same account; carries the study group. */
     val backendUser: UserSummary? = null,
     val friends: MeFriendsSummary = MeFriendsSummary.Loading,
-    val signOutInProgress: Boolean = false
+    val signOutInProgress: Boolean = false,
+    /** Sign-in to the web version goes through Backend, so it needs the ITMO.Widgets connection. */
+    val webLoginAvailable: Boolean = false
 )
 
 @HiltViewModel
 class MeViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val socialRepository: SocialRepository,
-    customServices: CustomServicesRepository
+    private val customServices: CustomServicesRepository
 ) : ViewModel() {
 
     private val signOutInProgress = MutableStateFlow(false)
@@ -50,17 +52,18 @@ class MeViewModel @Inject constructor(
 
     init {
         combine(
-            sessionRepository.state,
+            combine(sessionRepository.state, customServices.observeEnabled(), ::Pair),
             socialRepository.observeCurrentUser(),
             socialRepository.observeFriends(),
             socialRepository.observeRequests(),
             signOutInProgress
-        ) { session, backendUser, friends, requests, signingOut ->
+        ) { (session, servicesEnabled), backendUser, friends, requests, signingOut ->
             MeUiState(
                 user = (session as? SessionState.SignedIn)?.user,
                 backendUser = backendUser,
                 friends = summarize(friends, requests),
-                signOutInProgress = signingOut
+                signOutInProgress = signingOut,
+                webLoginAvailable = servicesEnabled
             )
         }.onEach { mutableUiState.value = it }.launchIn(viewModelScope)
 
