@@ -19,8 +19,8 @@ data class ResourceScope(val subjectId: Long, val subjectName: String, val perio
 /** Declaration order is the display order of chips and sections. */
 enum class LinkCategory { SCORES, QUEUE, MATERIALS, TASKS, RECORDINGS, NOTES, EXAM, CHAT, OTHER }
 
-/** GROUP and FLOW publish to the author's schedule flows at once; ALL may be premoderated. */
-enum class LinkVisibility { PRIVATE, GROUP, FLOW, ALL }
+/** FLOW publishes to one schedule flow of the author (`flowId`) at once; ALL may be premoderated. */
+enum class LinkVisibility { PRIVATE, FLOW, ALL }
 
 /** Owners see their own link's review state; other viewers always see PUBLISHED. */
 enum class SubjectLinkStatus { PRIVATE, PENDING, PUBLISHED, REJECTED, HIDDEN }
@@ -36,6 +36,9 @@ data class SubjectLink(
     val url: String,
     val title: String?,
     val visibility: LinkVisibility,
+    /** The schedule flow of a FLOW link; null otherwise. */
+    val flowId: Long?,
+    /** The schedule name of a FLOW link's flow, e.g. «ФИЗ ПИИКТ 3.2.1». */
     val audienceLabel: String?,
     val status: SubjectLinkStatus,
     val reviewNote: String?,
@@ -49,8 +52,11 @@ data class SubjectLink(
     val local: Boolean = false,
 )
 
-/** A GROUP or FLOW audience the viewer can publish to, labelled with its schedule group names. */
-data class LinkAudience(val visibility: LinkVisibility, val label: String)
+/**
+ * A schedule flow of the subject the viewer can publish to: [label] is its schedule name, [typeId] the
+ * schedule lesson type and [depth] the nesting level of its number (`3` lectures, `3.2`, `3.2.1`).
+ */
+data class LinkAudience(val flowId: Long, val label: String, val typeId: Int, val depth: Int)
 
 /** Without [servicesEnabled] only [mine] is filled, with local links. */
 data class SubjectLinksSnapshot(

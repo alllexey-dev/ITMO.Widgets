@@ -38,7 +38,7 @@ class SubjectLinksViewModelTest {
     @Test fun `links are grouped by category with chats and past periods last`() = runTest(main.dispatcher) {
         show(linksSnapshot(
             mine = listOf(subjectLink("own-other", LinkCategory.OTHER), subjectLink("own-scores", LinkCategory.SCORES)),
-            shared = listOf(subjectLink("chat", LinkCategory.CHAT, LinkVisibility.GROUP, isMine = false),
+            shared = listOf(subjectLink("chat", LinkCategory.CHAT, LinkVisibility.FLOW, isMine = false),
                 subjectLink("tasks", LinkCategory.TASKS, LinkVisibility.FLOW, isMine = false), shared),
             previous = listOf(subjectLink("old", LinkCategory.MATERIALS, LinkVisibility.ALL, isMine = false)),
         ))
@@ -50,7 +50,7 @@ class SubjectLinksViewModelTest {
             LinkSection.Category(LinkCategory.SCORES, listOf(subjectLink("own-scores", LinkCategory.SCORES), shared)),
             LinkSection.Category(LinkCategory.TASKS, listOf(subjectLink("tasks", LinkCategory.TASKS, LinkVisibility.FLOW, isMine = false))),
             LinkSection.Category(LinkCategory.OTHER, listOf(subjectLink("own-other", LinkCategory.OTHER))),
-            LinkSection.Category(LinkCategory.CHAT, listOf(subjectLink("chat", LinkCategory.CHAT, LinkVisibility.GROUP, isMine = false))),
+            LinkSection.Category(LinkCategory.CHAT, listOf(subjectLink("chat", LinkCategory.CHAT, LinkVisibility.FLOW, isMine = false))),
             LinkSection.Previous(listOf(subjectLink("old", LinkCategory.MATERIALS, LinkVisibility.ALL, isMine = false))),
         ), sections)
     }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
  * With the ITMO.Widgets opt-in the server is the source of truth and every action goes to it at once.
  * Without it links are PRIVATE and stay on the device until the first refresh with the opt-in uploads them;
  * voting, reports, pinning or saving others' links and non-PRIVATE visibility fail with `CustomServicesDisabled`.
+ * A FLOW link names one of the viewer's [LinkAudience.flowId]s in [save]; other visibilities pass null.
  */
 interface SubjectLinksRepository {
     fun observe(scope: ResourceScope): Flow<SubjectLinksState>
@@ -19,6 +20,7 @@ interface SubjectLinksRepository {
         url: String,
         title: String?,
         visibility: LinkVisibility,
+        flowId: Long?,
     ): AppResult<SubjectLink>
     suspend fun delete(scope: ResourceScope, id: String): AppResult<Unit>
     suspend fun setSaved(scope: ResourceScope, id: String, saved: Boolean): AppResult<Unit>

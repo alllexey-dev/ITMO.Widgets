@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
+import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
@@ -38,6 +39,8 @@ object RecordbookPreviewFixtures {
     const val LMS_URL = "https://lms.itmo.ru/course/1"
     private val SPORT_END: OffsetDateTime = OffsetDateTime.parse("2026-06-20T23:59:00+03:00")
     private val UPDATED: OffsetDateTime = OffsetDateTime.parse("2026-05-20T09:00:00+03:00")
+    private val LECTURE_FLOW = LinkAudience(7101, "МАТ АН ПИИКТ 3", typeId = 1, depth = 1)
+    private val PRACTICE_FLOW = LinkAudience(7102, "МАТ АН ПИИКТ 3.2", typeId = 3, depth = 2)
 
     /** Installs every repository of the host for [phase]; returns the links fixture for further edits. */
     fun install(phase: Phase): MemorySubjectLinksRepository {
@@ -141,16 +144,17 @@ object RecordbookPreviewFixtures {
             current.key to SubjectLinksSnapshot(
                 mine = listOf(
                     link(current, "own-table", LinkCategory.SCORES, "Таблица баллов потока", LinkVisibility.PRIVATE, mine = true),
-                    link(current, "own-chat", LinkCategory.CHAT, "Чат группы P3119", LinkVisibility.GROUP, mine = true, audience = "P3119")
+                    link(current, "own-chat", LinkCategory.CHAT, "Чат практики", LinkVisibility.FLOW, mine = true, flow = PRACTICE_FLOW)
                 ),
                 shared = listOf(
-                    link(current, "tasks", LinkCategory.TASKS, "Задания на семестр", LinkVisibility.FLOW, audience = "P3119, P3120"),
+                    link(current, "tasks", LinkCategory.TASKS, "Задания на семестр", LinkVisibility.FLOW, flow = LECTURE_FLOW),
                     link(current, "video", LinkCategory.RECORDINGS, "Записи лекций весны 2026 года с разбором задач", LinkVisibility.ALL, score = 5),
                     link(current, "notes", LinkCategory.NOTES, "Конспекты", LinkVisibility.ALL, score = 2),
                     link(current, "exam", LinkCategory.EXAM, "Билеты к экзамену", LinkVisibility.ALL),
-                    link(current, "flow-chat", LinkCategory.CHAT, "Поток по матанализу", LinkVisibility.FLOW, audience = "P3119, P3120")
+                    link(current, "flow-chat", LinkCategory.CHAT, "Поток по матанализу", LinkVisibility.FLOW, flow = LECTURE_FLOW)
                 ),
-                previous = emptyList(), pinnedId = null, audiences = emptyList(), premoderation = true, servicesEnabled = true
+                previous = emptyList(), pinnedId = null, audiences = listOf(LECTURE_FLOW, PRACTICE_FLOW),
+                premoderation = true, servicesEnabled = true
             ),
             past.key to SubjectLinksSnapshot(
                 mine = listOf(link(past, "past-table", LinkCategory.SCORES, "Таблица баллов осени", LinkVisibility.PRIVATE, mine = true)),
@@ -161,8 +165,8 @@ object RecordbookPreviewFixtures {
 
     private fun link(
         scope: ResourceScope, id: String, category: LinkCategory, title: String, visibility: LinkVisibility,
-        mine: Boolean = false, audience: String? = null, score: Int = 0
-    ) = SubjectLink(id, scope, category, "https://example.org/$id", title, visibility, audience,
+        mine: Boolean = false, flow: LinkAudience? = null, score: Int = 0
+    ) = SubjectLink(id, scope, category, "https://example.org/$id", title, visibility, flow?.flowId, flow?.label,
         if (mine && visibility == LinkVisibility.PRIVATE) SubjectLinkStatus.PRIVATE else SubjectLinkStatus.PUBLISHED, null,
         score, 0, isMine = mine, isSaved = false, reportedByMe = false, author = null, updatedAt = UPDATED)
 }

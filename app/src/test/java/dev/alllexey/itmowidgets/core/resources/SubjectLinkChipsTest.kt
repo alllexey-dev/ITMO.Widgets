@@ -8,7 +8,7 @@ import org.junit.Test
 class SubjectLinkChipsTest {
     private val lms = "https://lms.itmo.ru/course/1"
 
-    @Test fun `chips follow pin, LMS, own, saved, group and best public order`() {
+    @Test fun `chips follow pin, LMS, own, saved, flow and best public order`() {
         val snapshot = linksSnapshot(
             mine = listOf(subjectLink("own-notes", LinkCategory.NOTES), subjectLink("own-scores", LinkCategory.SCORES)),
             shared = listOf(
@@ -35,7 +35,7 @@ class SubjectLinkChipsTest {
     @Test fun `only four chips are shown and the rest of mine and shared is counted`() {
         val snapshot = linksSnapshot(
             mine = LinkCategory.entries.filter { it != LinkCategory.CHAT }.map { subjectLink("own-$it", it) },
-            shared = listOf(subjectLink("group", LinkCategory.SCORES, LinkVisibility.GROUP, isMine = false)),
+            shared = listOf(subjectLink("group", LinkCategory.SCORES, LinkVisibility.FLOW, isMine = false)),
         )
 
         val chips = subjectLinkChips(snapshot, lms)
@@ -47,7 +47,7 @@ class SubjectLinkChipsTest {
     @Test fun `chats never become chips and are not counted`() {
         val snapshot = linksSnapshot(
             mine = listOf(subjectLink("own-chat", LinkCategory.CHAT)),
-            shared = listOf(subjectLink("group-chat", LinkCategory.CHAT, LinkVisibility.GROUP, isMine = false),
+            shared = listOf(subjectLink("group-chat", LinkCategory.CHAT, LinkVisibility.FLOW, isMine = false),
                 subjectLink("public-chat", LinkCategory.CHAT, LinkVisibility.ALL, isMine = false)),
             pinnedId = "own-chat",
         )

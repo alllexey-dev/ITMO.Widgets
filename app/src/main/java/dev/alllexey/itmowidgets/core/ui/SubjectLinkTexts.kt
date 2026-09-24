@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.core.ui
 
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -42,14 +41,9 @@ fun linkIconRes(category: LinkCategory, url: String): Int {
     }
 }
 
-/** With an [audience] a group or flow is named by its schedule groups, e.g. «Группа P3119». */
-fun LinkVisibility.label(audience: LinkAudience? = null): UiText = when {
-    this == LinkVisibility.GROUP && audience != null -> UiText.Resource(R.string.links_visibility_group_audience, listOf(audience.label))
-    this == LinkVisibility.FLOW && audience != null -> UiText.Resource(R.string.links_visibility_flow_audience, listOf(audience.label))
-    else -> UiText.Resource(when (this) {
-        LinkVisibility.PRIVATE -> R.string.links_visibility_private
-        LinkVisibility.GROUP -> R.string.links_visibility_group
-        LinkVisibility.FLOW -> R.string.links_visibility_flow
-        LinkVisibility.ALL -> R.string.links_visibility_all
-    })
+/** A FLOW link is named by its schedule flow ([audienceLabel], e.g. «ФИЗ ПИИКТ 3.2.1»). */
+fun LinkVisibility.label(audienceLabel: String? = null): UiText = when (this) {
+    LinkVisibility.PRIVATE -> UiText.Resource(R.string.links_visibility_private)
+    LinkVisibility.FLOW -> audienceLabel?.let(UiText::Dynamic) ?: UiText.Resource(R.string.links_visibility_flow_unnamed)
+    LinkVisibility.ALL -> UiText.Resource(R.string.links_visibility_all)
 }

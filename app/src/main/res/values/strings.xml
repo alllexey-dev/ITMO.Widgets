@@ -735,11 +735,9 @@
     <string name="links_category_chat">Чат</string>
     <string name="links_category_other">Другое</string>
     <string name="links_visibility_private">Только я</string>
-    <string name="links_visibility_group">Группа</string>
-    <string name="links_visibility_flow">Поток</string>
+    <string name="links_visibility_flow_unnamed">Поток из расписания</string>
     <string name="links_visibility_all">Все</string>
-    <string name="links_visibility_group_audience">Группа %1$s</string>
-    <string name="links_visibility_flow_audience">Поток %1$s</string>
+    <string name="links_visibility_all_review">После проверки</string>
     <string name="links_status_pending">на проверке</string>
     <string name="links_status_rejected">отклонена</string>
     <string name="links_status_hidden">скрыта</string>
@@ -758,9 +756,6 @@
     <string name="links_name_hint">Название</string>
     <string name="links_who_sees">Кто видит</string>
     <string name="links_save">Сохранить</string>
-    <string name="links_audience_private">Видна только вам</string>
-    <string name="links_audience_all">Все студенты предмета</string>
-    <string name="links_audience_all_review">Все студенты предмета после проверки</string>
     <string name="links_connection_required">Поделиться можно с подключением к ITMO.Widgets</string>
     <string name="links_open">Открыть</string>
     <string name="links_pin">Закрепить</string>

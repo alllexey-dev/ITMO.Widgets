@@ -28,8 +28,9 @@ import org.junit.Test
 class LinkEditorViewModelTest {
     @get:Rule val main = MainDispatcherRule()
     private val repository = FakeSubjectLinksRepository()
-    private val group = LinkAudience(LinkVisibility.GROUP, "P3119")
-    private val flow = LinkAudience(LinkVisibility.FLOW, "P3119, P3120")
+    private val lecture = LinkAudience(7101, "ФИЗ ПИИКТ 3", typeId = 1, depth = 1)
+    private val practice = LinkAudience(7102, "ФИЗ ПИИКТ 3.2", typeId = 3, depth = 2)
+    private val lab = LinkAudience(7103, "ФИЗ ПИИКТ 3.2.1", typeId = 2, depth = 3)
 
     @Test fun `the site suggests a category until one is picked`() = runTest(main.dispatcher) {
         val vm = model()
@@ -57,45 +58,68 @@ class LinkEditorViewModelTest {
         assertTrue(repository.actions.isEmpty())
     }
 
-    @Test fun `visibilities are private, the viewer's audiences and all`() = runTest(main.dispatcher) {
-        show(linksSnapshot(audiences = listOf(flow, group)))
+    @Test fun `options are only me, every flow of the viewer in order and everybody`() = runTest(main.dispatcher) {
+        show(linksSnapshot(audiences = listOf(lecture, practice, lab)))
         val vm = model()
 
-        assertEquals(listOf(LinkVisibility.PRIVATE, LinkVisibility.GROUP, LinkVisibility.FLOW, LinkVisibility.ALL), vm.uiState.value.visibilities)
-        assertEquals(listOf(flow, group), vm.uiState.value.audiences)
+        assertEquals(listOf(LinkAudienceOption.Private, LinkAudienceOption.Flow(lecture), LinkAudienceOption.Flow(practice),
+            LinkAudienceOption.Flow(lab), LinkAudienceOption.All), vm.uiState.value.options)
+        assertEquals(LinkAudienceOption.Private, vm.uiState.value.selected)
 
-        show(linksSnapshot(audiences = listOf(group))); runCurrent()
-        assertEquals(listOf(LinkVisibility.PRIVATE, LinkVisibility.GROUP, LinkVisibility.ALL), vm.uiState.value.visibilities)
+        show(linksSnapshot()); runCurrent()
+        assertEquals(listOf(LinkAudienceOption.Private, LinkAudienceOption.All), vm.uiState.value.options)
+    }
+
+    @Test fun `choosing a flow keeps its id and a flow gone from the schedule falls back to only me`() = runTest(main.dispatcher) {
+        show(linksSnapshot(audiences = listOf(lecture, practice, lab)))
+        val vm = model()
+
+        vm.onAudienceSelected(LinkAudienceOption.Flow(lab))
+        assertEquals(LinkVisibility.FLOW, vm.uiState.value.visibility)
+        assertEquals(7103L, vm.uiState.value.flowId)
+        assertEquals(LinkAudienceOption.Flow(lab), vm.uiState.value.selected)
+        vm.onAudienceSelected(LinkAudienceOption.Flow(lecture))
+        assertEquals(7101L, vm.uiState.value.flowId)
+        vm.onAudienceSelected(LinkAudienceOption.Flow(LinkAudience(9999, "Чужой поток", typeId = 1, depth = 1)))
+        assertEquals(7101L, vm.uiState.value.flowId)
+
+        show(linksSnapshot(audiences = listOf(practice, lab))); runCurrent()
+        assertEquals(LinkVisibility.PRIVATE, vm.uiState.value.visibility)
+        assertNull(vm.uiState.value.flowId)
+        vm.onAudienceSelected(LinkAudienceOption.All)
+        assertEquals(LinkVisibility.ALL, vm.uiState.value.visibility)
+        assertNull(vm.uiState.value.flowId)
     }
 
     @Test fun `premoderation of the period reaches the form`() = runTest(main.dispatcher) {
-        show(linksSnapshot(audiences = listOf(group)).copy(premoderation = false))
+        show(linksSnapshot(audiences = listOf(lecture)).copy(premoderation = false))
         val vm = model()
         assertFalse(vm.uiState.value.premoderation)
 
-        show(linksSnapshot(audiences = listOf(group))); runCurrent()
+        show(linksSnapshot(audiences = listOf(lecture))); runCurrent()
         assertTrue(vm.uiState.value.premoderation)
     }
 
-    @Test fun `without the connection only private remains and a public choice falls back`() = runTest(main.dispatcher) {
-        show(linksSnapshot(audiences = listOf(group)))
+    @Test fun `without the connection only private remains and a shared choice falls back`() = runTest(main.dispatcher) {
+        show(linksSnapshot(audiences = listOf(lecture)))
         val vm = model()
-        vm.onVisibilitySelected(LinkVisibility.ALL)
-        assertEquals(LinkVisibility.ALL, vm.uiState.value.visibility)
+        vm.onAudienceSelected(LinkAudienceOption.Flow(lecture))
+        assertEquals(LinkVisibility.FLOW, vm.uiState.value.visibility)
 
-        show(linksSnapshot(servicesEnabled = false)); runCurrent()
+        show(linksSnapshot(audiences = listOf(lecture), servicesEnabled = false)); runCurrent()
 
-        assertEquals(listOf(LinkVisibility.PRIVATE), vm.uiState.value.visibilities)
+        assertEquals(listOf(LinkAudienceOption.Private), vm.uiState.value.options)
         assertEquals(LinkVisibility.PRIVATE, vm.uiState.value.visibility)
-        vm.onVisibilitySelected(LinkVisibility.GROUP)
+        assertNull(vm.uiState.value.flowId)
+        vm.onAudienceSelected(LinkAudienceOption.All)
         assertEquals(LinkVisibility.PRIVATE, vm.uiState.value.visibility)
     }
 
-    @Test fun `saving sends the form and reports it`() = runTest(main.dispatcher) {
-        show(linksSnapshot(audiences = listOf(group)))
+    @Test fun `saving sends the form with the chosen flow and reports it`() = runTest(main.dispatcher) {
+        show(linksSnapshot(audiences = listOf(lecture, practice, lab)))
         val vm = model()
         vm.onUrlChanged(" https://docs.google.com/spreadsheets/d/abc ")
-        vm.onVisibilitySelected(LinkVisibility.GROUP)
+        vm.onAudienceSelected(LinkAudienceOption.Flow(practice))
 
         vm.save(); runCurrent()
 
@@ -104,7 +128,8 @@ class LinkEditorViewModelTest {
         assertEquals("https://docs.google.com/spreadsheets/d/abc", saved.url)
         assertEquals(LinkCategory.SCORES, saved.category)
         assertNull(saved.title)
-        assertEquals(LinkVisibility.GROUP, saved.visibility)
+        assertEquals(LinkVisibility.FLOW, saved.visibility)
+        assertEquals(7102L, saved.flowId)
     }
 
     @Test fun `a failed save keeps the form and reports the error`() = runTest(main.dispatcher) {
@@ -119,11 +144,13 @@ class LinkEditorViewModelTest {
         assertTrue(vm.uiState.value.canSave)
     }
 
-    @Test fun `editing starts from the own link and keeps its category`() = runTest(main.dispatcher) {
-        show(linksSnapshot(mine = listOf(subjectLink("own", LinkCategory.NOTES, title = "Конспект"))))
+    @Test fun `editing starts from the own link and keeps its category and flow`() = runTest(main.dispatcher) {
+        show(linksSnapshot(mine = listOf(subjectLink("own", LinkCategory.NOTES, LinkVisibility.FLOW, title = "Конспект", flowId = 7103)),
+            audiences = listOf(lecture, practice, lab)))
         val vm = model(linkId = "own")
 
         assertTrue(vm.uiState.value.editing)
+        assertEquals(LinkAudienceOption.Flow(lab), vm.uiState.value.selected)
         assertEquals("https://example.org/own", vm.uiState.value.url)
         assertEquals("Конспект", vm.uiState.value.title)
         vm.onUrlChanged("https://github.com/itmo/labs")
@@ -131,6 +158,7 @@ class LinkEditorViewModelTest {
 
         vm.save(); runCurrent()
         assertEquals("own", repository.lastSave!!.id)
+        assertEquals(7103L, repository.lastSave!!.flowId)
     }
 
     private fun show(snapshot: SubjectLinksSnapshot) { repository.state.value = SubjectLinksState.Content(snapshot) }

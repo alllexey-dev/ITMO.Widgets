@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.primaryGroup
-import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
@@ -80,7 +79,7 @@ internal fun SubjectLink.displayTitle(): String = title ?: host()
  */
 internal fun Context.linkMeta(link: SubjectLink, pinned: Boolean, previous: Boolean): String = listOfNotNull(
     link.host().takeIf { link.title != null },
-    if (link.isMine) link.visibility.label(link.audienceLabel?.let { LinkAudience(link.visibility, it) }).resolve(this)
+    if (link.isMine) link.visibility.label(link.audienceLabel).resolve(this)
     else link.author?.primaryGroup()?.name ?: link.audienceLabel,
     link.scope.periodKey.studyYear().takeIf { previous },
     getString(R.string.links_pinned).takeIf { pinned },

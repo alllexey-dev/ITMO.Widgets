@@ -11,8 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.radiobutton.MaterialRadioButton
 import com.google.android.material.textfield.TextInputLayout
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
@@ -91,10 +91,37 @@ class SubjectLinksVisualTest {
         }
     }
 
+    @Test fun editorListsEveryNestedFlowWithItsKindOfClasses() {
+        Appearances.default.forEachIndexed { index, spec ->
+            withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_EDITOR, linkId = "own-scores") { scenario, repository ->
+                settle()
+                scenario.onActivity { activity ->
+                    val sheet = editor(activity)
+                    assertEquals(listOf("Только я", "ФИЗ ПИИКТ 3\nЛекция", "ФИЗ ПИИКТ 3.2\nПрактика",
+                        "ФИЗ ПИИКТ 3.2.1\nЛабораторная", "Все\nПосле проверки"), audienceRows(sheet))
+                    assertEquals("ФИЗ ПИИКТ 3.2", checkedAudience(sheet))
+                    assertEquals(View.GONE, sheet.findViewById<View>(R.id.connection_hint).visibility)
+                    assertTextFits(sheet)
+                    assertTouchTargets(sheet.findViewById(R.id.visibility))
+                    radioRows(sheet).first { it.text.startsWith("ФИЗ ПИИКТ 3.2.1") }.performClick()
+                }
+                settle()
+                scenario.onActivity { assertEquals("ФИЗ ПИИКТ 3.2.1", checkedAudience(editor(it))) }
+                screenshot("editor-flows-$index")
+                scenario.onActivity { editor(it).findViewById<View>(R.id.save_button).performClick() }
+                settle()
+                val saved = repository.peek(SCOPE).mine.first { it.id == "own-scores" }
+                assertEquals(LinkVisibility.FLOW, saved.visibility)
+                assertEquals(LAB_FLOW.flowId, saved.flowId)
+                assertEquals("ФИЗ ПИИКТ 3.2.1", saved.audienceLabel)
+            }
+        }
+    }
+
     @Test fun editorPastesAGuessedLinkAndOffersOnlyAvailableAudiences() {
         val pasted = "https://docs.google.com/spreadsheets/d/synthetic"
         withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_EDITOR, clipboard = pasted,
-            configure = { it.snapshots.value = mapOf(SCOPE.key to fixture().copy(audiences = listOf(GROUP_AUDIENCE))) }) { scenario, repository ->
+            configure = { it.snapshots.value = mapOf(SCOPE.key to fixture().copy(audiences = listOf(LECTURE_FLOW))) }) { scenario, repository ->
             settle()
             TestUi.eventually(idleBetween = true) {
                 scenario.onActivity { activity ->
@@ -106,16 +133,16 @@ class SubjectLinksVisualTest {
             }
             scenario.onActivity { activity ->
                 val sheet = editor(activity)
-                assertEquals(listOf("Только я", "Группа", "Все"), visibleVisibilities(sheet))
-                assertEquals("Видна только вам", sheet.findViewById<TextView>(R.id.audience).text.toString())
-                sheet.findViewById<View>(R.id.visibility_group).performClick()
+                assertEquals(listOf("Только я", "ФИЗ ПИИКТ 3\nЛекция", "Все\nПосле проверки"), audienceRows(sheet))
+                assertEquals("Только я", checkedAudience(sheet))
+                radioRows(sheet)[1].performClick()
             }
             settle()
             scenario.onActivity { activity ->
                 val sheet = editor(activity)
-                assertEquals("Группа P3119", sheet.findViewById<TextView>(R.id.audience).text.toString())
+                assertEquals("ФИЗ ПИИКТ 3", checkedAudience(sheet))
                 assertTextFits(sheet)
-                assertTouchTargets(sheet.findViewById(R.id.visibility), requireWidth = false)
+                assertTouchTargets(sheet.findViewById(R.id.visibility))
             }
             screenshot("editor-guessed")
 
@@ -131,17 +158,19 @@ class SubjectLinksVisualTest {
             settle()
             scenario.onActivity { assertEquals(R.id.category_exam, editor(it).findViewById<ChipGroup>(R.id.categories).checkedChipId) }
 
-            repository.snapshots.value = mapOf(SCOPE.key to fixture().copy(audiences = emptyList()))
+            repository.snapshots.value = mapOf(SCOPE.key to fixture().copy(audiences = emptyList(), premoderation = false))
             settle()
             scenario.onActivity { activity ->
                 val sheet = editor(activity)
-                assertEquals(listOf("Только я", "Все"), visibleVisibilities(sheet))
-                sheet.findViewById<View>(R.id.visibility_all).performClick()
+                // The chosen flow is gone from the schedule, so the choice falls back to only me.
+                assertEquals(listOf("Только я", "Все"), audienceRows(sheet))
+                assertEquals("Только я", checkedAudience(sheet))
+                radioRows(sheet).last().performClick()
             }
             settle()
             scenario.onActivity { activity ->
                 val sheet = editor(activity)
-                assertEquals("Все студенты предмета после проверки", sheet.findViewById<TextView>(R.id.audience).text.toString())
+                assertEquals("Все", checkedAudience(sheet))
                 sheet.findViewById<View>(R.id.save_button).performClick()
             }
             settle()
@@ -161,8 +190,11 @@ class SubjectLinksVisualTest {
             settle()
             scenario.onActivity { activity ->
                 val sheet = editor(activity)
-                assertEquals(listOf("Только я"), visibleVisibilities(sheet))
-                assertEquals(activity.getString(R.string.links_connection_required), sheet.findViewById<TextView>(R.id.audience).text.toString())
+                assertEquals(listOf("Только я"), audienceRows(sheet))
+                assertEquals("Только я", checkedAudience(sheet))
+                val hint = sheet.findViewById<TextView>(R.id.connection_hint)
+                assertEquals(View.VISIBLE, hint.visibility)
+                assertEquals(activity.getString(R.string.links_connection_required), hint.text.toString())
                 assertFalse(sheet.findViewById<View>(R.id.save_button).isEnabled)
                 sheet.findViewById<TextView>(R.id.url).text = "https://t.me/synthetic_chat"
             }
@@ -232,7 +264,7 @@ class SubjectLinksVisualTest {
             scenario.onActivity { activity ->
                 val sheet = editor(activity)
                 assertEquals(activity.getString(R.string.links_editor_edit), sheet.findViewById<TextView>(R.id.title).text.toString())
-                assertEquals(4, visibleVisibilities(sheet).size)
+                assertEquals(5, audienceRows(sheet).size)
                 assertTextFits(sheet)
             }
         }
@@ -303,9 +335,15 @@ class SubjectLinksVisualTest {
 
     private fun actions(activity: SubjectLinksPreviewActivity) = sheetView(activity, LinkActionsBottomSheet.TAG)
 
-    private fun visibleVisibilities(sheet: View): List<String> =
-        sheet.findViewById<View>(R.id.visibility).descendants().filterIsInstance<MaterialButton>()
-            .filter { it.visibility == View.VISIBLE }.map { it.text.toString() }.toList()
+    private fun radioRows(sheet: View): List<MaterialRadioButton> =
+        sheet.findViewById<View>(R.id.visibility).descendants().filterIsInstance<MaterialRadioButton>()
+            .filter { it.visibility == View.VISIBLE }.toList()
+
+    private fun audienceRows(sheet: View): List<String> = radioRows(sheet).map { it.text.toString() }
+
+    /** The first line of the checked row. */
+    private fun checkedAudience(sheet: View): String? =
+        radioRows(sheet).singleOrNull { it.isChecked }?.text?.toString()?.substringBefore('\n')
 
     private fun visibleActions(sheet: View): List<Int> =
         listOf(R.id.action_open, R.id.action_save, R.id.action_pin, R.id.action_edit, R.id.action_delete, R.id.action_report)
@@ -318,8 +356,9 @@ class SubjectLinksVisualTest {
     private companion object {
         val SCOPE = ResourceScope(42L, "Математический анализ", "2026-1")
         val PAST = ResourceScope(42L, "Математический анализ", "2025-1")
-        val GROUP_AUDIENCE = LinkAudience(LinkVisibility.GROUP, "P3119")
-        val FLOW_AUDIENCE = LinkAudience(LinkVisibility.FLOW, "P3110–P3119")
+        val LECTURE_FLOW = LinkAudience(7101, "ФИЗ ПИИКТ 3", typeId = 1, depth = 1)
+        val PRACTICE_FLOW = LinkAudience(7102, "ФИЗ ПИИКТ 3.2", typeId = 3, depth = 2)
+        val LAB_FLOW = LinkAudience(7103, "ФИЗ ПИИКТ 3.2.1", typeId = 2, depth = 3)
         val NOW: OffsetDateTime = OffsetDateTime.parse("2026-09-22T09:00:00Z")
         val AUTHOR = UserSummary(100001, "Синтетический Автор", null, listOf(UserGroup("P3118", 2, "ФПИиКТ")), UserSharing(false, false))
 
@@ -334,16 +373,16 @@ class SubjectLinksVisualTest {
             myVote: Int = 0,
             status: SubjectLinkStatus = SubjectLinkStatus.PUBLISHED,
             reviewNote: String? = null,
-            audienceLabel: String? = null,
+            flow: LinkAudience? = null,
             saved: Boolean = false,
             scope: ResourceScope = SCOPE,
-        ) = SubjectLink(id, scope, category, url, title, visibility, audienceLabel, status, reviewNote, score, myVote,
+        ) = SubjectLink(id, scope, category, url, title, visibility, flow?.flowId, flow?.label, status, reviewNote, score, myVote,
             isMine = mine, isSaved = saved, reportedByMe = false, author = AUTHOR.takeUnless { mine }, updatedAt = NOW)
 
         fun fixture() = SubjectLinksSnapshot(
             mine = listOf(
                 link("own-scores", LinkCategory.SCORES, "https://docs.google.com/spreadsheets/d/own", "Баллы нашей группы",
-                    LinkVisibility.GROUP, mine = true, score = 5, audienceLabel = "P3119"),
+                    LinkVisibility.FLOW, mine = true, score = 5, flow = PRACTICE_FLOW),
                 link("own-other", LinkCategory.OTHER, "https://example.org/cheatsheet", null, LinkVisibility.PRIVATE, mine = true,
                     status = SubjectLinkStatus.PRIVATE),
                 link("own-rejected", LinkCategory.NOTES, "https://www.notion.so/synthetic",
@@ -352,20 +391,22 @@ class SubjectLinksVisualTest {
             ),
             shared = listOf(
                 link("queue-group", LinkCategory.QUEUE, "https://docs.google.com/forms/d/queue", "Очередь на защиту",
-                    LinkVisibility.GROUP, score = 4, audienceLabel = "P3118"),
+                    LinkVisibility.FLOW, score = 4, flow = PRACTICE_FLOW),
                 link("materials-all", LinkCategory.MATERIALS, "https://drive.google.com/synthetic", "Материалы лектора", score = 12),
-                link("tasks-flow", LinkCategory.TASKS, "https://github.com/synthetic/tasks", "Задания потока", LinkVisibility.FLOW),
+                link("tasks-flow", LinkCategory.TASKS, "https://github.com/synthetic/tasks", "Задания потока", LinkVisibility.FLOW,
+                    flow = LECTURE_FLOW),
                 link("recordings-all", LinkCategory.RECORDINGS, "https://youtube.com/synthetic", "Записи лекций 2026", score = -2, myVote = -1),
                 link("exam-all", LinkCategory.EXAM, "https://example.org/exam", "Билеты к экзамену", score = 3, saved = true),
-                link("chat-group", LinkCategory.CHAT, "https://t.me/synthetic_group", "Чат группы", LinkVisibility.GROUP, audienceLabel = "P3118"),
-                link("chat-flow", LinkCategory.CHAT, "https://t.me/synthetic_flow", "Чат потока", LinkVisibility.FLOW),
+                link("chat-group", LinkCategory.CHAT, "https://t.me/synthetic_group", "Чат группы", LinkVisibility.FLOW,
+                    flow = PRACTICE_FLOW),
+                link("chat-flow", LinkCategory.CHAT, "https://t.me/synthetic_flow", "Чат потока", LinkVisibility.FLOW, flow = LECTURE_FLOW),
             ),
             previous = listOf(
                 link("past-materials", LinkCategory.MATERIALS, "https://drive.google.com/past", "Материалы прошлого года", score = 20, scope = PAST),
                 link("past-notes", LinkCategory.NOTES, "https://synthetic.notion.site/notes", null, score = 7, scope = PAST),
             ),
             pinnedId = "materials-all",
-            audiences = listOf(GROUP_AUDIENCE, FLOW_AUDIENCE),
+            audiences = listOf(LECTURE_FLOW, PRACTICE_FLOW, LAB_FLOW),
             premoderation = true,
             servicesEnabled = true,
         )

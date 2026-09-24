@@ -118,10 +118,11 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         url: String,
         title: String?,
         visibility: LinkVisibility,
+        flowId: Long?,
     ): AppResult<SubjectLink> = attempt {
         val generation = epoch.get()
         load(generation)
-        val request = saveRequest(scope, id, category, url, title, visibility)
+        val request = saveRequest(scope, id, category, url, title, visibility, flowId)
         if (!isEnabled()) {
             val onServer = current().scopes.values.any { cached -> cached.response.mine.any { it.id.toString() == id } }
             if (visibility != LinkVisibility.PRIVATE || onServer) throw Failure(AppError.CustomServicesDisabled)
@@ -384,6 +385,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         url: String,
         title: String?,
         visibility: LinkVisibility,
+        flowId: Long?,
     ): SaveSubjectLinkRequest {
         UUID.fromString(id)
         val cleanUrl = url.trim()
@@ -392,8 +394,9 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         require(uri.scheme.equals("https", ignoreCase = true) && !uri.host.isNullOrBlank() && uri.rawUserInfo == null)
         require(cleanUrl.length <= MAX_URL_LENGTH && (cleanTitle?.length ?: 0) <= MAX_TITLE_LENGTH)
         require(scope.subjectId > 0 && scope.subjectName.isNotBlank() && scope.periodKey.matches(PERIOD_KEY))
+        require((visibility == LinkVisibility.FLOW) == (flowId != null))
         return SaveSubjectLinkRequest(scope.subjectId, scope.subjectName.trim(), scope.periodKey, category.toWire(),
-            cleanUrl, cleanTitle, visibility.toWire())
+            cleanUrl, cleanTitle, visibility.toWire(), flowId)
     }
 
     private fun StoredLinks.withResponse(scope: ResourceScope, response: SubjectLinksResponse) =

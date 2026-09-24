@@ -4,11 +4,13 @@ import api.myitmo.MyItmo
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
 import dev.alllexey.itmowidgets.core.model.ApiResponse
+import dev.alllexey.itmowidgets.core.model.resources.LinkAudience as WireAudience
 import dev.alllexey.itmowidgets.core.model.resources.PinSubjectLinkRequest
 import dev.alllexey.itmowidgets.core.model.resources.ResourceVoteRequest
 import dev.alllexey.itmowidgets.core.model.resources.SaveSubjectLinkRequest
 import dev.alllexey.itmowidgets.core.model.resources.SubjectLinksResponse
 import dev.alllexey.itmowidgets.core.model.resources.UserRestriction as WireRestriction
+import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
@@ -58,7 +60,7 @@ class SubjectLinksRepositoryImplTest {
         val api = FakeApi(); val services = Services(false); val folder = temporary.newFolder()
         val repository = repo(folder, api, services)
 
-        assertTrue(repository.save(scope, id, LinkCategory.TASKS, url, "Лабы", LinkVisibility.PRIVATE) is AppResult.Success)
+        assertTrue(repository.save(scope, id, LinkCategory.TASKS, url, "Лабы", LinkVisibility.PRIVATE, null) is AppResult.Success)
         assertTrue(repository.refresh(scope) is AppResult.Success)
 
         assertTrue(api.calls.isEmpty())
@@ -72,7 +74,7 @@ class SubjectLinksRepositoryImplTest {
         val repository = repo(temporary.newFolder(), FakeApi(), Services(false))
         val disabled = AppResult.Failure(AppError.CustomServicesDisabled)
 
-        assertEquals(disabled, repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.GROUP))
+        assertEquals(disabled, repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.FLOW, 7103))
         assertEquals(disabled, repository.vote(scope, id, 1))
         assertEquals(disabled, repository.setSaved(scope, id, true))
         assertEquals(disabled, repository.pin(scope, id))
@@ -81,7 +83,7 @@ class SubjectLinksRepositoryImplTest {
     @Test fun `the first refresh with the opt-in uploads local links as private and drops them locally`() = runTest {
         val api = FakeApi(); val services = Services(false); val folder = temporary.newFolder()
         val repository = repo(folder, api, services)
-        repository.save(scope, id, LinkCategory.TASKS, url, "Лабы", LinkVisibility.PRIVATE)
+        repository.save(scope, id, LinkCategory.TASKS, url, "Лабы", LinkVisibility.PRIVATE, null)
         repository.pin(scope, id)
 
         services.enabled.value = true
@@ -95,6 +97,35 @@ class SubjectLinksRepositoryImplTest {
         assertEquals(id, repository.content(scope).pinnedId)
         services.enabled.value = false
         assertTrue(repo(folder, api, services).content(scope).mine.isEmpty())
+    }
+
+    @Test fun `a flow link sends its flow and reads back the flow name and the audiences`() = runTest {
+        val api = FakeApi(); val repository = repo(temporary.newFolder(), api, Services(true))
+        repository.refresh(scope)
+
+        val saved = repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.FLOW, 7103)
+
+        val request = api.saved.single()
+        assertEquals(WireVisibility.FLOW, request.visibility)
+        assertEquals(7103L, request.flowId)
+        val link = (saved as AppResult.Success).value
+        assertEquals(LinkVisibility.FLOW, link.visibility)
+        assertEquals(7103L, link.flowId)
+        assertEquals("ФИЗ ПИИКТ 3.2.1", link.audienceLabel)
+        assertEquals(listOf(LinkAudience(7101, "ФИЗ ПИИКТ 3", 1, 1), LinkAudience(7103, "ФИЗ ПИИКТ 3.2.1", 2, 3)),
+            repository.content(scope).audiences)
+        assertEquals(link, repository.content(scope).mine.single())
+    }
+
+    @Test fun `a flow is sent only with FLOW visibility`() = runTest {
+        val api = FakeApi(); val repository = repo(temporary.newFolder(), api, Services(true))
+        repository.refresh(scope)
+
+        assertTrue(repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.FLOW, null) is AppResult.Failure)
+        assertTrue(repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.ALL, 7103) is AppResult.Failure)
+        assertTrue(api.saved.isEmpty())
+        assertTrue(repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.ALL, null) is AppResult.Success)
+        assertEquals(null, api.saved.single().flowId)
     }
 
     @Test fun `a network error keeps the cached snapshot`() = runTest {
@@ -136,7 +167,7 @@ class SubjectLinksRepositoryImplTest {
     @Test fun `session cleanup deletes the file and ignores a late answer`() = runTest {
         val api = FakeApi(); val services = Services(false); val folder = temporary.newFolder()
         val repository = repo(folder, api, services)
-        repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.PRIVATE)
+        repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.PRIVATE, null)
         services.enabled.value = true
         api.pauseFetch = true
 
@@ -160,8 +191,26 @@ class SubjectLinksRepositoryImplTest {
         val repository = repo(folder, FakeApi(), Services(false))
 
         assertTrue(repository.observe(scope).first() is SubjectLinksState.Error)
-        assertTrue(repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.PRIVATE) is AppResult.Failure)
+        assertTrue(repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.PRIVATE, null) is AppResult.Failure)
         assertEquals(original, File(folder, "cache.json").readText())
+    }
+
+    @Test fun `a store from the GROUP build keeps device links and drops the stale server cache`() = runTest {
+        val folder = temporary.newFolder()
+        File(folder, "cache.json").writeText("""
+            {"format":1,
+             "local":{"$id":{"id":"$id","updatedAt":"2026-09-22T09:00:00Z","request":{"subjectId":42,
+               "subjectName":"Предмет","periodKey":"2026-1","category":"TASKS","url":"$url","title":"Лабы","visibility":"PRIVATE"}}},
+             "localPins":{},
+             "scopes":{"42-2026-1":{"scope":{"subjectId":42,"subjectName":"Предмет","periodKey":"2026-1"},
+               "response":{"mine":[],"shared":[{"visibility":"GROUP"}],"previous":[],"audiences":[],"premoderation":true}}}}
+        """.trimIndent())
+        val repository = repo(folder, FakeApi(), Services(false))
+
+        val restored = repository.content(scope).mine.single()
+        assertEquals(id, restored.id)
+        assertTrue(restored.local)
+        assertTrue(repository.content(scope).shared.isEmpty())
     }
 
     private fun repo(folder: File, api: FakeApi, services: Services) =
@@ -181,6 +230,7 @@ class SubjectLinksRepositoryImplTest {
         val mine = linkedMapOf<UUID, WireLink>()
         val shared = mutableListOf<WireLink>()
         val saved = mutableListOf<SaveSubjectLinkRequest>()
+        val audiences = listOf(WireAudience(7101, "ФИЗ ПИИКТ 3", 1, 1), WireAudience(7103, " ФИЗ ПИИКТ 3.2.1 ", 2, 3))
         val calls = mutableListOf<String>()
         var pinnedId: UUID? = null
         var failNext = false
@@ -216,10 +266,11 @@ class SubjectLinksRepositoryImplTest {
 
         fun link(id: UUID, category: LinkCategory, isMine: Boolean, request: SaveSubjectLinkRequest? = null) = WireLink(id, scope.subjectId,
             scope.subjectName, scope.periodKey, WireCategory.valueOf(category.name), request?.url ?: url, request?.title,
-            request?.visibility ?: WireVisibility.ALL, null,
+            request?.visibility ?: WireVisibility.ALL, request?.flowId,
+            audiences.firstOrNull { it.flowId == request?.flowId }?.label,
             if (request?.visibility == WireVisibility.PRIVATE) WireStatus.PRIVATE else WireStatus.PUBLISHED, null,
             0, 0, isMine, false, false, null, now)
 
-        private fun response() = SubjectLinksResponse(mine.values.toList(), shared.toList(), emptyList(), pinnedId, emptyList(), true)
+        private fun response() = SubjectLinksResponse(mine.values.toList(), shared.toList(), emptyList(), pinnedId, audiences, true)
     }
 }

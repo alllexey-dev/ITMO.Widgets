@@ -24,6 +24,7 @@ internal fun WireLink.toModel() = SubjectLink(
     url = url,
     title = title?.trim()?.takeIf { it.isNotEmpty() },
     visibility = visibility.toModel(),
+    flowId = flowId,
     audienceLabel = audienceLabel?.trim()?.takeIf { it.isNotEmpty() },
     status = SubjectLinkStatus.valueOf(status.name),
     reviewNote = reviewNote?.trim()?.takeIf { it.isNotEmpty() },
@@ -43,6 +44,7 @@ internal fun LocalLink.toModel() = SubjectLink(
     url = request.url,
     title = request.title,
     visibility = LinkVisibility.PRIVATE,
+    flowId = null,
     audienceLabel = null,
     status = SubjectLinkStatus.PRIVATE,
     reviewNote = null,
@@ -56,7 +58,7 @@ internal fun LocalLink.toModel() = SubjectLink(
     local = true,
 )
 
-internal fun WireAudience.toModel() = LinkAudience(visibility.toModel(), label.trim())
+internal fun WireAudience.toModel() = LinkAudience(flowId, label.trim(), typeId, depth)
 internal fun WireVisibility.toModel() = LinkVisibility.valueOf(name)
 internal fun LinkVisibility.toWire() = WireVisibility.valueOf(name)
 internal fun LinkCategory.toWire() = WireCategory.valueOf(name)

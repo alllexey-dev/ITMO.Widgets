@@ -18,7 +18,7 @@ data class SubjectLinkChips(val visible: List<SubjectLinkChip>, val moreCount: I
 
 /**
  * Chip order: the pinned link, the LMS page, own links by category, links added to own,
- * group and flow links of others, then the best-scored ALL link of every category not shown yet.
+ * flow links of others, then the best-scored ALL link of every category not shown yet.
  * Chats never become chips: the subject screen lists them separately.
  */
 fun subjectLinkChips(snapshot: SubjectLinksSnapshot, lmsUrl: String?, limit: Int = 4): SubjectLinkChips {
@@ -31,7 +31,7 @@ fun subjectLinkChips(snapshot: SubjectLinksSnapshot, lmsUrl: String?, limit: Int
     addAll(listOfNotNull(pinned))
     addAll(snapshot.mine.filter { it.category != LinkCategory.CHAT }.sortedBy { it.category.ordinal })
     addAll(all.filter { !it.isMine && it.isSaved })
-    addAll(others.filter { it.visibility == LinkVisibility.GROUP || it.visibility == LinkVisibility.FLOW })
+    addAll(others.filter { it.visibility == LinkVisibility.FLOW })
     val lms = lmsUrl?.let(SubjectLinkChip::Lms)
     val shown = links.values.map { it.category }.toSet() + listOfNotNull(lms?.category)
     addAll(others.filter { it.visibility == LinkVisibility.ALL && it.category !in shown }

@@ -16,6 +16,9 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import javax.inject.Inject
 
+/** 2 since links name one schedule flow; 1 held GROUP/FLOW audiences in its cached answers. */
+private const val FORMAT = 2
+
 /** A PRIVATE link saved without the opt-in; [request] is what the first refresh with the opt-in sends. */
 internal data class LocalLink(val id: String, val request: SaveSubjectLinkRequest, val updatedAt: OffsetDateTime) {
     val scope: ResourceScope get() = ResourceScope(request.subjectId, request.subjectName, request.periodKey)
@@ -28,7 +31,7 @@ internal data class LocalPin(val scope: ResourceScope, val linkId: String)
 internal data class CachedLinks(val scope: ResourceScope, val response: SubjectLinksResponse)
 
 internal data class StoredLinks(
-    val format: Int = 1,
+    val format: Int = FORMAT,
     val local: Map<String, LocalLink> = emptyMap(),
     val localPins: Map<String, LocalPin> = emptyMap(),
     val scopes: Map<String, CachedLinks> = emptyMap(),
@@ -43,7 +46,13 @@ class SubjectLinksFileStore internal constructor(private val directory: File, pr
     internal fun read(): StoredLinks {
         if (!file.exists()) return StoredLinks()
         val tree = JsonParser.parseString(file.readText()).asJsonObject
-        check(tree.get("format")?.asInt == 1 && tree.get("local")?.isJsonObject == true) { "Invalid subject links store" }
+        val format = tree.get("format")?.asInt
+        check((format == FORMAT || format == 1) && tree.get("local")?.isJsonObject == true) { "Invalid subject links store" }
+        if (format == 1) {
+            // Format 1 cached server answers with GROUP audiences; the cache is refetched, device-only links stay.
+            tree.remove("scopes")
+            tree.addProperty("format", FORMAT)
+        }
         val state = checkNotNull(gson.fromJson(tree, StoredLinks::class.java))
         // Corruption must not silently discard device-only links by being replaced with an empty store.
         checkNotNull(state.local).forEach { (id, link) ->

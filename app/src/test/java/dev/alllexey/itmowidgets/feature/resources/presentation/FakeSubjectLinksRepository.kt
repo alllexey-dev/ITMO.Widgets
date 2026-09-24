@@ -28,7 +28,8 @@ internal fun subjectLink(
     isSaved: Boolean = false,
     status: SubjectLinkStatus = if (isMine && visibility == LinkVisibility.PRIVATE) SubjectLinkStatus.PRIVATE else SubjectLinkStatus.PUBLISHED,
     title: String? = "Ссылка $id",
-) = SubjectLink(id, linkScope, category, "https://example.org/$id", title, visibility, null, status, null,
+    flowId: Long? = if (visibility == LinkVisibility.FLOW) 7101L else null,
+) = SubjectLink(id, linkScope, category, "https://example.org/$id", title, visibility, flowId, null, status, null,
     score, myVote, isMine, isSaved, reportedByMe = false, author = null, updatedAt = linkTime)
 
 internal fun linksSnapshot(
@@ -61,10 +62,11 @@ internal class FakeSubjectLinksRepository : SubjectLinksRepository {
         url: String,
         title: String?,
         visibility: LinkVisibility,
+        flowId: Long?,
     ): AppResult<SubjectLink> {
         actions += "save"
         gate()
-        val link = subjectLink(id, category, visibility).copy(scope = scope, url = url, title = title)
+        val link = subjectLink(id, category, visibility, flowId = flowId).copy(scope = scope, url = url, title = title)
         lastSave = link
         return (result as? AppResult.Failure) ?: AppResult.Success(link)
     }

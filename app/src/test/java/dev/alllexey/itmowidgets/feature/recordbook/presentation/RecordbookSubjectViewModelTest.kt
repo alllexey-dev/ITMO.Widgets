@@ -283,7 +283,7 @@ class RecordbookSubjectViewModelTest {
         resources.state.value = SubjectLinksState.Content(linksSnapshot(
             mine = listOf(subjectLink("table", LinkCategory.SCORES), subjectLink("chat", LinkCategory.CHAT)),
             shared = listOf(
-                subjectLink("group-chat", LinkCategory.CHAT, LinkVisibility.GROUP, isMine = false),
+                subjectLink("group-chat", LinkCategory.CHAT, LinkVisibility.FLOW, isMine = false),
                 subjectLink("tasks", LinkCategory.TASKS, LinkVisibility.FLOW, isMine = false),
                 subjectLink("notes", LinkCategory.NOTES, LinkVisibility.ALL, isMine = false, score = 3),
                 subjectLink("video", LinkCategory.RECORDINGS, LinkVisibility.ALL, isMine = false),

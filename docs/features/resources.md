@@ -1,7 +1,7 @@
 # Subject links
 
-Students keep HTTPS links per subject and period and see the links their group,
-their lecture flow and everybody else share. Links live on the subject page of
+Students keep HTTPS links per subject and period and see the links shared with
+one of their schedule flows or with everybody. Links live on the subject page of
 the recordbook (see [recordbook](recordbook.md#subject-page)); there is no
 separate links screen. `core/resources` holds the contract, `feature/resources`
 the data, the sheets and their view models. The Backend contract is
@@ -39,16 +39,19 @@ listed in its own block. Labels, icons and visibility texts live in
 | Visibility | Label | Who sees it |
 |---|---|---|
 | `PRIVATE` | `Только я` | the owner |
-| `GROUP` | `Группа` / `Группа P3119` | the author's non-lecture schedule flows of the subject (`type_id != 1`) |
-| `FLOW` | `Поток` / `Поток P3119, P3120` | the author's lecture flows (`type_id == 1`) |
+| `FLOW` | the flow name, e.g. `ФИЗ ПИИКТ 3.2.1` | students with exactly this schedule flow (`flowId`) of the subject and period |
 | `ALL` | `Все` | every student of the subject, after review while premoderation is on |
 
-Audiences are MyITMO schedule `flow_id`s, unique per cohort year, so P3119 of
-two different years never share links. Backend records them from the schedule
-the app uploads and offers only the audiences the viewer has now
-(`SubjectLinksSnapshot.audiences`, labelled with their group names). Group and
-flow links are published at once; `ALL` waits for a moderator while
-`premoderation` is true.
+A `FLOW` link names one MyITMO schedule `flow_id` of the author, of any
+nesting: `ФИЗ ПИИКТ 3` (lectures), `ФИЗ ПИИКТ 3.2` (practice),
+`ФИЗ ПИИКТ 3.2.1` (labs). A link for `3.2.1` reaches only that lab group, one
+for `3` the whole lecture flow. Flow ids are unique per cohort year, so the same
+names of two different years never share links. Backend records flows from the
+schedule the app uploads and offers every flow the viewer has now as
+`SubjectLinksSnapshot.audiences` (`LinkAudience(flowId, label, typeId, depth)`,
+sorted by depth, then name); `SubjectLink.flowId` and `audienceLabel` name the
+flow of a `FLOW` link. Flow links are published at once; `ALL` waits for a
+moderator while `premoderation` is true.
 
 Other students always see published content. The owner additionally sees
 `на проверке`, `отклонена` or `скрыта`; the actions sheet shows the moderator's
@@ -69,7 +72,7 @@ browser only through `core/util/HttpsNavigationPolicy`
 
 `subjectLinkChips` in `core/resources` builds at most four chips in this order:
 the pinned link, the MyITMO LMS page (`lms_link`, shown as `LMS`), own links by
-category, links added from others, group and flow links of others, then the
+category, links added from others, flow links of others, then the
 best-scored `ALL` link of every category not shown yet. `Ещё N` counts the
 other non-chat links and opens the links sheet; the last chip is `+`, which
 reads `Добавить ссылку` when it is alone. A tap opens the link, a long press
@@ -101,9 +104,12 @@ per tag and nothing once the state is saved.
   picks one (Google Sheets → `SCORES`, Google Forms → `QUEUE`, GitHub → `TASKS`,
   YouTube, VK Video → `RECORDINGS`, Notion → `NOTES`, `lms.itmo.ru` →
   `MATERIALS`, Telegram, VK chats, WhatsApp → `CHAT`). The title is optional
-  and its hint is the category name. `Кто видит` offers `Только я`, the
-  available audiences and `Все`; the line under it names the audience, or says
-  that links for everybody are reviewed first. The new link's UUID survives
+  and its hint is the category name. `Кто видит` is a list of radio rows
+  (at least 48 dp): `Только я`, every flow of the viewer (the flow name over
+  the kind of classes from `lessonTypeNameRes`) and `Все` (with `После проверки`
+  while premoderation is on). A chosen flow that is no longer offered falls
+  back to `Только я`; without the connection only `Только я` is listed with a
+  line saying sharing needs the connection. The new link's UUID survives
   process death, so a retried save reaches the same link.
 - `LinkActionsBottomSheet` (long press): `Открыть`; `Добавить к себе` /
   `Убрать из своих` for others' links; `Закрепить` / `Открепить`; `Изменить`
@@ -174,7 +180,7 @@ snapshots on errors, session cleanup and a corrupted file
 (`SubjectLinksViewModelTest`, `LinkEditorViewModelTest`).
 `SubjectLinksVisualTest` runs the real sheets in `SubjectLinksPreviewActivity`
 over the debug-only `MemorySubjectLinksRepository`: every category with chats
-and past years, voting, the editor with a guessed link and available audiences,
+and past years, voting, the editor with three nested flows, the editor with a guessed link and available audiences,
 the editor without the connection, an own rejected link, another student's
 link, and long titles at a large font on a narrow screen. The subject page's
 chips and chats are covered by `RecordbookVisualTest`.

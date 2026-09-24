@@ -6,6 +6,14 @@ publication or deployment.
 
 ## 2.2 — development
 
+### 2026-09-24
+
+- A link is shared with one schedule flow of the subject instead of the fixed
+  `Группа` and `Поток`: `Кто видит` lists `Только я`, every flow of the viewer
+  by nesting (`ФИЗ ПИИКТ 3`, `3.2`, `3.2.1`) with its kind of classes, and
+  `Все`. Flow links are labelled with the flow name. Needs Core and Backend
+  `1.7.0-SNAPSHOT` with `LinkVisibility` `PRIVATE`, `FLOW`, `ALL` and `flowId`.
+
 ### 2026-09-23
 
 - Trimmed app copy: no pull-to-refresh or tap instructions, no settings

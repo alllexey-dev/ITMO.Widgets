@@ -3,6 +3,11 @@ package dev.alllexey.itmowidgets.feature.resources.ui
 import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.TextAppearanceSpan
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,19 +19,21 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
-import dev.alllexey.itmowidgets.core.resources.LinkVisibility
+import dev.alllexey.itmowidgets.core.ui.lessonTypeNameRes
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.util.HttpsNavigationPolicy
+import dev.alllexey.itmowidgets.databinding.ItemLinkAudienceOptionBinding
 import dev.alllexey.itmowidgets.databinding.SheetLinkEditorBinding
+import dev.alllexey.itmowidgets.feature.resources.presentation.LinkAudienceOption
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
-import dev.alllexey.itmowidgets.core.ui.label
 import dev.alllexey.itmowidgets.core.ui.linkIconRes
 import dev.alllexey.itmowidgets.core.ui.title
 import kotlinx.coroutines.flow.launchIn
@@ -41,6 +48,9 @@ class LinkEditorBottomSheet : BottomSheetDialogFragment() {
     /** Programmatic updates of the fields must not read as the user's choice. */
     private var rendering = false
     private var shownCategory: LinkCategory? = null
+    /** The rows currently in the «Кто видит» group by view ID; rebuilt only when the offer changes. */
+    private var shownAudiences: Pair<List<LinkAudienceOption>, Boolean>? = null
+    private val audienceRows = mutableMapOf<Int, LinkAudienceOption>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = SheetLinkEditorBinding.inflate(inflater, container, false)
@@ -69,8 +79,8 @@ class LinkEditorBottomSheet : BottomSheetDialogFragment() {
             if (rendering) return@setOnCheckedStateChangeListener
             ids.firstOrNull()?.let(::categoryOf)?.let(viewModel::onCategorySelected)
         }
-        visibility.addOnButtonCheckedListener { _, id, checked ->
-            if (checked && !rendering) visibilityOf(id)?.let(viewModel::onVisibilitySelected)
+        visibility.setOnCheckedChangeListener { _, id ->
+            if (!rendering) audienceRows[id]?.let(viewModel::onAudienceSelected)
         }
         saveButton.setOnClickListener { viewModel.save() }
         viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
@@ -100,9 +110,7 @@ class LinkEditorBottomSheet : BottomSheetDialogFragment() {
             nameLayout.hint = state.category?.title()?.resolve(requireContext()) ?: getString(R.string.links_name_hint)
             if (name.text?.toString() != state.title) name.setText(state.title)
             nameLayout.error = state.titleError?.resolve(requireContext())
-            LinkVisibility.entries.forEach { option -> buttonOf(option).isVisible = option in state.visibilities }
-            visibility.check(buttonOf(state.visibility).id)
-            audience.text = audienceText(state)
+            bindAudiences(state)
             saveButton.isEnabled = state.canSave
         } finally {
             rendering = false
@@ -119,13 +127,47 @@ class LinkEditorBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    /** Without the connection only «Только я» is offered and the line says why. */
-    private fun audienceText(state: LinkEditorUiState): String = when {
-        state.visibilities.size == 1 -> getString(R.string.links_connection_required)
-        state.visibility == LinkVisibility.PRIVATE -> getString(R.string.links_audience_private)
-        state.visibility == LinkVisibility.ALL ->
-            getString(if (state.premoderation) R.string.links_audience_all_review else R.string.links_audience_all)
-        else -> state.visibility.label(state.audiences.firstOrNull { it.visibility == state.visibility }).resolve(requireContext())
+    /** Without the connection only «Только я» is offered and the line below says why. */
+    private fun bindAudiences(state: LinkEditorUiState) = with(binding) {
+        val offer = state.options to state.premoderation
+        if (offer != shownAudiences) {
+            shownAudiences = offer
+            visibility.clearCheck()
+            visibility.removeAllViews()
+            audienceRows.clear()
+            state.options.forEach { option ->
+                val row = ItemLinkAudienceOptionBinding.inflate(layoutInflater, visibility, false).root
+                row.id = View.generateViewId()
+                row.text = audienceText(option, state.premoderation)
+                audienceRows[row.id] = option
+                visibility.addView(row)
+            }
+        }
+        val selected = audienceRows.entries.first { it.value == state.selected }.key
+        if (visibility.checkedRadioButtonId != selected) visibility.check(selected)
+        connectionHint.isVisible = state.options.size == 1
+    }
+
+    /** A flow is its schedule name over the kind of classes; «Все» notes the review when there is one. */
+    private fun audienceText(option: LinkAudienceOption, premoderation: Boolean): CharSequence = when (option) {
+        LinkAudienceOption.Private -> getString(R.string.links_visibility_private)
+        is LinkAudienceOption.Flow -> twoLines(option.audience.label, getString(lessonTypeNameRes(option.audience.typeId)))
+        LinkAudienceOption.All -> twoLines(getString(R.string.links_visibility_all),
+            getString(R.string.links_visibility_all_review).takeIf { premoderation })
+    }
+
+    private fun twoLines(title: String, subtitle: String?): CharSequence {
+        if (subtitle == null) return title
+        val appearance = TypedValue().also {
+            requireContext().theme.resolveAttribute(com.google.android.material.R.attr.textAppearanceBodyMedium, it, true)
+        }.resourceId
+        val color = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurfaceVariant)
+        return SpannableStringBuilder(title).append('\n').apply {
+            val start = length
+            append(subtitle)
+            setSpan(TextAppearanceSpan(requireContext(), appearance), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(ForegroundColorSpan(color), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
     }
 
     /** Clipboard reads need window focus, which a sheet only gets once it is shown. */
@@ -166,16 +208,9 @@ class LinkEditorBottomSheet : BottomSheetDialogFragment() {
         LinkCategory.OTHER -> R.id.category_other
     }
 
-    private fun visibilityOf(buttonId: Int): LinkVisibility? = LinkVisibility.entries.firstOrNull { buttonOf(it).id == buttonId }
-
-    private fun buttonOf(visibility: LinkVisibility) = when (visibility) {
-        LinkVisibility.PRIVATE -> binding.visibilityPrivate
-        LinkVisibility.GROUP -> binding.visibilityGroup
-        LinkVisibility.FLOW -> binding.visibilityFlow
-        LinkVisibility.ALL -> binding.visibilityAll
-    }
-
     override fun onDestroyView() {
+        shownAudiences = null
+        audienceRows.clear()
         _binding = null
         super.onDestroyView()
     }

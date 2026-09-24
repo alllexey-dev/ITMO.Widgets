@@ -28,14 +28,34 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** One row of «Кто видит»: only me, one schedule flow of the viewer, or everybody. */
+sealed interface LinkAudienceOption {
+    val visibility: LinkVisibility
+    val flowId: Long? get() = null
+
+    data object Private : LinkAudienceOption {
+        override val visibility = LinkVisibility.PRIVATE
+    }
+
+    data class Flow(val audience: LinkAudience) : LinkAudienceOption {
+        override val visibility = LinkVisibility.FLOW
+        override val flowId: Long get() = audience.flowId
+    }
+
+    data object All : LinkAudienceOption {
+        override val visibility = LinkVisibility.ALL
+    }
+}
+
 data class LinkEditorUiState(
     val url: String = "",
     val category: LinkCategory? = null,
     val title: String = "",
     val visibility: LinkVisibility = LinkVisibility.PRIVATE,
-    /** PRIVATE, the viewer's group and flow audiences, ALL; only PRIVATE without the ITMO.Widgets connection. */
-    val visibilities: List<LinkVisibility> = listOf(LinkVisibility.PRIVATE),
-    val audiences: List<LinkAudience> = emptyList(),
+    /** The chosen flow of a FLOW link; null otherwise. */
+    val flowId: Long? = null,
+    /** Only me, every flow of the viewer in the server's order, everybody; only me without the ITMO.Widgets connection. */
+    val options: List<LinkAudienceOption> = listOf(LinkAudienceOption.Private),
     /** Links for everyone wait for review first. */
     val premoderation: Boolean = true,
     val urlError: UiText? = null,
@@ -44,6 +64,8 @@ data class LinkEditorUiState(
     val editing: Boolean = false,
 ) {
     val canSave: Boolean get() = url.isNotBlank() && category != null && !saving
+    val selected: LinkAudienceOption get() = options.firstOrNull { it.visibility == visibility && it.flowId == flowId }
+        ?: LinkAudienceOption.Private
 }
 
 /** Adds a link, or edits the viewer's own link given by [SubjectLinksArgs.LINK_ID]. */
@@ -85,8 +107,8 @@ class LinkEditorViewModel @Inject constructor(
 
     fun onTitleChanged(title: String) = _uiState.update { it.copy(title = title, titleError = null) }
 
-    fun onVisibilitySelected(visibility: LinkVisibility) = _uiState.update {
-        if (visibility in it.visibilities) it.copy(visibility = visibility) else it
+    fun onAudienceSelected(option: LinkAudienceOption) = _uiState.update {
+        if (option in it.options) it.copy(visibility = option.visibility, flowId = option.flowId) else it
     }
 
     fun save() {
@@ -103,7 +125,7 @@ class LinkEditorViewModel @Inject constructor(
         }
         _uiState.update { it.copy(saving = true) }
         viewModelScope.launch {
-            val result = repository.save(scope, id, category, url, title.ifEmpty { null }, state.visibility)
+            val result = repository.save(scope, id, category, url, title.ifEmpty { null }, state.visibility, state.flowId)
             _uiState.update { it.copy(saving = false) }
             channel.send(when (result) {
                 is AppResult.Success -> LinkEvent.Saved
@@ -116,15 +138,17 @@ class LinkEditorViewModel @Inject constructor(
         if (prefilled) return this
         val link = snapshot?.mine?.firstOrNull { it.id == editedId } ?: return this
         prefilled = true
-        return copy(url = link.url, category = link.category, title = link.title.orEmpty(), visibility = link.visibility)
+        return copy(url = link.url, category = link.category, title = link.title.orEmpty(), visibility = link.visibility,
+            flowId = link.flowId)
     }
 
+    /** A choice that is no longer offered, such as a flow gone from the schedule, falls back to only me. */
     private fun LinkEditorUiState.withOptions(snapshot: SubjectLinksSnapshot?): LinkEditorUiState {
-        val audiences = if (snapshot?.servicesEnabled == true) snapshot.audiences else emptyList()
-        val options = if (snapshot?.servicesEnabled != true) listOf(LinkVisibility.PRIVATE) else
-            (listOf(LinkVisibility.PRIVATE) + audiences.map { it.visibility } + LinkVisibility.ALL).distinct().sortedBy { it.ordinal }
-        return copy(visibilities = options, audiences = audiences, premoderation = snapshot?.premoderation ?: true,
-            visibility = visibility.takeIf { it in options } ?: LinkVisibility.PRIVATE)
+        val options = if (snapshot?.servicesEnabled != true) listOf(LinkAudienceOption.Private) else
+            listOf(LinkAudienceOption.Private) + snapshot.audiences.map(LinkAudienceOption::Flow) + LinkAudienceOption.All
+        val kept = options.any { it.visibility == visibility && it.flowId == flowId }
+        return copy(options = options, premoderation = snapshot?.premoderation ?: true,
+            visibility = if (kept) visibility else LinkVisibility.PRIVATE, flowId = if (kept) flowId else null)
     }
 
     private fun isHttpsLink(url: String): Boolean {

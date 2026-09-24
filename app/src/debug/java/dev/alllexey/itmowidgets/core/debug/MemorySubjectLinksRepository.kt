@@ -50,9 +50,11 @@ class MemorySubjectLinksRepository : SubjectLinksRepository {
         url: String,
         title: String?,
         visibility: LinkVisibility,
+        flowId: Long?,
     ): AppResult<SubjectLink> {
         if (!servicesEnabled && visibility != LinkVisibility.PRIVATE) return AppResult.Failure(AppError.CustomServicesDisabled)
-        val link = SubjectLink(id, scope, category, url, title, visibility, null,
+        val label = peek(scope).audiences.firstOrNull { it.flowId == flowId }?.label
+        val link = SubjectLink(id, scope, category, url, title, visibility, flowId, label,
             if (visibility == LinkVisibility.PRIVATE) SubjectLinkStatus.PRIVATE else SubjectLinkStatus.PUBLISHED, null,
             0, 0, isMine = true, isSaved = false, reportedByMe = false, author = null, updatedAt = now, local = !servicesEnabled)
         update(scope) { it.copy(mine = it.mine.filterNot { row -> row.id == id } + link) }

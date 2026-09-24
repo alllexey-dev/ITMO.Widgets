@@ -1,18 +1,20 @@
 # 0008 Subject links: schedule-flow audiences, premoderation only for everybody
 
-**Decision (2026-09-23).** A subject link has a category and a visibility:
-`PRIVATE`, `GROUP`, `FLOW` or `ALL`. Group and flow links are published to
-their audience at once; only links for everybody (`ALL`) go through
+**Decision (2026-09-23, audiences revised 2026-09-24).** A subject link has a
+category and a visibility: `PRIVATE`, `FLOW` or `ALL`. Flow links are published
+to their flow at once; only links for everybody (`ALL`) go through
 premoderation, and premoderation is a policy that can be switched off without a
 deployment. A chat is an ordinary link with category `CHAT`.
 
 **Audiences.** Audiences are MyITMO schedule `flow_id`s. A flow id is unique per
 cohort year and uses the same ids as ISU potok ids, so group P3119 of this year
 and of last year never share links, which a group name could not guarantee.
-`GROUP` is every flow of the author in the subject and period with
-`type_id != 1` (practice, labs), `FLOW` every flow with `type_id == 1`
-(lectures). Saving a group or flow link snapshots the author's matching flows;
-a viewer sees it when they share one of them.
+A `FLOW` link names exactly one flow of the author in the subject and period,
+of any nesting (`ФИЗ ПИИКТ 3` lectures, `3.2` practice, `3.2.1` labs); a viewer
+sees it when that flow is in their schedule. The earlier fixed audiences
+(`GROUP` = every non-lecture flow of the author, `FLOW` = every lecture flow)
+were replaced on 2026-09-24: they could not tell a lab subgroup from its
+practice group and forced one choice for all of them.
 
 Membership is behind the Backend interface `FlowMembership`. Its only
 implementation, `ScheduleFlowMembership`, trusts the schedule the user
@@ -33,7 +35,7 @@ change. Until then a modified client could claim a flow it does not attend;
 the reach of such a link is one subject's audience, and reports, votes and
 restrictions apply to it.
 
-**Why premoderation only for everybody.** A group or flow link reaches students
+**Why premoderation only for everybody.** A flow link reaches students
 who attend the same classes as the author, and chats or score tables are useful
 the moment they are shared; a review queue would only delay them. A link for
 everybody reaches strangers of every intake, and approved `ALL` links of
@@ -42,9 +44,9 @@ lasting categories are also shown to later years (`С прошлых лет`).
 **Moderation.** Roles, cases, append-only decisions, reports, capability
 restrictions and typed policies with code defaults are shared machinery that
 teacher reviews will reuse. Every change of a non-private link creates an
-immutable revision; others always see the latest approved revision, so a group
+immutable revision; others always see the latest approved revision, so a flow
 link widened to `ALL` is not public before a moderator approves it. Automatic
-approval of group, flow and (with premoderation off) public links is a decision
+approval of flow and (with premoderation off) public links is a decision
 by `actor=POLICY`, never a fictional moderator. Switching premoderation off
 approves the pending queue. Reports and a falling vote score open a case once
 their thresholds are reached; neither hides a link by itself. Restrictions are

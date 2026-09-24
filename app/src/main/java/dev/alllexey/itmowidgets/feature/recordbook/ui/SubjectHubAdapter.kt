@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChip
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
@@ -275,7 +274,7 @@ class SubjectHubAdapter(
             val context = binding.root.context
             binding.icon.setImageResource(linkIconRes(link.category, link.url))
             binding.title.text = link.title ?: link.url.toUri().host ?: link.url
-            binding.caption.text = link.visibility.label(link.audienceLabel?.let { LinkAudience(link.visibility, it) }).resolve(context)
+            binding.caption.text = link.visibility.label(link.audienceLabel).resolve(context)
             binding.root.setOnClickListener { hubActions.onOpenLink(link.url) }
             binding.root.setOnLongClickListener { hubActions.onLinkActions(link); true }
         }
