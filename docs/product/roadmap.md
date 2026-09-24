@@ -52,6 +52,15 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   results, subject resources) plug in without touching `feature/home`. The QR
   quick-settings tile, the app shortcuts, the study-root renaming and the
   bottom-bar/back-stack rules of Stage 43 remain open.
+- Outside the numbered stages, 2026-09-24 through `vibe/web-app-plan.md`: a web
+  version at `/app/` (repository `itmo-widgets-web`, next to the landing) with
+  a shell and an admin area for moderators and the admin (moderation queue,
+  restrictions, users and roles, dashboard, sport, system settings, audit).
+  A browser signs in by approval from the app (`Вход на сайт` in the profile,
+  QR or typed code, see [web sign-in](../features/web-login.md)); Backend then
+  issues an httpOnly web session. Student sections of the web version come
+  later and will sign in with an ITMO.ID token kept in the browser; Backend
+  does not proxy MyITMO for the browser. Not released to production.
 
 ## Plan Structure
 

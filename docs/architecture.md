@@ -49,18 +49,22 @@ core/           cross-cutting; knows nothing about features
   social/       SocialRepository, PeopleSearchRepository
   sport/        SportScoreRepository, PendingSportBookingsRepository
   storage/      DataStore wrappers, encrypted token storage
-  text/         UiText
+  text/         UiText; core/ui `resolve()` resolves UiText arguments first, so a format takes localized names
   time/         AcademicTimeProvider, WallClock
   qr/           CustomSpoilerManager
   ui/           AvatarView, state helpers, AppNavigator port, WidgetPinRequester, the spoiler crop screen,
-                the details-sheet header (view_details_header.xml + DetailsHeader.kt), ConditionTone
+                the details-sheet header (view_details_header.xml + DetailsHeader.kt), ConditionTone,
+                BottomSheets.kt (expandToContent() for sheets that open at their content height)
+  weblogin/     WebLoginRepository and WebLoginPreview — approving a browser's sign-in to the web version
 di/             Hilt modules, one per feature or concern
 feature/<name>/ ui | presentation | domain | data
 ```
 
 Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
 `recordbook`, `resources`, `schedule`, `settings`, `social`, `sport`, `update`,
-`widget`. A feature does not need all four layers.
+`weblogin`, `widget`. A feature does not need all four layers. `weblogin` holds
+the code and link parser, the User-Agent description, the view model and
+`WebLoginBottomSheet` ([web sign-in](features/web-login.md)).
 
 Placement rules:
 
@@ -171,9 +175,10 @@ Features open contextual screens through `core/ui/navigation.AppNavigator`,
 implemented by `MainActivity` and `MainNavigationCoordinator`. The same port
 shows the lesson and pending-sport sheets (`openLessonDetails`,
 `openPendingSportDetails`) and the subject link sheets (`openSubjectLinks`,
-`openLinkEditor`, `openLinkActions`) on the Activity's FragmentManager, so a
-screen in another feature can open them without importing `feature/schedule`
-or `feature/resources`. Selecting or
+`openLinkEditor`, `openLinkActions`) and the web sign-in sheet
+(`openWebLogin`) on the Activity's FragmentManager, so a screen in another
+feature can open them without importing `feature/schedule`, `feature/resources`
+or `feature/weblogin`. Selecting or
 reselecting a root tab discards the whole overlay stack; Back pops one overlay
 level; rotation restores the current level. Widget and notification intents are
 parsed by `MainActivityIntentRouting`, queued until the session is signed in,

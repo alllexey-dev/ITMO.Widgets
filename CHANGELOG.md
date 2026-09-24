@@ -13,6 +13,20 @@ publication or deployment.
   by nesting (`ФИЗ ПИИКТ 3`, `3.2`, `3.2.1`) with its kind of classes, and
   `Все`. Flow links are labelled with the flow name. Needs Core and Backend
   `1.7.0-SNAPSHOT` with `LinkVisibility` `PRIVATE`, `FLOW`, `ALL` and `flowId`.
+- `Вход на сайт` in the profile (only with `Подключение к ITMO.Widgets`) signs a
+  browser in to the web version at `/app/`: scan the QR with Google's code
+  scanner (no camera permission, `barcode_ui` module installed with the app) or
+  type the eight-character code, check the browser (`Chrome на macOS`) and the
+  request time, then `Войти`. Codes live 2 minutes and are approved only with
+  the app's ITMO.ID token. New `core/weblogin` and `feature/weblogin`; Core
+  `1.7.0-SNAPSHOT` adds `webLoginPreview`, `approveWebLogin` and `myRoles`;
+  Backend `1.7.0-SNAPSHOT` with `V5__web_sessions_and_admin.sql` is required.
+- `expandToContent()` moved to `core/ui/BottomSheets.kt` for every sheet;
+  `UiText.resolve()` resolves `UiText` arguments.
+- `Кто видит` is ordered from the widest audience to the narrowest: `Все`, the
+  flows from broad to nested, then `Только я`.
+- Public `t.me` links (channels, posts, invites) open in the Telegram client
+  through `tg://` (`core/util/TelegramLinks`) instead of the browser.
 
 ### 2026-09-23
 

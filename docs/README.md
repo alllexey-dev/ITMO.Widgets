@@ -33,6 +33,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 - [Notifications](features/notifications.md) — FCM receiver, token sync, handlers.
 - [Widgets](features/widgets.md) — schedule and QR widgets and their previews.
 - [Update offer](features/update.md) — version check and reminder policy.
+- [Web sign-in](features/web-login.md) — approving a browser's sign-in to the
+  web version with a QR or a typed code.
 
 ## Decisions
 
@@ -53,3 +55,4 @@ editing an old one when a decision changes.
 - Backend: `../itmo-widgets-backend/docs/README.md`
 - Core: `../itmo-widgets-core/docs/contract.md`
 - MyItmoApi: `../MyItmoApi/README.md`
+- Web version and landing: `../itmo-widgets-web/web/README.md`
