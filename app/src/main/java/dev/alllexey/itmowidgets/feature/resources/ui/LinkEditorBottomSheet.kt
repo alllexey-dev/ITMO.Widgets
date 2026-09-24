@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.core.ui.label
+import dev.alllexey.itmowidgets.core.ui.linkIconRes
 import dev.alllexey.itmowidgets.core.ui.title
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -61,6 +62,8 @@ class LinkEditorBottomSheet : BottomSheetDialogFragment() {
         name.setHorizontallyScrolling(false)
         name.maxLines = MAX_TITLE_LINES
         url.doAfterTextChanged { if (!rendering) viewModel.onUrlChanged(it?.toString().orEmpty()) }
+        // The stock clear_text icon hides without focus; here it stays while there is text to clear.
+        urlLayout.setEndIconOnClickListener { url.text = null }
         name.doAfterTextChanged { if (!rendering) viewModel.onTitleChanged(it?.toString().orEmpty()) }
         categories.setOnCheckedStateChangeListener { _, ids ->
             if (rendering) return@setOnCheckedStateChangeListener
@@ -89,8 +92,11 @@ class LinkEditorBottomSheet : BottomSheetDialogFragment() {
                 url.setText(state.url)
                 url.setSelection(state.url.length)
             }
+            urlLayout.isEndIconVisible = state.url.isNotEmpty()
             urlLayout.error = state.urlError?.resolve(requireContext())
             bindCategory(state.category)
+            root.findViewById<com.google.android.material.chip.Chip>(chipIdOf(LinkCategory.CHAT))
+                .setChipIconResource(linkIconRes(LinkCategory.CHAT, state.url))
             nameLayout.hint = state.category?.title()?.resolve(requireContext()) ?: getString(R.string.links_name_hint)
             if (name.text?.toString() != state.title) name.setText(state.title)
             nameLayout.error = state.titleError?.resolve(requireContext())

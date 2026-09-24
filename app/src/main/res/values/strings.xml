@@ -296,6 +296,7 @@
     <string name="diagnostics_copy">Копировать</string>
     <string name="diagnostics_copied">Журнал скопирован</string>
     <string name="diagnostics_clear">Очистить</string>
+    <string name="links_url_clear">Очистить ссылку</string>
     <string name="diagnostics_clear_confirm_title">Очистить журнал?</string>
     <string name="diagnostics_clear_confirm_message">Записи удалятся с устройства, восстановить их не получится.</string>
     <string name="diagnostics_empty_title">Ошибок нет</string>

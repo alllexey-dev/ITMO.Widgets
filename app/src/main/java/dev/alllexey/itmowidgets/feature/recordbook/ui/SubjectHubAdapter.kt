@@ -22,6 +22,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.ui.buildingShortTitle
 import dev.alllexey.itmowidgets.core.ui.iconRes
+import dev.alllexey.itmowidgets.core.ui.linkIconRes
 import dev.alllexey.itmowidgets.core.ui.label
 import dev.alllexey.itmowidgets.core.ui.lessonTypeColorRes
 import dev.alllexey.itmowidgets.core.ui.lessonTypeNameRes
@@ -272,6 +273,7 @@ class SubjectHubAdapter(
     private inner class ChatHolder(val binding: ItemSubjectChatBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(link: SubjectLink) {
             val context = binding.root.context
+            binding.icon.setImageResource(linkIconRes(link.category, link.url))
             binding.title.text = link.title ?: link.url.toUri().host ?: link.url
             binding.caption.text = link.visibility.label(link.audienceLabel?.let { LinkAudience(link.visibility, it) }).resolve(context)
             binding.root.setOnClickListener { hubActions.onOpenLink(link.url) }

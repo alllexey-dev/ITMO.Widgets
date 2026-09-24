@@ -31,7 +31,9 @@
             android:layout_marginHorizontal="@dimen/design_screen_margin"
             android:layout_marginTop="@dimen/design_spacing_group"
             android:hint="@string/links_url_hint"
-            app:endIconMode="clear_text">
+            app:endIconContentDescription="@string/links_url_clear"
+            app:endIconDrawable="@drawable/ic_close_rounded"
+            app:endIconMode="custom">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/url"

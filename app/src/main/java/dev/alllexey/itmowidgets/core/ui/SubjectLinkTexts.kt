@@ -31,6 +31,17 @@ fun LinkCategory.iconRes(): Int = when (this) {
     LinkCategory.OTHER -> R.drawable.ic_link
 }
 
+/** Chats show the messenger they lead to; everything else keeps its category symbol. */
+fun linkIconRes(category: LinkCategory, url: String): Int {
+    if (category != LinkCategory.CHAT) return category.iconRes()
+    val host = runCatching { java.net.URI(url.trim()).host }.getOrNull()?.lowercase()?.removePrefix("www.")
+    return when (host) {
+        "t.me", "telegram.me", "telegram.dog" -> R.drawable.ic_brand_telegram
+        "vk.com", "vk.ru", "vk.me", "m.vk.com" -> R.drawable.ic_brand_vk
+        else -> category.iconRes()
+    }
+}
+
 /** With an [audience] a group or flow is named by its schedule groups, e.g. «Группа P3119». */
 fun LinkVisibility.label(audience: LinkAudience? = null): UiText = when {
     this == LinkVisibility.GROUP && audience != null -> UiText.Resource(R.string.links_visibility_group_audience, listOf(audience.label))

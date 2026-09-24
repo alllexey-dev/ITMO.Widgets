@@ -14,6 +14,7 @@
     android:paddingVertical="@dimen/design_spacing_compact">
 
     <ImageView
+        android:id="@+id/icon"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_marginEnd="@dimen/design_spacing_content"
