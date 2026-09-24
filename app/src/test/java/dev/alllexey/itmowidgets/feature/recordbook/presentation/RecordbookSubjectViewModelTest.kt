@@ -279,7 +279,7 @@ class RecordbookSubjectViewModelTest {
 
     // --- links, grade step, control groups, lessons
 
-    @Test fun `chips and chats come from the links snapshot`() = runTest {
+    @Test fun `chips rank the snapshot links by score and chats come from it`() = runTest {
         resources.state.value = SubjectLinksState.Content(linksSnapshot(
             mine = listOf(subjectLink("table", LinkCategory.SCORES), subjectLink("chat", LinkCategory.CHAT)),
             shared = listOf(
@@ -292,7 +292,7 @@ class RecordbookSubjectViewModelTest {
         ))
         val vm = model(); advanceUntilIdle()
         val hub = vm.hub()
-        assertEquals(listOf("table", "tasks", "video", "notes"),
+        assertEquals(listOf("notes", "table", "tasks", "video"),
             hub.chips.visible.map { (it as SubjectLinkChip.Link).link.id })
         assertEquals(1, hub.chips.moreCount)
         assertEquals(listOf("chat", "group-chat"), hub.chats.map { it.id })

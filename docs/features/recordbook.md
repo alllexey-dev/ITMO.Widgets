@@ -106,8 +106,9 @@ list drawn by `SubjectHubAdapter`, in this order:
    result is open the hint names the next step, `до 4C ещё 3` or `до зачёта ещё 8`
    (`RecordbookGradeScale.nextStep`); a passed plain credit has none. PE shows
    the sport card instead.
-2. Link chips and then `Чаты` for everything except PE, including past periods;
-   see [resources](resources.md).
+2. `Ссылки` with a trailing `Все` that opens the links sheet, link chips and
+   then `Чаты` for everything except PE, including past periods; the header is
+   there even without links. See [resources](resources.md).
 3. `Баллы`: controls and [control groups](#control-groups), groups expanded.
 4. `Преподаватели`: distinct people from the subject's lessons, each with the
    lesson types they run, most frequent first; without lessons the recordbook
@@ -238,8 +239,8 @@ subject context resolver, the binding store and every subject-page state of
 `RecordbookSubjectViewModel`, including links, chats and `Все пары`. Visual tests
 run the real Fragments in `RecordbookPreviewActivity` with synthetic data
 (`RecordbookPreviewFixtures`): compact rows, `Требуют внимания` with PE, the
-summary only in the session, the one-page subject with its hint, chips and
-`Ещё N`, chats, expanded groups, two lessons and `Все пары`, a past period with
+summary only in the session, the one-page subject with its hint, `Ссылки` with
+`Все`, chips ranked by score with the own one filled, `Ещё N`, chats, expanded groups, two lessons and `Все пары`, a past period with
 links and PE without chips. Add
 `-Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full` and
 `-Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true` for all

@@ -70,14 +70,19 @@ browser only through `core/util/HttpsNavigationPolicy`
 
 ## Subject page
 
-`subjectLinkChips` in `core/resources` builds at most four chips in this order:
-the pinned link, the MyITMO LMS page (`lms_link`, shown as `LMS`), own links by
-category, links added from others, flow links of others, then the
-best-scored `ALL` link of every category not shown yet. `Ещё N` counts the
-other non-chat links and opens the links sheet; the last chip is `+`, which
-reads `Добавить ссылку` when it is alone. A tap opens the link, a long press
-opens its actions. `Чаты` follows the chips: own and shared chat links with
-the title (or the host) and the visibility label.
+The links block starts with a `Ссылки` header whose trailing `Все` (a 48 dp
+text button with a chevron) opens the links sheet whenever the subject has
+links, even with none yet: the sheet has its own empty state and
+`Добавить ссылку`. `subjectLinkChips` in `core/resources` builds at most four
+chips in this order: the pinned link, the MyITMO LMS page (`lms_link`, shown as
+`LMS`), then every other non-chat link of the period, own, added and shared
+alike, by `SubjectLinkRanking`: the higher score first, of equal scores the
+newer link. A link is shown once. An own link is a filled
+`colorSurfaceContainerHighest` chip with `colorOnSurface` text, the others stay outlined. `Ещё N` counts the
+other non-chat links and also opens the links sheet; the last chip is `+`,
+which reads `Добавить ссылку` when it is alone. A tap opens the link, a long
+press opens its actions. `Чаты` follows the chips: own and shared chat links
+with the title (or the host) and the visibility label.
 
 The recordbook reads the cached snapshot through `SubjectLinksRepository.peek`
 first, so a second visit opens without a spinner, then refreshes the scope.
@@ -90,7 +95,10 @@ The sheets sit on the Activity's FragmentManager and belong to no back stack.
 per tag and nothing once the state is saved.
 
 - `SubjectLinksBottomSheet` (`Ссылки` and the subject name): one section per
-  category in declaration order, `Чаты` after them, `С прошлых лет` last. A row
+  category in declaration order, `Чаты` after them, `С прошлых лет` last.
+  Within a category own and others' links are ranked together by
+  `SubjectLinkRanking`; an own row sits on a rounded `colorSurfaceContainerHigh`
+  surface (20 dp, as other list rows) and its caption names who sees it. A row
   shows the title or host and a line with the host when titled, the visibility
   of an own link or the author's group of another's, the study year of a past
   link, `закреплена` and the owner's review state. Others' links have vote
@@ -112,11 +120,17 @@ per tag and nothing once the state is saved.
   back to `Только я`; without the connection only `Только я` is listed with a
   line saying sharing needs the connection. The new link's UUID survives
   process death, so a retried save reaches the same link.
-- `LinkActionsBottomSheet` (long press): `Открыть`; `Добавить к себе` /
+- `LinkActionsBottomSheet` (long press): another student's link starts with
+  the same vote arrows and score as the list row (`view_link_votes.xml`,
+  `LinkVotes.kt`; tapping the current arrow takes the vote back); the score
+  follows the repository and a vote keeps the sheet open. The arrows are
+  hidden under a `VOTE` restriction and without the connection. An own shared
+  link shows its score without arrows, an own private one none. Then
+  `Открыть`; `Добавить к себе` /
   `Убрать из своих` for others' links; `Закрепить` / `Открепить`; `Изменить`
   and `Удалить` (confirmed) for own links; `Пожаловаться` opens
   `ReportLinkDialogFragment` once per link. Actions run one at a time; a
-  failure is a snackbar.
+  failure is a snackbar. Every action but a vote closes the sheet on success.
 
 ## Without the connection
 
@@ -173,15 +187,18 @@ Strict verification of flow membership is deferred, see
 ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.resources.SubjectLinksVisualTest
 ```
 
-JVM tests cover chip order and `Ещё N` (`SubjectLinkChipsTest`), period keys
+JVM tests cover chip order, ranking ties and `Ещё N` (`SubjectLinkChipsTest`), period keys
 (`ResourceScopeTest`), category guessing (`LinkCategoryGuessTest`), the
 repository without and with the connection, the upload of local links, cached
 snapshots on errors, session cleanup and a corrupted file
-(`SubjectLinksRepositoryImplTest`), and the sheet and editor view models
-(`SubjectLinksViewModelTest`, `LinkEditorViewModelTest`).
+(`SubjectLinksRepositoryImplTest`), and the sheet and editor view models, including the ranking within a category
+and votes that keep the actions sheet open (`SubjectLinksViewModelTest`,
+`LinkEditorViewModelTest`).
 `SubjectLinksVisualTest` runs the real sheets in `SubjectLinksPreviewActivity`
 over the debug-only `MemorySubjectLinksRepository`: every category with chats
 and past years, voting, the editor with three nested flows, the editor with a guessed link and available audiences,
 the editor without the connection, an own rejected link, another student's
-link, and long titles at a large font on a narrow screen. The subject page's
-chips and chats are covered by `RecordbookVisualTest`.
+link, an own row ranked between others' rows on its tonal surface, voting in
+the actions sheet, the own score without arrows, arrows hidden by a restriction,
+and long titles at a large font on a narrow screen. The subject page's
+`Ссылки` header, chips and chats are covered by `RecordbookVisualTest`.

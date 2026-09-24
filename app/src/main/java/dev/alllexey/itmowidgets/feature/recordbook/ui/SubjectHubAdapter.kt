@@ -233,6 +233,7 @@ class SubjectHubAdapter(
             val group = binding.chips
             val context = group.context
             val inflater = LayoutInflater.from(context)
+            binding.allLinks.setOnClickListener { hubActions.onAllLinks() }
             group.removeAllViews()
             fun chip(text: CharSequence, icon: Int?): Chip =
                 (inflater.inflate(R.layout.item_subject_link_chip, group, false) as Chip).apply {
@@ -244,6 +245,7 @@ class SubjectHubAdapter(
             chips.visible.forEach { item ->
                 when (item) {
                     is SubjectLinkChip.Link -> chip(item.link.title ?: item.link.category.title().resolve(context), item.category.iconRes()).apply {
+                        if (item.link.isMine) highlightOwn()
                         setOnClickListener { hubActions.onOpenLink(item.link.url) }
                         setOnLongClickListener { hubActions.onLinkActions(item.link); true }
                     }
@@ -267,6 +269,20 @@ class SubjectHubAdapter(
                 setOnClickListener { hubActions.onAddLink() }
             }
         }
+    }
+
+    /**
+     * An own link is a filled neutral chip among outlined ones, the same tone as own rows in the
+     * links sheet; secondaryContainer read too faintly with some dynamic palettes.
+     */
+    private fun Chip.highlightOwn() {
+        val onSurface = context.color.onSurface
+        chipBackgroundColor = ColorStateList.valueOf(
+            context.color.resolve(com.google.android.material.R.attr.colorSurfaceContainerHighest)
+        )
+        chipStrokeWidth = 0f
+        setTextColor(onSurface)
+        chipIconTint = ColorStateList.valueOf(onSurface)
     }
 
     private inner class ChatHolder(val binding: ItemSubjectChatBinding) : RecyclerView.ViewHolder(binding.root) {

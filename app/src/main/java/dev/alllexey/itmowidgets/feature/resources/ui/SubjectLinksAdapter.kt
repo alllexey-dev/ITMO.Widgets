@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
-import androidx.core.view.updateLayoutParams
 import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -15,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
-import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.ui.resolve
@@ -132,7 +130,8 @@ internal class SubjectLinksAdapter(
             val link = row.link
             title.text = link.displayTitle()
             meta.text = context.linkMeta(link, row.pinned, row.previous)
-            bindVotes(row)
+            voteColumn.bind(link, row.canVote) { up -> onVote(link, up) }
+            root.setBackgroundResource(if (link.isMine) R.drawable.bg_subject_link_row_own else R.drawable.bg_subject_link_row)
             val saveVisible = !link.isMine && row.canSave
             saveButton.isVisible = saveVisible
             if (saveVisible) {
@@ -147,31 +146,6 @@ internal class SubjectLinksAdapter(
             root.setOnLongClickListener { onActions(link); true }
             ViewCompat.replaceAccessibilityAction(root, AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_LONG_CLICK,
                 context.getString(R.string.links_actions), null)
-        }
-
-        /** Others' links vote with arrows; an own link shows its score, or a lock while it is private. */
-        private fun bindVotes(row: LinkRow.Item) = with(binding) {
-            val context = root.context
-            val link = row.link
-            val arrows = !link.isMine && row.canVote
-            val showScore = !link.isMine || link.visibility != LinkVisibility.PRIVATE
-            voteUp.isVisible = arrows
-            voteDown.isVisible = arrows
-            score.isVisible = showScore
-            privateIcon.isVisible = !showScore
-            score.text = String.format(Locale.getDefault(), "%d", link.score)
-            score.contentDescription = context.getString(R.string.links_score, link.score)
-            val overlap = if (arrows) -context.resources.getDimensionPixelSize(R.dimen.design_spacing_content) else 0
-            score.updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin = overlap; bottomMargin = overlap }
-            val accent = context.color.primary
-            val neutral = context.color.onSurfaceVariant
-            score.setTextColor(if (link.myVote != 0) accent else context.color.onSurface)
-            voteUp.imageTintList = ColorStateList.valueOf(if (link.myVote > 0) accent else neutral)
-            voteDown.imageTintList = ColorStateList.valueOf(if (link.myVote < 0) accent else neutral)
-            voteUp.isSelected = link.myVote > 0
-            voteDown.isSelected = link.myVote < 0
-            voteUp.setOnClickListener { onVote(link, true) }
-            voteDown.setOnClickListener { onVote(link, false) }
         }
     }
 

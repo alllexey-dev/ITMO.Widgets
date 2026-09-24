@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- An own link among others' links: a quiet tonal row; its caption names who sees it. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorControlHighlight">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/design_card_radius_content" />
+            <solid android:color="?attr/colorSurfaceContainerHigh" />
+        </shape>
+    </item>
+</ripple>

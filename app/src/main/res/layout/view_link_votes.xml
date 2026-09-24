@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reddit-style score: the arrows keep 48 dp targets and overlap the number by 12 dp each. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/design_touch_target"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <ImageButton
+        android:id="@+id/vote_up"
+        android:layout_width="@dimen/design_touch_target"
+        android:layout_height="@dimen/design_touch_target"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/links_vote_up"
+        android:src="@drawable/ic_arrow_upward_alt"
+        app:tint="?attr/colorOnSurfaceVariant" />
+
+    <TextView
+        android:id="@+id/score"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="-12dp"
+        android:maxLines="1"
+        android:textAppearance="?attr/textAppearanceLabelLarge"
+        android:textColor="?attr/colorOnSurface"
+        tools:text="12" />
+
+    <ImageButton
+        android:id="@+id/vote_down"
+        android:layout_width="@dimen/design_touch_target"
+        android:layout_height="@dimen/design_touch_target"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/links_vote_down"
+        android:src="@drawable/ic_arrow_downward_alt"
+        app:tint="?attr/colorOnSurfaceVariant" />
+
+    <ImageView
+        android:id="@+id/private_icon"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_lock"
+        android:visibility="gone"
+        app:tint="?attr/colorOnSurfaceVariant" />
+
+</LinearLayout>

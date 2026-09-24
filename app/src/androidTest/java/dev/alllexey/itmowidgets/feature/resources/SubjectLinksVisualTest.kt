@@ -6,12 +6,14 @@ import android.content.Context
 import android.content.Intent
 import android.view.View
 import android.widget.TextView
+import androidx.core.view.drawToBitmap
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.radiobutton.MaterialRadioButton
 import com.google.android.material.textfield.TextInputLayout
 import dev.alllexey.itmowidgets.R
@@ -24,9 +26,11 @@ import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
+import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkActionsBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkEditorBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
@@ -88,6 +92,92 @@ class SubjectLinksVisualTest {
             assertScore(0, 0)
             scenario.onActivity { row(it).findViewById<View>(R.id.vote_down).performClick() }
             assertScore(-1, -1)
+        }
+    }
+
+    @Test fun ownLinksRankAmongOthersOnATonalRow() {
+        Appearances.default.forEachIndexed { index, spec ->
+            withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS) { scenario, _ ->
+                settle()
+                val scores = mutableListOf<Pair<String, Boolean>>()
+                var inScores = false
+                visitRows(scenario) { row ->
+                    if (row is TextView) inScores = row.text.toString() == "Таблица баллов"
+                    else if (inScores) scores += row.findViewById<TextView>(R.id.title).text.toString() to row.hasTonalSurface()
+                }
+                assertEquals(listOf("Баллы всего потока" to false, "Баллы нашей группы" to true, "Старая таблица" to false), scores)
+                // «Таблица баллов» is the first section.
+                scenario.onActivity { sheetList(it).scrollToPosition(0) }
+                settle()
+                screenshot("links-own-ranked-$index")
+            }
+        }
+    }
+
+    @Test fun actionsSheetVotesForOthersLinkAndStaysOpen() {
+        Appearances.default.forEachIndexed { index, spec ->
+            withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "tasks-flow") { scenario, repository ->
+                settle()
+                fun assertScore(score: Int, vote: Int) = TestUi.eventually(idleBetween = true) {
+                    scenario.onActivity { activity ->
+                        val sheet = actions(activity)
+                        assertEquals(score.toString(), sheet.findViewById<TextView>(R.id.score).text.toString())
+                        assertEquals(vote > 0, sheet.findViewById<View>(R.id.vote_up).isSelected)
+                        assertEquals(vote < 0, sheet.findViewById<View>(R.id.vote_down).isSelected)
+                    }
+                    assertEquals(vote, repository.peek(SCOPE).shared.first { it.id == "tasks-flow" }.myVote)
+                }
+                scenario.onActivity { activity ->
+                    val sheet = actions(activity)
+                    assertTrue(sheet.findViewById<View>(R.id.vote_up).isShown && sheet.findViewById<View>(R.id.vote_down).isShown)
+                    // The vote sits at the top, before the first action.
+                    assertTrue(sheet.findViewById<View>(R.id.vote_down).bottomOnScreen() <= sheet.findViewById<View>(R.id.action_open).topOnScreen())
+                    assertTextFits(sheet)
+                    assertTouchTargets(sheet)
+                }
+                assertScore(0, 0)
+                scenario.onActivity { actions(it).findViewById<View>(R.id.vote_up).performClick() }
+                assertScore(1, 1)
+                screenshot("actions-vote-$index")
+                scenario.onActivity { actions(it).findViewById<View>(R.id.vote_up).performClick() }
+                assertScore(0, 0)
+                scenario.onActivity { actions(it).findViewById<View>(R.id.vote_down).performClick() }
+                assertScore(-1, -1)
+                scenario.onActivity { assertNotNull(it.supportFragmentManager.findFragmentByTag(LinkActionsBottomSheet.TAG)) }
+            }
+        }
+    }
+
+    @Test fun actionsSheetShowsTheOwnScoreWithoutArrowsAndNothingForAPrivateLink() {
+        withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "own-scores") { scenario, _ ->
+            settle()
+            scenario.onActivity { activity ->
+                val sheet = actions(activity)
+                assertTrue(sheet.findViewById<View>(R.id.score).isShown)
+                assertEquals("5", sheet.findViewById<TextView>(R.id.score).text.toString())
+                assertFalse(sheet.findViewById<View>(R.id.vote_up).isShown || sheet.findViewById<View>(R.id.vote_down).isShown)
+            }
+            screenshot("actions-own-score")
+        }
+        withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "own-other") { scenario, _ ->
+            settle()
+            scenario.onActivity { activity ->
+                assertEquals(View.GONE, actions(activity).findViewById<View>(R.id.vote_column).visibility)
+            }
+        }
+    }
+
+    @Test fun actionsSheetHidesArrowsUnderAVoteRestriction() {
+        withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "tasks-flow", configure = {
+            it.snapshots.value = mapOf(SCOPE.key to fixture())
+            it.restrictions.value = listOf(UserRestriction("r", RestrictionCapability.VOTE, "Правила", null))
+        }) { scenario, _ ->
+            settle()
+            scenario.onActivity { activity ->
+                val sheet = actions(activity)
+                assertTrue(sheet.findViewById<View>(R.id.score).isShown)
+                assertFalse(sheet.findViewById<View>(R.id.vote_up).isShown || sheet.findViewById<View>(R.id.vote_down).isShown)
+            }
         }
     }
 
@@ -222,6 +312,8 @@ class SubjectLinksVisualTest {
                     assertEquals("Причина: Ссылка ведёт на другой предмет", sheet.findViewById<TextView>(R.id.review_note).text.toString())
                     assertTrue(sheet.findViewById<TextView>(R.id.meta).text.contains("отклонена"))
                     assertEquals(listOf(R.id.action_open, R.id.action_pin, R.id.action_edit, R.id.action_delete), visibleActions(sheet))
+                    assertTrue(sheet.findViewById<View>(R.id.score).isShown)
+                    assertFalse(sheet.findViewById<View>(R.id.vote_up).isShown)
                     assertTextFits(sheet)
                     assertTouchTargets(sheet)
                 }
@@ -349,6 +441,18 @@ class SubjectLinksVisualTest {
         listOf(R.id.action_open, R.id.action_save, R.id.action_pin, R.id.action_edit, R.id.action_delete, R.id.action_report)
             .filter { sheet.findViewById<View>(it).visibility == View.VISIBLE }
 
+    /** Whether the row paints its own surface: sampled at the trailing edge, clear of the content. */
+    private fun View.hasTonalSurface(): Boolean {
+        val bitmap = drawToBitmap()
+        val pixel = bitmap.getPixel(width - (4 * resources.displayMetrics.density).toInt(), height / 2)
+        bitmap.recycle()
+        return pixel == MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurfaceContainerHigh)
+    }
+
+    private fun View.topOnScreen(): Int = IntArray(2).also(::getLocationOnScreen)[1]
+
+    private fun View.bottomOnScreen(): Int = topOnScreen() + height
+
     private fun settle() = TestUi.settle(600)
 
     private fun screenshot(name: String) = Screenshots.capture("links-screenshots", name)
@@ -390,6 +494,8 @@ class SubjectLinksVisualTest {
                     mine = true, status = SubjectLinkStatus.REJECTED, reviewNote = "Ссылка ведёт на другой предмет"),
             ),
             shared = listOf(
+                link("scores-all", LinkCategory.SCORES, "https://docs.google.com/spreadsheets/d/all", "Баллы всего потока", score = 8),
+                link("scores-old", LinkCategory.SCORES, "https://docs.google.com/spreadsheets/d/old", "Старая таблица", score = 1),
                 link("queue-group", LinkCategory.QUEUE, "https://docs.google.com/forms/d/queue", "Очередь на защиту",
                     LinkVisibility.FLOW, score = 4, flow = PRACTICE_FLOW),
                 link("materials-all", LinkCategory.MATERIALS, "https://drive.google.com/synthetic", "Материалы лектора", score = 12),

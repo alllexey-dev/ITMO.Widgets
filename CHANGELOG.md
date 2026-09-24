@@ -27,6 +27,16 @@ publication or deployment.
   flows from broad to nested, then `Только я`.
 - Public `t.me` links (channels, posts, invites) open in the Telegram client
   through `tg://` (`core/util/TelegramLinks`) instead of the browser.
+- The subject page's links start with a `Ссылки` header whose `Все` opens the
+  links sheet even without links; `Ещё N` and `+` stay.
+- Own links are no longer ranked first: chips go pin, `LMS`, then own, added
+  and shared links together by score (newer first on ties), replacing the old
+  own / added / flow / best-public-per-category order; the links sheet ranks
+  each category the same way. Own chips are filled, own rows sit on a rounded
+  `colorSurfaceContainerHigh` surface.
+- The long-press sheet of another student's link has the vote arrows and the
+  live score of the list row; an own shared link shows its score. A vote keeps
+  the sheet open.
 
 ### 2026-09-23
 

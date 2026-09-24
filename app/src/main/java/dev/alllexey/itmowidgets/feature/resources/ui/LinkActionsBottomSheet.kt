@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -14,6 +15,7 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
@@ -29,7 +31,8 @@ import dev.alllexey.itmowidgets.core.ui.expandToContent
 
 /**
  * What can be done with one link. Own: open, pin, edit, delete, with the review state and the reason
- * of a rejection. Others': open, add to own, pin, report. Actions that need the server are absent without it.
+ * of a rejection. Others': the vote arrows, open, add to own, pin, report. Actions that need the server are
+ * absent without it. A vote keeps the sheet open; every other action closes it on success.
  */
 @AndroidEntryPoint
 class LinkActionsBottomSheet : BottomSheetDialogFragment() {
@@ -76,6 +79,7 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
         val previous = snapshot.previous.any { it.id == link.id }
         title.text = link.displayTitle()
         meta.text = requireContext().linkMeta(link, pinned, previous)
+        bindVotes(link, state.canVote)
         val note = link.reviewNote.takeIf {
             link.isMine && (link.status == SubjectLinkStatus.REJECTED || link.status == SubjectLinkStatus.HIDDEN)
         }
@@ -98,6 +102,16 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
         actionDelete.setOnClickListener { confirmDelete(link) }
         actionReport.isVisible = !link.isMine && state.canReport && !link.reportedByMe
         actionReport.setOnClickListener { report(link) }
+    }
+
+    /** Others' links vote as in the list and the score follows the repository; an own private link has no score. */
+    private fun bindVotes(link: SubjectLink, canVote: Boolean) = with(binding) {
+        val visible = !link.isMine || link.visibility != LinkVisibility.PRIVATE
+        voteColumn.root.isVisible = visible
+        if (visible) voteColumn.bind(link, canVote) { up -> if (!pending) viewModel.vote(link.id, up) }
+        heading.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            marginStart = resources.getDimensionPixelSize(if (visible) R.dimen.design_spacing_compact else R.dimen.design_screen_margin)
+        }
     }
 
     private fun send(action: () -> Unit) {

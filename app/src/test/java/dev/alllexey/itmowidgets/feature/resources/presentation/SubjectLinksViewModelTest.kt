@@ -47,12 +47,24 @@ class SubjectLinksViewModelTest {
         val sections = vm.uiState.value.sections
 
         assertEquals(listOf(
-            LinkSection.Category(LinkCategory.SCORES, listOf(subjectLink("own-scores", LinkCategory.SCORES), shared)),
+            LinkSection.Category(LinkCategory.SCORES, listOf(shared, subjectLink("own-scores", LinkCategory.SCORES))),
             LinkSection.Category(LinkCategory.TASKS, listOf(subjectLink("tasks", LinkCategory.TASKS, LinkVisibility.FLOW, isMine = false))),
             LinkSection.Category(LinkCategory.OTHER, listOf(subjectLink("own-other", LinkCategory.OTHER))),
             LinkSection.Category(LinkCategory.CHAT, listOf(subjectLink("chat", LinkCategory.CHAT, LinkVisibility.FLOW, isMine = false))),
             LinkSection.Previous(listOf(subjectLink("old", LinkCategory.MATERIALS, LinkVisibility.ALL, isMine = false))),
         ), sections)
+    }
+
+    @Test fun `own and others' links of a category are ranked together, newer first on equal scores`() = runTest(main.dispatcher) {
+        val ownTop = subjectLink("own-top", score = 7)
+        val ownTied = subjectLink("own-tied", score = 2)
+        val newerTied = subjectLink("newer-tied", LinkCategory.MATERIALS, LinkVisibility.ALL, isMine = false, score = 2)
+            .copy(updatedAt = linkTime.plusHours(1))
+        val low = subjectLink("low", visibility = LinkVisibility.FLOW, isMine = false, score = -1)
+        show(linksSnapshot(mine = listOf(ownTied, ownTop), shared = listOf(low, newerTied)))
+        val vm = model()
+
+        assertEquals(listOf(LinkSection.Category(LinkCategory.MATERIALS, listOf(ownTop, newerTied, ownTied, low))), vm.uiState.value.sections)
     }
 
     @Test fun `arrows set a vote and the same arrow removes it`() = runTest(main.dispatcher) {
@@ -104,6 +116,18 @@ class SubjectLinksViewModelTest {
         vm.toggleSaved("shared"); runCurrent()
 
         assertEquals(LinkEvent.Done, vm.events.first())
+    }
+
+    @Test fun `a vote sends no Done, so the actions sheet stays open`() = runTest(main.dispatcher) {
+        show(linksSnapshot(shared = listOf(shared)))
+        val vm = model()
+        val events = mutableListOf<LinkEvent>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.events.collect { events += it } }
+
+        vm.vote("shared", up = false); runCurrent()
+
+        assertEquals(listOf("vote:shared:-1"), repository.actions)
+        assertTrue(events.isEmpty())
     }
 
     @Test fun `a second action while one is in flight is ignored`() = runTest(main.dispatcher) {

@@ -746,6 +746,8 @@
     <string name="links_title">Ссылки</string>
     <string name="links_add">Добавить ссылку</string>
     <string name="links_more">Ещё %1$d</string>
+    <string name="links_all">Все</string>
+    <string name="links_all_description">Все ссылки</string>
     <string name="links_chats">Чаты</string>
     <string name="links_previous">С прошлых лет</string>
     <string name="links_empty">Ссылок пока нет</string>

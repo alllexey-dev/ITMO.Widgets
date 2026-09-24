@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
+import dev.alllexey.itmowidgets.core.resources.SubjectLinkRanking
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
@@ -32,14 +33,14 @@ import kotlinx.coroutines.launch
 sealed interface LinkEvent {
     data class Failed(val text: UiText) : LinkEvent
     data object Saved : LinkEvent
-    /** An action of the links sheet succeeded; a sheet opened for one action may close. */
+    /** An action other than a vote succeeded; a sheet opened for one action may close. */
     data object Done : LinkEvent
 }
 
 sealed interface LinkSection {
     val links: List<SubjectLink>
 
-    /** Own and shared links of one category; chats are the CHAT section after all the others. */
+    /** Own and shared links of one category by [SubjectLinkRanking]; chats are the CHAT section after all the others. */
     data class Category(val category: LinkCategory, override val links: List<SubjectLink>) : LinkSection
 
     /** Approved links of past periods, always last. */
@@ -106,11 +107,11 @@ class SubjectLinksViewModel @Inject constructor(
         }
     }
 
-    /** Tapping the arrow of the current vote removes it. */
+    /** Tapping the arrow of the current vote removes it. A vote keeps the actions sheet open, so it sends no [LinkEvent.Done]. */
     fun vote(id: String, up: Boolean) {
         val link = find(id) ?: return
         val value = if (up) 1 else -1
-        act { repository.vote(scope, id, if (link.myVote == value) 0 else value) }
+        runOnce { repository.vote(scope, id, if (link.myVote == value) 0 else value) }
     }
 
     fun toggleSaved(id: String) {
@@ -131,17 +132,18 @@ class SubjectLinksViewModel @Inject constructor(
     private fun find(id: String): SubjectLink? =
         repository.peek(scope)?.let { snapshot -> (snapshot.mine + snapshot.shared + snapshot.previous).firstOrNull { it.id == id } }
 
-    /** One action at a time: a second tap while the first is in flight is ignored. */
-    private fun act(block: suspend () -> AppResult<*>) {
+    private fun act(block: suspend () -> AppResult<*>) = runOnce {
+        block().also { if (it is AppResult.Success) channel.send(LinkEvent.Done) }
+    }
+
+    /** One action at a time: a second tap while the first is in flight is ignored. A failure is an event. */
+    private fun runOnce(block: suspend () -> AppResult<*>) {
         if (busy) return
         busy = true
         viewModelScope.launch {
             try {
                 val result = block()
-                channel.send(when (result) {
-                    is AppResult.Success -> LinkEvent.Done
-                    is AppResult.Failure -> LinkEvent.Failed(result.error.toUiText())
-                })
+                if (result is AppResult.Failure) channel.send(LinkEvent.Failed(result.error.toUiText()))
             } finally {
                 busy = false
             }
@@ -151,7 +153,7 @@ class SubjectLinksViewModel @Inject constructor(
 
 /** Categories in declaration order with chats after them, then the links of past periods. */
 internal fun linkSections(snapshot: SubjectLinksSnapshot): List<LinkSection> {
-    val byCategory = (snapshot.mine + snapshot.shared).distinctBy { it.id }.groupBy { it.category }
+    val byCategory = (snapshot.mine + snapshot.shared).distinctBy { it.id }.sortedWith(SubjectLinkRanking).groupBy { it.category }
     val order = LinkCategory.entries.filter { it != LinkCategory.CHAT } + LinkCategory.CHAT
     val current = order.mapNotNull { category -> byCategory[category]?.let { LinkSection.Category(category, it) } }
     return current + listOfNotNull(snapshot.previous.takeIf { it.isNotEmpty() }?.let(LinkSection::Previous))

@@ -13,6 +13,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -177,15 +178,24 @@ class RecordbookVisualTest {
                     assertEquals("72", activity.findViewById<TextView>(R.id.points).text.toString())
                     assertEquals(activity.getString(R.string.subject_grade_next, "4C", "3"), activity.findViewById<TextView>(R.id.hint).text.toString())
                     val chips = activity.findViewById<ChipGroup>(R.id.chips).descendants().filterIsInstance<Chip>().toList()
-                    assertEquals(listOf(activity.getString(R.string.subject_link_lms), "Таблица баллов потока", "Задания на семестр",
-                        "Записи лекций весны 2026 года с разбором задач", activity.getString(R.string.links_more, 2), ""),
+                    // Pin, LMS, then links by score: the own table has none and follows the rated ones.
+                    assertEquals(listOf(activity.getString(R.string.subject_link_lms), "Записи лекций весны 2026 года с разбором задач",
+                        "Конспекты", "Таблица баллов потока", activity.getString(R.string.links_more, 2), ""),
                         chips.map { it.text.toString() })
                     assertEquals(activity.getString(R.string.links_add), chips.last().contentDescription)
                     chips.forEach { assertTrue(it.height >= 48 * activity.resources.displayMetrics.density - 1) }
+                    assertOwnChip(chips[3], own = true)
+                    chips.subList(0, 3).forEach { assertOwnChip(it, own = false) }
+                    val all = activity.findViewById<MaterialButton>(R.id.all_links)
+                    assertEquals(activity.getString(R.string.links_all), all.text.toString())
+                    assertEquals(activity.getString(R.string.links_title), activity.findViewById<TextView>(R.id.links_title).text.toString())
+                    assertTrue(all.height >= 48 * activity.resources.displayMetrics.density - 1 &&
+                        all.width >= 48 * activity.resources.displayMetrics.density - 1)
+                    all.performClick()
                     chips[4].performClick()
                     chips.last().performClick()
-                    chips[1].performLongClick()
-                    assertEquals(listOf("links", "editor", "actions:own-table"), RecordbookPreviewActivity.linkNavigation.toList())
+                    chips[3].performLongClick()
+                    assertEquals(listOf("links", "links", "editor", "actions:own-table"), RecordbookPreviewActivity.linkNavigation.toList())
                     assertEquals(2, items.count { it is DetailItem.Chat })
                     val groups = items.filterIsInstance<DetailItem.Group>()
                     assertEquals(3, groups.size)
@@ -234,9 +244,13 @@ class RecordbookVisualTest {
             openSubject(scenario, "Иностранный")
             scenario.onActivity { activity ->
                 assertEquals(activity.getString(R.string.subject_credit_next, "8"), activity.findViewById<TextView>(R.id.hint).text.toString())
-                // Without links yet the add chip explains itself.
+                // Without links yet the add chip explains itself and «Все» still opens the sheet.
                 val chips = activity.findViewById<ChipGroup>(R.id.chips).descendants().filterIsInstance<Chip>().toList()
                 assertEquals(listOf(activity.getString(R.string.links_add)), chips.map { it.text.toString() })
+                val all = activity.findViewById<MaterialButton>(R.id.all_links)
+                assertTrue(all.isShown)
+                all.performClick()
+                assertEquals(listOf("links"), RecordbookPreviewActivity.linkNavigation.toList())
                 assertVisibleTextFits(activity.window.decorView)
             }
             screenshot("subject-credit-narrow")
@@ -397,6 +411,12 @@ class RecordbookVisualTest {
         findViewById<RecyclerView>(R.id.main_recycler_view).children().first { it.findViewById<TextView>(R.id.name)?.text?.contains(namePart) == true }
 
     private fun View.texts(): List<String> = descendants().filterIsInstance<TextView>().filter { it.isShown }.map { it.text.toString() }.toList()
+
+    /** An own link is a filled neutral tonal chip; the others stay outlined. */
+    private fun assertOwnChip(chip: Chip, own: Boolean) {
+        val container = MaterialColors.getColor(chip, com.google.android.material.R.attr.colorSurfaceContainerHighest)
+        assertEquals(chip.text.toString(), own, chip.chipStrokeWidth == 0f && chip.chipBackgroundColor?.defaultColor == container)
+    }
 
     private fun assertTouchTargets(activity: RecordbookPreviewActivity) {
         val minimum = 48 * activity.resources.displayMetrics.density - 1
