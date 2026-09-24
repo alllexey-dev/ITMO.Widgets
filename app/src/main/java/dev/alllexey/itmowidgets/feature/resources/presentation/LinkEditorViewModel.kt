@@ -145,7 +145,8 @@ class LinkEditorViewModel @Inject constructor(
     /** A choice that is no longer offered, such as a flow gone from the schedule, falls back to only me. */
     private fun LinkEditorUiState.withOptions(snapshot: SubjectLinksSnapshot?): LinkEditorUiState {
         val options = if (snapshot?.servicesEnabled != true) listOf(LinkAudienceOption.Private) else
-            listOf(LinkAudienceOption.Private) + snapshot.audiences.map(LinkAudienceOption::Flow) + LinkAudienceOption.All
+            // Widest audience first, then the flows down the tree, the author alone last.
+            listOf(LinkAudienceOption.All) + snapshot.audiences.map(LinkAudienceOption::Flow) + LinkAudienceOption.Private
         val kept = options.any { it.visibility == visibility && it.flowId == flowId }
         return copy(options = options, premoderation = snapshot?.premoderation ?: true,
             visibility = if (kept) visibility else LinkVisibility.PRIVATE, flowId = if (kept) flowId else null)

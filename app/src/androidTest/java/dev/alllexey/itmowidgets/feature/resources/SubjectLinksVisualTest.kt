@@ -97,8 +97,8 @@ class SubjectLinksVisualTest {
                 settle()
                 scenario.onActivity { activity ->
                     val sheet = editor(activity)
-                    assertEquals(listOf("Только я", "ФИЗ ПИИКТ 3\nЛекция", "ФИЗ ПИИКТ 3.2\nПрактика",
-                        "ФИЗ ПИИКТ 3.2.1\nЛабораторная", "Все\nПосле проверки"), audienceRows(sheet))
+                    assertEquals(listOf("Все\nПосле проверки", "ФИЗ ПИИКТ 3\nЛекция", "ФИЗ ПИИКТ 3.2\nПрактика",
+                        "ФИЗ ПИИКТ 3.2.1\nЛабораторная", "Только я"), audienceRows(sheet))
                     assertEquals("ФИЗ ПИИКТ 3.2", checkedAudience(sheet))
                     assertEquals(View.GONE, sheet.findViewById<View>(R.id.connection_hint).visibility)
                     assertTextFits(sheet)
@@ -133,7 +133,7 @@ class SubjectLinksVisualTest {
             }
             scenario.onActivity { activity ->
                 val sheet = editor(activity)
-                assertEquals(listOf("Только я", "ФИЗ ПИИКТ 3\nЛекция", "Все\nПосле проверки"), audienceRows(sheet))
+                assertEquals(listOf("Все\nПосле проверки", "ФИЗ ПИИКТ 3\nЛекция", "Только я"), audienceRows(sheet))
                 assertEquals("Только я", checkedAudience(sheet))
                 radioRows(sheet)[1].performClick()
             }
@@ -163,9 +163,9 @@ class SubjectLinksVisualTest {
             scenario.onActivity { activity ->
                 val sheet = editor(activity)
                 // The chosen flow is gone from the schedule, so the choice falls back to only me.
-                assertEquals(listOf("Только я", "Все"), audienceRows(sheet))
+                assertEquals(listOf("Все", "Только я"), audienceRows(sheet))
                 assertEquals("Только я", checkedAudience(sheet))
-                radioRows(sheet).last().performClick()
+                radioRows(sheet).first().performClick()
             }
             settle()
             scenario.onActivity { activity ->

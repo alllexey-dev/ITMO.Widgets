@@ -105,9 +105,10 @@ per tag and nothing once the state is saved.
   YouTube, VK Video → `RECORDINGS`, Notion → `NOTES`, `lms.itmo.ru` →
   `MATERIALS`, Telegram, VK chats, WhatsApp → `CHAT`). The title is optional
   and its hint is the category name. `Кто видит` is a list of radio rows
-  (at least 48 dp): `Только я`, every flow of the viewer (the flow name over
-  the kind of classes from `lessonTypeNameRes`) and `Все` (with `После проверки`
-  while premoderation is on). A chosen flow that is no longer offered falls
+  (at least 48 dp) ordered from the widest audience to the narrowest: `Все`
+  (with `После проверки` while premoderation is on), every flow of the viewer
+  from broad to nested (the flow name over the kind of classes from
+  `lessonTypeNameRes`), then `Только я`. A chosen flow that is no longer offered falls
   back to `Только я`; without the connection only `Только я` is listed with a
   line saying sharing needs the connection. The new link's UUID survives
   process death, so a retried save reaches the same link.

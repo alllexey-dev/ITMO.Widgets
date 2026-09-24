@@ -62,12 +62,12 @@ class LinkEditorViewModelTest {
         show(linksSnapshot(audiences = listOf(lecture, practice, lab)))
         val vm = model()
 
-        assertEquals(listOf(LinkAudienceOption.Private, LinkAudienceOption.Flow(lecture), LinkAudienceOption.Flow(practice),
-            LinkAudienceOption.Flow(lab), LinkAudienceOption.All), vm.uiState.value.options)
+        assertEquals(listOf(LinkAudienceOption.All, LinkAudienceOption.Flow(lecture), LinkAudienceOption.Flow(practice),
+            LinkAudienceOption.Flow(lab), LinkAudienceOption.Private), vm.uiState.value.options)
         assertEquals(LinkAudienceOption.Private, vm.uiState.value.selected)
 
         show(linksSnapshot()); runCurrent()
-        assertEquals(listOf(LinkAudienceOption.Private, LinkAudienceOption.All), vm.uiState.value.options)
+        assertEquals(listOf(LinkAudienceOption.All, LinkAudienceOption.Private), vm.uiState.value.options)
     }
 
     @Test fun `choosing a flow keeps its id and a flow gone from the schedule falls back to only me`() = runTest(main.dispatcher) {
