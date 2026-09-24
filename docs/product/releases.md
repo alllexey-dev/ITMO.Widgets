@@ -15,10 +15,11 @@
    every screen, sign-in through third-party providers on the ITMO.ID page,
    cached content kept on screen during refresh, skeleton first loads. No
    product features, no Core or Backend change.
-5. **v2.2** adds moderated community resources and reviews, legacy review
-   import, personal Google Sheet mappings, schedule change tracking, BARS mark
-   notifications, range calendar export, verified App Links, sharing, the QR
-   quick-settings tile with app shortcuts, and the home feed.
+5. **v2.2** adds moderated community resources and reviews, legacy reviews
+   synced from the Reviews project, personal Google Sheet mappings, schedule
+   change tracking, BARS mark notifications, range calendar export, verified
+   App Links, sharing, the QR quick-settings tile with app shortcuts, and the
+   home feed.
 
 Achievements, messaging, posts, followers and free-window discovery are outside
 the roadmap. Do not add them opportunistically.

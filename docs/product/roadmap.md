@@ -44,6 +44,13 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   nearest lessons. The Backend schema is one migration,
   `V4__subject_links.sql`. Strict flow verification (ISU or zkTLS) is
   deferred, see decision 0008. Not released to production.
+- Stages 31–32: implemented on 2026-09-24 through `vibe/reviews-sync-plan.md`
+  (Backend 1.7.0-SNAPSHOT and the web admin, no Core or Android change) as a
+  sync from the Reviews project instead of a Google Sheets importer: Backend
+  copies its moderated reviews daily and on an admin's request, teachers
+  without ISU are skipped, and the web admin shows the state under `Отзывы`
+  (see `../itmo-widgets-backend/docs/ops/reviews-sync.md`). The app does not
+  show the copy yet. Not deployed yet.
 - Stage 43 (feed part) and Stage 44 (feed tests): delivered early on 2026-09-20
   through `vibe/home-feed-plan.md` with the cards available in v2.1: schedule,
   QR pass, sport, friend requests, three dismissible hints, and a
@@ -68,7 +75,7 @@ The work is delivered through the completed v2.0.1 baseline and two large produc
 
 * v2.0.1 completes Android legacy parity in the current refactor: authentication, onboarding, FCM, QR, widgets, settings, diagnostics, and regression coverage (Stages 1-2).
 * v2.1 delivers the social and study-context release. Its internal preparation introduces explicit database migrations, followed by friendship and privacy, own and public profiles, friends on lessons, lesson details, map hand-off, and the subject hub (Stages 3-18).
-* v2.2 delivers the community and schedule-intelligence release: moderated resources, teacher reviews, legacy review import, personal Google Sheet mappings, schedule changes, BARS mark notifications, range calendar export, verified App Links, sharing, the QR quick-settings tile and app shortcuts, and the smart home feed (Stages 19-45).
+* v2.2 delivers the community and schedule-intelligence release: moderated resources, teacher reviews, legacy reviews synced from the Reviews project, personal Google Sheet mappings, schedule changes, BARS mark notifications, range calendar export, verified App Links, sharing, the QR quick-settings tile and app shortcuts, and the smart home feed (Stages 19-45).
 
 No additional v2.0 feature release is planned after v2.0.1. A v2.0.2 version is reserved only for a required compatibility or bug-fix release discovered after v2.0.1 ships.
 
@@ -731,44 +738,52 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 * `./gradlew :app:testDebugUnitTest :app:connectedDebugAndroidTest`
 
-### Stage 31: Add an auditable legacy-review importer
+### Stage 31: Sync legacy reviews from the Reviews project
 
 **What to add/implement:**
 
-* Add a separate CLI entry point that reads configured Google Sheets or exported CSV files, normalizes rows, stores source-row provenance, deduplicates reviews, matches teachers by ISU first, and emits unresolved names for manual mapping.
-* Import every row into a non-public legacy batch and require moderation before publication.
-* Label published imported reviews as legacy and exclude them from verified-user achievements or counts.
+* Copy the anonymous teacher reviews of the Reviews project (`https://onetwozzzplus.github.io/reviews/`, API `https://reviews.work.gd`) into Backend daily at 05:00 Europe/Moscow and on an admin's request. Its own moderators have checked them, and it is the only source of older reviews; Google Sheets are not parsed.
+* Check the registry with its ETag; on a change fetch every teacher whose Reviews id is an ISU number (teachers without ISU are skipped), apply the complete snapshot in one transaction, keep reviews that disappeared upstream with a removal time, and apply nothing when any request fails.
+* Keep the subject title, source title and link, and the raw and parsed date, so the teacher review section can later show a copied review labeled as from Reviews with its source link. A read API for the app comes with that section (Stages 25-29).
+* Show the sync state and a start button in the web admin (`/app/admin/reviews`) and audit manual starts. Operations are described in `../itmo-widgets-backend/docs/ops/reviews-sync.md`.
 
 **Files to edit/create:**
 
-* `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/importer/LegacyReviewImportCommand.kt` - CLI entry point.
-* `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/importer/LegacyReviewParser.kt` - source-specific parsing.
-* `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/importer/TeacherMatcher.kt` - deterministic matching and unresolved output.
-* `../itmo-widgets-backend/src/main/resources/import/legacy-review-sources.yaml` - source mappings without credentials.
+* `../itmo-widgets-backend/src/main/resources/db/migration/V7__external_teacher_reviews.sql` - review copy and sync state tables.
+* `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/services/ReviewsApiClient.kt` - Reviews HTTP client with ETag, pacing and size limits.
+* `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/services/ReviewsSyncService.kt` - schedule, manual start, lease and run outcome.
+* `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/services/ReviewsSyncStore.kt` - snapshot application and run summary.
+* `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/controllers/AdminReviewsController.kt` - `GET`/`POST /api/admin/reviews/sync`.
+* `../itmo-widgets-web/web/src/features/reviews/ReviewsPage.tsx` - web admin section.
 
 **Examples in existing code:**
 
-* `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/services/SportUpdateService.kt` - batch ingestion and mapping pattern.
+* `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/repositories/WebLoginChallengeRepository.kt` - conditional-update claim.
+* `../itmo-widgets-backend/src/main/kotlin/dev/alllexey/itmowidgets/backend/repositories/ModerationCaseRepository.kt` - transaction-scoped advisory lock.
 
 **Verification commands:**
 
 * `JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew build`
 
-### Stage 32: Add importer fixture and dry-run tests
+### Stage 32: Add Reviews sync tests
 
 **What to add/implement:**
 
-* Add anonymized fixtures for every source format and golden dry-run reports.
-* Test duplicate rows, missing teacher ISU, conflicting names, blank reviews, malformed ratings, repeated imports, and transaction rollback.
+* Test the V7 constraints, the client against a local HTTP server (ETag, 304, 404, HTTP errors, malformed payloads, timeouts, no I/O inside a transaction), date parsing, settings binding, full, unchanged, aborted and disabled runs, a held, stale and leftover lease, the audit of manual starts, admin-only access, 409 starts and the web admin section.
 
 **Files to edit/create:**
 
-* `../itmo-widgets-backend/src/test/resources/import/` - anonymized source fixtures.
-* `../itmo-widgets-backend/src/test/kotlin/dev/alllexey/itmowidgets/backend/importer/LegacyReviewImporterTest.kt` - importer tests.
+* `../itmo-widgets-backend/src/test/kotlin/dev/alllexey/itmowidgets/backend/repositories/PostgreSqlMigrationTest.kt` - V7 constraints.
+* `../itmo-widgets-backend/src/test/kotlin/dev/alllexey/itmowidgets/backend/services/HttpReviewsApiClientTest.kt` - client tests.
+* `../itmo-widgets-backend/src/test/kotlin/dev/alllexey/itmowidgets/backend/services/ReviewsSyncServiceTest.kt` - run and lease tests.
+* `../itmo-widgets-backend/src/test/kotlin/dev/alllexey/itmowidgets/backend/services/AdminReviewsServiceTest.kt` - admin state tests.
+* `../itmo-widgets-backend/src/test/kotlin/dev/alllexey/itmowidgets/backend/controllers/AdminApiSecurityTest.kt` - admin-only routes and conflicts.
+* `../itmo-widgets-web/web/src/features/reviews/ReviewsPage.test.tsx` - web admin tests.
 
 **Verification commands:**
 
 * `JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew test`
+* `cd ../itmo-widgets-web/web && npm test`
 
 ### Stage 33: Add personal public-Google-Sheet score mappings
 
