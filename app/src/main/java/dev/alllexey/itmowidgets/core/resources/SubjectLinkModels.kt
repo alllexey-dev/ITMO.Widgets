@@ -45,7 +45,6 @@ data class SubjectLink(
     val score: Int,
     val myVote: Int,
     val isMine: Boolean,
-    val isSaved: Boolean,
     val reportedByMe: Boolean,
     val author: UserSummary?,
     val updatedAt: OffsetDateTime,

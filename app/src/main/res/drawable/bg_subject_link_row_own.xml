@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- An own link among others' links: a quiet tonal row; its caption names who sees it. -->
+<!-- An own link among others' links: one tonal step above the sheet (colorSurfaceContainerLow);
+     its caption names who sees it and its review state, so colour is not the only cue. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?attr/colorControlHighlight">
     <item>
         <shape android:shape="rectangle">
             <corners android:radius="@dimen/design_card_radius_content" />
-            <solid android:color="?attr/colorSurfaceContainerHigh" />
+            <solid android:color="?attr/colorSurfaceContainer" />
         </shape>
     </item>
 </ripple>

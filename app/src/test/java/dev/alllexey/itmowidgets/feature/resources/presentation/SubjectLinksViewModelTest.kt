@@ -77,16 +77,6 @@ class SubjectLinksViewModelTest {
         assertEquals(listOf("vote:shared:0", "vote:shared:-1"), repository.actions)
     }
 
-    @Test fun `adding to own flips the saved flag`() = runTest(main.dispatcher) {
-        show(linksSnapshot(shared = listOf(shared, subjectLink("kept", isMine = false, isSaved = true))))
-        val vm = model()
-
-        vm.toggleSaved("shared"); runCurrent()
-        vm.toggleSaved("kept"); runCurrent()
-
-        assertEquals(listOf("saved:shared:true", "saved:kept:false"), repository.actions)
-    }
-
     @Test fun `pinning the pinned link unpins it`() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared), pinnedId = "own"))
         val vm = model()
@@ -113,7 +103,7 @@ class SubjectLinksViewModelTest {
         show(linksSnapshot(shared = listOf(shared)))
         val vm = model()
 
-        vm.toggleSaved("shared"); runCurrent()
+        vm.pin("shared"); runCurrent()
 
         assertEquals(LinkEvent.Done, vm.events.first())
     }

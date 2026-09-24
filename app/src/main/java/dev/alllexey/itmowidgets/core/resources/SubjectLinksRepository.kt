@@ -23,7 +23,6 @@ interface SubjectLinksRepository {
         flowId: Long?,
     ): AppResult<SubjectLink>
     suspend fun delete(scope: ResourceScope, id: String): AppResult<Unit>
-    suspend fun setSaved(scope: ResourceScope, id: String, saved: Boolean): AppResult<Unit>
     /** A null [id] removes the pin of the period. */
     suspend fun pin(scope: ResourceScope, id: String?): AppResult<Unit>
     /** -1 or +1 replaces the previous vote, 0 removes it. */

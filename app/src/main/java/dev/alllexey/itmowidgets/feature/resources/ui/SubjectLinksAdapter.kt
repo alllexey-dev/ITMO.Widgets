@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
-import androidx.core.view.isVisible
 import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -40,7 +39,6 @@ internal sealed interface LinkRow {
         val link: SubjectLink,
         val pinned: Boolean,
         val canVote: Boolean,
-        val canSave: Boolean,
         val previous: Boolean,
     ) : LinkRow {
         override val key: String get() = "link:${link.id}"
@@ -50,7 +48,6 @@ internal sealed interface LinkRow {
 /** Sections become a header row followed by their links; chats are titled «Чаты». */
 internal fun SubjectLinksUiState.linkRows(): List<LinkRow> {
     val snapshot = content ?: return emptyList()
-    val canSave = snapshot.servicesEnabled
     return sections.flatMap { section ->
         val header = when (section) {
             is LinkSection.Category -> LinkRow.Header(
@@ -60,7 +57,7 @@ internal fun SubjectLinksUiState.linkRows(): List<LinkRow> {
             is LinkSection.Previous -> LinkRow.Header(UiText.Resource(R.string.links_previous), R.drawable.ic_history)
         }
         listOf(header) + section.links.map { link ->
-            LinkRow.Item(link, link.id == snapshot.pinnedId, canVote, canSave, section is LinkSection.Previous)
+            LinkRow.Item(link, link.id == snapshot.pinnedId, canVote, section is LinkSection.Previous)
         }
     }
 }
@@ -94,7 +91,6 @@ internal class SubjectLinksAdapter(
     private val onOpen: (SubjectLink) -> Unit,
     private val onActions: (SubjectLink) -> Unit,
     private val onVote: (SubjectLink, Boolean) -> Unit,
-    private val onToggleSaved: (SubjectLink) -> Unit,
 ) : ListAdapter<LinkRow, RecyclerView.ViewHolder>(Diff) {
 
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
@@ -132,16 +128,6 @@ internal class SubjectLinksAdapter(
             meta.text = context.linkMeta(link, row.pinned, row.previous)
             voteColumn.bind(link, row.canVote) { up -> onVote(link, up) }
             root.setBackgroundResource(if (link.isMine) R.drawable.bg_subject_link_row_own else R.drawable.bg_subject_link_row)
-            val saveVisible = !link.isMine && row.canSave
-            saveButton.isVisible = saveVisible
-            if (saveVisible) {
-                saveButton.setImageResource(if (link.isSaved) R.drawable.ic_check else R.drawable.ic_add)
-                saveButton.imageTintList = ColorStateList.valueOf(
-                    if (link.isSaved) context.color.primary else context.color.onSurfaceVariant)
-                saveButton.contentDescription = context.getString(
-                    if (link.isSaved) R.string.links_unsave_own else R.string.links_save_own)
-                saveButton.setOnClickListener { onToggleSaved(link) }
-            }
             root.setOnClickListener { onOpen(link) }
             root.setOnLongClickListener { onActions(link); true }
             ViewCompat.replaceAccessibilityAction(root, AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_LONG_CLICK,

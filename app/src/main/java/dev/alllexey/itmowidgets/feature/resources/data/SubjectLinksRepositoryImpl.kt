@@ -6,7 +6,6 @@ import dev.alllexey.itmowidgets.core.model.resources.ModerationReportRequest
 import dev.alllexey.itmowidgets.core.model.resources.PinSubjectLinkRequest
 import dev.alllexey.itmowidgets.core.model.resources.ResourceVoteRequest
 import dev.alllexey.itmowidgets.core.model.resources.SaveSubjectLinkRequest
-import dev.alllexey.itmowidgets.core.model.resources.SetLinkSavedRequest
 import dev.alllexey.itmowidgets.core.model.resources.SubjectLinksResponse
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
@@ -152,9 +151,6 @@ class SubjectLinksRepositoryImpl @Inject constructor(
             mutate(generation) { it.withoutMine(scope, id) }
         }
     }
-
-    override suspend fun setSaved(scope: ResourceScope, id: String, saved: Boolean): AppResult<Unit> =
-        linkAction(scope) { api.setSubjectLinkSaved(UUID.fromString(id), SetLinkSavedRequest(saved)) }
 
     override suspend fun pin(scope: ResourceScope, id: String?): AppResult<Unit> = attempt {
         val generation = epoch.get()

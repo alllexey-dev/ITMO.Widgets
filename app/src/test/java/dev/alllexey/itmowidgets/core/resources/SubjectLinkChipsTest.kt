@@ -15,7 +15,7 @@ class SubjectLinkChipsTest {
             shared = listOf(
                 subjectLink("flow", LinkCategory.QUEUE, LinkVisibility.FLOW, isMine = false, score = 3),
                 subjectLink("pinned", LinkCategory.EXAM, LinkVisibility.ALL, isMine = false),
-                subjectLink("saved", LinkCategory.OTHER, LinkVisibility.ALL, isMine = false, isSaved = true, score = 2),
+                subjectLink("public-other", LinkCategory.OTHER, LinkVisibility.ALL, isMine = false, score = 2),
                 subjectLink("public-tasks", LinkCategory.TASKS, LinkVisibility.ALL, isMine = false, score = 5),
             ),
             pinnedId = "pinned",
@@ -23,7 +23,7 @@ class SubjectLinkChipsTest {
 
         val chips = subjectLinkChips(snapshot, lms, limit = 10)
 
-        assertEquals(listOf("pinned", "LMS", "public-tasks", "flow", "saved", "own-notes", "own-scores"), chips.visible.map { it.name() })
+        assertEquals(listOf("pinned", "LMS", "public-tasks", "flow", "public-other", "own-notes", "own-scores"), chips.visible.map { it.name() })
         assertEquals(0, chips.moreCount)
     }
 
@@ -58,16 +58,16 @@ class SubjectLinkChipsTest {
     }
 
     @Test fun `a link is shown and counted once`() {
-        val saved = subjectLink("saved", LinkCategory.TASKS, LinkVisibility.ALL, isMine = false, isSaved = true, score = 4)
+        val twice = subjectLink("twice", LinkCategory.TASKS, LinkVisibility.ALL, isMine = false, score = 4)
         val snapshot = linksSnapshot(
-            mine = listOf(saved, subjectLink("pinned", LinkCategory.SCORES, score = 9)),
-            shared = listOf(saved, subjectLink("other", LinkCategory.NOTES, LinkVisibility.ALL, isMine = false)),
+            mine = listOf(twice, subjectLink("pinned", LinkCategory.SCORES, score = 9)),
+            shared = listOf(twice, subjectLink("other", LinkCategory.NOTES, LinkVisibility.ALL, isMine = false)),
             pinnedId = "pinned",
         )
 
         val chips = subjectLinkChips(snapshot, lmsUrl = null, limit = 2)
 
-        assertEquals(listOf("pinned", "saved"), chips.visible.map { it.name() })
+        assertEquals(listOf("pinned", "twice"), chips.visible.map { it.name() })
         assertEquals(1, chips.moreCount)
     }
 

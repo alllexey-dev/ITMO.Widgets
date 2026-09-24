@@ -53,7 +53,6 @@ class SubjectLinksBottomSheet : BottomSheetDialogFragment() {
             onOpen = { openLink(it.url, binding.root) },
             onActions = { openLinkActions(args, it.id) },
             onVote = { link, up -> viewModel.vote(link.id, up) },
-            onToggleSaved = { viewModel.toggleSaved(it.id) },
         )
         binding.recyclerView.adapter = adapter
         binding.recyclerView.itemAnimator = null

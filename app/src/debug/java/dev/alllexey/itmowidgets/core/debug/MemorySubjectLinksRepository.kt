@@ -56,16 +56,12 @@ class MemorySubjectLinksRepository : SubjectLinksRepository {
         val label = peek(scope).audiences.firstOrNull { it.flowId == flowId }?.label
         val link = SubjectLink(id, scope, category, url, title, visibility, flowId, label,
             if (visibility == LinkVisibility.PRIVATE) SubjectLinkStatus.PRIVATE else SubjectLinkStatus.PUBLISHED, null,
-            0, 0, isMine = true, isSaved = false, reportedByMe = false, author = null, updatedAt = now, local = !servicesEnabled)
+            0, 0, isMine = true, reportedByMe = false, author = null, updatedAt = now, local = !servicesEnabled)
         update(scope) { it.copy(mine = it.mine.filterNot { row -> row.id == id } + link) }
         return AppResult.Success(link)
     }
 
     override suspend fun delete(scope: ResourceScope, id: String) = update(scope) { it.copy(mine = it.mine.filterNot { row -> row.id == id }) }
-
-    override suspend fun setSaved(scope: ResourceScope, id: String, saved: Boolean) = online(scope) { snapshot ->
-        snapshot.copy(shared = snapshot.shared.map { if (it.id == id) it.copy(isSaved = saved) else it })
-    }
 
     override suspend fun pin(scope: ResourceScope, id: String?) = update(scope) { it.copy(pinnedId = id) }
 

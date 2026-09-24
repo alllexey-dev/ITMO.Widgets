@@ -25,12 +25,11 @@ internal fun subjectLink(
     isMine: Boolean = true,
     score: Int = 0,
     myVote: Int = 0,
-    isSaved: Boolean = false,
     status: SubjectLinkStatus = if (isMine && visibility == LinkVisibility.PRIVATE) SubjectLinkStatus.PRIVATE else SubjectLinkStatus.PUBLISHED,
     title: String? = "Ссылка $id",
     flowId: Long? = if (visibility == LinkVisibility.FLOW) 7101L else null,
 ) = SubjectLink(id, linkScope, category, "https://example.org/$id", title, visibility, flowId, null, status, null,
-    score, myVote, isMine, isSaved, reportedByMe = false, author = null, updatedAt = linkTime)
+    score, myVote, isMine, reportedByMe = false, author = null, updatedAt = linkTime)
 
 internal fun linksSnapshot(
     mine: List<SubjectLink> = emptyList(),
@@ -71,7 +70,6 @@ internal class FakeSubjectLinksRepository : SubjectLinksRepository {
         return (result as? AppResult.Failure) ?: AppResult.Success(link)
     }
     override suspend fun delete(scope: ResourceScope, id: String) = act("delete:$id")
-    override suspend fun setSaved(scope: ResourceScope, id: String, saved: Boolean) = act("saved:$id:$saved")
     override suspend fun pin(scope: ResourceScope, id: String?) = act("pin:$id")
     override suspend fun vote(scope: ResourceScope, id: String, value: Int) = act("vote:$id:$value")
     override suspend fun report(scope: ResourceScope, id: String, reason: ResourceReportReason, comment: String?) = act("report:$id:$reason")

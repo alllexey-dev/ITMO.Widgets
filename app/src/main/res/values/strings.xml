@@ -765,8 +765,6 @@
     <string name="links_edit">Изменить</string>
     <string name="links_delete">Удалить</string>
     <string name="links_delete_confirm">Удалить ссылку?</string>
-    <string name="links_save_own">Добавить к себе</string>
-    <string name="links_unsave_own">Убрать из своих</string>
     <string name="links_report">Пожаловаться</string>
     <string name="links_actions">Действия со ссылкой</string>
     <string name="links_pinned">закреплена</string>

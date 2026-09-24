@@ -60,10 +60,9 @@ reason for a rejected or hidden link. Past periods contribute
 `NOTES` and `EXAM` from earlier periods of the subject.
 
 Votes are +1/−1 arrows; tapping the current arrow takes the vote back, and the
-score is the sum. A viewer can add another student's link to their own list
-(`Добавить к себе`), pin one link per period (pinning the pinned link unpins it)
-and report a link (`Не открывается`, `Другой предмет`, `Спам`, `Другое`, optional
-comment). Any HTTPS host is accepted; the app checks the scheme, the host and
+score is the sum. A viewer can pin one link per period (pinning the pinned
+link unpins it) and report a link (`Не открывается`, `Другой предмет`, `Спам`,
+`Другое`, optional comment). Any HTTPS host is accepted; the app checks the scheme, the host and
 the absence of user info, and Backend never fetches a URL. Links open in the
 browser only through `core/util/HttpsNavigationPolicy`
 (`core/ui/LinkOpener.kt`); without a browser a snackbar says so.
@@ -75,8 +74,7 @@ text button with a chevron) opens the links sheet whenever the subject has
 links, even with none yet: the sheet has its own empty state and
 `Добавить ссылку`. `subjectLinkChips` in `core/resources` builds at most four
 chips in this order: the pinned link, the MyITMO LMS page (`lms_link`, shown as
-`LMS`), then every other non-chat link of the period, own, added and shared
-alike, by `SubjectLinkRanking`: the higher score first, of equal scores the
+`LMS`), then every other non-chat link of the period, own and shared alike, by `SubjectLinkRanking`: the higher score first, of equal scores the
 newer link. A link is shown once. An own link is a filled
 `colorSurfaceContainerHighest` chip with `colorOnSurface` text, the others stay outlined. `Ещё N` counts the
 other non-chat links and also opens the links sheet; the last chip is `+`,
@@ -97,13 +95,14 @@ per tag and nothing once the state is saved.
 - `SubjectLinksBottomSheet` (`Ссылки` and the subject name): one section per
   category in declaration order, `Чаты` after them, `С прошлых лет` last.
   Within a category own and others' links are ranked together by
-  `SubjectLinkRanking`; an own row sits on a rounded `colorSurfaceContainerHigh`
-  surface (20 dp, as other list rows) and its caption names who sees it. A row
-  shows the title or host and a line with the host when titled, the visibility
-  of an own link or the author's group of another's, the study year of a past
-  link, `закреплена` and the owner's review state. Others' links have vote
-  arrows and a `+` to add them; an own link shows its score, or a lock while it
-  is private. The sheet refreshes silently on open; a failed first load offers
+  `SubjectLinkRanking`; an own row sits on a rounded `colorSurfaceContainer`
+  surface (20 dp, as other list rows), one tonal step above the sheet's
+  `colorSurfaceContainerLow`, and its caption names who sees it and its review
+  state, so the colour is not the only cue. A row shows the title or host and
+  a line with the host when titled, the visibility of an own link or the
+  author's group of another's, the study year of a past link, `закреплена` and
+  the owner's review state. Others' links have vote arrows; an own link shows
+  its score, or a lock while it is private. The sheet refreshes silently on open; a failed first load offers
   `Повторить`, an empty one says `Ссылок пока нет`. The add button opens the
   editor.
 - `LinkEditorBottomSheet` (`Новая ссылка` / `Изменить ссылку`): the URL is
@@ -126,8 +125,7 @@ per tag and nothing once the state is saved.
   follows the repository and a vote keeps the sheet open. The arrows are
   hidden under a `VOTE` restriction and without the connection. An own shared
   link shows its score without arrows, an own private one none. Then
-  `Открыть`; `Добавить к себе` /
-  `Убрать из своих` for others' links; `Закрепить` / `Открепить`; `Изменить`
+  `Открыть`; `Закрепить` / `Открепить`; `Изменить`
   and `Удалить` (confirmed) for own links; `Пожаловаться` opens
   `ReportLinkDialogFragment` once per link. Actions run one at a time; a
   failure is a snackbar. Every action but a vote closes the sheet on success.
@@ -137,8 +135,8 @@ per tag and nothing once the state is saved.
 Without `Подключение к ITMO.Widgets` links are `PRIVATE` and stay on the device:
 the editor offers only `Только я` and says `Поделиться можно с подключением к
 ITMO.Widgets`; an own local link can be pinned, edited and deleted. Votes,
-reports, adding others' links, non-private visibility and editing a link that
-is already on the server fail with `AppError.CustomServicesDisabled`. The first
+reports, non-private visibility and editing a link that is already on the
+server fail with `AppError.CustomServicesDisabled`. The first
 refresh with the connection uploads local links and pins as private server
 links under their UUIDs; a link the server refuses stays local and is retried
 next time, and an edit made while the upload was in flight is sent next time.
@@ -148,8 +146,7 @@ next time, and an edit made while the upload was in flight is sent next time.
 `core/resources/SubjectLinksRepository` is the port;
 `feature/resources/data/SubjectLinksRepositoryImpl` implements it with the
 Core API (`subjectLinks`, `saveSubjectLink`, `deleteSubjectLink`,
-`setSubjectLinkSaved`, `pinSubjectLink`, `voteSubjectLink`,
-`reportSubjectLink`, `myRestrictions`), the connection gate and an injected
+`pinSubjectLink`, `voteSubjectLink`, `reportSubjectLink`, `myRestrictions`), the connection gate and an injected
 wall clock. With the connection the server is the source of truth: every action
 goes to it at once and its answer updates the cached snapshot. There is no
 background synchronization.
@@ -198,7 +195,8 @@ and votes that keep the actions sheet open (`SubjectLinksViewModelTest`,
 over the debug-only `MemorySubjectLinksRepository`: every category with chats
 and past years, voting, the editor with three nested flows, the editor with a guessed link and available audiences,
 the editor without the connection, an own rejected link, another student's
-link, an own row ranked between others' rows on its tonal surface, voting in
+link, an own row ranked between others' rows on its tonal surface (one step
+above the sheet's surface), voting in
 the actions sheet, the own score without arrows, arrows hidden by a restriction,
 and long titles at a large font on a narrow screen. The subject page's
 `Ссылки` header, chips and chats are covered by `RecordbookVisualTest`.

@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.radiobutton.MaterialRadioButton
+import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.textfield.TextInputLayout
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
@@ -99,6 +100,12 @@ class SubjectLinksVisualTest {
         Appearances.default.forEachIndexed { index, spec ->
             withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS) { scenario, _ ->
                 settle()
+                // The own row sits one tonal step above the sheet: Container on ContainerLow.
+                scenario.onActivity { activity ->
+                    val sheet = sheetList(activity)
+                    assertEquals(MaterialColors.getColor(sheet, com.google.android.material.R.attr.colorSurfaceContainerLow),
+                        sheetSurface(activity))
+                }
                 val scores = mutableListOf<Pair<String, Boolean>>()
                 var inScores = false
                 visitRows(scenario) { row ->
@@ -322,18 +329,18 @@ class SubjectLinksVisualTest {
         }
     }
 
-    @Test fun othersLinkOffersAddingPinningAndReporting() {
+    @Test fun othersLinkOffersPinningAndReporting() {
         withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "materials-all") { scenario, repository ->
             settle()
             scenario.onActivity { activity ->
                 val sheet = actions(activity)
                 assertEquals(View.GONE, sheet.findViewById<View>(R.id.review_note).visibility)
-                assertEquals(listOf(R.id.action_open, R.id.action_save, R.id.action_pin, R.id.action_report), visibleActions(sheet))
-                assertEquals("Добавить к себе", sheet.findViewById<TextView>(R.id.action_save).text.toString())
-                sheet.findViewById<View>(R.id.action_save).performClick()
+                assertEquals(listOf(R.id.action_open, R.id.action_pin, R.id.action_report), visibleActions(sheet))
+                assertEquals(activity.getString(R.string.links_unpin), sheet.findViewById<TextView>(R.id.action_pin).text.toString())
+                sheet.findViewById<View>(R.id.action_pin).performClick()
             }
             settle()
-            assertTrue(repository.peek(SCOPE).shared.first { it.id == "materials-all" }.isSaved)
+            assertEquals(null, repository.peek(SCOPE).pinnedId)
             scenario.onActivity { assertEquals(null, it.supportFragmentManager.findFragmentByTag(LinkActionsBottomSheet.TAG)) }
         }
     }
@@ -438,15 +445,22 @@ class SubjectLinksVisualTest {
         radioRows(sheet).singleOrNull { it.isChecked }?.text?.toString()?.substringBefore('\n')
 
     private fun visibleActions(sheet: View): List<Int> =
-        listOf(R.id.action_open, R.id.action_save, R.id.action_pin, R.id.action_edit, R.id.action_delete, R.id.action_report)
+        listOf(R.id.action_open, R.id.action_pin, R.id.action_edit, R.id.action_delete, R.id.action_report)
             .filter { sheet.findViewById<View>(it).visibility == View.VISIBLE }
 
-    /** Whether the row paints its own surface: sampled at the trailing edge, clear of the content. */
+    /** Whether the row paints the own-link surface: sampled at the trailing edge, clear of the content. */
     private fun View.hasTonalSurface(): Boolean {
         val bitmap = drawToBitmap()
         val pixel = bitmap.getPixel(width - (4 * resources.displayMetrics.density).toInt(), height / 2)
         bitmap.recycle()
-        return pixel == MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurfaceContainerHigh)
+        return pixel == MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurfaceContainer)
+    }
+
+    /** The fill of the links sheet itself, as the bottom sheet behaviour paints it. */
+    private fun sheetSurface(activity: SubjectLinksPreviewActivity): Int {
+        val sheet = sheetView(activity, SubjectLinksBottomSheet.TAG)
+            .findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+        return checkNotNull((sheet.background as MaterialShapeDrawable).fillColor).defaultColor
     }
 
     private fun View.topOnScreen(): Int = IntArray(2).also(::getLocationOnScreen)[1]
@@ -478,10 +492,9 @@ class SubjectLinksVisualTest {
             status: SubjectLinkStatus = SubjectLinkStatus.PUBLISHED,
             reviewNote: String? = null,
             flow: LinkAudience? = null,
-            saved: Boolean = false,
             scope: ResourceScope = SCOPE,
         ) = SubjectLink(id, scope, category, url, title, visibility, flow?.flowId, flow?.label, status, reviewNote, score, myVote,
-            isMine = mine, isSaved = saved, reportedByMe = false, author = AUTHOR.takeUnless { mine }, updatedAt = NOW)
+            isMine = mine, reportedByMe = false, author = AUTHOR.takeUnless { mine }, updatedAt = NOW)
 
         fun fixture() = SubjectLinksSnapshot(
             mine = listOf(
@@ -502,7 +515,7 @@ class SubjectLinksVisualTest {
                 link("tasks-flow", LinkCategory.TASKS, "https://github.com/synthetic/tasks", "Задания потока", LinkVisibility.FLOW,
                     flow = LECTURE_FLOW),
                 link("recordings-all", LinkCategory.RECORDINGS, "https://youtube.com/synthetic", "Записи лекций 2026", score = -2, myVote = -1),
-                link("exam-all", LinkCategory.EXAM, "https://example.org/exam", "Билеты к экзамену", score = 3, saved = true),
+                link("exam-all", LinkCategory.EXAM, "https://example.org/exam", "Билеты к экзамену", score = 3),
                 link("chat-group", LinkCategory.CHAT, "https://t.me/synthetic_group", "Чат группы", LinkVisibility.FLOW,
                     flow = PRACTICE_FLOW),
                 link("chat-flow", LinkCategory.CHAT, "https://t.me/synthetic_flow", "Чат потока", LinkVisibility.FLOW, flow = LECTURE_FLOW),

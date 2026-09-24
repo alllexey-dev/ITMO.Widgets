@@ -8,6 +8,16 @@ publication or deployment.
 
 ### 2026-09-24
 
+- `Добавить к себе` is gone: chips and rows are ranked by score, so saving
+  another student's link changed nothing. The `+`/check button of list rows,
+  `Добавить к себе` / `Убрать из своих` in the link actions sheet,
+  `SubjectLink.isSaved` and `SubjectLinksRepository.setSaved` are removed.
+  Needs Core and Backend `1.7.0-SNAPSHOT` without `setSubjectLinkSaved`
+  (Backend `V6__drop_subject_link_saves.sql`).
+- An own row in the links sheet is quieter: `colorSurfaceContainer`, one tonal
+  step above the sheet's `colorSurfaceContainerLow`, instead of
+  `colorSurfaceContainerHigh`. Subject page chips are unchanged.
+
 - A link is shared with one schedule flow of the subject instead of the fixed
   `Группа` and `Поток`: `Кто видит` lists `Только я`, every flow of the viewer
   by nesting (`ФИЗ ПИИКТ 3`, `3.2`, `3.2.1`) with its kind of classes, and

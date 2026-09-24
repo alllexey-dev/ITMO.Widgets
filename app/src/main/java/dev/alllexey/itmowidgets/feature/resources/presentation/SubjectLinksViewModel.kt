@@ -114,11 +114,6 @@ class SubjectLinksViewModel @Inject constructor(
         runOnce { repository.vote(scope, id, if (link.myVote == value) 0 else value) }
     }
 
-    fun toggleSaved(id: String) {
-        val link = find(id) ?: return
-        act { repository.setSaved(scope, id, !link.isSaved) }
-    }
-
     /** Pinning the pinned link unpins it. */
     fun pin(id: String) {
         val pinned = repository.peek(scope)?.pinnedId

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -46,14 +45,5 @@
             tools:text="docs.google.com · P3119" />
 
     </LinearLayout>
-
-    <ImageButton
-        android:id="@+id/save_button"
-        android:layout_width="@dimen/design_touch_target"
-        android:layout_height="@dimen/design_touch_target"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/links_save_own"
-        android:src="@drawable/ic_add"
-        app:tint="?attr/colorOnSurfaceVariant" />
 
 </LinearLayout>

@@ -168,5 +168,5 @@ object RecordbookPreviewFixtures {
         mine: Boolean = false, flow: LinkAudience? = null, score: Int = 0
     ) = SubjectLink(id, scope, category, "https://example.org/$id", title, visibility, flow?.flowId, flow?.label,
         if (mine && visibility == LinkVisibility.PRIVATE) SubjectLinkStatus.PRIVATE else SubjectLinkStatus.PUBLISHED, null,
-        score, 0, isMine = mine, isSaved = false, reportedByMe = false, author = null, updatedAt = UPDATED)
+        score, 0, isMine = mine, reportedByMe = false, author = null, updatedAt = UPDATED)
 }

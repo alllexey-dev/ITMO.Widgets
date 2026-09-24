@@ -82,12 +82,6 @@
             app:drawableStartCompat="@drawable/ic_open_in_new" />
 
         <TextView
-            android:id="@+id/action_save"
-            style="@style/Widget.ItmoWidgets.SheetAction"
-            android:text="@string/links_save_own"
-            app:drawableStartCompat="@drawable/ic_add" />
-
-        <TextView
             android:id="@+id/action_pin"
             style="@style/Widget.ItmoWidgets.SheetAction"
             android:text="@string/links_pin"

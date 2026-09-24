@@ -76,7 +76,6 @@ class SubjectLinksRepositoryImplTest {
 
         assertEquals(disabled, repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.FLOW, 7103))
         assertEquals(disabled, repository.vote(scope, id, 1))
-        assertEquals(disabled, repository.setSaved(scope, id, true))
         assertEquals(disabled, repository.pin(scope, id))
     }
 
@@ -269,7 +268,7 @@ class SubjectLinksRepositoryImplTest {
             request?.visibility ?: WireVisibility.ALL, request?.flowId,
             audiences.firstOrNull { it.flowId == request?.flowId }?.label,
             if (request?.visibility == WireVisibility.PRIVATE) WireStatus.PRIVATE else WireStatus.PUBLISHED, null,
-            0, 0, isMine, false, false, null, now)
+            0, 0, isMine, false, null, now)
 
         private fun response() = SubjectLinksResponse(mine.values.toList(), shared.toList(), emptyList(), pinnedId, audiences, true)
     }

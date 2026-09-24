@@ -31,7 +31,7 @@ import dev.alllexey.itmowidgets.core.ui.expandToContent
 
 /**
  * What can be done with one link. Own: open, pin, edit, delete, with the review state and the reason
- * of a rejection. Others': the vote arrows, open, add to own, pin, report. Actions that need the server are
+ * of a rejection. Others': the vote arrows, open, pin, report. Actions that need the server are
  * absent without it. A vote keeps the sheet open; every other action closes it on success.
  */
 @AndroidEntryPoint
@@ -88,10 +88,6 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
 
         val online = snapshot.servicesEnabled
         actionOpen.setOnClickListener { openLink(link.url, root); dismiss() }
-        actionSave.isVisible = !link.isMine && online
-        actionSave.setText(if (link.isSaved) R.string.links_unsave_own else R.string.links_save_own)
-        actionSave.setCompoundDrawablesRelativeWithIntrinsicBounds(if (link.isSaved) R.drawable.ic_remove else R.drawable.ic_add, 0, 0, 0)
-        actionSave.setOnClickListener { send { viewModel.toggleSaved(link.id) } }
         actionPin.isVisible = link.isMine || online
         actionPin.setText(if (pinned) R.string.links_unpin else R.string.links_pin)
         actionPin.setCompoundDrawablesRelativeWithIntrinsicBounds(if (pinned) R.drawable.ic_keep_off else R.drawable.ic_keep, 0, 0, 0)
