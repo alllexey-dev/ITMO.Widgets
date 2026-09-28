@@ -1,11 +1,14 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
 import android.content.res.ColorStateList
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import androidx.core.view.isEmpty
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
@@ -14,6 +17,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChip
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
@@ -89,7 +93,8 @@ data class SubjectHubActions(
     val onOpenLink: (String) -> Unit = {},
     val onLinkActions: (SubjectLink) -> Unit = {},
     val onAllLinks: () -> Unit = {},
-    val onAddLink: () -> Unit = {}
+    val onAddLink: () -> Unit = {},
+    val onOpenTeacher: (Int) -> Unit = {}
 )
 
 /** The whole subject page as one list: result, links, chats, scores, teachers and the nearest lessons. */
@@ -375,13 +380,28 @@ class SubjectHubAdapter(
         }
     }
 
-    private class TeacherHolder(val binding: ItemSubjectTeacherBinding) : RecyclerView.ViewHolder(binding.root) {
+    private inner class TeacherHolder(val binding: ItemSubjectTeacherBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(teacher: SubjectTeacher) {
             val context = binding.root.context
             binding.avatar.setUser(teacher.name, null)
             binding.name.text = teacher.name
             binding.roles.text = teacher.roles.joinToString(" · ") { context.getString(lessonTypeNameRes(it)) }
             binding.roles.isVisible = teacher.roles.isNotEmpty()
+            val isu = UserScreenArgs.profileIsu(teacher.isu)
+            binding.root.setOnClickListener(if (isu != null) { _ -> hubActions.onOpenTeacher(isu) } else null)
+            binding.root.isClickable = isu != null
+            binding.root.isFocusable = isu != null
+            binding.trailing.isVisible = isu != null
+            if (isu != null) {
+                val background = TypedValue()
+                context.theme.resolveAttribute(android.R.attr.selectableItemBackground, background, true)
+                binding.root.setBackgroundResource(background.resourceId)
+                ViewCompat.replaceAccessibilityAction(binding.root, AccessibilityActionCompat.ACTION_CLICK,
+                    context.getString(R.string.teacher_open_profile), null)
+            } else {
+                binding.root.background = null
+                ViewCompat.removeAccessibilityAction(binding.root, AccessibilityActionCompat.ACTION_CLICK.id)
+            }
         }
     }
 

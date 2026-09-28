@@ -11,7 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class QrCodeRepositoryImpl @Inject constructor(
     private val local: QrCodeLocalDataSource,
     private val remote: QrCodeRemoteDataSource

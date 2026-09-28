@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.ui
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -9,6 +10,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.UserSummary
 
@@ -19,6 +24,31 @@ class AvatarView @JvmOverloads constructor(
 
     private val image: ImageView
     private val text: TextView
+    private var bindingVersion = 0L
+    private val imageListener = object : RequestListener<Drawable> {
+        override fun onLoadFailed(
+            e: GlideException?, model: Any, target: Target<Drawable>, isFirstResource: Boolean
+        ): Boolean {
+            // Glide can reuse an equivalent request; snapshot the binding when its callback arrives.
+            val version = bindingVersion
+            post {
+                if (bindingVersion == version) {
+                    image.visibility = GONE
+                    text.visibility = VISIBLE
+                }
+            }
+            return false
+        }
+
+        override fun onResourceReady(
+            resource: Drawable, model: Any, target: Target<Drawable>, dataSource: DataSource, isFirstResource: Boolean
+        ): Boolean {
+            bindingVersion++
+            image.visibility = VISIBLE
+            text.visibility = GONE
+            return false
+        }
+    }
 
     init {
         LayoutInflater.from(context).inflate(R.layout.view_avatar, this, true)
@@ -34,6 +64,8 @@ class AvatarView @JvmOverloads constructor(
     }
 
     fun setUser(name: String?, pictureUrl: String?) {
+        bindingVersion++
+        text.text = name?.let(::initials)
         if (name == null) {
             Glide.with(this).clear(image)
             image.visibility = GONE
@@ -48,12 +80,12 @@ class AvatarView @JvmOverloads constructor(
             Glide.with(this)
                 .load(pictureUrl)
                 .circleCrop()
+                .listener(imageListener)
                 .into(image)
         } else {
             Glide.with(this).clear(image)
             image.visibility = GONE
             text.visibility = VISIBLE
-            text.text = initials(name)
         }
     }
 

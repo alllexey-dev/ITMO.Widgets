@@ -1,14 +1,21 @@
 package dev.alllexey.itmowidgets.testing
 
+import android.content.res.Configuration
+import android.view.View
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
+import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
+import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
+import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.ui.SportCardsPreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.ui.SportScoreCollapsePreviewActivity
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdatePreviewActivity
 import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginPreviewActivity
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 
 /**
  * The appearance matrix shared by the visual tests.
@@ -47,6 +54,18 @@ object Appearances {
     /** [all] when the full matrix was requested, otherwise only the light entry. */
     val default: List<Spec> get() = if (fullMatrix) all else all.take(1)
 
+    fun Spec.assertEffective(root: View, defaultPrimary: MutableMap<Boolean, Int>) {
+        val config = root.resources.configuration
+        assertEquals("Effective font scale for $name", fontScale, config.fontScale, 0.001f)
+        assertEquals("Effective night mode for $name",
+            if (dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO,
+            config.uiMode and Configuration.UI_MODE_NIGHT_MASK)
+        val primary = root.context.color.primary
+        if (colorSeed == null) defaultPrimary[dark] = primary
+        else assertNotEquals("The seeded palette must differ from the ordinary $name theme",
+            checkNotNull(defaultPrimary[dark]), primary)
+    }
+
     fun Spec.toSettingsNavigation() =
         SettingsNavigationTestActivity.Appearance(dark = dark, fontScale = fontScale, colorSeed = colorSeed)
 
@@ -63,6 +82,12 @@ object Appearances {
 
     fun Spec.toRecordbook() =
         RecordbookPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
+
+    fun Spec.toScheduleLifecycle() =
+        ScheduleLifecycleTestActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
+
+    fun Spec.toUserProfile() =
+        UserProfilePreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
 
     fun Spec.toSubjectLinks() =
         SubjectLinksPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)

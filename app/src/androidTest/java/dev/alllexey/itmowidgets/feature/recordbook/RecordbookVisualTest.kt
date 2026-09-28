@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.recordbook
 
 import android.content.Intent
 import android.view.View
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
@@ -18,6 +19,7 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
@@ -38,6 +40,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewFixtures.
 import dev.alllexey.itmowidgets.feature.recordbook.ui.SubjectHubAdapter
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
 import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.assertEffective
 import dev.alllexey.itmowidgets.testing.Appearances.toRecordbook
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -52,6 +55,46 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class RecordbookVisualTest {
+    @Test fun subjectTeacherWithIsuHasAccessibleProfileNavigationInEveryAppearance() {
+        val defaultPrimary = mutableMapOf<Boolean, Int>()
+        Appearances.default.forEachIndexed { index, spec ->
+            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
+                scenario.onActivity { activity ->
+                    val container = activity.findViewById<View>(R.id.recordbook_test_container)
+                    spec.assertEffective(container, defaultPrimary)
+                    if (spec.widthDp > 0) assertEquals((spec.widthDp * container.resources.displayMetrics.density).toInt(), container.width)
+                    RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons(listOf(
+                        hubLesson(7, "2026-06-03", RecordbookPreviewFixtures.MATH_ID, 1,
+                            SettingsNavigationTestActivity.LONG_NAME, 300001, RecordbookPreviewFixtures.MATH)
+                    ))
+                }
+                openSubject(scenario, "Математический")
+                scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.Teacher } }
+                scenario.onActivity { activity ->
+                    val row = activity.teacherRow()
+                    spec.assertEffective(row, defaultPrimary)
+                    assertEquals(SettingsNavigationTestActivity.LONG_NAME, row.findViewById<TextView>(R.id.name).text.toString())
+                    assertTrue(row.isClickable)
+                    assertTrue(row.isFocusable)
+                    assertEquals(View.VISIBLE, row.findViewById<View>(R.id.trailing).visibility)
+                    assertEquals(activity.getString(R.string.teacher_open_profile),
+                        row.createAccessibilityNodeInfo().actionList.single { it.id == AccessibilityActionCompat.ACTION_CLICK.id }.label)
+                    assertTextFits(row)
+                    dev.alllexey.itmowidgets.testing.ViewChecks.assertTouchTargets(row)
+                }
+                TestUi.settle(if (Screenshots.enabled) 500 else 80)
+                lateinit var activity: RecordbookPreviewActivity
+                scenario.onActivity { activity = it }
+                TestUi.awaitFrameCommit(activity)
+                screenshot("teacher-$index")
+                scenario.onActivity {
+                    it.teacherRow().performClick()
+                    assertEquals(listOf(300001), it.openedProfiles)
+                }
+            }
+        }
+    }
+
     @Test fun firstLoadWithoutAnyAnswerShowsTheSkeleton() {
         withPreview(RecordbookPreviewActivity.Appearance(), configure = { it.pending = CompletableDeferred() }) { scenario, _ ->
             settle()
@@ -284,6 +327,17 @@ class RecordbookVisualTest {
                 val chips = activity.findViewById<ChipGroup>(R.id.chips).descendants().filterIsInstance<Chip>().map { it.text.toString() }.toList()
                 assertTrue("Таблица баллов осени" in chips)
             }
+            scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.Teacher } }
+            scenario.onActivity { activity ->
+                val row = activity.teacherRow()
+                assertFalse(row.isClickable)
+                assertFalse(row.isFocusable)
+                assertEquals(View.GONE, row.findViewById<View>(R.id.trailing).visibility)
+                assertTrue(row.createAccessibilityNodeInfo().actionList.none { it.id == AccessibilityActionCompat.ACTION_CLICK.id })
+                row.performClick()
+                assertEquals(emptyList<Int>(), activity.openedProfiles)
+                assertTextFits(row)
+            }
             screenshot("subject-past-period")
         }
     }
@@ -401,6 +455,12 @@ class RecordbookVisualTest {
         } finally {
             RecordbookPreviewFixtures.reset()
         }
+    }
+
+    private fun RecordbookPreviewActivity.teacherRow(): View {
+        val position = hubItems().indexOfFirst { it is DetailItem.Teacher }
+        assertTrue(position >= 0)
+        return checkNotNull(hubList().findViewHolderForAdapterPosition(position)).itemView
     }
 
     private fun RecordbookPreviewActivity.hubList(): RecyclerView = findViewById(R.id.recycler_view)

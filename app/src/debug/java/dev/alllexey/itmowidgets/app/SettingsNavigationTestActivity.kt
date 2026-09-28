@@ -21,8 +21,14 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserSharing
+import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
+import dev.alllexey.itmowidgets.feature.social.domain.model.Person
+import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import dev.alllexey.itmowidgets.feature.social.ui.UserFriendsFragment
@@ -56,6 +62,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
@@ -138,6 +145,19 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         @Volatile var profileFor: (Int) -> UserProfile = { isu ->
             UserProfile(UserSummary(isu, LONG_NAME, null, emptyList(), UserSharing(true, true, friendsOpen)), RelationshipState.NONE)
         }
+        @Volatile var personFor: (Int) -> AppResult<Person> = { isu ->
+            val user = profileFor(isu).user
+            AppResult.Success(Person(
+                isu,
+                user.name,
+                user.pictureUrl,
+                emptyList(),
+                emptyList(),
+                user.primaryGroup()?.let {
+                    listOf(PersonEducation(it.name, it.course, it.facultyShortName))
+                }.orEmpty()
+            ))
+        }
         /** The last feed source the host built, for tests that swap cards while the screen is up. */
         @Volatile var homeSource: FixtureHomeCardSource? = null
         @Volatile var homePreferences: FixtureHomeCardPreferences? = null
@@ -199,9 +219,12 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
                             UserFriendsViewModel::class.java -> UserFriendsViewModel(arguments, ProfileSocial)
-                            UserProfileViewModel::class.java -> UserProfileViewModel(arguments, ProfileSocial, object : CurrentUserProvider {
-                                override suspend fun getCurrentUser() = CurrentUser(100001, "Тестовый пользователь", null)
-                            })
+                            UserProfileViewModel::class.java -> UserProfileViewModel(
+                                arguments, ProfileSocial, ProfilePeople, ProfileReviews,
+                                object : CurrentUserProvider {
+                                    override suspend fun getCurrentUser() = CurrentUser(100001, "Тестовый пользователь", null)
+                                }
+                            )
                             else -> error("Unexpected social ViewModel")
                         } as T
                     }
@@ -472,6 +495,18 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         private fun qr(block: QrWidgetSettings.() -> QrWidgetSettings) {
             appearance.value = appearance.value.copy(qr = appearance.value.qr.block())
         }
+    }
+
+    private object ProfilePeople : PersonRepository {
+        override fun cachedPerson(isu: Int): Person? = null
+        override suspend fun person(isu: Int): AppResult<Person> = personFor(isu)
+    }
+
+    private object ProfileReviews : TeacherReviewsRepository {
+        override fun cachedReviews(isu: Int): TeacherReviews? = null
+        override suspend fun reviews(isu: Int): AppResult<TeacherReviews> =
+            if (profileServicesEnabled) AppResult.Success(TeacherReviews(isu, emptyList()))
+            else AppResult.Failure(AppError.CustomServicesDisabled)
     }
 
     private object ProfileSocial : SocialRepository {

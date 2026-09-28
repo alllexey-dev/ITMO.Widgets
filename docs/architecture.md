@@ -35,11 +35,13 @@ core/           cross-cutting; knows nothing about features
   home/         HomeCard model and the HomeCardSource contract every feature contributes to
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
   navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders,
-                LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs)
+                LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs);
+                UserScreenArgs.profileIsu validates nullable Long ISUs before Int navigation
   onboarding/   OnboardingRepository — whether the first-run flow was passed
   network/      WidgetsClient, error mapping, serialization adapters
   notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
   resources/    SubjectLinksRepository, link models, ResourceScope, subjectLinkChips
+  reviews/      TeacherReviewsRepository, TeacherReviews, ExternalTeacherReview, ReviewDate
   result/       AppError, AppResult
   schedule/     schedule preferences, widget-refresh and SubjectLessonsGateway contracts
   services/     CustomServicesRepository — the Backend opt-in
@@ -61,10 +63,13 @@ feature/<name>/ ui | presentation | domain | data
 ```
 
 Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
-`recordbook`, `resources`, `schedule`, `settings`, `social`, `sport`, `update`,
+`recordbook`, `resources`, `reviews`, `schedule`, `settings`, `social`, `sport`, `update`,
 `weblogin`, `widget`. A feature does not need all four layers. `weblogin` holds
 the code and link parser, the User-Agent description, the view model and
-`WebLoginBottomSheet` ([web sign-in](features/web-login.md)).
+`WebLoginBottomSheet` ([web sign-in](features/web-login.md)). `social` owns the
+person profile and its direct My ITMO `PersonRepository`; `reviews/data` owns
+Backend review reads through the shared `core/reviews` contract, so the two
+features never import each other.
 
 Placement rules:
 
@@ -129,7 +134,11 @@ thread until it suspends.
 
 `SharedPreferences` is banned. *Enforced.* Anything caching user-scoped data
 implements `SessionDataCleaner`; sign-out and account change invoke every
-cleaner, and cache keys do not carry account identity themselves.
+cleaner, and cache keys do not carry account identity themselves. Repository
+implementations that are session cleaners are `@Singleton`, so cleaning and
+screen reads target the same cache instance. *Enforced.* Social and review
+Backend caches are unavailable while the opt-in is off or unknown, and their
+local generations invalidate late publications after opt-out or session clear.
 
 ### Session and identity
 
@@ -167,7 +176,7 @@ a set; each feature registers its own in its module).
 One Activity, two surfaces. `main_nav_graph` holds authentication, the five
 bottom destinations (recordbook, schedule, home, sport, profile) and the schedule
 friend-picker dialog. Contextual screens (settings, debug tools, subject details,
-update offer, friends, people search, public profile, another user's schedule
+update offer, friends, people search, person profile, another user's schedule
 and sport) live in `overlay_nav_graph` inside a full-screen `AppOverlayHostFragment`
 that slides above the unchanged root and bottom bar.
 
@@ -183,6 +192,12 @@ reselecting a root tab discards the whole overlay stack; Back pops one overlay
 level; rotation restores the current level. Widget and notification intents are
 parsed by `MainActivityIntentRouting`, queued until the session is signed in,
 saved across recreation and consumed exactly once.
+
+Every Fragment opens a person profile with `Fragment.openUserProfile(isu)` in
+`core/ui/navigation/AppNavigator.kt`. A sheet dismisses before invoking it.
+`UserScreenArgs.profileIsu(Long?)` accepts only `1..Int.MAX_VALUE`; absent or
+out-of-range teacher IDs leave rows informational. The friendship notification
+entry point stays in `MainActivity` and uses `navigation.openScreen` directly.
 
 ### Settings as data
 
@@ -201,6 +216,10 @@ The Konsist suite encodes: the layer table above; no feature-to-feature imports;
 ViewModels live in `presentation`; `*RepositoryImpl` lives in `data`; every
 Fragment with a nullable binding clears it in `onDestroyView()`; no direct
 `now()` calls under `feature.*` or `core.storage`; no `SharedPreferences`.
+Core library wire types from `core.model.reviews`, `core.model.resources`,
+`core.model.social` and `core.model.fcm` cannot be imported by `ui` or
+`presentation`; data mappers alias those imports when names overlap with local
+models. Session-cleaning `*RepositoryImpl` classes must be `@Singleton`.
 `DesignCardResourcesTest` pins the card style family from
 [`design.md`](design.md). Add a rule when a new invariant is agreed instead of
 relying on review.

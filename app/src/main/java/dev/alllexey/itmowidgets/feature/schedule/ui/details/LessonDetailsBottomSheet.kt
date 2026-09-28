@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
@@ -31,9 +30,8 @@ import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
 import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.bindFact
 import dev.alllexey.itmowidgets.core.ui.messageRes
-import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.MapLauncher
-import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentLessonDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemLessonFriendBinding
@@ -94,6 +92,7 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
         toolbar.setNavigationOnClickListener { dismiss() }
         val typeId = Lesson.TypeId(lesson.typeId)
         val destination = mapDestination()
+        val teacherIsu = UserScreenArgs.profileIsu(lesson.teacherIsu)
         header.bind(
             DetailsHeaderContent(
                 title = lesson.subjectName.ifBlank { getString(R.string.schedule_unknown_subject) },
@@ -105,7 +104,8 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
                 teacher = lesson.teacherFio,
                 location = locationText(),
                 mapAvailable = destination != null
-            )
+            ),
+            teacherIsu?.let { isu -> { openProfile(isu) } }
         ) { destination?.let(::openMap) }
         // The button is the link; only what the reader has to type or know is a fact.
         linkFact.bindFact(R.string.schedule_lesson_details_link, listOfNotNull(
@@ -154,14 +154,14 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
         val group = friend.primaryGroup()?.name
         row.friendGroup.isVisible = !group.isNullOrBlank()
         row.friendGroup.text = group
-        row.root.setOnClickListener { openFriendProfile(friend.isu) }
+        row.root.setOnClickListener { openProfile(friend.isu) }
         return row.root
     }
 
     /** The profile is a contextual screen above the tabs; the sheet has nothing to add once it opens. */
-    private fun openFriendProfile(isu: Int) {
+    private fun openProfile(isu: Int) {
         dismiss()
-        openScreen(AppScreen.USER_PROFILE, bundleOf(UserScreenArgs.ISU to isu))
+        openUserProfile(isu)
     }
 
     private fun locationText(): String {

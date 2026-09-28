@@ -11,11 +11,13 @@ import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
+@Singleton
 class BarsPreferenceRepositoryImpl @Inject constructor(
     private val tokens: BarsTokenStore,
     @param:AppPreferences private val preferences: DataStore<Preferences>

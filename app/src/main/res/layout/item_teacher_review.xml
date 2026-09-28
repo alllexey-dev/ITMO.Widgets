@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.ItmoWidgets.Card.Content"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/design_card_padding">
+
+        <TextView
+            android:id="@+id/subject"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/design_spacing_related"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textColor="?attr/colorOnSurface"
+            android:visibility="gone"
+            tools:text="Математический анализ"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/design_spacing_compact"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone"
+            tools:text="Сентябрь 2024"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Понятно объясняет материал и подробно отвечает на вопросы." />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/source"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_related"
+            android:ellipsize="none"
+            android:gravity="start|center_vertical"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="@dimen/design_touch_target"
+            android:minHeight="@dimen/design_touch_target"
+            android:paddingStart="0dp"
+            android:paddingTop="@dimen/design_spacing_compact"
+            android:paddingEnd="0dp"
+            android:paddingBottom="@dimen/design_spacing_compact"
+            android:singleLine="false"
+            android:textAlignment="viewStart"
+            app:icon="@drawable/ic_open_in_new"
+            app:iconGravity="textEnd"
+            tools:text="Reviews · ИТМО" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

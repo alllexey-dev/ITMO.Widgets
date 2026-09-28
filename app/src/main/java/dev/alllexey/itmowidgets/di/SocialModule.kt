@@ -16,13 +16,24 @@ import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelec
 import dev.alllexey.itmowidgets.feature.friendselector.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
+import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SocialModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindPersonRepository(impl: PersonRepositoryImpl): PersonRepository
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindPersonRepositorySessionDataCleaner(impl: PersonRepositoryImpl): SessionDataCleaner
 
     @Binds
     @IntoSet

@@ -44,13 +44,21 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   nearest lessons. The Backend schema is one migration,
   `V4__subject_links.sql`. Strict flow verification (ISU or zkTLS) is
   deferred, see decision 0008. Not released to production.
+- Stages 29–30 (person-profile and older-review reading portion): implemented
+  locally on 2026-09-28 through `vibe/person-profile-reviews-plan.md`. One
+  `USER_PROFILE` combines direct device-side My ITMO identity/facts, the opt-in
+  Backend social block and anonymous copied Reviews text. Teacher rows and both
+  search sections open it; the read API/Core contract and full visual/state
+  tests are included. Own review forms, eligibility, moderation, votes and
+  summaries remain planned. Backend rollout is recorded separately.
 - Stages 31–32: implemented on 2026-09-24 through `vibe/reviews-sync-plan.md`
   (Backend 1.7.0-SNAPSHOT and the web admin, no Core or Android change) as a
   sync from the Reviews project instead of a Google Sheets importer: Backend
   copies its moderated reviews daily and on an admin's request, teachers
   without ISU are skipped, and the web admin shows the state under `Отзывы`
-  (see `../itmo-widgets-backend/docs/ops/reviews-sync.md`). The app does not
-  show the copy yet. Not deployed yet.
+  (see `../itmo-widgets-backend/docs/ops/reviews-sync.md`). The person profile
+  now reads active copies through `GET /api/teachers/{isu}/reviews`; actual
+  deployment history is in `../itmo-widgets-backend/docs/ops/deployments.md`.
 - Stage 43 (feed part) and Stage 44 (feed tests): delivered early on 2026-09-20
   through `vibe/home-feed-plan.md` with the cards available in v2.1: schedule,
   QR pass, sport, friend requests, three dismissible hints, and a
@@ -622,6 +630,10 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 ### Stage 25: Implement Backend teacher reviews and review moderation
 
+The copied-review read route `GET /api/teachers/{isu}/reviews` already returns
+`TeacherReviewsResponse` from V7. The work below adds own reviews by extending
+that response; `V8__teacher_reviews.sql` remains reserved for these new tables.
+
 **What to add/implement:**
 
 * Add teachers keyed by teacher ISU, review revisions, category ratings, optional subject and period scope, anonymous-by-default publication, reports, and moderation history.
@@ -665,9 +677,13 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 ### Stage 27: Extend Core with teacher-review contracts
 
+`TeacherReviewModels.kt` already contains `TeacherReviewsResponse` and
+`ExternalTeacherReview`, and `teacherReviews(isu)` reads copied reviews. Keep
+that contract compatible while adding the fields and operations below.
+
 **What to add/implement:**
 
-* Add teacher profile, rating category, aggregate, review revision, moderation state, report, and create or edit request DTOs.
+* Extend the existing response with rating-category, aggregate, review-revision and moderation-state DTOs; add report and create or edit request DTOs.
 * Default `anonymous` to `true` in create requests.
 
 **Files to edit/create:**
@@ -695,24 +711,29 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 * `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew test`
 
-### Stage 29: Add Android teacher profiles and review flows
+### Stage 29: Extend person profiles with own review flows
+
+The shared person profile and copied-review reading flow are implemented in
+`feature/social` at `USER_PROFILE`. Own-review functionality below is still
+planned; forms belong to `feature/reviews`, not a separate teacher feature.
+Subject labels remain free text.
 
 **What to add/implement:**
 
-* Add teacher profiles reachable from lessons and subjects, rating summaries, subject filters, approved review lists, and report actions.
+* Extend the existing person profile with rating summaries, subject filters, approved native review lists and report actions without changing its entry points or copied reviews.
 * Add create and edit forms with anonymity enabled by default and explicit confirmation before non-anonymous publication.
 * Add `My reviews` with pending, approved, rejected, and superseded revisions under the own profile.
 * Open a public user profile only from approved non-anonymous reviews.
 
 **Files to edit/create:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/ui/TeacherProfileFragment.kt` - teacher profile.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/presentation/TeacherProfileViewModel.kt` - teacher and review state.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/ui/EditTeacherReviewFragment.kt` - create and edit form.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/ui/MyReviewsFragment.kt` - own moderation states, opened from the profile tab through `AppNavigator`.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/domain/TeacherReviewRepository.kt` - Android contract.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/teacher/data/TeacherReviewRepositoryImpl.kt` - Core-backed implementation.
-* `app/src/main/res/navigation/overlay_nav_graph.xml` - teacher and review destinations.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/social/ui/UserProfileFragment.kt` and `UserProfileAdapter.kt` - extend the existing person page.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/social/presentation/UserProfileViewModel.kt` and `UserProfileState.kt` - extend its review state.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/reviews/ui/EditTeacherReviewFragment.kt` - create and edit form.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/reviews/ui/MyReviewsFragment.kt` - own moderation states, opened from the profile tab through `AppNavigator`.
+* `app/src/main/java/dev/alllexey/itmowidgets/core/reviews/TeacherReviewsRepository.kt` - extend the shared Android contract.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/reviews/data/TeacherReviewsRepositoryImpl.kt` - extend the existing Core-backed implementation.
+* `app/src/main/res/navigation/overlay_nav_graph.xml` - new review-form destinations; keep `USER_PROFILE` as the person page.
 
 **Examples in existing code:**
 
@@ -724,15 +745,20 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 ### Stage 30: Add Android teacher-review tests
 
+Read-only person/profile tests already cover the three sources, deadlines,
+optional review fields and teacher entry points. Extend them for the still
+planned own-review behavior below.
+
 **What to add/implement:**
 
 * Test anonymous default state, explicit named-review confirmation, moderation-state rendering, author navigation, eligibility errors, and process restoration of unsent review text.
 
 **Files to edit/create:**
 
-* `app/src/test/java/dev/alllexey/itmowidgets/feature/teacher/presentation/TeacherProfileViewModelTest.kt` - teacher state tests.
-* `app/src/test/java/dev/alllexey/itmowidgets/feature/teacher/presentation/EditTeacherReviewViewModelTest.kt` - form tests.
-* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/teacher/TeacherReviewFlowTest.kt` - end-to-end UI flow.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/social/presentation/UserProfileViewModelTest.kt` - extend person-profile state tests.
+* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/social/UserProfileVisualTest.kt` - extend the existing profile visual matrix.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/reviews/presentation/EditTeacherReviewViewModelTest.kt` - form tests.
+* `app/src/androidTest/java/dev/alllexey/itmowidgets/feature/reviews/TeacherReviewFlowTest.kt` - end-to-end own-review UI flow.
 
 **Verification commands:**
 
@@ -744,7 +770,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 
 * Copy the anonymous teacher reviews of the Reviews project (`https://onetwozzzplus.github.io/reviews/`, API `https://reviews.work.gd`) into Backend daily at 05:00 Europe/Moscow and on an admin's request. Its own moderators have checked them, and it is the only source of older reviews; Google Sheets are not parsed.
 * Check the registry with its ETag; on a change fetch every teacher whose Reviews id is an ISU number (teachers without ISU are skipped), apply the complete snapshot in one transaction, keep reviews that disappeared upstream with a removal time, and apply nothing when any request fails.
-* Keep the subject title, source title and link, and the raw and parsed date, so the teacher review section can later show a copied review labeled as from Reviews with its source link. A read API for the app comes with that section (Stages 25-29).
+* Keep the subject title, source title and link, and the raw and parsed date. The implemented `GET /api/teachers/{isu}/reviews` serves active copies to the shared person profile, which labels them as Reviews and opens the source link; raw dates and sync metadata stay on Backend.
 * Show the sync state and a start button in the web admin (`/app/admin/reviews`) and audit manual starts. Operations are described in `../itmo-widgets-backend/docs/ops/reviews-sync.md`.
 
 **Files to edit/create:**
@@ -886,7 +912,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 **What to add/implement:**
 
 * Track the BARS journal in the background and notify about new marks, changed marks, and changed approvals. Everything stays on the device: BARS data never reaches Backend, and the feature does not depend on the custom-services opt-in.
-* Renew the BARS token in the background without a WebView: `BarsCookieSilentLogin` replays the official OIDC authorization URL through OkHttp with the ITMO.ID cookies read from `CookieManager`, accepts only the exact callback with a checked `state`, and exchanges the code through the library's `BarsCodeSupplier`. No credentials, no JavaScript, no cookie leaves the device. Foreground renewal keeps `BarsWebSilentLogin`. Record the rule as decision 0008.
+* Renew the BARS token in the background without a WebView: `BarsCookieSilentLogin` replays the official OIDC authorization URL through OkHttp with the ITMO.ID cookies read from `CookieManager`, accepts only the exact callback with a checked `state`, and exchanges the code through the library's `BarsCodeSupplier`. No credentials, no JavaScript, no cookie leaves the device. Foreground renewal keeps `BarsWebSilentLogin`. Record the rule as decision 0010.
 * Persist a normalized per-checkpoint snapshot (discipline, checkpoint plan, checkpoint, mark, approval) per ISU in the Room database introduced in Stage 35. `BarsMarkDiffEngine` is pure: it emits `MarkAdded`, `MarkChanged`, and `ApprovalChanged` events, ignores reorder-only responses, treats an empty journal (`total = 0`, no marks) as "no marks" rather than a removal, and skips plans with `has_course_project` exactly like the overlay mapper. The first successful sync after enabling only writes the baseline and notifies nothing.
 * Run a unique periodic WorkManager job (`bars-mark-sync`, every three hours, network constraint, `@HiltWorker`). It exits quietly without a BARS session, backs off after a failed renewal, and when the ITMO.ID cookie session is gone posts one `Войдите в БАРС` notification and stays silent until the next successful BARS login. Opening the recordbook with the `БАРС` chip runs the same diff on the fresh journal so foreground use advances the baseline. Do not claim immediate delivery because Android controls periodic execution.
 * Add the `BARS` notification channel next to `SPORT` and `FRIENDS`. One notification per subject per sync with a stable id: subject and checkpoint in the title, the mark in the expanded text, `VISIBILITY_PRIVATE` with the public version `Новая оценка в БАРС`. Tapping opens the recordbook subject with the chip on through `MainActivityIntentRouting`.
@@ -905,7 +931,7 @@ Core and Backend retain independent semantic versions. Every Android release doc
 * `app/src/main/java/dev/alllexey/itmowidgets/app/MainActivityIntentRouting.kt` - route to the recordbook subject with the chip on.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/settings/presentation/SettingsViewModel.kt` - the tracking toggle.
 * `app/src/main/java/dev/alllexey/itmowidgets/di/RecordbookModule.kt` - bindings and the worker entry point.
-* `docs/decisions/0009-bars-background-renewal.md` - cookie replay through OkHttp is the only background renewal path.
+* `docs/decisions/0010-bars-background-renewal.md` - cookie replay through OkHttp is the only background renewal path.
 * `docs/features/recordbook.md`, `docs/features/notifications.md`, `docs/settings.md` - current-state documentation of tracking, the channel, and the toggle.
 
 **Framework/Library Documentation:**

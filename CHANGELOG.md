@@ -6,6 +6,32 @@ publication or deployment.
 
 ## 2.2 — development
 
+### 2026-09-28
+
+- One person profile opens for any ISU: the device loads My ITMO name, photo,
+  positions, rooms and education; registered users keep their ITMO.Widgets
+  relationship and sharing block. Contacts, gender and exchange status are not
+  shown. The endpoint's observed HTTP 400 / numeric 100 / explicit null result
+  is interpreted as missing only in the personality repository.
+- Older anonymous Reviews text appears at the bottom of the profile with its
+  optional subject, month or before-year date and source link, without ratings
+  or truncation. Needs Core and Backend `1.7.0-SNAPSHOT` with `teacherReviews`
+  and `GET /api/teachers/{isu}/reviews` (existing Backend V7 schema).
+- Teachers in lesson, pending-sport and sport details and on subject pages open
+  the same profile when they have an ISU; both people-search sections do too.
+  Informational rows without an ISU and friend-sport cards remain read-only.
+- Backend profile/friends/review caches stay behind the connection and clear on
+  opt-out or sign-out; local generations reject older replies after off/on.
+  `SocialRepositoryImpl` and all session-cleaning repository implementations
+  are singletons shared with their cleaners.
+- The composite profile waits for complete initial parts, with a 3-second
+  deadline once an identity is ready. Late reviews append; late identity blocks
+  wait for retry instead of moving visible content. One snackbar reports partial
+  failure. Avatar image errors show current initials.
+- Synthetic emulator tests cover the profile, entry points, delayed replies,
+  recycling, recreation, accessibility and full appearance matrices. Instrumented
+  runs preserve installed APKs/data; snapshots wait for completed transitions.
+
 ### 2026-09-24
 
 - `Добавить к себе` is gone: chips and rows are ranked by score, so saving

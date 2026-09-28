@@ -29,7 +29,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
   physical-education link, the one-page subject screen.
 - [Subject links](features/resources.md) — link categories and audiences,
   chips, sheets, the local mode without the connection.
-- [Social](features/social.md) — friends, requests, people search, public profiles.
+- [Social](features/social.md) — friends, requests, people search, person profiles.
+- [Teacher reviews](features/reviews.md) — older anonymous text reviews in person profiles.
 - [Notifications](features/notifications.md) — FCM receiver, token sync, handlers.
 - [Widgets](features/widgets.md) — schedule and QR widgets and their previews.
 - [Update offer](features/update.md) — version check and reminder policy.
@@ -49,6 +50,7 @@ editing an old one when a decision changes.
 - [0006 People search via MyITMO plus lookup](decisions/0006-people-search.md)
 - [0007 Push delivery guard by recipient ISU](decisions/0007-push-guard.md)
 - [0008 Subject links: schedule-flow audiences, premoderation only for everybody](decisions/0008-community-moderation.md)
+- [0009 One person profile, direct My ITMO identity and copied reviews](decisions/0009-person-profile.md)
 
 ## Sibling repositories
 

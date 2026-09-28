@@ -65,7 +65,7 @@ class UserSearchViewModelTest {
         assertEquals(true, registered.opensProfile)
         val stranger = (content.items[3] as UserListItem.User).row
         assertEquals(UserAction.INVITE, stranger.primary)
-        assertEquals(false, stranger.opensProfile)
+        assertEquals(true, stranger.opensProfile)
 
         viewModel.loadMore()
         advanceUntilIdle()

@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.sport.cards
 import android.content.Intent
 import android.graphics.Rect
 import android.view.View
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.widget.NestedScrollView
@@ -17,6 +18,9 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
@@ -28,6 +32,7 @@ import dev.alllexey.itmowidgets.feature.sport.ui.SportCardsPreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonItem
 import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.assertEffective
 import dev.alllexey.itmowidgets.testing.Appearances.toSportCards
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -46,6 +51,47 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SportCardsVisualTest {
+    @Test fun teacherInSportDetailsOpensProfileAfterClosingTheSheet() {
+        val defaultPrimary = mutableMapOf<Boolean, Int>()
+        Appearances.default.forEachIndexed { index, spec ->
+            preview(spec.toSportCards()) { scenario ->
+                scenario.onActivity { activity ->
+                    spec.assertEffective(activity.list, defaultPrimary)
+                    activity.showDetails(SportCardFixtures.lesson().copy(teacherIsu = 100, teacherFio = SettingsNavigationTestActivity.LONG_NAME))
+                }
+                settle()
+                scenario.onActivity { activity ->
+                    val details = sheet(activity)
+                    val root = details.requireView()
+                    spec.assertEffective(root, defaultPrimary)
+                    val teacher = root.findViewById<View>(R.id.teacher_fact)
+                    assertEquals(SettingsNavigationTestActivity.LONG_NAME, teacher.findViewById<TextView>(R.id.fact_value).text.toString())
+                    assertTrue(teacher.isClickable)
+                    assertTrue(teacher.isFocusable)
+                    assertEquals(View.VISIBLE, teacher.findViewById<View>(R.id.fact_trailing).visibility)
+                    assertEquals(activity.getString(R.string.teacher_open_profile),
+                        teacher.createAccessibilityNodeInfo().actionList.single { it.id == AccessibilityActionCompat.ACTION_CLICK.id }.label)
+                    if (spec.widthDp > 0) assertEquals((spec.widthDp * root.resources.displayMetrics.density).toInt(), details.dialog!!.window!!.decorView.width)
+                    assertTextFits(root)
+                    assertTouchTargets(root)
+                }
+                TestUi.settle(if (Screenshots.enabled) 500 else 80)
+                lateinit var activity: SportCardsPreviewActivity
+                scenario.onActivity { activity = it }
+                TestUi.awaitFrameCommit(activity)
+                screenshot("teacher-$index")
+                scenario.onActivity { sheet(it).requireView().findViewById<View>(R.id.teacher_fact).performClick() }
+                settle()
+                scenario.onActivity {
+                    assertNull(it.supportFragmentManager.findFragmentByTag(SportCommonDetailsBottomSheet.TAG))
+                    val navigation = it.openedScreens.single()
+                    assertEquals(AppScreen.USER_PROFILE, navigation.first)
+                    assertEquals(100, navigation.second?.getInt(UserScreenArgs.ISU))
+                }
+            }
+        }
+    }
+
     @Test fun cardsAndDetailsInLightDarkAndNarrowDynamicPalettes() {
         Appearances.default.forEachIndexed { index, spec ->
             preview(spec.toSportCards()) { scenario ->

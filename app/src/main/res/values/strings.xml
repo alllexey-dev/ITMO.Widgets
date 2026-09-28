@@ -410,6 +410,7 @@
     <string name="subject_lesson_date">EEE, d MMM</string>
     <string name="schedule_break_range_short">%1$s–%2$s</string>
     <string name="subject_teachers_title">Преподаватели</string>
+    <string name="teacher_open_profile">Открыть профиль</string>
     <string name="recordbook_refresh_error">Не удалось обновить, показываем прежние данные. %1$s</string>
     <string name="recordbook_period_program">%1$s\n%2$s</string>
     <string name="sport_details_title">Занятие</string>
@@ -598,7 +599,6 @@
     <string name="user_name_placeholder">Пользователь ИСУ %1$d</string>
     <string name="user_profile_hidden_friends_hint">Обычно открывается после добавления в друзья</string>
     <string name="user_profile_not_found_title">Профиль не найден</string>
-    <string name="user_profile_not_found_description">Этот человек ещё не пользуется ITMO.Widgets</string>
 
     <!-- Another user's schedule and sport -->
     <string name="user_schedule_title">Расписание: %1$s</string>
@@ -831,4 +831,12 @@
     <string name="web_login_platform_android" translatable="false">Android</string>
     <string name="web_login_platform_ios" translatable="false">iOS</string>
     <string name="web_login_platform_ipados" translatable="false">iPadOS</string>
+    <string name="person_course">%1$d курс</string>
+    <string name="person_fact_position">Должность</string>
+    <string name="person_fact_room">Аудитория</string>
+    <string name="person_fact_education">Учёба</string>
+    <string name="teacher_reviews_title">Отзывы</string>
+    <string name="teacher_review_before_year">До %1$d</string>
+    <string name="teacher_review_source">Reviews · %1$s</string>
+    <string name="teacher_review_source_default">Reviews</string>
 </resources>

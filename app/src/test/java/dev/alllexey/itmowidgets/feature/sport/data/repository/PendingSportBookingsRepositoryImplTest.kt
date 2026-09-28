@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -51,9 +52,9 @@ class PendingSportBookingsRepositoryImplTest {
     @Test fun `future prediction shifts once while bound real and free lessons use actual dates`() = runTest {
         val prototype = SportCardFixtures.entry().targetLesson.copy(
             id = 20, start = SportCardFixtures.start.minusWeeks(2), end = SportCardFixtures.start.minusWeeks(2).plusMinutes(90),
-            sectionName = "  Секция  ", teacherFio = " Преподаватель ", roomName = " Зал "
+            sectionName = "  Секция  ", teacherFio = " Преподаватель ", roomName = " Зал ", teacherIsu = 300001
         )
-        val real = prototype.copy(id = 30, start = SportCardFixtures.start.plusDays(1), end = SportCardFixtures.start.plusDays(1).plusMinutes(90))
+        val real = prototype.copy(id = 30, start = SportCardFixtures.start.plusDays(1), end = SportCardFixtures.start.plusDays(1).plusMinutes(90), teacherIsu = 300002)
         data.entries.value = CustomDataState.Success(listOf(
             auto(prototype = prototype),
             auto(id = 3, prototype = prototype.copy(id = 21), real = real),
@@ -66,13 +67,20 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(-20L, predicted.lessonId)
         assertEquals("Секция", predicted.sectionName)
         assertEquals("Преподаватель", predicted.teacherFio)
+        assertEquals(300001, predicted.teacherIsu)
+        assertEquals(300001, predicted.toDetailsArgs().teacherIsu)
         assertEquals("Зал", predicted.roomName)
         val bound = pending.data.first { it.lessonId == 30L }
         assertFalse(bound.isPrediction)
+        assertEquals(300002, bound.teacherIsu)
+        assertEquals(300002, bound.toDetailsArgs().teacherIsu)
         assertEquals(real.start, bound.start)
         assertEquals(real.end, bound.end)
         assertEquals(PendingSportBooking.QueueKind.AUTO, bound.queueKind)
-        assertEquals(SportCardFixtures.start, pending.data.first { it.queueKind == PendingSportBooking.QueueKind.FREE }.start)
+        val free = pending.data.first { it.queueKind == PendingSportBooking.QueueKind.FREE }
+        assertEquals(SportCardFixtures.start, free.start)
+        assertEquals(SportCardFixtures.entry().targetLesson.teacherIsu.toInt(), free.teacherIsu)
+        assertEquals(free.teacherIsu, free.toDetailsArgs().teacherIsu)
     }
 
     @Test fun `only active future unsigned queues remain and multiple queues for real lesson do not duplicate`() = runTest {

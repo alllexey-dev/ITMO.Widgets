@@ -84,7 +84,8 @@ class PendingSportBookingsRepositoryImpl @Inject constructor(
                             end = booking.end,
                             teacherFio = booking.teacherFio.trim(),
                             roomName = booking.roomName.trim(),
-                            isPrediction = !booking.isLessonReal
+                            isPrediction = !booking.isLessonReal,
+                            teacherIsu = booking.teacherIsu
                         )
                     }
                 DataState.Success(pending)

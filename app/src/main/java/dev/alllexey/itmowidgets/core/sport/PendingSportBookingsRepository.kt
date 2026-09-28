@@ -15,7 +15,8 @@ data class PendingSportBooking(
     val end: OffsetDateTime,
     val teacherFio: String,
     val roomName: String,
-    val isPrediction: Boolean
+    val isPrediction: Boolean,
+    val teacherIsu: Int? = null
 ) {
     enum class QueueKind { FREE, AUTO }
 }

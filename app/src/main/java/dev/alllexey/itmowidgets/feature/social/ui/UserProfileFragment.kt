@@ -4,42 +4,38 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.content.res.ColorStateList
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.model.primaryGroup
-import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
-import dev.alllexey.itmowidgets.core.util.color
+import dev.alllexey.itmowidgets.core.ui.openLink
+import dev.alllexey.itmowidgets.core.ui.userDisplayName
 import dev.alllexey.itmowidgets.databinding.FragmentUserProfileBinding
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileEvent
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import dev.alllexey.itmowidgets.core.ui.userDisplayName
 
 @AndroidEntryPoint
 class UserProfileFragment : Fragment() {
 
     private var _binding: FragmentUserProfileBinding? = null
     private val binding get() = _binding!!
+    private lateinit var adapter: UserProfileAdapter
+    private var renderRevision = 0L
 
     private val viewModel: UserProfileViewModel by viewModels()
 
@@ -54,9 +50,18 @@ class UserProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.backButton.setOnClickListener { closeScreen() }
-        binding.primaryAction.setOnClickListener { viewModel.onPrimaryAction() }
-        binding.secondaryAction.setOnClickListener { viewModel.onSecondaryAction() }
-        binding.stateAction.setOnClickListener { viewModel.load() }
+        binding.stateAction.setOnClickListener { viewModel.retry() }
+        adapter = UserProfileAdapter(ProfileActions(
+            onPrimary = viewModel::onPrimaryAction,
+            onSecondary = viewModel::onSecondaryAction,
+            onFriends = { openUserScreen(AppScreen.USER_FRIENDS) },
+            onSchedule = { openUserScreen(AppScreen.USER_SCHEDULE) },
+            onSport = { openUserScreen(AppScreen.USER_SPORT) },
+            onSource = { openLink(it, binding.root) }
+        ))
+        binding.profileList.adapter = adapter
+        binding.profileList.itemAnimator = null
+        binding.profileList.addItemDecoration(ProfileItemSpacing())
 
         viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
@@ -69,18 +74,36 @@ class UserProfileFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        binding.profileList.adapter = null
         _binding = null
         super.onDestroyView()
     }
 
-    private fun render(state: UserProfileUiState) = with(binding) {
-        loading.isVisible = state is UserProfileUiState.Loading
-        content.isVisible = state is UserProfileUiState.Content
-        stateContainer.isVisible = state is UserProfileUiState.Error
+    private fun render(state: UserProfileUiState) {
+        val revision = ++renderRevision
         when (state) {
-            UserProfileUiState.Loading -> Unit
-            is UserProfileUiState.Error -> renderError(state.error)
-            is UserProfileUiState.Content -> renderContent(state)
+            UserProfileUiState.Loading -> with(binding) {
+                loading.isVisible = true
+                profileList.isVisible = false
+                stateContainer.isVisible = false
+            }
+            is UserProfileUiState.Error -> with(binding) {
+                loading.isVisible = false
+                profileList.isVisible = false
+                stateContainer.isVisible = true
+                renderError(state.error)
+            }
+            is UserProfileUiState.Content -> {
+                val currentBinding = binding
+                adapter.submitContent(state) {
+                    // A pending diff must not reveal an old page after an error or a new view.
+                    if (_binding !== currentBinding || renderRevision != revision) return@submitContent
+                    currentBinding.profileList.invalidateItemDecorations()
+                    currentBinding.loading.isVisible = false
+                    currentBinding.stateContainer.isVisible = false
+                    currentBinding.profileList.isVisible = true
+                }
+            }
         }
     }
 
@@ -88,88 +111,17 @@ class UserProfileFragment : Fragment() {
         val notFound = error == AppError.NotFound
         stateIcon.setImageResource(if (notFound) R.drawable.ic_person else R.drawable.ic_error_rounded)
         stateTitle.setText(if (notFound) R.string.user_profile_not_found_title else R.string.common_load_error_title)
-        stateDescription.text = if (notFound) {
-            getString(R.string.user_profile_not_found_description)
-        } else {
-            getString(error.messageRes())
-        }
+        stateDescription.isVisible = !notFound
+        stateDescription.text = if (notFound) null else getString(error.messageRes())
         stateAction.isVisible = !notFound
     }
 
-    private fun renderContent(state: UserProfileUiState.Content) = with(binding) {
-        val user = state.profile.user
-        avatar.setUser(user)
-        name.text = requireContext().userDisplayName(user.name, user.isu)
-        val firstGroup = user.primaryGroup()
-        group.isVisible = firstGroup != null
-        group.text = firstGroup?.let {
-            getString(R.string.me_group_format, it.name, it.course, it.facultyShortName)
-        }
-        meta.text = getString(R.string.me_isu, user.isu)
-
-        val relationship = state.profile.relationship
-        relationshipStatus.isVisible = state.isSelf || relationship == RelationshipState.INCOMING
-        relationshipStatus.text = when {
-            state.isSelf -> getString(R.string.user_profile_self)
-            else -> getString(R.string.user_status_incoming)
-        }
-        actions.isVisible = !state.isSelf && relationship != RelationshipState.BLOCKED
-        primaryAction.isEnabled = !state.busy
-        secondaryAction.isEnabled = !state.busy
-        secondaryAction.isVisible = relationship == RelationshipState.INCOMING
-        secondaryAction.setText(R.string.user_profile_reject_request)
-        when (relationship) {
-            RelationshipState.NONE -> primaryAction.applyStyle(
-                R.string.user_profile_add_friend, filled = true
-            )
-            RelationshipState.OUTGOING -> primaryAction.applyStyle(
-                R.string.user_profile_cancel_request, filled = false
-            )
-            RelationshipState.INCOMING -> primaryAction.applyStyle(
-                R.string.user_profile_accept_request, filled = true
-            )
-            RelationshipState.FRIENDS -> primaryAction.applyStyle(
-                R.string.user_profile_remove_friend, filled = false
-            )
-            RelationshipState.BLOCKED -> Unit
-        }
-
-        bindEntry(friendsRow, friendsDescription, friendsTrailing, user.sharing.friends, R.string.user_profile_friends_open) {
-            openScreen(AppScreen.USER_FRIENDS, userArguments(user.isu, user.name))
-        }
-        val scheduleOpen = state.isSelf || user.sharing.schedule
-        val sportOpen = state.isSelf || user.sharing.sport
-        bindEntry(scheduleRow, scheduleDescription, scheduleTrailing, scheduleOpen, R.string.user_profile_schedule_open) {
-            openScreen(AppScreen.USER_SCHEDULE, userArguments(user.isu, user.name))
-        }
-        bindEntry(sportRow, sportDescription, sportTrailing, sportOpen, R.string.user_profile_sport_open) {
-            openScreen(AppScreen.USER_SPORT, userArguments(user.isu, user.name))
-        }
-        hiddenHint.isVisible = !state.isSelf && relationship != RelationshipState.FRIENDS &&
-            (!scheduleOpen || !sportOpen)
-    }
-
-    private fun bindEntry(
-        row: View,
-        description: TextView,
-        trailing: ImageView,
-        open: Boolean,
-        openDescription: Int,
-        onOpen: () -> Unit
-    ) {
-        description.setText(if (open) openDescription else R.string.user_profile_hidden)
-        trailing.setImageResource(if (open) R.drawable.ic_chevron_right else R.drawable.ic_lock)
-        row.isClickable = open
-        row.setOnClickListener(if (open) { _ -> onOpen() } else null)
-        row.alpha = if (open) 1f else 0.72f
-    }
-
-    /** One button, two weights: filled for joining, tonal for stepping back. */
-    private fun MaterialButton.applyStyle(text: Int, filled: Boolean) {
-        setText(text)
-        val colors = context.color
-        backgroundTintList = ColorStateList.valueOf(if (filled) colors.primary else colors.secondaryContainer)
-        setTextColor(if (filled) colors.onPrimary else colors.onSecondaryContainer)
+    private fun openUserScreen(screen: AppScreen) {
+        val content = viewModel.uiState.value as? UserProfileUiState.Content ?: return
+        openScreen(screen, bundleOf(
+            UserScreenArgs.ISU to content.isu,
+            UserScreenArgs.NAME to requireContext().userDisplayName(content.name, content.isu)
+        ))
     }
 
     private fun handle(event: UserProfileEvent) {
@@ -185,11 +137,11 @@ class UserProfileFragment : Fragment() {
                 .setNegativeButton(R.string.common_cancel, null)
                 .setPositiveButton(R.string.user_action_remove) { _, _ -> viewModel.removeFriend() }
                 .show()
+            UserProfileEvent.LoadFailed -> Snackbar.make(
+                binding.root,
+                R.string.common_partial_load_error,
+                Snackbar.LENGTH_LONG
+            ).setAction(R.string.common_retry) { viewModel.retry() }.show()
         }
     }
-
-    private fun userArguments(isu: Int, name: String) = bundleOf(
-        UserScreenArgs.ISU to isu,
-        UserScreenArgs.NAME to name
-    )
 }

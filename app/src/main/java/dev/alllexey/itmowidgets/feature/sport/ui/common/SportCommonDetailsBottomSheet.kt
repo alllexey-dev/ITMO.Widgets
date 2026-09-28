@@ -19,8 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import androidx.core.os.bundleOf
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
-import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
-import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.ConditionTone
 import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
@@ -81,6 +80,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         bindAction()
         toolbar.setNavigationOnClickListener { dismiss() }
         val timing = SportSessionTiming(OffsetDateTime.parse(item.start), OffsetDateTime.parse(item.end), timeProvider)
+        val teacherIsu = UserScreenArgs.profileIsu(item.teacherIsu.toLong())
         header.bind(
             DetailsHeaderContent(
                 title = item.sectionName,
@@ -91,7 +91,8 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
                 teacher = item.teacherFio,
                 location = item.roomName,
                 mapAvailable = item.mapAddress != null
-            )
+            ),
+            teacherIsu?.let { isu -> { openProfile(isu) } }
         ) { openMap() }
         bindRegistration()
         bindConditions()
@@ -261,15 +262,15 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
                 }
                 else -> getString(R.string.sport_friend_not_signed)
             }
-            row.root.setOnClickListener { openFriendProfile(friend.isu) }
+            row.root.setOnClickListener { openProfile(friend.isu) }
             friendsContainer.addView(row.root)
         }
     }
 
     /** The profile is a contextual screen above the tabs; the sheet has nothing to add once it opens. */
-    private fun openFriendProfile(isu: Int) {
+    private fun openProfile(isu: Int) {
         dismiss()
-        openScreen(AppScreen.USER_PROFILE, bundleOf(UserScreenArgs.ISU to isu))
+        openUserProfile(isu)
     }
 
     private fun openMap() {

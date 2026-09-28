@@ -22,6 +22,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -55,7 +56,11 @@ import java.time.ZoneId
 /** Real production Fragments with test-supplied in-memory repositories; never reads a session. */
 @AndroidEntryPoint
 class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
+    val openedProfiles = mutableListOf<Int>()
+
     override fun attachBaseContext(newBase: Context) {
+        // AppCompat chooses its night configuration while attaching, before onCreate.
+        delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         val config = Configuration(newBase.resources.configuration).apply {
             fontScale = appearance.fontScale
             uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
@@ -65,7 +70,6 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
                 if (fragment !is RecordbookFragment && fragment !is RecordbookSubjectFragment) return
@@ -121,7 +125,19 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
             .replace(R.id.recordbook_test_container, RecordbookFragment(), ROOT_TAG).commitNow()
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !appearance.dark
+            isAppearanceLightNavigationBars = !appearance.dark
+        }
+    }
+
     override fun openScreen(screen: AppScreen, arguments: Bundle?) {
+        if (screen == AppScreen.USER_PROFILE) {
+            openedProfiles.add(checkNotNull(arguments).getInt(UserScreenArgs.ISU))
+            return
+        }
         check(screen == AppScreen.RECORDBOOK_SUBJECT)
         supportFragmentManager.beginTransaction().replace(R.id.recordbook_test_container,
             RecordbookSubjectFragment().apply { this.arguments = arguments }, "detail")

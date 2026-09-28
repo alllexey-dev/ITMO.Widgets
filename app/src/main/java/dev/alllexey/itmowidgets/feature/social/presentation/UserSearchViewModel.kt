@@ -203,7 +203,7 @@ class UserSearchViewModel @Inject constructor(
                 status = UiText.Resource(R.string.user_status_not_registered),
                 primary = UserAction.INVITE,
                 busy = false,
-                opensProfile = false
+                opensProfile = true
             )
         }
     }

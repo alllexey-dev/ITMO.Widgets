@@ -61,7 +61,10 @@ metrics and history; conditions; comment; friends on the lesson. Rail icons are 
 fixed size and are re-centred at bind time against the scaled text line. The
 sheet renders the selected domain snapshot without another request; booking-only
 responses carry no capacity or comments, so none are invented. Tapping a friend
-row dismisses the sheet and opens the public profile.
+row dismisses the sheet and opens the person profile. The teacher row in the
+header also opens that profile when a usable ISU is available, with a chevron,
+48 dp target and localized click action. It dismisses the sheet first; without
+an ISU the teacher remains a non-clickable fact.
 
 `SportBookingConditions` is the deterministic local offer policy shared by cards
 and details. Academic intersections only warn; official booking conflicts,
@@ -105,8 +108,8 @@ in the Backend sport-automation contract.
 
 `UserSportFragment` (overlay `USER_SPORT`) lists confirmed lessons resolved
 against the ITMO catalog plus pending queues returned by Backend, sorted by
-start, read-only: no cancellation, no details, no friends preview. `Forbidden`
-renders as a lock state. The screen reads `observeSportCatalog()`, the raw
+start, read-only: no cancellation, no details, no friends preview and no teacher
+profile action. `Forbidden` renders as a lock state. The screen reads `observeSportCatalog()`, the raw
 free-attendance lessons, not the merged schedule: that stream also waits for
 the viewer's queues and friends, which only the sport tab refreshes.
 

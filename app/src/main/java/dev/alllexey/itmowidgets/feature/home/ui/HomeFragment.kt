@@ -22,7 +22,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.navigation.SettingsScreenArgs
-import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
@@ -32,6 +31,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openLessonDetails
 import dev.alllexey.itmowidgets.core.ui.navigation.openPendingSportDetails
 import dev.alllexey.itmowidgets.core.ui.navigation.openRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
 import dev.alllexey.itmowidgets.databinding.FragmentHomeBinding
 import dev.alllexey.itmowidgets.feature.home.presentation.HomeEvent
@@ -132,7 +132,7 @@ class HomeFragment : Fragment() {
                 onOpenSport = { openRoot(AppRoot.SPORT) },
                 onOpenFriends = { openScreen(AppScreen.FRIENDS) },
                 onOpenUser = { user ->
-                    openScreen(AppScreen.USER_PROFILE, bundleOf(UserScreenArgs.ISU to user.isu, UserScreenArgs.NAME to user.name))
+                    openUserProfile(user.isu)
                 },
                 onHint = ::actOnHint,
                 onDismissHint = viewModel::dismissHint

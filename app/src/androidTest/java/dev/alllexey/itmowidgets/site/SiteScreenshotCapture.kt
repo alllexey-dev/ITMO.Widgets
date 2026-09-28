@@ -65,8 +65,7 @@ import org.junit.runner.RunWith
  * Not a test: with `captureScreenshots=true` it walks the debug hosts with
  * lifelike, invented data and saves full-screen PNGs for the website
  * (`site-screenshots-light` / `-night`). `siteTheme=night` switches every host to
- * its dark appearance; the schedule host follows the system, so the caller
- * toggles `cmd uimode night` as well. No real account, no network.
+ * its dark appearance. No real account, no network.
  */
 @RunWith(AndroidJUnit4::class)
 class SiteScreenshotCapture {
@@ -158,6 +157,7 @@ class SiteScreenshotCapture {
     // region Schedule (ScheduleLifecycleTestActivity)
 
     private fun captureSchedule() {
+        ScheduleLifecycleTestActivity.appearance = ScheduleLifecycleTestActivity.Appearance(dark = night)
         ScheduleLifecycleTestActivity.days.value = listOf(
             day(TODAY, lesson(1, "09:30", "11:00", DISCRETE, "Лекция", 1, PETROV, "1405", KRONVA),
                 lesson(2, "11:30", "13:00", MATH, "Лекция", 1, IVANOVA, "1506", KRONVA, zoom = true),
@@ -185,6 +185,7 @@ class SiteScreenshotCapture {
                 capture("lesson")
             }
         } finally {
+            ScheduleLifecycleTestActivity.appearance = ScheduleLifecycleTestActivity.Appearance()
             ScheduleLifecycleTestActivity.days.value = emptyList()
             ScheduleLifecycleTestActivity.showPendingSport.value = false
             ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(emptyList())

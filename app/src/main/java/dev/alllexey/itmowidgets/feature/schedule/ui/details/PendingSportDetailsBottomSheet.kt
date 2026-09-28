@@ -15,6 +15,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.location.MapDestination
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -25,6 +26,7 @@ import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.MapLauncher
 import dev.alllexey.itmowidgets.core.ui.navigation.openRoot
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentPendingSportDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportConditionBinding
@@ -73,6 +75,7 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
         val zone = timeProvider.zoneId
         val start = OffsetDateTime.parse(booking.start).atZoneSameInstant(zone)
         val end = OffsetDateTime.parse(booking.end).atZoneSameInstant(zone)
+        val teacherIsu = UserScreenArgs.profileIsu(booking.teacherIsu?.toLong())
         header.bind(
             DetailsHeaderContent(
                 title = booking.sectionName,
@@ -83,7 +86,8 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
                 teacher = booking.teacherFio,
                 location = booking.roomName,
                 mapAvailable = booking.roomName.isNotBlank()
-            )
+            ),
+            teacherIsu?.let { isu -> { dismiss(); openUserProfile(isu) } }
         ) {
             val opened = MapLauncher.open(requireContext(), MapDestination(label = booking.sectionName, address = booking.roomName))
             if (!opened) Snackbar.make(root, R.string.schedule_map_unavailable, Snackbar.LENGTH_SHORT).show()

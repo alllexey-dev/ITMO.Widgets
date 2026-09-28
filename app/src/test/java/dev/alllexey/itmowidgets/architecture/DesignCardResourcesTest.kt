@@ -59,6 +59,7 @@ class DesignCardResourcesTest {
             "item_recordbook_subject" to "Content",
             "item_recordbook_control" to "Content",
             "item_recordbook_note" to "Content",
+            "item_teacher_review" to "Content",
             "item_recordbook_summary" to "CompactSummary",
             "item_subject_hero" to "Summary",
             "item_recordbook_sport" to "Summary",

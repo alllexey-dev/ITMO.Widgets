@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkActions
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
 import dev.alllexey.itmowidgets.core.ui.navigation.openSubjectLinks
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.openLink
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookSubjectBinding
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
@@ -62,7 +63,8 @@ class RecordbookSubjectFragment : Fragment() {
             onOpenLink = { openLink(it, binding.root) },
             onLinkActions = { link -> linksArgs()?.let { openLinkActions(it, link.id) } },
             onAllLinks = { linksArgs()?.let(::openSubjectLinks) },
-            onAddLink = { linksArgs()?.let { openLinkEditor(it) } }
+            onAddLink = { linksArgs()?.let { openLinkEditor(it) } },
+            onOpenTeacher = ::openUserProfile
         ))
         binding.recyclerView.adapter = adapter
         binding.recyclerView.itemAnimator = null

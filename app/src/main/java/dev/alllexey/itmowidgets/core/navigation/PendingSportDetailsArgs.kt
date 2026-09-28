@@ -12,7 +12,8 @@ data class PendingSportDetailsArgs(
     val start: String,
     val end: String,
     val teacherFio: String,
-    val roomName: String
+    val roomName: String,
+    val teacherIsu: Int? = null
 ) : Serializable
 
 fun PendingSportBooking.toDetailsArgs() = PendingSportDetailsArgs(
@@ -23,5 +24,6 @@ fun PendingSportBooking.toDetailsArgs() = PendingSportDetailsArgs(
     start = start.toString(),
     end = end.toString(),
     teacherFio = teacherFio,
-    roomName = roomName
+    roomName = roomName,
+    teacherIsu = teacherIsu
 )

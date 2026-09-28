@@ -112,7 +112,9 @@ list drawn by `SubjectHubAdapter`, in this order:
 3. `Баллы`: controls and [control groups](#control-groups), groups expanded.
 4. `Преподаватели`: distinct people from the subject's lessons, each with the
    lesson types they run, most frequent first; without lessons the recordbook
-   teacher stands in. Rows are informational; teacher profiles wait for Stage 29.
+   teacher stands in. A row with a usable teacher ISU opens the shared person
+   profile. A recordbook-only teacher without ISU remains informational, including
+   past periods, PE and unmatched subjects; no identifier is guessed by name.
 5. `Ближайшие пары`: only for the current period and never for PE.
 
 The scale is `RecordbookGradeScale`: above 90 is 5A, above 83 4B, above 74 4C,

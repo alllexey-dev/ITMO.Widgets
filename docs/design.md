@@ -211,9 +211,13 @@ verification.
 
 ### Running the visual tests
 
-By default `./gradlew :app:connectedDebugAndroidTest` runs every visual test in
-the light appearance only and writes no screenshots, which keeps the suite
-short. Two instrumentation arguments switch the full checks on:
+By default the visual suites run in the light appearance only and write no
+screenshots, which keeps the suite short. Always target the emulator explicitly
+and preserve installed APKs/data with
+`-Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true`; UTP otherwise
+uninstalls its APKs after a run. Never use the user's phone or enable automatic
+uninstallation of an incompatible APK. Two instrumentation arguments switch the
+full checks on:
 
 - `appearanceMatrix=full` runs each visual test in all four appearances: light;
   dark; font scale 1.3 with a dynamic seed on a 320 dp width; dark with font
@@ -224,7 +228,8 @@ short. Two instrumentation arguments switch the full checks on:
   (the profile and social suites use `files/` instead of `cache/`).
 
 ```bash
-./gradlew :app:connectedDebugAndroidTest \
+ANDROID_SERIAL=emulator-5554 ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true \
   -Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full \
   -Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true
 ```
@@ -232,14 +237,27 @@ short. Two instrumentation arguments switch the full checks on:
 The same run through `adb`, for one class:
 
 ```bash
-adb shell am instrument -w -e appearanceMatrix full -e captureScreenshots true \
+adb -s emulator-5554 shell am instrument -w -e appearanceMatrix full -e captureScreenshots true \
   -e class dev.alllexey.itmowidgets.feature.onboarding.OnboardingVisualTest \
   dev.alllexey.itmowidgets.test/androidx.test.runner.AndroidJUnitRunner
-adb pull /sdcard/Android/data/dev.alllexey.itmowidgets/cache/onboarding-screenshots
+adb -s emulator-5554 pull /sdcard/Android/data/dev.alllexey.itmowidgets/cache/onboarding-screenshots
 ```
 
 Before calling a UI change done, run the affected suites with both arguments
 and look at the PNGs; the default run only proves the layout holds in light.
+`Screenshots` exports PNGs to Gradle's
+`app/build/outputs/connected_android_test_additional_output/debugAndroidTest/connected/`.
+Copy a completed suite's screenshots into ignored `vibe/` before another
+connected run can replace that output directory.
+
+Preview hosts set `delegate.localNightMode` before attaching their base context;
+setting it in `onCreate` can trigger an extra recreation and consume one-shot
+feedback before a test observes it. Assert the effective font scale, night mode,
+width and seeded palette, not just fixture values. Capture after layout/frame
+commit and completed snackbar animations; allow the SystemUI compositor to
+settle when switching appearances. Wait for feedback dismissal after retry.
+These are local host overrides: preserve the emulator's global theme/font
+settings, and restore them if a separate test explicitly changes them.
 
 ## Reference implementations
 
@@ -254,10 +272,17 @@ and look at the PNGs; the default run only proves the layout holds in light.
   `res/layout/item_subject_hero.xml`, `res/layout/item_recordbook_control_group.xml`.
 - Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt`,
   `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`, `res/layout/item_subject_link.xml`.
-- User row and public profile: `res/layout/item_user_row.xml`, `res/layout/fragment_user_profile.xml`.
+- User row: `res/layout/item_user_row.xml`.
+- Person profile: `res/layout/fragment_user_profile.xml`,
+  `feature/social/ui/UserProfileAdapter.kt`, `res/layout/item_teacher_review.xml`.
+- Clickable teacher fact in details headers: `res/layout/item_sport_detail_fact.xml`,
+  `core/ui/DetailsHeader.kt` (`bindAction` resets chevron, ripple, touch target
+  and accessibility action when the identifier is absent).
+- Avatar image failure: `core/ui/AvatarView.kt` keeps current initials ready and
+  guards the posted Glide fallback against a newer binding or successful load.
 - Friend picker: `res/layout/dialog_friend_selector.xml`.
 - Home feed: `res/layout/fragment_home.xml`, `res/layout/item_home_*.xml`,
   `feature/home/ui/HomeFeedAdapter.kt`, `feature/home/HomeFeedVisualTest.kt`.
 - Visual tests: `feature/sport/cards/SportCardsVisualTest.kt`,
   `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
-  `feature/friendselector/SelectionRowsTest.kt`.
+  `feature/friendselector/SelectionRowsTest.kt`, `feature/social/UserProfileVisualTest.kt`.

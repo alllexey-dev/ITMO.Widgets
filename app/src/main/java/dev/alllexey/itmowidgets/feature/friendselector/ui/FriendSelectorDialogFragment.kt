@@ -20,10 +20,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
-import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.messageRes
-import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
-import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.databinding.DialogFriendSelectorBinding
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorScope
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorUiState
@@ -330,7 +328,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     /** The profile is a contextual screen; the sheet has nothing to add once it opens. */
     private fun openProfile(user: UserSummary) {
         dismiss()
-        openScreen(AppScreen.USER_PROFILE, bundleOf(UserScreenArgs.ISU to user.isu))
+        openUserProfile(user.isu)
     }
 
     private fun updateRecentSelection() {

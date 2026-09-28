@@ -9,10 +9,10 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 
 /** Synthetic responses through the real MyItmoApi Retrofit contract, with no network or credentials. */
-fun myItmoStub(body: (Request) -> String): MyItmo = MyItmo().apply {
+fun myItmoStub(code: Int = 200, body: (Request) -> String): MyItmo = MyItmo().apply {
     okHttpClient = OkHttpClient.Builder().addInterceptor { chain ->
         Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1)
-            .code(200).message("OK")
+            .code(code).message("Synthetic response")
             .body(body(chain.request()).toResponseBody("application/json".toMediaType())).build()
     }.build()
 }

@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -172,6 +173,6 @@ class FriendsFragment : Fragment() {
     }
 
     private fun openProfile(row: UserRowUi) {
-        UserProfileNavigation.open(this, row.isu)
+        openUserProfile(row.isu)
     }
 }

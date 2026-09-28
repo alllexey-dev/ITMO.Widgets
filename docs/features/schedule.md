@@ -113,11 +113,16 @@ or the official cache.
   data has nothing about the queue does the schedule's own
   `PendingSportDetailsBottomSheet` appear: the shared header, the status as
   the kind line, one `Условия записи` card and `Открыть в спорте`.
+- A teacher in the lesson or pending-sport header opens the person profile when
+  the lesson carries a usable ISU. The row shows a chevron, has a 48 dp touch
+  target and a localized accessibility click action. The sheet dismisses first.
+  Without an ISU, including event teachers, the row remains informational with
+  no chevron, ripple or click action; no name lookup is attempted.
 - `Друзья на паре` is the only place friends on a lesson appear.
   `LessonDetailsViewModel` asks `LessonFriendsRepository` for
   `GET /api/schedule/lessons/{pairId}/friends?date=`; Backend answers with the
   viewer's accepted friends who attend that occurrence and share their schedule
   with the viewer. Without the ITMO.Widgets opt-in the block is absent; while
   loading it shows a spinner; an error offers `Повторить`; an empty answer says
-  so. A friend row opens the public profile.
+  so. A friend row opens the person profile.
 - Schedule changes are not shown here; their detection belongs to v2.2.

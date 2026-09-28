@@ -129,6 +129,13 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `session-cleared repositories are singletons`() {
+        productionClasses
+            .filter { it.name.endsWith("RepositoryImpl") && it.hasParentWithName("SessionDataCleaner") }
+            .assertTrue { it.hasAnnotationWithName("Singleton") }
+    }
+
+    @Test
     fun `fragments with nullable binding clear it in onDestroyView`() {
         productionClasses
             .filter { it.name.endsWith("Fragment") }
@@ -203,6 +210,10 @@ class ArchitectureTest {
 
         val forbiddenUiImports = listOf(
             "api.myitmo.",
+            "dev.alllexey.itmowidgets.core.model.reviews.",
+            "dev.alllexey.itmowidgets.core.model.resources.",
+            "dev.alllexey.itmowidgets.core.model.social.",
+            "dev.alllexey.itmowidgets.core.model.fcm.",
             "dev.alllexey.itmowidgets.core.network.",
             "dev.alllexey.itmowidgets.core.storage.",
             "dev.alllexey.itmowidgets.data."
@@ -211,6 +222,10 @@ class ArchitectureTest {
         val forbiddenPresentationImports = listOf(
             "android.",
             "api.myitmo.",
+            "dev.alllexey.itmowidgets.core.model.reviews.",
+            "dev.alllexey.itmowidgets.core.model.resources.",
+            "dev.alllexey.itmowidgets.core.model.social.",
+            "dev.alllexey.itmowidgets.core.model.fcm.",
             "dev.alllexey.itmowidgets.core.network.",
             "dev.alllexey.itmowidgets.core.storage.",
             "dev.alllexey.itmowidgets.data."

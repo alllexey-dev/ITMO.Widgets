@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -36,7 +37,7 @@ class UserFriendsFragment : Fragment() {
         binding.title.text = if (viewModel.name.isBlank()) getString(R.string.friends_title)
             else getString(R.string.user_friends_owner, viewModel.name)
         binding.backButton.setOnClickListener { closeScreen() }
-        val adapter = UserListAdapter(onAction = { _, _ -> }, onOpen = { UserProfileNavigation.open(this, it.isu) })
+        val adapter = UserListAdapter(onAction = { _, _ -> }, onOpen = { openUserProfile(it.isu) })
         binding.recyclerView.adapter = adapter
         binding.swipeRefreshLayout.applyAppRefreshColors()
         binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.load() })

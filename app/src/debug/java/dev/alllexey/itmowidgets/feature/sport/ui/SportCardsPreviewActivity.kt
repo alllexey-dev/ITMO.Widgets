@@ -18,7 +18,13 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
+import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
@@ -34,14 +40,17 @@ import java.util.Locale
 
 /** Isolated real adapters and details sheet, with synthetic test inputs and no network actions. */
 @AndroidEntryPoint
-class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, SportSignActionsListener {
+class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, SportSignActionsListener, AppNavigator {
     lateinit var list: RecyclerView
     var actionCount = 0
     var lastAction: String? = null
     val bookingAdapter = SportBookingAdapter(FixedTime, this)
     val lessonAdapter = SportLessonsAdapter(this, FixedTime)
+    val openedScreens = mutableListOf<Pair<AppScreen, Bundle?>>()
 
     override fun attachBaseContext(newBase: Context) {
+        // AppCompat chooses its night configuration while attaching, before onCreate.
+        delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         val config = Configuration(newBase.resources.configuration).apply {
             fontScale = appearance.fontScale
             uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
@@ -54,7 +63,6 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
                 if (fragment is SportCommonDetailsBottomSheet) fragment.timeProvider = FixedTime
@@ -99,6 +107,27 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
             insets
         }
     }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !appearance.dark
+            isAppearanceLightNavigationBars = !appearance.dark
+        }
+    }
+
+    override fun openScreen(screen: AppScreen, arguments: Bundle?) {
+        openedScreens.add(screen to arguments?.let(::Bundle))
+    }
+
+    override fun openRoot(root: AppRoot) = Unit
+    override fun dismissOverlays() = Unit
+    override fun openLessonDetails(args: LessonDetailsArgs) = Unit
+    override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
+    override fun openSubjectLinks(args: SubjectLinksArgs) = Unit
+    override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) = Unit
+    override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
+    override fun openWebLogin() = Unit
 
     fun showBookings(items: List<SportBooking>) {
         list.adapter = bookingAdapter

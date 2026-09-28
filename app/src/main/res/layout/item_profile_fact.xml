@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.ItmoWidgets.CompactSettingsRow"
+    android:clickable="false"
+    android:focusable="false"
+    android:gravity="top">
+
+    <ImageView
+        android:id="@+id/fact_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="@dimen/design_spacing_group"
+        android:contentDescription="@null"
+        app:tint="?attr/colorOnSurfaceVariant"
+        tools:src="@drawable/ic_work" />
+
+    <LinearLayout style="@style/Widget.ItmoWidgets.CompactSettingsRowText">
+
+        <TextView
+            android:id="@+id/fact_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Доцент" />
+
+        <TextView
+            android:id="@+id/fact_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_related"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone"
+            tools:text="Факультет информационных технологий и программирования"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</LinearLayout>

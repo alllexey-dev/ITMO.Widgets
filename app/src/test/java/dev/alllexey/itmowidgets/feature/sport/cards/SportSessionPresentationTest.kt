@@ -18,6 +18,14 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class SportSessionPresentationTest {
+    @Test fun `teacher identifiers survive lesson and booking detail arguments`() {
+        val lesson = SportCardFixtures.lesson().copy(teacherIsu = 300001)
+        val booking = SportCardFixtures.booking().copy(teacherIsu = 300002)
+
+        assertEquals(lesson.teacherIsu, lesson.toDetailsArgs().teacherIsu)
+        assertEquals(booking.teacherIsu, booking.toDetailsArgs().teacherIsu)
+    }
+
     @Test fun `details expose the same lesson offer and only existing booking cancellation`() {
         val lesson = SportCardFixtures.lesson()
         val now = lesson.start.minusHours(2)

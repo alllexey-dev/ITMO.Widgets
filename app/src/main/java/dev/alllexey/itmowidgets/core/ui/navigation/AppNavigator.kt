@@ -1,11 +1,13 @@
 package dev.alllexey.itmowidgets.core.ui.navigation
 
 import android.os.Bundle
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 
 enum class AppScreen {
     SETTINGS, DIAGNOSTICS, DEBUG_TOOLS, RECORDBOOK_SUBJECT, APP_UPDATE, QR_PASS, MY_ITMO_WEB,
@@ -51,6 +53,10 @@ interface ScreenTransitionHost {
 
 fun Fragment.openScreen(screen: AppScreen, arguments: Bundle? = null) {
     (requireActivity() as AppNavigator).openScreen(screen, arguments)
+}
+
+fun Fragment.openUserProfile(isu: Int) {
+    openScreen(AppScreen.USER_PROFILE, bundleOf(UserScreenArgs.ISU to isu))
 }
 
 fun Fragment.openRoot(root: AppRoot) {

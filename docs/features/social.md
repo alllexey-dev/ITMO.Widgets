@@ -1,10 +1,15 @@
 # Social
 
-Friends, requests, people search and public profiles. Backend is the authority
+Friends, requests, people search and person profiles. Backend is the authority
 for relationships and access; the app only renders viewer-scoped capabilities.
-Everything here is gated on the custom-services opt-in.
+Backend data requires `Подключение к ITMO.Widgets`; the My ITMO part of a
+person's profile works without it. The device fetches the identity header and
+facts directly through MyItmoApi. Backend does not proxy that profile or call
+My ITMO with the viewer's token. Its separate service account still resolves
+current study groups in `UserData`, as described in
+[Current study groups on read](../../../itmo-widgets-backend/docs/contracts/friendships.md#current-study-groups-on-read).
 
-## Repositories (`core/social`)
+## Repositories
 
 - `SocialRepository` loads friends, incoming and outgoing requests and the own
   Backend profile in one refresh, caches them as `SocialState` flows and exposes
@@ -16,8 +21,28 @@ Everything here is gated on the custom-services opt-in.
   (`searchPersonalities`, 20 per page) and annotates registered users through
   Backend lookup in chunks of 50. Phone and e-mail from the directory never leave
   the data layer. See decision [0006](../decisions/0006-people-search.md).
+- `feature/social/domain/PersonRepository` calls `MyItmoApi.getPersonality(isu)`
+  through `PersonRepositoryImpl`, independently of the Backend opt-in. It keeps
+  a memory cache by ISU and is a singleton `SessionDataCleaner`. The mapper
+  retains name, photo, positions, rooms and education, not contacts, gender or
+  exchange status. Empty strings and repeated facts are normalized at this
+  boundary. Only this endpoint's observed HTTP 400 with numeric `error_code=100`
+  and explicit `result=null` means `NotFound`; other 400 responses remain errors.
+  HTTP 404, a successful null result and a mismatched result ISU also mean
+  `NotFound`. The MyItmoApi library itself keeps the HTTP error unchanged.
+- `core/reviews/TeacherReviewsRepository` supplies the optional review section;
+  its implementation belongs to `feature/reviews/data`, see [reviews](reviews.md).
 - `core/friend/FriendRepository` is a facade over `SocialRepository` for the
   schedule picker, exposing friends as plain `UserSummary` values.
+
+`SocialRepositoryImpl` and `TeacherReviewsRepositoryImpl` are singletons: the
+screens and `SessionDataCleaner` use the same instance. `cachedProfile`,
+`cachedUserFriends` and `cachedReviews` are unavailable while the opt-in is off
+or unknown. Disabling it clears the caches, changes friends and requests to
+`SocialState.Disabled` and clears the own Backend profile. A short atomic
+publication check compares a local generation; a late response from before
+disabling or sign-out cannot refill the cleared cache, even after re-enabling.
+Stale opt-in reads cannot clear or revive a newer connection either.
 
 `RelationshipState` is viewer-relative: `NONE`, `OUTGOING`, `INCOMING`,
 `FRIENDS`, `BLOCKED` (reserved, never produced yet). `UserSummary.sharing`
@@ -27,8 +52,9 @@ Identity publication: `BackendIdentitySync` uploads the ITMO.ID id token on cold
 start, after sign-in and when services are enabled. A failed upload is retried
 by `IdentitySyncWork` with exponential backoff, up to six attempts, and every
 failure is recorded in the diagnostics journal. Until the upload lands,
-`UserData.name` from Backend is empty and every screen renders
-`Пользователь ИСУ N` through `Context.userDisplayName`.
+`UserData.name` from Backend is empty; views using that identity render
+`Пользователь ИСУ N` through `Context.userDisplayName`. The person profile
+prefers its direct My ITMO identity when available.
 
 ## Profile tab (`feature/me`)
 
@@ -56,34 +82,105 @@ Query after a 300 ms debounce; results split into `В ITMO.Widgets` (with the
 relationship action: add, cancel, accept) and `Остальные` (with `Пригласить`,
 which opens a share sheet with the release link). `Показать ещё` loads the next
 page. Actions update the row from the returned profile without a new search.
+The whole row opens the person's profile in both sections, including
+`Остальные`; the separate invitation action remains a share action.
 
-## Public profile (overlay `USER_PROFILE`, argument `UserScreenArgs.ISU`)
+## Person profile (overlay `USER_PROFILE`, argument `UserScreenArgs.ISU`)
 
-Identity header; one primary action driven by the relationship (`Добавить в
-друзья` filled, `Отменить заявку` tonal, `Принять заявку` filled with a
-secondary `Отклонить`, `Удалить из друзей` tonal with confirmation); the own
-profile shows `Это вы` and no actions. `Расписание` and `Спорт` rows are open
-when the capability allows, otherwise locked with a hint that friends usually
-unlock them. Open rows lead to `USER_SCHEDULE` and `USER_SPORT` with the ISU and
-name. `NotFound` renders as "not an ITMO.Widgets user".
+One screen opens for any positive ISU, not just registered users. It combines
+three independently loaded parts: `PersonRepository` (My ITMO identity and
+facts), `SocialRepository.profile(isu)` (the ITMO.Widgets block), and
+`TeacherReviewsRepository` (older reviews). A page exists when either identity
+source succeeds. Its name and photo come from My ITMO when that person exists,
+otherwise from Backend; a missing photo uses initials rather than another
+source's photo. Empty Backend names use `Context.userDisplayName`.
 
-Profiles open from the friends list, requests, search results, the friend
-picker (locked row tap or long-press) and the friends list in the sport details
-sheet, always through `AppScreen.USER_PROFILE`.
+`UserProfileAdapter` renders one RecyclerView in this order:
+
+1. Photo or initials, name and `ИСУ N`.
+2. Relationship status and actions, only with a social block and for self or
+   a relationship other than `BLOCKED`.
+3. The ITMO.Widgets sharing card: `Друзья`, `Расписание`, `Спорт`.
+4. One facts card, only when positions, rooms or education contain rows.
+5. `Отзывы`, only when at least one non-empty review remains after mapping.
+
+A position with no title uses its department once, without a repeated
+subtitle; education combines course and faculty in the subtitle. Backend's
+primary group supplies the education fact only when the My ITMO person is
+absent. Facts have non-clickable rows and accessible category descriptions.
+
+The relationship action is `Добавить в друзья` (filled), `Отменить заявку`
+(tonal), `Принять заявку` (filled, with `Отклонить`), or `Удалить из друзей`
+(tonal, with confirmation); the own profile shows `Это вы` without buttons.
+Sharing rows follow Backend's viewer capabilities; own schedule and sport are
+available to self. Closed rows show a lock, not an action. Open rows lead to
+`USER_FRIENDS`, `USER_SCHEDULE` or `USER_SPORT` with the ISU and displayed name.
+
+### Loading and failures
+
+- First entry stays on a skeleton until all three parts leave `Loading`,
+  either by a reply or a cached answer. If the My ITMO person or Backend
+  profile is ready while another part is loading, a 3-second coroutine
+  deadline starts. It resets if neither identity remains ready. Without any
+  ready identity there is no deadline: the skeleton stays.
+- At the deadline the ready page appears without inserting middle blocks
+  later. Late reviews append at the bottom; a late person or social block is
+  kept in the repository cache, does not enter the shown page and counts as
+  a partial failure. If the page loses its last ready identity, those deferred
+  identity replies apply normally again.
+- Replies for cache-seeded parts replace their visible data as they arrive;
+  only parts declared late are deferred. Visible-page `Повторить` is silent,
+  updates parts incrementally and has no deadline. It can immediately use a
+  cached late identity. Retry from a full-screen error starts over with the
+  skeleton, cache seeds and deadline; it does not restore the old page.
+- A shown page does not turn into a full-screen error until all three requests
+  have replied. An absent person plus absent Backend profile shows only
+  `Профиль не найден`, without a description or retry. Other identity failures
+  without a page show `Не удалось загрузить`, a reason and `Повторить`.
+- My ITMO `NotFound` is quiet when Backend provides a profile. Backend
+  `NotFound` or `CustomServicesDisabled` simply hides its block; reviews
+  `CustomServicesDisabled` hides the section. Any other failed part with a
+  page shows one `Часть данных не загрузилась` snackbar with `Повторить`,
+  after all three requests finish.
+
+A diff commit switches content and placeholders atomically and checks both the
+current binding and render revision. RecyclerView has no item animator and
+uses `PREVENT_WHEN_EMPTY` to restore scroll after view recreation. Review text
+is never truncated; date and source formatting are specified in [reviews](reviews.md).
+
+### Entry points
+
+Fragments open profiles through `core/ui/navigation.Fragment.openUserProfile(isu)`:
+
+- Friends, incoming/outgoing requests and another person's friends list.
+- Both people-search sections and people shown on the home feed.
+- The friend picker (a locked row tap or long-press).
+- Friends in lesson and sport details.
+- The teacher in the lesson, pending-sport and sport-details headers.
+- `Преподаватели` rows on the subject page when an ISU is available.
+
+Sheets dismiss before navigating. My ITMO `Long` identifiers pass through
+`UserScreenArgs.profileIsu` (`1..Int.MAX_VALUE`); no ISU is guessed from a name.
+Rows without a usable ISU remain informational and have neither chevron nor
+click action. Friend-sport cards remain read-only and do not open teacher
+profiles. Friendship pushes retain the Activity entry point
+`MainActivity.ACTION_OPEN_USER_PROFILE`, which opens `AppScreen.USER_PROFILE`
+through the navigation coordinator.
 
 ## Another user’s friends (overlay `USER_FRIENDS`)
 
-The public profile has a `Друзья` row controlled by Backend’s `canViewFriends`.
+The person profile has a `Друзья` row controlled by Backend’s `canViewFriends`.
 The screen shows only accepted friends, with every row and capability relative
-to the signed-in viewer. Rows open public profiles; the list has no mutation
+to the signed-in viewer. Rows open person profiles; the list has no mutation
 buttons or request tabs. First loading, empty, denied, disabled services and
 retryable errors are distinct. Refresh retains content on network failure,
 but discards it if authorization is revoked; returning to the screen rechecks
 access. No target list is stored in the viewer’s own friends cache, but the
 repository keeps the last answer per ISU (`cachedUserFriends`) and the last
-profile per ISU from any list, screen or action (`cachedProfile`), both cleared
-on sign-out, so a reopened profile or list renders at once with `refreshing`
-and only an unseen person shows the skeleton.
+profile per ISU from any list, screen or action (`cachedProfile`). Both are
+cleared on sign-out and when the opt-in is disabled. A reopened friends list
+can render its cached snapshot with `refreshing`; the composite person profile
+follows the loading contract above.
 
 `Кто видит список друзей` is an independent privacy choice: `Все` (the default
 for both existing and new accounts), `Друзья`, `Никто`. Backend enforces it before
@@ -95,6 +192,16 @@ reading the list and never exposes pending requests or the owner’s raw audienc
 name, `ISU • group` subtitle, optional status line, up to two action buttons or a
 chevron, section headers and a load-more row. Presentation builds `UserRowUi`
 values with `UiText` labels; the adapter maps `UserAction` to strings.
+
+## Verification
+
+`PersonRepositoryImplTest`, `SocialRepositoryImplTest`, `ProfileFactsTest`,
+`UserProfileStateTest` and `UserProfileViewModelTest` cover the source boundary,
+cache invalidation and deterministic loading/deadline/action behavior.
+`UserProfileVisualTest` exercises all profile states, delayed parts, recycling,
+accessibility, photo failure and scroll restoration in the full appearance
+matrix; `UserFriendsVisualTest` checks the existing friends navigation.
+See [visual test commands](../design.md#running-the-visual-tests).
 
 ## Not implemented yet
 

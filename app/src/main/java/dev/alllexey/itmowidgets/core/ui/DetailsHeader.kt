@@ -1,14 +1,18 @@
 package dev.alllexey.itmowidgets.core.ui
 
 import android.content.res.ColorStateList
+import android.util.TypedValue
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.ItemSportDetailFactBinding
 import dev.alllexey.itmowidgets.databinding.ViewDetailsHeaderBinding
@@ -31,7 +35,7 @@ data class DetailsHeaderContent(
     val mapAvailable: Boolean
 )
 
-fun ViewDetailsHeaderBinding.bind(content: DetailsHeaderContent, onMap: () -> Unit) {
+fun ViewDetailsHeaderBinding.bind(content: DetailsHeaderContent, onTeacher: (() -> Unit)?, onMap: () -> Unit) {
     sectionName.text = content.title
     kind.text = content.kind
     kindRow.isVisible = !content.kind.isNullOrBlank()
@@ -44,6 +48,7 @@ fun ViewDetailsHeaderBinding.bind(content: DetailsHeaderContent, onMap: () -> Un
     duration.text = minutes?.let { root.context.getString(R.string.sport_duration, it) }
     alignRailIcon(timeIcon, date)
     teacherFact.bindFact(R.string.sport_details_teacher, content.teacher.orEmpty(), R.drawable.ic_person_rounded)
+    teacherFact.bindAction(onTeacher)
     locationFact.bindFact(R.string.sport_details_location, content.location.orEmpty(), R.drawable.ic_location_on_rounded)
     mapButton.isVisible = content.mapAvailable
     mapButton.setOnClickListener { onMap() }
@@ -57,6 +62,30 @@ fun ItemSportDetailFactBinding.bindFact(@StringRes title: Int, value: String, @D
     factValue.contentDescription = root.context.getString(R.string.sport_detail_fact_description, root.context.getString(title), value)
     factIcon.setImageResource(icon)
     alignRailIcon(factIcon, factValue)
+    alignRailIcon(factTrailing, factValue)
+}
+
+fun ItemSportDetailFactBinding.bindAction(onClick: (() -> Unit)?) {
+    val clickable = onClick != null
+    root.setOnClickListener(if (onClick != null) { _ -> onClick() } else null)
+    root.isClickable = clickable
+    root.isFocusable = clickable
+    if (clickable) {
+        val background = TypedValue()
+        root.context.theme.resolveAttribute(android.R.attr.selectableItemBackground, background, true)
+        root.setBackgroundResource(background.resourceId)
+        ViewCompat.replaceAccessibilityAction(root, AccessibilityActionCompat.ACTION_CLICK,
+            root.context.getString(R.string.teacher_open_profile), null)
+    } else {
+        root.background = null
+        ViewCompat.removeAccessibilityAction(root, AccessibilityActionCompat.ACTION_CLICK.id)
+    }
+    val touchTarget = root.resources.getDimensionPixelSize(R.dimen.design_touch_target)
+    val minimumPadding = root.resources.getDimensionPixelSize(R.dimen.design_spacing_compact)
+    val verticalPadding = if (clickable) ((touchTarget - factValue.lineHeight) / 2).coerceAtLeast(minimumPadding) else minimumPadding
+    root.minimumHeight = if (clickable) touchTarget else 0
+    root.updatePadding(top = verticalPadding, bottom = verticalPadding)
+    factTrailing.isVisible = clickable
 }
 
 /**

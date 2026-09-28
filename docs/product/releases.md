@@ -36,7 +36,7 @@ the minimum Core and Backend it needs.
 
 | Android | Core | Backend | MyItmoApi | Notes |
 |---|---|---|---|---|
-| 2.2-SNAPSHOT (development) | 1.7.0-SNAPSHOT (Maven Local) | 1.7.0-SNAPSHOT, PostgreSQL V4 (`V4__subject_links.sql`) | 1.8.1 | Subject links need the V4 schema and the links API; debug builds only, not released. |
+| 2.2-SNAPSHOT (development) | 1.7.0-SNAPSHOT (Maven Local), including `teacherReviews` | 1.7.0-SNAPSHOT, PostgreSQL through V7 (`V7__external_teacher_reviews.sql`) | 1.8.1 | Subject links need V4 and the links API; person-profile reviews need `GET /api/teachers/{isu}/reviews` over V7. Local development, not a published release; deployment is recorded separately. |
 | 2.1.1 | 1.2.0 | 1.2.1 (`770293b`, current groups in every profile response) | 1.8.1 | Client-only release; works against Backend 1.2.0 as well, then lesson friends may show an older group. |
 | 2.1 | 1.2.0 (Maven Central, tag `1.2.0`) | 1.2.0, commit `a70cab1` or later | 1.8.1 (Maven Central, tag `1.8.1`) | Backend 1.2.0 requires the PostgreSQL cutover; 2.0.x clients are rejected by it and are told to update through `GET /api/app/version`. |
 | 2.0.x (legacy) | 1.1.x | 1.1.6 | 1.6.0 | MariaDB backend, reciprocal friend requests, boolean privacy. |
@@ -50,7 +50,8 @@ or MyItmoApi and any deployment happen only on explicit request.
 - Existing enabled legacy privacy settings become `Друзья`; disabled ones stay
   `Никто`. An upgrade never broadens an audience.
 - Widgets keep the single established style and smart update scheduling.
-- Refresh tokens stay on the device; Backend receives only the access token.
+- User refresh tokens stay on the device. Backend uses the access token for
+  authentication; ID-token identity publication is a separate opt-in request.
 - The production database reset is a fresh PostgreSQL cluster after the Android
   2.1 release, with a verified backup and separate approval. It is not an
   in-place MariaDB migration.

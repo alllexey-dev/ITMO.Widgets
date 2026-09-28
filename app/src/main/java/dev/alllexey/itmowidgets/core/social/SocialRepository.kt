@@ -36,8 +36,10 @@ data class FriendRequests(
  */
 interface SocialRepository {
 
+    /** Remains [SocialState.Disabled] after opting out until the next [refresh]. */
     fun observeFriends(): Flow<SocialState<List<UserProfile>>>
 
+    /** Remains [SocialState.Disabled] after opting out until the next [refresh]. */
     fun observeRequests(): Flow<SocialState<FriendRequests>>
 
     /** The signed-in user as Backend sees it, or `null` while unknown. */
@@ -45,9 +47,9 @@ interface SocialRepository {
 
     /** The last loaded friend list, for callers that cannot collect a flow. */
     val currentFriends: List<UserProfile>?
-    /** The last answer for one person, from any list or screen, for the first frame of a profile. */
+    /** The last answer for one person; null while custom services are disabled or their state is unknown. */
     fun cachedProfile(isu: Int): UserProfile? = null
-    /** The last loaded friend list of another user, for the first frame of that screen. */
+    /** The last loaded friend list of another user; null while custom services are disabled or unknown. */
     fun cachedUserFriends(isu: Int): List<UserProfile>? = null
 
     suspend fun refresh()
