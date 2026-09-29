@@ -4,9 +4,11 @@ Reviews of a teacher appear at the bottom of the
 [person profile](social.md#person-profile-overlay-user_profile-argument-userscreenargsisu);
 there is no separate teacher screen and no «My reviews» screen. One list holds
 own reviews of ITMO.Widgets users and anonymous copies from the Reviews
-project, in Backend's order. With `Подключение к ITMO.Widgets` a user writes
-one review per teacher, edits and deletes it, votes on others' reviews and
-reports them. The
+project, in Backend's order, under Backend's AI summary of them. With
+`Подключение к ITMO.Widgets` a user writes one review per teacher, edits and
+deletes it, votes on others' reviews and reports them. The tone of the summary
+also appears as a coloured dot next to the teacher's name in the lesson sheet
+and on the subject page. The
 [Backend contract](../../../itmo-widgets-backend/docs/contracts/teacher-reviews.md)
 defines the routes, limits, premoderation and the ISU check.
 
@@ -15,12 +17,19 @@ defines the routes, limits, premoderation and the ISU check.
 - `core/reviews`: the `TeacherReviewsRepository` contract and the models
   `TeacherReviews`, `TeacherReview` with `ReviewOrigin` (`Community` or
   `Reviews`), `OwnTeacherReview` with `OwnReviewStatus`, `ReviewReportReason`,
-  `TeacherReviewDraft`, `TeacherReviewLimits` and `ReviewDate`.
+  `TeacherReviewDraft`, `TeacherReviewLimits` and `ReviewDate`;
+  `TeacherSummary.kt` with `TeacherSummary`, `SummaryScale`, `TeacherLevel`,
+  `SummaryConfidence`, `SummaryScaleKind`, `SummaryScaleValue` and `SummaryTag`;
+  the `TeacherLevelsRepository` contract.
 - `core/schedule/TeacherLessons.kt`: `TeacherLessonsGateway`, the viewer's own
   lessons with a teacher ([schedule](schedule.md#lessons-with-a-teacher)).
 - `core/navigation/TeacherReviewArgs.kt`: the teacher ISU and full name for the
   editor and the report dialog.
-- `feature/reviews/data`: `TeacherReviewsRepositoryImpl` and the Core mapping.
+- `feature/reviews/data`: `TeacherReviewsRepositoryImpl`, the Core mapping,
+  `TeacherLevelsRepositoryImpl` and `TeacherLevelsFileStore`.
+- `core/ui/TeacherLevelTone.kt`: the dot colour and words of each tone and
+  `ImageView.bindLevel`, shared by the profile, the lesson sheet and the subject
+  page.
 - `feature/reviews/presentation`: `ReviewEditorViewModel`, `ReportReviewViewModel`.
 - `feature/reviews/ui`: `ReviewEditorBottomSheet`, `ReportReviewDialogFragment`.
 
@@ -70,13 +79,91 @@ Invalid input fails with `AppError.Unknown` without a request; a Backend
   `https://onetwozzzplus.github.io/reviews/#/teacher/{isu}`. `core/ui/LinkOpener`
   performs the final navigation-policy check.
 
+- `summary` becomes `TeacherSummary` or `null`. Tags this app does not know
+  are skipped and repeats dropped, blank pros, cons and reasons are dropped, and
+  a summary with a blank description is no summary. `showsLevel` is true for
+  confidence `MEDIUM` or `HIGH`.
+
+## AI summary
+
+Backend builds the summary from active Reviews copies and published own reviews
+that passed the ISU check, once a teacher has at least three of them
+([Backend](../../../itmo-widgets-backend/docs/ops/ai-summaries.md)). The app
+shows what Backend returns and decides nothing about it: a hidden summary or one
+of a teacher with fewer reviews is simply `null`, and until Backend builds a new
+summary the previous one is shown with its own count, which may differ from
+`Отзывы · N`.
+
+The card (`item_teacher_summary.xml`, `Widget.ItmoWidgets.Card.Content.Tonal`)
+comes first in the section, right under the heading and before the own review,
+with the usual 8 dp gap after it. Its texts are plain, with links switched off.
+From top to bottom:
+
+- `auto_awesome` and `Сводка по N отзывам` (`titleSmall`, plurals), with a
+  muted `ИИ` at the end; TalkBack reads `Сводка по N отзывам, составлена ИИ`;
+- the tone row, only when `showsLevel`: the dot and the words
+  (`В основном отрицательные`, `Скорее отрицательные`, `Смешанные`,
+  `Скорее положительные`, `В основном положительные`), read as
+  `Тон отзывов: …`;
+- the description;
+- pros and cons as rows with `add` and `remove` icons, each block read as
+  `Плюсы: …` or `Минусы: …` and hidden when empty;
+- tag chips (`item_summary_tag_chip.xml`, 28 dp, not clickable), hidden
+  without tags: `Автомат`, `Много лаб`, `Много домашки`, `Частые контрольные`,
+  `Строгий на защите`, `Мягкий на защите`, `Сложный экзамен`, `Лёгкий экзамен`,
+  `Спрашивает теорию`, `Жёсткие дедлайны`, `Гибкие дедлайны`,
+  `Важна посещаемость`, `Свободное посещение`, `Доп. баллы`,
+  `Чёткие требования`, `Размытые требования`, `Интересные занятия`,
+  `Читает по слайдам`, `Быстро отвечает`, `Сложно связаться`;
+- the five scales, collapsed by default behind the text button `Подробнее`
+  (`Свернуть` when open, with a chevron, a 48 dp target and the TalkBack state
+  `свёрнуто` or `развёрнуто`). Each scale is a row `name … value` with its reason
+  below: `Объясняет` плохо/средне/хорошо, `Отношение к студентам`
+  плохое/нейтральное/хорошее, `Справедливость оценок`, `Строгость` and
+  `Нагрузка` низкая/средняя/высокая, and a muted `мало данных` without a reason.
+
+Opening the scales only grows the card: nothing above it moves. Whether they
+are open belongs to the profile of that teacher (`UserProfileViewModel`,
+`SavedStateHandle`), so it survives rebinding, new reviews, recreation and
+process death, and another profile starts collapsed.
+
+## Teacher levels
+
+`TeacherLevelsRepository.levels(isus)` returns the tone of teachers whose shown
+summary has confidence `MEDIUM` or `HIGH`; others are absent. The
+implementation:
+
+- is gated by the custom-services opt-in: without it the answer is empty, the
+  cache is deleted and nothing is sent;
+- keeps Backend's answers, including «no level», in
+  `filesDir/teacher_levels/levels.json` (format 1, atomic writes, excluded from
+  backup and device transfer) for a day, and asks Backend only for missing or
+  older teachers, in sorted batches of 50
+  (`GET /api/teachers/summary-levels`). Only ISU numbers in
+  `100000..9999999` are sent; Backend would reject a whole batch with another
+  one, and such a teacher has no summary anyway;
+- serializes calls with a mutex, so screens asking at once send one request;
+- on a failure of any batch writes nothing and returns the fresh cached part;
+  a level is decoration, never a screen error. An answer that arrives after a
+  sign-out or after the opt-in was switched off is dropped;
+- is a `SessionDataCleaner`, and a corrupt file is deleted.
+
+The dot (`bg_teacher_level_dot.xml`, 10 dp) is decorative; the row that carries
+it adds `, тон отзывов: …` to its TalkBack description. Where it stands:
+
+- the summary card's tone row;
+- the teacher row of the lesson sheet ([schedule](schedule.md#lesson-details));
+- the teacher rows of the subject page
+  ([recordbook](recordbook.md#subject-page)).
+
 ## The profile section
 
 The section exists while connected when there is at least one review, an own
 review or `Написать`. `Написать` needs `canWrite` from Backend, no own review
 yet and a person who teaches: Backend's `knownTeacher` (the person teaches a
-loaded lesson, a cached ISU flow, has a Reviews copy or a published review) or
-any position of the My ITMO person. The heading is `Отзывы · N`, counting the
+loaded academic pair, a cached ISU flow, has a Reviews copy or a published
+review; a room booking, which names the person who booked it, does not count)
+or any position of the My ITMO person. The heading is `Отзывы · N`, counting the
 own review too, or `Отзывы` without reviews; `Написать` is a text button with
 `ic_edit` in the heading.
 
@@ -162,22 +249,28 @@ does not affect the order.
 
 ## Not implemented
 
-An AI summary of a teacher's reviews and handing ITMO.Widgets reviews over to
-the Reviews project are separate work.
+Handing ITMO.Widgets reviews over to the Reviews project is separate work.
 
 ## Tests
 
-`TeacherReviewsRepositoryImplTest` covers mapping of both kinds, opt-in and
-no-network behavior, input checks before the network, mutation routes, the
-cache and `observeUpdates()` after opt-out and session clear, errors and
-cancellation. `ReviewEditorViewModelTest` and `ReportReviewViewModelTest` cover
+`TeacherReviewsRepositoryImplTest` covers mapping of both kinds and of the
+summary (unknown tags, blank points, `LOW` confidence), opt-in and no-network
+behavior, input checks before the network, mutation routes, the cache and
+`observeUpdates()` after opt-out and session clear, errors and cancellation.
+`TeacherLevelsRepositoryImplTest` and `TeacherLevelsFileStoreTest` cover the
+levels: the opt-in, the day cache, batches, the ISU range, failures and answers
+after the opt-in was switched off. `ReviewEditorViewModelTest` and `ReportReviewViewModelTest` cover
 the forms, restoration, suggestions growing with the history, saving with
 partial flows and validation; `ProfileReviewsTest`,
 `UserProfileStateTest` and `UserProfileViewModelTest` the section, `Написать`,
-votes, deletion and updates. `UserProfileVisualTest` (with
+votes, deletion, updates, the summary and its collapsed scales kept in the saved
+state. `UserProfileVisualTest` (with
 `UserProfilePreviewActivity`) and `ReviewEditorVisualTest` (with
 `ReviewEditorPreviewActivity`, debug only) cover the mixed list with the own
 review first, statuses, votes, reports, author navigation, long names, 20
-recycled reviews, the editor and the report dialog in the full appearance
-matrix. Use the [visual test commands](../design.md#running-the-visual-tests)
+recycled reviews, the summary card in every state (tone, low confidence, empty
+blocks, long texts at 320 dp and font 1.3, every tone, collapsed and expanded
+scales across recreation, a late answer), the editor and the report dialog in
+the full appearance matrix. `LessonDetailsVisualTest` and
+`RecordbookVisualTest` cover the tone dots. Use the [visual test commands](../design.md#running-the-visual-tests)
 and inspect the saved PNGs.

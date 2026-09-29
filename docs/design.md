@@ -39,6 +39,14 @@ fills. Lesson types, grades, sport statuses and ring sectors are domain
 semantics with their own deliberate light and dark values and contrast checks;
 a status is also readable by text or icon, never by colour alone.
 
+The tone of a teacher's AI summary is such a stable colour of meaning:
+`teacher_level_*` from red to green (`very_negative`, `negative`, `mixed`,
+`positive`, `very_positive`, light `#D32F2F`, `#E06C00`, `#B58900`, `#689F38`,
+`#2E7D32`, dark `#FF6E6E`, `#FFA24C`, `#FFD54F`, `#AED581`, `#4CAF50`),
+only harmonized towards the primary colour (`core/ui/TeacherLevelTone.kt`), so
+every palette keeps five distinct tones. The dot is decorative; its row says
+the tone in words.
+
 ## Geometry and the card family
 
 The grid is 4 dp. Compactness never shrinks the touch target.
@@ -58,6 +66,7 @@ The grid is 4 dp. Compactness never shrinks the touch target.
 | `Card.Content` | 20 dp radius, no stroke | Subject, control, user rows |
 | `Card.Content.Outlined` | 20 dp radius, 1 dp `colorOutlineVariant` | Sport lesson and booking cards, debug cards |
 | `Card.Content.Own` | 20 dp radius, 1 dp `colorPrimary` | The viewer's own teacher review above the others |
+| `Card.Content.Tonal` | 20 dp radius, no stroke, `colorSurfaceContainerHigh` | The AI summary of a teacher's reviews above the reviews |
 | `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius | Recordbook summary; subject result and PE sport card |
 | `Card.SettingsGroup` | 20 dp radius, no stroke, inner dividers | One card per settings or profile group, never per row |
 | `Card.ScheduleDay` | 16 dp radius, 16 dp between days | A day of lessons with its timeline |
@@ -285,6 +294,17 @@ settings, and restore them if a separate test explicitly changes them.
   `res/layout/item_own_teacher_review.xml` (`Card.Content.Own`, a status pill as a
   12 % wash of its tone: content-based palettes make `…Container` colours too
   dark for the tone as text), bound in `feature/social/ui/ReviewViews.kt`.
+- AI summary: `res/layout/item_teacher_summary.xml` (`Card.Content.Tonal`, a
+  header with `auto_awesome` and a muted `ИИ`, the tone row with the dot, pros
+  and cons as icon rows `view_summary_point.xml`, tag chips
+  `item_summary_tag_chip.xml` and five scales `view_summary_scale.xml`
+  collapsed behind the text button `Подробнее`/`Свернуть` whose 48 dp target
+  reaches into the card padding), bound in `feature/social/ui/SummaryViews.kt`.
+- Tone dot: `res/drawable/bg_teacher_level_dot.xml` tinted by
+  `core/ui/TeacherLevelTone.kt` (`ImageView.bindLevel`), in the lesson sheet's
+  teacher fact (`fact_mark` in `res/layout/item_sport_detail_fact.xml`) and the
+  subject page's teacher rows (`level_dot` in `res/layout/item_subject_teacher.xml`);
+  its place is reserved where a late dot would otherwise move the row.
 - Review editor: `res/layout/sheet_review_editor.xml`,
   `feature/reviews/ui/ReviewEditorBottomSheet.kt`. A form sheet without a handle
   that cannot be dragged or dismissed outside: Back and the close button ask

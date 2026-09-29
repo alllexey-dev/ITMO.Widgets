@@ -115,6 +115,14 @@ list drawn by `SubjectHubAdapter`, in this order:
    teacher stands in. A row with a usable teacher ISU opens the shared person
    profile. A recordbook-only teacher without ISU remains informational, including
    past periods, PE and unmatched subjects; no identifier is guessed by name.
+   With `Подключение к ITMO.Widgets` a row with an ISU shows the tone of the
+   teacher's AI summary as a 10 dp dot before the chevron (`level_dot` in
+   `item_subject_teacher.xml`); `RecordbookSubjectViewModel` asks
+   `TeacherLevelsRepository` whenever the set of teacher ISUs changes and keeps
+   the answer in `SubjectHubState.teacherLevels`
+   ([teacher levels](reviews.md#teacher-levels)). A row with an ISU but no level
+   keeps the place of the dot, so the chevrons stay in one column; a row without
+   an ISU has none. TalkBack adds `, тон отзывов: …` to the row.
 5. `Ближайшие пары`: only for the current period and never for PE.
 
 The scale is `RecordbookGradeScale`: above 90 is 5A, above 83 4B, above 74 4C,

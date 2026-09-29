@@ -42,7 +42,8 @@ core/           cross-cutting; knows nothing about features
   notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
   resources/    SubjectLinksRepository, link models, ResourceScope, subjectLinkChips
   reviews/      TeacherReviewsRepository, TeacherReviews, TeacherReview with ReviewOrigin, OwnTeacherReview,
-                OwnReviewStatus, ReviewReportReason, TeacherReviewDraft, TeacherReviewLimits, ReviewDate
+                OwnReviewStatus, ReviewReportReason, TeacherReviewDraft, TeacherReviewLimits, ReviewDate,
+                TeacherSummary with its scales, tags and TeacherLevel, TeacherLevelsRepository
   result/       AppError, AppResult
   schedule/     schedule preferences, widget-refresh, SubjectLessonsGateway and TeacherLessonsGateway
                 (TeacherLessons.kt) contracts
@@ -58,6 +59,7 @@ core/           cross-cutting; knows nothing about features
   qr/           CustomSpoilerManager
   ui/           AvatarView, state helpers, AppNavigator port, WidgetPinRequester, the spoiler crop screen,
                 the details-sheet header (view_details_header.xml + DetailsHeader.kt), ConditionTone,
+                TeacherLevelTone (the tone dot of teachers' AI summaries),
                 BottomSheets.kt (expandToContent() for sheets that open at their content height)
   weblogin/     WebLoginRepository and WebLoginPreview — approving a browser's sign-in to the web version
 di/             Hilt modules, one per feature or concern
@@ -70,9 +72,10 @@ Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
 the code and link parser, the User-Agent description, the view model and
 `WebLoginBottomSheet` ([web sign-in](features/web-login.md)). `social` owns the
 person profile and its direct My ITMO `PersonRepository`; `reviews` owns
-Backend review reads and mutations (`data`), the editor and report view models
-(`presentation`) and `ReviewEditorBottomSheet` and `ReportReviewDialogFragment`
-(`ui`). The profile reaches them through the shared `core/reviews` contract and
+Backend review reads and mutations and the teacher levels cache (`data`), the
+editor and report view models (`presentation`) and `ReviewEditorBottomSheet`
+and `ReportReviewDialogFragment` (`ui`). The profile, the lesson sheet and the
+subject page reach them through the shared `core/reviews` contracts and
 `AppNavigator`, and the editor reads the viewer's lessons with a teacher through
 `core/schedule/TeacherLessonsGateway` (implemented in `schedule/data`), so the
 features never import each other.
@@ -138,6 +141,7 @@ thread until it suspends.
 | Schedule and QR caches | Files under `cacheDir`, observed through flows |
 | Device-only subject links and the last links answer per subject period | `filesDir/subject_links/cache.json`, atomic writes, excluded from backup and device transfer |
 | Finished weeks of the personal schedule for review suggestions | `filesDir/teacher_lessons/weeks.json`, atomic writes, excluded from backup and device transfer |
+| Tones of teachers' AI summaries, a day per answer | `filesDir/teacher_levels/levels.json`, atomic writes, excluded from backup and device transfer |
 
 `SharedPreferences` is banned. *Enforced.* Anything caching user-scoped data
 implements `SessionDataCleaner`; sign-out and account change invoke every

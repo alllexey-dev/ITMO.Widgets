@@ -149,6 +149,15 @@ or the official cache.
   target and a localized accessibility click action. The sheet dismisses first.
   Without an ISU, including event teachers, the row remains informational with
   no chevron, ripple or click action; no name lookup is attempted.
+- With `Подключение к ITMO.Widgets` and a teacher ISU the lesson sheet shows the
+  tone of the teacher's AI summary as a 10 dp dot between the name and the
+  chevron (`fact_mark` in `item_sport_detail_fact.xml`,
+  `ViewDetailsHeaderBinding.bindTeacherLevel`). `LessonDetailsViewModel` gets it
+  from `TeacherLevelsRepository` (`ARG_TEACHER_ISU`), cached for a day
+  ([teacher levels](reviews.md#teacher-levels)). The place of the dot is
+  reserved while the level loads or when there is none, so a late dot moves
+  neither the name nor the chevron; TalkBack reads `, тон отзывов: …` after the
+  teacher. Without an ISU the dot is gone, and sport sheets never show it.
 - `Друзья на паре` is the only place friends on a lesson appear.
   `LessonDetailsViewModel` asks `LessonFriendsRepository` for
   `GET /api/schedule/lessons/{pairId}/friends?date=`; Backend answers with the

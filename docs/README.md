@@ -31,7 +31,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
   chips, sheets, the local mode without the connection.
 - [Social](features/social.md) — friends, requests, people search, person profiles.
 - [Teacher reviews](features/reviews.md) — own reviews with premoderation, votes
-  and reports, and Reviews copies in person profiles; the editor and the report.
+  and reports, and Reviews copies in person profiles; the AI summary and the
+  teacher tone dots; the editor and the report.
 - [Notifications](features/notifications.md) — FCM receiver, token sync, handlers.
 - [Widgets](features/widgets.md) — schedule and QR widgets and their previews.
 - [Update offer](features/update.md) — version check and reminder policy.
@@ -53,6 +54,7 @@ editing an old one when a decision changes.
 - [0008 Subject links: schedule-flow audiences, premoderation only for everybody](decisions/0008-community-moderation.md)
 - [0009 One person profile, direct My ITMO identity and copied reviews](decisions/0009-person-profile.md)
 - [0010 Own teacher reviews verified through ISU flows](decisions/0010-review-verification.md)
+- [0011 AI summaries of teacher reviews through Gemini behind a proxy](decisions/0011-ai-review-summaries.md)
 
 ## Sibling repositories
 

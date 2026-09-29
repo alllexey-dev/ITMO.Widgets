@@ -38,6 +38,21 @@ publication or deployment.
 - Needs Core and Backend `1.7.0-SNAPSHOT` with `saveMyTeacherReview` and V9
   (`V9__teacher_reviews.sql`, after `V8__service_credentials.sql`); an older
   Backend answers with `external`, which this build does not read.
+- AI summary of a teacher's reviews first in the profile's `Отзывы`, on a tonal
+  card (`Card.Content.Tonal`): `Сводка по N отзывам` with `ИИ`, the tone of the
+  reviews with a coloured dot when Backend is confident enough, a short
+  description, pros and cons, tags, and five scales in words collapsed by
+  default behind `Подробнее`/`Свернуть`. The open state lives in the profile's
+  saved state, so it survives recreation. Unknown tags are skipped.
+- A tone dot next to the teacher in the lesson sheet and in the subject page's
+  teacher rows, with its place reserved so a late dot moves nothing. Tones come
+  from `GET /api/teachers/summary-levels` in batches of 50 behind the
+  connection and are kept for a day in `filesDir/teacher_levels/levels.json`,
+  cleared with the session.
+- Needs Core and Backend `1.7.0-SNAPSHOT` with `summary`,
+  `teacherSummaryLevels` and V10 (`V10__teacher_summaries.sql`); without V10 the
+  reviews come without a summary and teachers without dots. See decision
+  [0011](docs/decisions/0011-ai-review-summaries.md).
 
 ### 2026-09-28
 

@@ -94,6 +94,17 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   issues an httpOnly web session. Student sections of the web version come
   later and will sign in with an ITMO.ID token kept in the browser; Backend
   does not proxy MyITMO for the browser. Not released to production.
+- Outside the numbered stages, 2026-09-29 through `vibe/ai-summary-plan.md`: AI
+  summaries of teacher reviews (decision
+  [0011](../decisions/0011-ai-review-summaries.md)). Backend builds them through
+  the free Gemini API (`gemini-3.5-flash-lite`, chosen by a probe) reached only
+  through the `gemini-proxy` sidecar, from Reviews copies and verified own
+  reviews, nightly and by an admin within a daily budget (Backend V10, Core
+  `summary` and `teacherSummaryLevels`). The person profile shows the summary
+  card first in the reviews with the scales collapsed behind `Подробнее`; tone
+  dots stand next to teachers in the lesson sheet and on the subject page; the
+  web admin has `ИИ-сводки`, the summaries table and the Gemini key. Not
+  released to production.
 
 ## Plan Structure
 
@@ -930,7 +941,7 @@ planned own-review behavior below.
 **What to add/implement:**
 
 * Track the BARS journal in the background and notify about new marks, changed marks, and changed approvals. Everything stays on the device: BARS data never reaches Backend, and the feature does not depend on the custom-services opt-in.
-* Renew the BARS token in the background without a WebView: `BarsCookieSilentLogin` replays the official OIDC authorization URL through OkHttp with the ITMO.ID cookies read from `CookieManager`, accepts only the exact callback with a checked `state`, and exchanges the code through the library's `BarsCodeSupplier`. No credentials, no JavaScript, no cookie leaves the device. Foreground renewal keeps `BarsWebSilentLogin`. Record the rule as decision 0011.
+* Renew the BARS token in the background without a WebView: `BarsCookieSilentLogin` replays the official OIDC authorization URL through OkHttp with the ITMO.ID cookies read from `CookieManager`, accepts only the exact callback with a checked `state`, and exchanges the code through the library's `BarsCodeSupplier`. No credentials, no JavaScript, no cookie leaves the device. Foreground renewal keeps `BarsWebSilentLogin`. Record the rule as decision 0012.
 * Persist a normalized per-checkpoint snapshot (discipline, checkpoint plan, checkpoint, mark, approval) per ISU in the Room database introduced in Stage 35. `BarsMarkDiffEngine` is pure: it emits `MarkAdded`, `MarkChanged`, and `ApprovalChanged` events, ignores reorder-only responses, treats an empty journal (`total = 0`, no marks) as "no marks" rather than a removal, and skips plans with `has_course_project` exactly like the overlay mapper. The first successful sync after enabling only writes the baseline and notifies nothing.
 * Run a unique periodic WorkManager job (`bars-mark-sync`, every three hours, network constraint, `@HiltWorker`). It exits quietly without a BARS session, backs off after a failed renewal, and when the ITMO.ID cookie session is gone posts one `Войдите в БАРС` notification and stays silent until the next successful BARS login. Opening the recordbook with the `БАРС` chip runs the same diff on the fresh journal so foreground use advances the baseline. Do not claim immediate delivery because Android controls periodic execution.
 * Add the `BARS` notification channel next to `SPORT` and `FRIENDS`. One notification per subject per sync with a stable id: subject and checkpoint in the title, the mark in the expanded text, `VISIBILITY_PRIVATE` with the public version `Новая оценка в БАРС`. Tapping opens the recordbook subject with the chip on through `MainActivityIntentRouting`.
@@ -949,7 +960,7 @@ planned own-review behavior below.
 * `app/src/main/java/dev/alllexey/itmowidgets/app/MainActivityIntentRouting.kt` - route to the recordbook subject with the chip on.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/settings/presentation/SettingsViewModel.kt` - the tracking toggle.
 * `app/src/main/java/dev/alllexey/itmowidgets/di/RecordbookModule.kt` - bindings and the worker entry point.
-* `docs/decisions/0011-bars-background-renewal.md` - cookie replay through OkHttp is the only background renewal path.
+* `docs/decisions/0012-bars-background-renewal.md` - cookie replay through OkHttp is the only background renewal path.
 * `docs/features/recordbook.md`, `docs/features/notifications.md`, `docs/settings.md` - current-state documentation of tracking, the channel, and the toggle.
 
 **Framework/Library Documentation:**
