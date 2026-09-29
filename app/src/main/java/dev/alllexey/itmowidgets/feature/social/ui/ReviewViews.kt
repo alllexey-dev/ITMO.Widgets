@@ -43,15 +43,14 @@ internal fun ItemTeacherReviewBinding.bind(item: ProfileItem.Review, actions: Pr
     verified.root.setText(R.string.teacher_review_verified)
     unverified.isVisible = community != null && !community.verified
     source.isVisible = copy != null
-    source.text = copy?.let {
-        it.sourceTitle?.let { title -> context.getString(R.string.teacher_review_source, title) }
-            ?: context.getString(R.string.teacher_review_source_default)
-    }
+    // The label is just the source; «Reviews» stays for TalkBack and for a copy without a source title.
+    source.text = copy?.let { it.sourceTitle ?: context.getString(R.string.teacher_review_source_default) }
+    source.contentDescription = copy?.sourceTitle?.let { context.getString(R.string.teacher_review_source, it) }
     source.setOnClickListener(copy?.let { View.OnClickListener { actions.onSource(copy.sourceUrl) } })
     votes.bind(review, item.canVote, item.busy) { up -> actions.onVote(review.id, up) }
     val canReport = item.canReport && community != null && !community.reportedByMe
-    // An empty menu keeps its place so the votes line up from card to card.
-    more.visibility = if (canReport) View.VISIBLE else View.INVISIBLE
+    // Without a menu the votes sit flush with the card's end.
+    more.isVisible = canReport
     more.isEnabled = !item.busy
     more.setOnClickListener(if (canReport) View.OnClickListener { anchor ->
         (anchor as ImageButton).showMenu(R.string.teacher_review_report to { actions.onReport(review.id) })

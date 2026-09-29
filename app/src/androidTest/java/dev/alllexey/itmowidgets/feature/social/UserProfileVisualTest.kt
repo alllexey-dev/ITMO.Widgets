@@ -796,7 +796,7 @@ class UserProfileVisualTest {
             val source = row.findViewById<TextView>(R.id.source)
             assertEquals(copy != null, source.isShown)
             if (copy != null) {
-                assertEquals(copy.sourceTitle?.let { "Reviews · $it" } ?: "Reviews", source.text.toString())
+                assertEquals(copy.sourceTitle ?: "Reviews", source.text.toString())
                 assertTrue(source.height >= 48 * source.resources.displayMetrics.density - 1)
             }
             assertEquals(canReport && community != null && !community.reportedByMe, row.findViewById<View>(R.id.more).isShown)

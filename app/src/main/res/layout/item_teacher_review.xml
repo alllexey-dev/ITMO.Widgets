@@ -111,7 +111,7 @@
                     android:contentDescription="@string/teacher_review_actions"
                     android:padding="@dimen/design_spacing_content"
                     android:src="@drawable/ic_more_vert_rounded"
-                    android:visibility="invisible"
+                    android:visibility="gone"
                     app:tint="?attr/colorOnSurfaceVariant"
                     tools:visibility="visible" />
 

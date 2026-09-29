@@ -839,7 +839,7 @@
     <string name="person_fact_isu_value">ИСУ %1$s</string>
     <string name="teacher_reviews_title">Отзывы</string>
     <string name="teacher_review_before_year">До %1$d</string>
-    <string name="teacher_review_source">Reviews · %1$s</string>
+    <string name="teacher_review_source">Источник: Reviews · %1$s</string>
     <string name="teacher_review_source_default">Reviews</string>
     <string name="teacher_reviews_count">Отзывы · %1$d</string>
     <string name="teacher_review_write">Написать</string>
