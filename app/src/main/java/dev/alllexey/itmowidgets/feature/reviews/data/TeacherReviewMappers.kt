@@ -8,13 +8,22 @@ import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
+import dev.alllexey.itmowidgets.core.reviews.SummaryConfidence
+import dev.alllexey.itmowidgets.core.reviews.SummaryScale
+import dev.alllexey.itmowidgets.core.reviews.SummaryScaleKind
+import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
+import dev.alllexey.itmowidgets.core.reviews.SummaryTag
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
 import dev.alllexey.itmowidgets.core.util.HttpsNavigationPolicy
 import java.time.YearMonth
 import dev.alllexey.itmowidgets.core.model.reviews.OwnTeacherReview as WireOwnReview
 import dev.alllexey.itmowidgets.core.model.reviews.TeacherReview as WireReview
 import dev.alllexey.itmowidgets.core.model.reviews.TeacherReviewsResponse as WireTeacherReviews
+import dev.alllexey.itmowidgets.core.model.reviews.SummaryLevel as WireSummaryLevel
+import dev.alllexey.itmowidgets.core.model.reviews.TeacherSummary as WireTeacherSummary
 
 internal fun WireTeacherReviews.toModel() = TeacherReviews(
     isu = teacherIsu,
@@ -24,6 +33,7 @@ internal fun WireTeacherReviews.toModel() = TeacherReviews(
     canVote = canVote,
     canReport = canReport,
     knownTeacher = knownTeacher,
+    summary = summary?.toModel(),
 )
 
 internal fun ReviewReportReason.toWire() = ReportReason.valueOf(name)
@@ -60,5 +70,28 @@ private fun WireOwnReview.toModel() = OwnTeacherReview(
     verified = verified,
     written = ReviewDate.Month(YearMonth.from(writtenOn)),
 )
+
+/** Tags this app does not know are skipped; a summary without a description is no summary. */
+internal fun WireTeacherSummary.toModel(): TeacherSummary? {
+    val description = description.clean() ?: return null
+    return TeacherSummary(
+        reviewCount = reviewCount,
+        description = description,
+        pros = pros.mapNotNull { it.clean() },
+        cons = cons.mapNotNull { it.clean() },
+        tags = tags.mapNotNull { code -> SummaryTag.entries.firstOrNull { it.name == code.trim() } }.distinct(),
+        scales = scales.map { scale ->
+            SummaryScale(
+                kind = SummaryScaleKind.valueOf(scale.kind.name),
+                value = SummaryScaleValue.valueOf(scale.value.name),
+                reason = scale.reason.clean(),
+            )
+        },
+        level = level.toModel(),
+        confidence = SummaryConfidence.valueOf(confidence.name),
+    )
+}
+
+internal fun WireSummaryLevel.toModel() = TeacherLevel.valueOf(name)
 
 private fun String?.clean(): String? = this?.trim()?.takeIf(String::isNotEmpty)

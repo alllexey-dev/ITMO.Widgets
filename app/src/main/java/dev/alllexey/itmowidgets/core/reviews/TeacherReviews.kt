@@ -6,6 +6,7 @@ import java.time.YearMonth
 /**
  * Reviews of one teacher for the current viewer. [reviews] keeps Backend's ranked order and never holds the
  * viewer's own review, which comes only in [mine]. [knownTeacher] means Backend has seen the person teach.
+ * [summary] is Backend's shown AI summary, null without one.
  */
 data class TeacherReviews(
     val isu: Int,
@@ -15,6 +16,7 @@ data class TeacherReviews(
     val canVote: Boolean,
     val canReport: Boolean,
     val knownTeacher: Boolean,
+    val summary: TeacherSummary? = null,
 )
 
 /** A published review as another viewer sees it; [myVote] is -1, 0 or 1. */

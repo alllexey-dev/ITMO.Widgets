@@ -2,6 +2,7 @@
 <full-backup-content>
     <exclude domain="file" path="subject_links/" />
     <exclude domain="file" path="teacher_lessons/" />
+    <exclude domain="file" path="teacher_levels/" />
     <exclude
         domain="file"
         path="datastore/app_preferences.preferences_pb" />

@@ -8,10 +8,17 @@ import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
+import dev.alllexey.itmowidgets.core.reviews.SummaryConfidence
+import dev.alllexey.itmowidgets.core.reviews.SummaryScale
+import dev.alllexey.itmowidgets.core.reviews.SummaryScaleKind
+import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
+import dev.alllexey.itmowidgets.core.reviews.SummaryTag
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
+import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
 import java.time.YearMonth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,7 +31,25 @@ internal fun teacherReviews(
     canVote: Boolean = true,
     canReport: Boolean = true,
     knownTeacher: Boolean = true,
-) = TeacherReviews(isu, reviews, mine, canWrite, canVote, canReport, knownTeacher)
+    summary: TeacherSummary? = null,
+) = TeacherReviews(isu, reviews, mine, canWrite, canVote, canReport, knownTeacher, summary)
+
+internal fun teacherSummary(
+    reviewCount: Int = 12,
+    level: TeacherLevel = TeacherLevel.POSITIVE,
+    confidence: SummaryConfidence = SummaryConfidence.MEDIUM,
+    description: String = "Понятно объясняет и честно оценивает, но строго принимает лабораторные.",
+    pros: List<String> = listOf("Понятные лекции", "Честные оценки"),
+    cons: List<String> = listOf("Строгая защита лабораторных"),
+    tags: List<SummaryTag> = listOf(SummaryTag.MANY_LABS, SummaryTag.STRICT_DEFENSE),
+    scales: List<SummaryScale> = listOf(
+        SummaryScale(SummaryScaleKind.EXPLAINS, SummaryScaleValue.HIGH, "Хвалят понятные лекции"),
+        SummaryScale(SummaryScaleKind.ATTITUDE, SummaryScaleValue.MEDIUM, "Ровное отношение"),
+        SummaryScale(SummaryScaleKind.FAIRNESS, SummaryScaleValue.HIGH, "Оценки считают честными"),
+        SummaryScale(SummaryScaleKind.STRICTNESS, SummaryScaleValue.HIGH, "Строго на защите"),
+        SummaryScale(SummaryScaleKind.WORKLOAD, SummaryScaleValue.NOT_ENOUGH_DATA, null),
+    ),
+) = TeacherSummary(reviewCount, description, pros, cons, tags, scales, level, confidence)
 
 internal fun copiedReview(id: String) = TeacherReview(id, "Предмет", ReviewDate.BeforeYear(2023), "Отзыв $id", score = 0,
     myVote = 0, origin = ReviewOrigin.Reviews("Источник", "https://example.org/reviews/$id"))

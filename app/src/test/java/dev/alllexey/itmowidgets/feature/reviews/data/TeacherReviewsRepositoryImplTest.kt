@@ -24,9 +24,23 @@ import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.reviews.SummaryConfidence
+import dev.alllexey.itmowidgets.core.reviews.SummaryScale
+import dev.alllexey.itmowidgets.core.reviews.SummaryScaleKind
+import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
+import dev.alllexey.itmowidgets.core.reviews.SummaryTag
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
+import dev.alllexey.itmowidgets.core.model.reviews.SummaryConfidence as WireConfidence
+import dev.alllexey.itmowidgets.core.model.reviews.SummaryLevel as WireLevel
+import dev.alllexey.itmowidgets.core.model.reviews.SummaryScaleKind as WireScaleKind
+import dev.alllexey.itmowidgets.core.model.reviews.SummaryScaleValue as WireScaleValue
+import dev.alllexey.itmowidgets.core.model.reviews.TeacherSummary as WireSummary
+import dev.alllexey.itmowidgets.core.model.reviews.TeacherSummaryScale as WireScale
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import java.io.IOException
 import java.lang.reflect.Proxy
+import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
@@ -143,6 +157,56 @@ class TeacherReviewsRepositoryImplTest {
 
         assertTrue((repository.reviews(100001) as AppResult.Failure).error is AppError.Unknown)
         assertNull(repository.cachedReviews(100001))
+    }
+
+    @Test
+    fun `maps the whole summary skipping unknown tags and blank items`() = runTest {
+        val api = FakeApi().apply { result = result!!.copy(summary = wireSummary()) }
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+
+        val summary = (repository.reviews(100001) as AppResult.Success).value.summary
+
+        assertEquals(
+            TeacherSummary(
+                reviewCount = 12,
+                description = "Понятно объясняет, но строго принимает лабораторные.",
+                pros = listOf("Понятные лекции"),
+                cons = listOf("Строгая защита"),
+                tags = listOf(SummaryTag.MANY_LABS, SummaryTag.STRICT_DEFENSE),
+                scales = listOf(
+                    SummaryScale(SummaryScaleKind.EXPLAINS, SummaryScaleValue.HIGH, "Хвалят лекции"),
+                    SummaryScale(SummaryScaleKind.ATTITUDE, SummaryScaleValue.MEDIUM, "Ровное отношение"),
+                    SummaryScale(SummaryScaleKind.FAIRNESS, SummaryScaleValue.HIGH, "Оценки честные"),
+                    SummaryScale(SummaryScaleKind.STRICTNESS, SummaryScaleValue.HIGH, "Строгая защита"),
+                    SummaryScale(SummaryScaleKind.WORKLOAD, SummaryScaleValue.NOT_ENOUGH_DATA, null),
+                ),
+                level = TeacherLevel.POSITIVE,
+                confidence = SummaryConfidence.MEDIUM,
+            ),
+            summary,
+        )
+        assertTrue(summary!!.showsLevel)
+    }
+
+    @Test
+    fun `a reply without a summary or with a blank description has no summary`() = runTest {
+        val api = FakeApi()
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+
+        assertNull((repository.reviews(100001) as AppResult.Success).value.summary)
+        api.result = api.result!!.copy(summary = wireSummary().copy(description = " \n "))
+        assertNull((repository.reviews(100001) as AppResult.Success).value.summary)
+    }
+
+    @Test
+    fun `a low confidence summary hides its level`() = runTest {
+        val api = FakeApi().apply { result = result!!.copy(summary = wireSummary().copy(confidence = WireConfidence.LOW)) }
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+
+        val summary = (repository.reviews(100001) as AppResult.Success).value.summary!!
+
+        assertEquals(SummaryConfidence.LOW, summary.confidence)
+        assertFalse(summary.showsLevel)
     }
 
     @Test
@@ -566,6 +630,24 @@ class TeacherReviewsRepositoryImplTest {
         "Отзыв $number", 0, 0, false, false, null, null, null)
 
     private fun TeacherReview.source() = origin as ReviewOrigin.Reviews
+
+    private fun wireSummary() = WireSummary(
+        reviewCount = 12,
+        description = " Понятно объясняет, но строго принимает лабораторные. ",
+        pros = listOf(" Понятные лекции ", " "),
+        cons = listOf("Строгая защита"),
+        tags = listOf("MANY_LABS", "NEW_TAG", " STRICT_DEFENSE ", "MANY_LABS"),
+        scales = listOf(
+            WireScale(WireScaleKind.EXPLAINS, WireScaleValue.HIGH, "Хвалят лекции"),
+            WireScale(WireScaleKind.ATTITUDE, WireScaleValue.MEDIUM, " Ровное отношение "),
+            WireScale(WireScaleKind.FAIRNESS, WireScaleValue.HIGH, "Оценки честные"),
+            WireScale(WireScaleKind.STRICTNESS, WireScaleValue.HIGH, "Строгая защита"),
+            WireScale(WireScaleKind.WORKLOAD, WireScaleValue.NOT_ENOUGH_DATA, null),
+        ),
+        level = WireLevel.POSITIVE,
+        confidence = WireConfidence.MEDIUM,
+        generatedAt = Instant.parse("2026-09-29T03:00:00Z"),
+    )
 
     private class FakeServices(enabled: Boolean) : CustomServicesRepository {
         val enabled = MutableStateFlow(enabled)
