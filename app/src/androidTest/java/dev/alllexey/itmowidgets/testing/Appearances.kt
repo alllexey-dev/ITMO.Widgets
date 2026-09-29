@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
+import dev.alllexey.itmowidgets.feature.reviews.ui.ReviewEditorPreviewActivity
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity
@@ -91,6 +92,9 @@ object Appearances {
 
     fun Spec.toSubjectLinks() =
         SubjectLinksPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
+
+    fun Spec.toReviewEditor() =
+        ReviewEditorPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
 
     fun Spec.toWebLogin() =
         WebLoginPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)

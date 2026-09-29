@@ -13,6 +13,11 @@
         <item name="strokeWidth">@dimen/design_card_stroke</item>
     </style>
 
+    <!-- The viewer's own review among others: the same surface with a thin accent outline. -->
+    <style name="Widget.ItmoWidgets.Card.Content.Own" parent="Widget.ItmoWidgets.Card.Content.Outlined">
+        <item name="strokeColor">?attr/colorPrimary</item>
+    </style>
+
     <!-- The compact recordbook summary keeps its slightly stronger neutral surface and 20 dp shape. -->
     <style name="Widget.ItmoWidgets.Card.CompactSummary" parent="Widget.ItmoWidgets.Card.Content">
         <item name="cardBackgroundColor">?attr/colorSurfaceContainer</item>
@@ -252,4 +257,23 @@
         <item name="textAllCaps">false</item>
     </style>
 
+    <!-- A text link in the bottom row of a review: flush with the text, 48 dp tall, wrapping long names. -->
+    <style name="Widget.ItmoWidgets.ReviewOriginButton" parent="Widget.Material3.Button.TextButton">
+        <item name="android:ellipsize">none</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minWidth">@dimen/design_touch_target</item>
+        <item name="android:minHeight">@dimen/design_touch_target</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">@dimen/design_spacing_compact</item>
+        <item name="android:paddingTop">@dimen/design_spacing_compact</item>
+        <item name="android:paddingBottom">@dimen/design_spacing_compact</item>
+        <item name="android:singleLine">false</item>
+        <item name="android:textAlignment">viewStart</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:hyphenationFrequency">normal</item>
+    </style>
 </resources>

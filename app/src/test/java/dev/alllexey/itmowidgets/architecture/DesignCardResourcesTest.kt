@@ -49,6 +49,11 @@ class DesignCardResourcesTest {
             )
         }
         assertEquals("?attr/colorOutlineVariant", property(cardStyle("Content.Outlined"), "strokeColor"))
+        // The own review keeps the quiet surface and shape; only its 1 dp outline takes the accent.
+        assertEquals("?attr/colorSurfaceContainerLow", property(cardStyle("Content.Own"), "cardBackgroundColor"))
+        assertEquals("20dp", property(cardStyle("Content.Own"), "cardCornerRadius"))
+        assertEquals("1dp", property(cardStyle("Content.Own"), "strokeWidth"))
+        assertEquals("?attr/colorPrimary", property(cardStyle("Content.Own"), "strokeColor"))
     }
 
     @Test
@@ -60,6 +65,7 @@ class DesignCardResourcesTest {
             "item_recordbook_control" to "Content",
             "item_recordbook_note" to "Content",
             "item_teacher_review" to "Content",
+            "item_own_teacher_review" to "Content.Own",
             "item_recordbook_summary" to "CompactSummary",
             "item_subject_hero" to "Summary",
             "item_recordbook_sport" to "Summary",

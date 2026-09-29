@@ -22,6 +22,7 @@
 
         <TextView
             android:id="@+id/name"
+            android:hyphenationFrequency="normal"
             android:accessibilityHeading="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -31,13 +32,15 @@
             tools:text="Иванов Иван Иванович" />
 
         <TextView
-            android:id="@+id/meta"
+            android:id="@+id/headline"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/design_spacing_related"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant"
-            tools:text="ИСУ 123456" />
+            android:visibility="gone"
+            tools:text="Доцент · ФИТиП"
+            tools:visibility="visible" />
 
     </LinearLayout>
 

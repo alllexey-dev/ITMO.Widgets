@@ -20,6 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
+import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
@@ -31,6 +32,10 @@ import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
+import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
+import dev.alllexey.itmowidgets.core.reviews.ReviewDate
+import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
@@ -47,10 +52,12 @@ import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
+import java.time.YearMonth
 import java.util.Collections
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
@@ -158,6 +165,9 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
         @Volatile var socialDelayMs = 0L
         @Volatile var reviewsDelayMs = 0L
         @Volatile var selfIsu = 0
+        @Volatile var mutationDelayMs = 0L
+        @Volatile var mutationError: AppError? = null
+        const val OWN_REVIEW_ID = "own-review"
         val states: MutableList<UserProfileUiState> = Collections.synchronizedList(mutableListOf())
         val openedScreens: MutableList<Pair<AppScreen, Bundle?>> = Collections.synchronizedList(mutableListOf())
         val openedEditors: MutableList<TeacherReviewArgs> = Collections.synchronizedList(mutableListOf())
@@ -178,7 +188,12 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
         }
     }
 
+    /** Reviews kept in [reviews]; mutations change that fixture and publish it as an update, like the real repository. */
     private object PreviewReviews : TeacherReviewsRepository {
+        init { check(BuildConfig.DEBUG) }
+
+        private val updates = MutableSharedFlow<TeacherReviews>(extraBufferCapacity = 8)
+
         override fun cachedReviews(isu: Int): TeacherReviews? = UserProfilePreviewActivity.cachedReviews?.takeIf { it.isu == isu }
 
         override suspend fun reviews(isu: Int): AppResult<TeacherReviews> {
@@ -191,12 +206,47 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
             }
         }
 
-        override fun observeUpdates() = emptyFlow<TeacherReviews>()
-        override suspend fun save(isu: Int, draft: TeacherReviewDraft) = UserProfilePreviewActivity.reviews
-        override suspend fun delete(isu: Int) = UserProfilePreviewActivity.reviews
-        override suspend fun vote(isu: Int, reviewId: String, value: Int) = UserProfilePreviewActivity.reviews
-        override suspend fun report(isu: Int, reviewId: String, reason: ReviewReportReason, comment: String?) =
-            UserProfilePreviewActivity.reviews
+        override fun observeUpdates(): Flow<TeacherReviews> = updates
+
+        override suspend fun save(isu: Int, draft: TeacherReviewDraft) = mutate { current ->
+            current.copy(mine = OwnTeacherReview(current.mine?.id ?: OWN_REVIEW_ID, draft.subject, draft.text, draft.anonymous,
+                OwnReviewStatus.PENDING, null, 0, false, ReviewDate.Month(YearMonth.of(2026, 9))))
+        }
+
+        override suspend fun delete(isu: Int) = mutate { it.copy(mine = null) }
+
+        override suspend fun vote(isu: Int, reviewId: String, value: Int) = mutate { current ->
+            current.copy(reviews = current.reviews.map {
+                if (it.id == reviewId) it.copy(score = it.score - it.myVote + value, myVote = value) else it
+            })
+        }
+
+        override suspend fun report(isu: Int, reviewId: String, reason: ReviewReportReason, comment: String?) = mutate { current ->
+            current.copy(reviews = current.reviews.map { review ->
+                val origin = review.origin
+                if (review.id == reviewId && origin is ReviewOrigin.Community) review.copy(origin = origin.copy(reportedByMe = true)) else review
+            })
+        }
+
+        suspend fun publish(next: TeacherReviews) = updates.emit(next)
+
+        private suspend fun mutate(change: (TeacherReviews) -> TeacherReviews): AppResult<TeacherReviews> {
+            delay(mutationDelayMs)
+            mutationError?.let { return AppResult.Failure(it) }
+            val current = (UserProfilePreviewActivity.reviews as? AppResult.Success)?.value ?: return AppResult.Failure(AppError.NotFound)
+            val next = change(current)
+            UserProfilePreviewActivity.reviews = AppResult.Success(next)
+            UserProfilePreviewActivity.cachedReviews = next
+            updates.emit(next)
+            return AppResult.Success(next)
+        }
+    }
+
+    /** Publishes [next] as if an editor elsewhere had saved it. */
+    fun publishReviews(next: TeacherReviews) {
+        reviews = AppResult.Success(next)
+        cachedReviews = next
+        lifecycleScope.launch { PreviewReviews.publish(next) }
     }
 
     private object PreviewSocial : SocialRepository {

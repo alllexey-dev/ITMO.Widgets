@@ -14,12 +14,16 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openReviewEditor
+import dev.alllexey.itmowidgets.core.ui.navigation.openReviewReport
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.openLink
 import dev.alllexey.itmowidgets.core.ui.userDisplayName
 import dev.alllexey.itmowidgets.databinding.FragmentUserProfileBinding
@@ -57,7 +61,13 @@ class UserProfileFragment : Fragment() {
             onFriends = { openUserScreen(AppScreen.USER_FRIENDS) },
             onSchedule = { openUserScreen(AppScreen.USER_SCHEDULE) },
             onSport = { openUserScreen(AppScreen.USER_SPORT) },
-            onSource = { openLink(it, binding.root) }
+            onSource = { openLink(it, binding.root) },
+            onWriteReview = { reviewArgs()?.let(::openReviewEditor) },
+            onEditReview = { reviewArgs()?.let(::openReviewEditor) },
+            onDeleteReview = viewModel::requestDeleteOwnReview,
+            onVote = viewModel::vote,
+            onReport = { id -> reviewArgs()?.let { openReviewReport(it, id) } },
+            onAuthor = { openUserProfile(it) }
         ))
         binding.profileList.adapter = adapter
         binding.profileList.itemAnimator = null
@@ -122,6 +132,11 @@ class UserProfileFragment : Fragment() {
             UserScreenArgs.ISU to content.isu,
             UserScreenArgs.NAME to requireContext().userDisplayName(content.name, content.isu)
         ))
+    }
+
+    private fun reviewArgs(): TeacherReviewArgs? {
+        val content = viewModel.uiState.value as? UserProfileUiState.Content ?: return null
+        return TeacherReviewArgs(content.isu, content.name)
     }
 
     private fun handle(event: UserProfileEvent) {

@@ -7,6 +7,7 @@
         <activity android:name=".feature.recordbook.ui.RecordbookPreviewActivity" android:exported="false" />
         <activity android:name=".feature.social.ui.UserProfilePreviewActivity" android:exported="false" />
         <activity android:name=".app.SubjectLinksPreviewActivity" android:exported="false" />
+        <activity android:name=".feature.reviews.ui.ReviewEditorPreviewActivity" android:exported="false" />
         <activity android:name=".feature.weblogin.ui.WebLoginPreviewActivity" android:exported="false" />
         <activity android:name=".feature.update.ui.AppUpdatePreviewActivity" android:exported="false" />
         <activity

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- «Вёл у автора»: a quiet tonal pill with a check, readable without colour. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/verified"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_review_pill"
+    android:backgroundTint="@color/review_verified_container"
+    android:drawablePadding="2dp"
+    android:gravity="center_vertical"
+    android:paddingStart="4dp"
+    android:paddingTop="2dp"
+    android:paddingEnd="10dp"
+    android:paddingBottom="2dp"
+    android:text="@string/teacher_review_verified"
+    android:textAppearance="?attr/textAppearanceLabelMedium"
+    android:textColor="?attr/colorPrimary"
+    android:visibility="gone"
+    app:drawableStartCompat="@drawable/ic_check_small"
+    app:drawableTint="?attr/colorPrimary" />

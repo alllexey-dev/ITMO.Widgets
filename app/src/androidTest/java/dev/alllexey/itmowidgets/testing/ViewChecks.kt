@@ -24,13 +24,15 @@ object ViewChecks {
 
     /**
      * Every non-empty text view under [root] is fully laid out within its own bounds.
-     * Ellipsis fails unless [allowEllipsis]; [checkEdges] also keeps the view inside its parent.
+     * Ellipsis fails unless [allowEllipsis] or the view is one of the deliberately shortened [ellipsizable] lines;
+     * [checkEdges] also keeps the view inside its parent.
      */
     fun assertTextFits(
         root: View,
         allowEllipsis: Boolean = false,
         visible: Visible = Visible.SHOWN,
-        checkEdges: Boolean = false
+        checkEdges: Boolean = false,
+        ellipsizable: (TextView) -> Boolean = { false }
     ) {
         root.descendants().filterIsInstance<TextView>()
             .filter { if (visible == Visible.SHOWN) it.isShown else it.visibility == View.VISIBLE }
@@ -39,7 +41,7 @@ object ViewChecks {
                 val layout = view.layout ?: return@forEach
                 assertTrue("Height: ${view.text}", layout.height <= view.height - view.compoundPaddingTop - view.compoundPaddingBottom)
                 for (line in 0 until layout.lineCount) {
-                    if (!allowEllipsis) assertEquals("Ellipsis: ${view.text}", 0, layout.getEllipsisCount(line))
+                    if (!allowEllipsis && !ellipsizable(view)) assertEquals("Ellipsis: ${view.text}", 0, layout.getEllipsisCount(line))
                     assertTrue(
                         "Width (${layout.getLineMax(line)} / ${view.width - view.compoundPaddingLeft - view.compoundPaddingRight}): ${view.text}",
                         layout.getLineMax(line) <= view.width - view.compoundPaddingLeft - view.compoundPaddingRight + 1

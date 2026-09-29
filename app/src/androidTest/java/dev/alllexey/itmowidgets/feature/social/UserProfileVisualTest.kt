@@ -8,6 +8,13 @@ import androidx.core.view.children
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.R as MaterialR
 import dev.alllexey.itmowidgets.R
@@ -18,10 +25,16 @@ import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
+import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.shortPersonName
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
@@ -33,6 +46,7 @@ import dev.alllexey.itmowidgets.feature.social.ui.UserProfileAdapter
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity.Companion.ISU
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity.Companion.LONG_NAME
+import dev.alllexey.itmowidgets.feature.social.ui.text
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Appearances.toUserProfile
 import dev.alllexey.itmowidgets.testing.Screenshots
@@ -61,13 +75,16 @@ class UserProfileVisualTest {
                 assertNull(activity.findViewById<View>(R.id.friends_row))
                 assertNull(activity.findViewById<View>(R.id.primary_action))
                 assertEquals(LONG_NAME, activity.findViewById<TextView>(R.id.name).text.toString())
+                assertEquals("Доцент · ФИТиП", activity.findViewById<TextView>(R.id.headline).text.toString())
                 assertTrue(activity.findViewById<View>(R.id.name).isAccessibilityHeading)
                 assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS,
                     activity.findViewById<View>(R.id.avatar).importantForAccessibility)
                 val facts = activity.holder<ProfileItem.Facts>().findViewById<LinearLayout>(R.id.facts)
                 val rows = facts.children.filter { it.findViewById<View>(R.id.fact_title) != null }.toList()
-                assertEquals(3, rows.size)
+                assertEquals(4, rows.size)
                 assertEquals("Должность: Доцент", rows[0].findViewById<TextView>(R.id.fact_title).contentDescription)
+                assertEquals("ИСУ $ISU", rows[3].findViewById<TextView>(R.id.fact_title).text.toString())
+                assertEquals("ИСУ: $ISU", rows[3].findViewById<TextView>(R.id.fact_title).contentDescription)
                 assertTrue(rows[0].findViewById<View>(R.id.fact_subtitle).isShown)
                 assertEquals(View.GONE, rows[1].findViewById<View>(R.id.fact_subtitle).visibility)
                 assertEquals(1, facts.descendants().filterIsInstance<TextView>().count { it.text.toString() == UNTITLED_DEPARTMENT })
@@ -76,10 +93,11 @@ class UserProfileVisualTest {
             scrollTo<ProfileItem.Section>(scenario)
             scenario.onActivity {
                 val title = it.holder<ProfileItem.Section>().findViewById<TextView>(R.id.title)
-                assertEquals("Отзывы", title.text.toString())
+                assertEquals("Отзывы · 3", title.text.toString())
                 assertTrue(title.isAccessibilityHeading)
+                assertFalse(it.holder<ProfileItem.Section>().findViewById<View>(R.id.action).isShown)
             }
-            teacherReviews().forEachIndexed { index, review -> assertReview(scenario, index, review) }
+            teacherReviews().forEach { review -> assertReview(scenario, review) }
             frame(scenario, "teacher-bottom-${spec.name}")
         }
     }
@@ -141,6 +159,7 @@ class UserProfileVisualTest {
                 content(scenario)
                 scenario.onActivity {
                     assertEquals(BACKEND_NAME, it.findViewById<TextView>(R.id.name).text.toString())
+                    assertEquals("M3234 · 2 курс", it.findViewById<TextView>(R.id.headline).text.toString())
                     assertEquals("M3234", it.holder<ProfileItem.Facts>().findViewById<TextView>(R.id.fact_title).text.toString())
                 }
                 if (error == AppError.Network) snackbar(scenario) else noSnackbar(scenario)
@@ -149,15 +168,17 @@ class UserProfileVisualTest {
         }
     }
 
-    @Test fun personWithoutFactsHasOnlyAHeader() = appearances { spec ->
+    @Test fun personWithoutFactsHasOnlyTheIsuFact() = appearances { spec ->
         preview(spec, { UserProfilePreviewActivity.person = AppResult.Success(teacher().copy(positions = emptyList(), rooms = emptyList())) }) { scenario ->
             content(scenario)
             scenario.onActivity {
-                assertEquals(1, it.items().size)
-                assertTrue(it.items().single() is ProfileItem.Header)
-                assertNull(it.findViewById<View>(R.id.facts))
+                assertEquals(listOf(ProfileItem.Header::class, ProfileItem.Facts::class), it.items().map { item -> item::class })
+                assertEquals(View.GONE, it.findViewById<View>(R.id.headline).visibility)
+                val titles = it.findViewById<View>(R.id.facts).descendants().filterIsInstance<TextView>()
+                    .filter { view -> view.id == R.id.fact_title }.map { view -> view.text.toString() }.toList()
+                assertEquals(listOf("ИСУ $ISU"), titles)
             }
-            frame(scenario, "header-only-${spec.name}")
+            frame(scenario, "isu-only-${spec.name}")
         }
     }
 
@@ -203,12 +224,13 @@ class UserProfileVisualTest {
             friendFixture()
             UserProfilePreviewActivity.person = AppResult.Success(teacher())
             UserProfilePreviewActivity.cachedSocial = friend()
-            UserProfilePreviewActivity.personDelayMs = 1_500
-            UserProfilePreviewActivity.reviewsDelayMs = 2_000
+            // Both replies come before the 3 s deadline but late enough for a cold, dark launch to show the skeleton.
+            UserProfilePreviewActivity.personDelayMs = 2_000
+            UserProfilePreviewActivity.reviewsDelayMs = 2_400
             UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews()))
         }) { scenario ->
             loading(scenario)
-            TestUi.settle(400)
+            TestUi.settle(300)
             loading(scenario)
             assertTrue(states().none { it is UserProfileUiState.Content })
             frame(scenario, "staggered-loading-${spec.name}")
@@ -235,21 +257,28 @@ class UserProfileVisualTest {
         }
     }
 
-    @Test fun fifteenReviewsRecycleEveryOptionalFieldAndRestoreScroll() = appearances { spec ->
-        val reviews = (0 until 15).map { index ->
-            copiedReview("review-$index", if (index % 2 == 0) "Предмет $index — $LONG_SUBJECT" else null,
-                when (index % 3) { 0 -> ReviewDate.Month(YearMonth.of(2025, 1)); 1 -> ReviewDate.BeforeYear(2023); else -> null },
-                if (index % 2 == 0) "Очень длинное название источника отзывов студентов университета ИТМО" else null,
-                "https://example.org/reviews/$index", "Отзыв $index. " + LONG_REVIEW)
+    @Test fun twentyMixedReviewsRecycleEveryOptionalFieldAndRestoreScroll() = appearances { spec ->
+        val reviews = (0 until 20).map { index ->
+            val subject = if (index % 2 == 0) "Предмет $index — $LONG_SUBJECT" else null
+            val written = when (index % 3) { 0 -> ReviewDate.Month(YearMonth.of(2025, 1)); 1 -> ReviewDate.BeforeYear(2023); else -> null }
+            when (index % 4) {
+                0 -> copiedReview("review-$index", subject, written,
+                    if (index % 8 == 0) "Очень длинное название источника отзывов студентов университета ИТМО" else null,
+                    "https://example.org/reviews/$index", "Отзыв $index. " + LONG_REVIEW)
+                1 -> communityReview("review-$index", subject, written, "Отзыв $index. На занятиях было интересно.", author = AUTHOR,
+                    verified = index % 8 == 1, score = index)
+                2 -> communityReview("review-$index", subject, written, "Отзыв $index. $LONG_REVIEW", verified = true, reportedByMe = true)
+                else -> communityReview("review-$index", subject, written, "Отзыв $index. Всё понятно.", score = -1, myVote = -1)
+            }
         }
         preview(spec, {
             UserProfilePreviewActivity.person = AppResult.Success(teacher())
-            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(reviews))
+            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(reviews, canVote = true, canReport = true))
         }) { scenario ->
             content(scenario)
-            reviews.forEachIndexed { index, review -> assertReview(scenario, index, review) }
+            reviews.forEach { assertReview(scenario, it, canVote = true, canReport = true) }
             frame(scenario, "many-reviews-end-${spec.name}")
-            reviews.indices.reversed().forEach { assertReview(scenario, it, reviews[it]) }
+            reviews.reversed().forEach { assertReview(scenario, it, canVote = true, canReport = true) }
             frame(scenario, "many-reviews-back-${spec.name}")
             var before: Pair<Int, Int>? = null
             scenario.onActivity {
@@ -262,6 +291,248 @@ class UserProfileVisualTest {
             content(scenario)
             TestUi.eventually { scenario.onActivity { assertEquals(before, it.scrollAnchor()) } }
             frame(scenario, "many-reviews-recreated-${spec.name}")
+        }
+    }
+
+    @Test fun mixedReviewsShowTheOwnReviewFirstAndEachOrigin() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews())
+        }) { scenario ->
+            content(scenario)
+            scenario.onActivity { activity ->
+                val reviews = activity.items().dropWhile { it !is ProfileItem.Section }
+                val section = reviews.first() as ProfileItem.Section
+                assertEquals(4, section.count)
+                assertEquals(null, section.actionRes)
+                assertTrue(reviews[1] is ProfileItem.OwnReview)
+                assertEquals(listOf("named", "anonymous", "copy"), reviews.drop(2).map { (it as ProfileItem.Review).review.id })
+            }
+            frame(scenario, "mixed-top-${spec.name}")
+            scrollTo<ProfileItem.Section>(scenario)
+            scenario.onActivity { activity ->
+                assertEquals("Отзывы · 4", activity.holder<ProfileItem.Section>().findViewById<TextView>(R.id.title).text.toString())
+                val own = activity.holder<ProfileItem.OwnReview>()
+                assertEquals("На проверке", own.findViewById<TextView>(R.id.status).text.toString())
+                assertEquals("Ваш отзыв · Математический анализ · анонимно", own.findViewById<TextView>(R.id.meta).text.toString())
+                assertNull(own.findViewById<View>(R.id.vote_up))
+                assertFalse(own.findViewById<View>(R.id.score).isShown)
+                assertFalse(own.findViewById<View>(R.id.verified).isShown)
+                assertTrue(own.findViewById<View>(R.id.more).isShown)
+                assertEquals("Действия с отзывом", own.findViewById<View>(R.id.more).contentDescription)
+            }
+            frame(scenario, "mixed-reviews-${spec.name}")
+            mixedReviews().reviews.forEach { assertReview(scenario, it, canVote = true, canReport = true) }
+            frame(scenario, "mixed-bottom-${spec.name}")
+        }
+    }
+
+    @Test fun writeIsOfferedOnlyForTeachersWithoutAnOwnReview() = appearances { spec ->
+        val lecturer = teacher()
+        val student = teacher().copy(positions = emptyList())
+        val cases = listOf(
+            Triple("known", student to reviewsOf(emptyList(), canWrite = true, knownTeacher = true), true),
+            Triple("position", lecturer to reviewsOf(emptyList(), canWrite = true), true),
+            Triple("student", student to reviewsOf(emptyList(), canWrite = true), null),
+            Triple("own", lecturer to reviewsOf(emptyList(), canWrite = true, knownTeacher = true, mine = ownReview(OwnReviewStatus.PUBLISHED)), false),
+            Triple("closed", lecturer to reviewsOf(teacherReviews().take(1), canWrite = false, knownTeacher = true), false),
+        )
+        for ((name, fixture, write) in cases) {
+            preview(spec, {
+                UserProfilePreviewActivity.person = AppResult.Success(fixture.first)
+                UserProfilePreviewActivity.reviews = AppResult.Success(fixture.second)
+            }) { scenario ->
+                content(scenario)
+                scenario.onActivity { activity ->
+                    val section = activity.items().filterIsInstance<ProfileItem.Section>().singleOrNull()
+                    if (write == null) assertNull(name, section)
+                    else {
+                        assertEquals(name, write, section?.actionRes != null)
+                        val action = activity.holder<ProfileItem.Section>().findViewById<TextView>(R.id.action)
+                        assertEquals(name, write, action.isShown)
+                        if (write) assertEquals("Написать", action.text.toString())
+                    }
+                }
+                if (name == "known") {
+                    frame(scenario, "write-${spec.name}")
+                    scenario.onActivity { it.holder<ProfileItem.Section>().findViewById<View>(R.id.action).performClick() }
+                    assertEquals(listOf(TeacherReviewArgs(ISU, LONG_NAME)), UserProfilePreviewActivity.openedEditors.toList())
+                }
+            }
+        }
+    }
+
+    @Test fun arrowsVoteTakeTheVoteBackAndWaitForTheAnswer() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews())
+        }) { scenario ->
+            content(scenario)
+            fun row(activity: UserProfilePreviewActivity) = activity.reviewRow("anonymous")
+            fun assertVote(score: Int, vote: Int) = TestUi.eventually {
+                scenario.onActivity { activity ->
+                    val row = row(activity)
+                    assertEquals(score.toString(), row.findViewById<TextView>(R.id.score).text.toString())
+                    assertEquals("Рейтинг $score", row.findViewById<TextView>(R.id.score).contentDescription)
+                    assertEquals(vote > 0, row.findViewById<View>(R.id.vote_up).isSelected)
+                    assertEquals(vote < 0, row.findViewById<View>(R.id.vote_down).isSelected)
+                    assertTrue(row.findViewById<View>(R.id.vote_up).isEnabled)
+                }
+            }
+            showReview(scenario, "anonymous")
+            assertVote(0, 0)
+            scenario.onActivity { row(it).findViewById<View>(R.id.vote_up).performClick() }
+            assertVote(1, 1)
+            frame(scenario, "vote-up-${spec.name}")
+            scenario.onActivity { row(it).findViewById<View>(R.id.vote_up).performClick() }
+            assertVote(0, 0)
+
+            UserProfilePreviewActivity.mutationDelayMs = 2_000
+            scenario.onActivity { row(it).findViewById<View>(R.id.vote_down).performClick() }
+            TestUi.eventually {
+                scenario.onActivity {
+                    assertFalse(row(it).findViewById<View>(R.id.vote_up).isEnabled)
+                    assertFalse(row(it).findViewById<View>(R.id.vote_down).isEnabled)
+                }
+            }
+            assertVote(-1, -1)
+
+            UserProfilePreviewActivity.mutationDelayMs = 0
+            UserProfilePreviewActivity.mutationError = AppError.Restricted
+            scenario.onActivity { row(it).findViewById<View>(R.id.vote_up).performClick() }
+            snackbar(scenario, text = "Действие ограничено модерацией")
+            assertVote(-1, -1)
+        }
+    }
+
+    @Test fun overflowReportsOnlyOthersReviewsOnce() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews())
+        }) { scenario ->
+            content(scenario)
+            showReview(scenario, "copy")
+            scenario.onActivity { assertFalse(it.reviewRow("copy").findViewById<View>(R.id.more).isShown) }
+            showReview(scenario, "named")
+            scenario.onActivity { it.reviewRow("named").findViewById<View>(R.id.more).performClick() }
+            TestUi.settle(400)
+            Screenshots.capture("profile-screenshots", "report-menu-${spec.name}", Screenshots.Location.FILES)
+            onView(withText("Пожаловаться")).inRoot(isPlatformPopup()).perform(click())
+            TestUi.eventually { assertEquals(listOf("named"), UserProfilePreviewActivity.openedReports.toList()) }
+            scenario.onActivity { activity ->
+                val reported = mixedReviews().let { fixture ->
+                    fixture.copy(reviews = fixture.reviews.map {
+                        if (it.id == "named") it.copy(origin = (it.origin as ReviewOrigin.Community).copy(reportedByMe = true)) else it
+                    })
+                }
+                activity.publishReviews(reported)
+            }
+            TestUi.eventually { scenario.onActivity { assertFalse(it.reviewRow("named").findViewById<View>(R.id.more).isShown) } }
+            frame(scenario, "reported-${spec.name}")
+        }
+    }
+
+    @Test fun ownReviewStatesShowTheirPillReasonAndScore() = appearances { spec ->
+        val cases = listOf(
+            ownReview(OwnReviewStatus.PENDING),
+            ownReview(OwnReviewStatus.REJECTED, note = LONG_REASON),
+            ownReview(OwnReviewStatus.HIDDEN),
+            ownReview(OwnReviewStatus.PUBLISHED, verified = true).copy(anonymous = false, score = 3),
+            ownReview(OwnReviewStatus.PUBLISHED),
+        )
+        for (mine in cases) {
+            preview(spec, {
+                UserProfilePreviewActivity.person = AppResult.Success(teacher())
+                UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews(mine))
+            }) { scenario ->
+                content(scenario)
+                scrollTo<ProfileItem.Section>(scenario)
+                scenario.onActivity { activity ->
+                    val own = activity.holder<ProfileItem.OwnReview>()
+                    val status = own.findViewById<TextView>(R.id.status)
+                    val reason = own.findViewById<TextView>(R.id.reason)
+                    val published = mine.status == OwnReviewStatus.PUBLISHED
+                    assertEquals(when (mine.status) {
+                        OwnReviewStatus.PENDING -> "На проверке"
+                        OwnReviewStatus.REJECTED -> "Отклонён"
+                        OwnReviewStatus.HIDDEN -> "Скрыт"
+                        OwnReviewStatus.PUBLISHED -> ""
+                    }, if (status.isShown) status.text.toString() else "")
+                    assertEquals(if (mine.status == OwnReviewStatus.REJECTED) "Причина: $LONG_REASON" else null,
+                        reason.text?.toString()?.takeIf { reason.isShown })
+                    assertEquals(published && mine.verified, own.findViewById<View>(R.id.verified).isShown)
+                    if (published && mine.verified) assertEquals("Вёл у вас", own.findViewById<TextView>(R.id.verified).text.toString())
+                    assertEquals(published && !mine.verified, own.findViewById<View>(R.id.unverified).isShown)
+                    assertEquals(published, own.findViewById<View>(R.id.score).isShown)
+                    if (published) assertEquals("Рейтинг ${mine.score}", own.findViewById<View>(R.id.score).contentDescription)
+                    assertEquals("Ваш отзыв · Математический анализ · ${if (mine.anonymous) "анонимно" else "с вашим именем"}",
+                        own.findViewById<TextView>(R.id.meta).text.toString())
+                }
+                frame(scenario, "own-${mine.status.name.lowercase()}${if (mine.verified) "-verified" else ""}-${spec.name}")
+            }
+        }
+    }
+
+    @Test fun deletingTheOwnReviewAsksAndBringsBackWrite() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews(ownReview(OwnReviewStatus.PUBLISHED)))
+        }) { scenario ->
+            content(scenario)
+            scrollTo<ProfileItem.Section>(scenario)
+            scenario.onActivity { it.holder<ProfileItem.OwnReview>().findViewById<View>(R.id.more).performClick() }
+            TestUi.settle(400)
+            Screenshots.capture("profile-screenshots", "own-menu-${spec.name}", Screenshots.Location.FILES)
+            onView(withText("Удалить")).inRoot(isPlatformPopup()).perform(click())
+            onView(withText("Удалить отзыв?")).inRoot(isDialog()).check(matches(isDisplayed()))
+            Screenshots.capture("profile-screenshots", "delete-confirm-${spec.name}", Screenshots.Location.FILES) { TestUi.settle(400) }
+            onView(withText("Удалить")).inRoot(isDialog()).perform(click())
+            TestUi.eventually {
+                scenario.onActivity { activity ->
+                    assertTrue(activity.items().none { it is ProfileItem.OwnReview })
+                    assertEquals("Написать", activity.holder<ProfileItem.Section>().findViewById<TextView>(R.id.action).text.toString())
+                    assertTrue(activity.holder<ProfileItem.Section>().findViewById<View>(R.id.action).isShown)
+                }
+            }
+            frame(scenario, "deleted-${spec.name}")
+        }
+    }
+
+    @Test fun authorNameOpensTheAuthorProfile() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews())
+        }) { scenario ->
+            content(scenario)
+            showReview(scenario, "named")
+            scenario.onActivity { it.reviewRow("named").findViewById<View>(R.id.author).performClick() }
+            val opened = UserProfilePreviewActivity.openedScreens.single()
+            assertEquals(AppScreen.USER_PROFILE, opened.first)
+            assertEquals(AUTHOR.isu, opened.second?.getInt(UserScreenArgs.ISU))
+        }
+    }
+
+    @Test fun savedReviewAppearsFirstWithoutMovingTheHeader() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews(mine = null))
+        }) { scenario ->
+            content(scenario)
+            var positions: Pair<Int, Int>? = null
+            scenario.onActivity {
+                assertTrue(it.items().none { item -> item is ProfileItem.OwnReview })
+                positions = it.identityPositions()
+                it.publishReviews(mixedReviews(ownReview(OwnReviewStatus.PENDING)))
+            }
+            TestUi.eventually {
+                scenario.onActivity { activity ->
+                    val reviews = activity.items().dropWhile { it !is ProfileItem.Section }
+                    assertTrue(reviews[1] is ProfileItem.OwnReview)
+                    assertEquals(positions, activity.identityPositions())
+                }
+            }
+            noSnackbar(scenario)
+            frame(scenario, "saved-${spec.name}")
         }
     }
 
@@ -397,6 +668,10 @@ class UserProfileVisualTest {
         UserProfilePreviewActivity.selfIsu = 0
         UserProfilePreviewActivity.states.clear()
         UserProfilePreviewActivity.openedScreens.clear()
+        UserProfilePreviewActivity.openedEditors.clear()
+        UserProfilePreviewActivity.openedReports.clear()
+        UserProfilePreviewActivity.mutationDelayMs = 0
+        UserProfilePreviewActivity.mutationError = null
     }
 
     private fun content(scenario: ActivityScenario<UserProfilePreviewActivity>, attempts: Int = 40) = TestUi.eventually(attempts = attempts) {
@@ -422,12 +697,13 @@ class UserProfileVisualTest {
         }
     }
 
-    private fun snackbar(scenario: ActivityScenario<UserProfilePreviewActivity>, attempts: Int = 40) {
+    private fun snackbar(scenario: ActivityScenario<UserProfilePreviewActivity>, attempts: Int = 40, text: String? = null) {
         TestUi.eventually(attempts = attempts) {
             scenario.onActivity {
-                val text = it.findViewById<TextView>(MaterialR.id.snackbar_text)
-                assertTrue(text?.isShown == true)
-                assertEquals("Часть данных не загрузилась", text.text.toString())
+                val view = it.findViewById<TextView>(MaterialR.id.snackbar_text)
+                assertTrue(view?.isShown == true)
+                if (text == null) assertEquals("Часть данных не загрузилась", view.text.toString())
+                else assertTrue(view.text.toString(), view.text.contains(text))
             }
         }
         TestUi.settle(350)
@@ -465,7 +741,7 @@ class UserProfileVisualTest {
             if (appearance.widthDp > 0) {
                 assertEquals((appearance.widthDp * container.resources.displayMetrics.density).toInt(), container.width)
             }
-            ViewChecks.assertTextFits(it.window.decorView)
+            ViewChecks.assertTextFits(it.window.decorView, ellipsizable = ::isReviewMeta)
             ViewChecks.assertTouchTargets(it.window.decorView)
         }
         TestUi.awaitFrameCommit(activity)
@@ -481,33 +757,61 @@ class UserProfileVisualTest {
         TestUi.settle(80)
     }
 
-    private fun assertReview(scenario: ActivityScenario<UserProfilePreviewActivity>, index: Int, review: TeacherReview) {
-        var position = 0
+    /** The review's meta line is the one line deliberately shortened to two lines. */
+    private fun isReviewMeta(view: TextView) = view.id == R.id.meta && view.maxLines == 2
+
+    private fun showReview(scenario: ActivityScenario<UserProfilePreviewActivity>, id: String) {
         scenario.onActivity {
-            position = it.items().indexOfFirst { item -> item is ProfileItem.Review } + index
+            val position = it.items().indexOfFirst { item -> item is ProfileItem.Review && item.review.id == id }
+            assertTrue(position >= 0)
             (it.list().layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, 0)
         }
         TestUi.settle(60)
+    }
+
+    private fun assertReview(
+        scenario: ActivityScenario<UserProfilePreviewActivity>,
+        review: TeacherReview,
+        canVote: Boolean = false,
+        canReport: Boolean = false
+    ) {
+        showReview(scenario, review.id)
         scenario.onActivity { activity ->
-            val row = checkNotNull(activity.list().findViewHolderForAdapterPosition(position)).itemView
-            val subject = row.findViewById<TextView>(R.id.subject)
-            val date = row.findViewById<TextView>(R.id.date)
-            val source = row.findViewById<TextView>(R.id.source)
-            assertEquals(if (review.subject == null) View.GONE else View.VISIBLE, subject.visibility)
-            assertEquals(review.subject.orEmpty(), subject.text.toString())
-            assertEquals(if (review.written == null) View.GONE else View.VISIBLE, date.visibility)
-            assertEquals(when (review.written) {
-                is ReviewDate.Month -> "Январь 2025"
-                is ReviewDate.BeforeYear -> "До 2023"
-                null -> ""
-            }, date.text.toString())
-            val origin = review.origin as ReviewOrigin.Reviews
-            assertEquals(origin.sourceTitle?.let { "Reviews · $it" } ?: "Reviews", source.text.toString())
+            val row = activity.reviewRow(review.id)
+            val meta = row.findViewById<TextView>(R.id.meta)
+            val expectedMeta = listOfNotNull(review.subject, review.written?.text(activity)).joinToString(" · ")
+            assertEquals(expectedMeta.isNotEmpty(), meta.isShown)
+            assertEquals(expectedMeta, meta.text.toString())
             assertEquals(review.text, row.findViewById<TextView>(R.id.text).text.toString())
-            assertTrue(source.height >= 48 * source.resources.displayMetrics.density)
-            ViewChecks.assertTextFits(activity.window.decorView)
+            val community = review.origin as? ReviewOrigin.Community
+            val copy = review.origin as? ReviewOrigin.Reviews
+            val author = row.findViewById<TextView>(R.id.author)
+            assertEquals(community?.author != null, author.isShown)
+            if (community?.author != null) {
+                assertEquals(shortPersonName(community.author!!.name), author.text.toString())
+                assertEquals(community.author!!.name, author.contentDescription)
+            }
+            assertEquals(community?.verified == true, row.findViewById<View>(R.id.verified).isShown)
+            assertEquals(community != null && community.author == null && !community.verified, row.findViewById<View>(R.id.unverified).isShown)
+            val source = row.findViewById<TextView>(R.id.source)
+            assertEquals(copy != null, source.isShown)
+            if (copy != null) {
+                assertEquals(copy.sourceTitle?.let { "Reviews · $it" } ?: "Reviews", source.text.toString())
+                assertTrue(source.height >= 48 * source.resources.displayMetrics.density - 1)
+            }
+            assertEquals(canReport && community != null && !community.reportedByMe, row.findViewById<View>(R.id.more).isShown)
+            assertEquals(canVote, row.findViewById<View>(R.id.vote_up).isShown)
+            assertEquals(canVote, row.findViewById<View>(R.id.vote_down).isShown)
+            assertEquals(review.score.toString(), row.findViewById<TextView>(R.id.score).text.toString())
+            assertEquals(canVote || review.score != 0, row.findViewById<View>(R.id.score).isShown)
+            ViewChecks.assertTextFits(activity.window.decorView, ellipsizable = ::isReviewMeta)
             ViewChecks.assertTouchTargets(activity.window.decorView)
         }
+    }
+
+    private fun UserProfilePreviewActivity.reviewRow(id: String): View {
+        val position = items().indexOfFirst { it is ProfileItem.Review && it.review.id == id }
+        return checkNotNull(list().findViewHolderForAdapterPosition(position)).itemView
     }
 
     private fun UserProfilePreviewActivity.list(): RecyclerView = findViewById(R.id.profile_list)
@@ -542,11 +846,43 @@ class UserProfileVisualTest {
     )
     private fun copiedReview(id: String, subject: String?, written: ReviewDate?, sourceTitle: String?, sourceUrl: String, text: String) =
         TeacherReview(id, subject, written, text, score = 0, myVote = 0, origin = ReviewOrigin.Reviews(sourceTitle, sourceUrl))
-    private fun reviewsOf(reviews: List<TeacherReview>) = TeacherReviews(ISU, reviews, mine = null, canWrite = false,
-        canVote = false, canReport = false, knownTeacher = false)
+    private fun communityReview(
+        id: String,
+        subject: String?,
+        written: ReviewDate?,
+        text: String,
+        author: UserSummary? = null,
+        verified: Boolean = false,
+        reportedByMe: Boolean = false,
+        score: Int = 0,
+        myVote: Int = 0
+    ) = TeacherReview(id, subject, written, text, score, myVote, ReviewOrigin.Community(verified, author, reportedByMe))
+    private fun ownReview(status: OwnReviewStatus, note: String? = null, verified: Boolean = false) = OwnTeacherReview(
+        UserProfilePreviewActivity.OWN_REVIEW_ID, "Математический анализ",
+        "Лекции понятные, на практике разбираем задачи из контрольных. Вопросы можно задавать в любое время.",
+        anonymous = true, status = status, reviewNote = note, score = 0, verified = verified,
+        written = ReviewDate.Month(YearMonth.of(2026, 9)))
+    /** The own review, a named verified review, an anonymous unverified one and a Reviews copy, in Backend's order. */
+    private fun mixedReviews(mine: OwnTeacherReview? = ownReview(OwnReviewStatus.PENDING)) = reviewsOf(listOf(
+        communityReview("named", LONG_SUBJECT, ReviewDate.Month(YearMonth.of(2025, 1)),
+            "Объясняет сложные темы на простых примерах, всегда отвечает на вопросы после пары.", author = AUTHOR, verified = true, score = 5),
+        communityReview("anonymous", null, ReviewDate.Month(YearMonth.of(2024, 11)), LONG_REVIEW),
+        copiedReview("copy", "Математический анализ", ReviewDate.BeforeYear(2023), "Отзывы ПИ", "https://example.org/reviews/copy",
+            "На занятиях было интересно."),
+    ), canWrite = true, canVote = true, canReport = true, knownTeacher = true, mine = mine)
+    private fun reviewsOf(
+        reviews: List<TeacherReview>,
+        canWrite: Boolean = false,
+        canVote: Boolean = false,
+        canReport: Boolean = false,
+        knownTeacher: Boolean = false,
+        mine: OwnTeacherReview? = null
+    ) = TeacherReviews(ISU, reviews, mine, canWrite, canVote, canReport, knownTeacher)
 
     private companion object {
         const val BACKEND_NAME = "Соколов Артём Игоревич"
+        const val LONG_REASON = "В отзыве есть оценки личных качеств преподавателя; оставьте только то, что касается занятий и материалов"
+        val AUTHOR = UserSummary(200002, "Константинопольская Александра Константиновна", null, emptyList(), UserSharing(sport = false, schedule = false))
         const val LONG_DEPARTMENT = "Факультет информационных технологий и программирования, кафедра прикладной математики и теоретической информатики"
         const val UNTITLED_DEPARTMENT = "Институт международного развития и партнёрства"
         const val LONG_SUBJECT = "Математические методы моделирования сложных информационных систем"
