@@ -11,8 +11,11 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.subjectLinkChips
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
@@ -81,7 +84,8 @@ class RecordbookSubjectViewModel @Inject constructor(
     private val bindings: SubjectBindingStore,
     private val contextResolver: SubjectContextResolver,
     private val time: AcademicTimeProvider,
-    private val subjectLinks: SubjectLinksRepository
+    private val subjectLinks: SubjectLinksRepository,
+    private val teacherLevels: TeacherLevelsRepository,
 ) : ViewModel() {
     private val entryId = checkNotNull(savedStateHandle.get<Long>(ARG_ENTRY_ID))
     private val programId = checkNotNull(savedStateHandle.get<Long>(ARG_PROGRAM_ID))
@@ -101,6 +105,8 @@ class RecordbookSubjectViewModel @Inject constructor(
     private var loadJob: Job? = null
     private var hubJob: Job? = null
     private var linksJob: Job? = null
+    private var levelsJob: Job? = null
+    private var levelIsus: Set<Int> = emptySet()
     /** Bumped after a binding is written so the lesson flow is re-evaluated. */
     private val bindingVersion = MutableStateFlow(0)
     private var proposalRejected = false
@@ -267,6 +273,28 @@ class RecordbookSubjectViewModel @Inject constructor(
         _uiState.update { state ->
             if (state is RecordbookSubjectUiState.Content) state.copy(hub = state.hub.transform()) else state
         }
+        (_uiState.value as? RecordbookSubjectUiState.Content)?.hub?.teachers?.let(::loadTeacherLevels)
+    }
+
+    /** Asks for tones only when the set of teachers with an ISU changes; the repository keeps them for a day. */
+    private fun loadTeacherLevels(teachers: List<SubjectTeacher>) {
+        val isus = teachers.mapNotNull { UserScreenArgs.profileIsu(it.isu) }.toSet()
+        if (isus == levelIsus) return
+        levelIsus = isus
+        levelsJob?.cancel()
+        if (isus.isEmpty()) {
+            updateLevels(emptyMap())
+            return
+        }
+        levelsJob = viewModelScope.launch {
+            updateLevels(teacherLevels.levels(isus).mapKeys { (isu, _) -> isu.toLong() })
+        }
+    }
+
+    private fun updateLevels(levels: Map<Long, TeacherLevel>) = _uiState.update { state ->
+        if (state is RecordbookSubjectUiState.Content && state.hub.teacherLevels != levels) {
+            state.copy(hub = state.hub.copy(teacherLevels = levels))
+        } else state
     }
 
     /** Same rule as the study root's default selection: the academic year rolls in September. */

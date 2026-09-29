@@ -58,6 +58,7 @@ object RecordbookPreviewFixtures {
         RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons()
         RecordbookPreviewActivity.resourceRepository = MemorySubjectLinksRepository()
         RecordbookPreviewActivity.linkNavigation.clear()
+        RecordbookPreviewActivity.levelsRepository = RecordbookPreviewActivity.MemoryLevels()
     }
 
     class Recordbook(private val phase: Phase) : RecordbookRepository {

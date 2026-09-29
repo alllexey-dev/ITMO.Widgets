@@ -14,6 +14,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.databinding.ItemSportDetailFactBinding
 import dev.alllexey.itmowidgets.databinding.ViewDetailsHeaderBinding
 import java.time.Duration
@@ -49,10 +50,24 @@ fun ViewDetailsHeaderBinding.bind(content: DetailsHeaderContent, onTeacher: (() 
     alignRailIcon(timeIcon, date)
     teacherFact.bindFact(R.string.sport_details_teacher, content.teacher.orEmpty(), R.drawable.ic_person_rounded)
     teacherFact.bindAction(onTeacher)
+    bindTeacherLevel(null, reserve = false)
     locationFact.bindFact(R.string.sport_details_location, content.location.orEmpty(), R.drawable.ic_location_on_rounded)
     mapButton.isVisible = content.mapAvailable
     mapButton.setOnClickListener { onMap() }
     placeCard.isVisible = teacherFact.root.isVisible || locationFact.root.isVisible || mapButton.isVisible
+}
+
+/**
+ * The tone dot at the end of the teacher row, before the chevron. With [reserve] the row keeps the dot's place while
+ * no [level] is known, so a late level does not move the name; a sheet reserves it only for a teacher with an ISU.
+ */
+fun ViewDetailsHeaderBinding.bindTeacherLevel(level: TeacherLevel?, reserve: Boolean) {
+    val context = root.context
+    teacherFact.factMark.bindLevel(level, reserve)
+    alignRailIcon(teacherFact.factMark, teacherFact.factValue)
+    val value = teacherFact.factValue.text.toString()
+    val row = context.getString(R.string.sport_detail_fact_description, context.getString(R.string.sport_details_teacher), value)
+    teacherFact.factValue.contentDescription = level?.let { "$row, ${it.tone().description(context).lowercase()}" } ?: row
 }
 
 /** The icon carries the category, so [title] only survives for screen readers. */

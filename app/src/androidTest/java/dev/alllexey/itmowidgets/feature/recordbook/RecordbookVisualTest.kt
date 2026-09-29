@@ -4,6 +4,7 @@ import android.content.Intent
 import android.view.View
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import androidx.core.graphics.ColorUtils
@@ -22,10 +23,12 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
+import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
@@ -90,6 +93,63 @@ class RecordbookVisualTest {
                 scenario.onActivity {
                     it.teacherRow().performClick()
                     assertEquals(listOf(300001), it.openedProfiles)
+                }
+            }
+        }
+    }
+
+    @Test fun subjectTeacherRowsShowLevelDots() {
+        val defaultPrimary = mutableMapOf<Boolean, Int>()
+        Appearances.default.forEachIndexed { index, spec ->
+            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
+                val levels = RecordbookPreviewActivity.MemoryLevels(mutableMapOf(300001 to TeacherLevel.VERY_POSITIVE, 300002 to TeacherLevel.NEGATIVE))
+                scenario.onActivity { activity ->
+                    spec.assertEffective(activity.findViewById(R.id.recordbook_test_container), defaultPrimary)
+                    RecordbookPreviewActivity.levelsRepository = levels
+                    RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons(listOf(
+                        hubLesson(7, "2026-06-03", RecordbookPreviewFixtures.MATH_ID, 1,
+                            SettingsNavigationTestActivity.LONG_NAME, 300001, RecordbookPreviewFixtures.MATH),
+                        hubLesson(8, "2026-06-04", RecordbookPreviewFixtures.MATH_ID, 3, "Практикова Полина Петровна", 300002,
+                            RecordbookPreviewFixtures.MATH),
+                        hubLesson(9, "2026-06-05", RecordbookPreviewFixtures.MATH_ID, 2, "Лабораторов Лев Львович", 300003,
+                            RecordbookPreviewFixtures.MATH),
+                        hubLesson(10, "2026-06-06", RecordbookPreviewFixtures.MATH_ID, 2, "Безисунов Борис Борисович", 1,
+                            RecordbookPreviewFixtures.MATH).copy(teacherIsu = null),
+                    ))
+                }
+                openSubject(scenario, "Математический")
+                scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.Teacher } }
+                scenario.onActivity { activity ->
+                    assertEquals(listOf(setOf(300001, 300002, 300003)), levels.calls.toList())
+                    val rows = activity.teacherRows()
+                    assertEquals(4, rows.size)
+                    val dots = rows.map { it.findViewById<ImageView>(R.id.level_dot) }
+                    assertEquals(listOf(View.VISIBLE, View.VISIBLE, View.INVISIBLE, View.GONE), dots.map { it.visibility })
+                    assertEquals(TeacherLevelTone.VERY_POSITIVE.color(activity), dots[0].imageTintList?.defaultColor)
+                    assertEquals(TeacherLevelTone.NEGATIVE.color(activity), dots[1].imageTintList?.defaultColor)
+                    assertEquals("${SettingsNavigationTestActivity.LONG_NAME}, тон отзывов: в основном положительные",
+                        rows[0].findViewById<TextView>(R.id.name).contentDescription)
+                    assertEquals("Практикова Полина Петровна, тон отзывов: скорее отрицательные",
+                        rows[1].findViewById<TextView>(R.id.name).contentDescription)
+                    assertNull(rows[2].findViewById<TextView>(R.id.name).contentDescription)
+                    // The reserved place keeps every chevron and name in one column.
+                    val chevrons = rows.take(3).map { it.findViewById<View>(R.id.trailing) }
+                    assertEquals(1, chevrons.map { it.left }.distinct().size)
+                    assertEquals(1, rows.take(3).map { it.findViewById<View>(R.id.name).width }.distinct().size)
+                    assertFalse(rows[3].isClickable)
+                    rows.forEach { row ->
+                        assertTextFits(row)
+                        dev.alllexey.itmowidgets.testing.ViewChecks.assertTouchTargets(row)
+                    }
+                }
+                TestUi.settle(if (Screenshots.enabled) 500 else 80)
+                lateinit var activity: RecordbookPreviewActivity
+                scenario.onActivity { activity = it }
+                TestUi.awaitFrameCommit(activity)
+                screenshot("teacher-levels-$index")
+                scenario.onActivity {
+                    it.teacherRows()[1].performClick()
+                    assertEquals(listOf(300002), it.openedProfiles)
                 }
             }
         }
@@ -462,6 +522,10 @@ class RecordbookVisualTest {
         assertTrue(position >= 0)
         return checkNotNull(hubList().findViewHolderForAdapterPosition(position)).itemView
     }
+
+    private fun RecordbookPreviewActivity.teacherRows(): List<View> = hubItems().withIndex()
+        .filter { it.value is DetailItem.Teacher }
+        .map { checkNotNull(hubList().findViewHolderForAdapterPosition(it.index)).itemView }
 
     private fun RecordbookPreviewActivity.hubList(): RecyclerView = findViewById(R.id.recycler_view)
 

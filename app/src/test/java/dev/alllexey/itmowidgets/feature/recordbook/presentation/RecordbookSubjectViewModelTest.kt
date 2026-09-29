@@ -42,6 +42,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.feature.reviews.presentation.FakeTeacherLevelsRepository
 import org.junit.Rule
 import org.junit.Test
 
@@ -51,10 +53,11 @@ class RecordbookSubjectViewModelTest {
     private val repository = FakeRecordbookRepository()
     private val bars = FakeBarsRepository()
     private val resources = FakeSubjectLinksRepository()
+    private val levels = FakeTeacherLevelsRepository()
     private fun model(withBars: Boolean = false) = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
         put("entry_id", 42L); put("program_id", 1L); put("semester", 2); put("study_year", "2025/2026")
         if (withBars) { put("bars_plan", 8L); put("bars_type", "flow"); put("bars_identifier", "7") }
-    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources)
+    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels)
     private val lessons = FakeSubjectLessonsGateway()
     private val scheduleRefresh = FakeScheduleRefreshGateway()
     private val bindingStore = FakeSubjectBindingStore()
@@ -170,7 +173,7 @@ class RecordbookSubjectViewModelTest {
         repository.subjects = AppResult.Success(listOf(subject))
         return RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
             put("entry_id", 42L); put("program_id", 1L); put("semester", 3); put("study_year", "2026/2027")
-        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources)
+        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels)
     }
 
     @Test fun `an exact discipline id shows the upcoming lessons and their teachers without asking`() = runTest {
@@ -190,6 +193,40 @@ class RecordbookSubjectViewModelTest {
         assertEquals(listOf(SubjectTeacher("Лектор Л. Л.", 1, listOf(1)), SubjectTeacher("Практик П. П.", 2, listOf(3))), hub.teachers)
         assertEquals(listOf(LocalDate.parse("2026-09-07") to LocalDate.parse("2026-10-05")), scheduleRefresh.requests)
         assertTrue(hub.chips.visible.none { it is SubjectLinkChip.Lms })
+    }
+
+    @Test fun `teacher tones are asked once per set of ISUs and teachers without one are never asked`() = runTest {
+        levels.levels[123456] = TeacherLevel.POSITIVE
+        levels.levels[234567] = TeacherLevel.MIXED
+        lessons.lessons.value = listOf(
+            subjectLesson(1, "2026-09-08", subjectId = 1L, typeId = 1, teacherIsu = 123456, teacherFio = "Лектор Л. Л."),
+            subjectLesson(2, "2026-09-09", subjectId = 1L, typeId = 3, teacherIsu = 234567, teacherFio = "Практик П. П."),
+            subjectLesson(3, "2026-09-10", subjectId = 1L, typeId = 3, teacherIsu = null, teacherFio = "Без ИСУ Б. Б."),
+        )
+        val model = currentPeriodModel()
+        advanceUntilIdle()
+
+        assertEquals(mapOf(123456L to TeacherLevel.POSITIVE, 234567L to TeacherLevel.MIXED), model.hub().teacherLevels)
+        assertEquals(listOf(setOf(123456, 234567)), levels.calls)
+
+        lessons.lessons.value = lessons.lessons.value + subjectLesson(4, "2026-09-11", subjectId = 1L, typeId = 3,
+            teacherIsu = 234567, teacherFio = "Практик П. П.")
+        advanceUntilIdle()
+        assertEquals(1, levels.calls.size)
+
+        lessons.lessons.value = lessons.lessons.value.filter { it.teacherIsu != 234567L }
+        advanceUntilIdle()
+        assertEquals(listOf(setOf(123456, 234567), setOf(123456)), levels.calls)
+        assertEquals(mapOf(123456L to TeacherLevel.POSITIVE), model.hub().teacherLevels)
+    }
+
+    @Test fun `a page whose teachers have no ISU asks for no tones`() = runTest {
+        lessons.lessons.value = listOf(subjectLesson(1, "2026-09-08", subjectId = 1L, teacherIsu = null, teacherFio = "Без ИСУ Б. Б."))
+        val model = currentPeriodModel()
+        advanceUntilIdle()
+
+        assertEquals(emptyMap<Long, TeacherLevel>(), model.hub().teacherLevels)
+        assertEquals(emptyList<Set<Int>>(), levels.calls)
     }
 
     @Test fun `a name match is proposed, confirming stores it and rejecting leaves it unmatched`() = runTest {

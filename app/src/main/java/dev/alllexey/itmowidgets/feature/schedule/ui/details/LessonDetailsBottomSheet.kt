@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
@@ -27,7 +28,9 @@ import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.ui.bind
+import dev.alllexey.itmowidgets.core.ui.bindTeacherLevel
 import dev.alllexey.itmowidgets.core.ui.bindFact
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.MapLauncher
@@ -107,6 +110,7 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
             ),
             teacherIsu?.let { isu -> { openProfile(isu) } }
         ) { destination?.let(::openMap) }
+        showTeacherLevel(viewModel.teacherLevel.value)
         // The button is the link; only what the reader has to type or know is a fact.
         linkFact.bindFact(R.string.schedule_lesson_details_link, listOfNotNull(
             lesson.zoomInfo,
@@ -125,6 +129,16 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::renderFriends)
             .launchIn(viewLifecycleOwner.lifecycleScope)
+        viewModel.teacherLevel
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .onEach(::showTeacherLevel)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    /** The dot's place is kept for a teacher with an ISU, so a level arriving later does not move the row. */
+    @VisibleForTesting
+    internal fun showTeacherLevel(level: TeacherLevel?) {
+        binding.header.bindTeacherLevel(level, reserve = UserScreenArgs.profileIsu(lesson.teacherIsu) != null)
     }
 
     private fun renderFriends(state: LessonFriendsState) = with(binding) {
@@ -205,6 +219,7 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
                 putSerializable(ARG_LESSON, args)
                 putLong(LessonDetailsViewModel.ARG_PAIR_ID, args.pairId)
                 putString(LessonDetailsViewModel.ARG_DATE, args.date)
+                UserScreenArgs.profileIsu(args.teacherIsu)?.let { putInt(LessonDetailsViewModel.ARG_TEACHER_ISU, it) }
             }
         }
 

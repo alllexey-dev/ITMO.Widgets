@@ -40,6 +40,16 @@
     </LinearLayout>
 
     <ImageView
+        android:id="@+id/level_dot"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:layout_marginStart="@dimen/design_spacing_compact"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:src="@drawable/bg_teacher_level_dot"
+        android:visibility="gone" />
+
+    <ImageView
         android:id="@+id/trailing"
         android:layout_width="24dp"
         android:layout_height="24dp"

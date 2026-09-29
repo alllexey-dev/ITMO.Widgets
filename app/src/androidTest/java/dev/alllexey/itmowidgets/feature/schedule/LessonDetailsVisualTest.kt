@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule
 
 import android.view.View
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -15,6 +16,8 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
@@ -193,6 +196,69 @@ class LessonDetailsVisualTest {
     }
 
     @Test
+    fun teacherLevelDotAppearsWithoutMovingTheRow() {
+        val defaultPrimary = mutableMapOf<Boolean, Int>()
+        val specs = if (Appearances.fullMatrix) Appearances.all else Appearances.all.take(2)
+        specs.forEachIndexed { index, spec ->
+            ScheduleLifecycleTestActivity.appearance = spec.toScheduleLifecycle()
+            withSchedule(lessons = listOf(lesson().copy(teacherIsu = 300001, teacherFio = SettingsNavigationTestActivity.LONG_NAME))) { scenario ->
+                scenario.onActivity { activity ->
+                    spec.assertEffective(activity.findViewById(R.id.schedule_test_container), defaultPrimary)
+                    activity.recycler().descendants().first { it.id == R.id.card_container && it.isShown }.performClick()
+                }
+                settle()
+                var geometry: Triple<Int, Int, Int>? = null
+                scenario.onActivity { activity ->
+                    val row = activity.sheet().requireView().findViewById<View>(R.id.teacher_fact)
+                    val mark = row.findViewById<View>(R.id.fact_mark)
+                    // The opt-in is off, so no level arrives; the place is still kept for a teacher with an ISU.
+                    assertEquals(View.INVISIBLE, mark.visibility)
+                    assertTrue(mark.width > 0)
+                    geometry = row.geometry()
+                    activity.sheet().showTeacherLevel(TeacherLevel.POSITIVE)
+                }
+                settle()
+                scenario.onActivity { activity ->
+                    val root = activity.sheet().requireView()
+                    val row = root.findViewById<View>(R.id.teacher_fact)
+                    val mark = row.findViewById<ImageView>(R.id.fact_mark)
+                    assertEquals(View.VISIBLE, mark.visibility)
+                    assertEquals(TeacherLevelTone.POSITIVE.color(activity), mark.imageTintList?.defaultColor)
+                    assertEquals(geometry, row.geometry())
+                    // The dot sits between the name and the chevron.
+                    val value = row.findViewById<View>(R.id.fact_value)
+                    val trailing = row.findViewById<View>(R.id.fact_trailing)
+                    assertTrue(value.right <= mark.left && mark.right <= trailing.left)
+                    assertEquals("Преподаватель: ${SettingsNavigationTestActivity.LONG_NAME}, тон отзывов: скорее положительные",
+                        row.findViewById<View>(R.id.fact_value).contentDescription)
+                    assertTeacherAction(row)
+                    ViewChecks.assertTextFits(root)
+                    ViewChecks.assertTouchTargets(root)
+                }
+                frame(scenario, "teacher-level-$index")
+                scenario.onActivity { activity ->
+                    activity.sheet().showTeacherLevel(null)
+                    val row = activity.sheet().requireView().findViewById<View>(R.id.teacher_fact)
+                    assertEquals(View.INVISIBLE, row.findViewById<View>(R.id.fact_mark).visibility)
+                    assertEquals("Преподаватель: ${SettingsNavigationTestActivity.LONG_NAME}",
+                        row.findViewById<View>(R.id.fact_value).contentDescription)
+                }
+            }
+        }
+        ScheduleLifecycleTestActivity.appearance = ScheduleLifecycleTestActivity.Appearance()
+        withSchedule { scenario ->
+            scenario.onActivity { it.recycler().descendants().first { view -> view.id == R.id.card_container && view.isShown }.performClick() }
+            settle()
+            scenario.onActivity { activity ->
+                activity.sheet().showTeacherLevel(TeacherLevel.POSITIVE)
+                activity.sheet().showTeacherLevel(null)
+                assertEquals(View.GONE, activity.sheet().requireView().findViewById<View>(R.id.teacher_fact)
+                    .findViewById<View>(R.id.fact_mark).visibility)
+            }
+        }
+    }
+
+    @Test
     fun aPendingSportRowOpensItsOwnSheetWithTheSportHandOff() {
         val start = LocalDate.of(2026, 9, 7).atTime(16, 0).atOffset(java.time.ZoneOffset.ofHours(3))
         val booking = PendingSportBooking(
@@ -284,6 +350,10 @@ class LessonDetailsVisualTest {
         schedule().childFragmentManager.findFragmentByTag(LessonDetailsBottomSheet.TAG) as LessonDetailsBottomSheet
 
     private fun View.text(id: Int) = findViewById<TextView>(id).text.toString()
+
+    /** Height, top on screen and width of the name: what a late dot must not change. */
+    private fun View.geometry(): Triple<Int, Int, Int> =
+        Triple(height, IntArray(2).also(::getLocationOnScreen)[1], findViewById<View>(R.id.fact_value).width)
 
     private fun View.fact(id: Int) = findViewById<View>(id).findViewById<TextView>(R.id.fact_value).text.toString()
 

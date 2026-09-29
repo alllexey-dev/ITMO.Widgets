@@ -21,8 +21,10 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChip
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
+import dev.alllexey.itmowidgets.core.ui.bindLevel
 import dev.alllexey.itmowidgets.core.ui.buildingShortTitle
 import dev.alllexey.itmowidgets.core.ui.iconRes
 import dev.alllexey.itmowidgets.core.ui.linkIconRes
@@ -33,6 +35,7 @@ import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.roomShortTitle
 import dev.alllexey.itmowidgets.core.ui.title
+import dev.alllexey.itmowidgets.core.ui.tone
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookControlBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookControlGroupBinding
@@ -81,7 +84,7 @@ sealed interface DetailItem {
     data class LessonsMessage(val state: SubjectLessonsState) : DetailItem
     data class BindingProposal(val candidate: ScheduleSubject) : DetailItem
     data class BindingChoice(val candidates: List<ScheduleSubject>) : DetailItem
-    data class Teacher(val teacher: SubjectTeacher) : DetailItem
+    data class Teacher(val teacher: SubjectTeacher, val level: TeacherLevel?) : DetailItem
 }
 
 /** Actions the subject page forwards to its view model and the link sheets. */
@@ -134,7 +137,7 @@ class SubjectHubAdapter(
             }
             if (hub.teachers.isNotEmpty()) {
                 add(DetailItem.Section(R.string.subject_teachers_title))
-                addAll(hub.teachers.map(DetailItem::Teacher))
+                addAll(hub.teachers.map { DetailItem.Teacher(it, it.isu?.let(hub.teacherLevels::get)) })
             }
             if (hub.lessons != SubjectLessonsState.Hidden) {
                 add(DetailItem.Section(R.string.subject_lessons_title))
@@ -201,7 +204,7 @@ class SubjectHubAdapter(
             is DetailItem.LessonsMessage -> (holder as LessonsMessageHolder).bind(item.state)
             is DetailItem.BindingProposal -> (holder as BindingHolder).bindProposal(item.candidate)
             is DetailItem.BindingChoice -> (holder as BindingHolder).bindChoice(item.candidates)
-            is DetailItem.Teacher -> (holder as TeacherHolder).bind(item.teacher)
+            is DetailItem.Teacher -> (holder as TeacherHolder).bind(item.teacher, item.level)
         }
     }
 
@@ -381,10 +384,13 @@ class SubjectHubAdapter(
     }
 
     private inner class TeacherHolder(val binding: ItemSubjectTeacherBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(teacher: SubjectTeacher) {
+        fun bind(teacher: SubjectTeacher, level: TeacherLevel?) {
             val context = binding.root.context
             binding.avatar.setUser(teacher.name, null)
             binding.name.text = teacher.name
+            // A teacher with an ISU keeps the dot's place, so a tone arriving later does not move the chevron.
+            binding.levelDot.bindLevel(level, reserve = UserScreenArgs.profileIsu(teacher.isu) != null)
+            binding.name.contentDescription = level?.let { "${teacher.name}, ${it.tone().description(context).lowercase()}" }
             binding.roles.text = teacher.roles.joinToString(" · ") { context.getString(lessonTypeNameRes(it)) }
             binding.roles.isVisible = teacher.roles.isNotEmpty()
             val isu = UserScreenArgs.profileIsu(teacher.isu)

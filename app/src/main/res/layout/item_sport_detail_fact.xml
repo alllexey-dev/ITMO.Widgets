@@ -25,6 +25,15 @@
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurfaceVariant" />
     <ImageView
+        android:id="@+id/fact_mark"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:layout_marginStart="8dp"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:src="@drawable/bg_teacher_level_dot"
+        android:visibility="gone" />
+    <ImageView
         android:id="@+id/fact_trailing"
         android:layout_width="20dp"
         android:layout_height="20dp"

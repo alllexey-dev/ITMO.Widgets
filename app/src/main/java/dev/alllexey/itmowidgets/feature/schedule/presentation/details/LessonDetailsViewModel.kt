@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import java.time.LocalDate
@@ -16,14 +18,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Friends on one lesson occurrence. The lesson itself arrives with the sheet;
- * only the friend list needs Backend, and only behind the opt-in.
+ * Friends on one lesson occurrence and the tone of its teacher's reviews. The lesson itself arrives with the sheet;
+ * only friends and the tone need Backend, and only behind the opt-in.
  */
 @HiltViewModel
 class LessonDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val friendsRepository: LessonFriendsRepository,
-    private val customServices: CustomServicesRepository
+    private val customServices: CustomServicesRepository,
+    private val teacherLevels: TeacherLevelsRepository,
 ) : ViewModel() {
 
     val pairId: Long = checkNotNull(savedStateHandle.get<Long>(ARG_PAIR_ID)) { "Lesson details need a pair id" }
@@ -32,8 +35,13 @@ class LessonDetailsViewModel @Inject constructor(
     private val _friends = MutableStateFlow<LessonFriendsState>(LessonFriendsState.Loading)
     val friends: StateFlow<LessonFriendsState> = _friends.asStateFlow()
 
+    private val teacherIsu: Int? = savedStateHandle.get<Int>(ARG_TEACHER_ISU)?.takeIf { it > 0 }
+    private val _teacherLevel = MutableStateFlow<TeacherLevel?>(null)
+    val teacherLevel: StateFlow<TeacherLevel?> = _teacherLevel.asStateFlow()
+
     init {
         load()
+        loadTeacherLevel()
     }
 
     fun retry() = load()
@@ -54,8 +62,17 @@ class LessonDetailsViewModel @Inject constructor(
         }
     }
 
+    private fun loadTeacherLevel() {
+        val isu = teacherIsu ?: return
+        viewModelScope.launch {
+            if (!customServices.isEnabled()) return@launch
+            _teacherLevel.value = teacherLevels.levels(setOf(isu))[isu]
+        }
+    }
+
     companion object {
         const val ARG_PAIR_ID = "pair_id"
         const val ARG_DATE = "date"
+        const val ARG_TEACHER_ISU = "teacher_isu"
     }
 }

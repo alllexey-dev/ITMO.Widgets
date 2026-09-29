@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
+import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
@@ -26,6 +27,8 @@ import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
@@ -94,7 +97,7 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
                             }
                             val handle = SavedStateHandle(values)
                             RecordbookSubjectViewModel(checkNotNull(repository), bars ?: NoBars, handle, resolver,
-                                lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime, resourceRepository) as T
+                                lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime, resourceRepository, levelsRepository) as T
                         }
                     }
                 }
@@ -201,6 +204,17 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         /** Link sheets the page asked for: `links`, `editor` or `actions:<id>`. */
         val linkNavigation: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
         @Volatile var bindingStore: SubjectBindingStore = MemoryBindings()
+        /** Teacher tones a test hands in; never Backend. */
+        @Volatile var levelsRepository: TeacherLevelsRepository = MemoryLevels()
+    }
+
+    class MemoryLevels(val levels: MutableMap<Int, TeacherLevel> = mutableMapOf()) : TeacherLevelsRepository {
+        init { check(BuildConfig.DEBUG) }
+        val calls: MutableList<Set<Int>> = java.util.Collections.synchronizedList(mutableListOf())
+        override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> {
+            calls += isus
+            return levels.filterKeys { it in isus }
+        }
     }
 
     /** Lessons a test hands in; the window filter mirrors the real cache read. */

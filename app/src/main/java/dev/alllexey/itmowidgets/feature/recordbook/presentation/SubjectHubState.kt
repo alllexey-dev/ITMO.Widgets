@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContext
@@ -27,6 +28,7 @@ sealed interface SubjectLessonsState {
 /**
  * The schedule and links half of the subject page. Physical education has no [resourceScope]:
  * no links, chips or chats. [chips] also hold the MyITMO LMS page while the links load or fail.
+ * [teacherLevels] are the review tones of [teachers] by ISU; a teacher without one is absent.
  */
 data class SubjectHubState(
     val lessons: SubjectLessonsState = SubjectLessonsState.Hidden,
@@ -35,7 +37,8 @@ data class SubjectHubState(
     val resourceScope: ResourceScope? = null,
     val links: SubjectLinksState? = null,
     val chips: SubjectLinkChips = SubjectLinkChips(emptyList(), 0),
-    val chats: List<SubjectLink> = emptyList()
+    val chats: List<SubjectLink> = emptyList(),
+    val teacherLevels: Map<Long, TeacherLevel> = emptyMap()
 ) {
     /** The nearest lessons first; the rest only after «Все пары». */
     val visibleLessons: List<SubjectLesson>
