@@ -18,8 +18,9 @@ import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.reviews.ExternalTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
+import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
+import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
@@ -50,7 +51,7 @@ class UserProfileVisualTest {
     @Test fun teacherHasAccessibleFactsAndCompleteReviews() = appearances { spec ->
         preview(spec, configure = {
             UserProfilePreviewActivity.person = AppResult.Success(teacher())
-            UserProfilePreviewActivity.reviews = AppResult.Success(TeacherReviews(ISU, teacherReviews()))
+            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews()))
         }) { scenario ->
             content(scenario)
             scenario.onActivity { activity ->
@@ -204,7 +205,7 @@ class UserProfileVisualTest {
             UserProfilePreviewActivity.cachedSocial = friend()
             UserProfilePreviewActivity.personDelayMs = 1_500
             UserProfilePreviewActivity.reviewsDelayMs = 2_000
-            UserProfilePreviewActivity.reviews = AppResult.Success(TeacherReviews(ISU, teacherReviews()))
+            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews()))
         }) { scenario ->
             loading(scenario)
             TestUi.settle(400)
@@ -236,14 +237,14 @@ class UserProfileVisualTest {
 
     @Test fun fifteenReviewsRecycleEveryOptionalFieldAndRestoreScroll() = appearances { spec ->
         val reviews = (0 until 15).map { index ->
-            ExternalTeacherReview("review-$index", if (index % 2 == 0) "Предмет $index — $LONG_SUBJECT" else null,
+            copiedReview("review-$index", if (index % 2 == 0) "Предмет $index — $LONG_SUBJECT" else null,
                 when (index % 3) { 0 -> ReviewDate.Month(YearMonth.of(2025, 1)); 1 -> ReviewDate.BeforeYear(2023); else -> null },
                 if (index % 2 == 0) "Очень длинное название источника отзывов студентов университета ИТМО" else null,
                 "https://example.org/reviews/$index", "Отзыв $index. " + LONG_REVIEW)
         }
         preview(spec, {
             UserProfilePreviewActivity.person = AppResult.Success(teacher())
-            UserProfilePreviewActivity.reviews = AppResult.Success(TeacherReviews(ISU, reviews))
+            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(reviews))
         }) { scenario ->
             content(scenario)
             reviews.forEachIndexed { index, review -> assertReview(scenario, index, review) }
@@ -282,7 +283,7 @@ class UserProfileVisualTest {
     @Test fun recreatingTeacherPageDoesNotShowASkeleton() = appearances { spec ->
         preview(spec, {
             UserProfilePreviewActivity.person = AppResult.Success(teacher())
-            UserProfilePreviewActivity.reviews = AppResult.Success(TeacherReviews(ISU, teacherReviews()))
+            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews()))
         }) { scenario ->
             content(scenario)
             val previous = states().filterIsInstance<UserProfileUiState.Content>().last()
@@ -299,7 +300,7 @@ class UserProfileVisualTest {
     @Test fun lateReviewsAppendWithoutMovingTheNameOrFacts() = appearances { spec ->
         preview(spec, {
             UserProfilePreviewActivity.person = AppResult.Success(teacher())
-            UserProfilePreviewActivity.reviews = AppResult.Success(TeacherReviews(ISU, teacherReviews()))
+            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews()))
             UserProfilePreviewActivity.reviewsDelayMs = 6_000
         }) { scenario ->
             content(scenario, attempts = 200)
@@ -386,7 +387,7 @@ class UserProfileVisualTest {
         UserProfilePreviewActivity.appearance = UserProfilePreviewActivity.Appearance()
         UserProfilePreviewActivity.person = AppResult.Failure(AppError.NotFound)
         UserProfilePreviewActivity.social = AppResult.Failure(AppError.NotFound)
-        UserProfilePreviewActivity.reviews = AppResult.Success(TeacherReviews(ISU, emptyList()))
+        UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(emptyList()))
         UserProfilePreviewActivity.cachedPerson = null
         UserProfilePreviewActivity.cachedSocial = null
         UserProfilePreviewActivity.cachedReviews = null
@@ -480,7 +481,7 @@ class UserProfileVisualTest {
         TestUi.settle(80)
     }
 
-    private fun assertReview(scenario: ActivityScenario<UserProfilePreviewActivity>, index: Int, review: ExternalTeacherReview) {
+    private fun assertReview(scenario: ActivityScenario<UserProfilePreviewActivity>, index: Int, review: TeacherReview) {
         var position = 0
         scenario.onActivity {
             position = it.items().indexOfFirst { item -> item is ProfileItem.Review } + index
@@ -500,7 +501,8 @@ class UserProfileVisualTest {
                 is ReviewDate.BeforeYear -> "До 2023"
                 null -> ""
             }, date.text.toString())
-            assertEquals(review.sourceTitle?.let { "Reviews · $it" } ?: "Reviews", source.text.toString())
+            val origin = review.origin as ReviewOrigin.Reviews
+            assertEquals(origin.sourceTitle?.let { "Reviews · $it" } ?: "Reviews", source.text.toString())
             assertEquals(review.text, row.findViewById<TextView>(R.id.text).text.toString())
             assertTrue(source.height >= 48 * source.resources.displayMetrics.density)
             ViewChecks.assertTextFits(activity.window.decorView)
@@ -534,10 +536,14 @@ class UserProfileVisualTest {
         listOf(PersonPosition("Доцент", LONG_DEPARTMENT), PersonPosition(null, UNTITLED_DEPARTMENT)),
         listOf(PersonRoom("405", "Кронверкский проспект, 49")), emptyList())
     private fun teacherReviews() = listOf(
-        ExternalTeacherReview("review-one", LONG_SUBJECT, ReviewDate.Month(YearMonth.of(2025, 1)), "Отзывы ПИ", "https://example.org/reviews/1", "Понятно объясняет материал и подробно отвечает на вопросы."),
-        ExternalTeacherReview("review-two", null, ReviewDate.BeforeYear(2023), null, "https://example.org/reviews/2", "На занятиях было интересно."),
-        ExternalTeacherReview("review-three", null, null, null, "https://example.org/reviews/3", LONG_REVIEW)
+        copiedReview("review-one", LONG_SUBJECT, ReviewDate.Month(YearMonth.of(2025, 1)), "Отзывы ПИ", "https://example.org/reviews/1", "Понятно объясняет материал и подробно отвечает на вопросы."),
+        copiedReview("review-two", null, ReviewDate.BeforeYear(2023), null, "https://example.org/reviews/2", "На занятиях было интересно."),
+        copiedReview("review-three", null, null, null, "https://example.org/reviews/3", LONG_REVIEW)
     )
+    private fun copiedReview(id: String, subject: String?, written: ReviewDate?, sourceTitle: String?, sourceUrl: String, text: String) =
+        TeacherReview(id, subject, written, text, score = 0, myVote = 0, origin = ReviewOrigin.Reviews(sourceTitle, sourceUrl))
+    private fun reviewsOf(reviews: List<TeacherReview>) = TeacherReviews(ISU, reviews, mine = null, canWrite = false,
+        canVote = false, canReport = false, knownTeacher = false)
 
     private companion object {
         const val BACKEND_NAME = "Соколов Артём Игоревич"

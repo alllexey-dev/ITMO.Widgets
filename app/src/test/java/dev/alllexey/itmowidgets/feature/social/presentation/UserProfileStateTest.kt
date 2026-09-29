@@ -1,7 +1,8 @@
 package dev.alllexey.itmowidgets.feature.social.presentation
 
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.reviews.ExternalTeacherReview
+import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
+import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import org.junit.Assert.assertEquals
@@ -14,13 +15,14 @@ class UserProfileStateTest {
         it.copy(user = it.user.copy(pictureUrl = "https://example.test/backend.jpg"))
     }
     private val social = SocialBlock(backendProfile, isSelf = false, busy = false)
-    private val reviews = TeacherReviews(5, listOf(ExternalTeacherReview(
+    private val reviews = teacherReviews(5, listOf(TeacherReview(
         id = "review-1",
         subject = "Математика",
         written = null,
-        sourceTitle = null,
-        sourceUrl = "https://example.test/review-1",
-        text = "Понятные объяснения."
+        text = "Понятные объяснения.",
+        score = 0,
+        myVote = 0,
+        origin = ReviewOrigin.Reviews(sourceTitle = null, sourceUrl = "https://example.test/review-1")
     )))
     private val personContent = UserProfileUiState.Content(
         isu = 5,
@@ -72,7 +74,7 @@ class UserProfileStateTest {
             StateCase(
                 "directory identity takes priority without importing backend education",
                 readyPerson, readySocial, readyReviews,
-                personContent.copy(social = social, reviews = reviews.external)
+                personContent.copy(social = social, reviews = reviews.reviews)
             ),
             StateCase(
                 "forbidden backend does not hide the directory person",

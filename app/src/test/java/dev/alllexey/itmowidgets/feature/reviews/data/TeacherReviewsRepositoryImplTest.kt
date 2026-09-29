@@ -2,11 +2,28 @@ package dev.alllexey.itmowidgets.feature.reviews.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.model.reviews.ExternalTeacherReview as WireReview
+import dev.alllexey.itmowidgets.core.model.GroupData
+import dev.alllexey.itmowidgets.core.model.UserCapabilities
+import dev.alllexey.itmowidgets.core.model.UserData
+import dev.alllexey.itmowidgets.core.model.resources.ModerationReportRequest
+import dev.alllexey.itmowidgets.core.model.toUserSummary
+import dev.alllexey.itmowidgets.core.model.resources.ReportReason
+import dev.alllexey.itmowidgets.core.model.resources.ResourceVoteRequest
+import dev.alllexey.itmowidgets.core.model.reviews.OwnTeacherReview as WireOwnReview
+import dev.alllexey.itmowidgets.core.model.reviews.SaveTeacherReviewRequest
+import dev.alllexey.itmowidgets.core.model.reviews.TeacherReview as WireReview
+import dev.alllexey.itmowidgets.core.model.reviews.TeacherReviewKind
+import dev.alllexey.itmowidgets.core.model.reviews.TeacherReviewStatus
 import dev.alllexey.itmowidgets.core.model.reviews.TeacherReviewsResponse as WireTeacherReviews
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
+import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
+import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
+import dev.alllexey.itmowidgets.core.reviews.TeacherReview
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import java.io.IOException
 import java.lang.reflect.Proxy
@@ -24,6 +41,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -50,7 +71,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `maps exact date before year and absent date preserving Backend order`() = runTest {
         val api = FakeApi().apply {
-            result = result!!.copy(external = listOf(
+            result = result!!.copy(reviews = listOf(
                 review(1).copy(writtenOn = LocalDate.of(2025, 1, 25)),
                 review(2).copy(writtenBeforeYear = 2024),
                 review(3),
@@ -62,8 +83,8 @@ class TeacherReviewsRepositoryImplTest {
 
         assertEquals(listOf(100001), api.requestedIsus)
         assertEquals(100001, reviews.isu)
-        assertEquals(listOf(UUID(0, 1).toString(), UUID(0, 2).toString(), UUID(0, 3).toString()), reviews.external.map { it.id })
-        assertEquals(listOf(ReviewDate.Month(YearMonth.of(2025, 1)), ReviewDate.BeforeYear(2024), null), reviews.external.map { it.written })
+        assertEquals(listOf(UUID(0, 1).toString(), UUID(0, 2).toString(), UUID(0, 3).toString()), reviews.reviews.map { it.id })
+        assertEquals(listOf(ReviewDate.Month(YearMonth.of(2025, 1)), ReviewDate.BeforeYear(2024), null), reviews.reviews.map { it.written })
         assertEquals(reviews, repository.cachedReviews(100001))
     }
 
@@ -71,19 +92,19 @@ class TeacherReviewsRepositoryImplTest {
     fun `keeps https source links and falls back for absent unsafe and malformed links`() = runTest {
         val links = listOf(" https://example.test/source ", "http://example.test/source", null, " ", "not a url", "https:///missing-host")
         val api = FakeApi().apply {
-            result = result!!.copy(external = links.mapIndexed { index, link -> review(index + 1).copy(sourceLink = link) })
+            result = result!!.copy(reviews = links.mapIndexed { index, link -> review(index + 1).copy(sourceLink = link) })
         }
         val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
 
         val reviews = (repository.reviews(100001) as AppResult.Success).value
 
-        assertEquals(listOf("https://example.test/source") + List(5) { PROVIDER_URL }, reviews.external.map { it.sourceUrl })
+        assertEquals(listOf("https://example.test/source") + List(5) { PROVIDER_URL }, reviews.reviews.map { it.source().sourceUrl })
     }
 
     @Test
     fun `trims optional strings drops blank reviews and preserves full text and order`() = runTest {
         val api = FakeApi().apply {
-            result = result!!.copy(external = listOf(
+            result = result!!.copy(reviews = listOf(
                 review(1).copy(subjectTitle = " Предмет ", sourceTitle = " Источник ", text = " Первый\nвторой абзац "),
                 review(2).copy(text = " \n\t "),
                 review(3).copy(subjectTitle = " ", sourceTitle = " ", text = " Третий "),
@@ -91,19 +112,19 @@ class TeacherReviewsRepositoryImplTest {
         }
         val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
 
-        val reviews = (repository.reviews(100001) as AppResult.Success).value.external
+        val reviews = (repository.reviews(100001) as AppResult.Success).value.reviews
 
         assertEquals(listOf(UUID(0, 1).toString(), UUID(0, 3).toString()), reviews.map { it.id })
         assertEquals(listOf("Первый\nвторой абзац", "Третий"), reviews.map { it.text })
         assertEquals("Предмет", reviews[0].subject)
-        assertEquals("Источник", reviews[0].sourceTitle)
+        assertEquals("Источник", reviews[0].source().sourceTitle)
         assertNull(reviews[1].subject)
-        assertNull(reviews[1].sourceTitle)
+        assertNull(reviews[1].source().sourceTitle)
     }
 
     @Test
     fun `HTTP and network failures preserve the successful cache`() = runTest {
-        val api = FakeApi().apply { result = result!!.copy(external = listOf(review(1))) }
+        val api = FakeApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
         val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
         val cached = (repository.reviews(100001) as AppResult.Success).value
 
@@ -192,7 +213,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `pre-disconnect responses cannot replace fresh reviews after reconnect`() = runTest {
         val services = FakeServices(true)
-        val api = FakeApi().apply { result = result!!.copy(external = listOf(review(1))) }
+        val api = FakeApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
         val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope)
         val gate = ResponseGate()
         api.beforeResponse = gate::await
@@ -205,18 +226,18 @@ class TeacherReviewsRepositoryImplTest {
         assertNull(repository.cachedReviews(100001))
 
         api.beforeResponse = {}
-        api.result = api.result!!.copy(external = listOf(review(2)))
+        api.result = api.result!!.copy(reviews = listOf(review(2)))
         val fresh = (repository.reviews(100001) as AppResult.Success).value
         gate.open()
 
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), pending.await())
         assertEquals(fresh, repository.cachedReviews(100001))
-        assertEquals(UUID(0, 2).toString(), fresh.external.single().id)
+        assertEquals(UUID(0, 2).toString(), fresh.reviews.single().id)
     }
 
     @Test
     fun `pre-clear responses cannot replace fresh session cache`() = runTest {
-        val api = FakeApi().apply { result = result!!.copy(external = listOf(review(1))) }
+        val api = FakeApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
         val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
         val gate = ResponseGate()
         api.beforeResponse = gate::await
@@ -225,7 +246,7 @@ class TeacherReviewsRepositoryImplTest {
 
         repository.clearSessionData()
         api.beforeResponse = {}
-        api.result = api.result!!.copy(external = listOf(review(2)))
+        api.result = api.result!!.copy(reviews = listOf(review(2)))
         val fresh = (repository.reviews(100001) as AppResult.Success).value
         gate.open()
 
@@ -323,7 +344,228 @@ class TeacherReviewsRepositoryImplTest {
         }
     }
 
-    private fun review(number: Int) = WireReview(UUID(0, number.toLong()), null, null, null, null, null, "Отзыв $number")
+    @Test
+    fun `maps own community reviews copies own review and viewer capabilities`() = runTest {
+        val author = UserData(100002, " Автор Отзыва ", null, listOf(GroupData("M3234", 2, "ФИТиП")),
+            UserCapabilities(canViewSchedule = true, canViewSport = false))
+        val api = FakeApi().apply {
+            result = result!!.copy(
+                reviews = listOf(
+                    community(1).copy(verified = true, author = author, writtenOn = LocalDate.of(2026, 9, 12), score = 3, myVote = 1),
+                    community(2).copy(reportedByMe = true, myVote = -1),
+                    review(3).copy(sourceTitle = " Отзывы ПИ ", sourceLink = "https://example.test/review/3"),
+                    review(4).copy(sourceLink = "http://example.test/review/4", writtenBeforeYear = 2023),
+                ),
+                mine = WireOwnReview(UUID(0, 9), " Предмет ", " Мой отзыв ", false, TeacherReviewStatus.REJECTED,
+                    " Грубость ", 2, true, LocalDate.of(2026, 9, 20)),
+                canWrite = true, canVote = true, canReport = false, knownTeacher = true,
+            )
+        }
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+
+        val reviews = (repository.reviews(100001) as AppResult.Success).value
+
+        assertEquals(listOf(
+            TeacherReview(UUID(0, 1).toString(), null, ReviewDate.Month(YearMonth.of(2026, 9)), "Отзыв 1", 3, 1,
+                ReviewOrigin.Community(verified = true, author = author.toUserSummary(), reportedByMe = false)),
+            TeacherReview(UUID(0, 2).toString(), null, null, "Отзыв 2", 0, -1,
+                ReviewOrigin.Community(verified = false, author = null, reportedByMe = true)),
+            TeacherReview(UUID(0, 3).toString(), null, null, "Отзыв 3", 0, 0,
+                ReviewOrigin.Reviews("Отзывы ПИ", "https://example.test/review/3")),
+            TeacherReview(UUID(0, 4).toString(), null, ReviewDate.BeforeYear(2023), "Отзыв 4", 0, 0,
+                ReviewOrigin.Reviews(null, PROVIDER_URL)),
+        ), reviews.reviews)
+        assertEquals("Автор Отзыва", (reviews.reviews[0].origin as ReviewOrigin.Community).author?.name)
+        val mine = checkNotNull(reviews.mine)
+        assertEquals(UUID(0, 9).toString(), mine.id)
+        assertEquals("Предмет", mine.subject)
+        assertEquals("Мой отзыв", mine.text)
+        assertFalse(mine.anonymous)
+        assertEquals(OwnReviewStatus.REJECTED, mine.status)
+        assertEquals("Грубость", mine.reviewNote)
+        assertEquals(2, mine.score)
+        assertTrue(mine.verified)
+        assertEquals(ReviewDate.Month(YearMonth.of(2026, 9)), mine.written)
+        assertEquals(listOf(true, true, false, true), listOf(reviews.canWrite, reviews.canVote, reviews.canReport, reviews.knownTeacher))
+    }
+
+    @Test
+    fun `save sends cleaned content and sorted flows and publishes the answer`() = runTest {
+        val api = FakeApi()
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+        val updates = collectUpdates(repository)
+        api.result = api.result!!.copy(mine = ownWire())
+
+        val result = repository.save(100001, TeacherReviewDraft(" Матанализ ", "  $VALID_TEXT\r\nВторая строка ", false, setOf(30, 10, 20)))
+
+        val saved = (result as AppResult.Success).value
+        assertEquals(listOf(Request("saveMyTeacherReview", listOf(100001,
+            SaveTeacherReviewRequest("Матанализ", "$VALID_TEXT\nВторая строка", false, listOf(10L, 20L, 30L))))), api.requests)
+        assertEquals(saved, repository.cachedReviews(100001))
+        runCurrent()
+        assertEquals(listOf(saved), updates)
+    }
+
+    @Test
+    fun `save sends a blank subject as null and at most fifty flows`() = runTest {
+        val api = FakeApi()
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+
+        repository.save(100001, TeacherReviewDraft("   ", VALID_TEXT, true, (60L downTo 1L).toSet()))
+
+        val request = api.requests.single().arguments[1] as SaveTeacherReviewRequest
+        assertNull(request.subjectTitle)
+        assertTrue(request.anonymous)
+        assertEquals((1L..50L).toList(), request.flowIds)
+    }
+
+    @Test
+    fun `delete vote and report call their routes with the review UUID`() = runTest {
+        val api = FakeApi()
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+        val updates = collectUpdates(repository)
+        val id = UUID(0, 7)
+
+        assertTrue(repository.delete(100001) is AppResult.Success)
+        assertTrue(repository.vote(100001, id.toString(), 1) is AppResult.Success)
+        assertTrue(repository.report(100001, id.toString(), ReviewReportReason.OFFENSIVE, "  Грубо  ") is AppResult.Success)
+        assertTrue(repository.report(100001, id.toString(), ReviewReportReason.WRONG_TEACHER, "   ") is AppResult.Success)
+
+        assertEquals(listOf(
+            Request("deleteMyTeacherReview", listOf(100001)),
+            Request("voteTeacherReview", listOf(id, ResourceVoteRequest(1))),
+            Request("reportTeacherReview", listOf(id, ModerationReportRequest(ReportReason.OFFENSIVE, "Грубо"))),
+            Request("reportTeacherReview", listOf(id, ModerationReportRequest(ReportReason.WRONG_TEACHER, null))),
+        ), api.requests)
+        runCurrent()
+        assertEquals(4, updates.size)
+    }
+
+    @Test
+    fun `mutations without the opt-in never call Backend`() = runTest {
+        val api = FakeApi()
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(false), api.instance, backgroundScope)
+        val id = UUID(0, 7).toString()
+
+        val results = listOf(
+            repository.save(100001, TeacherReviewDraft(null, VALID_TEXT, true, emptySet())),
+            repository.delete(100001),
+            repository.vote(100001, id, 1),
+            repository.report(100001, id, ReviewReportReason.SPAM, null),
+        )
+
+        assertEquals(List(4) { AppResult.Failure(AppError.CustomServicesDisabled) }, results)
+        assertEquals(0, api.calls)
+    }
+
+    @Test
+    fun `invalid input fails before the network`() = runTest {
+        val api = FakeApi()
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+        val id = UUID(0, 7).toString()
+
+        val results = listOf(
+            repository.save(100001, TeacherReviewDraft(null, "a".repeat(29), true, emptySet())),
+            repository.save(100001, TeacherReviewDraft(null, " ".repeat(10) + "a".repeat(29) + " ".repeat(10), true, emptySet())),
+            repository.save(100001, TeacherReviewDraft(null, "a".repeat(3001), true, emptySet())),
+            repository.save(100001, TeacherReviewDraft("п".repeat(201), VALID_TEXT, true, emptySet())),
+            repository.vote(100001, id, 2),
+            repository.vote(100001, "x", 1),
+            repository.report(100001, "x", ReviewReportReason.OTHER, null),
+            repository.report(100001, id, ReviewReportReason.OTHER, "к".repeat(501)),
+        )
+
+        results.forEach { assertTrue(it.toString(), (it as AppResult.Failure).error is AppError.Unknown) }
+        assertEquals(0, api.calls)
+    }
+
+    @Test
+    fun `limits count code points like Backend`() = runTest {
+        val api = FakeApi()
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+        val emoji = "\uD83D\uDE00"
+
+        assertTrue(repository.save(100001, TeacherReviewDraft(emoji.repeat(200), emoji.repeat(3000), true, emptySet())) is AppResult.Success)
+        assertTrue(repository.save(100001, TeacherReviewDraft(null, emoji.repeat(3001), true, emptySet())) is AppResult.Failure)
+
+        assertEquals(1, api.calls)
+    }
+
+    @Test
+    fun `restricted and network failures keep the cache and publish nothing`() = runTest {
+        val api = FakeApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+        val cached = (repository.reviews(100001) as AppResult.Success).value
+        val updates = collectUpdates(repository)
+        api.result = api.result!!.copy(reviews = emptyList())
+
+        api.failure = HttpException(Response.error<Any>(403, """{"error":{"code":"restricted"}}""".toResponseBody()))
+        assertEquals(AppResult.Failure(AppError.Restricted), repository.vote(100001, UUID(0, 1).toString(), 1))
+        api.failure = IOException("Synthetic offline response")
+        assertEquals(AppResult.Failure(AppError.Network), repository.save(100001, TeacherReviewDraft(null, VALID_TEXT, true, emptySet())))
+
+        runCurrent()
+        assertEquals(cached, repository.cachedReviews(100001))
+        assertEquals(emptyList<TeacherReviews>(), updates)
+    }
+
+    @Test
+    fun `a mutation answer after opting out reaches neither cache nor updates`() = runTest {
+        val services = FakeServices(true)
+        val api = FakeApi()
+        val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope)
+        val updates = collectUpdates(repository)
+        val gate = ResponseGate()
+        api.beforeResponse = gate::await
+        val pending = async { repository.delete(100001) }
+        gate.entered.await()
+
+        services.enabled.value = false
+        runCurrent()
+        services.enabled.value = true
+        runCurrent()
+        gate.open()
+
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), pending.await())
+        runCurrent()
+        assertNull(repository.cachedReviews(100001))
+        assertEquals(emptyList<TeacherReviews>(), updates)
+    }
+
+    @Test
+    fun `a mutation answer after session cleanup reaches neither cache nor updates`() = runTest {
+        val api = FakeApi()
+        val repository = TeacherReviewsRepositoryImpl(FakeServices(true), api.instance, backgroundScope)
+        val updates = collectUpdates(repository)
+        val gate = ResponseGate()
+        api.beforeResponse = gate::await
+        val pending = async { repository.vote(100001, UUID(0, 1).toString(), -1) }
+        gate.entered.await()
+
+        repository.clearSessionData()
+        gate.open()
+
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), pending.await())
+        runCurrent()
+        assertNull(repository.cachedReviews(100001))
+        assertEquals(emptyList<TeacherReviews>(), updates)
+    }
+
+    private fun TestScope.collectUpdates(repository: TeacherReviewsRepositoryImpl): List<TeacherReviews> {
+        val updates = CopyOnWriteArrayList<TeacherReviews>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { repository.observeUpdates().toList(updates) }
+        return updates
+    }
+
+    private fun community(number: Int) = review(number).copy(kind = TeacherReviewKind.COMMUNITY)
+
+    private fun ownWire() = WireOwnReview(UUID(0, 9), null, VALID_TEXT, true, TeacherReviewStatus.PENDING, null, 0, false,
+        LocalDate.of(2026, 9, 29))
+
+    private fun review(number: Int) = WireReview(UUID(0, number.toLong()), TeacherReviewKind.REVIEWS, null, null, null,
+        "Отзыв $number", 0, 0, false, false, null, null, null)
+
+    private fun TeacherReview.source() = origin as ReviewOrigin.Reviews
 
     private class FakeServices(enabled: Boolean) : CustomServicesRepository {
         val enabled = MutableStateFlow(enabled)
@@ -351,10 +593,11 @@ class TeacherReviewsRepositoryImplTest {
     }
 
     private class FakeApi {
-        var result: WireTeacherReviews? = WireTeacherReviews(100001, PROVIDER_URL, emptyList())
+        var result: WireTeacherReviews? = WireTeacherReviews(100001, PROVIDER_URL, emptyList(), null, false, false, false, false)
         var failure: Exception? = null
         var beforeResponse: () -> Unit = {}
         val requestedIsus = CopyOnWriteArrayList<Int>()
+        val requests = CopyOnWriteArrayList<Request>()
         private val callCount = AtomicInteger()
         val calls: Int get() = callCount.get()
 
@@ -367,9 +610,10 @@ class TeacherReviewsRepositoryImplTest {
                 "hashCode" -> return@newProxyInstance System.identityHashCode(proxy)
                 "toString" -> return@newProxyInstance "FakeReviewsApi"
             }
-            check(method.name == "teacherReviews") { "Unexpected ItmoWidgetsApi call: ${method.name}" }
+            check(method.name in ROUTES) { "Unexpected ItmoWidgetsApi call: ${method.name}" }
             callCount.incrementAndGet()
-            requestedIsus += arguments[0] as Int
+            if (method.name == "teacherReviews") requestedIsus += arguments[0] as Int
+            else requests += Request(method.name, arguments.dropLast(1))
             failure?.let { throw it }
             val response = ApiResponse.success(result)
             beforeResponse()
@@ -377,7 +621,12 @@ class TeacherReviewsRepositoryImplTest {
         } as ItmoWidgetsApi
     }
 
+    /** A mutation route with its arguments, without the continuation. */
+    private data class Request(val method: String, val arguments: List<Any?>)
+
     private companion object {
         const val PROVIDER_URL = "https://onetwozzzplus.github.io/reviews/#/teacher/100001"
+        const val VALID_TEXT = "Понятно объясняет материал и отвечает на вопросы."
+        val ROUTES = setOf("teacherReviews", "saveMyTeacherReview", "deleteMyTeacherReview", "voteTeacherReview", "reportTeacherReview")
     }
 }

@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.feature.social.presentation
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.reviews.ExternalTeacherReview
+import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 
@@ -25,7 +25,7 @@ sealed interface UserProfileUiState {
         val pictureUrl: String?,
         val facts: List<ProfileFact>,
         val social: SocialBlock?,
-        val reviews: List<ExternalTeacherReview>
+        val reviews: List<TeacherReview>
     ) : UserProfileUiState
 }
 
@@ -48,7 +48,7 @@ fun userProfileUiState(
             pictureUrl = if (personality != null) personality.photoUrl else user?.pictureUrl,
             facts = profileFacts(personality, if (personality == null) user?.primaryGroup() else null),
             social = block,
-            reviews = (reviews as? ProfilePart.Ready)?.value?.external.orEmpty()
+            reviews = (reviews as? ProfilePart.Ready)?.value?.reviews.orEmpty()
         )
     }
     val error = listOfNotNull((person as? ProfilePart.Failed)?.error, (social as? ProfilePart.Failed)?.error)

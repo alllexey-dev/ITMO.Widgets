@@ -30,6 +30,8 @@ import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUser
@@ -47,6 +49,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import java.util.Collections
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
@@ -138,7 +141,7 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
         @Volatile var appearance = Appearance()
         @Volatile var person: AppResult<Person> = AppResult.Failure(AppError.NotFound)
         @Volatile var social: AppResult<UserProfile> = AppResult.Failure(AppError.NotFound)
-        @Volatile var reviews: AppResult<TeacherReviews> = AppResult.Success(TeacherReviews(ISU, emptyList()))
+        @Volatile var reviews: AppResult<TeacherReviews> = AppResult.Success(TeacherReviews(ISU, emptyList(), null, false, false, false, false))
         @Volatile var cachedPerson: Person? = null
         @Volatile var cachedSocial: UserProfile? = null
         @Volatile var cachedReviews: TeacherReviews? = null
@@ -176,6 +179,13 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
                 }
             }
         }
+
+        override fun observeUpdates() = emptyFlow<TeacherReviews>()
+        override suspend fun save(isu: Int, draft: TeacherReviewDraft) = UserProfilePreviewActivity.reviews
+        override suspend fun delete(isu: Int) = UserProfilePreviewActivity.reviews
+        override suspend fun vote(isu: Int, reviewId: String, value: Int) = UserProfilePreviewActivity.reviews
+        override suspend fun report(isu: Int, reviewId: String, reason: ReviewReportReason, comment: String?) =
+            UserProfilePreviewActivity.reviews
     }
 
     private object PreviewSocial : SocialRepository {

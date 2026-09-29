@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
 import dev.alllexey.itmowidgets.feature.qr.ui.QrCodeFragment
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.color.DynamicColors
@@ -23,6 +24,8 @@ import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
@@ -505,8 +508,13 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     private object ProfileReviews : TeacherReviewsRepository {
         override fun cachedReviews(isu: Int): TeacherReviews? = null
         override suspend fun reviews(isu: Int): AppResult<TeacherReviews> =
-            if (profileServicesEnabled) AppResult.Success(TeacherReviews(isu, emptyList()))
+            if (profileServicesEnabled) AppResult.Success(TeacherReviews(isu, emptyList(), null, false, false, false, false))
             else AppResult.Failure(AppError.CustomServicesDisabled)
+        override fun observeUpdates() = emptyFlow<TeacherReviews>()
+        override suspend fun save(isu: Int, draft: TeacherReviewDraft) = reviews(isu)
+        override suspend fun delete(isu: Int) = reviews(isu)
+        override suspend fun vote(isu: Int, reviewId: String, value: Int) = reviews(isu)
+        override suspend fun report(isu: Int, reviewId: String, reason: ReviewReportReason, comment: String?) = reviews(isu)
     }
 
     private object ProfileSocial : SocialRepository {

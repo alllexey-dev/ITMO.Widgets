@@ -6,8 +6,8 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.reviews.ExternalTeacherReview
-import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
+import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
@@ -138,7 +138,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(people = personRepository(), reviews = reviewsRepository())
         val events = events(viewModel)
         runCurrent()
-        assertEquals(personContent().copy(reviews = sampleReviews().external), viewModel.uiState.value)
+        assertEquals(personContent().copy(reviews = sampleReviews().reviews), viewModel.uiState.value)
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
 
@@ -175,7 +175,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(people = people, reviews = reviews)
         val events = events(viewModel)
         runCurrent()
-        val initial = personContent().copy(reviews = sampleReviews().external)
+        val initial = personContent().copy(reviews = sampleReviews().reviews)
         assertEquals(initial, viewModel.uiState.value)
         personGate.complete(Unit)
         runCurrent()
@@ -284,7 +284,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(social, people, reviews)
         val events = events(viewModel)
         runCurrent()
-        val expected = personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = sampleReviews().external)
+        val expected = personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = sampleReviews().reviews)
         assertEquals(expected, viewModel.uiState.value)
         gate.complete(Unit)
         runCurrent()
@@ -304,7 +304,7 @@ class UserProfileViewModelTest {
         advanceTimeBy(1_000)
         gate.complete(Unit)
         runCurrent()
-        assertEquals(listOf(personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = sampleReviews().external)),
+        assertEquals(listOf(personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = sampleReviews().reviews)),
             states.filterIsInstance<UserProfileUiState.Content>())
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
@@ -342,7 +342,7 @@ class UserProfileViewModelTest {
         assertEquals(personContent(), viewModel.uiState.value)
         gate.complete(Unit)
         runCurrent()
-        assertEquals(listOf(UserProfileUiState.Loading, personContent(), personContent().copy(reviews = sampleReviews().external)), states)
+        assertEquals(listOf(UserProfileUiState.Loading, personContent(), personContent().copy(reviews = sampleReviews().reviews)), states)
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
 
@@ -609,7 +609,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(people = personRepository(), reviews = reviews)
         val events = events(viewModel)
         runCurrent()
-        assertEquals(personContent().copy(reviews = sampleReviews().external), viewModel.uiState.value)
+        assertEquals(personContent().copy(reviews = sampleReviews().reviews), viewModel.uiState.value)
         assertEquals(listOf(UserProfileEvent.LoadFailed), events)
     }
 
@@ -676,7 +676,7 @@ class UserProfileViewModelTest {
         assertEquals(emptyList<UserProfileUiState>(), states)
         gate.complete(Unit)
         runCurrent()
-        assertEquals(personContent().copy(name = "Новое имя", reviews = sampleReviews().external), viewModel.uiState.value)
+        assertEquals(personContent().copy(name = "Новое имя", reviews = sampleReviews().reviews), viewModel.uiState.value)
         assertTrue(states.all { it is UserProfileUiState.Content })
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
@@ -800,7 +800,8 @@ class UserProfileViewModelTest {
 
     private fun personRepository() = FakePersonRepository().apply { people = mapOf(5 to AppResult.Success(samplePerson(5))) }
     private fun reviewsRepository() = FakeTeacherReviewsRepository().apply { results = mapOf(5 to AppResult.Success(sampleReviews())) }
-    private fun sampleReviews() = TeacherReviews(5, listOf(ExternalTeacherReview("review-1", "Предмет", null, "Источник", "https://example.org/review", "Текст отзыва")))
+    private fun sampleReviews() = teacherReviews(5, listOf(TeacherReview("review-1", "Предмет", null, "Текст отзыва", 0, 0,
+        ReviewOrigin.Reviews("Источник", "https://example.org/review"))))
     private fun personContent() = UserProfileUiState.Content(5, "Персона 5", null, emptyList(), null, emptyList())
     private fun TestScope.expireDeadline() { advanceTimeBy(UserProfileViewModel.PART_DEADLINE.inWholeMilliseconds); runCurrent() }
     private fun TestScope.states(viewModel: UserProfileViewModel) = mutableListOf<UserProfileUiState>().also { states ->

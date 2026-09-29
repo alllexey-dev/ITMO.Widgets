@@ -16,7 +16,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.RelationshipState
-import dev.alllexey.itmowidgets.core.reviews.ExternalTeacherReview
+import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
+import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.ui.userDisplayName
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemProfileFactsBinding
@@ -35,7 +36,7 @@ sealed interface ProfileItem {
     data class Sharing(val social: SocialBlock) : ProfileItem
     data class Facts(val facts: List<ProfileFact>) : ProfileItem
     data class Section(@param:StringRes val titleRes: Int) : ProfileItem
-    data class Review(val review: ExternalTeacherReview) : ProfileItem
+    data class Review(val review: TeacherReview) : ProfileItem
 }
 
 data class ProfileActions(
@@ -158,15 +159,19 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
     private class SectionHolder(val binding: ItemProfileSectionBinding) : RecyclerView.ViewHolder(binding.root)
 
     private inner class ReviewHolder(private val binding: ItemTeacherReviewBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(review: ExternalTeacherReview) = with(binding) {
+        fun bind(review: TeacherReview) = with(binding) {
             subject.text = review.subject
             subject.isVisible = review.subject != null
             date.text = review.written?.text(root.context)
             date.isVisible = review.written != null
             text.text = review.text
-            source.text = review.sourceTitle?.let { root.context.getString(R.string.teacher_review_source, it) }
-                ?: root.context.getString(R.string.teacher_review_source_default)
-            source.setOnClickListener { actions.onSource(review.sourceUrl) }
+            val copy = review.origin as? ReviewOrigin.Reviews
+            source.isVisible = copy != null
+            source.text = copy?.let {
+                it.sourceTitle?.let { title -> root.context.getString(R.string.teacher_review_source, title) }
+                    ?: root.context.getString(R.string.teacher_review_source_default)
+            }
+            source.setOnClickListener(copy?.let { origin -> View.OnClickListener { actions.onSource(origin.sourceUrl) } })
         }
     }
 
