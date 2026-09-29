@@ -106,7 +106,8 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
                 end = LocalTime.parse(lesson.end),
                 teacher = lesson.teacherFio,
                 location = locationText(),
-                mapAvailable = destination != null
+                mapAvailable = destination != null,
+                flow = lesson.flowName
             ),
             teacherIsu?.let { isu -> { openProfile(isu) } }
         ) { destination?.let(::openMap) }

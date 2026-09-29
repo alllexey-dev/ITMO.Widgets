@@ -91,6 +91,7 @@ class LessonDetailsVisualTest {
                 assertEquals("90 мин", root.text(R.id.duration))
                 assertEquals(lesson().teacherFio, root.fact(R.id.teacher_fact))
                 assertNoTeacherAction(root.findViewById(R.id.teacher_fact))
+                assertFlowRow(root, "ФИЗ ПИИКТ 3.2")
                 assertEquals("1506 · Кронверкский проспект, 49", root.fact(R.id.location_fact))
                 assertEquals(View.VISIBLE, root.findViewById<View>(R.id.map_button).visibility)
                 assertEquals(View.GONE, root.findViewById<View>(R.id.link_button).visibility)
@@ -125,12 +126,54 @@ class LessonDetailsVisualTest {
                 val root = (activity.supportFragmentManager.findFragmentByTag(LessonDetailsBottomSheet.TAG) as LessonDetailsBottomSheet).requireView()
                 assertEquals(activity.getString(R.string.schedule_unknown_subject), root.text(R.id.section_name))
                 assertEquals(View.VISIBLE, root.findViewById<View>(R.id.time_card).visibility)
-                for (id in listOf(R.id.place_card, R.id.link_fact, R.id.actions, R.id.note_card, R.id.friends_card)) {
+                for (id in listOf(R.id.place_card, R.id.flow_fact, R.id.link_fact, R.id.actions, R.id.note_card, R.id.friends_card)) {
                     assertEquals(View.GONE, root.findViewById<View>(id).visibility)
                 }
                 ViewChecks.assertTextFits(root)
             }
             Screenshots.capture("lesson-details-screenshots", "minimal") { settle() }
+        }
+    }
+
+    @Test
+    fun longFlowNameWrapsInEveryAppearance() {
+        val longFlow = "Тестовый поток с очень длинным названием, которое не помещается в одну строку экрана 12345"
+        assertEquals(90, longFlow.length)
+        val defaultPrimary = mutableMapOf<Boolean, Int>()
+        Appearances.default.forEach { spec ->
+            ScheduleLifecycleTestActivity.appearance = spec.toScheduleLifecycle()
+            withSchedule(lessons = listOf(lesson().copy(groupName = longFlow))) { scenario ->
+                scenario.onActivity { activity ->
+                    spec.assertEffective(activity.findViewById(R.id.schedule_test_container), defaultPrimary)
+                    activity.recycler().descendants().first { it.id == R.id.card_container && it.isShown }.performClick()
+                }
+                settle()
+                scenario.onActivity { activity ->
+                    val root = activity.sheet().requireView()
+                    spec.assertEffective(root, defaultPrimary)
+                    assertFlowRow(root, longFlow)
+                    assertTrue(root.findViewById<View>(R.id.flow_fact).findViewById<TextView>(R.id.fact_value).lineCount > 1)
+                    ViewChecks.assertTextFits(root)
+                    ViewChecks.assertTouchTargets(root)
+                }
+                frame(scenario, "flow-${spec.name}")
+            }
+        }
+    }
+
+    @Test
+    fun sportSheetsHaveNoFlowRow() {
+        withSchedule { scenario ->
+            scenario.onActivity {
+                PendingSportDetailsBottomSheet.newInstance(pendingBooking()).show(it.supportFragmentManager, PendingSportDetailsBottomSheet.TAG)
+            }
+            settle()
+            scenario.onActivity { activity ->
+                val sheet = activity.supportFragmentManager.findFragmentByTag(PendingSportDetailsBottomSheet.TAG) as PendingSportDetailsBottomSheet
+                val root = sheet.requireView()
+                assertEquals(View.VISIBLE, root.findViewById<View>(R.id.teacher_fact).visibility)
+                assertEquals(View.GONE, root.findViewById<View>(R.id.flow_fact).visibility)
+            }
         }
     }
 
@@ -260,13 +303,7 @@ class LessonDetailsVisualTest {
 
     @Test
     fun aPendingSportRowOpensItsOwnSheetWithTheSportHandOff() {
-        val start = LocalDate.of(2026, 9, 7).atTime(16, 0).atOffset(java.time.ZoneOffset.ofHours(3))
-        val booking = PendingSportBooking(
-            queueId = 1, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100,
-            sectionName = "Современные танцы", start = start, end = start.plusMinutes(90),
-            teacherFio = SettingsNavigationTestActivity.LONG_NAME, roomName = "Кронверкский проспект, 49, зал 1",
-            isPrediction = true, teacherIsu = 300002
-        )
+        val booking = pendingBooking()
         val defaultPrimary = mutableMapOf<Boolean, Int>()
         Appearances.default.forEachIndexed { index, spec ->
             ScheduleLifecycleTestActivity.appearance = spec.toScheduleLifecycle()
@@ -366,6 +403,19 @@ class LessonDetailsVisualTest {
             row.createAccessibilityNodeInfo().actionList.single { it.id == AccessibilityActionCompat.ACTION_CLICK.id }.label)
     }
 
+    /** The flow row reads like the other facts, sits between the teacher and the place and does nothing on tap. */
+    private fun assertFlowRow(root: View, flow: String) {
+        val row = root.findViewById<View>(R.id.flow_fact)
+        assertEquals(View.VISIBLE, row.visibility)
+        assertEquals(flow, root.fact(R.id.flow_fact))
+        assertEquals("Поток: $flow", row.findViewById<View>(R.id.fact_value).contentDescription)
+        assertEquals(View.VISIBLE, row.findViewById<View>(R.id.fact_icon).visibility)
+        val teacher = root.findViewById<View>(R.id.teacher_fact)
+        val location = root.findViewById<View>(R.id.location_fact)
+        assertTrue(teacher.bottom <= row.top && row.bottom <= location.top)
+        assertNoTeacherAction(row)
+    }
+
     private fun assertNoTeacherAction(row: View) {
         assertFalse(row.isClickable)
         assertFalse(row.isFocusable)
@@ -383,10 +433,20 @@ class LessonDetailsVisualTest {
 
     private fun settle() = TestUi.settle(400)
 
+    private fun pendingBooking(): PendingSportBooking {
+        val start = LocalDate.of(2026, 9, 7).atTime(16, 0).atOffset(java.time.ZoneOffset.ofHours(3))
+        return PendingSportBooking(
+            queueId = 1, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100,
+            sectionName = "Современные танцы", start = start, end = start.plusMinutes(90),
+            teacherFio = SettingsNavigationTestActivity.LONG_NAME, roomName = "Кронверкский проспект, 49, зал 1",
+            isPrediction = true, teacherIsu = 300002
+        )
+    }
+
     private fun lesson() = Lesson(
         pairId = 1, start = LocalTime.of(8, 20), end = LocalTime.of(9, 50), type = "Лекция", typeId = Lesson.TypeId(1),
         note = "Организационная информация о занятии", subjectName = "Математический анализ (продвинутый уровень)",
-        subjectId = 1, groupName = "Тестовая группа", flowId = 1, flowTypeId = 2, teacherIsu = null,
+        subjectId = 1, groupName = "ФИЗ ПИИКТ 3.2", flowId = 1, flowTypeId = 2, teacherIsu = null,
         teacherFio = "Тестовый преподаватель с длинным именем", room = Room("1506"),
         building = Building("Кронверкский проспект, 49"), buildingId = 13, mainBuildingId = 13,
         format = "Очный", formatId = 1, zoomUrl = null, zoomPassword = null, zoomInfo = null

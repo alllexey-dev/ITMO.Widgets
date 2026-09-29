@@ -33,7 +33,8 @@ data class DetailsHeaderContent(
     val end: LocalTime,
     val teacher: String?,
     val location: String?,
-    val mapAvailable: Boolean
+    val mapAvailable: Boolean,
+    val flow: String? = null
 )
 
 fun ViewDetailsHeaderBinding.bind(content: DetailsHeaderContent, onTeacher: (() -> Unit)?, onMap: () -> Unit) {
@@ -51,10 +52,12 @@ fun ViewDetailsHeaderBinding.bind(content: DetailsHeaderContent, onTeacher: (() 
     teacherFact.bindFact(R.string.sport_details_teacher, content.teacher.orEmpty(), R.drawable.ic_person_rounded)
     teacherFact.bindAction(onTeacher)
     bindTeacherLevel(null, reserve = false)
+    flowFact.bindFact(R.string.schedule_lesson_details_flow, content.flow.orEmpty(), R.drawable.ic_group)
     locationFact.bindFact(R.string.sport_details_location, content.location.orEmpty(), R.drawable.ic_location_on_rounded)
     mapButton.isVisible = content.mapAvailable
     mapButton.setOnClickListener { onMap() }
-    placeCard.isVisible = teacherFact.root.isVisible || locationFact.root.isVisible || mapButton.isVisible
+    placeCard.isVisible = teacherFact.root.isVisible || flowFact.root.isVisible || locationFact.root.isVisible ||
+        mapButton.isVisible
 }
 
 /**

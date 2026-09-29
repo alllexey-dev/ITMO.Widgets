@@ -378,8 +378,9 @@ class SportCardsVisualTest {
                     val details = sheet(activity)
                     val root = details.requireView()
                     val place = root.findViewById<ViewGroup>(R.id.place_card)
-                    assertEquals(listOf(R.id.teacher_fact, R.id.location_fact, R.id.map_button),
+                    assertEquals(listOf(R.id.teacher_fact, R.id.flow_fact, R.id.location_fact, R.id.map_button),
                         (0 until place.childCount).map { place.getChildAt(it).id })
+                    assertEquals(View.GONE, root.findViewById<View>(R.id.flow_fact).visibility)
                     assertEquals(predicted.roomName, root.findViewById<View>(R.id.location_fact)
                         .findViewById<TextView>(R.id.fact_value).text.toString())
                     assertTrue(root.findViewById<View>(R.id.attention_container).descendants()

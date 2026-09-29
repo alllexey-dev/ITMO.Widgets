@@ -120,6 +120,10 @@
             layout="@layout/item_sport_detail_fact" />
 
         <include
+            android:id="@+id/flow_fact"
+            layout="@layout/item_sport_detail_fact" />
+
+        <include
             android:id="@+id/location_fact"
             layout="@layout/item_sport_detail_fact" />
 

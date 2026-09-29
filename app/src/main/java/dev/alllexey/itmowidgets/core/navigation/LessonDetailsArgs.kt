@@ -20,5 +20,7 @@ data class LessonDetailsArgs(
     val note: String?,
     val zoomUrl: String?,
     val zoomPassword: String?,
-    val zoomInfo: String?
+    val zoomInfo: String?,
+    /** The My ITMO flow the lesson belongs to, such as "ФИЗ ПИИКТ 3.2". */
+    val flowName: String? = null
 ) : Serializable

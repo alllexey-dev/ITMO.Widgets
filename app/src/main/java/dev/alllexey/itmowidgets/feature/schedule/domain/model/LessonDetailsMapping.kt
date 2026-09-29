@@ -20,5 +20,6 @@ fun Lesson.toDetailsArgs(date: LocalDate) = LessonDetailsArgs(
     note = note?.takeIf { it.isNotBlank() },
     zoomUrl = zoomUrl?.takeIf { it.isNotBlank() },
     zoomPassword = zoomPassword?.takeIf { it.isNotBlank() },
-    zoomInfo = zoomInfo?.takeIf { it.isNotBlank() }
+    zoomInfo = zoomInfo?.takeIf { it.isNotBlank() },
+    flowName = groupName.trim().takeIf(String::isNotEmpty)
 )
