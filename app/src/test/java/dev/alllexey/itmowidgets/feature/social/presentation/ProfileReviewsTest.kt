@@ -6,7 +6,9 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ProfileReviewsTest {
@@ -48,6 +50,14 @@ class ProfileReviewsTest {
         assertEquals(1, profileReviews(withReviews, null, busyId = null)?.count)
         assertNull(profileReviews(withoutReviews, student, busyId = null))
         assertNull(profileReviews(teacherReviews(5, listOf(copiedReview("r1"))), null, busyId = null)?.summary)
+    }
+
+    @Test
+    fun `the summary scales are folded unless the screen expanded them`() {
+        val reviews = teacherReviews(5, listOf(copiedReview("r1")), summary = teacherSummary())
+
+        assertFalse(checkNotNull(profileReviews(reviews, null, busyId = null)).summaryExpanded)
+        assertTrue(checkNotNull(profileReviews(reviews, null, busyId = null, summaryExpanded = true)).summaryExpanded)
     }
 
     private fun section(

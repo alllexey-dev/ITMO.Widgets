@@ -46,7 +46,7 @@ sealed interface UserProfileEvent {
 
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val social: SocialRepository,
     private val people: PersonRepository,
     private val reviews: TeacherReviewsRepository,
@@ -60,8 +60,11 @@ class UserProfileViewModel @Inject constructor(
     private val inFlight = MutableStateFlow(true)
     /** The review whose vote or deletion is in flight; one at a time. */
     private val reviewBusy = MutableStateFlow<String?>(null)
-    val uiState: StateFlow<UserProfileUiState> = combine(personPart, socialPart, reviewsPart, inFlight, reviewBusy) { person, block, reviews, loading, busy ->
-        userProfileUiState(isu, person, block, reviews, busy) to loading
+    /** Whether the summary shows its scales; kept across configuration changes and process death. */
+    private val summaryExpanded = savedStateHandle.getStateFlow(SUMMARY_EXPANDED, false)
+    private val reviewsView = combine(reviewBusy, summaryExpanded, ::Pair)
+    val uiState: StateFlow<UserProfileUiState> = combine(personPart, socialPart, reviewsPart, inFlight, reviewsView) { person, block, reviews, loading, (busy, expanded) ->
+        userProfileUiState(isu, person, block, reviews, busy, expanded) to loading
     }.scan(partsState()) { previous, (next, loading) ->
         if (loading && next !is UserProfileUiState.Content && previous is UserProfileUiState.Content) previous else next
     }.stateIn(viewModelScope, SharingStarted.Eagerly, partsState())
@@ -228,6 +231,10 @@ class UserProfileViewModel @Inject constructor(
         actOnReview(reviewId) { reviews.vote(isu, reviewId, value) }
     }
 
+    fun toggleSummaryScales() {
+        savedStateHandle[SUMMARY_EXPANDED] = !summaryExpanded.value
+    }
+
     fun requestDeleteOwnReview() {
         if (readyReviews()?.mine == null) return
         viewModelScope.launch { events.send(UserProfileEvent.ConfirmDeleteReview) }
@@ -268,7 +275,8 @@ class UserProfileViewModel @Inject constructor(
         }
     }
 
-    private fun partsState() = userProfileUiState(isu, personPart.value, socialPart.value, reviewsPart.value, reviewBusy.value)
+    private fun partsState() =
+        userProfileUiState(isu, personPart.value, socialPart.value, reviewsPart.value, reviewBusy.value, summaryExpanded.value)
     private fun readyReviews() = (reviewsPart.value as? ProfilePart.Ready)?.value
     private fun socialBlock() = (socialPart.value as? ProfilePart.Ready)?.value
     private fun AppError.isSocialAbsence() = this == AppError.NotFound || this == AppError.CustomServicesDisabled
@@ -276,5 +284,6 @@ class UserProfileViewModel @Inject constructor(
 
     companion object {
         internal val PART_DEADLINE: Duration = 3.seconds
+        internal const val SUMMARY_EXPANDED = "summary_expanded"
     }
 }

@@ -872,6 +872,10 @@
     <string name="teacher_summary_pros">Плюсы</string>
     <string name="teacher_summary_cons">Минусы</string>
     <string name="teacher_summary_list">%1$s: %2$s</string>
+    <string name="teacher_summary_more">Подробнее</string>
+    <string name="teacher_summary_less">Свернуть</string>
+    <string name="teacher_summary_collapsed">свёрнуто</string>
+    <string name="teacher_summary_expanded">развёрнуто</string>
     <string name="teacher_summary_tag_automat">Автомат</string>
     <string name="teacher_summary_tag_many_labs">Много лаб</string>
     <string name="teacher_summary_tag_heavy_homework">Много домашки</string>

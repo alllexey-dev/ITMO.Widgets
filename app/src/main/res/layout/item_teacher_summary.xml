@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The AI summary above the reviews: a header with the review count, the tone, a short description, pros and cons, tags and five scales. -->
+<!-- The AI summary above the reviews: a header with the review count, the tone, a short description, pros and cons, tags and five scales folded behind a text button. -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -10,6 +10,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:clipToPadding="false"
         android:orientation="vertical"
         android:padding="@dimen/design_card_padding">
 
@@ -120,7 +121,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/design_spacing_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <include
                 android:id="@+id/scale_explains"
@@ -143,6 +146,23 @@
                 layout="@layout/view_summary_scale" />
 
         </LinearLayout>
+
+        <!-- The 48 dp target reaches into the card padding, so the label keeps the content edge and a compact bottom. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/scales_toggle"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-12dp"
+            android:layout_marginBottom="-12dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="@dimen/design_touch_target"
+            android:text="@string/teacher_summary_more"
+            app:icon="@drawable/ic_summary_expand"
+            app:iconGravity="textEnd"
+            app:iconPadding="4dp"
+            app:iconSize="18dp" />
 
     </LinearLayout>
 

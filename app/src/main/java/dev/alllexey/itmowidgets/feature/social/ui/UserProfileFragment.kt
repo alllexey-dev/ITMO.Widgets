@@ -67,7 +67,8 @@ class UserProfileFragment : Fragment() {
             onDeleteReview = viewModel::requestDeleteOwnReview,
             onVote = viewModel::vote,
             onReport = { id -> reviewArgs()?.let { openReviewReport(it, id) } },
-            onAuthor = { openUserProfile(it) }
+            onAuthor = { openUserProfile(it) },
+            onToggleSummary = viewModel::toggleSummaryScales
         ))
         binding.profileList.adapter = adapter
         binding.profileList.itemAnimator = null

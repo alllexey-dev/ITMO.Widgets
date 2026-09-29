@@ -42,7 +42,8 @@ sealed interface ProfileItem {
     data class Facts(val facts: List<ProfileFact>) : ProfileItem
     /** [count] is appended to the title when positive; [actionRes] is a trailing text button. */
     data class Section(@param:StringRes val titleRes: Int, val count: Int = 0, @param:StringRes val actionRes: Int? = null) : ProfileItem
-    data class Summary(val summary: TeacherSummary) : ProfileItem
+    /** The scales show only when [expanded]; the rest of the card is always visible. */
+    data class Summary(val summary: TeacherSummary, val expanded: Boolean) : ProfileItem
     data class OwnReview(val review: OwnTeacherReview, val busy: Boolean) : ProfileItem
     data class Review(val review: TeacherReview, val canVote: Boolean, val canReport: Boolean, val busy: Boolean) : ProfileItem
 }
@@ -59,7 +60,8 @@ data class ProfileActions(
     val onDeleteReview: () -> Unit = {},
     val onVote: (reviewId: String, up: Boolean) -> Unit = { _, _ -> },
     val onReport: (reviewId: String) -> Unit = {},
-    val onAuthor: (isu: Int) -> Unit = {}
+    val onAuthor: (isu: Int) -> Unit = {},
+    val onToggleSummary: () -> Unit = {}
 )
 
 /** One page with independently updating blocks; late reviews are appended after all identity facts. */
@@ -81,7 +83,7 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
             state.reviews?.let { reviews ->
                 add(ProfileItem.Section(R.string.teacher_reviews_title, reviews.count,
                     R.string.teacher_review_write.takeIf { reviews.canWrite }))
-                reviews.summary?.let { add(ProfileItem.Summary(it)) }
+                reviews.summary?.let { add(ProfileItem.Summary(it, reviews.summaryExpanded)) }
                 reviews.mine?.let { add(ProfileItem.OwnReview(it, busy = reviews.busyId == it.id)) }
                 reviews.items.forEach {
                     add(ProfileItem.Review(it, reviews.canVote, reviews.canReport, busy = reviews.busyId == it.id))
@@ -123,7 +125,7 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
             is ProfileItem.Sharing -> (holder as SharingHolder).bind(item.social)
             is ProfileItem.Facts -> (holder as FactsHolder).binding.bindFacts(item.facts)
             is ProfileItem.Section -> (holder as SectionHolder).bind(item)
-            is ProfileItem.Summary -> (holder as SummaryHolder).binding.bind(item.summary)
+            is ProfileItem.Summary -> (holder as SummaryHolder).binding.bind(item.summary, item.expanded, actions.onToggleSummary)
             is ProfileItem.OwnReview -> (holder as OwnReviewHolder).binding.bind(item, actions)
             is ProfileItem.Review -> (holder as ReviewHolder).binding.bind(item, actions)
         }

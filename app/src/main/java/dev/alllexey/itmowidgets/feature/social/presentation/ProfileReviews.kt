@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 
 /**
  * The reviews section of a profile; [busyId] is the review whose vote or deletion is in flight. [summary] is
- * Backend's AI summary of the reviews and comes first in the section.
+ * Backend's AI summary of the reviews and comes first in the section; its scales show only when [summaryExpanded].
  */
 data class ProfileReviews(
     val items: List<TeacherReview>,
@@ -18,6 +18,7 @@ data class ProfileReviews(
     val canReport: Boolean,
     val busyId: String?,
     val summary: TeacherSummary? = null,
+    val summaryExpanded: Boolean = false,
 ) {
     /** Every review the viewer sees here, their own one included. */
     val count: Int get() = items.size + if (mine != null) 1 else 0
@@ -27,10 +28,11 @@ data class ProfileReviews(
  * The section exists when there is something to read or the viewer may write. Writing needs no own review yet
  * and a person who teaches: Backend has seen them teach, or My ITMO lists any position.
  */
-fun profileReviews(reviews: TeacherReviews?, person: Person?, busyId: String?): ProfileReviews? {
+fun profileReviews(reviews: TeacherReviews?, person: Person?, busyId: String?, summaryExpanded: Boolean = false): ProfileReviews? {
     if (reviews == null) return null
     val teaches = reviews.knownTeacher || person?.positions?.isNotEmpty() == true
     val canWrite = reviews.canWrite && reviews.mine == null && teaches
     if (reviews.reviews.isEmpty() && reviews.mine == null && !canWrite) return null
-    return ProfileReviews(reviews.reviews, reviews.mine, canWrite, reviews.canVote, reviews.canReport, busyId, reviews.summary)
+    return ProfileReviews(reviews.reviews, reviews.mine, canWrite, reviews.canVote, reviews.canReport, busyId, reviews.summary,
+        summaryExpanded)
 }

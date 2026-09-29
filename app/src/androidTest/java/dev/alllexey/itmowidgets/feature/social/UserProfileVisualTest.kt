@@ -16,6 +16,7 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.R as MaterialR
@@ -664,13 +665,7 @@ class UserProfileVisualTest {
                 assertEquals("Плюсы: Понятно объясняет сложные темы; Честно оценивает", card.findViewById<View>(R.id.pros).contentDescription)
                 assertEquals(listOf("Много лаб", "Строгий на защите", "Чёткие требования"), card.tags())
                 assertTrue(card.findViewById<ViewGroup>(R.id.tags).children.all { !it.isClickable && !it.isFocusable })
-                assertEquals(
-                    listOf("Объясняет" to "хорошо", "Отношение к студентам" to "нейтральное", "Справедливость оценок" to "высокая",
-                        "Строгость" to "высокая", "Нагрузка" to "мало данных"),
-                    card.scales().map { it.text(R.id.name) to it.text(R.id.value) },
-                )
-                assertEquals(listOf(true, true, true, true, false), card.scales().map { it.findViewById<View>(R.id.reason).isShown })
-                assertEquals("Объясняет: хорошо. Хвалят понятные лекции", card.scales().first().contentDescription)
+                card.assertScalesFolded(expanded = false)
                 val gap = card.screenTop() - activity.holder<ProfileItem.Section>().let { it.screenTop() + it.height }
                 assertEquals(0, gap)
             }
@@ -686,6 +681,77 @@ class UserProfileVisualTest {
                 assertEquals(card.resources.getDimensionPixelSize(R.dimen.design_spacing_compact), next)
             }
             frame(scenario, "summary-end-${spec.name}")
+        }
+    }
+
+    @Test fun summaryScalesFoldBehindATextButton() {
+        val specs = if (Appearances.fullMatrix) Appearances.all else Appearances.all.take(2)
+        specs.forEach { spec ->
+            preview(spec, {
+                UserProfilePreviewActivity.person = AppResult.Success(teacher())
+                UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews().copy(summary = sampleSummary()))
+            }) { scenario ->
+                content(scenario)
+                scrollTo<ProfileItem.Section>(scenario)
+                var sectionTop = 0
+                var cardTop = 0
+                var collapsedHeight = 0
+                var descriptionTop = 0
+                scenario.onActivity { activity ->
+                    val card = activity.holder<ProfileItem.Summary>()
+                    card.assertScalesFolded(expanded = false)
+                    assertTrue(card.findViewById<View>(R.id.level_row).isShown)
+                    assertTrue(card.findViewById<View>(R.id.description).isShown)
+                    assertTrue(card.findViewById<View>(R.id.pros).isShown)
+                    assertTrue(card.findViewById<View>(R.id.cons).isShown)
+                    assertTrue(card.findViewById<View>(R.id.tags).isShown)
+                    sectionTop = activity.holder<ProfileItem.Section>().screenTop()
+                    cardTop = card.screenTop()
+                    collapsedHeight = card.height
+                    descriptionTop = card.findViewById<View>(R.id.description).screenTop()
+                }
+                frame(scenario, "summary-collapsed-${spec.name}")
+
+                onView(withId(R.id.scales_toggle)).perform(click())
+                TestUi.eventually {
+                    scenario.onActivity { activity ->
+                        val card = activity.holder<ProfileItem.Summary>()
+                        card.assertScalesFolded(expanded = true)
+                        assertEquals(5, card.scales().count { it.isShown })
+                        assertEquals(
+                            listOf("Объясняет" to "хорошо", "Отношение к студентам" to "нейтральное", "Справедливость оценок" to "высокая",
+                                "Строгость" to "высокая", "Нагрузка" to "мало данных"),
+                            card.scales().map { it.text(R.id.name) to it.text(R.id.value) },
+                        )
+                        assertEquals(listOf(true, true, true, true, false), card.scales().map { it.findViewById<View>(R.id.reason).isShown })
+                        assertEquals("Объясняет: хорошо. Хвалят понятные лекции", card.scales().first().contentDescription)
+                        // Only the card grows: nothing above it and none of its own blocks move.
+                        assertEquals(sectionTop, activity.holder<ProfileItem.Section>().screenTop())
+                        assertEquals(cardTop, card.screenTop())
+                        assertEquals(descriptionTop, card.findViewById<View>(R.id.description).screenTop())
+                        assertTrue(card.height > collapsedHeight)
+                    }
+                }
+                frame(scenario, "summary-expanded-${spec.name}")
+
+                scenario.recreate()
+                content(scenario)
+                scrollTo<ProfileItem.Section>(scenario)
+                scenario.onActivity { activity ->
+                    assertTrue((activity.items().single { it is ProfileItem.Summary } as ProfileItem.Summary).expanded)
+                    activity.holder<ProfileItem.Summary>().assertScalesFolded(expanded = true)
+                }
+
+                onView(withId(R.id.scales_toggle)).perform(click())
+                TestUi.eventually {
+                    scenario.onActivity { activity ->
+                        val card = activity.holder<ProfileItem.Summary>()
+                        card.assertScalesFolded(expanded = false)
+                        assertEquals(collapsedHeight, card.height)
+                        assertEquals(cardTop, card.screenTop())
+                    }
+                }
+            }
         }
     }
 
@@ -717,12 +783,14 @@ class UserProfileVisualTest {
         }) { scenario ->
             content(scenario)
             scrollTo<ProfileItem.Section>(scenario)
+            expandSummary(scenario)
             scenario.onActivity { activity ->
                 val card = activity.holder<ProfileItem.Summary>()
                 assertEquals("Сводка по 21 отзыву", card.text(R.id.label))
                 assertEquals(View.GONE, card.findViewById<View>(R.id.pros).visibility)
                 assertEquals(View.GONE, card.findViewById<View>(R.id.cons).visibility)
                 assertEquals(View.GONE, card.findViewById<View>(R.id.tags).visibility)
+                assertEquals(5, card.scales().count { it.isShown })
                 assertEquals(List(5) { "мало данных" }, card.scales().map { it.text(R.id.value) })
                 assertTrue(card.scales().none { it.findViewById<View>(R.id.reason).isShown })
                 val muted = card.context.color.onSurfaceVariant
@@ -753,6 +821,7 @@ class UserProfileVisualTest {
             }) { scenario ->
                 content(scenario)
                 scrollTo<ProfileItem.Section>(scenario)
+                expandSummary(scenario)
                 scenario.onActivity { activity ->
                     val card = activity.holder<ProfileItem.Summary>()
                     assertEquals(400, LONG_DESCRIPTION.length)
@@ -766,6 +835,7 @@ class UserProfileVisualTest {
                     // The sign of a point sits on its first line at any font scale.
                     val point = card.findViewById<ViewGroup>(R.id.pros).getChildAt(0)
                     assertEquals(point.findViewById<TextView>(R.id.text).lineHeight, point.findViewById<View>(R.id.icon).height)
+                    assertTrue(card.scales().all { it.findViewById<View>(R.id.reason).isShown })
                 }
                 frame(scenario, "summary-long-top-${spec.name}")
                 scenario.onActivity { it.list().scrollBy(0, it.holder<ProfileItem.Summary>().height / 2) }
@@ -848,6 +918,38 @@ class UserProfileVisualTest {
     }
 
     private fun appearances(block: (Appearances.Spec) -> Unit) = Appearances.default.forEach(block)
+
+    /** Brings «Подробнее» on screen, taps it, waits for the scales and returns to the section heading. */
+    private fun expandSummary(scenario: ActivityScenario<UserProfilePreviewActivity>) {
+        scenario.onActivity { activity ->
+            val toggle = activity.holder<ProfileItem.Summary>().findViewById<View>(R.id.scales_toggle)
+            val list = activity.list()
+            val overflow = toggle.screenTop() + toggle.height - (list.screenTop() + list.height)
+            if (overflow > 0) list.scrollBy(0, overflow)
+        }
+        TestUi.settle(80)
+        onView(withId(R.id.scales_toggle)).perform(click())
+        TestUi.eventually { scenario.onActivity { it.holder<ProfileItem.Summary>().assertScalesFolded(expanded = true) } }
+        scrollTo<ProfileItem.Section>(scenario)
+    }
+
+    /** The scales and their text button: label, TalkBack state, a full touch target and the content edge. */
+    private fun View.assertScalesFolded(expanded: Boolean) {
+        assertEquals(expanded, findViewById<View>(R.id.scales).isShown)
+        assertEquals(if (expanded) View.VISIBLE else View.GONE, findViewById<View>(R.id.scales).visibility)
+        val toggle = findViewById<TextView>(R.id.scales_toggle)
+        assertTrue(toggle.isShown)
+        assertEquals(if (expanded) "Свернуть" else "Подробнее", toggle.text.toString())
+        val node = toggle.createAccessibilityNodeInfo()
+        assertEquals(if (expanded) "развёрнуто" else "свёрнуто", node.stateDescription?.toString())
+        assertTrue(node.isClickable)
+        assertTrue(node.isEnabled)
+        val touchTarget = resources.getDimensionPixelSize(R.dimen.design_touch_target)
+        assertTrue("Toggle ${toggle.width}x${toggle.height}", toggle.height >= touchTarget && toggle.width >= touchTarget)
+        assertEquals(findViewById<View>(R.id.description).left, toggle.left + toggle.paddingStart)
+        // The toggle ends the card; the target reaches into its padding, not past it.
+        assertTrue(toggle.bottom <= (toggle.parent as View).height)
+    }
 
     private fun preview(
         spec: Appearances.Spec,

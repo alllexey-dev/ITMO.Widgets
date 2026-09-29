@@ -35,7 +35,8 @@ fun userProfileUiState(
     person: ProfilePart<Person>,
     social: ProfilePart<SocialBlock>,
     reviews: ProfilePart<TeacherReviews>,
-    busyId: String? = null
+    busyId: String? = null,
+    summaryExpanded: Boolean = false
 ): UserProfileUiState {
     if (person is ProfilePart.Loading || social is ProfilePart.Loading || reviews is ProfilePart.Loading) {
         return UserProfileUiState.Loading
@@ -52,7 +53,7 @@ fun userProfileUiState(
             headline = profileHeadline(personality, if (personality == null) group else null),
             facts = profileFacts(personality, if (personality == null) group else null) + isuFact(isu),
             social = block,
-            reviews = profileReviews((reviews as? ProfilePart.Ready)?.value, personality, busyId)
+            reviews = profileReviews((reviews as? ProfilePart.Ready)?.value, personality, busyId, summaryExpanded)
         )
     }
     val error = listOfNotNull((person as? ProfilePart.Failed)?.error, (social as? ProfilePart.Failed)?.error)

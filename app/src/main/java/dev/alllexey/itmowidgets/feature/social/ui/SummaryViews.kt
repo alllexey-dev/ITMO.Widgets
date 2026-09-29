@@ -25,9 +25,10 @@ import dev.alllexey.itmowidgets.databinding.ViewSummaryScaleBinding
 
 /**
  * The AI summary card. Texts are plain: nothing is parsed as markup or links. Empty blocks are hidden; every mutable
- * property is set here, so a recycled card never keeps the previous teacher's state.
+ * property is set here, so a recycled card never keeps the previous teacher's state. The scales fold behind a text
+ * button whose state belongs to the screen, so it survives rebinds and recreation.
  */
-internal fun ItemTeacherSummaryBinding.bind(summary: TeacherSummary) {
+internal fun ItemTeacherSummaryBinding.bind(summary: TeacherSummary, expanded: Boolean, onToggle: () -> Unit) {
     val context = root.context
     val title = context.resources.getQuantityString(R.plurals.teacher_summary_label, summary.reviewCount, summary.reviewCount)
     label.text = title
@@ -62,14 +63,22 @@ internal fun ItemTeacherSummaryBinding.bind(summary: TeacherSummary) {
     }
     summary.tags.forEachIndexed { index, tag -> (tags.getChildAt(index) as Chip).setText(tag.label()) }
 
-    val scales = summary.scales.associateBy(SummaryScale::kind)
+    val byKind = summary.scales.associateBy(SummaryScale::kind)
     listOf(
         scaleExplains to SummaryScaleKind.EXPLAINS,
         scaleAttitude to SummaryScaleKind.ATTITUDE,
         scaleFairness to SummaryScaleKind.FAIRNESS,
         scaleStrictness to SummaryScaleKind.STRICTNESS,
         scaleWorkload to SummaryScaleKind.WORKLOAD,
-    ).forEach { (view, kind) -> view.bind(kind, scales[kind]) }
+    ).forEach { (view, kind) -> view.bind(kind, byKind[kind]) }
+    scales.isVisible = expanded
+    scalesToggle.setText(if (expanded) R.string.teacher_summary_less else R.string.teacher_summary_more)
+    scalesToggle.setIconResource(if (expanded) R.drawable.ic_summary_collapse else R.drawable.ic_summary_expand)
+    ViewCompat.setStateDescription(
+        scalesToggle,
+        context.getString(if (expanded) R.string.teacher_summary_expanded else R.string.teacher_summary_collapsed),
+    )
+    scalesToggle.setOnClickListener { onToggle() }
 }
 
 /** One row per point; the block is read by TalkBack as «Плюсы: …». */

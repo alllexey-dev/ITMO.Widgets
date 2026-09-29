@@ -837,6 +837,44 @@ class UserProfileViewModelTest {
     }
 
     @Test
+    fun `the summary scales start folded, toggle and keep their state across updates`() = runTest(mainDispatcherRule.dispatcher) {
+        val summary = teacherSummary()
+        val reviews = FakeTeacherReviewsRepository().apply {
+            results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1")), summary = summary)))
+        }
+        val handle = handle(5)
+        val viewModel = UserProfileViewModel(handle, FakeSocialRepository(), personRepository(), reviews, currentUser(1))
+        runCurrent()
+        assertEquals(false, viewModel.content().reviews?.summaryExpanded)
+
+        viewModel.toggleSummaryScales()
+        runCurrent()
+        assertEquals(true, viewModel.content().reviews?.summaryExpanded)
+        assertEquals(true, handle.get<Boolean>(UserProfileViewModel.SUMMARY_EXPANDED))
+
+        reviews.updates.emit(teacherReviews(5, listOf(communityReview("r1"), communityReview("r2")), summary = summary))
+        runCurrent()
+        assertEquals(2, viewModel.content().reviews?.items?.size)
+        assertEquals(true, viewModel.content().reviews?.summaryExpanded)
+
+        viewModel.toggleSummaryScales()
+        runCurrent()
+        assertEquals(false, viewModel.content().reviews?.summaryExpanded)
+    }
+
+    @Test
+    fun `the expanded summary is restored from the saved state`() = runTest(mainDispatcherRule.dispatcher) {
+        val reviews = FakeTeacherReviewsRepository().apply {
+            results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1")), summary = teacherSummary())))
+        }
+        val handle = SavedStateHandle(mapOf(UserScreenArgs.ISU to 5, UserProfileViewModel.SUMMARY_EXPANDED to true))
+        val viewModel = UserProfileViewModel(handle, FakeSocialRepository(), personRepository(), reviews, currentUser(1))
+        runCurrent()
+
+        assertEquals(true, viewModel.content().reviews?.summaryExpanded)
+    }
+
+    @Test
     fun `late reviews that arrive as an update are appended without a snackbar`() = runTest(mainDispatcherRule.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val reviews = reviewsRepository().apply { this.gate = { gate.await() } }
