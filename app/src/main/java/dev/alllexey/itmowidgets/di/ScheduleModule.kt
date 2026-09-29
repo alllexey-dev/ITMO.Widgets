@@ -8,11 +8,13 @@ import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
+import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.app.WidgetRefreshCoordinator
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSourceImpl
@@ -63,6 +65,18 @@ abstract class ScheduleModule {
     abstract fun bindSubjectLessonsGateway(
         impl: SubjectLessonsGatewayImpl
     ): SubjectLessonsGateway
+
+    @Binds
+    @Singleton
+    abstract fun bindTeacherLessonsGateway(
+        impl: TeacherLessonsGatewayImpl
+    ): TeacherLessonsGateway
+
+    @Binds
+    @IntoSet
+    abstract fun bindTeacherLessonsSessionDataCleaner(
+        impl: TeacherLessonsGatewayImpl
+    ): SessionDataCleaner
 
     @Binds
     @IntoSet
