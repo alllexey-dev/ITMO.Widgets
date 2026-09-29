@@ -65,7 +65,8 @@ class ReviewEditorVisualTest {
         }) { scenario ->
             scenario.onActivity { activity ->
                 val sheet = sheet(activity)
-                assertEquals("Отзыв о Константинопольская А.\u00A0К.", sheet.findViewById<TextView>(R.id.title).text.toString())
+                assertEquals("Новый отзыв", sheet.findViewById<TextView>(R.id.title).text.toString())
+                assertEquals("Константинопольская А.\u00A0К.", sheet.findViewById<TextView>(R.id.teacher).text.toString())
                 assertTrue(sheet.findViewById<View>(R.id.title).isAccessibilityHeading)
                 assertEquals("Закрыть", sheet.findViewById<View>(R.id.close).contentDescription)
                 assertTrue(sheet.findViewById<MaterialSwitch>(R.id.anonymous).isChecked)

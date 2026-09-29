@@ -861,7 +861,7 @@
     <string name="teacher_review_score">Рейтинг %1$d</string>
     <string name="teacher_review_report">Пожаловаться</string>
     <string name="teacher_review_actions">Действия с отзывом</string>
-    <string name="review_editor_new">Отзыв о %1$s</string>
+    <string name="review_editor_new">Новый отзыв</string>
     <string name="review_editor_edit">Изменить отзыв</string>
     <string name="review_editor_close">Закрыть</string>
     <string name="review_subject_hint">Предмет</string>

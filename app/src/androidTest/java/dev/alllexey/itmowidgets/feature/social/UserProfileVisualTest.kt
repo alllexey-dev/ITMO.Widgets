@@ -792,7 +792,7 @@ class UserProfileVisualTest {
                 assertEquals(community.author!!.name, author.contentDescription)
             }
             assertEquals(community?.verified == true, row.findViewById<View>(R.id.verified).isShown)
-            assertEquals(community != null && community.author == null && !community.verified, row.findViewById<View>(R.id.unverified).isShown)
+            assertEquals(community != null && !community.verified, row.findViewById<View>(R.id.unverified).isShown)
             val source = row.findViewById<TextView>(R.id.source)
             assertEquals(copy != null, source.isShown)
             if (copy != null) {
@@ -882,7 +882,7 @@ class UserProfileVisualTest {
     private companion object {
         const val BACKEND_NAME = "Соколов Артём Игоревич"
         const val LONG_REASON = "В отзыве есть оценки личных качеств преподавателя; оставьте только то, что касается занятий и материалов"
-        val AUTHOR = UserSummary(200002, "Константинопольская Александра Константиновна", null, emptyList(), UserSharing(sport = false, schedule = false))
+        val AUTHOR = UserSummary(200002, "Преображенская Евгения Владиславовна", null, emptyList(), UserSharing(sport = false, schedule = false))
         const val LONG_DEPARTMENT = "Факультет информационных технологий и программирования, кафедра прикладной математики и теоретической информатики"
         const val UNTITLED_DEPARTMENT = "Институт международного развития и партнёрства"
         const val LONG_SUBJECT = "Математические методы моделирования сложных информационных систем"

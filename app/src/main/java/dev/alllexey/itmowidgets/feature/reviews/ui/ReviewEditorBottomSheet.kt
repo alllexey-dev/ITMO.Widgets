@@ -90,14 +90,15 @@ class ReviewEditorBottomSheet : BottomSheetDialogFragment() {
     private fun render(state: ReviewEditorUiState) = with(binding) {
         rendering = true
         try {
-            title.text = if (state.editing) getString(R.string.review_editor_edit)
-            else getString(R.string.review_editor_new, shortPersonName(viewModel.teacherName))
+            title.setText(if (state.editing) R.string.review_editor_edit else R.string.review_editor_new)
+            teacher.text = shortPersonName(viewModel.teacherName)
             if (subject.text?.toString() != state.subject) {
                 subject.setText(state.subject)
                 subject.setSelection(state.subject.length)
             }
             subjectLayout.error = state.subjectError?.resolve(requireContext())
             bindSuggestions(state.suggestions)
+            markPickedSuggestion(state.subject)
             if (text.text?.toString() != state.text) {
                 text.setText(state.text)
                 text.setSelection(state.text.length)
@@ -124,10 +125,19 @@ class ReviewEditorBottomSheet : BottomSheetDialogFragment() {
             val chip = layoutInflater.inflate(R.layout.item_review_subject_chip, this.suggestions, false) as Chip
             chip.text = name
             chip.setOnClickListener {
-                subject.setText(name)
-                subject.setSelection(subject.text?.length ?: 0)
+                val picked = if (subject.text?.toString() == name) "" else name
+                subject.setText(picked)
+                subject.setSelection(picked.length)
             }
             this.suggestions.addView(chip)
+        }
+    }
+
+    /** The chip matching the typed subject shows as selected, so a tap reads as a choice. */
+    private fun markPickedSuggestion(current: String) = with(binding) {
+        for (index in 0 until suggestions.childCount) {
+            val chip = suggestions.getChildAt(index) as Chip
+            chip.isChecked = chip.text.toString() == current
         }
     }
 

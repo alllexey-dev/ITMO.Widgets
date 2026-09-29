@@ -21,8 +21,8 @@ import dev.alllexey.itmowidgets.databinding.ViewReviewVotesBinding
 import java.util.Locale
 
 /**
- * Another viewer's or a copied review. The bottom row names the origin — the author, the verification mark or the
- * Reviews source — and holds the votes; reporting sits in the overflow menu. Every mutable property is set here.
+ * Another viewer's or a copied review. A named author heads the card; the bottom row holds the verification mark or
+ * the Reviews source and the votes; reporting sits in the overflow menu. Every mutable property is set here.
  */
 internal fun ItemTeacherReviewBinding.bind(item: ProfileItem.Review, actions: ProfileActions) {
     val context = root.context
@@ -41,7 +41,7 @@ internal fun ItemTeacherReviewBinding.bind(item: ProfileItem.Review, actions: Pr
     this.author.setOnClickListener(author?.let { View.OnClickListener { actions.onAuthor(author.isu) } })
     verified.root.isVisible = community?.verified == true
     verified.root.setText(R.string.teacher_review_verified)
-    unverified.isVisible = community != null && author == null && !community.verified
+    unverified.isVisible = community != null && !community.verified
     source.isVisible = copy != null
     source.text = copy?.let {
         it.sourceTitle?.let { title -> context.getString(R.string.teacher_review_source, title) }

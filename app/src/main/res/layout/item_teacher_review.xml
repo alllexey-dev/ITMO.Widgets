@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Three zones: one meta line, the full text, a 48 dp row with the origin on the left and votes on the right. -->
+<!-- Author (named reviews only), one meta line, the full text, a 48 dp row with the mark or source on the left and votes on the right. -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -15,6 +15,18 @@
         android:paddingTop="@dimen/design_card_padding"
         android:paddingEnd="@dimen/design_spacing_related"
         android:paddingBottom="@dimen/design_spacing_related">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/author"
+            style="@style/Widget.ItmoWidgets.ReviewOriginButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-12dp"
+            android:layout_marginBottom="-6dp"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:visibility="gone"
+            tools:text="Иванова А. С."
+            tools:visibility="visible" />
 
         <TextView
             android:id="@+id/meta"
@@ -51,15 +63,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingBottom="@dimen/design_spacing_related">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/author"
-                    style="@style/Widget.ItmoWidgets.ReviewOriginButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    tools:text="Иванова А. С."
-                    tools:visibility="visible" />
 
                 <include
                     android:id="@+id/verified"
