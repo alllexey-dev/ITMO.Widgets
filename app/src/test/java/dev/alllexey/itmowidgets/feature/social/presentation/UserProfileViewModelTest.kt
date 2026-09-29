@@ -6,8 +6,10 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
@@ -138,7 +140,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(people = personRepository(), reviews = reviewsRepository())
         val events = events(viewModel)
         runCurrent()
-        assertEquals(personContent().copy(reviews = sampleReviews().reviews), viewModel.uiState.value)
+        assertEquals(personContent().copy(reviews = section()), viewModel.uiState.value)
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
 
@@ -175,7 +177,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(people = people, reviews = reviews)
         val events = events(viewModel)
         runCurrent()
-        val initial = personContent().copy(reviews = sampleReviews().reviews)
+        val initial = personContent().copy(reviews = section())
         assertEquals(initial, viewModel.uiState.value)
         personGate.complete(Unit)
         runCurrent()
@@ -284,7 +286,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(social, people, reviews)
         val events = events(viewModel)
         runCurrent()
-        val expected = personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = sampleReviews().reviews)
+        val expected = personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = section())
         assertEquals(expected, viewModel.uiState.value)
         gate.complete(Unit)
         runCurrent()
@@ -304,7 +306,7 @@ class UserProfileViewModelTest {
         advanceTimeBy(1_000)
         gate.complete(Unit)
         runCurrent()
-        assertEquals(listOf(personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = sampleReviews().reviews)),
+        assertEquals(listOf(personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false), reviews = section())),
             states.filterIsInstance<UserProfileUiState.Content>())
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
@@ -342,7 +344,7 @@ class UserProfileViewModelTest {
         assertEquals(personContent(), viewModel.uiState.value)
         gate.complete(Unit)
         runCurrent()
-        assertEquals(listOf(UserProfileUiState.Loading, personContent(), personContent().copy(reviews = sampleReviews().reviews)), states)
+        assertEquals(listOf(UserProfileUiState.Loading, personContent(), personContent().copy(reviews = section())), states)
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
 
@@ -609,7 +611,7 @@ class UserProfileViewModelTest {
         val viewModel = viewModel(people = personRepository(), reviews = reviews)
         val events = events(viewModel)
         runCurrent()
-        assertEquals(personContent().copy(reviews = sampleReviews().reviews), viewModel.uiState.value)
+        assertEquals(personContent().copy(reviews = section()), viewModel.uiState.value)
         assertEquals(listOf(UserProfileEvent.LoadFailed), events)
     }
 
@@ -676,7 +678,7 @@ class UserProfileViewModelTest {
         assertEquals(emptyList<UserProfileUiState>(), states)
         gate.complete(Unit)
         runCurrent()
-        assertEquals(personContent().copy(name = "Новое имя", reviews = sampleReviews().reviews), viewModel.uiState.value)
+        assertEquals(personContent().copy(name = "Новое имя", reviews = section()), viewModel.uiState.value)
         assertTrue(states.all { it is UserProfileUiState.Content })
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
@@ -798,11 +800,116 @@ class UserProfileViewModelTest {
         assertEquals(emptyList<UserProfileEvent>(), events)
     }
 
+    @Test
+    fun `an update for this teacher replaces the reviews on the page and others are ignored`() = runTest(mainDispatcherRule.dispatcher) {
+        val reviews = reviewsRepository()
+        val viewModel = viewModel(people = personRepository(), reviews = reviews)
+        runCurrent()
+        val updated = teacherReviews(5, listOf(communityReview("r2")), mine = ownReview(OwnReviewStatus.PENDING))
+
+        reviews.updates.emit(teacherReviews(6, listOf(communityReview("elsewhere"))))
+        runCurrent()
+        assertEquals(section(), viewModel.content().reviews)
+        reviews.updates.emit(updated)
+        runCurrent()
+
+        assertEquals(section(updated), viewModel.content().reviews)
+        assertEquals(2, viewModel.content().reviews?.count)
+    }
+
+    @Test
+    fun `late reviews that arrive as an update are appended without a snackbar`() = runTest(mainDispatcherRule.dispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        val reviews = reviewsRepository().apply { this.gate = { gate.await() } }
+        val viewModel = viewModel(people = personRepository(), reviews = reviews)
+        val events = events(viewModel)
+        runCurrent()
+        expireDeadline()
+        assertEquals(personContent(), viewModel.uiState.value)
+
+        reviews.updates.emit(sampleReviews())
+        runCurrent()
+
+        assertEquals(personContent().copy(reviews = section()), viewModel.uiState.value)
+        assertEquals(emptyList<UserProfileEvent>(), events)
+    }
+
+    @Test
+    fun `an arrow votes, the arrow of the current vote takes it back and the other arrow switches`() = runTest(mainDispatcherRule.dispatcher) {
+        val voted = teacherReviews(5, listOf(communityReview("r1").copy(score = 1, myVote = 1)))
+        val reviews = FakeTeacherReviewsRepository().apply {
+            results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1")))))
+            voteResult = AppResult.Success(voted)
+        }
+        val viewModel = viewModel(people = personRepository(), reviews = reviews)
+        runCurrent()
+
+        viewModel.vote("r1", up = true)
+        runCurrent()
+        assertEquals(1, viewModel.content().reviews?.items?.single()?.myVote)
+        viewModel.vote("r1", up = true)
+        runCurrent()
+        viewModel.vote("r1", up = false)
+        runCurrent()
+
+        assertEquals(listOf("vote:5:r1:1", "vote:5:r1:0", "vote:5:r1:-1"), reviews.actions)
+    }
+
+    @Test
+    fun `a vote in flight marks the review busy and ignores more taps`() = runTest(mainDispatcherRule.dispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        val reviews = FakeTeacherReviewsRepository().apply {
+            results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1"), communityReview("r2")))))
+            voteResult = AppResult.Failure(AppError.Restricted)
+            mutationGate = { gate.await() }
+        }
+        val viewModel = viewModel(people = personRepository(), reviews = reviews)
+        val events = events(viewModel)
+        runCurrent()
+
+        viewModel.vote("r1", up = false)
+        runCurrent()
+        assertEquals("r1", viewModel.content().reviews?.busyId)
+        viewModel.vote("r1", up = true)
+        viewModel.vote("r2", up = true)
+        runCurrent()
+        gate.complete(Unit)
+        runCurrent()
+
+        assertEquals(listOf("vote:5:r1:-1"), reviews.actions)
+        assertEquals(listOf(UserProfileEvent.ActionFailed(AppError.Restricted)), events)
+        assertEquals(null, viewModel.content().reviews?.busyId)
+    }
+
+    @Test
+    fun `deleting the own review asks first and then brings back writing`() = runTest(mainDispatcherRule.dispatcher) {
+        val reviews = FakeTeacherReviewsRepository().apply {
+            results = mapOf(5 to AppResult.Success(teacherReviews(5, mine = ownReview())))
+            deleteResult = AppResult.Success(teacherReviews(5))
+        }
+        val viewModel = viewModel(people = personRepository(), reviews = reviews)
+        val events = events(viewModel)
+        runCurrent()
+        assertEquals(false, viewModel.content().reviews?.canWrite)
+
+        viewModel.requestDeleteOwnReview()
+        runCurrent()
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.ConfirmDeleteReview), events)
+        assertEquals(emptyList<String>(), reviews.actions)
+        viewModel.deleteOwnReview()
+        runCurrent()
+
+        assertEquals(listOf("delete:5"), reviews.actions)
+        assertEquals(null, viewModel.content().reviews?.mine)
+        assertEquals(true, viewModel.content().reviews?.canWrite)
+    }
+
     private fun personRepository() = FakePersonRepository().apply { people = mapOf(5 to AppResult.Success(samplePerson(5))) }
     private fun reviewsRepository() = FakeTeacherReviewsRepository().apply { results = mapOf(5 to AppResult.Success(sampleReviews())) }
     private fun sampleReviews() = teacherReviews(5, listOf(TeacherReview("review-1", "Предмет", null, "Текст отзыва", 0, 0,
         ReviewOrigin.Reviews("Источник", "https://example.org/review"))))
-    private fun personContent() = UserProfileUiState.Content(5, "Персона 5", null, emptyList(), null, emptyList())
+    private fun personContent() = UserProfileUiState.Content(5, "Персона 5", null, null, listOf(isuFact(5)), null, null)
+    private fun section(reviews: TeacherReviews = sampleReviews(), busyId: String? = null) = profileReviews(reviews, samplePerson(5), busyId)
     private fun TestScope.expireDeadline() { advanceTimeBy(UserProfileViewModel.PART_DEADLINE.inWholeMilliseconds); runCurrent() }
     private fun TestScope.states(viewModel: UserProfileViewModel) = mutableListOf<UserProfileUiState>().also { states ->
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.toList(states) }
@@ -820,8 +927,9 @@ class UserProfileViewModelTest {
     ) = UserProfileViewModel(handle(5), social, people, reviews, currentUser(currentIsu))
 
     private fun backendContent(relationship: RelationshipState = RelationshipState.NONE) = UserProfileUiState.Content(
-        5, "Пользователь 5", null, listOf(ProfileFact(ProfileFactKind.EDUCATION, "M3100", "ФИТиП", 1)),
-        SocialBlock(profile(5, relationship), isSelf = false, busy = false), emptyList()
+        5, "Пользователь 5", null, ProfileHeadline.Group("M3100", 1),
+        listOf(ProfileFact(ProfileFactKind.EDUCATION, "M3100", "ФИТиП", 1), isuFact(5)),
+        SocialBlock(profile(5, relationship), isSelf = false, busy = false), null
     )
 
     private fun UserProfileViewModel.content() = uiState.value as UserProfileUiState.Content

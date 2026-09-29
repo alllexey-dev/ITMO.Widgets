@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
@@ -40,6 +41,7 @@ sealed interface UserProfileEvent {
     data class ActionFailed(val error: AppError) : UserProfileEvent
     data class ConfirmRemove(val name: String) : UserProfileEvent
     data object LoadFailed : UserProfileEvent
+    data object ConfirmDeleteReview : UserProfileEvent
 }
 
 @HiltViewModel
@@ -56,8 +58,10 @@ class UserProfileViewModel @Inject constructor(
     private val socialPart = MutableStateFlow<ProfilePart<SocialBlock>>(ProfilePart.Loading)
     private val reviewsPart = MutableStateFlow<ProfilePart<TeacherReviews>>(ProfilePart.Loading)
     private val inFlight = MutableStateFlow(true)
-    val uiState: StateFlow<UserProfileUiState> = combine(personPart, socialPart, reviewsPart, inFlight) { person, block, reviews, loading ->
-        userProfileUiState(isu, person, block, reviews) to loading
+    /** The review whose vote or deletion is in flight; one at a time. */
+    private val reviewBusy = MutableStateFlow<String?>(null)
+    val uiState: StateFlow<UserProfileUiState> = combine(personPart, socialPart, reviewsPart, inFlight, reviewBusy) { person, block, reviews, loading, busy ->
+        userProfileUiState(isu, person, block, reviews, busy) to loading
     }.scan(partsState()) { previous, (next, loading) ->
         if (loading && next !is UserProfileUiState.Content && previous is UserProfileUiState.Content) previous else next
     }.stateIn(viewModelScope, SharingStarted.Eagerly, partsState())
@@ -68,7 +72,15 @@ class UserProfileViewModel @Inject constructor(
     private var isSelf = false
     private val lateParts = mutableSetOf<Part>()
 
-    init { load() }
+    init {
+        viewModelScope.launch {
+            reviews.observeUpdates().filter { it.isu == isu }.collect {
+                lateParts -= Part.REVIEWS
+                reviewsPart.value = ProfilePart.Ready(it)
+            }
+        }
+        load()
+    }
 
     fun load() {
         loadJob?.cancel()
@@ -204,6 +216,43 @@ class UserProfileViewModel @Inject constructor(
 
     fun removeFriend() = act { social.removeFriend(isu) }
 
+    /** The up or down arrow; tapping the arrow of the current vote takes it back. */
+    fun vote(reviewId: String, up: Boolean) {
+        if (reviewBusy.value != null) return
+        val review = readyReviews()?.reviews?.firstOrNull { it.id == reviewId } ?: return
+        val value = when {
+            up && review.myVote > 0 || !up && review.myVote < 0 -> 0
+            up -> 1
+            else -> -1
+        }
+        actOnReview(reviewId) { reviews.vote(isu, reviewId, value) }
+    }
+
+    fun requestDeleteOwnReview() {
+        if (readyReviews()?.mine == null) return
+        viewModelScope.launch { events.send(UserProfileEvent.ConfirmDeleteReview) }
+    }
+
+    fun deleteOwnReview() {
+        if (reviewBusy.value != null) return
+        val mine = readyReviews()?.mine ?: return
+        actOnReview(mine.id) { reviews.delete(isu) }
+    }
+
+    private fun actOnReview(reviewId: String, action: suspend () -> AppResult<TeacherReviews>) {
+        reviewBusy.value = reviewId
+        viewModelScope.launch {
+            try {
+                when (val result = action()) {
+                    is AppResult.Success -> reviewsPart.value = ProfilePart.Ready(result.value)
+                    is AppResult.Failure -> events.send(UserProfileEvent.ActionFailed(result.error))
+                }
+            } finally {
+                reviewBusy.value = null
+            }
+        }
+    }
+
     private fun act(action: suspend () -> AppResult<UserProfile>) {
         val current = socialBlock() ?: return
         if (current.busy) return
@@ -219,7 +268,8 @@ class UserProfileViewModel @Inject constructor(
         }
     }
 
-    private fun partsState() = userProfileUiState(isu, personPart.value, socialPart.value, reviewsPart.value)
+    private fun partsState() = userProfileUiState(isu, personPart.value, socialPart.value, reviewsPart.value, reviewBusy.value)
+    private fun readyReviews() = (reviewsPart.value as? ProfilePart.Ready)?.value
     private fun socialBlock() = (socialPart.value as? ProfilePart.Ready)?.value
     private fun AppError.isSocialAbsence() = this == AppError.NotFound || this == AppError.CustomServicesDisabled
     private enum class Part { PERSON, SOCIAL, REVIEWS }

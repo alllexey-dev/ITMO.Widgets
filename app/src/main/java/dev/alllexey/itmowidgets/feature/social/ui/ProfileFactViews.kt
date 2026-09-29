@@ -29,9 +29,10 @@ private fun ItemProfileFactBinding.bindFact(fact: ProfileFact) {
         ProfileFactKind.POSITION -> R.drawable.ic_work to R.string.person_fact_position
         ProfileFactKind.ROOM -> R.drawable.ic_location_on_rounded to R.string.person_fact_room
         ProfileFactKind.EDUCATION -> R.drawable.ic_school to R.string.person_fact_education
+        ProfileFactKind.ISU -> R.drawable.ic_badge to R.string.person_fact_isu
     }
     factIcon.setImageResource(icon)
-    factTitle.text = fact.title
+    factTitle.text = if (fact.kind == ProfileFactKind.ISU) context.getString(R.string.person_fact_isu_value, fact.title) else fact.title
     factTitle.contentDescription = context.getString(
         R.string.sport_detail_fact_description, context.getString(category), fact.title
     )

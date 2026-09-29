@@ -64,9 +64,9 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
                 add(ProfileItem.Sharing(social))
             }
             if (state.facts.isNotEmpty()) add(ProfileItem.Facts(state.facts))
-            if (state.reviews.isNotEmpty()) {
+            state.reviews?.items?.takeIf { it.isNotEmpty() }?.let { reviews ->
                 add(ProfileItem.Section(R.string.teacher_reviews_title))
-                addAll(state.reviews.map(ProfileItem::Review))
+                addAll(reviews.map(ProfileItem::Review))
             }
         }, onCommitted)
     }

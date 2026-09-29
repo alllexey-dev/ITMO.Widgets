@@ -59,4 +59,38 @@ class ProfileFactsTest {
 
         assertEquals(emptyList<ProfileFact>(), facts)
     }
+
+    @Test
+    fun `the headline is the first position with a short department`() {
+        val person = samplePerson(5).copy(positions = listOf(
+            PersonPosition("Доцент", "Факультет информационных технологий и программирования, кафедра прикладной математики"),
+            PersonPosition("Ассистент", "Кафедра"),
+        ))
+
+        assertEquals(ProfileHeadline.Position("Доцент", "ФИТиП"), profileHeadline(person, UserGroup("M3100", 1, "ФИТиП")))
+    }
+
+    @Test
+    fun `without positions the headline is the student group`() {
+        val person = samplePerson(5).copy(education = listOf(PersonEducation(null, null, "Факультет"), PersonEducation("M3200", 2, null)))
+
+        assertEquals(ProfileHeadline.Group("M3200", 2), profileHeadline(person, null))
+        assertEquals(ProfileHeadline.Group("M3100", 1), profileHeadline(null, UserGroup("M3100", 1, "ФИТиП")))
+        assertEquals(null, profileHeadline(samplePerson(5), null))
+    }
+
+    @Test
+    fun `departments are shortened to their initials or a given abbreviation`() {
+        assertEquals("ФИТиП", shortDepartment("Факультет информационных технологий и программирования"))
+        assertEquals("ИМРиП", shortDepartment("Институт международного развития и партнёрства"))
+        assertEquals("НОЦИКТ", shortDepartment("Научно-образовательный центр ИКТ"))
+        assertEquals("ФПИиКТ", shortDepartment("Факультет программной инженерии и компьютерной техники (ФПИиКТ)"))
+        assertEquals("Кафедра физики", shortDepartment("Кафедра физики"))
+        assertEquals("ЦРОД", shortDepartment("Центр по работе с «Одарёнными детьми»"))
+    }
+
+    @Test
+    fun `the ISU fact shows the number`() {
+        assertEquals(ProfileFact(ProfileFactKind.ISU, "123456", null, null), isuFact(123456))
+    }
 }

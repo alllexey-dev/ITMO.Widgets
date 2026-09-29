@@ -28,9 +28,10 @@ class UserProfileStateTest {
         isu = 5,
         name = "Персона 5",
         pictureUrl = "https://example.test/person.jpg",
-        facts = emptyList(),
+        headline = null,
+        facts = listOf(isuFact(5)),
         social = null,
-        reviews = emptyList()
+        reviews = null
     )
 
     @Test
@@ -66,15 +67,16 @@ class UserProfileStateTest {
                     isu = 5,
                     name = "Пользователь 5",
                     pictureUrl = "https://example.test/backend.jpg",
-                    facts = listOf(ProfileFact(ProfileFactKind.EDUCATION, "M3100", "ФИТиП", 1)),
+                    headline = ProfileHeadline.Group("M3100", 1),
+                    facts = listOf(ProfileFact(ProfileFactKind.EDUCATION, "M3100", "ФИТиП", 1), isuFact(5)),
                     social = social,
-                    reviews = emptyList()
+                    reviews = null
                 )
             ),
             StateCase(
                 "directory identity takes priority without importing backend education",
                 readyPerson, readySocial, readyReviews,
-                personContent.copy(social = social, reviews = reviews.reviews)
+                personContent.copy(social = social, reviews = profileReviews(reviews, person, null))
             ),
             StateCase(
                 "forbidden backend does not hide the directory person",
@@ -125,6 +127,16 @@ class UserProfileStateTest {
         )
 
         assertEquals(personContent.copy(pictureUrl = null, social = social), state)
+    }
+
+    @Test
+    fun `the reviews section carries the own review and the busy review`() {
+        val section = teacherReviews(5, reviews.reviews, mine = ownReview(), canVote = false)
+
+        val state = userProfileUiState(5, ProfilePart.Ready(person), ProfilePart.Absent, ProfilePart.Ready(section), busyId = "own")
+
+        assertEquals(personContent.copy(reviews = ProfileReviews(reviews.reviews, ownReview(), canWrite = false, canVote = false,
+            canReport = true, busyId = "own")), state)
     }
 
     private data class StateCase(

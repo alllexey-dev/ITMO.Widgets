@@ -218,7 +218,7 @@ class UserProfileVisualTest {
             val page = states().filterIsInstance<UserProfileUiState.Content>().single()
             assertEquals(LONG_NAME, page.name)
             assertNotNull(page.social)
-            assertEquals(3, page.reviews.size)
+            assertEquals(3, page.reviews?.items?.size)
             frame(scenario, "staggered-content-${spec.name}")
         }
     }

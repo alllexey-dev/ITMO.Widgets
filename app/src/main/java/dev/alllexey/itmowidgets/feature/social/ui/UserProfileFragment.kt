@@ -137,6 +137,11 @@ class UserProfileFragment : Fragment() {
                 .setNegativeButton(R.string.common_cancel, null)
                 .setPositiveButton(R.string.user_action_remove) { _, _ -> viewModel.removeFriend() }
                 .show()
+            UserProfileEvent.ConfirmDeleteReview -> MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.teacher_review_delete_confirm)
+                .setNegativeButton(R.string.common_cancel, null)
+                .setPositiveButton(R.string.teacher_review_delete) { _, _ -> viewModel.deleteOwnReview() }
+                .show()
             UserProfileEvent.LoadFailed -> Snackbar.make(
                 binding.root,
                 R.string.common_partial_load_error,
