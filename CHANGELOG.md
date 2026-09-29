@@ -6,6 +6,31 @@ publication or deployment.
 
 ## 2.2 — development
 
+### 2026-09-29
+
+- Own teacher reviews in the person profile: `Написать` in the `Отзывы · N`
+  heading when the viewer may write, has no review of the person yet and the
+  person teaches (Backend's `knownTeacher` or a My ITMO position). The editor
+  sheet (`Новый отзыв` / `Изменить отзыв` with the teacher's short name below)
+  has an optional subject with filter-chip suggestions from the viewer's own
+  lessons with the teacher over the last 8 study periods, a text of 30–3000
+  characters and `Анонимно` on by default; unsaved changes ask
+  `Не сохранять отзыв?`. Every version waits for moderation.
+- The own review comes first on an outlined card with its status
+  (`На проверке`, `Отклонён` with the reason, `Скрыт`), anonymity and, once
+  published, its score; its menu edits or deletes it.
+- Others' reviews and the Reviews copies are one list in Backend's order with
+  +1/−1 votes. A named author heads the card as a link to their profile;
+  `Вёл у автора` marks reviews Backend verified through ISU, every other own
+  review shows `Не подтверждён`. `Пожаловаться` in the menu opens a report with
+  `Оскорбления`, `Не тот преподаватель`, `Спам` or `Другое` and a comment.
+- Mutations update every open profile of the teacher without a reload.
+- The profile header shows one line under the name (position with a short
+  department, or the group); `ИСУ N` moved to the end of the facts card.
+- Needs Core and Backend `1.7.0-SNAPSHOT` with `saveMyTeacherReview` and V9
+  (`V9__teacher_reviews.sql`, after `V8__service_credentials.sql`); an older
+  Backend answers with `external`, which this build does not read.
+
 ### 2026-09-28
 
 - One person profile opens for any ISU: the device loads My ITMO name, photo,

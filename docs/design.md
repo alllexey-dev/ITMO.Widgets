@@ -57,6 +57,7 @@ The grid is 4 dp. Compactness never shrinks the touch target.
 |---|---|---|
 | `Card.Content` | 20 dp radius, no stroke | Subject, control, user rows |
 | `Card.Content.Outlined` | 20 dp radius, 1 dp `colorOutlineVariant` | Sport lesson and booking cards, debug cards |
+| `Card.Content.Own` | 20 dp radius, 1 dp `colorPrimary` | The viewer's own teacher review above the others |
 | `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius | Recordbook summary; subject result and PE sport card |
 | `Card.SettingsGroup` | 20 dp radius, no stroke, inner dividers | One card per settings or profile group, never per row |
 | `Card.ScheduleDay` | 16 dp radius, 16 dp between days | A day of lessons with its timeline |
@@ -274,7 +275,22 @@ settings, and restore them if a separate test explicitly changes them.
   `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`, `res/layout/item_subject_link.xml`.
 - User row: `res/layout/item_user_row.xml`.
 - Person profile: `res/layout/fragment_user_profile.xml`,
-  `feature/social/ui/UserProfileAdapter.kt`, `res/layout/item_teacher_review.xml`.
+  `feature/social/ui/UserProfileAdapter.kt`, the section heading with an action
+  `res/layout/item_profile_section.xml`.
+- Teacher reviews: `res/layout/item_teacher_review.xml` (a named author on top
+  as a link, `subject · date`, the full text, a bottom row in
+  `feature/social/ui/ReviewFooterLayout.kt` with the verification pill
+  `view_review_verified.xml`, a muted `Не подтверждён` or the Reviews source,
+  compact votes `view_review_votes.xml` and `⋮`),
+  `res/layout/item_own_teacher_review.xml` (`Card.Content.Own`, a status pill as a
+  12 % wash of its tone: content-based palettes make `…Container` colours too
+  dark for the tone as text), bound in `feature/social/ui/ReviewViews.kt`.
+- Review editor: `res/layout/sheet_review_editor.xml`,
+  `feature/reviews/ui/ReviewEditorBottomSheet.kt`. A form sheet without a handle
+  that cannot be dragged or dismissed outside: Back and the close button ask
+  `Не сохранять отзыв?` only when something changed. The title has a second line
+  with the teacher's short name; subject suggestions are filter chips
+  (`item_review_subject_chip.xml`) that mark the picked one.
 - Clickable teacher fact in details headers: `res/layout/item_sport_detail_fact.xml`,
   `core/ui/DetailsHeader.kt` (`bindAction` resets chevron, ripple, touch target
   and accessibility action when the identifier is absent).
@@ -285,4 +301,5 @@ settings, and restore them if a separate test explicitly changes them.
   `feature/home/ui/HomeFeedAdapter.kt`, `feature/home/HomeFeedVisualTest.kt`.
 - Visual tests: `feature/sport/cards/SportCardsVisualTest.kt`,
   `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
-  `feature/friendselector/SelectionRowsTest.kt`, `feature/social/UserProfileVisualTest.kt`.
+  `feature/friendselector/SelectionRowsTest.kt`, `feature/social/UserProfileVisualTest.kt`,
+  `feature/reviews/ReviewEditorVisualTest.kt`.

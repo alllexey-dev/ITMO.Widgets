@@ -30,7 +30,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 - [Subject links](features/resources.md) — link categories and audiences,
   chips, sheets, the local mode without the connection.
 - [Social](features/social.md) — friends, requests, people search, person profiles.
-- [Teacher reviews](features/reviews.md) — older anonymous text reviews in person profiles.
+- [Teacher reviews](features/reviews.md) — own reviews with premoderation, votes
+  and reports, and Reviews copies in person profiles; the editor and the report.
 - [Notifications](features/notifications.md) — FCM receiver, token sync, handlers.
 - [Widgets](features/widgets.md) — schedule and QR widgets and their previews.
 - [Update offer](features/update.md) — version check and reminder policy.
@@ -51,6 +52,7 @@ editing an old one when a decision changes.
 - [0007 Push delivery guard by recipient ISU](decisions/0007-push-guard.md)
 - [0008 Subject links: schedule-flow audiences, premoderation only for everybody](decisions/0008-community-moderation.md)
 - [0009 One person profile, direct My ITMO identity and copied reviews](decisions/0009-person-profile.md)
+- [0010 Own teacher reviews verified through ISU flows](decisions/0010-review-verification.md)
 
 ## Sibling repositories
 

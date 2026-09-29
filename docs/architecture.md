@@ -35,15 +35,17 @@ core/           cross-cutting; knows nothing about features
   home/         HomeCard model and the HomeCardSource contract every feature contributes to
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
   navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders,
-                LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs);
-                UserScreenArgs.profileIsu validates nullable Long ISUs before Int navigation
+                LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs,
+                TeacherReviewArgs); UserScreenArgs.profileIsu validates nullable Long ISUs before Int navigation
   onboarding/   OnboardingRepository — whether the first-run flow was passed
   network/      WidgetsClient, error mapping, serialization adapters
   notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
   resources/    SubjectLinksRepository, link models, ResourceScope, subjectLinkChips
-  reviews/      TeacherReviewsRepository, TeacherReviews, ExternalTeacherReview, ReviewDate
+  reviews/      TeacherReviewsRepository, TeacherReviews, TeacherReview with ReviewOrigin, OwnTeacherReview,
+                OwnReviewStatus, ReviewReportReason, TeacherReviewDraft, TeacherReviewLimits, ReviewDate
   result/       AppError, AppResult
-  schedule/     schedule preferences, widget-refresh and SubjectLessonsGateway contracts
+  schedule/     schedule preferences, widget-refresh, SubjectLessonsGateway and TeacherLessonsGateway
+                (TeacherLessons.kt) contracts
   services/     CustomServicesRepository — the Backend opt-in
   settings/     WidgetAppearanceRepository and CustomSpoilerRepository — widget appearance
                 for screens outside settings (the first-run flow)
@@ -67,8 +69,12 @@ Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
 `weblogin`, `widget`. A feature does not need all four layers. `weblogin` holds
 the code and link parser, the User-Agent description, the view model and
 `WebLoginBottomSheet` ([web sign-in](features/web-login.md)). `social` owns the
-person profile and its direct My ITMO `PersonRepository`; `reviews/data` owns
-Backend review reads through the shared `core/reviews` contract, so the two
+person profile and its direct My ITMO `PersonRepository`; `reviews` owns
+Backend review reads and mutations (`data`), the editor and report view models
+(`presentation`) and `ReviewEditorBottomSheet` and `ReportReviewDialogFragment`
+(`ui`). The profile reaches them through the shared `core/reviews` contract and
+`AppNavigator`, and the editor reads the viewer's lessons with a teacher through
+`core/schedule/TeacherLessonsGateway` (implemented in `schedule/data`), so the
 features never import each other.
 
 Placement rules:
@@ -184,10 +190,12 @@ Features open contextual screens through `core/ui/navigation.AppNavigator`,
 implemented by `MainActivity` and `MainNavigationCoordinator`. The same port
 shows the lesson and pending-sport sheets (`openLessonDetails`,
 `openPendingSportDetails`) and the subject link sheets (`openSubjectLinks`,
-`openLinkEditor`, `openLinkActions`) and the web sign-in sheet
-(`openWebLogin`) on the Activity's FragmentManager, so a screen in another
-feature can open them without importing `feature/schedule`, `feature/resources`
-or `feature/weblogin`. Selecting or
+`openLinkEditor`, `openLinkActions`), the web sign-in sheet (`openWebLogin`)
+and the review editor and report dialog (`openReviewEditor`,
+`openReviewReport`, with `TeacherReviewArgs`) on the Activity's
+FragmentManager, so a screen in another feature can open them without
+importing `feature/schedule`, `feature/resources`, `feature/weblogin` or
+`feature/reviews`. Selecting or
 reselecting a root tab discards the whole overlay stack; Back pops one overlay
 level; rotation restores the current level. Widget and notification intents are
 parsed by `MainActivityIntentRouting`, queued until the session is signed in,

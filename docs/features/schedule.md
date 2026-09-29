@@ -24,6 +24,22 @@ schedule chosen through the picker, and optional pending sport rows.
   once and only a screen with nothing cached shows the skeleton
   (`schedule_skeleton`) until the cache flow answers.
 
+## Lessons with a teacher
+
+`core/schedule/TeacherLessonsGateway.taughtBy(teacherIsu)` feeds the
+[review editor](reviews.md#editor): the subjects of the viewer's own academic
+lessons with that teacher (suggestions, newest first) and their `flowId`s
+(candidate ISU flows for Backend's check). `TeacherLessonsGatewayImpl` in
+`feature/schedule/data` reads the personal My ITMO schedule for the last 8
+study periods (`StudyPeriods.recent`: 1 September – 31 January and
+1 February – 31 August, the current one up to today), one request per period
+in turn, and keeps academic lessons (`flowTypeId == 2`) whose `teacherId` is the
+teacher. It is read only: these lessons are never uploaded to Backend and do not
+touch the schedule cache. Past periods stay in memory until the session is
+cleared; the current period is requested every time. A failed period is left
+out and requested again next time; only when every period fails is the result
+an error. The recordbook is not used, since its teachers carry no ISU.
+
 ## Friend picker
 
 `feature/friendselector` is a bottom sheet opened from the schedule FAB and

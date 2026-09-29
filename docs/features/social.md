@@ -90,19 +90,24 @@ The whole row opens the person's profile in both sections, including
 One screen opens for any positive ISU, not just registered users. It combines
 three independently loaded parts: `PersonRepository` (My ITMO identity and
 facts), `SocialRepository.profile(isu)` (the ITMO.Widgets block), and
-`TeacherReviewsRepository` (older reviews). A page exists when either identity
-source succeeds. Its name and photo come from My ITMO when that person exists,
-otherwise from Backend; a missing photo uses initials rather than another
-source's photo. Empty Backend names use `Context.userDisplayName`.
+`TeacherReviewsRepository` (reviews of the person as a teacher). A page exists
+when either identity source succeeds. Its name and photo come from My ITMO when
+that person exists, otherwise from Backend; a missing photo uses initials rather
+than another source's photo. Empty Backend names use `Context.userDisplayName`.
 
 `UserProfileAdapter` renders one RecyclerView in this order:
 
-1. Photo or initials, name and `ИСУ N`.
+1. Photo or initials, name and one headline: the first position with a short
+   department (`Должность · ФИТиП`: an abbreviation in trailing parentheses, a
+   short name as is, otherwise the initials of its first clause), otherwise the
+   student group with its course. Backend's group is used only without a My ITMO
+   person; without either the line is absent.
 2. Relationship status and actions, only with a social block and for self or
    a relationship other than `BLOCKED`.
 3. The ITMO.Widgets sharing card: `Друзья`, `Расписание`, `Спорт`.
-4. One facts card, only when positions, rooms or education contain rows.
-5. `Отзывы`, only when at least one non-empty review remains after mapping.
+4. One facts card: positions, rooms and education, then `ИСУ N` last with
+   `ic_badge`.
+5. `Отзывы`, see [Reviews](#reviews) below.
 
 A position with no title uses its department once, without a repeated
 subtitle; education combines course and faculty in the subtitle. Backend's
@@ -115,6 +120,28 @@ The relationship action is `Добавить в друзья` (filled), `Отм�
 Sharing rows follow Backend's viewer capabilities; own schedule and sport are
 available to self. Closed rows show a lock, not an action. Open rows lead to
 `USER_FRIENDS`, `USER_SCHEDULE` or `USER_SPORT` with the ISU and displayed name.
+
+### Reviews
+
+The last section shows reviews of the person as a teacher, only with the
+connection ([teacher reviews](reviews.md#the-profile-section)). It exists when
+there is at least one review, an own review, or `Написать`: the viewer may
+write (`canWrite`), has no review of this person yet and the person teaches
+(Backend's `knownTeacher` or any My ITMO position). The heading `Отзывы · N`
+counts the own review too and carries `Написать`, which opens the review editor.
+
+- The viewer's own review comes first with its status, anonymity, rejection
+  reason and, once published, its score; its menu edits it or deletes it after
+  `Удалить отзыв?`.
+- Other reviews follow in Backend's order with votes and `Пожаловаться` in the
+  menu. A named author heads the card as a link and opens that person's profile.
+- `UserProfileViewModel` keeps one review mutation at a time (`busyId`): a vote
+  or deletion disables that card's controls, and the answer replaces the
+  section. A failure shows the action snackbar and keeps the section.
+- The view model also collects `TeacherReviewsRepository.observeUpdates()` for
+  its ISU, so a save in the editor, a report or a mutation from another open
+  profile updates the section in place, without a reload or a scroll jump. Such
+  an update also delivers reviews that were late.
 
 ### Loading and failures
 
@@ -196,8 +223,9 @@ values with `UiText` labels; the adapter maps `UserAction` to strings.
 ## Verification
 
 `PersonRepositoryImplTest`, `SocialRepositoryImplTest`, `ProfileFactsTest`,
-`UserProfileStateTest` and `UserProfileViewModelTest` cover the source boundary,
-cache invalidation and deterministic loading/deadline/action behavior.
+`ProfileReviewsTest`, `UserProfileStateTest` and `UserProfileViewModelTest`
+cover the source boundary, cache invalidation, the headline and facts, the
+reviews section and deterministic loading/deadline/action behavior.
 `UserProfileVisualTest` exercises all profile states, delayed parts, recycling,
 accessibility, photo failure and scroll restoration in the full appearance
 matrix; `UserFriendsVisualTest` checks the existing friends navigation.

@@ -49,8 +49,26 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   `USER_PROFILE` combines direct device-side My ITMO identity/facts, the opt-in
   Backend social block and anonymous copied Reviews text. Teacher rows and both
   search sections open it; the read API/Core contract and full visual/state
-  tests are included. Own review forms, eligibility, moderation, votes and
-  summaries remain planned. Backend rollout is recorded separately.
+  tests are included. Own reviews, verification, moderation and votes followed
+  in the entry below; summaries remain planned. Backend rollout is recorded
+  separately.
+- Stages 25–30 (own reviews): implemented on 2026-09-29 through
+  `vibe/own-reviews-plan.md` (Backend and Core 1.7.0-SNAPSHOT with V8 and V9,
+  the web admin, Android 2.2-SNAPSHOT), with these corrections to the stage
+  texts: no rating categories, tags or aggregates, only free text with an
+  optional subject; no period or subject in the key, one review per author and
+  teacher; no `My reviews` screen, the own review shows first in the teacher's
+  profile with its status; instead of a schedule-context eligibility rule
+  Backend checks through ISU flows whether the teacher taught the author and
+  only marks the review (`Вёл у автора` / `Не подтверждён`), never rejects it;
+  +1/−1 votes on own reviews and on the Reviews copies in one ranked list;
+  premoderation of every version, reports on own reviews only; the ISU cookie
+  and the My ITMO service tokens share one Backend table `service_credentials`
+  (`V8__service_credentials.sql`) with an admin API and a web admin card, and
+  the reviews are `V9__teacher_reviews.sql` rather than V8. See
+  [0010](../decisions/0010-review-verification.md).
+  Follow-up: V8 keeps `my_itmo_storage` for an image-only Backend rollback; a
+  separate migration of the next release drops it.
 - Stages 31–32: implemented on 2026-09-24 through `vibe/reviews-sync-plan.md`
   (Backend 1.7.0-SNAPSHOT and the web admin, no Core or Android change) as a
   sync from the Reviews project instead of a Google Sheets importer: Backend
@@ -912,7 +930,7 @@ planned own-review behavior below.
 **What to add/implement:**
 
 * Track the BARS journal in the background and notify about new marks, changed marks, and changed approvals. Everything stays on the device: BARS data never reaches Backend, and the feature does not depend on the custom-services opt-in.
-* Renew the BARS token in the background without a WebView: `BarsCookieSilentLogin` replays the official OIDC authorization URL through OkHttp with the ITMO.ID cookies read from `CookieManager`, accepts only the exact callback with a checked `state`, and exchanges the code through the library's `BarsCodeSupplier`. No credentials, no JavaScript, no cookie leaves the device. Foreground renewal keeps `BarsWebSilentLogin`. Record the rule as decision 0010.
+* Renew the BARS token in the background without a WebView: `BarsCookieSilentLogin` replays the official OIDC authorization URL through OkHttp with the ITMO.ID cookies read from `CookieManager`, accepts only the exact callback with a checked `state`, and exchanges the code through the library's `BarsCodeSupplier`. No credentials, no JavaScript, no cookie leaves the device. Foreground renewal keeps `BarsWebSilentLogin`. Record the rule as decision 0011.
 * Persist a normalized per-checkpoint snapshot (discipline, checkpoint plan, checkpoint, mark, approval) per ISU in the Room database introduced in Stage 35. `BarsMarkDiffEngine` is pure: it emits `MarkAdded`, `MarkChanged`, and `ApprovalChanged` events, ignores reorder-only responses, treats an empty journal (`total = 0`, no marks) as "no marks" rather than a removal, and skips plans with `has_course_project` exactly like the overlay mapper. The first successful sync after enabling only writes the baseline and notifies nothing.
 * Run a unique periodic WorkManager job (`bars-mark-sync`, every three hours, network constraint, `@HiltWorker`). It exits quietly without a BARS session, backs off after a failed renewal, and when the ITMO.ID cookie session is gone posts one `Войдите в БАРС` notification and stays silent until the next successful BARS login. Opening the recordbook with the `БАРС` chip runs the same diff on the fresh journal so foreground use advances the baseline. Do not claim immediate delivery because Android controls periodic execution.
 * Add the `BARS` notification channel next to `SPORT` and `FRIENDS`. One notification per subject per sync with a stable id: subject and checkpoint in the title, the mark in the expanded text, `VISIBILITY_PRIVATE` with the public version `Новая оценка в БАРС`. Tapping opens the recordbook subject with the chip on through `MainActivityIntentRouting`.
@@ -931,7 +949,7 @@ planned own-review behavior below.
 * `app/src/main/java/dev/alllexey/itmowidgets/app/MainActivityIntentRouting.kt` - route to the recordbook subject with the chip on.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/settings/presentation/SettingsViewModel.kt` - the tracking toggle.
 * `app/src/main/java/dev/alllexey/itmowidgets/di/RecordbookModule.kt` - bindings and the worker entry point.
-* `docs/decisions/0010-bars-background-renewal.md` - cookie replay through OkHttp is the only background renewal path.
+* `docs/decisions/0011-bars-background-renewal.md` - cookie replay through OkHttp is the only background renewal path.
 * `docs/features/recordbook.md`, `docs/features/notifications.md`, `docs/settings.md` - current-state documentation of tracking, the channel, and the toggle.
 
 **Framework/Library Documentation:**
