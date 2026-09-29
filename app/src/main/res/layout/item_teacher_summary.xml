@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The AI summary above the reviews: a header with the review count, the tone, a short description, pros and cons, tags and five scales. -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.ItmoWidgets.Card.Content.Tonal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/design_card_padding">
+
+        <LinearLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_auto_awesome"
+                app:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:id="@+id/label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/design_spacing_compact"
+                android:layout_marginEnd="@dimen/design_spacing_compact"
+                android:layout_weight="1"
+                android:importantForAccessibility="no"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="Сводка по 12 отзывам" />
+
+            <TextView
+                android:id="@+id/ai"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="no"
+                android:text="@string/teacher_summary_ai"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/level_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            tools:ignore="UseCompoundDrawables">
+
+            <ImageView
+                android:id="@+id/level_dot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:src="@drawable/bg_teacher_level_dot" />
+
+            <TextView
+                android:id="@+id/level"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/design_spacing_compact"
+                android:layout_weight="1"
+                android:importantForAccessibility="no"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="Скорее положительные" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_compact"
+            android:autoLink="none"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Понятно объясняет и честно оценивает, но строго принимает лабораторные." />
+
+        <LinearLayout
+            android:id="@+id/pros"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_content"
+            android:orientation="vertical" />
+
+        <LinearLayout
+            android:id="@+id/cons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_related"
+            android:orientation="vertical" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/tags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_content"
+            app:chipSpacingHorizontal="6dp"
+            app:chipSpacingVertical="6dp" />
+
+        <LinearLayout
+            android:id="@+id/scales"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_content"
+            android:orientation="vertical">
+
+            <include
+                android:id="@+id/scale_explains"
+                layout="@layout/view_summary_scale" />
+
+            <include
+                android:id="@+id/scale_attitude"
+                layout="@layout/view_summary_scale" />
+
+            <include
+                android:id="@+id/scale_fairness"
+                layout="@layout/view_summary_scale" />
+
+            <include
+                android:id="@+id/scale_strictness"
+                layout="@layout/view_summary_scale" />
+
+            <include
+                android:id="@+id/scale_workload"
+                layout="@layout/view_summary_scale" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

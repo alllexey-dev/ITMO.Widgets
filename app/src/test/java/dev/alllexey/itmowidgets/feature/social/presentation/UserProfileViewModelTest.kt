@@ -818,6 +818,25 @@ class UserProfileViewModelTest {
     }
 
     @Test
+    fun `the summary from the reviews reply reaches the section and survives a vote`() = runTest(mainDispatcherRule.dispatcher) {
+        val summary = teacherSummary()
+        val loaded = teacherReviews(5, listOf(communityReview("r1")), summary = summary)
+        val reviews = FakeTeacherReviewsRepository().apply {
+            results = mapOf(5 to AppResult.Success(loaded))
+            voteResult = AppResult.Success(teacherReviews(5, listOf(communityReview("r1").copy(score = 1, myVote = 1)), summary = summary))
+        }
+        val viewModel = viewModel(people = personRepository(), reviews = reviews)
+        runCurrent()
+        assertEquals(summary, viewModel.content().reviews?.summary)
+
+        viewModel.vote("r1", up = true)
+        runCurrent()
+
+        assertEquals(1, viewModel.content().reviews?.items?.single()?.myVote)
+        assertEquals(summary, viewModel.content().reviews?.summary)
+    }
+
+    @Test
     fun `late reviews that arrive as an update are appended without a snackbar`() = runTest(mainDispatcherRule.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val reviews = reviewsRepository().apply { this.gate = { gate.await() } }

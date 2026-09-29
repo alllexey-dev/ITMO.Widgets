@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A summary tag: a small label in a chip's shape that does nothing on touch. -->
+<com.google.android.material.chip.Chip xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.Material3.Chip.Assist"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clickable="false"
+    android:focusable="false"
+    android:textAppearance="?attr/textAppearanceLabelMedium"
+    android:textColor="?attr/colorOnSurfaceVariant"
+    app:chipBackgroundColor="@android:color/transparent"
+    app:chipMinHeight="28dp"
+    app:chipStrokeColor="?attr/colorOutlineVariant"
+    app:ensureMinTouchTargetSize="false" />

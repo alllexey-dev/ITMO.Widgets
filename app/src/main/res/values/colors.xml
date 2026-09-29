@@ -21,6 +21,13 @@
     <color name="sport_condition_warning">#875200</color>
     <color name="sport_condition_blocked">#B32635</color>
 
+    <!-- Tone of a teacher's reviews, from very negative to very positive; harmonized with the palette at runtime. -->
+    <color name="teacher_level_very_negative">#D32F2F</color>
+    <color name="teacher_level_negative">#E06C00</color>
+    <color name="teacher_level_mixed">#B58900</color>
+    <color name="teacher_level_positive">#689F38</color>
+    <color name="teacher_level_very_positive">#2E7D32</color>
+
     <!-- App-widget palette for launchers that cannot resolve the activity theme. -->
     <color name="widget_surface">#FFFDFBFF</color>
     <color name="widget_surface_container">#FFF3EDF7</color>

@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.feature.social
 
 import android.content.res.Configuration
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.children
@@ -33,6 +35,15 @@ import dev.alllexey.itmowidgets.core.reviews.ReviewDate
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.reviews.SummaryConfidence
+import dev.alllexey.itmowidgets.core.reviews.SummaryScale
+import dev.alllexey.itmowidgets.core.reviews.SummaryScaleKind
+import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
+import dev.alllexey.itmowidgets.core.reviews.SummaryTag
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
+import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
+import dev.alllexey.itmowidgets.core.ui.tone
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.shortPersonName
 import dev.alllexey.itmowidgets.core.util.color
@@ -46,6 +57,7 @@ import dev.alllexey.itmowidgets.feature.social.ui.UserProfileAdapter
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity.Companion.ISU
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity.Companion.LONG_NAME
+import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity.Companion.sampleSummary
 import dev.alllexey.itmowidgets.feature.social.ui.text
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Appearances.toUserProfile
@@ -624,6 +636,217 @@ class UserProfileVisualTest {
         }
     }
 
+    @Test fun summaryComesFirstWithLabelLevelAndScales() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews().copy(summary = sampleSummary()))
+        }) { scenario ->
+            content(scenario)
+            scenario.onActivity { activity ->
+                val reviews = activity.items().dropWhile { it !is ProfileItem.Section }
+                assertEquals(4, (reviews[0] as ProfileItem.Section).count)
+                assertTrue(reviews[1] is ProfileItem.Summary)
+                assertTrue(reviews[2] is ProfileItem.OwnReview)
+            }
+            scrollTo<ProfileItem.Section>(scenario)
+            scenario.onActivity { activity ->
+                val card = activity.holder<ProfileItem.Summary>()
+                assertEquals("Сводка по 12 отзывам", card.text(R.id.label))
+                assertEquals("ИИ", card.text(R.id.ai))
+                assertEquals("Сводка по 12 отзывам, составлена ИИ", card.findViewById<View>(R.id.header).contentDescription)
+                assertTrue(card.findViewById<View>(R.id.level_row).isShown)
+                assertTrue(card.findViewById<View>(R.id.level_dot).isShown)
+                assertEquals("Скорее положительные", card.text(R.id.level))
+                assertEquals("Тон отзывов: скорее положительные", card.findViewById<View>(R.id.level_row).contentDescription)
+                assertEquals(sampleSummary().description, card.text(R.id.description))
+                assertEquals(listOf("Понятно объясняет сложные темы", "Честно оценивает"), card.points(R.id.pros))
+                assertEquals(listOf("Строгая защита лабораторных"), card.points(R.id.cons))
+                assertEquals("Плюсы: Понятно объясняет сложные темы; Честно оценивает", card.findViewById<View>(R.id.pros).contentDescription)
+                assertEquals(listOf("Много лаб", "Строгий на защите", "Чёткие требования"), card.tags())
+                assertTrue(card.findViewById<ViewGroup>(R.id.tags).children.all { !it.isClickable && !it.isFocusable })
+                assertEquals(
+                    listOf("Объясняет" to "хорошо", "Отношение к студентам" to "нейтральное", "Справедливость оценок" to "высокая",
+                        "Строгость" to "высокая", "Нагрузка" to "мало данных"),
+                    card.scales().map { it.text(R.id.name) to it.text(R.id.value) },
+                )
+                assertEquals(listOf(true, true, true, true, false), card.scales().map { it.findViewById<View>(R.id.reason).isShown })
+                assertEquals("Объясняет: хорошо. Хвалят понятные лекции", card.scales().first().contentDescription)
+                val gap = card.screenTop() - activity.holder<ProfileItem.Section>().let { it.screenTop() + it.height }
+                assertEquals(0, gap)
+            }
+            frame(scenario, "summary-${spec.name}")
+            scenario.onActivity { activity ->
+                val own = activity.items().indexOfFirst { it is ProfileItem.OwnReview }
+                (activity.list().layoutManager as LinearLayoutManager).scrollToPositionWithOffset(own, activity.list().height / 2)
+            }
+            TestUi.settle(80)
+            scenario.onActivity { activity ->
+                val card = activity.holder<ProfileItem.Summary>()
+                val next = activity.holder<ProfileItem.OwnReview>().screenTop() - (card.screenTop() + card.height)
+                assertEquals(card.resources.getDimensionPixelSize(R.dimen.design_spacing_compact), next)
+            }
+            frame(scenario, "summary-end-${spec.name}")
+        }
+    }
+
+    @Test fun lowConfidenceSummaryHasNoLevel() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews(),
+                summary = sampleSummary(reviewCount = 3, confidence = SummaryConfidence.LOW)))
+        }) { scenario ->
+            content(scenario)
+            scrollTo<ProfileItem.Section>(scenario)
+            scenario.onActivity { activity ->
+                val card = activity.holder<ProfileItem.Summary>()
+                assertEquals("Сводка по 3 отзывам", card.text(R.id.label))
+                assertEquals(View.GONE, card.findViewById<View>(R.id.level_row).visibility)
+                assertFalse(card.findViewById<View>(R.id.level_dot).isShown)
+                assertTrue(card.findViewById<View>(R.id.description).isShown)
+            }
+            frame(scenario, "summary-low-${spec.name}")
+        }
+    }
+
+    @Test fun summaryWithoutProsConsOrTagsHidesThoseBlocks() = appearances { spec ->
+        val empty = sampleSummary(reviewCount = 21, pros = emptyList(), cons = emptyList(), tags = emptyList(),
+            scales = SummaryScaleKind.entries.map { SummaryScale(it, SummaryScaleValue.NOT_ENOUGH_DATA, null) })
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews(), summary = empty))
+        }) { scenario ->
+            content(scenario)
+            scrollTo<ProfileItem.Section>(scenario)
+            scenario.onActivity { activity ->
+                val card = activity.holder<ProfileItem.Summary>()
+                assertEquals("Сводка по 21 отзыву", card.text(R.id.label))
+                assertEquals(View.GONE, card.findViewById<View>(R.id.pros).visibility)
+                assertEquals(View.GONE, card.findViewById<View>(R.id.cons).visibility)
+                assertEquals(View.GONE, card.findViewById<View>(R.id.tags).visibility)
+                assertEquals(List(5) { "мало данных" }, card.scales().map { it.text(R.id.value) })
+                assertTrue(card.scales().none { it.findViewById<View>(R.id.reason).isShown })
+                val muted = card.context.color.onSurfaceVariant
+                assertTrue(card.scales().all { it.findViewById<TextView>(R.id.value).currentTextColor == muted })
+            }
+            frame(scenario, "summary-empty-${spec.name}")
+        }
+    }
+
+    @Test fun longSummaryFitsNarrowScreenAndLargeFont() {
+        val narrow = Appearances.Spec("light-narrow", fontScale = 1.3f, widthDp = 320)
+        val specs = listOf(Appearances.light, narrow) + if (Appearances.fullMatrix) Appearances.all.drop(1) else emptyList()
+        val long = sampleSummary(
+            reviewCount = 60,
+            description = LONG_DESCRIPTION,
+            pros = List(4) { index -> "${index + 1}. " + LONG_POINT.take(97) },
+            cons = List(4) { index -> "${index + 1}. " + LONG_CON.take(97) },
+            tags = listOf(SummaryTag.UNCLEAR_REQUIREMENTS, SummaryTag.ATTENDANCE_REQUIRED, SummaryTag.INTERESTING_CLASSES,
+                SummaryTag.FLEXIBLE_DEADLINES, SummaryTag.FREQUENT_TESTS, SummaryTag.READS_SLIDES),
+            scales = SummaryScaleKind.entries.map { SummaryScale(it, SummaryScaleValue.MEDIUM, LONG_POINT.take(100)) },
+            level = TeacherLevel.VERY_NEGATIVE,
+            confidence = SummaryConfidence.HIGH,
+        )
+        specs.forEach { spec ->
+            preview(spec, {
+                UserProfilePreviewActivity.person = AppResult.Success(teacher())
+                UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews(), summary = long))
+            }) { scenario ->
+                content(scenario)
+                scrollTo<ProfileItem.Section>(scenario)
+                scenario.onActivity { activity ->
+                    val card = activity.holder<ProfileItem.Summary>()
+                    assertEquals(400, LONG_DESCRIPTION.length)
+                    assertEquals(LONG_DESCRIPTION, card.text(R.id.description))
+                    assertEquals(4, card.points(R.id.pros).size)
+                    assertEquals(4, card.points(R.id.cons).size)
+                    val tags = card.findViewById<ViewGroup>(R.id.tags)
+                    assertEquals(6, tags.childCount)
+                    assertTrue("Tags wrap into several rows", tags.children.map { it.top }.distinct().count() > 1)
+                    tags.children.forEach { assertTrue(it.right <= tags.width) }
+                    // The sign of a point sits on its first line at any font scale.
+                    val point = card.findViewById<ViewGroup>(R.id.pros).getChildAt(0)
+                    assertEquals(point.findViewById<TextView>(R.id.text).lineHeight, point.findViewById<View>(R.id.icon).height)
+                }
+                frame(scenario, "summary-long-top-${spec.name}")
+                scenario.onActivity { it.list().scrollBy(0, it.holder<ProfileItem.Summary>().height / 2) }
+                frame(scenario, "summary-long-bottom-${spec.name}")
+            }
+        }
+    }
+
+    @Test fun everyLevelHasItsTone() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews(), summary = sampleSummary()))
+        }) { scenario ->
+            content(scenario)
+            scrollTo<ProfileItem.Section>(scenario)
+            TeacherLevel.entries.forEach { level ->
+                scenario.onActivity { it.publishReviews(reviewsOf(teacherReviews(), summary = sampleSummary(level = level))) }
+                TestUi.eventually {
+                    scenario.onActivity { activity ->
+                        val card = activity.holder<ProfileItem.Summary>()
+                        val tone = level.tone()
+                        assertEquals(activity.getString(tone.label), card.text(R.id.level))
+                        val dot = card.findViewById<ImageView>(R.id.level_dot)
+                        assertTrue(dot.isShown)
+                        assertEquals(tone.color(activity), dot.imageTintList?.defaultColor)
+                        assertEquals(tone.description(activity), card.findViewById<View>(R.id.level_row).contentDescription)
+                    }
+                }
+                frame(scenario, "summary-level-${level.name.lowercase()}-${spec.name}")
+            }
+            scenario.onActivity { activity ->
+                val colors = TeacherLevelTone.entries.map { it.color(activity) }
+                assertEquals(5, colors.distinct().size)
+            }
+        }
+    }
+
+    @Test fun profileWithoutSummaryIsUnchanged() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews())
+        }) { scenario ->
+            content(scenario)
+            scenario.onActivity { activity ->
+                val reviews = activity.items().dropWhile { it !is ProfileItem.Section }
+                assertTrue(activity.items().none { it is ProfileItem.Summary })
+                assertTrue(reviews[1] is ProfileItem.OwnReview)
+                assertEquals(listOf("named", "anonymous", "copy"), reviews.drop(2).map { (it as ProfileItem.Review).review.id })
+            }
+            scrollTo<ProfileItem.Section>(scenario)
+            scenario.onActivity { activity ->
+                val section = activity.holder<ProfileItem.Section>()
+                assertEquals(section.screenTop() + section.height, activity.holder<ProfileItem.OwnReview>().screenTop())
+            }
+            frame(scenario, "summary-none-${spec.name}")
+        }
+    }
+
+    @Test fun lateReviewsWithSummaryDoNotMoveTheHeader() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews(), summary = sampleSummary()))
+            UserProfilePreviewActivity.reviewsDelayMs = 6_000
+        }) { scenario ->
+            content(scenario, attempts = 200)
+            var positions: Pair<Int, Int>? = null
+            scenario.onActivity {
+                assertTrue(it.items().none { item -> item is ProfileItem.Section || item is ProfileItem.Summary })
+                positions = it.identityPositions()
+            }
+            TestUi.eventually(attempts = 200) {
+                scenario.onActivity {
+                    assertTrue(it.items().any { item -> item is ProfileItem.Summary })
+                    assertEquals(positions, it.identityPositions())
+                }
+            }
+            noSnackbar(scenario)
+            frame(scenario, "summary-late-${spec.name}")
+        }
+    }
+
     private fun appearances(block: (Appearances.Spec) -> Unit) = Appearances.default.forEach(block)
 
     private fun preview(
@@ -876,10 +1099,22 @@ class UserProfileVisualTest {
         canVote: Boolean = false,
         canReport: Boolean = false,
         knownTeacher: Boolean = false,
-        mine: OwnTeacherReview? = null
-    ) = TeacherReviews(ISU, reviews, mine, canWrite, canVote, canReport, knownTeacher)
+        mine: OwnTeacherReview? = null,
+        summary: TeacherSummary? = null
+    ) = TeacherReviews(ISU, reviews, mine, canWrite, canVote, canReport, knownTeacher, summary)
+    private fun View.text(id: Int): String = findViewById<TextView>(id).text.toString()
+    private fun View.points(id: Int): List<String> =
+        findViewById<ViewGroup>(id).children.map { it.findViewById<TextView>(R.id.text).text.toString() }.toList()
+    private fun View.tags(): List<String> = findViewById<ViewGroup>(R.id.tags).children.map { (it as TextView).text.toString() }.toList()
+    private fun View.scales(): List<View> = findViewById<ViewGroup>(R.id.scales).children.toList()
 
     private companion object {
+        const val LONG_DESCRIPTION = "Большинство студентов пишут, что лекции понятные и хорошо структурированные, а на практике разбирают задачи " +
+            "из контрольных. Часть отзывов отмечает строгую защиту лабораторных и высокие требования к оформлению отчётов. " +
+            "Мнения о нагрузке расходятся: одним хватает занятий, другим приходится много заниматься самостоятельно дома. " +
+            "Все материалы выкладывает заранее, консультации перед экзаменом помогают."
+        const val LONG_POINT = "Подробно разбирает решения на практических занятиях и отвечает на вопросы после пары и в переписке в любое время"
+        const val LONG_CON = "Строго принимает лабораторные работы и снижает баллы за каждую неточность в отчёте и за опоздание со сдачей"
         const val BACKEND_NAME = "Соколов Артём Игоревич"
         const val LONG_REASON = "В отзыве есть оценки личных качеств преподавателя; оставьте только то, что касается занятий и материалов"
         val AUTHOR = UserSummary(200002, "Преображенская Евгения Владиславовна", null, emptyList(), UserSharing(sport = false, schedule = false))

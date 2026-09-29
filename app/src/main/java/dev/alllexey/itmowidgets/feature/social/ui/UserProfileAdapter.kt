@@ -19,6 +19,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
+import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
 import dev.alllexey.itmowidgets.core.ui.userDisplayName
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemOwnTeacherReviewBinding
@@ -28,6 +29,7 @@ import dev.alllexey.itmowidgets.databinding.ItemProfileRelationshipBinding
 import dev.alllexey.itmowidgets.databinding.ItemProfileSectionBinding
 import dev.alllexey.itmowidgets.databinding.ItemProfileSharingBinding
 import dev.alllexey.itmowidgets.databinding.ItemTeacherReviewBinding
+import dev.alllexey.itmowidgets.databinding.ItemTeacherSummaryBinding
 import dev.alllexey.itmowidgets.feature.social.presentation.ProfileFact
 import dev.alllexey.itmowidgets.feature.social.presentation.ProfileHeadline
 import dev.alllexey.itmowidgets.feature.social.presentation.SocialBlock
@@ -40,6 +42,7 @@ sealed interface ProfileItem {
     data class Facts(val facts: List<ProfileFact>) : ProfileItem
     /** [count] is appended to the title when positive; [actionRes] is a trailing text button. */
     data class Section(@param:StringRes val titleRes: Int, val count: Int = 0, @param:StringRes val actionRes: Int? = null) : ProfileItem
+    data class Summary(val summary: TeacherSummary) : ProfileItem
     data class OwnReview(val review: OwnTeacherReview, val busy: Boolean) : ProfileItem
     data class Review(val review: TeacherReview, val canVote: Boolean, val canReport: Boolean, val busy: Boolean) : ProfileItem
 }
@@ -78,6 +81,7 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
             state.reviews?.let { reviews ->
                 add(ProfileItem.Section(R.string.teacher_reviews_title, reviews.count,
                     R.string.teacher_review_write.takeIf { reviews.canWrite }))
+                reviews.summary?.let { add(ProfileItem.Summary(it)) }
                 reviews.mine?.let { add(ProfileItem.OwnReview(it, busy = reviews.busyId == it.id)) }
                 reviews.items.forEach {
                     add(ProfileItem.Review(it, reviews.canVote, reviews.canReport, busy = reviews.busyId == it.id))
@@ -92,6 +96,7 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
         is ProfileItem.Sharing -> R.layout.item_profile_sharing
         is ProfileItem.Facts -> R.layout.item_profile_facts
         is ProfileItem.Section -> R.layout.item_profile_section
+        is ProfileItem.Summary -> R.layout.item_teacher_summary
         is ProfileItem.OwnReview -> R.layout.item_own_teacher_review
         is ProfileItem.Review -> R.layout.item_teacher_review
     }
@@ -104,6 +109,7 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
             R.layout.item_profile_sharing -> SharingHolder(ItemProfileSharingBinding.inflate(inflater, parent, false))
             R.layout.item_profile_facts -> FactsHolder(ItemProfileFactsBinding.inflate(inflater, parent, false))
             R.layout.item_profile_section -> SectionHolder(ItemProfileSectionBinding.inflate(inflater, parent, false))
+            R.layout.item_teacher_summary -> SummaryHolder(ItemTeacherSummaryBinding.inflate(inflater, parent, false))
             R.layout.item_own_teacher_review -> OwnReviewHolder(ItemOwnTeacherReviewBinding.inflate(inflater, parent, false))
             R.layout.item_teacher_review -> ReviewHolder(ItemTeacherReviewBinding.inflate(inflater, parent, false))
             else -> error("Unknown profile view type: $viewType")
@@ -117,6 +123,7 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
             is ProfileItem.Sharing -> (holder as SharingHolder).bind(item.social)
             is ProfileItem.Facts -> (holder as FactsHolder).binding.bindFacts(item.facts)
             is ProfileItem.Section -> (holder as SectionHolder).bind(item)
+            is ProfileItem.Summary -> (holder as SummaryHolder).binding.bind(item.summary)
             is ProfileItem.OwnReview -> (holder as OwnReviewHolder).binding.bind(item, actions)
             is ProfileItem.Review -> (holder as ReviewHolder).binding.bind(item, actions)
         }
@@ -188,6 +195,7 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
         }
     }
 
+    private class SummaryHolder(val binding: ItemTeacherSummaryBinding) : RecyclerView.ViewHolder(binding.root)
     private class OwnReviewHolder(val binding: ItemOwnTeacherReviewBinding) : RecyclerView.ViewHolder(binding.root)
     private class ReviewHolder(val binding: ItemTeacherReviewBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -245,7 +253,8 @@ internal class ProfileItemSpacing : RecyclerView.ItemDecoration() {
     }
 }
 
-private fun ProfileItem.isReview() = this is ProfileItem.Review || this is ProfileItem.OwnReview
+/** The summary opens the section like a review: flush under the heading, the list gap after it. */
+private fun ProfileItem.isReview() = this is ProfileItem.Review || this is ProfileItem.OwnReview || this is ProfileItem.Summary
 
 /** «Доцент · ФИТиП» or «M3234 · 2 курс»; null when there is nothing to say. */
 private fun ProfileHeadline.text(context: Context): String? = when (this) {

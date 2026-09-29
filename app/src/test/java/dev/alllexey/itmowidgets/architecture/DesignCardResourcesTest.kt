@@ -54,6 +54,11 @@ class DesignCardResourcesTest {
         assertEquals("20dp", property(cardStyle("Content.Own"), "cardCornerRadius"))
         assertEquals("1dp", property(cardStyle("Content.Own"), "strokeWidth"))
         assertEquals("?attr/colorPrimary", property(cardStyle("Content.Own"), "strokeColor"))
+        // The AI summary is told apart from reviews by a slightly stronger surface, never by an outline.
+        assertEquals("?attr/colorSurfaceContainerHigh", property(cardStyle("Content.Tonal"), "cardBackgroundColor"))
+        assertEquals("20dp", property(cardStyle("Content.Tonal"), "cardCornerRadius"))
+        assertEquals("0dp", property(cardStyle("Content.Tonal"), "strokeWidth"))
+        assertEquals("0dp", property(cardStyle("Content.Tonal"), "cardElevation"))
     }
 
     @Test
@@ -66,6 +71,7 @@ class DesignCardResourcesTest {
             "item_recordbook_note" to "Content",
             "item_teacher_review" to "Content",
             "item_own_teacher_review" to "Content.Own",
+            "item_teacher_summary" to "Content.Tonal",
             "item_recordbook_summary" to "CompactSummary",
             "item_subject_hero" to "Summary",
             "item_recordbook_sport" to "Summary",

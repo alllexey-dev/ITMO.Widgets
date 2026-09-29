@@ -18,6 +18,11 @@
         <item name="strokeColor">?attr/colorPrimary</item>
     </style>
 
+    <!-- A generated summary above reviews: the same shape on a slightly stronger surface, no outline. -->
+    <style name="Widget.ItmoWidgets.Card.Content.Tonal" parent="Widget.ItmoWidgets.Card.Content">
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHigh</item>
+    </style>
+
     <!-- The compact recordbook summary keeps its slightly stronger neutral surface and 20 dp shape. -->
     <style name="Widget.ItmoWidgets.Card.CompactSummary" parent="Widget.ItmoWidgets.Card.Content">
         <item name="cardBackgroundColor">?attr/colorSurfaceContainer</item>

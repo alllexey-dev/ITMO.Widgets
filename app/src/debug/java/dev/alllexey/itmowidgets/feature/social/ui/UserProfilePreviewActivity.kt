@@ -37,9 +37,16 @@ import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
+import dev.alllexey.itmowidgets.core.reviews.SummaryConfidence
+import dev.alllexey.itmowidgets.core.reviews.SummaryScale
+import dev.alllexey.itmowidgets.core.reviews.SummaryScaleKind
+import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
+import dev.alllexey.itmowidgets.core.reviews.SummaryTag
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
+import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.social.FriendRequests
@@ -172,6 +179,25 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
         val openedScreens: MutableList<Pair<AppScreen, Bundle?>> = Collections.synchronizedList(mutableListOf())
         val openedEditors: MutableList<TeacherReviewArgs> = Collections.synchronizedList(mutableListOf())
         val openedReports: MutableList<String> = Collections.synchronizedList(mutableListOf())
+
+        /** A synthetic AI summary for [reviews]; the defaults fill every block of the card. */
+        fun sampleSummary(
+            reviewCount: Int = 12,
+            level: TeacherLevel = TeacherLevel.POSITIVE,
+            confidence: SummaryConfidence = SummaryConfidence.MEDIUM,
+            description: String = "Студенты чаще всего отмечают понятные лекции и честные оценки. " +
+                "Защита лабораторных строгая, к ней нужно готовиться заранее.",
+            pros: List<String> = listOf("Понятно объясняет сложные темы", "Честно оценивает"),
+            cons: List<String> = listOf("Строгая защита лабораторных"),
+            tags: List<SummaryTag> = listOf(SummaryTag.MANY_LABS, SummaryTag.STRICT_DEFENSE, SummaryTag.CLEAR_REQUIREMENTS),
+            scales: List<SummaryScale> = listOf(
+                SummaryScale(SummaryScaleKind.EXPLAINS, SummaryScaleValue.HIGH, "Хвалят понятные лекции"),
+                SummaryScale(SummaryScaleKind.ATTITUDE, SummaryScaleValue.MEDIUM, "Ровное отношение без поблажек"),
+                SummaryScale(SummaryScaleKind.FAIRNESS, SummaryScaleValue.HIGH, "Оценки считают честными"),
+                SummaryScale(SummaryScaleKind.STRICTNESS, SummaryScaleValue.HIGH, "Строго принимает лабораторные"),
+                SummaryScale(SummaryScaleKind.WORKLOAD, SummaryScaleValue.NOT_ENOUGH_DATA, null),
+            ),
+        ) = TeacherSummary(reviewCount, description, pros, cons, tags, scales, level, confidence)
     }
 
     private object PreviewPeople : PersonRepository {

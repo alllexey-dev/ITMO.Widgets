@@ -13,4 +13,9 @@
     <color name="sport_condition_waiting">#9BBEFF</color>
     <color name="sport_condition_warning">#F4C16F</color>
     <color name="sport_condition_blocked">#FFB3B9</color>
+    <color name="teacher_level_very_negative">#FF6E6E</color>
+    <color name="teacher_level_negative">#FFA24C</color>
+    <color name="teacher_level_mixed">#FFD54F</color>
+    <color name="teacher_level_positive">#AED581</color>
+    <color name="teacher_level_very_positive">#4CAF50</color>
 </resources>

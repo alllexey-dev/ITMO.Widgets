@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ProfileReviewsTest {
@@ -35,6 +36,18 @@ class ProfileReviewsTest {
 
         assertEquals(3, profileReviews(reviews, null, busyId = "r2")?.count)
         assertEquals("r2", profileReviews(reviews, null, busyId = "r2")?.busyId)
+    }
+
+    @Test
+    fun `the summary comes with the section and never makes one on its own`() {
+        val summary = teacherSummary()
+        val withReviews = teacherReviews(5, listOf(copiedReview("r1")), canWrite = false, summary = summary)
+        val withoutReviews = teacherReviews(5, canWrite = false, knownTeacher = false, summary = summary)
+
+        assertEquals(summary, profileReviews(withReviews, null, busyId = null)?.summary)
+        assertEquals(1, profileReviews(withReviews, null, busyId = null)?.count)
+        assertNull(profileReviews(withoutReviews, student, busyId = null))
+        assertNull(profileReviews(teacherReviews(5, listOf(copiedReview("r1"))), null, busyId = null)?.summary)
     }
 
     private fun section(
