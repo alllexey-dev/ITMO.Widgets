@@ -30,15 +30,30 @@ schedule chosen through the picker, and optional pending sport rows.
 [review editor](reviews.md#editor): the subjects of the viewer's own academic
 lessons with that teacher (suggestions, newest first) and their `flowId`s
 (candidate ISU flows for Backend's check). `TeacherLessonsGatewayImpl` in
-`feature/schedule/data` reads the personal My ITMO schedule for the last 8
-study periods (`StudyPeriods.recent`: 1 September – 31 January and
-1 February – 31 August, the current one up to today), one request per period
-in turn, and keeps academic lessons (`flowTypeId == 2`) whose `teacherId` is the
-teacher. It is read only: these lessons are never uploaded to Backend and do not
-touch the schedule cache. Past periods stay in memory until the session is
-cleared; the current period is requested every time. A failed period is left
-out and requested again next time; only when every period fails is the result
-an error. The recordbook is not used, since its teachers carry no ISU.
+`feature/schedule/data` samples the personal My ITMO schedule by Monday–Sunday
+weeks (`StudyWeeks.sampled`): in the current academic year and the 3 previous
+ones the weeks containing 25 September, 3 December, 24 February and 5 March,
+without weeks that start after today, plus the current week, which is asked
+once even when it is a sampled one. That is at most 17 requests; all of them
+run at once. It keeps academic lessons (`flowTypeId == 2`) whose `teacherId` is
+the teacher. It is read only: these lessons are never uploaded to Backend and
+do not touch the schedule cache.
+
+The result is a flow: after each week answers it emits everything collected so
+far, newer weeks first, and it completes when every week has answered. A failed
+week is left out and asked again next time; only when every week fails is the
+single emission an error.
+
+Weeks that ended before today never change. `TeacherWeeksFileStore` keeps them
+in `filesDir/teacher_lessons/weeks.json` (format 1: per week's Monday, the
+teacher ISU, flow and subject of each academic lesson with a teacher), with
+atomic writes, excluded from backup and device transfer; weeks no longer
+sampled are dropped on write. They are emitted at once without a request; the
+current week is requested every time. A corrupt file or one of another format
+is ignored and replaced by the next write. The
+file belongs to the signed-in account: `clearSessionData()` deletes it, and an
+answer requested before the clear is not stored. The recordbook is not used,
+since its teachers carry no ISU.
 
 ## Friend picker
 

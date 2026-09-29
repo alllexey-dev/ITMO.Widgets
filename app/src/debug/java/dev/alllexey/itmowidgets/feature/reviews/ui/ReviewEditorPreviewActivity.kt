@@ -39,6 +39,7 @@ import java.util.Collections
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 
 /**
  * The real review editor or report dialog over an empty window, fed by synthetic fixtures; never reads a session
@@ -136,9 +137,9 @@ class ReviewEditorPreviewActivity : AppCompatActivity(), AppNavigator {
     }
 
     private object PreviewLessons : TeacherLessonsGateway {
-        override suspend fun taughtBy(teacherIsu: Int): AppResult<TeacherLessons> {
+        override fun taughtBy(teacherIsu: Int): Flow<AppResult<TeacherLessons>> = flow {
             delay(lessonsDelayMs)
-            return lessons
+            emit(lessons)
         }
     }
 

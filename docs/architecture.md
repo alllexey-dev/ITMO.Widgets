@@ -137,6 +137,7 @@ thread until it suspends.
 | ITMO.ID tokens, BARS session | Encrypted files via Android Keystore |
 | Schedule and QR caches | Files under `cacheDir`, observed through flows |
 | Device-only subject links and the last links answer per subject period | `filesDir/subject_links/cache.json`, atomic writes, excluded from backup and device transfer |
+| Finished weeks of the personal schedule for review suggestions | `filesDir/teacher_lessons/weeks.json`, atomic writes, excluded from backup and device transfer |
 
 `SharedPreferences` is banned. *Enforced.* Anything caching user-scoped data
 implements `SessionDataCleaner`; sign-out and account change invoke every

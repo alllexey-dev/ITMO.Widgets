@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <exclude domain="file" path="subject_links/" />
+    <exclude domain="file" path="teacher_lessons/" />
     <exclude
         domain="file"
         path="datastore/app_preferences.preferences_pb" />

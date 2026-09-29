@@ -27,7 +27,9 @@ summary. ISU lists at most 250 members per flow, so an author beyond them in a
 larger flow stays unverified.
 
 **Candidates.** The app sends the flows of its own academic lessons with the
-teacher from the personal schedule of the last 8 study periods; Backend adds the
+teacher from sampled weeks of the personal schedule over the current and the 3
+previous academic years
+([schedule](../features/schedule.md#lessons-with-a-teacher)); Backend adds the
 author's uploaded lessons with the teacher and schedule flows. The recordbook is
 not used: its teachers carry no ISU, and an ISU is never looked up by name
 ([0009](0009-person-profile.md)).

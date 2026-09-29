@@ -13,7 +13,7 @@ publication or deployment.
   person teaches (Backend's `knownTeacher` or a My ITMO position). The editor
   sheet (`Новый отзыв` / `Изменить отзыв` with the teacher's short name below)
   has an optional subject with filter-chip suggestions from the viewer's own
-  lessons with the teacher over the last 8 study periods, a text of 30–3000
+  lessons with the teacher from the personal schedule, a text of 30–3000
   characters and `Анонимно` on by default; unsaved changes ask
   `Не сохранять отзыв?`. Every version waits for moderation.
 - The own review comes first on an outlined card with its status
@@ -25,6 +25,14 @@ publication or deployment.
   review shows `Не подтверждён`. `Пожаловаться` in the menu opens a report with
   `Оскорбления`, `Не тот преподаватель`, `Спам` or `Другое` and a comment.
 - Mutations update every open profile of the teacher without a reload.
+- Review suggestions and candidate flows come from up to 17 sampled weeks of the
+  personal schedule instead of 8 whole study periods one after another: in the
+  current and the 3 previous academic years the weeks of 25 September,
+  3 December, 24 February and 5 March, plus the current week. All weeks are
+  asked at once and suggestions appear as they answer; a save sends the flows
+  collected by then. Finished weeks are kept in
+  `filesDir/teacher_lessons/weeks.json` until the session is cleared and come
+  without a request.
 - The profile header shows one line under the name (position with a short
   department, or the group); `ИСУ N` moved to the end of the facts card.
 - Needs Core and Backend `1.7.0-SNAPSHOT` with `saveMyTeacherReview` and V9

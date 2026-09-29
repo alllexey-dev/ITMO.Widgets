@@ -74,11 +74,12 @@ class ReviewEditorViewModelTest {
     }
 
     @Test fun `subjects of own lessons become suggestions and a failed history stays silent`() = runTest(main.dispatcher) {
-        lessons.result = AppResult.Success(TeacherLessons(setOf(7L), listOf("Физика", "Механика")))
+        lessons.answer(AppResult.Success(TeacherLessons(setOf(7L), listOf("Физика", "Механика"))))
+        lessons.finish()
         assertEquals(listOf("Физика", "Механика"), model().uiState.value.suggestions)
 
-        lessons.result = AppResult.Failure(AppError.Network)
-        val failed = model()
+        val failing = FakeTeacherLessonsGateway().apply { answer(AppResult.Failure(AppError.Network)); finish() }
+        val failed = model(lessons = failing)
         val events = mutableListOf<ReviewEditorEvent>()
         backgroundScope.launch { failed.events.toList(events) }
         runCurrent()
@@ -86,8 +87,20 @@ class ReviewEditorViewModelTest {
         assertTrue(events.isEmpty())
     }
 
+    @Test fun `suggestions grow as the schedule weeks answer`() = runTest(main.dispatcher) {
+        val vm = model()
+        assertTrue(vm.uiState.value.suggestions.isEmpty())
+
+        lessons.answer(AppResult.Success(TeacherLessons(setOf(3L), listOf("Механика")))); runCurrent()
+        assertEquals(listOf("Механика"), vm.uiState.value.suggestions)
+
+        lessons.answer(AppResult.Success(TeacherLessons(setOf(7L, 3L), listOf("Физика", "Механика")))); runCurrent()
+        assertEquals(listOf("Физика", "Механика"), vm.uiState.value.suggestions)
+    }
+
     @Test fun `save sends the trimmed draft with the history flows`() = runTest(main.dispatcher) {
-        lessons.result = AppResult.Success(TeacherLessons(setOf(7L, 3L), listOf("Физика")))
+        lessons.answer(AppResult.Success(TeacherLessons(setOf(7L, 3L), listOf("Физика"))))
+        lessons.finish()
         repository.saveResult = AppResult.Success(teacherReviews(TEACHER, mine = ownReview(OwnReviewStatus.PENDING)))
         val vm = model()
 
@@ -102,10 +115,21 @@ class ReviewEditorViewModelTest {
         assertFalse(vm.uiState.value.saving)
     }
 
+    @Test fun `a save during the history sends the flows collected so far`() = runTest(main.dispatcher) {
+        repository.saveResult = AppResult.Success(teacherReviews(TEACHER))
+        val vm = model()
+        lessons.answer(AppResult.Success(TeacherLessons(setOf(3L), listOf("Механика")))); runCurrent()
+
+        vm.onTextChanged(VALID_TEXT)
+        vm.save(); runCurrent()
+        lessons.answer(AppResult.Success(TeacherLessons(setOf(7L, 3L), listOf("Физика", "Механика")))); runCurrent()
+
+        assertEquals(TeacherReviewDraft(null, VALID_TEXT, anonymous = true, flowIds = setOf(3L)), repository.lastDraft)
+        assertEquals(ReviewEditorEvent.Saved, vm.events.first())
+        assertEquals(listOf("Физика", "Механика"), vm.uiState.value.suggestions)
+    }
+
     @Test fun `a blank subject is sent as none and a slow history does not delay the save`() = runTest(main.dispatcher) {
-        val history = CompletableDeferred<Unit>()
-        lessons.gate = { history.await() }
-        lessons.result = AppResult.Success(TeacherLessons(setOf(7L), listOf("Физика")))
         repository.saveResult = AppResult.Success(teacherReviews(TEACHER))
         val vm = model()
 
@@ -115,7 +139,6 @@ class ReviewEditorViewModelTest {
 
         assertEquals(TeacherReviewDraft(null, VALID_TEXT, anonymous = true, flowIds = emptySet()), repository.lastDraft)
         assertEquals(ReviewEditorEvent.Saved, vm.events.first())
-        history.complete(Unit)
     }
 
     @Test fun `lengths out of bounds are field errors without a network call`() = runTest(main.dispatcher) {
@@ -170,8 +193,10 @@ class ReviewEditorViewModelTest {
 
     private fun handle() = SavedStateHandle(mapOf(TeacherReviewArgs.TEACHER_ISU to TEACHER, TeacherReviewArgs.TEACHER_NAME to "Иванов Иван Иванович"))
 
-    private fun TestScope.model(handle: SavedStateHandle = handle()): ReviewEditorViewModel =
-        ReviewEditorViewModel(handle, repository, lessons).also { runCurrent() }
+    private fun TestScope.model(
+        handle: SavedStateHandle = handle(),
+        lessons: FakeTeacherLessonsGateway = this@ReviewEditorViewModelTest.lessons,
+    ): ReviewEditorViewModel = ReviewEditorViewModel(handle, repository, lessons).also { runCurrent() }
 
     private companion object {
         const val TEACHER = 123456

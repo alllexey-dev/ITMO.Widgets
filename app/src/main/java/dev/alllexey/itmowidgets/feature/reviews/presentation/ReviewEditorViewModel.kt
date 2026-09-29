@@ -58,15 +58,16 @@ class ReviewEditorViewModel @Inject constructor(
     val uiState: StateFlow<ReviewEditorUiState> = _uiState.asStateFlow()
     private val channel = Channel<ReviewEditorEvent>(Channel.BUFFERED)
     val events: Flow<ReviewEditorEvent> = channel.receiveAsFlow()
-    /** Flows of the viewer's lessons with the teacher; empty until the schedule history answers. */
+    /** Flows of the viewer's lessons with the teacher, growing as the schedule weeks answer. */
     private var flowIds: Set<Long> = emptySet()
 
     init {
         viewModelScope.launch {
-            val result = lessons.taughtBy(teacherIsu)
-            if (result is AppResult.Success) {
-                flowIds = result.value.flowIds
-                _uiState.update { it.copy(suggestions = result.value.subjects) }
+            lessons.taughtBy(teacherIsu).collect { result ->
+                if (result is AppResult.Success) {
+                    flowIds = result.value.flowIds
+                    _uiState.update { it.copy(suggestions = result.value.subjects) }
+                }
             }
         }
     }

@@ -139,8 +139,9 @@ Back or the close button with changes asks `Не сохранять отзыв?`
 initial values and the mode live in `SavedStateHandle`, so the text survives
 recreation and process death; the first opening starts from the cached own
 review. The flows of the viewer's lessons with the teacher go into the draft as
-`flowIds`, candidates for Backend's check; a save does not wait for the
-schedule history, and an unavailable history leaves no suggestions without an
+`flowIds`, candidates for Backend's check. Suggestions and flows grow as the
+schedule weeks answer; a save does not wait for the history and sends the flows
+collected by then, and an unavailable history leaves no suggestions without an
 error.
 
 ## Report
@@ -170,7 +171,8 @@ the Reviews project are separate work.
 no-network behavior, input checks before the network, mutation routes, the
 cache and `observeUpdates()` after opt-out and session clear, errors and
 cancellation. `ReviewEditorViewModelTest` and `ReportReviewViewModelTest` cover
-the forms, restoration, suggestions and validation; `ProfileReviewsTest`,
+the forms, restoration, suggestions growing with the history, saving with
+partial flows and validation; `ProfileReviewsTest`,
 `UserProfileStateTest` and `UserProfileViewModelTest` the section, `Написать`,
 votes, deletion and updates. `UserProfileVisualTest` (with
 `UserProfilePreviewActivity`) and `ReviewEditorVisualTest` (with
