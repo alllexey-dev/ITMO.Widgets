@@ -22,6 +22,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
@@ -157,6 +158,10 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
     override fun openLessonDetails(args: LessonDetailsArgs) = Unit
 
     override fun openWebLogin() = Unit
+
+    override fun openReviewEditor(args: TeacherReviewArgs) = Unit
+
+    override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) = Unit
 
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
 

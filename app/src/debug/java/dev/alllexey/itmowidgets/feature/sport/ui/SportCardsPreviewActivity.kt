@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
@@ -128,6 +129,10 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
     override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) = Unit
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
     override fun openWebLogin() = Unit
+
+    override fun openReviewEditor(args: TeacherReviewArgs) = Unit
+
+    override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) = Unit
 
     fun showBookings(items: List<SportBooking>) {
         list.adapter = bookingAdapter

@@ -7,6 +7,7 @@ import androidx.navigation.fragment.findNavController
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 
 enum class AppScreen {
@@ -38,6 +39,11 @@ interface AppNavigator {
     fun openLinkEditor(args: SubjectLinksArgs, linkId: String? = null)
 
     fun openLinkActions(args: SubjectLinksArgs, linkId: String)
+
+    /** Writes the viewer's review of a teacher, or edits it when there is one. */
+    fun openReviewEditor(args: TeacherReviewArgs)
+
+    fun openReviewReport(args: TeacherReviewArgs, reviewId: String)
 
     /** Approves a browser's sign-in to the web version. */
     fun openWebLogin()
@@ -91,6 +97,14 @@ fun Fragment.openLinkEditor(args: SubjectLinksArgs, linkId: String? = null) {
 
 fun Fragment.openLinkActions(args: SubjectLinksArgs, linkId: String) {
     (requireActivity() as AppNavigator).openLinkActions(args, linkId)
+}
+
+fun Fragment.openReviewEditor(args: TeacherReviewArgs) {
+    (requireActivity() as AppNavigator).openReviewEditor(args)
+}
+
+fun Fragment.openReviewReport(args: TeacherReviewArgs, reviewId: String) {
+    (requireActivity() as AppNavigator).openReviewReport(args, reviewId)
 }
 
 fun Fragment.openWebLogin() {

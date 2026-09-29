@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -132,6 +133,14 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
     override fun openWebLogin() = Unit
 
+    override fun openReviewEditor(args: TeacherReviewArgs) {
+        openedEditors.add(args)
+    }
+
+    override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) {
+        openedReports.add(reviewId)
+    }
+
     data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val widthDp: Int = 0, val colorSeed: Int? = null)
 
     companion object {
@@ -151,6 +160,8 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
         @Volatile var selfIsu = 0
         val states: MutableList<UserProfileUiState> = Collections.synchronizedList(mutableListOf())
         val openedScreens: MutableList<Pair<AppScreen, Bundle?>> = Collections.synchronizedList(mutableListOf())
+        val openedEditors: MutableList<TeacherReviewArgs> = Collections.synchronizedList(mutableListOf())
+        val openedReports: MutableList<String> = Collections.synchronizedList(mutableListOf())
     }
 
     private object PreviewPeople : PersonRepository {

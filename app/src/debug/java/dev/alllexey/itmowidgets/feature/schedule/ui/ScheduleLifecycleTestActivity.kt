@@ -22,6 +22,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
@@ -135,6 +136,10 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator {
     override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) = Unit
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
     override fun openWebLogin() = Unit
+
+    override fun openReviewEditor(args: TeacherReviewArgs) = Unit
+
+    override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) = Unit
 
     private class PreviewRepository : ScheduleRepository {
         override fun observeScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) =

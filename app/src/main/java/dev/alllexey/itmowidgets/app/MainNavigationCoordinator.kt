@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
@@ -19,6 +20,8 @@ import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkActionsBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkEditorBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
+import dev.alllexey.itmowidgets.feature.reviews.ui.ReportReviewDialogFragment
+import dev.alllexey.itmowidgets.feature.reviews.ui.ReviewEditorBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
@@ -112,6 +115,16 @@ class MainNavigationCoordinator(
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) {
         if (fragments.isStateSaved || fragments.findFragmentByTag(LinkActionsBottomSheet.TAG) != null) return
         LinkActionsBottomSheet.newInstance(args, linkId).show(fragments, LinkActionsBottomSheet.TAG)
+    }
+
+    override fun openReviewEditor(args: TeacherReviewArgs) {
+        if (fragments.isStateSaved || fragments.findFragmentByTag(ReviewEditorBottomSheet.TAG) != null) return
+        ReviewEditorBottomSheet.newInstance(args).show(fragments, ReviewEditorBottomSheet.TAG)
+    }
+
+    override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) {
+        if (fragments.isStateSaved || fragments.findFragmentByTag(ReportReviewDialogFragment.TAG) != null) return
+        ReportReviewDialogFragment.newInstance(args, reviewId).show(fragments, ReportReviewDialogFragment.TAG)
     }
 
     override fun openWebLogin() {

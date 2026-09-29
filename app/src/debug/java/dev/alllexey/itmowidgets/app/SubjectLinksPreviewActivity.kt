@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
@@ -75,6 +76,10 @@ class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator {
     override fun openScreen(screen: AppScreen, arguments: Bundle?) = Unit
 
     override fun openWebLogin() = Unit
+
+    override fun openReviewEditor(args: TeacherReviewArgs) = Unit
+
+    override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) = Unit
 
     override fun openRoot(root: AppRoot) = Unit
 

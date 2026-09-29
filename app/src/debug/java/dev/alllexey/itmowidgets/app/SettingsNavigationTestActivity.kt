@@ -376,6 +376,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     /** Only recorded: the sheet itself talks to Backend and has its own preview host. */
     override fun openWebLogin() { webLoginOpened += Unit }
 
+    override fun openReviewEditor(args: dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs) = Unit
+
+    override fun openReviewReport(args: dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs, reviewId: String) = Unit
+
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) = navigation.openPendingSportDetails(args)
 
     val host: NavHostFragment

@@ -60,6 +60,8 @@ internal class FakeTeacherReviewsRepository : TeacherReviewsRepository {
     val actions = mutableListOf<String>()
     var lastDraft: TeacherReviewDraft? = null
         private set
+    var lastComment: String? = null
+        private set
 
     override fun cachedReviews(isu: Int): TeacherReviews? = cached[isu]
 
@@ -80,8 +82,10 @@ internal class FakeTeacherReviewsRepository : TeacherReviewsRepository {
 
     override suspend fun vote(isu: Int, reviewId: String, value: Int) = mutate("vote:$isu:$reviewId:$value") { voteResult }
 
-    override suspend fun report(isu: Int, reviewId: String, reason: ReviewReportReason, comment: String?) =
-        mutate("report:$isu:$reviewId:$reason") { reportResult }
+    override suspend fun report(isu: Int, reviewId: String, reason: ReviewReportReason, comment: String?): AppResult<TeacherReviews> {
+        lastComment = comment
+        return mutate("report:$isu:$reviewId:$reason") { reportResult }
+    }
 
     private suspend fun mutate(action: String, result: () -> AppResult<TeacherReviews>): AppResult<TeacherReviews> {
         actions += action
