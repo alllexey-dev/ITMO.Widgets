@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings
 
 import android.os.Bundle
+import androidx.core.app.NotificationManagerCompat
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -163,9 +164,50 @@ class SettingsNavigationTest {
                     Screenshots.capture("settings-screenshots", "settings-schedule-${spec.name}") { settle() }
                 }
             }
+            // The recordbook page before BARS answered (one switch) and after (two), with the footer under them.
+            for (spec in specs) for (bars in listOf(null, true)) {
+                SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
+                SettingsNavigationTestActivity.MemoryMarkTracking.bars.value = bars
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    scenario.onActivity {
+                        it.openScreen(AppScreen.SETTINGS, Bundle().apply { putString(SettingsPage.ARGUMENT, SettingsPage.RECORDBOOK.name) })
+                    }
+                    settle()
+                    scenario.onActivity { activity -> assertRecordbookPage(activity, spec.fontScale, barsShown = bars != null) }
+                    val state = if (bars == null) "bars-hidden" else "bars-shown"
+                    Screenshots.capture("settings-screenshots", "settings-recordbook-${spec.name}-$state") { settle() }
+                }
+            }
         } finally {
             SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.MemoryMarkTracking.bars.value = null
         }
+    }
+
+    private fun assertRecordbookPage(activity: SettingsNavigationTestActivity, fontScale: Float, barsShown: Boolean) {
+        val fragment = activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment as SettingsFragment
+        val root = fragment.requireView() as ViewGroup
+        assertEquals(fontScale, root.resources.configuration.fontScale, 0.001f)
+        assertEquals(View.GONE, root.findViewById<View>(R.id.settings_progress).visibility)
+        val sections = root.findViewById<ViewGroup>(R.id.sections_container)
+        val titles = root.descendants.filterIsInstance<TextView>()
+            .filter { it.id == R.id.setting_title && it.isShown }.map { it.text.toString() }.toList()
+        assertEquals(
+            listOfNotNull(
+                activity.getString(R.string.settings_marks_myitmo_title),
+                activity.getString(R.string.settings_marks_bars_title).takeIf { barsShown }
+            ),
+            titles
+        )
+        assertEquals(titles.size, sections.descendants.count { it.id == R.id.setting_switch && it.isShown })
+        val footer = sections.descendants.filterIsInstance<TextView>().single { it.id == R.id.setting_section_footer }
+        assertTrue(footer.isShown)
+        val footerRes = if (NotificationManagerCompat.from(activity).areNotificationsEnabled()) R.string.settings_marks_footer
+        else R.string.settings_marks_notifications_off
+        assertEquals(activity.getString(footerRes), footer.text.toString())
+        assertTrue(activity.offlineLoadingFrames.isEmpty())
+        ViewChecks.assertTextFits(root)
+        ViewChecks.assertTouchTargets(sections, requireWidth = false)
     }
 
     private fun assertAudienceDialog(selectedIndex: Int) {

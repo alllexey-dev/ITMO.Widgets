@@ -96,6 +96,7 @@ import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import kotlinx.coroutines.flow.onStart
 import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
@@ -276,7 +277,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
+                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, MemoryMarkTracking, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
                         CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(customSpoiler)
                         else -> error("Unexpected ViewModel")
                     } as T
@@ -396,8 +397,13 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         private val local = MutableStateFlow(LocalSettings(customServicesEnabled = true))
         private val sharing = MutableStateFlow<SharingSettingsState>(SharingSettingsState.Loading)
         override fun observeLocalSettings() =
-            combine(local, MemoryScheduleChangeTracking.enabled) { settings, scheduleChanges ->
-                settings.copy(scheduleChangesEnabled = scheduleChanges)
+            combine(
+                local,
+                MemoryScheduleChangeTracking.enabled,
+                MemoryMarkTracking.myItmo,
+                MemoryMarkTracking.bars
+            ) { settings, scheduleChanges, myItmoMarks, barsMarks ->
+                settings.copy(scheduleChangesEnabled = scheduleChanges, myItmoMarksEnabled = myItmoMarks, barsMarksEnabled = barsMarks)
             }.onStart { delay(80) }
         override fun observeSharingSettings() = sharing
         override suspend fun refreshSharingSettings() { sharing.value = SharingSettingsState.Content(SharingSettings()) }
@@ -452,6 +458,17 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         val enabled = MutableStateFlow(true)
         override fun observeEnabled() = enabled
         override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
+        override suspend fun syncWork() = Unit
+        override fun stopWork() = Unit
+        override fun checkNow() = Unit
+    }
+
+    /** The mark switches flip in memory; tests set [bars] to show or hide the BARS switch. No work is scheduled. */
+    object MemoryMarkTracking : MarkTracking {
+        val myItmo = MutableStateFlow(true)
+        val bars = MutableStateFlow<Boolean?>(null)
+        override suspend fun setMyItmoEnabled(enabled: Boolean) { myItmo.value = enabled }
+        override suspend fun setBarsEnabled(enabled: Boolean) { bars.value = enabled }
         override suspend fun syncWork() = Unit
         override fun stopWork() = Unit
         override fun checkNow() = Unit

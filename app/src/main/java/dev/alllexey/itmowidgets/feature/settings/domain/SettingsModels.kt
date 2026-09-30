@@ -15,6 +15,9 @@ data class LocalSettings(
     val sport: SportDisplaySettings = SportDisplaySettings(),
     val showSportAutoSign: Boolean = false,
     val scheduleChangesEnabled: Boolean = true,
+    val myItmoMarksEnabled: Boolean = true,
+    /** Null until the account's first BARS answer: the switch is hidden then. */
+    val barsMarksEnabled: Boolean? = null,
     val hiddenHomeCards: Set<HomeCardKind> = emptySet()
 )
 

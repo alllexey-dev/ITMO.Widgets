@@ -10,7 +10,7 @@ import java.time.LocalDate
 
 /** Feed order is the declaration order; a kind is also the unit the user can hide. */
 enum class HomeCardKind {
-    SCHEDULE, SCHEDULE_CHANGES, SPORT, FRIEND_REQUESTS, HINT_WIDGETS, HINT_NOTIFICATIONS, HINT_SERVICES
+    SCHEDULE, SCHEDULE_CHANGES, MARKS, SPORT, FRIEND_REQUESTS, HINT_WIDGETS, HINT_NOTIFICATIONS, HINT_SERVICES
 }
 
 /** A dismissible nudge; each one has its own card kind so it sorts and hides on its own. */

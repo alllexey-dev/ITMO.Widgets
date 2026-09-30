@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings
 
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import android.content.Intent
 import android.content.res.Configuration
@@ -402,6 +403,7 @@ class SettingsRendererTest {
                     },
                     AppVersion(activity.getString(R.string.app_version)),
                     RendererScheduleChangeTracking,
+                    RendererMarkTracking,
                     NoDiagnostics,
                     SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
@@ -531,6 +533,15 @@ private object RendererScheduleChangeTracking : ScheduleChangeTracking {
     private val enabled = MutableStateFlow(true)
     override fun observeEnabled() = enabled
     override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
+    override suspend fun syncWork() = Unit
+    override fun stopWork() = Unit
+    override fun checkNow() = Unit
+}
+
+/** Mark switches are not stored here; nothing is scheduled. */
+private object RendererMarkTracking : MarkTracking {
+    override suspend fun setMyItmoEnabled(enabled: Boolean) = Unit
+    override suspend fun setBarsEnabled(enabled: Boolean) = Unit
     override suspend fun syncWork() = Unit
     override fun stopWork() = Unit
     override fun checkNow() = Unit

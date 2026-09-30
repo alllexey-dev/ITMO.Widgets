@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
@@ -64,6 +65,7 @@ class SettingsViewModel @Inject constructor(
     private val widgetRefreshRequester: WidgetRefreshRequester,
     private val appVersion: AppVersion,
     private val tracking: ScheduleChangeTracking,
+    private val markTracking: MarkTracking,
     diagnostics: AppDiagnostics,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -189,7 +191,20 @@ class SettingsViewModel @Inject constructor(
                     eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
                 }
             }
-            KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SCHEDULE_CHANGES, KEY_HOME_CARD_SPORT, KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
+            KEY_MYITMO_MARKS -> {
+                updateLocalSetting { markTracking.setMyItmoEnabled(checked) }
+                if (checked && notificationPermissionGranted.value == false) {
+                    eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
+                }
+            }
+            KEY_BARS_MARKS -> {
+                updateLocalSetting { markTracking.setBarsEnabled(checked) }
+                if (checked && notificationPermissionGranted.value == false) {
+                    eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
+                }
+            }
+            KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SCHEDULE_CHANGES, KEY_HOME_CARD_MARKS, KEY_HOME_CARD_SPORT,
+            KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
                 val kind = HOME_CARDS.first { it.first == key }.second
                 repository.setHomeCardVisible(kind, checked)
             }
@@ -378,6 +393,7 @@ class SettingsViewModel @Inject constructor(
                 items = listOf(
                     navigation(SettingsPage.HOME),
                     navigation(SettingsPage.SCHEDULE),
+                    navigation(SettingsPage.RECORDBOOK),
                     navigation(SettingsPage.SPORT),
                     navigation(SettingsPage.MAINTENANCE)
                 )
@@ -537,6 +553,30 @@ class SettingsViewModel @Inject constructor(
                     )
                 ),
                 footer = UiText.Resource(R.string.settings_schedule_footer)
+            )
+        )
+        SettingsPage.RECORDBOOK -> listOf(
+            SettingSection(
+                title = null,
+                items = listOfNotNull(
+                    SettingItem.Toggle(
+                        key = KEY_MYITMO_MARKS,
+                        title = UiText.Resource(R.string.settings_marks_myitmo_title),
+                        checked = local.myItmoMarksEnabled
+                    ),
+                    // BARS appears with the account's first BARS answer; before it there is nothing to check.
+                    local.barsMarksEnabled?.let { enabled ->
+                        SettingItem.Toggle(
+                            key = KEY_BARS_MARKS,
+                            title = UiText.Resource(R.string.settings_marks_bars_title),
+                            checked = enabled
+                        )
+                    }
+                ),
+                footer = UiText.Resource(
+                    if (notificationsGranted == false) R.string.settings_marks_notifications_off
+                    else R.string.settings_marks_footer
+                )
             )
         )
         SettingsPage.SPORT -> listOf(
@@ -710,6 +750,9 @@ class SettingsViewModel @Inject constructor(
         const val KEY_SCHEDULE_CHANGES = "schedule_changes"
         const val KEY_HOME_CARD_SCHEDULE = "home_card_schedule"
         const val KEY_HOME_CARD_SCHEDULE_CHANGES = "home_card_schedule_changes"
+        const val KEY_HOME_CARD_MARKS = "home_card_marks"
+        const val KEY_MYITMO_MARKS = "myitmo_marks"
+        const val KEY_BARS_MARKS = "bars_marks"
         const val KEY_HOME_CARD_SPORT = "home_card_sport"
         const val KEY_HOME_CARD_FRIENDS = "home_card_friends"
 
@@ -721,6 +764,7 @@ class SettingsViewModel @Inject constructor(
                 HomeCardKind.SCHEDULE_CHANGES,
                 R.string.settings_home_card_schedule_changes_title
             ),
+            Triple(KEY_HOME_CARD_MARKS, HomeCardKind.MARKS, R.string.settings_home_card_marks_title),
             Triple(KEY_HOME_CARD_SPORT, HomeCardKind.SPORT, R.string.settings_home_card_sport_title),
             Triple(KEY_HOME_CARD_FRIENDS, HomeCardKind.FRIEND_REQUESTS, R.string.settings_home_card_friends_title)
         )

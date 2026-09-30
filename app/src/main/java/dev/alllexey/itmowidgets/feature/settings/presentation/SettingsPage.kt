@@ -14,6 +14,7 @@ enum class SettingsPage(val title: UiText) {
     QR_WIDGET(UiText.Resource(R.string.settings_group_qr_widget)),
     HOME(UiText.Resource(R.string.settings_group_home)),
     SCHEDULE(UiText.Resource(R.string.settings_group_schedule)),
+    RECORDBOOK(UiText.Resource(R.string.title_recordbook)),
     SPORT(UiText.Resource(R.string.settings_group_sport)),
     MAINTENANCE(UiText.Resource(R.string.settings_group_maintenance));
 

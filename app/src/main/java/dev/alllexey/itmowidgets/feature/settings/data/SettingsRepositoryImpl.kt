@@ -65,11 +65,15 @@ class SettingsRepositoryImpl @Inject constructor(
         val app = combine(
             settings.observeScheduleSportAutoSignEnabled(),
             settings.observeScheduleChangesEnabled(),
+            settings.observeMyItmoMarksEnabled(),
+            settings.observeBarsMarksEnabled(),
             settings.observeHiddenHomeCards()
-        ) { showSportAutoSign, scheduleChangesEnabled, hiddenHomeCards ->
+        ) { showSportAutoSign, scheduleChangesEnabled, myItmoMarksEnabled, barsMarksEnabled, hiddenHomeCards ->
             AppLocalSettings(
                 showSportAutoSign = showSportAutoSign,
                 scheduleChangesEnabled = scheduleChangesEnabled,
+                myItmoMarksEnabled = myItmoMarksEnabled,
+                barsMarksEnabled = barsMarksEnabled,
                 hiddenHomeCards = hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet()
             )
         }
@@ -88,6 +92,8 @@ class SettingsRepositoryImpl @Inject constructor(
                 sport = sportSettings,
                 showSportAutoSign = appSettings.showSportAutoSign,
                 scheduleChangesEnabled = appSettings.scheduleChangesEnabled,
+                myItmoMarksEnabled = appSettings.myItmoMarksEnabled,
+                barsMarksEnabled = appSettings.barsMarksEnabled,
                 hiddenHomeCards = appSettings.hiddenHomeCards
             )
         }
@@ -252,5 +258,7 @@ class SettingsRepositoryImpl @Inject constructor(
 private data class AppLocalSettings(
     val showSportAutoSign: Boolean,
     val scheduleChangesEnabled: Boolean,
+    val myItmoMarksEnabled: Boolean,
+    val barsMarksEnabled: Boolean?,
     val hiddenHomeCards: Set<HomeCardKind>
 )

@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -163,7 +164,7 @@ class SettingsViewModelTest {
 
             assertEquals(SettingsPage.ROOT, fixture.viewModel.page)
             assertEquals(3, fixture.viewModel.sections.value.size)
-            assertEquals(10, fixture.viewModel.allItems().size)
+            assertEquals(11, fixture.viewModel.allItems().size)
             assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
             val navigation = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
             assertEquals(
@@ -177,7 +178,7 @@ class SettingsViewModelTest {
                 it.title == UiText.Resource(R.string.me_group_app)
             }
             assertEquals(
-                listOf(SettingsPage.HOME, SettingsPage.SCHEDULE, SettingsPage.SPORT, SettingsPage.MAINTENANCE),
+                listOf(SettingsPage.HOME, SettingsPage.SCHEDULE, SettingsPage.RECORDBOOK, SettingsPage.SPORT, SettingsPage.MAINTENANCE),
                 applicationSection.items.filterIsInstance<SettingItem.Navigation>().map { it.page }
             )
             assertEquals(0, fixture.repository.refreshSharingCount)
@@ -286,8 +287,9 @@ class SettingsViewModelTest {
 
             advanceUntilIdle()
 
+            // A decided BARS switch, so the recordbook page shows both of its rows.
             val details = SettingsPage.entries.filter { it != SettingsPage.ROOT }.map { page ->
-                createFixture(page = page).viewModel
+                createFixture(page = page, local = LocalSettings(barsMarksEnabled = false)).viewModel
             }
             advanceUntilIdle()
             val items = (listOf(fixture.viewModel) + details)
@@ -319,8 +321,11 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_SCHEDULE_CHANGES,
                     SettingsViewModel.KEY_HOME_CARD_SCHEDULE,
                     SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES,
+                    SettingsViewModel.KEY_HOME_CARD_MARKS,
                     SettingsViewModel.KEY_HOME_CARD_SPORT,
                     SettingsViewModel.KEY_HOME_CARD_FRIENDS,
+                    SettingsViewModel.KEY_MYITMO_MARKS,
+                    SettingsViewModel.KEY_BARS_MARKS,
                     SettingsViewModel.KEY_REFRESH_WIDGETS,
                     SettingsViewModel.KEY_RESTART_ONBOARDING,
                     SettingsViewModel.KEY_DIAGNOSTICS,
@@ -704,7 +709,8 @@ class SettingsViewModelTest {
             assertEquals(
                 listOf(
                     SettingsViewModel.KEY_HOME_CARD_SCHEDULE, SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES,
-                    SettingsViewModel.KEY_HOME_CARD_SPORT, SettingsViewModel.KEY_HOME_CARD_FRIENDS
+                    SettingsViewModel.KEY_HOME_CARD_MARKS, SettingsViewModel.KEY_HOME_CARD_SPORT,
+                    SettingsViewModel.KEY_HOME_CARD_FRIENDS
                 ),
                 section.items.map { it.key }
             )
@@ -836,6 +842,100 @@ class SettingsViewModelTest {
             assertEquals(listOf(HomeCardKind.SCHEDULE_CHANGES to false), fixture.repository.homeCardRequests)
             assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES).checked)
             assertTrue(fixture.tracking.setCalls.isEmpty())
+        }
+
+    @Test
+    fun `root lists the recordbook between schedule and sport`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture()
+            advanceUntilIdle()
+
+            val pages = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>().map { it.page }
+            val index = pages.indexOf(SettingsPage.RECORDBOOK)
+            assertEquals(SettingsPage.SCHEDULE, pages[index - 1])
+            assertEquals(SettingsPage.SPORT, pages[index + 1])
+            assertEquals(UiText.Resource(R.string.title_recordbook), SettingsPage.RECORDBOOK.title)
+        }
+
+    @Test
+    fun `recordbook page shows the BARS switch only once BARS has answered`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.RECORDBOOK, local = LocalSettings(myItmoMarksEnabled = false))
+            advanceUntilIdle()
+
+            val section = fixture.viewModel.sections.value.single()
+            assertEquals(null, section.title)
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS), section.items.map { it.key })
+            val myItmo = fixture.viewModel.toggle(SettingsViewModel.KEY_MYITMO_MARKS)
+            assertEquals(UiText.Resource(R.string.settings_marks_myitmo_title), myItmo.title)
+            assertFalse(myItmo.checked)
+
+            for (bars in listOf(false, true)) {
+                fixture.repository.barsMarks.value = bars
+                advanceUntilIdle()
+                assertEquals(
+                    listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS),
+                    fixture.viewModel.sections.value.single().items.map { it.key }
+                )
+                val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_BARS_MARKS)
+                assertEquals(UiText.Resource(R.string.settings_marks_bars_title), toggle.title)
+                assertEquals(bars, toggle.checked)
+            }
+        }
+
+    @Test
+    fun `recordbook footer says when notifications are off`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.RECORDBOOK)
+            advanceUntilIdle()
+            val footer = { fixture.viewModel.sections.value.single().footer }
+            assertEquals(UiText.Resource(R.string.settings_marks_footer), footer())
+
+            fixture.viewModel.onNotificationPermissionChanged(granted = false)
+            advanceUntilIdle()
+            assertEquals(UiText.Resource(R.string.settings_marks_notifications_off), footer())
+
+            fixture.viewModel.onNotificationPermissionChanged(granted = true)
+            advanceUntilIdle()
+            assertEquals(UiText.Resource(R.string.settings_marks_footer), footer())
+        }
+
+    @Test
+    fun `mark switches go through tracking and turning one on asks for notifications only when they are off`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.RECORDBOOK, local = LocalSettings(barsMarksEnabled = false))
+            fixture.viewModel.onNotificationPermissionChanged(granted = false)
+            advanceUntilIdle()
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_MYITMO_MARKS, false)
+            advanceUntilIdle()
+            assertEquals(listOf(false), fixture.markTracking.myItmoCalls)
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_BARS_MARKS, true)
+            advanceUntilIdle()
+            assertEquals(listOf(true), fixture.markTracking.barsCalls)
+            // Only the switch turned on asked; turning My ITMO off did not.
+            assertEquals(listOf(SettingsEvent.RequestNotificationPermission), fixture.viewModel.events.take(1).toList())
+            assertTrue(fixture.tracking.setCalls.isEmpty())
+            assertEquals(0, fixture.widgetRefresher.refreshCount)
+        }
+
+    @Test
+    fun `home page offers the marks card third and hides it`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.HOME)
+            advanceUntilIdle()
+
+            val row = fixture.viewModel.sections.value.single().items[2] as SettingItem.Toggle
+            assertEquals(SettingsViewModel.KEY_HOME_CARD_MARKS, row.key)
+            assertEquals(UiText.Resource(R.string.settings_home_card_marks_title), row.title)
+            assertTrue(row.checked)
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_HOME_CARD_MARKS, false)
+            advanceUntilIdle()
+            assertEquals(listOf(HomeCardKind.MARKS to false), fixture.repository.homeCardRequests)
+            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_MARKS).checked)
+            assertTrue(fixture.markTracking.myItmoCalls.isEmpty())
         }
 
     @Test
@@ -1172,6 +1272,7 @@ class SettingsViewModelTest {
         page: SettingsPage = SettingsPage.ROOT
     ): Fixture {
         val tracking = FakeScheduleChangeTracking(enabled = local.scheduleChangesEnabled)
+        val markTracking = FakeMarkTracking()
         val repository = FakeSettingsRepository(local, sharing, localInitiallyAvailable, tracking.enabled)
         val customServicesRepository = FakeCustomServicesRepository { enabled ->
             repository.local.value = repository.local.value.copy(
@@ -1187,10 +1288,11 @@ class SettingsViewModelTest {
             widgetRefreshRequester = refresher,
             appVersion = AppVersion("2.1-test"),
             tracking = tracking,
+            markTracking = markTracking,
             diagnostics = RecordingDiagnostics(),
             savedStateHandle = SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
         )
-        return Fixture(viewModel, repository, customServicesRepository, refresher, onboarding, tracking)
+        return Fixture(viewModel, repository, customServicesRepository, refresher, onboarding, tracking, markTracking)
     }
 
     private fun SettingsViewModel.allItems(): List<SettingItem> =
@@ -1211,7 +1313,8 @@ class SettingsViewModelTest {
         val customServicesRepository: FakeCustomServicesRepository,
         val widgetRefresher: FakeWidgetRefreshRequester,
         val onboardingRepository: FakeOnboardingRepository,
-        val tracking: FakeScheduleChangeTracking
+        val tracking: FakeScheduleChangeTracking,
+        val markTracking: FakeMarkTracking
     )
 
     private class FakeOnboardingRepository : OnboardingRepository {
@@ -1239,6 +1342,9 @@ class SettingsViewModelTest {
     ) : SettingsRepository {
 
         val local = MutableStateFlow(initialLocal)
+        /** The mark switches live behind [dev.alllexey.itmowidgets.core.recordbook.MarkTracking]; tests move them here. */
+        val myItmoMarks = MutableStateFlow(initialLocal.myItmoMarksEnabled)
+        val barsMarks = MutableStateFlow(initialLocal.barsMarksEnabled)
         private val localAvailable = MutableStateFlow(localInitiallyAvailable)
         val sharing = MutableStateFlow(initialSharing)
         var refreshSharingCount = 0
@@ -1262,8 +1368,10 @@ class SettingsViewModelTest {
         var scheduleSportAutoSignWrite: suspend () -> Unit = {}
 
         override fun observeLocalSettings(): Flow<LocalSettings> =
-            combine(localAvailable, local, scheduleChangesEnabled) { available, settings, scheduleChanges ->
-                settings.copy(scheduleChangesEnabled = scheduleChanges).takeIf { available }
+            combine(localAvailable, local, scheduleChangesEnabled, myItmoMarks, barsMarks) {
+                    available, settings, scheduleChanges, myItmo, bars ->
+                settings.copy(scheduleChangesEnabled = scheduleChanges, myItmoMarksEnabled = myItmo, barsMarksEnabled = bars)
+                    .takeIf { available }
             }.filterNotNull()
 
         fun publishLocalSettings() {

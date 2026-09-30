@@ -116,6 +116,24 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
+    fun `mark switches default to My ITMO on and BARS undecided and follow the stored values`() = runTest {
+        val fixture = createRepository()
+        val defaults = fixture.repository.observeLocalSettings().first()
+        assertTrue(defaults.myItmoMarksEnabled)
+        assertEquals(null, defaults.barsMarksEnabled)
+
+        fixture.storage.setMyItmoMarksEnabled(false)
+        fixture.storage.setBarsMarksEnabled(true)
+        assertEquals(
+            LocalSettings(myItmoMarksEnabled = false, barsMarksEnabled = true),
+            fixture.repository.observeLocalSettings().first()
+        )
+
+        fixture.storage.clearBarsMarkState()
+        assertEquals(LocalSettings(myItmoMarksEnabled = false), fixture.repository.observeLocalSettings().first())
+    }
+
+    @Test
     fun `does not fetch sharing settings while custom services are disabled`() = runTest {
         val fixture = createRepository()
 
