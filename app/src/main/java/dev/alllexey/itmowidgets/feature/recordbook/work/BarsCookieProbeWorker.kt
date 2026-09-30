@@ -12,6 +12,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import api.bars.Bars
+import api.bars.utils.BarsApiException
 import api.bars.utils.BarsAuthHelper
 import api.bars.utils.BarsSessionCode
 import dagger.hilt.EntryPoint
@@ -50,17 +51,25 @@ class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : Corout
         } catch (cancel: CancellationException) {
             throw cancel
         } catch (failure: Exception) {
-            "outcome=ERROR type=${failure.javaClass.simpleName}"
+            val http = (failure as? BarsApiException)?.httpCode
+            "outcome=ERROR step=$step type=${failure.javaClass.simpleName} http=$http cause=${failure.cause?.javaClass?.simpleName}"
         }
         Log.i(TAG, line)
         return Result.success()
     }
 
+    /** The last step started, so an error line says where the probe stopped without echoing any value. */
+    private var step = "start"
+
     private suspend fun probe(bars: Bars, cookies: ItmoIdCookies): String {
         val state = BarsAuthHelper.newState()
+        step = "loginUrl"
         val url = bars.authHelper.getLoginUrl(state)
+        step = "cookies"
         val cookie = cookies.cookieHeader(url)
+        step = "request"
         val answer = withContext(Dispatchers.IO) { bars.authHelper.requestCodeWithCookies(state, cookie) }
+        step = "exchange"
         val exchange = if (answer.outcome == BarsSessionCode.Outcome.CODE) {
             val valid = try {
                 Bars.isValidAuthorization(withContext(Dispatchers.IO) { bars.authHelper.exchange(answer.code) })
@@ -98,6 +107,6 @@ class WorkManagerBarsSessionProbe @Inject constructor(
 
     private companion object {
         const val WORK = "bars-cookie-probe"
-        const val DELAY_SECONDS = 20L
+        const val DELAY_SECONDS = 120L
     }
 }
