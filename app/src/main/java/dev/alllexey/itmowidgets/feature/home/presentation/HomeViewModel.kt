@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.home.HomeCard
+import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -86,6 +87,10 @@ class HomeViewModel @Inject constructor(
 
     fun dismissHint(hint: HomeHint) {
         viewModelScope.launch { hintStore.dismiss(hint) }
+    }
+
+    fun dismissCard(kind: HomeCardKind) {
+        viewModelScope.launch { sources.forEach { it.dismiss(kind) } }
     }
 
     private companion object {

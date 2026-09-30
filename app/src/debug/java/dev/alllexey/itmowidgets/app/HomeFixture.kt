@@ -12,11 +12,17 @@ import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.LessonSlot
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
@@ -75,8 +81,30 @@ data class HomeFixture(
             completed = 1
         )
 
+        /** A synthetic move of a Tuesday lesson to Wednesday, found this morning. */
+        fun scheduleChangeSample(subject: String = "Математический анализ") = ScheduleChange(
+            id = "fixture-1",
+            detectedAt = Instant.parse("2026-09-07T06:00:00Z"),
+            kind = ScheduleChangeKind.UPDATED,
+            fields = setOf(ScheduleChangeField.TIME),
+            subjectName = subject,
+            typeId = 1,
+            flowName = "МАТ АН 1.1",
+            before = changeSlot(DATE.plusDays(1)),
+            after = changeSlot(DATE.plusDays(2)),
+            read = false,
+            notified = true
+        )
+
+        private fun changeSlot(date: LocalDate) = LessonSlot(
+            pairId = 1, date = date, start = LocalTime.of(10, 0), end = LocalTime.of(11, 30), room = "1506",
+            building = "Кронверкский проспект, 49", formatId = 1, format = "Очный", teacherIsu = 300001,
+            teacherName = "Преподаватель Тестовый"
+        )
+
         fun defaultCards() = listOf(
             HomeCard.Hint(HomeHint.WIDGETS),
+            HomeCard.ScheduleChanges(unread = 3, latest = scheduleChangeSample()),
             HomeCard.FriendRequests(listOf(user(300001, "Александра Константинопольская"), user(300002, "Иван Петров"))),
             HomeCard.Sport(SportScoreSummary(attendances = 50, bonus = 22), listOf(booking(1, 16), booking(2, 18, prediction = true))),
             schedule()
@@ -90,6 +118,7 @@ class FixtureHomeCardSource(fixture: HomeFixture) : HomeCardSource {
     var refreshDelayMs = fixture.refreshDelayMs
     var refreshes = 0
     var revalidations = 0
+    val dismissed = mutableListOf<HomeCardKind>()
     private val neverAnswers = fixture.neverAnswers
 
     override fun observe(): Flow<List<HomeCard>> = if (neverAnswers) flow { awaitCancellation() } else cards
@@ -102,6 +131,11 @@ class FixtureHomeCardSource(fixture: HomeFixture) : HomeCardSource {
 
     override suspend fun revalidate() {
         revalidations++
+    }
+
+    override suspend fun dismiss(kind: HomeCardKind) {
+        dismissed += kind
+        cards.value = cards.value.filterNot { it.kind == kind }
     }
 }
 

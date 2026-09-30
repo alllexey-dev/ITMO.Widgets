@@ -18,4 +18,7 @@ interface HomeCardSource {
     suspend fun refresh(): AppResult<Unit>
 
     suspend fun revalidate() = Unit
+
+    /** The close button of a [kind] card resets what the card shows; sources without such a card do nothing. */
+    suspend fun dismiss(kind: HomeCardKind) = Unit
 }

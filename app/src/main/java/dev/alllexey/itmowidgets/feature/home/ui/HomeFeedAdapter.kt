@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.ui.buildingShortTitle
+import dev.alllexey.itmowidgets.core.ui.headline
 import dev.alllexey.itmowidgets.core.ui.lessonTypeColorRes
 import dev.alllexey.itmowidgets.core.ui.lessonTypeNameRes
 import dev.alllexey.itmowidgets.core.ui.roomShortTitle
@@ -30,6 +31,7 @@ import dev.alllexey.itmowidgets.databinding.ItemHomeFriendRequestsBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeHintBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeLessonRowBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeScheduleBinding
+import dev.alllexey.itmowidgets.databinding.ItemHomeScheduleChangesBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeSportBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeSportRowBinding
 import dev.alllexey.itmowidgets.databinding.ItemUserRowBinding
@@ -47,7 +49,9 @@ data class HomeFeedActions(
     val onOpenFriends: () -> Unit = {},
     val onOpenUser: (UserSummary) -> Unit = {},
     val onHint: (HomeHint) -> Unit = {},
-    val onDismissHint: (HomeHint) -> Unit = {}
+    val onDismissHint: (HomeHint) -> Unit = {},
+    val onOpenScheduleChanges: () -> Unit = {},
+    val onDismissScheduleChanges: () -> Unit = {}
 )
 
 /**
@@ -68,6 +72,7 @@ class HomeFeedAdapter(
 
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
         is HomeCard.Schedule -> TYPE_SCHEDULE
+        is HomeCard.ScheduleChanges -> TYPE_SCHEDULE_CHANGES
         is HomeCard.Sport -> TYPE_SPORT
         is HomeCard.FriendRequests -> TYPE_FRIENDS
         is HomeCard.Hint -> TYPE_HINT
@@ -77,6 +82,7 @@ class HomeFeedAdapter(
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
             TYPE_SCHEDULE -> ScheduleHolder(ItemHomeScheduleBinding.inflate(inflater, parent, false))
+            TYPE_SCHEDULE_CHANGES -> ScheduleChangesHolder(ItemHomeScheduleChangesBinding.inflate(inflater, parent, false))
             TYPE_SPORT -> SportHolder(ItemHomeSportBinding.inflate(inflater, parent, false))
             TYPE_FRIENDS -> FriendsHolder(ItemHomeFriendRequestsBinding.inflate(inflater, parent, false))
             else -> HintHolder(ItemHomeHintBinding.inflate(inflater, parent, false))
@@ -86,6 +92,7 @@ class HomeFeedAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val card = getItem(position)) {
             is HomeCard.Schedule -> (holder as ScheduleHolder).bind(card)
+            is HomeCard.ScheduleChanges -> (holder as ScheduleChangesHolder).bind(card)
             is HomeCard.Sport -> (holder as SportHolder).bind(card)
             is HomeCard.FriendRequests -> (holder as FriendsHolder).bind(card)
             is HomeCard.Hint -> (holder as HintHolder).bind(card)
@@ -174,6 +181,25 @@ class HomeFeedAdapter(
             )
             binding.rowProgress.isVisible = focused
             binding.rowProgress.progress = ((progress ?: 0f) * PROGRESS_MAX).toInt()
+        }
+    }
+
+    inner class ScheduleChangesHolder(
+        private val binding: ItemHomeScheduleChangesBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(card: HomeCard.ScheduleChanges) {
+            val context = binding.root.context
+            val latest = card.latest.headline(context)
+            binding.scheduleChangesCount.text = card.unread.toString()
+            binding.scheduleChangesLatest.text = latest
+            binding.homeScheduleChangesCard.contentDescription = context.getString(
+                R.string.home_schedule_changes_description,
+                context.getString(R.string.schedule_changes_title),
+                card.unread,
+                latest
+            )
+            binding.homeScheduleChangesCard.setOnClickListener { actions.onOpenScheduleChanges() }
+            binding.scheduleChangesDismiss.setOnClickListener { actions.onDismissScheduleChanges() }
         }
     }
 
@@ -268,6 +294,7 @@ class HomeFeedAdapter(
 
     private companion object {
         const val TYPE_SCHEDULE = 1
+        const val TYPE_SCHEDULE_CHANGES = 2
         const val TYPE_SPORT = 3
         const val TYPE_FRIENDS = 4
         const val TYPE_HINT = 5

@@ -112,6 +112,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     val offlineLoadingFrames = mutableListOf<SettingsPage>()
     val groupedProfileFrames = mutableListOf<Boolean>()
     val webLoginOpened = mutableListOf<Unit>()
+    val openedScreens = mutableListOf<AppScreen>()
     private val repository = FixtureRepository()
     private val refresh = object : WidgetRefreshRequester { override fun refreshAll() = Unit }
     private val onboardingServices = FixtureOnboardingServices()
@@ -361,7 +362,11 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         navigation = MainNavigationCoordinator(binding, supportFragmentManager, host)
     }
 
-    override fun openScreen(screen: AppScreen, arguments: Bundle?) = navigation.openScreen(screen, arguments)
+    /** The schedule changes history is only recorded: its real screen would read and mark the device's own file. */
+    override fun openScreen(screen: AppScreen, arguments: Bundle?) {
+        openedScreens += screen
+        if (screen != AppScreen.SCHEDULE_CHANGES) navigation.openScreen(screen, arguments)
+    }
 
     override fun dismissOverlays() = navigation.dismissOverlays()
 

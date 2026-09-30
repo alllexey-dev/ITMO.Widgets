@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.DefaultScheduleChangeTracking
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleChangesHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSourceImpl
@@ -104,6 +105,13 @@ abstract class ScheduleModule {
     @Singleton
     abstract fun bindScheduleHomeCards(
         impl: ScheduleHomeCardSource
+    ): HomeCardSource
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindScheduleChangesHomeCards(
+        impl: ScheduleChangesHomeCardSource
     ): HomeCardSource
 
     @Binds

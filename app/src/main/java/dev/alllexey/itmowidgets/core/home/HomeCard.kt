@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.core.home
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import java.time.LocalDate
@@ -40,6 +41,11 @@ sealed interface HomeCard {
         val completed: Int
     ) : HomeCard {
         override val kind: HomeCardKind get() = HomeCardKind.SCHEDULE
+    }
+
+    /** [unread] counts unread changes of lessons not yet over; [latest] is the newest of them. */
+    data class ScheduleChanges(val unread: Int, val latest: ScheduleChange) : HomeCard {
+        override val kind: HomeCardKind get() = HomeCardKind.SCHEDULE_CHANGES
     }
 
     data class Sport(val score: SportScoreSummary?, val queue: List<PendingSportBooking>) : HomeCard {

@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.feature.home.FakeHomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.FakeHomeCardSource
 import dev.alllexey.itmowidgets.feature.home.FakeHomeHintStore
@@ -84,6 +85,38 @@ class HomeViewModelTest {
         preferences.hidden.value = emptySet()
         advanceUntilIdle()
         assertEquals(3, vm.content().cards.size)
+    }
+
+    @Test
+    fun `schedule changes sit right after the schedule and hide by their own kind`() = runTest {
+        val changes = FakeHomeCardSource(HomeCard.ScheduleChanges(unread = 2, latest = scheduleChange()))
+        val vm = model(hints, sport, changes, schedule)
+        subscribe(vm)
+        advanceUntilIdle()
+        assertEquals(
+            listOf(HomeCardKind.SCHEDULE, HomeCardKind.SCHEDULE_CHANGES, HomeCardKind.SPORT, HomeCardKind.HINT_WIDGETS),
+            vm.content().cards.map { it.kind }
+        )
+
+        preferences.hidden.value = setOf(HomeCardKind.SCHEDULE_CHANGES)
+        advanceUntilIdle()
+        assertEquals(
+            listOf(HomeCardKind.SCHEDULE, HomeCardKind.SPORT, HomeCardKind.HINT_WIDGETS),
+            vm.content().cards.map { it.kind }
+        )
+    }
+
+    @Test
+    fun `dismissing a card reaches every source`() = runTest {
+        val vm = model()
+
+        vm.dismissCard(HomeCardKind.SCHEDULE_CHANGES)
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(listOf(HomeCardKind.SCHEDULE_CHANGES)).let { it + it + it },
+            listOf(hints.dismissed, sport.dismissed, schedule.dismissed)
+        )
     }
 
     @Test

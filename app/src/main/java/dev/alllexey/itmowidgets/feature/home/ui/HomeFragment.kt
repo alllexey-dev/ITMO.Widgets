@@ -20,6 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.navigation.SettingsScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
@@ -135,7 +136,9 @@ class HomeFragment : Fragment() {
                     openUserProfile(user.isu)
                 },
                 onHint = ::actOnHint,
-                onDismissHint = viewModel::dismissHint
+                onDismissHint = viewModel::dismissHint,
+                onOpenScheduleChanges = { openScreen(AppScreen.SCHEDULE_CHANGES) },
+                onDismissScheduleChanges = { viewModel.dismissCard(HomeCardKind.SCHEDULE_CHANGES) }
             ),
             zoneId = timeProvider.zoneId
         )

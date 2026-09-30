@@ -35,6 +35,7 @@ class FakeHomeCardSource(vararg initial: HomeCard) : HomeCardSource {
     var pendingRefresh: CompletableDeferred<AppResult<Unit>>? = null
     var refreshes = 0
     var revalidations = 0
+    val dismissed = mutableListOf<HomeCardKind>()
 
     override fun observe(): Flow<List<HomeCard>> = cards
 
@@ -45,6 +46,10 @@ class FakeHomeCardSource(vararg initial: HomeCard) : HomeCardSource {
 
     override suspend fun revalidate() {
         revalidations++
+    }
+
+    override suspend fun dismiss(kind: HomeCardKind) {
+        dismissed += kind
     }
 }
 
