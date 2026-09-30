@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.debug.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
@@ -51,7 +52,8 @@ class DebugToolsViewModel @Inject constructor(
     private val sportLessonTemplateController: SportLessonTemplateController,
     private val refreshTokenController: DebugRefreshTokenController,
     private val customServicesRepository: CustomServicesRepository,
-    private val scheduleChangeTracking: ScheduleChangeTracking
+    private val scheduleChangeTracking: ScheduleChangeTracking,
+    private val barsSessionProbe: BarsSessionProbe
 ) : ViewModel() {
 
     private val mutableUiState =
@@ -77,6 +79,9 @@ class DebugToolsViewModel @Inject constructor(
 
     /** One background check of the own schedule, as soon as the network allows. */
     fun checkScheduleChanges() = scheduleChangeTracking.checkNow()
+
+    /** Renews BARS through ITMO.ID cookies once, in a fresh process; the outcome goes to logcat only. */
+    fun probeBarsSession() = barsSessionProbe.start()
 
     fun setDateOverride(date: LocalDate?) {
         timeOverrideController.setOverrideDate(date)

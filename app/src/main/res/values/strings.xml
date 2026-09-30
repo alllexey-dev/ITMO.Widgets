@@ -208,6 +208,7 @@
 
 
     <string name="debug_schedule_changes_check">Проверить изменения расписания</string>
+    <string name="debug_bars_session_probe">Проверить продление БАРС</string>
     <string name="debug_academic_time_title">Тестовое академическое время</string>
     <string name="debug_academic_time_description">Подменяет дату только для расписания и спорта. Авторизация, кэш и QR живут по системному времени.</string>
     <string name="debug_academic_time_system">Системная дата</string>

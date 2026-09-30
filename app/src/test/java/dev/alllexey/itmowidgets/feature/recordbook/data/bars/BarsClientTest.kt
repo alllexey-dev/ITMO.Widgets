@@ -44,6 +44,14 @@ class BarsClientTest {
         var requests = 0
         override suspend fun authorizationCode(state: String): String? { requests++; return silentCodes.removeFirstOrNull() }
     }
+    private val backgroundRenewals = mutableListOf<BarsCookieRenewal>()
+    private val backgroundLogin = object : BarsBackgroundLogin {
+        var requests = 0
+        override suspend fun renew(state: String): BarsCookieRenewal {
+            requests++
+            return backgroundRenewals.removeFirstOrNull() ?: BarsCookieRenewal.SessionEnded
+        }
+    }
     private val server = MockWebServer()
     private val fake = FakeBars()
     private lateinit var client: BarsClient
@@ -55,7 +63,7 @@ class BarsClientTest {
             override fun getHost() = server.hostName
             override fun getRestUrl() = server.url("/backend/rest/").toString()
         }).apply { storage = this@BarsClientTest.storage }
-        client = BarsClient(bars, storage, owner, silentLogin)
+        client = BarsClient(bars, storage, owner, silentLogin, backgroundLogin)
     }
     @After fun stop() = server.shutdown()
 
@@ -141,6 +149,58 @@ class BarsClientTest {
         store.install(123, old)
         server.shutdown()
         assertEquals(AppResult.Failure(AppError.Network), client.account { Unit })
+    }
+    @Test fun `background renews an expired session through cookies, not the WebView`() = runTest {
+        store.install(123, old)
+        fake.rejected = old
+        backgroundRenewals += BarsCookieRenewal.Code("synthetic-code")
+        val result = client.backgroundAccount { execute { client.bars.api.getDisciplines(true) } }
+        assertTrue(result is BarsBackground.Success)
+        assertEquals(fake.issued, store.load(123))
+        assertEquals(1, backgroundLogin.requests)
+        assertEquals(0, silentLogin.requests)
+    }
+    @Test fun `ended ITMO ID session in the background keeps the saved header`() = runTest {
+        store.install(123, old)
+        fake.rejected = old
+        backgroundRenewals += BarsCookieRenewal.SessionEnded
+        assertEquals(BarsBackground.SessionEnded, client.backgroundAccount { execute { client.bars.api.getDisciplines(true) } })
+        assertEquals(old, store.load(123))
+        assertEquals(0, silentLogin.requests)
+    }
+    @Test fun `network failure of the background renewal is a network failure`() = runTest {
+        store.install(123, old)
+        fake.rejected = old
+        backgroundRenewals += BarsCookieRenewal.Failed(AppError.Network)
+        assertEquals(BarsBackground.Failure(AppError.Network), client.backgroundAccount { Unit })
+        assertEquals(old, store.load(123))
+    }
+    @Test fun `background without a saved session sends nothing and renews nothing`() = runTest {
+        assertEquals(BarsBackground.NoSession, client.backgroundAccount { Unit })
+        assertEquals(0, server.requestCount)
+        assertEquals(0, backgroundLogin.requests)
+        assertEquals(0, silentLogin.requests)
+    }
+    @Test fun `screens renew through the WebView after background blocks, failed ones included`() = runTest {
+        store.install(123, old)
+        assertTrue(client.backgroundAccount { Unit } is BarsBackground.Success)
+        assertEquals(
+            BarsBackground.Failure(AppError.Unknown()),
+            client.backgroundAccount<Unit> { throw IllegalStateException("synthetic failure") }
+        )
+        fake.rejected = old
+        silentCodes += "synthetic-code"
+        assertTrue(client.account { execute { client.bars.api.getDisciplines(true) } } is AppResult.Success)
+        assertEquals(1, silentLogin.requests)
+        assertEquals(0, backgroundLogin.requests)
+    }
+    @Test fun `account change during a background block is unauthorized`() = runTest {
+        store.install(123, old)
+        val result = client.backgroundAccount {
+            isu = 999
+            execute { client.bars.api.getDisciplines(true) }
+        }
+        assertEquals(BarsBackground.Failure(AppError.Unauthorized), result)
     }
 
     /** Stateful BARS stand-in: identity, selected period, one issued session and one rejected header. */

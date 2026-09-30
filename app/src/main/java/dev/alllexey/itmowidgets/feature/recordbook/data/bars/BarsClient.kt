@@ -21,20 +21,31 @@ import retrofit2.Call
 
 /**
  * App-side seam over the library client: binds the session to the signed-in ISU, serializes
- * period selection, and turns library failures into [AppError]. Silent renewal is delegated to
- * the WebView flow through the library's [BarsCodeSupplier].
+ * period selection, and turns library failures into [AppError]. Silent renewal goes through the
+ * library's [BarsCodeSupplier]: screens ([account]) renew through the headless WebView flow, the
+ * background ([backgroundAccount]) through ITMO.ID cookies without a WebView. Only one block runs
+ * at a time, so the supplier's mode belongs to the block that holds the lock.
  */
 @Singleton
 class BarsClient @Inject constructor(
     val bars: Bars,
     private val storage: OwnerBoundBarsStorage,
     private val currentUser: CurrentUserProvider,
-    silentLogin: BarsSilentLogin
+    silentLogin: BarsSilentLogin,
+    backgroundLogin: BarsBackgroundLogin
 ) {
     private val mutex = Mutex()
 
+    @Volatile private var cookieRenewal = false
+
     init {
-        bars.codeSupplier = BarsCodeSupplier { state -> runBlocking { silentLogin.authorizationCode(state) } }
+        bars.codeSupplier = BarsCodeSupplier { state ->
+            if (cookieRenewal) {
+                codeOf(runBlocking { backgroundLogin.renew(state) })
+            } else {
+                runBlocking { silentLogin.authorizationCode(state) }
+            }
+        }
     }
 
     suspend fun <T> account(block: suspend Account.() -> T): AppResult<T> = safe {
@@ -43,6 +54,37 @@ class BarsClient @Inject constructor(
             account.open()
             account.block()
         }
+    }
+
+    /**
+     * The background form of [account]: the session is renewed through ITMO.ID cookies, and an ended ITMO.ID
+     * session is [BarsBackground.SessionEnded] instead of a failure. Without a saved session for the current
+     * ISU nothing is requested.
+     */
+    suspend fun <T> backgroundAccount(block: suspend Account.() -> T): BarsBackground<T> = try {
+        mutex.withLock {
+            val owner = owner()
+            if (withContext(Dispatchers.IO) { storage.getAuthorization() } == null) {
+                BarsBackground.NoSession
+            } else {
+                cookieRenewal = true
+                try {
+                    val account = Account(owner)
+                    account.open()
+                    BarsBackground.Success(account.block())
+                } finally {
+                    cookieRenewal = false
+                }
+            }
+        }
+    } catch (cancel: CancellationException) {
+        throw cancel
+    } catch (_: SessionEndedSignal) {
+        BarsBackground.SessionEnded
+    } catch (failure: BarsFailure) {
+        BarsBackground.Failure(failure.error)
+    } catch (_: Exception) {
+        BarsBackground.Failure(AppError.Unknown())
     }
 
     /** Interactive ITMO.ID result; the session is kept only if it belongs to the app's user. */
@@ -106,6 +148,17 @@ class BarsClient @Inject constructor(
         AppResult.Failure(AppError.Unknown())
     }
 
+    /** Leaves the library's renewal untouched: the saved header stays, and [backgroundAccount] reports the end. */
+    private class SessionEndedSignal : RuntimeException()
+
+    private fun codeOf(renewal: BarsCookieRenewal): String = when (renewal) {
+        is BarsCookieRenewal.Code -> renewal.code
+        BarsCookieRenewal.SessionEnded -> throw SessionEndedSignal()
+        is BarsCookieRenewal.Failed -> throw BarsApiException(
+            "Renewal failed", if (renewal.error == AppError.Network) IOException() else null
+        )
+    }
+
     private class BarsFailure(val error: AppError) : RuntimeException()
     private fun fail(error: AppError): Nothing = throw BarsFailure(error)
     private fun BarsApiException.toAppError(): AppError = when (httpCode) {
@@ -115,4 +168,17 @@ class BarsClient @Inject constructor(
         null -> if (cause is IOException) AppError.Network else AppError.Unknown()
         else -> AppError.Unknown()
     }
+}
+
+/** Result of a [BarsClient.backgroundAccount] block. */
+sealed interface BarsBackground<out T> {
+    data class Success<T>(val value: T) : BarsBackground<T>
+
+    /** No saved BARS session for the signed-in user: the user never signed in to BARS or signed out. */
+    data object NoSession : BarsBackground<Nothing>
+
+    /** The ITMO.ID session behind the cookies ended; only an interactive sign-in brings BARS back. */
+    data object SessionEnded : BarsBackground<Nothing>
+
+    data class Failure(val error: AppError) : BarsBackground<Nothing>
 }

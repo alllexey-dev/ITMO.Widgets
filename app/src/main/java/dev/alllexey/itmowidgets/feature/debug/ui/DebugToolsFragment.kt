@@ -70,6 +70,7 @@ class DebugToolsFragment : Fragment() {
             viewModel.clearScoreOverride()
         }
         binding.debugScheduleChangesCheckButton.setOnClickListener { viewModel.checkScheduleChanges() }
+        binding.debugBarsSessionProbeButton.setOnClickListener { viewModel.probeBarsSession() }
     }
 
     override fun onDestroyView() {

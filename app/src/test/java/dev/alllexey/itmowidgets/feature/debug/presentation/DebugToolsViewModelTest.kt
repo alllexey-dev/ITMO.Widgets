@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.debug.presentation
 
+import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
@@ -36,6 +37,7 @@ class DebugToolsViewModelTest {
     private val refreshTokenController = FakeRefreshTokenController()
     private val customServicesRepository = FakeCustomServicesRepository()
     private val scheduleChangeTracking = FakeScheduleChangeTracking()
+    private val barsSessionProbe = FakeBarsSessionProbe()
 
     private fun createViewModel(): DebugToolsViewModel = DebugToolsViewModel(
         timeProvider = FixedTimeProvider,
@@ -44,7 +46,8 @@ class DebugToolsViewModelTest {
         sportLessonTemplateController = lessonController,
         refreshTokenController = refreshTokenController,
         customServicesRepository = customServicesRepository,
-        scheduleChangeTracking = scheduleChangeTracking
+        scheduleChangeTracking = scheduleChangeTracking,
+        barsSessionProbe = barsSessionProbe
     )
 
     @Test
@@ -54,6 +57,15 @@ class DebugToolsViewModelTest {
         viewModel.checkScheduleChanges()
 
         assertEquals(1, scheduleChangeTracking.checkNowCalls)
+    }
+
+    @Test
+    fun `probing the BARS session starts one probe`() {
+        val viewModel = createViewModel()
+
+        viewModel.probeBarsSession()
+
+        assertEquals(1, barsSessionProbe.starts)
     }
 
     @Test
@@ -188,6 +200,14 @@ class DebugToolsViewModelTest {
 
         override suspend fun setEnabled(enabled: Boolean) {
             this.enabled.value = enabled
+        }
+    }
+
+    private class FakeBarsSessionProbe : BarsSessionProbe {
+        var starts = 0
+
+        override fun start() {
+            starts++
         }
     }
 
