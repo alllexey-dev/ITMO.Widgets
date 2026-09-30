@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
@@ -33,6 +34,8 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
@@ -73,7 +76,7 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator {
                             }, object : PendingSportBookingsRepository {
                                 override fun observePendingBookings() = pendingSport
                                 override suspend fun refresh() = refreshPendingOutcome()
-                            }) as T
+                            }, PreviewChanges) as T
                 })[ScheduleViewModel::class.java]
             }
         }, false)
@@ -152,6 +155,17 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator {
         override suspend fun clearCaches() = clearOutcome()
     }
 
+    /** Changes live in [changes] only; a check never runs and nothing is written. */
+    private object PreviewChanges : ScheduleChangesRepository {
+        override fun observeChanges() = changes
+        override suspend fun check(): AppResult<ScheduleCheckResult> = AppResult.Success(ScheduleCheckResult.Compared(0))
+        override suspend fun markNotified(ids: Set<String>) = Unit
+        override suspend fun markAllRead() {
+            changes.value = changes.value.map { it.copy(read = true) }
+        }
+        override suspend fun resetSnapshot() = Unit
+    }
+
     private object FixedTime : AcademicTimeProvider {
         override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
         override fun today(): LocalDate = LocalDate.of(2026, 9, 7)
@@ -171,5 +185,7 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator {
         @Volatile var showPendingSport = MutableStateFlow(false)
         @Volatile var pendingSport = MutableStateFlow<DataState<List<PendingSportBooking>>>(DataState.Success(emptyList()))
         @Volatile var refreshPendingOutcome: suspend () -> Unit = {}
+        /** Tests put changes here and set it back to an empty list afterwards. */
+        val changes = MutableStateFlow<List<ScheduleChange>>(emptyList())
     }
 }

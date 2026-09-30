@@ -129,6 +129,8 @@
     <string name="schedule_lesson_details_title">Пара</string>
     <string name="schedule_lesson_details_link">Видеозвонок</string>
     <string name="schedule_lesson_details_flow">Поток</string>
+    <string name="schedule_lesson_details_changes">Изменения</string>
+    <string name="schedule_lesson_changed">Изменена</string>
     <string name="schedule_lesson_details_link_password">Пароль: %1$s</string>
     <string name="schedule_lesson_link_indicator">Есть ссылка на занятие</string>
     <string name="schedule_lesson_note_title">Примечание</string>

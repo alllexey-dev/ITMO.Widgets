@@ -5,14 +5,18 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
+import androidx.core.widget.TextViewCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -29,9 +33,11 @@ import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.bindTeacherLevel
 import dev.alllexey.itmowidgets.core.ui.bindFact
+import dev.alllexey.itmowidgets.core.ui.detailLines
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.MapLauncher
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
@@ -134,6 +140,30 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::showTeacherLevel)
             .launchIn(viewLifecycleOwner.lifecycleScope)
+        showChange(viewModel.change.value)
+        viewModel.change
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .onEach(::showChange)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    /** "было → стало" per changed field of the latest change; the block leaves when there is none. */
+    @VisibleForTesting
+    internal fun showChange(change: ScheduleChange?) = with(binding) {
+        changesLines.removeAllViews()
+        change?.detailLines(requireContext())?.forEach { changesLines.addView(changeLine(it)) }
+        changesCard.isVisible = change != null
+    }
+
+    private fun changeLine(text: String): TextView = TextView(requireContext()).apply {
+        val appearance = TypedValue()
+        context.theme.resolveAttribute(com.google.android.material.R.attr.textAppearanceBodyMedium, appearance, true)
+        TextViewCompat.setTextAppearance(this, appearance.resourceId)
+        setTextColor(context.color.onSurface)
+        this.text = text
+        layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = resources.getDimensionPixelSize(R.dimen.design_spacing_related) }
     }
 
     /** The dot's place is kept for a teacher with an ISU, so a level arriving later does not move the row. */

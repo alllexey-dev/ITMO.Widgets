@@ -10,6 +10,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.Guideline
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.util.color
@@ -114,12 +115,14 @@ class LessonAdapter(
         private val typeIndicator: ImageView = itemView.findViewById(R.id.type_indicator)
         private val typeLabel: TextView = itemView.findViewById(R.id.type)
         private val linkIndicator: View = itemView.findViewById(R.id.link_indicator)
+        private val changeIndicator: View = itemView.findViewById(R.id.change_indicator)
 
         fun bind(item: ScheduleItem.LessonItem, onClick: (Lesson) -> Unit) {
             val lesson = item.lesson
             card.setOnClickListener { onClick(lesson) }
             card.isFocusable = true
             linkIndicator.visibility = if (lesson.zoomUrl.isNullOrBlank()) View.GONE else View.VISIBLE
+            changeIndicator.isVisible = item.changed
 
             (card.layoutParams as? ViewGroup.MarginLayoutParams?)?.bottomMargin = if (item.isLastLesson) 0 else 16.dp
 
@@ -210,6 +213,7 @@ class LessonAdapter(
             content.setOnClickListener { onClick(booking) }
             content.isFocusable = true
             itemView.findViewById<View>(R.id.link_indicator).visibility = View.GONE
+            itemView.findViewById<View>(R.id.change_indicator).visibility = View.GONE
             title.text = booking.sectionName
             start.text = booking.start.format(TIME_FORMATTER)
             end.text = booking.end.format(TIME_FORMATTER)

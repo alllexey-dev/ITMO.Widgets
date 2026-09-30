@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule
 
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
 import android.widget.ImageView
 import android.widget.TextView
@@ -17,6 +18,10 @@ import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.schedule.LessonSlot
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.util.DataState
@@ -36,6 +41,7 @@ import dev.alllexey.itmowidgets.testing.Appearances.toScheduleLifecycle
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,7 +74,61 @@ class LessonDetailsVisualTest {
     fun restore() {
         runBlocking { settings.setCustomServicesEnabled(originalServices) }
         ScheduleLifecycleTestActivity.days = MutableStateFlow(emptyList())
+        ScheduleLifecycleTestActivity.changes.value = emptyList()
         ScheduleLifecycleTestActivity.appearance = ScheduleLifecycleTestActivity.Appearance()
+    }
+
+    @Test
+    fun changeBlockShowsWasAndNowWithoutMovingTheHeader() {
+        Appearances.default.forEach { spec ->
+            ScheduleLifecycleTestActivity.appearance = spec.toScheduleLifecycle()
+            // The list marks the lesson from the same store the block reads.
+            ScheduleLifecycleTestActivity.changes.value = listOf(change(ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.PLACE)))
+            withSchedule { scenario ->
+                scenario.onActivity { activity ->
+                    val card = activity.recycler().descendants().first { it.id == R.id.card_container && it.isShown }
+                    assertEquals(View.VISIBLE, card.findViewById<View>(R.id.change_indicator).visibility)
+                    card.performClick()
+                }
+                settle()
+                var anchors: Pair<Int, Int>? = null
+                scenario.onActivity { activity ->
+                    val root = activity.sheet().requireView()
+                    anchors = root.anchors()
+                    activity.sheet().showChange(null)
+                    assertEquals(View.GONE, root.findViewById<View>(R.id.changes_card).visibility)
+                    activity.sheet().showChange(change(ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.TIME, ScheduleChangeField.PLACE),
+                        after = slot(LocalTime.of(10, 0), room = "2202", building = "ул. Ломоносова, 9")))
+                }
+                settle()
+                scenario.onActivity { activity ->
+                    val root = activity.sheet().requireView()
+                    assertEquals(View.VISIBLE, root.findViewById<View>(R.id.changes_card).visibility)
+                    assertEquals("Изменения", root.text(R.id.changes_title))
+                    assertEquals(listOf("Время: 08:20–09:50 → 10:00–11:30", "Аудитория: 1506 · Кронва → 2202 · Ломо"), root.changeLines())
+                    assertEquals(anchors, root.anchors())
+                    val header = root.findViewById<View>(R.id.header)
+                    val block = root.findViewById<View>(R.id.changes_card)
+                    assertTrue(header.bottom <= block.top)
+                    ViewChecks.assertTextFits(root)
+                    ViewChecks.assertTouchTargets(root)
+                }
+                frame(scenario, "change-${spec.name}")
+                scenario.onActivity { activity ->
+                    val root = activity.sheet().requireView()
+                    // One changed field: only its "было → стало" line, no second "Формат: Дистанционный".
+                    activity.sheet().showChange(change(ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.FORMAT),
+                        after = slot(LocalTime.of(8, 20), formatId = 3, format = "Дистанционный")))
+                    assertEquals(listOf("Формат: Очный → Дистанционный"), root.changeLines())
+                    activity.sheet().showChange(change(ScheduleChangeKind.ADDED, emptySet(), before = null))
+                    assertEquals(listOf("Добавлена: пн, 7 сентября, 08:20"), root.changeLines())
+                    activity.sheet().showChange(null)
+                    assertEquals(View.GONE, root.findViewById<View>(R.id.changes_card).visibility)
+                }
+                settle()
+                scenario.onActivity { activity -> assertEquals(anchors, activity.sheet().requireView().anchors()) }
+            }
+        }
     }
 
     @Test
@@ -387,6 +447,38 @@ class LessonDetailsVisualTest {
         schedule().childFragmentManager.findFragmentByTag(LessonDetailsBottomSheet.TAG) as LessonDetailsBottomSheet
 
     private fun View.text(id: Int) = findViewById<TextView>(id).text.toString()
+
+    /** On-screen tops of the header and the teacher row: what the change block must not move. */
+    private fun View.anchors(): Pair<Int, Int> =
+        IntArray(2).also(findViewById<View>(R.id.header)::getLocationOnScreen)[1] to
+            IntArray(2).also(findViewById<View>(R.id.teacher_fact)::getLocationOnScreen)[1]
+
+    private fun View.changeLines(): List<String> = findViewById<ViewGroup>(R.id.changes_lines).let { lines ->
+        (0 until lines.childCount).map { (lines.getChildAt(it) as TextView).text.toString() }
+    }
+
+    private fun change(
+        kind: ScheduleChangeKind,
+        fields: Set<ScheduleChangeField>,
+        before: LessonSlot? = slot(LocalTime.of(8, 20)),
+        after: LessonSlot? = slot(LocalTime.of(8, 20), room = "2202")
+    ) = ScheduleChange(
+        id = "visual", detectedAt = Instant.parse("2026-09-07T06:00:00Z"), kind = kind, fields = fields,
+        subjectName = lesson().subjectName, typeId = 1, flowName = "ФИЗ ПИИКТ 3.2", before = before, after = after,
+        read = false, notified = true
+    )
+
+    private fun slot(
+        start: LocalTime,
+        room: String = "1506",
+        building: String = "Кронверкский проспект, 49",
+        formatId: Int = 1,
+        format: String = "Очный"
+    ) = LessonSlot(
+        pairId = 1, date = LocalDate.of(2026, 9, 7), start = start, end = start.plusMinutes(90), room = room,
+        building = building, formatId = formatId, format = format, teacherIsu = null,
+        teacherName = "Тестовый преподаватель с длинным именем"
+    )
 
     /** Height, top on screen and width of the name: what a late dot must not change. */
     private fun View.geometry(): Triple<Int, Int, Int> =

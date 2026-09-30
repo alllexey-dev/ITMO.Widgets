@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.time.LocalDate
 import java.time.ZoneId
+import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -54,7 +55,7 @@ class SchedulePendingSportTest {
         }
         val official = OfficialRepository()
         val pending = PendingRepository()
-        val model = ScheduleViewModel(official, clock, SavedStateHandle(), Preferences(true), pending)
+        val model = ScheduleViewModel(official, clock, SavedStateHandle(), Preferences(true), pending, FakeScheduleChangesRepository())
         model.ensureDataLoaded()
         runCurrent()
         val original = model.content().schedule
@@ -328,7 +329,7 @@ class SchedulePendingSportTest {
     private fun model(
         official: OfficialRepository = OfficialRepository(), preferences: Preferences = Preferences(),
         pending: PendingRepository = PendingRepository(), saved: SavedStateHandle = SavedStateHandle()
-    ) = ScheduleViewModel(official, Today, saved, preferences, pending)
+    ) = ScheduleViewModel(official, Today, saved, preferences, pending, FakeScheduleChangesRepository())
 
     private fun ScheduleViewModel.content() = uiState.value as ScheduleUiState.Content
 

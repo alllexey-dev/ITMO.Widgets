@@ -120,6 +120,70 @@ class ScheduleCardsVisualTest {
     }
 
     @Test
+    fun changedLessonsShowAMarkThatSurvivesRecycling() {
+        Appearances.default.forEach { spec ->
+            preview(spec) { scenario ->
+                lateinit var adapter: DayScheduleAdapter
+                lateinit var holder: DayScheduleAdapter.DayViewHolder
+                val date = FixedTime.today().plusDays(1)
+                val day = DaySchedule(date.dayOfWeek.value, 1, date, null, listOf(
+                    lesson(),
+                    lesson().copy(pairId = 2, start = LocalTime.of(10, 0), end = LocalTime.of(11, 30),
+                        subjectName = "Физика", zoomUrl = "https://example.invalid/meeting"),
+                    lesson().copy(pairId = 3, start = LocalTime.of(11, 40), end = LocalTime.of(13, 10), subjectName = "Программирование")
+                ))
+                fun indicators() = holder.lessonList.descendants().filter { it.id == R.id.change_indicator }.toList()
+                scenario.onActivity { activity ->
+                    adapter = DayScheduleAdapter(FixedTime)
+                    adapter.submitList(listOf(ScheduleDisplayDay(date, day, changedPairIds = setOf(2L))))
+                    val frame = FrameLayout(activity).apply { setBackgroundColor(activity.color.surface) }
+                    val scroll = ScrollView(activity)
+                    holder = adapter.onCreateViewHolder(scroll, 0)
+                    adapter.onBindViewHolder(holder, 0)
+                    scroll.addView(holder.itemView)
+                    frame.addView(scroll, FrameLayout.LayoutParams(
+                        if (spec.widthDp > 0) (spec.widthDp * activity.resources.displayMetrics.density).toInt() else -1,
+                        -1, Gravity.CENTER_HORIZONTAL
+                    ))
+                    activity.setContentView(frame)
+                    ViewCompat.setOnApplyWindowInsetsListener(frame) { view, insets ->
+                        val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                        view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+                        insets
+                    }
+                    ViewCompat.requestApplyInsets(frame)
+                }
+                settle()
+                screenshot("changed-${spec.name}")
+                scenario.onActivity { activity ->
+                    val marks = indicators()
+                    assertEquals(3, marks.size)
+                    assertEquals(listOf(View.GONE, View.VISIBLE, View.GONE), marks.map { it.visibility })
+                    val mark = marks[1] as ImageView
+                    assertEquals(activity.color.primary, mark.imageTintList!!.defaultColor)
+                    assertEquals("Изменена", mark.contentDescription.toString())
+                    val density = activity.resources.displayMetrics.density
+                    assertEquals((16 * density).toInt(), mark.width)
+                    assertTextFits(holder.itemView)
+
+                    // The same holder, rebound without changes: every mark leaves.
+                    adapter.submitList(listOf(ScheduleDisplayDay(date, day)))
+                }
+                settle()
+                scenario.onActivity {
+                    assertEquals(emptySet<Long>(), adapter.currentList.single().changedPairIds)
+                    adapter.onBindViewHolder(holder, 0)
+                }
+                settle()
+                scenario.onActivity {
+                    assertTrue(indicators().all { it.visibility == View.GONE })
+                    assertTextFits(holder.itemView)
+                }
+            }
+        }
+    }
+
+    @Test
     fun recycledDayHolderFadesPastDaysOnceAndRestoresTodayAndFuture() {
         for (dark in listOf(false, true)) preview(Appearances.light.copy(dark = dark)) { scenario ->
             lateinit var adapter: DayScheduleAdapter

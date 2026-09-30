@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.presentation
 
+import dev.alllexey.itmowidgets.core.schedule.LessonOccurrence
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.time.LocalDate
@@ -10,7 +11,9 @@ import java.time.ZoneId
 data class ScheduleDisplayDay(
     val date: LocalDate,
     val officialDay: DaySchedule?,
-    val pendingSport: List<PendingSportBooking> = emptyList()
+    val pendingSport: List<PendingSportBooking> = emptyList(),
+    /** Lessons of this day with a schedule change of the last 30 days, by `pair_id`. */
+    val changedPairIds: Set<Long> = emptySet()
 )
 
 fun buildScheduleDisplayDays(
@@ -19,7 +22,8 @@ fun buildScheduleDisplayDays(
     start: LocalDate,
     end: LocalDate,
     zoneId: ZoneId,
-    now: OffsetDateTime
+    now: OffsetDateTime,
+    changed: Set<LessonOccurrence> = emptySet()
 ): List<ScheduleDisplayDay> {
     val pendingByDate = pending.distinctBy { it.queueKind to it.queueId }
         .map { it.copy(
@@ -29,9 +33,15 @@ fun buildScheduleDisplayDays(
         .filter { it.start.isAfter(now) && !it.start.toLocalDate().isBefore(start) && !it.start.toLocalDate().isAfter(end) }
         .groupBy { it.start.toLocalDate() }
     val officialByDate = official.associateBy { it.date }
+    val changedByDate = changed.groupBy(LessonOccurrence::date) { it.pairId }
     return (officialByDate.keys + pendingByDate.keys).sorted().map { date ->
-        ScheduleDisplayDay(date, officialByDate[date], pendingByDate[date].orEmpty().sortedWith(
-            compareBy<PendingSportBooking> { it.start }.thenBy { it.queueKind }.thenBy { it.queueId }
-        ))
+        ScheduleDisplayDay(
+            date,
+            officialByDate[date],
+            pendingByDate[date].orEmpty().sortedWith(
+                compareBy<PendingSportBooking> { it.start }.thenBy { it.queueKind }.thenBy { it.queueId }
+            ),
+            changedByDate[date].orEmpty().toSet()
+        )
     }
 }

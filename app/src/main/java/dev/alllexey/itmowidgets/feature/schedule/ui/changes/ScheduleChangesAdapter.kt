@@ -11,11 +11,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.ui.alignRailIcon
-import dev.alllexey.itmowidgets.core.ui.detailLines
 import dev.alllexey.itmowidgets.core.ui.lessonTypeNameRes
-import dev.alllexey.itmowidgets.core.ui.summary
+import dev.alllexey.itmowidgets.core.ui.listLines
+import dev.alllexey.itmowidgets.core.ui.listSummary
 import dev.alllexey.itmowidgets.databinding.ItemScheduleChangeBinding
 import dev.alllexey.itmowidgets.databinding.ItemScheduleChangeDayBinding
 import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.RelativeDay
@@ -74,8 +73,8 @@ internal class ScheduleChangesAdapter : ListAdapter<ScheduleChangeItem, Recycler
             val context = root.context
             val change = row.change
             val subjectText = change.subjectName.trim().ifEmpty { context.getString(R.string.schedule_unknown_subject) }
-            val summaryText = change.summary(context)
-            val lineTexts = if (change.kind == ScheduleChangeKind.UPDATED) change.detailLines(context) else emptyList()
+            val summaryText = change.listSummary(context)
+            val lineTexts = change.listLines(context)
             val metaText = listOfNotNull(
                 context.getString(lessonTypeNameRes(change.typeId)),
                 change.flowName?.trim()?.takeIf(String::isNotEmpty)

@@ -24,6 +24,19 @@ fun ScheduleChange.summary(context: Context): String = when (kind) {
     }
 }
 
+/**
+ * The main line of a list row. With one changed field it is that field's "было → стало" line: the summary would only
+ * repeat it ("Формат: Дистанционный" over "Формат: Очный → Дистанционный").
+ */
+fun ScheduleChange.listSummary(context: Context): String =
+    if (hasSingleField()) detailLines(context).single() else summary(context)
+
+/** The "было → стало" lines under [listSummary]; empty when the summary already is the only one. */
+fun ScheduleChange.listLines(context: Context): List<String> =
+    if (kind == ScheduleChangeKind.UPDATED && !hasSingleField()) detailLines(context) else emptyList()
+
+private fun ScheduleChange.hasSingleField(): Boolean = kind == ScheduleChangeKind.UPDATED && fields.size == 1
+
 /** "Физика — отменена: вт, 8 сентября, 10:00", the one line a notification or a card has room for. */
 fun ScheduleChange.headline(context: Context): String {
     val subject = subjectName.trim().ifEmpty { context.getString(R.string.schedule_unknown_subject) }

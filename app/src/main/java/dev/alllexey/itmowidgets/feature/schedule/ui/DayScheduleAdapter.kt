@@ -109,7 +109,7 @@ class DayScheduleAdapter(
         // Keep the committed snapshot intact for its old/new marker comparison.
         val states = if (timelineDays === currentList) timelineStates
         else resolveScheduleTimeline(currentList, timeProvider.now().toLocalDateTime())
-        val processed = processLessonsWithBreaks(lessons, states[position], daySchedule.pendingSport)
+        val processed = processLessonsWithBreaks(lessons, states[position], daySchedule.pendingSport, daySchedule.changedPairIds)
         val lessonAdapter = LessonAdapter(processed, { lesson -> onLessonClick(lesson, date) }, onPendingClick)
         // Days are recycled by the outer list. A day's bounded rows must all
         // contribute their natural height; a nested wrap-content RecyclerView
@@ -154,14 +154,22 @@ class DayScheduleAdapter(
     private fun processLessonsWithBreaks(
         lessons: List<Lesson>,
         states: List<ScheduleItem.LessonState>,
-        pending: List<PendingSportBooking>
+        pending: List<PendingSportBooking>,
+        changedPairIds: Set<Long>
     ): List<ScheduleItem> {
         val processedList = mutableListOf<ScheduleItem>()
         val sortedLessons = lessons.withIndex().sortedBy { it.value.start }
 
         sortedLessons.forEachIndexed { index, indexedLesson ->
             val currentLesson = indexedLesson.value
-            processedList.add(ScheduleItem.LessonItem(currentLesson, states[indexedLesson.index], index == sortedLessons.size - 1))
+            processedList.add(
+                ScheduleItem.LessonItem(
+                    currentLesson,
+                    states[indexedLesson.index],
+                    isLastLesson = index == sortedLessons.size - 1,
+                    changed = currentLesson.pairId in changedPairIds
+                )
+            )
 
             if (index < sortedLessons.size - 1) {
                 val nextLesson = sortedLessons[index + 1].value

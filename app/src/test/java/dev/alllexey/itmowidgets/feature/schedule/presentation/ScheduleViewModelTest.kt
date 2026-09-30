@@ -3,10 +3,14 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.scheduleChange
+import dev.alllexey.itmowidgets.core.testing.slot
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
+import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
@@ -354,9 +358,81 @@ class ScheduleViewModelTest {
         )
     }
 
+    @Test
+    fun `a change marks its lesson only on its own day`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val (tomorrow, later) = timeProvider.today().plusDays(1) to timeProvider.today().plusDays(2)
+            val repository = FakeScheduleRepository().apply { schedules.value = listOf(daySchedule(tomorrow), daySchedule(later)) }
+            val changes = FakeScheduleChangesRepository(
+                scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, tomorrow))
+            )
+            val viewModel = createViewModel(repository, changesRepository = changes)
+
+            viewModel.ensureDataLoaded()
+            advanceUntilIdle()
+
+            assertEquals(mapOf(tomorrow to setOf(1L), later to emptySet()), viewModel.changedPairIdsByDay())
+        }
+
+    @Test
+    fun `a cancelled lesson still in the cache is marked by its old slot`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val day = timeProvider.today().plusDays(2)
+            val repository = FakeScheduleRepository().apply { schedules.value = listOf(daySchedule(day)) }
+            val changes = FakeScheduleChangesRepository(
+                scheduleChange(kind = ScheduleChangeKind.CANCELLED, before = slot(2, day))
+            )
+            val viewModel = createViewModel(repository, changesRepository = changes)
+
+            viewModel.ensureDataLoaded()
+            advanceUntilIdle()
+
+            assertEquals(mapOf(day to setOf(2L)), viewModel.changedPairIdsByDay())
+        }
+
+    @Test
+    fun `a friend's schedule with the same lesson shows the mark too`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val user = SelectedUser(123456, "Иван Иванов", null)
+            val day = timeProvider.today().plusDays(1)
+            val repository = FakeScheduleRepository().apply { schedulesFor(user.isu).value = listOf(daySchedule(day)) }
+            val changes = FakeScheduleChangesRepository(scheduleChange(before = slot(3, day), after = slot(3, day.plusDays(1))))
+            val viewModel = createViewModel(repository, changesRepository = changes)
+
+            viewModel.setSelectedUser(user)
+            viewModel.loadInitialSchedule(forceRefresh = true)
+            advanceUntilIdle()
+
+            assertEquals(user, (viewModel.uiState.value as ScheduleUiState.Content).selectedUser)
+            assertEquals(mapOf(day to setOf(3L)), viewModel.changedPairIdsByDay())
+        }
+
+    @Test
+    fun `a change leaving the store removes the mark without asking for the schedule again`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val day = timeProvider.today().plusDays(1)
+            val repository = FakeScheduleRepository().apply { schedules.value = listOf(daySchedule(day)) }
+            val changes = FakeScheduleChangesRepository(scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, day)))
+            val viewModel = createViewModel(repository, changesRepository = changes)
+            viewModel.ensureDataLoaded()
+            advanceUntilIdle()
+            val requests = repository.refreshRequests.size
+            assertEquals(mapOf(day to setOf(1L)), viewModel.changedPairIdsByDay())
+
+            changes.changes.value = emptyList()
+            advanceUntilIdle()
+
+            assertEquals(mapOf(day to emptySet<Long>()), viewModel.changedPairIdsByDay())
+            assertEquals(requests, repository.refreshRequests.size)
+        }
+
+    private fun ScheduleViewModel.changedPairIdsByDay(): Map<LocalDate, Set<Long>> =
+        (uiState.value as ScheduleUiState.Content).displayDays.associate { it.date to it.changedPairIds }
+
     private fun createViewModel(
         repository: ScheduleRepository,
-        savedStateHandle: SavedStateHandle = SavedStateHandle()
+        savedStateHandle: SavedStateHandle = SavedStateHandle(),
+        changesRepository: FakeScheduleChangesRepository = FakeScheduleChangesRepository()
     ): ScheduleViewModel {
         return ScheduleViewModel(
             repository = repository,
@@ -368,7 +444,8 @@ class ScheduleViewModelTest {
             pendingRepository = object : PendingSportBookingsRepository {
                 override fun observePendingBookings() = flowOf<DataState<List<PendingSportBooking>>>(DataState.Success(emptyList()))
                 override suspend fun refresh() = Unit
-            }
+            },
+            changesRepository = changesRepository
         )
     }
 

@@ -7,9 +7,15 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.scheduleChange
+import dev.alllexey.itmowidgets.core.testing.slot
 import dev.alllexey.itmowidgets.feature.reviews.presentation.FakeTeacherLevelsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
+import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
+import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -112,7 +118,52 @@ class LessonDetailsViewModelTest {
         assertEquals(emptyList<Set<Int>>(), levels.calls)
     }
 
-    private fun createViewModel(teacherIsu: Int? = null) = LessonDetailsViewModel(
+    @Test
+    fun `the newest change of this occurrence is shown`() = runTest(mainDispatcherRule.dispatcher) {
+        val older = scheduleChange(id = "older", after = slot(42, DATE), detectedAt = Instant.parse("2026-09-06T09:00:00Z"))
+        val newer = scheduleChange(
+            id = "newer", fields = setOf(ScheduleChangeField.PLACE), before = slot(42, DATE),
+            after = slot(42, DATE, room = "2202"), detectedAt = Instant.parse("2026-09-07T09:00:00Z")
+        )
+        val changes = FakeScheduleChangesRepository(older, newer)
+
+        val viewModel = createViewModel(changes = changes)
+        advanceUntilIdle()
+
+        assertEquals(newer, viewModel.change.value)
+    }
+
+    @Test
+    fun `a change of another lesson or date is not this one's`() = runTest(mainDispatcherRule.dispatcher) {
+        val changes = FakeScheduleChangesRepository(
+            scheduleChange(id = "other-lesson", after = slot(7, DATE)),
+            scheduleChange(id = "other-date", kind = ScheduleChangeKind.ADDED, after = slot(42, DATE.plusDays(1)))
+        )
+
+        val viewModel = createViewModel(changes = changes)
+        advanceUntilIdle()
+
+        assertNull(viewModel.change.value)
+    }
+
+    @Test
+    fun `a cancellation is found by its old slot and leaves with the store`() = runTest(mainDispatcherRule.dispatcher) {
+        val cancelled = scheduleChange(kind = ScheduleChangeKind.CANCELLED, before = slot(42, DATE))
+        val changes = FakeScheduleChangesRepository(cancelled)
+
+        val viewModel = createViewModel(changes = changes)
+        advanceUntilIdle()
+        assertEquals(cancelled, viewModel.change.value)
+
+        changes.changes.value = emptyList()
+        advanceUntilIdle()
+        assertNull(viewModel.change.value)
+    }
+
+    private fun createViewModel(
+        teacherIsu: Int? = null,
+        changes: FakeScheduleChangesRepository = FakeScheduleChangesRepository()
+    ) = LessonDetailsViewModel(
         savedStateHandle = SavedStateHandle(
             buildMap {
                 put(LessonDetailsViewModel.ARG_PAIR_ID, 42L)
@@ -123,6 +174,7 @@ class LessonDetailsViewModelTest {
         friendsRepository = repository,
         customServices = services,
         teacherLevels = levels,
+        changesRepository = changes,
     )
 
     private fun friend(isu: Int, name: String) = UserSummary(isu, name, null, emptyList(), UserSharing(sport = false, schedule = true))
@@ -141,5 +193,9 @@ class LessonDetailsViewModelTest {
             requests += pairId to date
             return result
         }
+    }
+
+    private companion object {
+        val DATE: LocalDate = LocalDate.of(2026, 9, 8)
     }
 }

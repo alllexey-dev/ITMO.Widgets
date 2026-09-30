@@ -129,6 +129,18 @@
                 android:visibility="gone"
                 app:tint="?attr/colorOnSurfaceVariant"
                 tools:visibility="visible" />
+
+            <!-- A schedule change of the last 30 days touches the lesson; details say what changed. -->
+            <ImageView
+                android:id="@+id/change_indicator"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/schedule_lesson_changed"
+                android:src="@drawable/ic_edit_calendar"
+                android:visibility="gone"
+                app:tint="?attr/colorPrimary"
+                tools:visibility="visible" />
         </LinearLayout>
 
         <!-- Teacher -->

@@ -6,12 +6,15 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.LessonOccurrence
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -21,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -32,7 +36,8 @@ class ScheduleViewModel @Inject constructor(
     private val timeProvider: AcademicTimeProvider,
     private val savedStateHandle: SavedStateHandle,
     private val preferences: SchedulePreferencesRepository,
-    private val pendingRepository: PendingSportBookingsRepository
+    private val pendingRepository: PendingSportBookingsRepository,
+    private val changesRepository: ScheduleChangesRepository
 ) : ViewModel() {
 
     private val rootUserIsu = savedStateHandle
@@ -55,6 +60,7 @@ class ScheduleViewModel @Inject constructor(
     private var pendingSport = emptyList<PendingSportBooking>()
     private var pendingObserveJob: Job? = null
     private var pendingRefreshJob: Job? = null
+    private var changedOccurrences = emptySet<LessonOccurrence>()
 
     private val _uiState = MutableStateFlow<ScheduleUiState>(
         ScheduleUiState.Loading(selectedUser)
@@ -71,6 +77,16 @@ class ScheduleViewModel @Inject constructor(
                 updatePendingObservation()
                 if (hasStarted) emitCurrentState()
             }
+        }
+        viewModelScope.launch {
+            // Marks follow the lesson, so a friend's schedule with a shared lesson shows them too.
+            changesRepository.observeChanges()
+                .map { changes -> changes.flatMap(ScheduleChange::occurrences).toSet() }
+                .distinctUntilChanged()
+                .collect { occurrences ->
+                    changedOccurrences = occurrences
+                    if (hasStarted) emitCurrentState()
+                }
         }
     }
 
@@ -243,7 +259,7 @@ class ScheduleViewModel @Inject constructor(
 
     private fun currentDisplayDays() = buildScheduleDisplayDays(
         currentDays, if (canShowPendingSport()) pendingSport else emptyList(),
-        currentStart, currentEnd, timeProvider.zoneId, timeProvider.now()
+        currentStart, currentEnd, timeProvider.zoneId, timeProvider.now(), changedOccurrences
     )
 
     // A successful empty academic response is still a usable snapshot. Keep its

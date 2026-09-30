@@ -5,7 +5,13 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import java.time.LocalTime
 
 sealed interface ScheduleItem {
-    data class LessonItem(val lesson: Lesson, val lessonState: LessonState, val isLastLesson: Boolean) : ScheduleItem
+    /** [changed]: a schedule change of the last 30 days touches this lesson. */
+    data class LessonItem(
+        val lesson: Lesson,
+        val lessonState: LessonState,
+        val isLastLesson: Boolean,
+        val changed: Boolean = false
+    ) : ScheduleItem
 
     data class PendingSportItem(val booking: PendingSportBooking, val isLast: Boolean) : ScheduleItem
 

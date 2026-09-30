@@ -8,18 +8,24 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
+import dev.alllexey.itmowidgets.core.schedule.LessonOccurrence
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * Friends on one lesson occurrence and the tone of its teacher's reviews. The lesson itself arrives with the sheet;
- * only friends and the tone need Backend, and only behind the opt-in.
+ * Friends on one lesson occurrence, the tone of its teacher's reviews and its latest schedule change. The lesson
+ * itself arrives with the sheet; only friends and the tone need Backend, and only behind the opt-in.
  */
 @HiltViewModel
 class LessonDetailsViewModel @Inject constructor(
@@ -27,6 +33,7 @@ class LessonDetailsViewModel @Inject constructor(
     private val friendsRepository: LessonFriendsRepository,
     private val customServices: CustomServicesRepository,
     private val teacherLevels: TeacherLevelsRepository,
+    changesRepository: ScheduleChangesRepository,
 ) : ViewModel() {
 
     val pairId: Long = checkNotNull(savedStateHandle.get<Long>(ARG_PAIR_ID)) { "Lesson details need a pair id" }
@@ -38,6 +45,14 @@ class LessonDetailsViewModel @Inject constructor(
     private val teacherIsu: Int? = savedStateHandle.get<Int>(ARG_TEACHER_ISU)?.takeIf { it > 0 }
     private val _teacherLevel = MutableStateFlow<TeacherLevel?>(null)
     val teacherLevel: StateFlow<TeacherLevel?> = _teacherLevel.asStateFlow()
+
+    /** The newest change of the last 30 days that touches this occurrence, from the local store only. */
+    val change: StateFlow<ScheduleChange?> = changesRepository.observeChanges()
+        .map { changes ->
+            val occurrence = LessonOccurrence(pairId, date)
+            changes.filter { occurrence in it.occurrences() }.maxByOrNull(ScheduleChange::detectedAt)
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {
         load()
