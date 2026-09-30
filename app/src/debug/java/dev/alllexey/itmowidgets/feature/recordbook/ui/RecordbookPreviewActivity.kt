@@ -45,6 +45,15 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheck
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkCheckResult
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNews
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSource
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.ReadStamp
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
@@ -82,7 +91,8 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         val resolver = RecordbookSportResolver(checkNotNull(sportRepository))
                         return if (fragment is RecordbookFragment) {
-                            RecordbookViewModel(checkNotNull(repository), bars ?: NoBars, preference, SavedStateHandle(), resolver, FixedTime) as T
+                            RecordbookViewModel(checkNotNull(repository), bars ?: NoBars, preference, SavedStateHandle(), resolver, FixedTime,
+                                MemoryMarkTracking) as T
                         } else {
                             val args = fragment.requireArguments()
                             val values = mutableMapOf<String, Any>(
@@ -97,7 +107,8 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
                             }
                             val handle = SavedStateHandle(values)
                             RecordbookSubjectViewModel(checkNotNull(repository), bars ?: NoBars, handle, resolver,
-                                lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime, resourceRepository, levelsRepository) as T
+                                lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime, resourceRepository, levelsRepository,
+                                MemoryMarkTracking) as T
                         }
                     }
                 }
@@ -222,6 +233,50 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         val lessons = MutableStateFlow(initial)
         override fun observeOwnLessons(start: LocalDate, end: LocalDate): Flow<List<SubjectLesson>> =
             lessons.map { list -> list.filter { !it.date.isBefore(start) && !it.date.isAfter(end) } }
+    }
+
+    /** Unread marks a test hands in; reads and advances are only recorded, never written to the device's file. */
+    object MemoryMarkTracking : MarkTrackingRepository {
+        val news = MutableStateFlow<List<MarkNews>>(emptyList())
+        val readCalls: MutableList<Pair<StudyHalf, String>> = java.util.Collections.synchronizedList(mutableListOf())
+        val seenCalls: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+
+        init { check(BuildConfig.DEBUG) }
+
+        fun reset() {
+            news.value = emptyList()
+            readCalls.clear()
+            seenCalls.clear()
+        }
+
+        override fun observeNews(): Flow<List<MarkNews>> = news
+        override suspend fun checkMyItmo(): AppResult<MarkCheckResult> = AppResult.Failure(AppError.Unauthorized)
+        override suspend fun checkBars(): BarsCheck = BarsCheck.NoSession
+        override fun readStarted(): ReadStamp = ReadStamp(0)
+
+        override suspend fun recordMyItmoSeen(
+            stamp: ReadStamp, half: StudyHalf, programId: Long, semester: Int, subjects: List<RecordbookSubject>
+        ) {
+            seenCalls += "myitmo:${half.key}:$semester"
+        }
+
+        override suspend fun recordBarsSeen(stamp: ReadStamp, half: StudyHalf, plans: List<BarsPlanMarks>) {
+            seenCalls += "bars:${half.key}"
+        }
+
+        override suspend fun target(news: MarkNews, withBars: Boolean): MarkSubjectTarget? = null
+        override suspend fun markNotified(ids: Set<String>) = Unit
+
+        override suspend fun markRead(half: StudyHalf, nameKey: String) {
+            readCalls += half to nameKey
+            news.value = news.value.filterNot { it.half == half && it.nameKey == nameKey }
+        }
+
+        override suspend fun markAllRead() {
+            news.value = emptyList()
+        }
+
+        override suspend fun resetSource(source: MarkSource) = Unit
     }
 
     class MemoryBindings : SubjectBindingStore {

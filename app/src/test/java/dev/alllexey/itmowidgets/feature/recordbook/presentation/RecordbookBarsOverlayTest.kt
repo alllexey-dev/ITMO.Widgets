@@ -6,6 +6,13 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
+import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
+import dev.alllexey.itmowidgets.feature.recordbook.TEST_HALF
+import dev.alllexey.itmowidgets.feature.recordbook.barsJournal
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheckpointMark
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.of
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FixedAcademicTime
@@ -30,8 +37,9 @@ class RecordbookBarsOverlayTest {
     }
     private val bars = FakeBarsRepository().apply { subjects = AppResult.Success(listOf(barsSubject())) }
     private val preference = FakeBarsPreference()
+    private val marks = FakeMarkTrackingRepository()
     private fun model(state: SavedStateHandle = SavedStateHandle()) = RecordbookViewModel(myItmo, bars, preference, state,
-        RecordbookSportResolver(FakeSportScoreRepository()), FixedAcademicTime())
+        RecordbookSportResolver(FakeSportScoreRepository()), FixedAcademicTime(), marks)
     private val content get() = model().let { it.ensureDataLoaded(); it }
 
     @Test fun `disabled overlay never asks BARS`() = runTest {
@@ -98,6 +106,26 @@ class RecordbookBarsOverlayTest {
         assertFalse(done.refreshing)
         assertTrue(done.barsApplied)
         assertEquals(91.5, done.subjects[0].score!!, 0.0)
+    }
+    @Test fun `a BARS answer advances the snapshot with the journals whose checkpoints are known`() = runTest {
+        preference.enabled = true
+        val other = barsSubject(name = "Тестовый предмет без точек").copy(barsJournal = barsJournal(9L))
+        bars.subjects = AppResult.Success(listOf(barsSubject(), other))
+        val controls = listOf(
+            RecordbookControl(1, "Контрольная 1", 10.0, 5.0, 20.0, true, null, null),
+            RecordbookControl(2, "Контрольная 2", null, 5.0, 20.0, true, null, null)
+        )
+        bars.cachedControls = mapOf(barsJournal() to controls)
+        content; advanceUntilIdle()
+        assertEquals(listOf(TEST_HALF to listOf(BarsPlanMarks.of(barsSubject(), controls)!!)), marks.seenBars)
+        assertEquals(listOf(BarsCheckpointMark(1, 10.0, false)), marks.seenBars.single().second.single().marks)
+    }
+    @Test fun `a failed BARS answer advances nothing of BARS`() = runTest {
+        preference.enabled = true
+        bars.subjects = AppResult.Failure(AppError.Network)
+        content; advanceUntilIdle()
+        assertTrue(marks.seenBars.isEmpty())
+        assertEquals(1, marks.seenMyItmo.size)
     }
     @Test fun `toggle before the first load wins over the stored value`() = runTest {
         preference.enabled = true

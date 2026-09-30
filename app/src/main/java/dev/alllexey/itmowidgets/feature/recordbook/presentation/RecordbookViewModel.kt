@@ -13,7 +13,10 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookBarsMerge
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.of
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.studyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
@@ -47,7 +50,9 @@ sealed interface RecordbookUiState {
         /** BARS answered for this period, so subjects without a journal are genuinely absent there. */
         val barsApplied: Boolean = false,
         /** Subjects for «Требуют внимания» by `entryId`; everything else is the regular list. */
-        val attention: Map<Long, RecordbookAttentionReason> = emptyMap()
+        val attention: Map<Long, RecordbookAttentionReason> = emptyMap(),
+        /** `subjectNameKey`s of unread new or changed marks in the selected period's half-year. */
+        val newSubjects: Set<String> = emptySet()
     ) : RecordbookUiState {
         /** The pass count means something only once a final grade or credit exists. */
         val showSummary: Boolean get() = subjects.any { it.normalizedRate != RecordbookRate.InProgress }
@@ -67,7 +72,8 @@ class RecordbookViewModel @Inject constructor(
     private val barsPreference: BarsPreferenceRepository,
     private val savedStateHandle: SavedStateHandle,
     private val sportResolver: RecordbookSportResolver,
-    private val time: AcademicTimeProvider
+    private val time: AcademicTimeProvider,
+    private val marks: MarkTrackingRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<RecordbookUiState>(RecordbookUiState.Loading())
     val uiState: StateFlow<RecordbookUiState> = _uiState.asStateFlow()
@@ -77,6 +83,19 @@ class RecordbookViewModel @Inject constructor(
     private var programs: List<RecordbookProgram> = emptyList()
     private var selection: RecordbookSelection? = null
     private var loadJob: Job? = null
+    private var newsByHalf: Map<StudyHalf, Set<String>> = emptyMap()
+
+    init {
+        // Unread marks come from the local store; a new one reaches the open list without a request.
+        viewModelScope.launch {
+            marks.observeNews().collect { news ->
+                newsByHalf = news.groupBy({ it.half }, { it.nameKey }).mapValues { it.value.toSet() }
+                (_uiState.value as? RecordbookUiState.Content)?.let { content ->
+                    _uiState.value = content.copy(newSubjects = newSubjectsIn(content.selection.period))
+                }
+            }
+        }
+    }
 
     fun ensureDataLoaded() {
         if (_uiState.value is RecordbookUiState.Loading && loadJob?.isActive != true) refresh(silent = true)
@@ -109,6 +128,8 @@ class RecordbookViewModel @Inject constructor(
             ?: seedFromCache()
         _uiState.value = previous?.copy(refreshing = !silent, refreshError = null)
             ?: RecordbookUiState.Loading(programs, selection)
+        // Taken before any request: a background check written meanwhile makes this answer stale.
+        val stamp = marks.readStarted()
         loadJob = viewModelScope.launch {
             if (!barsLoaded) {
                 _barsEnabled.value = barsPreference.isEnabled()
@@ -138,6 +159,11 @@ class RecordbookViewModel @Inject constructor(
             when (val result = repository.getSubjects(selected.program.id, selected.period.semester)) {
                 is AppResult.Success -> {
                     val official = result.value
+                    // What the list shows advances the snapshot of the current half-year; children of the load job.
+                    val half = selected.period.studyHalf()?.takeIf { it == StudyHalf.of(time.today()) }
+                    if (half != null) {
+                        launch { marks.recordMyItmoSeen(stamp, half, selected.program.id, selected.period.semester, official) }
+                    }
                     val sport = sportResolver.resolve(selected.period, official)
                     if (journals == null) {
                         _uiState.value = content(selected, official, sport)
@@ -146,8 +172,10 @@ class RecordbookViewModel @Inject constructor(
                     // MyITMO is on screen at once; a pull keeps its indicator until BARS answers.
                     _uiState.value = content(selected, official, sport).copy(refreshing = !silent)
                     _uiState.value = when (val overlay = journals.await()) {
-                        is AppResult.Success ->
+                        is AppResult.Success -> {
+                            if (half != null) launch { marks.recordBarsSeen(stamp, half, barsPlans(overlay.value)) }
                             content(selected, RecordbookBarsMerge.apply(official, overlay.value), sport).copy(barsApplied = true)
+                        }
                         is AppResult.Failure -> content(selected, official, sport).copy(barsError = overlay.error)
                     }
                 }
@@ -178,7 +206,15 @@ class RecordbookViewModel @Inject constructor(
     private fun content(selected: RecordbookSelection, subjects: List<RecordbookSubject>, sport: RecordbookSportState?) =
         RecordbookUiState.Content(programs, selected, subjects, sport, attention = subjects.mapNotNull { subject ->
             attentionReason(subject, sport, knownControls(subject), time.now())?.let { subject.entryId to it }
-        }.toMap())
+        }.toMap(), newSubjects = newSubjectsIn(selected.period))
+
+    private fun newSubjectsIn(period: RecordbookPeriod): Set<String> =
+        period.studyHalf()?.let(newsByHalf::get).orEmpty()
+
+    /** Journals whose checkpoints an answer already parsed; the rest have nothing to compare. */
+    private fun barsPlans(journals: List<RecordbookSubject>): List<BarsPlanMarks> = journals.mapNotNull { journal ->
+        journal.barsJournal?.let(bars::cachedControls)?.let { BarsPlanMarks.of(journal, it) }
+    }
 
     /** Only controls an earlier answer brought; the list never asks for them. */
     private fun knownControls(subject: RecordbookSubject): List<RecordbookControl>? =

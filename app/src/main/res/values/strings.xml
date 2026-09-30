@@ -542,6 +542,7 @@
     <string name="recordbook_bars_error">БАРС недоступен, показываем My ITMO. %1$s</string>
     <string name="recordbook_bars_wrong_account">В БАРС открыт другой аккаунт. Нажмите «Повторить» и войдите под тем же аккаунтом ITMO.ID, что и в приложении.</string>
     <string name="recordbook_bars_missing">нет в БАРС</string>
+    <string name="recordbook_subject_new">Новое</string>
     <string name="recordbook_additional_points">Дополнительные баллы</string>
     <string name="recordbook_absent">Неявка</string>
 

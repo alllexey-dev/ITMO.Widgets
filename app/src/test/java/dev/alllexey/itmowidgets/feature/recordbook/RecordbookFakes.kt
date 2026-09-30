@@ -81,6 +81,8 @@ class FakeBarsRepository : BarsRecordbookRepository {
     var subjectLoader: (suspend () -> AppResult<List<RecordbookSubject>>)? = null
     val periodRequests = mutableListOf<RecordbookPeriod>()
     val journalRequests = mutableListOf<BarsJournalReference>()
+    var cachedControls: Map<BarsJournalReference, List<RecordbookControl>> = emptyMap()
+    override fun cachedControls(journal: BarsJournalReference) = cachedControls[journal]
     override suspend fun getSubjects(period: RecordbookPeriod): AppResult<List<RecordbookSubject>> {
         periodRequests += period
         return subjectLoader?.invoke() ?: subjects

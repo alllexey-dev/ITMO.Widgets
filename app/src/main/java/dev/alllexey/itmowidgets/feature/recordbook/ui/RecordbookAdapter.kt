@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
+import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookAttentionReason
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookProgress
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
@@ -29,7 +30,9 @@ sealed interface RecordbookListItem {
         val value: RecordbookSubject,
         val sport: RecordbookSportState?,
         val reason: RecordbookAttentionReason? = null,
-        val barsMissing: Boolean = false
+        val barsMissing: Boolean = false,
+        /** An unread new or changed mark: the dot stays until the subject's page opens. */
+        val isNew: Boolean = false
     ) : RecordbookListItem
 }
 
@@ -44,7 +47,8 @@ class RecordbookAdapter(private val onSubjectClick: (RecordbookSubject) -> Unit)
         fun item(subject: RecordbookSubject) = RecordbookListItem.Subject(subject, state.sport.takeIf { subject.isPhysicalEducation },
             reason = state.attention[subject.entryId],
             // PE is graded outside BARS; only other unmatched subjects need the hint.
-            barsMissing = state.barsApplied && subject.barsJournal == null && !subject.isPhysicalEducation)
+            barsMissing = state.barsApplied && subject.barsJournal == null && !subject.isPhysicalEducation,
+            isNew = subjectNameKey(subject.name) in state.newSubjects)
         submitList(buildList {
             if (state.showSummary) {
                 add(RecordbookListItem.Summary(subjects.count { it.status == RecordbookSubjectStatus.PASSED }, subjects.size))
@@ -102,6 +106,7 @@ class RecordbookAdapter(private val onSubjectClick: (RecordbookSubject) -> Unit)
             val subject = item.value
             val context = binding.root.context
             binding.name.text = subject.name
+            binding.newMark.isVisible = item.isNew
             binding.meta.text = item.reason?.text(context) ?: listOf(
                 subject.assessmentLabel(context),
                 item.sport?.takeUnless { it is RecordbookSportState.Content }?.compactText(context).orEmpty(),
@@ -128,7 +133,10 @@ class RecordbookAdapter(private val onSubjectClick: (RecordbookSubject) -> Unit)
                 binding.progress.setProgressCompat(progress.progress, false)
                 context.getString(R.string.recordbook_points_out_of, formatRecordbookNumber(progress.value), "100")
             }
-            binding.root.contentDescription = listOf(subject.name, binding.meta.text.toString(), result)
+            binding.root.contentDescription = listOf(
+                if (item.isNew) context.getString(R.string.recordbook_subject_new) else "",
+                subject.name, binding.meta.text.toString(), result
+            )
                 .filter(String::isNotBlank).joinToString(". ")
             binding.root.setOnClickListener { onSubjectClick(subject) }
         }

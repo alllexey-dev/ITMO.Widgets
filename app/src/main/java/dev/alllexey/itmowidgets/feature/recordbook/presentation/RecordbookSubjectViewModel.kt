@@ -38,6 +38,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookContro
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.studyHalf
+import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.domain.withBars
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -46,6 +49,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -87,6 +92,7 @@ class RecordbookSubjectViewModel @Inject constructor(
     private val time: AcademicTimeProvider,
     private val subjectLinks: SubjectLinksRepository,
     private val teacherLevels: TeacherLevelsRepository,
+    private val marks: MarkTrackingRepository,
 ) : ViewModel() {
     private val entryId = checkNotNull(savedStateHandle.get<Long>(ARG_ENTRY_ID))
     private val programId = checkNotNull(savedStateHandle.get<Long>(ARG_PROGRAM_ID))
@@ -112,7 +118,16 @@ class RecordbookSubjectViewModel @Inject constructor(
     private val bindingVersion = MutableStateFlow(0)
     private var proposalRejected = false
 
-    init { refresh(silent = true) }
+    init {
+        refresh(silent = true)
+        // Opening the page reads the subject's new marks: once, on the first content from the cache or the answer.
+        period.studyHalf()?.let { half ->
+            viewModelScope.launch {
+                val subject = _uiState.filterIsInstance<RecordbookSubjectUiState.Content>().first().subject
+                marks.markRead(half, subjectNameKey(subject.name))
+            }
+        }
+    }
 
     /** A pull shows the indicator; the load on entry stays silent behind the cached subject. */
     fun refresh(silent: Boolean = false) {

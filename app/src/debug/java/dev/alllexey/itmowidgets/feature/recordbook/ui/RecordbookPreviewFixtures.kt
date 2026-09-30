@@ -59,6 +59,7 @@ object RecordbookPreviewFixtures {
         RecordbookPreviewActivity.resourceRepository = MemorySubjectLinksRepository()
         RecordbookPreviewActivity.linkNavigation.clear()
         RecordbookPreviewActivity.levelsRepository = RecordbookPreviewActivity.MemoryLevels()
+        RecordbookPreviewActivity.MemoryMarkTracking.reset()
     }
 
     class Recordbook(private val phase: Phase) : RecordbookRepository {

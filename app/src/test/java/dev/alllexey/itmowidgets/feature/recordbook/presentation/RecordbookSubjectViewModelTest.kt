@@ -7,6 +7,9 @@ import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChip
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
+import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
+import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroup
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroupKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
@@ -54,13 +57,23 @@ class RecordbookSubjectViewModelTest {
     private val bars = FakeBarsRepository()
     private val resources = FakeSubjectLinksRepository()
     private val levels = FakeTeacherLevelsRepository()
+    private val marks = FakeMarkTrackingRepository()
     private fun model(withBars: Boolean = false) = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
         put("entry_id", 42L); put("program_id", 1L); put("semester", 2); put("study_year", "2025/2026")
         if (withBars) { put("bars_plan", 8L); put("bars_type", "flow"); put("bars_identifier", "7") }
-    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels)
+    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels, marks)
     private val lessons = FakeSubjectLessonsGateway()
     private val scheduleRefresh = FakeScheduleRefreshGateway()
     private val bindingStore = FakeSubjectBindingStore()
+
+    @Test fun `opening the page reads the subject's new marks once`() = runTest {
+        val vm = model(); advanceUntilIdle()
+        assertTrue(vm.uiState.value is RecordbookSubjectUiState.Content)
+        assertEquals(listOf(StudyHalf(2025, 2) to subjectNameKey("Тестовый предмет")), marks.read)
+
+        vm.refresh(); advanceUntilIdle()
+        assertEquals(1, marks.read.size)
+    }
 
     @Test fun `past periods expose private links independently from the schedule binding`() = runTest {
         resources.state.value = SubjectLinksState.Content(linksSnapshot(mine = listOf(subjectLink("own")), servicesEnabled = false))
@@ -173,7 +186,7 @@ class RecordbookSubjectViewModelTest {
         repository.subjects = AppResult.Success(listOf(subject))
         return RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
             put("entry_id", 42L); put("program_id", 1L); put("semester", 3); put("study_year", "2026/2027")
-        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels)
+        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels, marks)
     }
 
     @Test fun `an exact discipline id shows the upcoming lessons and their teachers without asking`() = runTest {

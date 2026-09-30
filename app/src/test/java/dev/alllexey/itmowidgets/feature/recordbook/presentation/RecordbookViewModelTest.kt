@@ -6,9 +6,14 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FixedAcademicTime
+import dev.alllexey.itmowidgets.feature.recordbook.TEST_HALF
+import dev.alllexey.itmowidgets.feature.recordbook.markNews
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
+import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
@@ -33,8 +38,11 @@ class RecordbookViewModelTest {
     private val repository = FakeRecordbookRepository()
     private val sport = FakeSportScoreRepository()
 
+    private val marks = FakeMarkTrackingRepository()
+
     private fun model(state: SavedStateHandle = SavedStateHandle(), date: String = "2026-09-07") =
-        RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), state, RecordbookSportResolver(sport), FixedAcademicTime(date))
+        RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), state, RecordbookSportResolver(sport),
+            FixedAcademicTime(date), marks)
 
     @Test fun `loads current academic period without asking sport for regular subjects`() = runTest {
         val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
@@ -186,6 +194,46 @@ class RecordbookViewModelTest {
         val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
         assertEquals(mapOf(1L to RecordbookAttentionReason.Failed, 2L to RecordbookAttentionReason.Absent),
             (vm.uiState.value as RecordbookUiState.Content).attention)
+    }
+
+    @Test fun `unread marks of the listed half-year mark their subjects whatever the case and ё`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Тестовый предмет по химии")))
+        marks.news.value = listOf(markNews("ТЕСТОВЫЙ ПРЕДМЁТ ПО ХИМИИ"), markNews("Другой предмет", half = StudyHalf(2025, 2)))
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        assertEquals(setOf(subjectNameKey("Тестовый предмет по химии")), (vm.uiState.value as RecordbookUiState.Content).newSubjects)
+
+        repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Тестовый предмет по химии")))
+        vm.selectPeriod(1L, 1); advanceUntilIdle()
+        val autumn = vm.uiState.value as RecordbookUiState.Content
+        assertEquals(1, autumn.selection.period.semester)
+        assertTrue(autumn.newSubjects.isEmpty())
+    }
+
+    @Test fun `a new unread mark reaches the open list without a request`() = runTest {
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val requests = repository.programRequests to repository.subjectRequests.size
+        assertTrue((vm.uiState.value as RecordbookUiState.Content).newSubjects.isEmpty())
+
+        marks.news.value = listOf(markNews("Тестовый предмет")); advanceUntilIdle()
+
+        assertEquals(setOf(subjectNameKey("Тестовый предмет")), (vm.uiState.value as RecordbookUiState.Content).newSubjects)
+        assertEquals(requests, repository.programRequests to repository.subjectRequests.size)
+    }
+
+    @Test fun `only a loaded list of the current half-year advances the My ITMO snapshot`() = runTest {
+        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        assertEquals(listOf(FakeMarkTrackingRepository.SeenMyItmo(TEST_HALF, 1L, 3, listOf(recordbookSubject()))), marks.seenMyItmo)
+
+        vm.selectPeriod(1L, 2); advanceUntilIdle()
+        assertEquals(1, marks.seenMyItmo.size)
+
+        val failing = FakeMarkTrackingRepository()
+        repository.subjects = AppResult.Failure(AppError.Network)
+        val failed = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), SavedStateHandle(),
+            RecordbookSportResolver(sport), FixedAcademicTime(), failing)
+        failed.ensureDataLoaded(); advanceUntilIdle()
+        assertTrue(failed.uiState.value is RecordbookUiState.Error)
+        assertTrue(failing.seenMyItmo.isEmpty())
     }
 
     @Test fun `the summary waits for the first final grade or credit`() = runTest {

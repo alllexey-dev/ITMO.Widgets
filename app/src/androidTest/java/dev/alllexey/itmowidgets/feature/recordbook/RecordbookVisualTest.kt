@@ -31,6 +31,9 @@ import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNews
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
+import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
@@ -49,6 +52,7 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.CompletableDeferred
@@ -219,6 +223,51 @@ class RecordbookVisualTest {
                     assertVisibleTextFits(activity.window.decorView)
                 }
                 screenshot("root-session-${spec.name}")
+            }
+        }
+    }
+
+    @Test fun newMarksShowADotUntilTheSubjectOpens() {
+        val half = StudyHalf(2025, 2)
+        val design = "Проектирование и разработка распределённых информационных систем"
+        Appearances.default.forEach { spec ->
+            RecordbookPreviewActivity.MemoryMarkTracking.news.value = listOf(
+                newMark(RecordbookPreviewFixtures.MATH, half), newMark(design.uppercase(), half), newMark("История", StudyHalf(2025, 1))
+            )
+            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
+                scenario.onActivity { activity ->
+                    val math = activity.row(RecordbookPreviewFixtures.MATH)
+                    val long = activity.row("Проектирование")
+                    assertNewMark(activity, math)
+                    assertNewMark(activity, long)
+                    assertTrue("The long name wraps next to the dot", long.findViewById<TextView>(R.id.name).lineCount > 1)
+                    assertOnlyDots(activity, RecordbookPreviewFixtures.MATH, "Проектирование")
+                    assertTouchTargets(activity)
+                    assertVisibleTextFits(activity.window.decorView)
+                }
+                screenshot("marks-dot-${spec.name}")
+                openSubject(scenario, "Проектирование")
+                scenario.onActivity {
+                    assertEquals(listOf(half to subjectNameKey(design)), RecordbookPreviewActivity.MemoryMarkTracking.readCalls)
+                    it.onBackPressedDispatcher.onBackPressed()
+                }
+                settle()
+                scenario.onActivity { activity ->
+                    assertEquals(View.GONE, activity.row("Проектирование").findViewById<View>(R.id.new_mark).visibility)
+                    assertNewMark(activity, activity.row(RecordbookPreviewFixtures.MATH))
+                    assertOnlyDots(activity, RecordbookPreviewFixtures.MATH)
+                    activity.findViewById<RecyclerView>(R.id.main_recycler_view).let { it.scrollToPosition(it.adapter!!.itemCount - 1) }
+                }
+                settle()
+                scenario.onActivity { assertOnlyDots(it, RecordbookPreviewFixtures.MATH) }
+                scenario.onActivity { activity ->
+                    val list = activity.findViewById<RecyclerView>(R.id.main_recycler_view)
+                    list.scrollToPosition(0)
+                    list.adapter!!.notifyItemRangeChanged(0, list.adapter!!.itemCount)
+                }
+                settle()
+                scenario.onActivity { assertOnlyDots(it, RecordbookPreviewFixtures.MATH) }
+                screenshot("marks-dot-read-${spec.name}")
             }
         }
     }
@@ -534,6 +583,33 @@ class RecordbookVisualTest {
     private fun RecordbookPreviewActivity.row(namePart: String): View =
         findViewById<RecyclerView>(R.id.main_recycler_view).children().first { it.findViewById<TextView>(R.id.name)?.text?.contains(namePart) == true }
 
+    private fun newMark(name: String, half: StudyHalf) = subjectNameKey(name).let { key ->
+        MarkNews(MarkNews.idOf(half, key), half, key, name, Instant.parse("2026-06-01T09:00:00Z"), notified = true)
+    }
+    /** An 8 dp dot in the primary colour right after the name, centred on it; the row is read as «Новое» first. */
+    private fun assertNewMark(activity: RecordbookPreviewActivity, row: View) {
+        val dot = row.findViewById<ImageView>(R.id.new_mark)
+        val name = row.findViewById<TextView>(R.id.name)
+        assertTrue(dot.isShown)
+        val density = activity.resources.displayMetrics.density
+        assertEquals(8 * density, dot.width.toFloat(), 1f)
+        assertEquals(8 * density, dot.height.toFloat(), 1f)
+        assertTrue("The dot follows the name", dot.left >= name.right)
+        assertEquals(name.top + name.height / 2f, dot.top + dot.height / 2f, 1f)
+        assertEquals(MaterialColors.getColor(dot, androidx.appcompat.R.attr.colorPrimary), dot.imageTintList!!.defaultColor)
+        assertTrue(row.contentDescription.toString().startsWith(activity.getString(R.string.recordbook_subject_new) + ". "))
+    }
+    /** Every bound subject row shows the dot exactly when its name is one of [unread]. */
+    private fun assertOnlyDots(activity: RecordbookPreviewActivity, vararg unread: String) {
+        val rows = activity.findViewById<RecyclerView>(R.id.main_recycler_view).children().filter { it.findViewById<TextView>(R.id.name) != null }
+        assertTrue(rows.isNotEmpty())
+        rows.forEach { row ->
+            val name = row.findViewById<TextView>(R.id.name).text.toString()
+            val expected = unread.any { name.contains(it) }
+            assertEquals(name, expected, row.findViewById<View>(R.id.new_mark).visibility == View.VISIBLE)
+            assertEquals(name, expected, row.contentDescription.toString().startsWith(activity.getString(R.string.recordbook_subject_new)))
+        }
+    }
     private fun View.texts(): List<String> = descendants().filterIsInstance<TextView>().filter { it.isShown }.map { it.text.toString() }.toList()
 
     /** An own link is a filled neutral tonal chip; the others stay outlined. */
