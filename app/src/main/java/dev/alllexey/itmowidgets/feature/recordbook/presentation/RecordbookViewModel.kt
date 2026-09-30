@@ -13,6 +13,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookBarsMerge
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.studyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
@@ -192,11 +194,8 @@ class RecordbookViewModel @Inject constructor(
 
     private fun defaultSelection(): RecordbookSelection? {
         val options = programs.flatMap { program -> program.periods.map { RecordbookSelection(program, it) } }
-        val today = time.today()
-        val yearStart = today.year - if (today.monthValue < 9) 1 else 0
-        val year = "$yearStart/${yearStart + 1}"
-        val half = if (today.monthValue in 2..8) 2 else 1
-        return options.firstOrNull { it.period.studyYear == year && it.period.semesterInCourse == half }
+        val half = StudyHalf.of(time.today())
+        return options.firstOrNull { it.period.studyHalf() == half }
             ?: options.firstOrNull { it.period.actual }
             ?: options.minByOrNull { it.period.semester }
     }
