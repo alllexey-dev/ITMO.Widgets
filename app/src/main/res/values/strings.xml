@@ -303,11 +303,15 @@
     <string name="settings_group_schedule">Расписание</string>
     <string name="settings_group_home">Главный экран</string>
     <string name="settings_home_card_schedule_title">Расписание на сегодня</string>
+    <string name="settings_home_card_schedule_changes_title">Изменения в расписании</string>
     <string name="settings_home_card_sport_title">Спорт</string>
     <string name="settings_home_card_friends_title">Заявки в друзья</string>
     <string name="settings_schedule_sport_auto_sign_title">Автозапись на спорт</string>
     <string name="settings_schedule_sport_auto_sign_description">Показывать ожидание записи в своём расписании и виджетах.</string>
     <string name="settings_schedule_footer">Нужно подключение к ITMO.Widgets.</string>
+    <string name="settings_schedule_changes_title">Изменения расписания</string>
+    <string name="settings_schedule_changes_description">Уведомлять о переносах и отменах пар.</string>
+    <string name="settings_schedule_changes_notifications_off">Уведомления выключены.</string>
     <string name="settings_version_title">Версия</string>
     <string name="settings_diagnostics_title">Журнал ошибок</string>
     <string name="settings_diagnostics_count">Записей: %1$d</string>

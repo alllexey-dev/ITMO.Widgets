@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.feature.settings.ui
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
@@ -10,6 +12,7 @@ import android.view.ViewGroup
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -79,6 +82,17 @@ class SettingsFragment : Fragment() {
     private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) cropImageLauncher.launch(uri)
     }
+
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            // A denial without a dialog means the permission is locked; only the system page can undo that.
+            if (!granted && !shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)) {
+                openNotificationSettings()
+            }
+            viewModel.onNotificationPermissionChanged(
+                NotificationManagerCompat.from(requireContext()).areNotificationsEnabled()
+            )
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -172,6 +186,7 @@ class SettingsFragment : Fragment() {
                         Snackbar.LENGTH_SHORT
                     ).show()
                     SettingsEvent.OpenNotificationSettings -> openNotificationSettings()
+                    SettingsEvent.RequestNotificationPermission -> requestNotifications()
                     SettingsEvent.ChooseCustomSpoiler -> chooseCustomSpoiler()
                     SettingsEvent.ResetCustomSpoiler -> spoilerViewModel.resetImage()
                     SettingsEvent.OpenDiagnostics -> openScreen(AppScreen.DIAGNOSTICS)
@@ -307,6 +322,14 @@ class SettingsFragment : Fragment() {
 
     private fun showImageError() {
         _binding?.let { Snackbar.make(it.root, R.string.settings_qr_custom_image_failed, Snackbar.LENGTH_LONG).show() }
+    }
+
+    private fun requestNotifications() {
+        val permissionGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (permissionGranted) openNotificationSettings()
+        else notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
     }
 
     private fun openNotificationSettings() {

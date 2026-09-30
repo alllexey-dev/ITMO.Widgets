@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -46,6 +47,8 @@ import kotlinx.coroutines.launch
 sealed interface SettingsEvent {
     data object WidgetsRefreshStarted : SettingsEvent
     data object OpenNotificationSettings : SettingsEvent
+    /** Asks for the Android 13 permission, or opens the system page when it cannot be asked. */
+    data object RequestNotificationPermission : SettingsEvent
     data object ChooseCustomSpoiler : SettingsEvent
     data object ResetCustomSpoiler : SettingsEvent
     data object OpenDiagnostics : SettingsEvent
@@ -60,6 +63,7 @@ class SettingsViewModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val widgetRefreshRequester: WidgetRefreshRequester,
     private val appVersion: AppVersion,
+    private val tracking: ScheduleChangeTracking,
     diagnostics: AppDiagnostics,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -179,7 +183,13 @@ class SettingsViewModel @Inject constructor(
             KEY_SCHEDULE_SPORT_AUTO_SIGN -> updateWidgetSetting {
                 repository.setScheduleSportAutoSignEnabled(checked)
             }
-            KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SPORT, KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
+            KEY_SCHEDULE_CHANGES -> {
+                updateLocalSetting { tracking.setEnabled(checked) }
+                if (checked && notificationPermissionGranted.value == false) {
+                    eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
+                }
+            }
+            KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SCHEDULE_CHANGES, KEY_HOME_CARD_SPORT, KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
                 val kind = HOME_CARDS.first { it.first == key }.second
                 repository.setHomeCardVisible(kind, checked)
             }
@@ -503,6 +513,23 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOf(
                     SettingItem.Toggle(
+                        key = KEY_SCHEDULE_CHANGES,
+                        title = UiText.Resource(R.string.settings_schedule_changes_title),
+                        description = UiText.Resource(
+                            if (notificationsGranted == false) {
+                                R.string.settings_schedule_changes_notifications_off
+                            } else {
+                                R.string.settings_schedule_changes_description
+                            }
+                        ),
+                        checked = local.scheduleChangesEnabled
+                    )
+                )
+            ),
+            SettingSection(
+                title = null,
+                items = listOf(
+                    SettingItem.Toggle(
                         key = KEY_SCHEDULE_SPORT_AUTO_SIGN,
                         title = UiText.Resource(R.string.settings_schedule_sport_auto_sign_title),
                         description = UiText.Resource(R.string.settings_schedule_sport_auto_sign_description),
@@ -680,13 +707,20 @@ class SettingsViewModel @Inject constructor(
         const val KEY_SPORT_SHARING = "sport_sharing"
         const val KEY_FRIENDS_SHARING = "friends_sharing"
         const val KEY_SCHEDULE_SPORT_AUTO_SIGN = "schedule_sport_auto_sign"
+        const val KEY_SCHEDULE_CHANGES = "schedule_changes"
         const val KEY_HOME_CARD_SCHEDULE = "home_card_schedule"
+        const val KEY_HOME_CARD_SCHEDULE_CHANGES = "home_card_schedule_changes"
         const val KEY_HOME_CARD_SPORT = "home_card_sport"
         const val KEY_HOME_CARD_FRIENDS = "home_card_friends"
 
         /** Row key, the kind it hides, its title; the feed order is the row order. */
         private val HOME_CARDS = listOf(
             Triple(KEY_HOME_CARD_SCHEDULE, HomeCardKind.SCHEDULE, R.string.settings_home_card_schedule_title),
+            Triple(
+                KEY_HOME_CARD_SCHEDULE_CHANGES,
+                HomeCardKind.SCHEDULE_CHANGES,
+                R.string.settings_home_card_schedule_changes_title
+            ),
             Triple(KEY_HOME_CARD_SPORT, HomeCardKind.SPORT, R.string.settings_home_card_sport_title),
             Triple(KEY_HOME_CARD_FRIENDS, HomeCardKind.FRIEND_REQUESTS, R.string.settings_home_card_friends_title)
         )

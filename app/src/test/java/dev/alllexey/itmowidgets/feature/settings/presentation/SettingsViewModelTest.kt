@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
@@ -315,7 +316,9 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_SPORT_TEACHER_FILTER,
                     SettingsViewModel.KEY_SPORT_TIME_FILTER,
                     SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN,
+                    SettingsViewModel.KEY_SCHEDULE_CHANGES,
                     SettingsViewModel.KEY_HOME_CARD_SCHEDULE,
+                    SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES,
                     SettingsViewModel.KEY_HOME_CARD_SPORT,
                     SettingsViewModel.KEY_HOME_CARD_FRIENDS,
                     SettingsViewModel.KEY_REFRESH_WIDGETS,
@@ -700,8 +703,8 @@ class SettingsViewModelTest {
             assertEquals(null, section.footer)
             assertEquals(
                 listOf(
-                    SettingsViewModel.KEY_HOME_CARD_SCHEDULE, SettingsViewModel.KEY_HOME_CARD_SPORT,
-                    SettingsViewModel.KEY_HOME_CARD_FRIENDS
+                    SettingsViewModel.KEY_HOME_CARD_SCHEDULE, SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES,
+                    SettingsViewModel.KEY_HOME_CARD_SPORT, SettingsViewModel.KEY_HOME_CARD_FRIENDS
                 ),
                 section.items.map { it.key }
             )
@@ -721,7 +724,9 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.SCHEDULE)
             advanceUntilIdle()
 
-            val section = fixture.viewModel.sections.value.single()
+            val section = fixture.viewModel.sections.value.single { section ->
+                section.items.any { it.key == SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN }
+            }
             val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN)
             assertEquals(listOf(toggle), section.items)
             assertEquals(UiText.Resource(R.string.settings_group_schedule), fixture.viewModel.page.title)
@@ -750,6 +755,87 @@ class SettingsViewModelTest {
             assertTrue(fixture.repository.sportSharingRequests.isEmpty())
             assertEquals(2, fixture.widgetRefresher.refreshCount)
             assertEquals(null, fixture.viewModel.previewSettings.value)
+        }
+
+    @Test
+    fun `schedule page puts the changes switch in its own section above auto sign`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.SCHEDULE, local = LocalSettings(scheduleChangesEnabled = false))
+            advanceUntilIdle()
+
+            val (changes, autoSign) = fixture.viewModel.sections.value
+            val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_CHANGES)
+            assertEquals(listOf(toggle), changes.items)
+            assertEquals(null, changes.title)
+            assertEquals(null, changes.footer)
+            assertEquals(UiText.Resource(R.string.settings_schedule_changes_title), toggle.title)
+            assertFalse(toggle.checked)
+            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN), autoSign.items.map { it.key })
+            assertEquals(UiText.Resource(R.string.settings_schedule_footer), autoSign.footer)
+
+            fixture.tracking.enabled.value = true
+            advanceUntilIdle()
+            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_CHANGES).checked)
+        }
+
+    @Test
+    fun `schedule changes switch goes through tracking and asks for notifications only when they are off`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.SCHEDULE)
+            fixture.viewModel.onNotificationPermissionChanged(granted = true)
+            advanceUntilIdle()
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_CHANGES, false)
+            advanceUntilIdle()
+            assertEquals(listOf(false), fixture.tracking.setCalls)
+            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_CHANGES).checked)
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_CHANGES, true)
+            advanceUntilIdle()
+            assertEquals(listOf(false, true), fixture.tracking.setCalls)
+
+            fixture.viewModel.onNotificationPermissionChanged(granted = false)
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_CHANGES, true)
+            advanceUntilIdle()
+            assertEquals(listOf(false, true, true), fixture.tracking.setCalls)
+            assertEquals(listOf(SettingsEvent.RequestNotificationPermission), fixture.viewModel.events.take(1).toList())
+            assertEquals(0, fixture.widgetRefresher.refreshCount)
+            assertTrue(fixture.repository.homeCardRequests.isEmpty())
+        }
+
+    @Test
+    fun `schedule changes description says when notifications are off`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.SCHEDULE)
+            advanceUntilIdle()
+            val description = { fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_CHANGES).description }
+            assertEquals(UiText.Resource(R.string.settings_schedule_changes_description), description())
+
+            fixture.viewModel.onNotificationPermissionChanged(granted = false)
+            advanceUntilIdle()
+            assertEquals(UiText.Resource(R.string.settings_schedule_changes_notifications_off), description())
+
+            fixture.viewModel.onNotificationPermissionChanged(granted = true)
+            advanceUntilIdle()
+            assertEquals(UiText.Resource(R.string.settings_schedule_changes_description), description())
+        }
+
+    @Test
+    fun `home page offers the schedule changes card second and hides it`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.HOME)
+            advanceUntilIdle()
+
+            val row = fixture.viewModel.sections.value.single().items[1] as SettingItem.Toggle
+            assertEquals(SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES, row.key)
+            assertEquals(UiText.Resource(R.string.settings_home_card_schedule_changes_title), row.title)
+            assertTrue(row.checked)
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES, false)
+            advanceUntilIdle()
+            assertEquals(listOf(HomeCardKind.SCHEDULE_CHANGES to false), fixture.repository.homeCardRequests)
+            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES).checked)
+            assertTrue(fixture.tracking.setCalls.isEmpty())
         }
 
     @Test
@@ -1085,7 +1171,8 @@ class SettingsViewModelTest {
         localInitiallyAvailable: Boolean = true,
         page: SettingsPage = SettingsPage.ROOT
     ): Fixture {
-        val repository = FakeSettingsRepository(local, sharing, localInitiallyAvailable)
+        val tracking = FakeScheduleChangeTracking(enabled = local.scheduleChangesEnabled)
+        val repository = FakeSettingsRepository(local, sharing, localInitiallyAvailable, tracking.enabled)
         val customServicesRepository = FakeCustomServicesRepository { enabled ->
             repository.local.value = repository.local.value.copy(
                 customServicesEnabled = enabled
@@ -1099,10 +1186,11 @@ class SettingsViewModelTest {
             onboardingRepository = onboarding,
             widgetRefreshRequester = refresher,
             appVersion = AppVersion("2.1-test"),
+            tracking = tracking,
             diagnostics = RecordingDiagnostics(),
             savedStateHandle = SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
         )
-        return Fixture(viewModel, repository, customServicesRepository, refresher, onboarding)
+        return Fixture(viewModel, repository, customServicesRepository, refresher, onboarding, tracking)
     }
 
     private fun SettingsViewModel.allItems(): List<SettingItem> =
@@ -1122,7 +1210,8 @@ class SettingsViewModelTest {
         val repository: FakeSettingsRepository,
         val customServicesRepository: FakeCustomServicesRepository,
         val widgetRefresher: FakeWidgetRefreshRequester,
-        val onboardingRepository: FakeOnboardingRepository
+        val onboardingRepository: FakeOnboardingRepository,
+        val tracking: FakeScheduleChangeTracking
     )
 
     private class FakeOnboardingRepository : OnboardingRepository {
@@ -1144,7 +1233,9 @@ class SettingsViewModelTest {
     private class FakeSettingsRepository(
         initialLocal: LocalSettings,
         initialSharing: SharingSettingsState,
-        localInitiallyAvailable: Boolean
+        localInitiallyAvailable: Boolean,
+        /** The switch lives behind [dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking]; reads follow it. */
+        private val scheduleChangesEnabled: MutableStateFlow<Boolean>
     ) : SettingsRepository {
 
         val local = MutableStateFlow(initialLocal)
@@ -1171,8 +1262,8 @@ class SettingsViewModelTest {
         var scheduleSportAutoSignWrite: suspend () -> Unit = {}
 
         override fun observeLocalSettings(): Flow<LocalSettings> =
-            combine(localAvailable, local) { available, settings ->
-                settings.takeIf { available }
+            combine(localAvailable, local, scheduleChangesEnabled) { available, settings, scheduleChanges ->
+                settings.copy(scheduleChangesEnabled = scheduleChanges).takeIf { available }
             }.filterNotNull()
 
         fun publishLocalSettings() {

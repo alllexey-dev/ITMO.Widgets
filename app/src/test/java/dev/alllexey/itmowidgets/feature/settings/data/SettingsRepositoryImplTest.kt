@@ -104,6 +104,18 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
+    fun `schedule changes switch defaults on and follows the stored value`() = runTest {
+        val fixture = createRepository()
+        assertTrue(fixture.repository.observeLocalSettings().first().scheduleChangesEnabled)
+
+        fixture.storage.setScheduleChangesEnabled(false)
+        assertEquals(LocalSettings(scheduleChangesEnabled = false), fixture.repository.observeLocalSettings().first())
+
+        fixture.storage.setScheduleChangesEnabled(true)
+        assertEquals(LocalSettings(), fixture.repository.observeLocalSettings().first())
+    }
+
+    @Test
     fun `does not fetch sharing settings while custom services are disabled`() = runTest {
         val fixture = createRepository()
 

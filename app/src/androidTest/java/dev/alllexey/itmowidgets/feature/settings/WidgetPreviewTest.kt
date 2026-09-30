@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings
 
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
@@ -331,7 +332,7 @@ class WidgetPreviewTest {
                         override suspend fun reset() = Unit
                     },
                     object : WidgetRefreshRequester { override fun refreshAll() = Unit },
-                    AppVersion(activity.getString(R.string.app_version)), NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
+                    AppVersion(activity.getString(R.string.app_version)), WidgetPreviewScheduleChangeTracking, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
             })[SettingsViewModel::class.java]
             activity.findViewById<TextView>(R.id.settings_title).text = page.title.resolve(activity)
@@ -416,4 +417,14 @@ class WidgetPreviewTest {
     private companion object {
         const val SCREENSHOTS = "widget-preview-screenshots"
     }
+}
+
+/** The switch flips in memory; nothing is scheduled. */
+private object WidgetPreviewScheduleChangeTracking : ScheduleChangeTracking {
+    private val enabled = MutableStateFlow(true)
+    override fun observeEnabled() = enabled
+    override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
+    override suspend fun syncWork() = Unit
+    override fun stopWork() = Unit
+    override fun checkNow() = Unit
 }

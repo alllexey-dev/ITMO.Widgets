@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings
 
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Rect
@@ -400,6 +401,7 @@ class SettingsRendererTest {
                         override fun refreshAll() = Unit
                     },
                     AppVersion(activity.getString(R.string.app_version)),
+                    RendererScheduleChangeTracking,
                     NoDiagnostics,
                     SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
@@ -522,4 +524,14 @@ class SettingsRendererTest {
         const val LONG_VALUE = "Плавное исчезновение пользовательского изображения"
         const val LONG_TOGGLE = "Показывать расписание следующего дня после окончания сегодняшних занятий"
     }
+}
+
+/** The switch flips in memory; nothing is scheduled. */
+private object RendererScheduleChangeTracking : ScheduleChangeTracking {
+    private val enabled = MutableStateFlow(true)
+    override fun observeEnabled() = enabled
+    override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
+    override suspend fun syncWork() = Unit
+    override fun stopWork() = Unit
+    override fun checkNow() = Unit
 }

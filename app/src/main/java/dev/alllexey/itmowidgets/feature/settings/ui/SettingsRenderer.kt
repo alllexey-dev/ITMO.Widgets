@@ -43,6 +43,7 @@ class SettingsRenderer(
     private val rowBindings = mutableMapOf<String, ItemSettingRowBinding>()
     private val sectionLabels = mutableMapOf<Int, TextView>()
     private val sectionFooters = mutableMapOf<Int, TextView>()
+    private val sectionCards = mutableMapOf<Int, View>()
     private var renderedStructure: List<List<String>>? = null
 
     fun render(sections: List<SettingSection>) {
@@ -54,6 +55,7 @@ class SettingsRenderer(
         sections.forEachIndexed { index, section ->
             sectionLabels[index]?.let { bindOptionalText(it, section.title) }
             sectionFooters[index]?.let { bindOptionalText(it, section.footer) }
+            sectionCards[index]?.let { bindCardSpacing(it, separated = index > 0 && section.title == null) }
             section.items.forEach(::update)
         }
     }
@@ -64,10 +66,11 @@ class SettingsRenderer(
         rowBindings.clear()
         sectionLabels.clear()
         sectionFooters.clear()
+        sectionCards.clear()
 
         sections.forEachIndexed { index, section ->
             addSectionLabel(index)
-            addSectionCard(section.items)
+            sectionCards[index] = addSectionCard(section.items)
             addSectionFooter(index)
         }
     }
@@ -99,7 +102,7 @@ class SettingsRenderer(
         container.addView(footer)
     }
 
-    private fun addSectionCard(items: List<SettingItem>) {
+    private fun addSectionCard(items: List<SettingItem>): View {
         val card = inflater.inflate(R.layout.item_setting_card, container, false)
             as MaterialCardView
         val rows = card.findViewById<LinearLayout>(R.id.section_rows)
@@ -110,6 +113,14 @@ class SettingsRenderer(
         }
 
         container.addView(card)
+        return card
+    }
+
+    /** An untitled section after another one has no label to push it away, so the card keeps the group gap itself. */
+    private fun bindCardSpacing(card: View, separated: Boolean) {
+        card.updateLayoutParams<LinearLayout.LayoutParams> {
+            topMargin = if (separated) container.resources.getDimensionPixelSize(R.dimen.design_spacing_group) else 0
+        }
     }
 
     private fun createRow(item: SettingItem, parent: ViewGroup): View {

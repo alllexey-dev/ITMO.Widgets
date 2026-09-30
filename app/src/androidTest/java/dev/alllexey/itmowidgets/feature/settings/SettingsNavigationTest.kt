@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
+import androidx.core.view.children
 import androidx.core.view.descendants
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
@@ -15,14 +16,18 @@ import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.transition.MaterialSharedAxis
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -118,6 +123,48 @@ class SettingsNavigationTest {
             scenario.recreate()
             settle()
             scenario.onActivity { assertTrue(it.offlineLoadingFrames.isEmpty()) }
+        }
+        // The schedule page again, at font 1.3 as well: both switches arrive together and fit.
+        val specs = (Appearances.default + Appearances.all.first { it.fontScale > 1f }).distinct()
+        try {
+            for (spec in specs) {
+                SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    scenario.onActivity {
+                        it.openScreen(AppScreen.SETTINGS, Bundle().apply { putString(SettingsPage.ARGUMENT, SettingsPage.SCHEDULE.name) })
+                    }
+                    settle()
+                    scenario.onActivity { activity ->
+                        val fragment = activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment as SettingsFragment
+                        val root = fragment.requireView() as ViewGroup
+                        assertEquals(spec.fontScale, root.resources.configuration.fontScale, 0.001f)
+                        assertEquals(View.GONE, root.findViewById<View>(R.id.settings_progress).visibility)
+                        val switches = root.findViewById<ViewGroup>(R.id.sections_container).descendants
+                            .filter { it.id == R.id.setting_switch && it.isShown }.toList()
+                        assertEquals(2, switches.size)
+                        val titles = root.descendants.filterIsInstance<TextView>()
+                            .filter { it.id == R.id.setting_title && it.isShown }.map { it.text.toString() }.toList()
+                        assertEquals(
+                            listOf(
+                                activity.getString(R.string.settings_schedule_changes_title),
+                                activity.getString(R.string.settings_schedule_sport_auto_sign_title)
+                            ),
+                            titles
+                        )
+                        val cards = root.findViewById<ViewGroup>(R.id.sections_container).children
+                            .filterIsInstance<MaterialCardView>().toList()
+                        assertEquals(2, cards.size)
+                        val gap = root.resources.getDimensionPixelSize(R.dimen.design_spacing_group)
+                        assertTrue("Untitled sections keep the group gap", cards[1].top - cards[0].bottom >= gap)
+                        assertTrue(activity.offlineLoadingFrames.isEmpty())
+                        ViewChecks.assertTextFits(root)
+                        ViewChecks.assertTouchTargets(root.findViewById(R.id.sections_container), requireWidth = false)
+                    }
+                    Screenshots.capture("settings-screenshots", "settings-schedule-${spec.name}") { settle() }
+                }
+            }
+        } finally {
+            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
         }
     }
 

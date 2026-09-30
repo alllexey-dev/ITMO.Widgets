@@ -64,9 +64,14 @@ class SettingsRepositoryImpl @Inject constructor(
 
         val app = combine(
             settings.observeScheduleSportAutoSignEnabled(),
+            settings.observeScheduleChangesEnabled(),
             settings.observeHiddenHomeCards()
-        ) { showSportAutoSign, hiddenHomeCards ->
-            showSportAutoSign to hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet()
+        ) { showSportAutoSign, scheduleChangesEnabled, hiddenHomeCards ->
+            AppLocalSettings(
+                showSportAutoSign = showSportAutoSign,
+                scheduleChangesEnabled = scheduleChangesEnabled,
+                hiddenHomeCards = hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet()
+            )
         }
 
         return combine(
@@ -75,14 +80,15 @@ class SettingsRepositoryImpl @Inject constructor(
             qrWidget,
             sport,
             app
-        ) { customServices, schedule, qr, sportSettings, (showSportAutoSign, hiddenHomeCards) ->
+        ) { customServices, schedule, qr, sportSettings, appSettings ->
             LocalSettings(
                 customServicesEnabled = customServices,
                 scheduleWidget = schedule,
                 qrWidget = qr,
                 sport = sportSettings,
-                showSportAutoSign = showSportAutoSign,
-                hiddenHomeCards = hiddenHomeCards
+                showSportAutoSign = appSettings.showSportAutoSign,
+                scheduleChangesEnabled = appSettings.scheduleChangesEnabled,
+                hiddenHomeCards = appSettings.hiddenHomeCards
             )
         }
     }
@@ -242,3 +248,9 @@ class SettingsRepositoryImpl @Inject constructor(
         return responseData
     }
 }
+
+private data class AppLocalSettings(
+    val showSportAutoSign: Boolean,
+    val scheduleChangesEnabled: Boolean,
+    val hiddenHomeCards: Set<HomeCardKind>
+)

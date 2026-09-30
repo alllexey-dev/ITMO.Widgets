@@ -14,6 +14,7 @@ data class LocalSettings(
     val qrWidget: QrWidgetSettings = QrWidgetSettings(),
     val sport: SportDisplaySettings = SportDisplaySettings(),
     val showSportAutoSign: Boolean = false,
+    val scheduleChangesEnabled: Boolean = true,
     val hiddenHomeCards: Set<HomeCardKind> = emptySet()
 )
 

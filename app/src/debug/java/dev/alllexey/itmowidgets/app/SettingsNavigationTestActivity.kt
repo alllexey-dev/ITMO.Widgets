@@ -95,6 +95,8 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.*
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import kotlinx.coroutines.flow.onStart
 import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
 
@@ -273,7 +275,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
+                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
                         CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(customSpoiler)
                         else -> error("Unexpected ViewModel")
                     } as T
@@ -388,7 +390,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     private class FixtureRepository : SettingsRepository {
         private val local = MutableStateFlow(LocalSettings(customServicesEnabled = true))
         private val sharing = MutableStateFlow<SharingSettingsState>(SharingSettingsState.Loading)
-        override fun observeLocalSettings() = local.onStart { delay(80) }
+        override fun observeLocalSettings() =
+            combine(local, MemoryScheduleChangeTracking.enabled) { settings, scheduleChanges ->
+                settings.copy(scheduleChangesEnabled = scheduleChanges)
+            }.onStart { delay(80) }
         override fun observeSharingSettings() = sharing
         override suspend fun refreshSharingSettings() { sharing.value = SharingSettingsState.Content(SharingSettings()) }
         override fun disableSharingSettings() = Unit
@@ -435,6 +440,16 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
             val widget = local.value.scheduleWidget
             local.value = local.value.copy(scheduleWidget = widget.copy(full = widget.full.copy(textSize = size)))
         }
+    }
+
+    /** The switch flips in memory; no work is scheduled and no snapshot exists. */
+    private object MemoryScheduleChangeTracking : ScheduleChangeTracking {
+        val enabled = MutableStateFlow(true)
+        override fun observeEnabled() = enabled
+        override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
+        override suspend fun syncWork() = Unit
+        override fun stopWork() = Unit
+        override fun checkNow() = Unit
     }
 
     private object Services : CustomServicesRepository {
