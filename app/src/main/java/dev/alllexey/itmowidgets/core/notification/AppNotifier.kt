@@ -17,5 +17,7 @@ data class AppNotification(
 
 interface AppNotifier {
     fun show(notification: AppNotification)
+    /** Removes one shown notification; [channel] is its tag, as in [show]. */
+    fun cancel(channel: String, id: Int)
     fun clear()
 }

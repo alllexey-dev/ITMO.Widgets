@@ -83,6 +83,10 @@ class AndroidAppNotifier @Inject constructor(
         }
     }
 
+    override fun cancel(channel: String, id: Int) {
+        NotificationManagerCompat.from(context).cancel(channel, id)
+    }
+
     override fun clear() {
         context.getSystemService(NotificationManager::class.java).cancelAll()
     }

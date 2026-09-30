@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSourceImpl
@@ -24,6 +25,7 @@ import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleReposit
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import javax.inject.Singleton
 
@@ -97,6 +99,19 @@ abstract class ScheduleModule {
     abstract fun bindScheduleHomeCards(
         impl: ScheduleHomeCardSource
     ): HomeCardSource
+
+    @Binds
+    @Singleton
+    abstract fun bindScheduleChangesRepository(
+        impl: ScheduleChangesRepositoryImpl
+    ): ScheduleChangesRepository
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindScheduleChangesSessionDataCleaner(
+        impl: ScheduleChangesRepositoryImpl
+    ): SessionDataCleaner
 
     @Binds
     @Singleton

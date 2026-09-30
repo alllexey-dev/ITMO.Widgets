@@ -619,6 +619,7 @@
     <string name="friend_picker_open_profile">Открыть профиль</string>
     <string name="notification_channel_sport">Спорт: автозапись</string>
     <string name="notification_channel_friends">Друзья</string>
+    <string name="notification_channel_schedule_changes">Изменения расписания</string>
     <string name="notification_sport_success">Вы записаны на спорт</string>
     <string name="notification_sport_failure">Не удалось записать на спорт</string>
     <string name="notification_sport_lesson">%1$s, %2$s</string>

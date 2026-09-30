@@ -85,6 +85,7 @@ class FriendshipPushHandlerTest {
                 if (failNotifier) error("Synthetic permission race")
                 notifications += notification
             }
+            override fun cancel(channel: String, id: Int) = Unit
             override fun clear() = Unit
         }, social, object : CustomServicesRepository {
             override fun observeEnabled() = flowOf(enabled)

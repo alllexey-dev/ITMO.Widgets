@@ -133,6 +133,7 @@ class SportSignPushHandlerTest {
                     if (failNotifier) error("Synthetic notification failure")
                     notifications += notification
                 }
+                override fun cancel(channel: String, id: Int) = Unit
                 override fun clear() = Unit
             }, Clock.fixed(Instant.parse("2026-09-15T10:00:00Z"), ZoneOffset.UTC), RecordingDiagnostics())
 
