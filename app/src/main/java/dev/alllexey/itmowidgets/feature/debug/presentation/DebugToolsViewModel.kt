@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -49,7 +50,8 @@ class DebugToolsViewModel @Inject constructor(
     private val sportScoreOverrideController: SportScoreOverrideController,
     private val sportLessonTemplateController: SportLessonTemplateController,
     private val refreshTokenController: DebugRefreshTokenController,
-    private val customServicesRepository: CustomServicesRepository
+    private val customServicesRepository: CustomServicesRepository,
+    private val scheduleChangeTracking: ScheduleChangeTracking
 ) : ViewModel() {
 
     private val mutableUiState =
@@ -72,6 +74,9 @@ class DebugToolsViewModel @Inject constructor(
             customServicesRepository.setEnabled(enabled)
         }
     }
+
+    /** One background check of the own schedule, as soon as the network allows. */
+    fun checkScheduleChanges() = scheduleChangeTracking.checkNow()
 
     fun setDateOverride(date: LocalDate?) {
         timeOverrideController.setOverrideDate(date)

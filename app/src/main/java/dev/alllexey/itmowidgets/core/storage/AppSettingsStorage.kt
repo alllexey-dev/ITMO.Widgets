@@ -35,6 +35,10 @@ class AppSettingsStorage(
     suspend fun getScheduleSportAutoSignEnabled(): Boolean =
         read()[SCHEDULE_SPORT_AUTO_SIGN_ENABLED] ?: false
 
+    /** The background check of the own schedule; on unless the user turned it off. */
+    suspend fun getScheduleChangesEnabled(): Boolean =
+        read()[SCHEDULE_CHANGES_ENABLED] ?: true
+
     suspend fun getWidgetSmartSchedulingEnabled(): Boolean = true
 
     suspend fun getSingleLessonWidgetStyle(): LessonStyle = LessonStyle.DOT
@@ -65,6 +69,11 @@ class AppSettingsStorage(
     fun observeScheduleSportAutoSignEnabled(): Flow<Boolean> =
         preferences
             .map { it[SCHEDULE_SPORT_AUTO_SIGN_ENABLED] ?: false }
+            .distinctUntilChanged()
+
+    fun observeScheduleChangesEnabled(): Flow<Boolean> =
+        preferences
+            .map { it[SCHEDULE_CHANGES_ENABLED] ?: true }
             .distinctUntilChanged()
 
     suspend fun getScheduleWidgetSettings(): ScheduleWidgetSettings = read().scheduleWidgetSettings()
@@ -121,6 +130,10 @@ class AppSettingsStorage(
 
     suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
         write(SCHEDULE_SPORT_AUTO_SIGN_ENABLED, enabled)
+    }
+
+    suspend fun setScheduleChangesEnabled(enabled: Boolean) {
+        write(SCHEDULE_CHANGES_ENABLED, enabled)
     }
 
     suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) {
@@ -208,6 +221,8 @@ class AppSettingsStorage(
             booleanPreferencesKey("custom_services_enabled")
         private val SCHEDULE_SPORT_AUTO_SIGN_ENABLED =
             booleanPreferencesKey("schedule_sport_auto_sign_enabled")
+        private val SCHEDULE_CHANGES_ENABLED =
+            booleanPreferencesKey("schedule_changes_enabled")
         private val WIDGET_FORWARD_SCHEDULING_ENABLED =
             booleanPreferencesKey("widget_forward_scheduling_enabled")
         private val WIDGET_HIDE_TEACHER_ENABLED =

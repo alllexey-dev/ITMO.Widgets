@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import java.time.LocalDate
@@ -34,6 +35,7 @@ class DebugToolsViewModelTest {
     private val lessonController = FakeLessonTemplateController()
     private val refreshTokenController = FakeRefreshTokenController()
     private val customServicesRepository = FakeCustomServicesRepository()
+    private val scheduleChangeTracking = FakeScheduleChangeTracking()
 
     private fun createViewModel(): DebugToolsViewModel = DebugToolsViewModel(
         timeProvider = FixedTimeProvider,
@@ -41,8 +43,18 @@ class DebugToolsViewModelTest {
         sportScoreOverrideController = scoreController,
         sportLessonTemplateController = lessonController,
         refreshTokenController = refreshTokenController,
-        customServicesRepository = customServicesRepository
+        customServicesRepository = customServicesRepository,
+        scheduleChangeTracking = scheduleChangeTracking
     )
+
+    @Test
+    fun `checking schedule changes asks for one background check`() {
+        val viewModel = createViewModel()
+
+        viewModel.checkScheduleChanges()
+
+        assertEquals(1, scheduleChangeTracking.checkNowCalls)
+    }
 
     @Test
     fun `publishes debug values through state`() {

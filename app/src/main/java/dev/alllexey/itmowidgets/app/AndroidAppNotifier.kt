@@ -41,6 +41,7 @@ class AndroidAppNotifier @Inject constructor(
                     action = MainActivity.ACTION_OPEN_USER_PROFILE
                     putExtra(UserScreenArgs.ISU, target.isu)
                 }
+                NotificationDestination.ScheduleChanges -> action = MainActivity.ACTION_OPEN_SCHEDULE_CHANGES
             }
         }
         val pendingIntent = PendingIntent.getActivity(context, notification.id, intent,
@@ -51,6 +52,7 @@ class AndroidAppNotifier @Inject constructor(
             .setContentText(notification.text.resolve(context))
             .setStyle(NotificationCompat.BigTextStyle().bigText(notification.text.resolve(context)))
             .setContentIntent(pendingIntent)
+            .setSilent(notification.silent)
             .apply {
                 if (notification.channel == AppNotificationChannels.FRIENDS) {
                     setGroup(AppNotificationChannels.FRIENDS)

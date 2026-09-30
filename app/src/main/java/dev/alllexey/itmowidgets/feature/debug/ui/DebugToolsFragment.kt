@@ -54,6 +54,7 @@ class DebugToolsFragment : Fragment() {
         binding.debugTimeContainer.isVisible = BuildConfig.DEBUG
         binding.debugSportScoreContainer.isVisible = BuildConfig.DEBUG
         binding.debugSportLessonsContainer.isVisible = BuildConfig.DEBUG
+        binding.debugScheduleChangesContainer.isVisible = BuildConfig.DEBUG
         if (!BuildConfig.DEBUG) return
 
         observeState()
@@ -68,6 +69,7 @@ class DebugToolsFragment : Fragment() {
         binding.debugSportScoreResetButton.setOnClickListener {
             viewModel.clearScoreOverride()
         }
+        binding.debugScheduleChangesCheckButton.setOnClickListener { viewModel.checkScheduleChanges() }
     }
 
     override fun onDestroyView() {

@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.notification.FcmWork
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
@@ -25,7 +26,8 @@ class AndroidSessionLifecycleEffects @Inject constructor(
     private val scheduleWidgetStore: ScheduleWidgetSnapshotStore,
     private val qrWidgetStateStore: QrWidgetStateStore,
     private val qrWidgetImages: QrWidgetImages,
-    private val notifier: AppNotifier
+    private val notifier: AppNotifier,
+    private val scheduleChangeTracking: ScheduleChangeTracking
 ) : SessionLifecycleEffects {
 
     override suspend fun prepareForSessionChange() {
@@ -33,9 +35,11 @@ class AndroidSessionLifecycleEffects @Inject constructor(
         notifier.clear()
         QrWidgetWork.cancelAll(context)
         ScheduleWidgetWork.cancelAll(context)
+        scheduleChangeTracking.stopWork()
     }
 
     override suspend fun onSignedIn() {
+        scheduleChangeTracking.syncWork()
         if (QrCodeWidgetProvider.widgetIds(context).isNotEmpty()) {
             QrWidgetWork.enqueueUpdate(context, force = true)
         }

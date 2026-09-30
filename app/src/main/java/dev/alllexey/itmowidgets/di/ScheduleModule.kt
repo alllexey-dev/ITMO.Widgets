@@ -5,6 +5,7 @@ import dagger.Module
 import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
@@ -15,6 +16,7 @@ import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.changes.DefaultScheduleChangeTracking
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
@@ -25,8 +27,12 @@ import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleReposit
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
+import dev.alllexey.itmowidgets.feature.schedule.work.AndroidScheduleChangeNotifier
+import dev.alllexey.itmowidgets.feature.schedule.work.WorkManagerScheduleChangesScheduler
 import javax.inject.Singleton
 
 @Module
@@ -112,6 +118,22 @@ abstract class ScheduleModule {
     abstract fun bindScheduleChangesSessionDataCleaner(
         impl: ScheduleChangesRepositoryImpl
     ): SessionDataCleaner
+
+    @Binds
+    abstract fun bindScheduleChangesScheduler(
+        impl: WorkManagerScheduleChangesScheduler
+    ): ScheduleChangesScheduler
+
+    @Binds
+    abstract fun bindScheduleChangeNotifier(
+        impl: AndroidScheduleChangeNotifier
+    ): ScheduleChangeNotifier
+
+    @Binds
+    @Singleton
+    abstract fun bindScheduleChangeTracking(
+        impl: DefaultScheduleChangeTracking
+    ): ScheduleChangeTracking
 
     @Binds
     @Singleton

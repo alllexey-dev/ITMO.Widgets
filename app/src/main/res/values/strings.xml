@@ -205,6 +205,7 @@
     <string name="recordbook_disciplines_section">Дисциплины</string>
 
 
+    <string name="debug_schedule_changes_check">Проверить изменения расписания</string>
     <string name="debug_academic_time_title">Тестовое академическое время</string>
     <string name="debug_academic_time_description">Подменяет дату только для расписания и спорта. Авторизация, кэш и QR живут по системному времени.</string>
     <string name="debug_academic_time_system">Системная дата</string>
@@ -638,6 +639,12 @@
     <string name="notification_channel_sport">Спорт: автозапись</string>
     <string name="notification_channel_friends">Друзья</string>
     <string name="notification_channel_schedule_changes">Изменения расписания</string>
+    <plurals name="schedule_changes_notification_title">
+        <item quantity="one">Расписание изменилось: %d пара</item>
+        <item quantity="few">Расписание изменилось: %d пары</item>
+        <item quantity="many">Расписание изменилось: %d пар</item>
+        <item quantity="other">Расписание изменилось: %d пары</item>
+    </plurals>
     <string name="notification_sport_success">Вы записаны на спорт</string>
     <string name="notification_sport_failure">Не удалось записать на спорт</string>
     <string name="notification_sport_lesson">%1$s, %2$s</string>

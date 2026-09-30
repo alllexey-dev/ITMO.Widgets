@@ -323,6 +323,26 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.ItmoWidgets.Card.Content.Outlined"
+            android:id="@+id/debug_schedule_changes_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_content"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/debug_schedule_changes_check_button"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/design_card_padding"
+                android:minHeight="@dimen/design_touch_target"
+                android:text="@string/debug_schedule_changes_check" />
+
+        </com.google.android.material.card.MaterialCardView>
+
     </LinearLayout>
 
     </ScrollView>

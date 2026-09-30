@@ -71,12 +71,15 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private lateinit var navigation: MainNavigationCoordinator
     private var pendingRootDestination: Int? = null
     private var pendingUserIsu: Int? = null
+    private var pendingScreen: AppScreen? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState != null) {
             pendingRootDestination = savedInstanceState.getInt(PENDING_ROOT).takeIf { it != 0 }
             pendingUserIsu = savedInstanceState.getInt(PENDING_USER).takeIf { it > 0 }
+            pendingScreen = savedInstanceState.getString(PENDING_SCREEN)
+                ?.let { name -> AppScreen.entries.firstOrNull { it.name == name } }
         } else {
             acceptIntent(intent)
         }
@@ -257,6 +260,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putInt(PENDING_ROOT, pendingRootDestination ?: 0)
         outState.putInt(PENDING_USER, pendingUserIsu ?: 0)
+        outState.putString(PENDING_SCREEN, pendingScreen?.name)
         super.onSaveInstanceState(outState)
     }
 
@@ -320,6 +324,9 @@ class MainActivity : AppCompatActivity(), AppNavigator {
                             pendingRootDestination = null
                             val userIsu = pendingUserIsu
                             pendingUserIsu = null
+                            val screen = pendingScreen
+                            pendingScreen = null
+                            screen?.let { navigation.openScreen(it) }
                             if (userIsu != null) {
                                 navigation.openScreen(AppScreen.USER_PROFILE, Bundle().apply {
                                     putInt(UserScreenArgs.ISU, userIsu)
@@ -348,6 +355,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         val route = MainActivityIntentRouting.parse(intent.action, intent.getIntExtra(UserScreenArgs.ISU, 0)) ?: return
         pendingRootDestination = route.rootDestination
         pendingUserIsu = route.userIsu
+        pendingScreen = route.screen
     }
 
     companion object {
@@ -356,7 +364,9 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         const val ACTION_OPEN_SPORT = "dev.alllexey.itmowidgets.action.OPEN_SPORT"
         const val ACTION_OPEN_USER_PROFILE = "dev.alllexey.itmowidgets.action.OPEN_USER_PROFILE"
         const val ACTION_OPEN_SCHEDULE = "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE"
+        const val ACTION_OPEN_SCHEDULE_CHANGES = "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE_CHANGES"
         private const val PENDING_USER = "pending_user_isu"
         private const val PENDING_ROOT = "pending_root_destination"
+        private const val PENDING_SCREEN = "pending_screen"
     }
 }
