@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
+import dev.alllexey.itmowidgets.core.work.outcomeOf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigests
@@ -33,6 +34,7 @@ class MarksCheck @Inject constructor(
         if (myItmo) (repository.checkMyItmo() as? AppResult.Failure)?.let { errors += it.error }
         if (bars) {
             when (val result = repository.checkBars()) {
+                // A network failure is retried and never prompts: only ITMO.ID's answer or missing cookies end a session.
                 is BarsCheck.Failed -> errors += result.error
                 BarsCheck.SessionEnded ->
                     if (settings.getBarsLoginPrompt() == BarsLoginPrompt.NONE) settings.setBarsLoginPrompt(BarsLoginPrompt.PENDING)
@@ -41,7 +43,7 @@ class MarksCheck @Inject constructor(
         }
         // Marks found in the quiet hours wait here for the first run after them, whatever the network does then.
         deliver()
-        return if (errors.any { it != AppError.Unauthorized }) CheckOutcome.RETRY else CheckOutcome.DONE
+        return outcomeOf(errors)
     }
 
     private suspend fun deliver() {

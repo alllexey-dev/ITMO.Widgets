@@ -1,10 +1,9 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
-import api.bars.utils.BarsApiException
 import api.bars.utils.BarsAuthHelper
 import api.bars.utils.BarsSessionCode
+import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
-import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -53,12 +52,11 @@ class BarsCookieSilentLogin @Inject constructor(
         if (header.isNullOrBlank()) return BarsCookieRenewal.SessionEnded
         val answer = try {
             withContext(Dispatchers.IO) { auth.requestCodeWithCookies(state, header) }
-        } catch (failure: BarsApiException) {
-            return BarsCookieRenewal.Failed(if (failure.cause is IOException) AppError.Network else AppError.Unknown())
         } catch (cancel: CancellationException) {
             throw cancel
-        } catch (_: Exception) {
-            return BarsCookieRenewal.Failed(AppError.Unknown())
+        } catch (failure: Exception) {
+            // No network is not an ended session: the cookies may still sign in on the next run.
+            return BarsCookieRenewal.Failed(if (failure.isCausedByNetworkFailure()) AppError.Network else AppError.Unknown())
         }
         storeCookies(url, answer.setCookies)
         return when (answer.outcome) {

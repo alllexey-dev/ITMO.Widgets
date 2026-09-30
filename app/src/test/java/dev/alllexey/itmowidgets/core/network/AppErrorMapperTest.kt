@@ -10,6 +10,8 @@ import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class AppErrorMapperTest {
 
@@ -20,6 +22,17 @@ class AppErrorMapperTest {
             AppError.Network,
             ApiException("Network failure", IOException()).toAppError()
         )
+    }
+
+    @Test
+    fun `a network failure anywhere in the cause chain is a network error, not an ended session`() {
+        assertEquals(
+            AppError.Network,
+            TokenRefreshException("Refresh failed", RuntimeException(UnknownHostException())).toAppError()
+        )
+        assertEquals(AppError.Network, IOException(TokenRefreshException("Expired")).toAppError())
+        assertEquals(AppError.Network, ApiException("Network error", SocketTimeoutException()).toAppError())
+        assertEquals(AppError.Unauthorized, TokenRefreshException("Expired").toAppError())
     }
 
     @Test

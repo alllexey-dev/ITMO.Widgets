@@ -6,6 +6,7 @@ import api.bars.model.Term
 import api.bars.model.User
 import api.bars.utils.BarsApiException
 import api.bars.utils.BarsCodeSupplier
+import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
@@ -62,7 +63,8 @@ class BarsClient @Inject constructor(
     /**
      * The background form of [account]: the session is renewed through ITMO.ID cookies, and an ended ITMO.ID
      * session is [BarsBackground.SessionEnded] instead of a failure. Without a saved session for the current
-     * ISU nothing is requested.
+     * ISU nothing is requested. A network failure before any answer, of BARS or of ITMO.ID, is
+     * [BarsBackground.Failure] with [AppError.Network], never [BarsBackground.SessionEnded]; the saved header stays.
      */
     suspend fun <T> backgroundAccount(block: suspend Account.() -> T): BarsBackground<T> = runBackground(block)
         .also { if (it is BarsBackground.Success) listener.onBarsAnswered() }
@@ -89,8 +91,8 @@ class BarsClient @Inject constructor(
         BarsBackground.SessionEnded
     } catch (failure: BarsFailure) {
         BarsBackground.Failure(failure.error)
-    } catch (_: Exception) {
-        BarsBackground.Failure(AppError.Unknown())
+    } catch (failure: Exception) {
+        BarsBackground.Failure(failure.unexpectedError())
     }
 
     /** Interactive ITMO.ID result; the session is kept only if it belongs to the app's user. */
@@ -151,9 +153,8 @@ class BarsClient @Inject constructor(
         throw cancel
     } catch (failure: BarsFailure) {
         AppResult.Failure(failure.error)
-    } catch (_: Exception) {
-        // Never retain exceptions containing URLs, OAuth codes or response bodies in diagnostics.
-        AppResult.Failure(AppError.Unknown())
+    } catch (failure: Exception) {
+        AppResult.Failure(failure.unexpectedError())
     }
 
     /** Leaves the library's renewal untouched: the saved header stays, and [backgroundAccount] reports the end. */
@@ -173,9 +174,13 @@ class BarsClient @Inject constructor(
         401 -> AppError.Unauthorized
         403, 423 -> AppError.Forbidden
         404 -> AppError.NotFound
-        null -> if (cause is IOException) AppError.Network else AppError.Unknown()
+        null -> unexpectedError()
         else -> AppError.Unknown()
     }
+
+    // Never retain exceptions containing URLs, OAuth codes or response bodies in diagnostics.
+    private fun Exception.unexpectedError(): AppError =
+        if (isCausedByNetworkFailure()) AppError.Network else AppError.Unknown()
 }
 
 /** Told about every successful BARS answer of the account, outside the client's lock. */

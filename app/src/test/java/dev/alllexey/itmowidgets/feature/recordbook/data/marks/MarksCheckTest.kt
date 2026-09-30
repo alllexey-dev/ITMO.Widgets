@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
+import dev.alllexey.itmowidgets.core.work.workResultOf
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
 import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.RecordingMarksNotifier
@@ -16,6 +17,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkCheckResult
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
 import dev.alllexey.itmowidgets.feature.recordbook.markNews
+import androidx.work.ListenableWorker.Result
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -142,6 +144,32 @@ class MarksCheckTest {
         repository.barsResult = BarsCheck.NoSession
         assertEquals(CheckOutcome.DONE, check.run())
         assertEquals(0, notifier.prompts)
+        assertEquals(BarsLoginPrompt.NONE, settings.getBarsLoginPrompt())
+    }
+
+    @Test
+    fun `no network for BARS is retried and never prompts to sign in`() = runTest {
+        settings.setBarsMarksEnabled(true)
+        repository.barsResult = BarsCheck.Failed(AppError.Network)
+
+        assertEquals(CheckOutcome.RETRY, check.run())
+
+        assertEquals(BarsLoginPrompt.NONE, settings.getBarsLoginPrompt())
+        assertEquals(0, notifier.prompts)
+    }
+
+    @Test
+    fun `no network for both sources is retried twice, then the next period tries again`() = runTest {
+        settings.setBarsMarksEnabled(true)
+        repository.myItmoResult = AppResult.Failure(AppError.Network)
+        repository.barsResult = BarsCheck.Failed(AppError.Network)
+
+        val outcome = check.run()
+
+        assertEquals(CheckOutcome.RETRY, outcome)
+        assertEquals(Result.retry(), workResultOf(outcome, 0))
+        assertEquals(Result.retry(), workResultOf(outcome, 1))
+        assertEquals(Result.success(), workResultOf(outcome, 2))
         assertEquals(BarsLoginPrompt.NONE, settings.getBarsLoginPrompt())
     }
 

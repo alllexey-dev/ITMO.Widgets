@@ -1,11 +1,11 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
-import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
+import dev.alllexey.itmowidgets.core.work.outcomeOf
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigests
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
@@ -25,10 +25,7 @@ class ScheduleChangesCheck @Inject constructor(
         val result = repository.check()
         // Changes found in the quiet hours wait here for the first run after them, whatever the network does then.
         deliver()
-        return when {
-            result is AppResult.Failure && result.error != AppError.Unauthorized -> CheckOutcome.RETRY
-            else -> CheckOutcome.DONE
-        }
+        return outcomeOf(listOfNotNull((result as? AppResult.Failure)?.error))
     }
 
     private suspend fun deliver() {

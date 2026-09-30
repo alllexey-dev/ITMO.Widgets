@@ -129,6 +129,28 @@ class MarkTrackingRepositoryImplTest {
     }
 
     @Test
+    fun `no network in either source keeps both snapshots and the unread subjects`() = runTest {
+        val repository = repository()
+        repository.checkMyItmo()
+        repository.checkBars()
+        clock.advance(Duration.ofHours(3))
+        recordbook.subjects = AppResult.Success(listOf(subject(42, "Физика", 12.5)))
+        repository.checkMyItmo()
+        val before = store.read()
+        val news = repository.observeNews().first()
+
+        clock.advance(Duration.ofHours(3))
+        recordbook.programs = AppResult.Failure(AppError.Network)
+        assertEquals(AppResult.Failure(AppError.Network), repository.checkMyItmo())
+        barsAnswer(BarsMarkRead.Failure(AppError.Network))
+        assertEquals(BarsCheck.Failed(AppError.Network), repository.checkBars())
+
+        assertEquals(before, store.read())
+        assertEquals(news, repository.observeNews().first())
+        assertEquals(1, news.size)
+    }
+
+    @Test
     fun `a subject changed in both sources is one record`() = runTest {
         barsAnswer(BarsMarkRead.Journals(listOf(plan(1, "Физика", BarsCheckpointMark(10, 5.0, false))), 0))
         val repository = repository()

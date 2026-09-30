@@ -8,11 +8,13 @@ import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.feature.recordbook.CountingBarsSessionListener
+import java.net.UnknownHostException
 import java.util.Base64
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.test.runTest
+import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -61,13 +63,25 @@ class BarsClientTest {
     @Before fun start() {
         server.dispatcher = fake
         server.start()
-        val bars = Bars(object : BarsConfiguration.Default() {
-            override fun getHost() = server.hostName
-            override fun getRestUrl() = server.url("/backend/rest/").toString()
-        }).apply { storage = this@BarsClientTest.storage }
+        val bars = Bars(configuration()).apply { storage = this@BarsClientTest.storage }
         client = BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener)
     }
     @After fun stop() = server.shutdown()
+
+    private fun configuration() = object : BarsConfiguration.Default() {
+        override fun getHost() = server.hostName
+        override fun getRestUrl() = server.url("/backend/rest/").toString()
+    }
+
+    /** A client whose every `current_user` request fails before any answer, as for a backgrounded app on MIUI. */
+    private fun offlineClient(): BarsClient {
+        val offline = OkHttpClient.Builder().addInterceptor { chain ->
+            if (chain.request().url.encodedPath.contains("users/current_user")) throw UnknownHostException("Synthetic")
+            chain.proceed(chain.request())
+        }.build()
+        val bars = Bars(configuration(), offline).apply { storage = this@BarsClientTest.storage }
+        return BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener)
+    }
 
     @Test fun `token file is account-bound and cleared`() {
         store.install(123, old)
@@ -176,6 +190,18 @@ class BarsClientTest {
         backgroundRenewals += BarsCookieRenewal.Failed(AppError.Network)
         assertEquals(BarsBackground.Failure(AppError.Network), client.backgroundAccount { Unit })
         assertEquals(old, store.load(123))
+    }
+    @Test fun `no network before any answer is a network failure that renews nothing and keeps the header`() = runTest {
+        store.install(123, old)
+        val offline = offlineClient()
+
+        assertEquals(BarsBackground.Failure(AppError.Network), offline.backgroundAccount { Unit })
+        assertEquals(AppResult.Failure(AppError.Network), offline.account { Unit })
+
+        assertEquals(0, backgroundLogin.requests)
+        assertEquals(0, silentLogin.requests)
+        assertEquals(old, store.load(123))
+        assertEquals(0, listener.answers)
     }
     @Test fun `background without a saved session sends nothing and renews nothing`() = runTest {
         assertEquals(BarsBackground.NoSession, client.backgroundAccount { Unit })

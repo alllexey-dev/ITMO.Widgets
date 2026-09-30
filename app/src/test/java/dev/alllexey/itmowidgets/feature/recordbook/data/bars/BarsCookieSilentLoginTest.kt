@@ -3,7 +3,9 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 import api.bars.Bars
 import api.bars.BarsConfiguration
 import dev.alllexey.itmowidgets.core.result.AppError
+import java.net.UnknownHostException
 import kotlinx.coroutines.test.runTest
+import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -23,13 +25,15 @@ class BarsCookieSilentLoginTest {
 
     @Before fun start() {
         server.start()
-        bars = Bars(object : BarsConfiguration.Default() {
-            override fun getIssuer() = server.url("/auth/realms/itmo").toString()
-        })
+        bars = Bars(configuration())
         login = BarsCookieSilentLogin(bars.authHelper, cookies)
     }
 
     @After fun stop() = server.shutdown()
+
+    private fun configuration() = object : BarsConfiguration.Default() {
+        override fun getIssuer() = server.url("/auth/realms/itmo").toString()
+    }
 
     @Test fun `callback with the same state is a code and the answer's cookies go back for the request URL`() = runTest {
         server.enqueue(MockResponse().setResponseCode(302).setHeader("Location", "$callback?state=s1&code=synthetic-code")
@@ -76,6 +80,16 @@ class BarsCookieSilentLoginTest {
 
         server.shutdown()
         assertEquals(BarsCookieRenewal.Failed(AppError.Network), login.renew("s1"))
+    }
+
+    @Test fun `no network before any answer is a network failure and stores no cookies`() = runTest {
+        val offline = Bars(configuration(), OkHttpClient.Builder().addInterceptor { throw UnknownHostException("Synthetic") }.build())
+        val login = BarsCookieSilentLogin(offline.authHelper, cookies)
+
+        assertEquals(BarsCookieRenewal.Failed(AppError.Network), login.renew("s1"))
+        assertEquals(1, cookies.reads.size)
+        assertTrue(cookies.stored.isEmpty())
+        assertEquals(0, server.requestCount)
     }
 
     @Test fun `unavailable cookie store is a failure without a request`() = runTest {

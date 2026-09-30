@@ -11,6 +11,8 @@ import dev.alllexey.itmowidgets.core.testing.myItmoResponses
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
 import java.io.File
+import java.io.IOException
+import java.net.UnknownHostException
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -41,9 +43,12 @@ class ScheduleChangesRepositoryImplTest {
     @Volatile private var status = 200
     @Volatile private var body: String? = null
     @Volatile private var gate: CountDownLatch? = null
+    /** Thrown instead of any answer, as when a backgrounded app has no network. */
+    @Volatile private var failure: IOException? = null
     private val api = myItmoResponses { request ->
         requests += "${request.url.encodedPath}?${request.url.queryParameter("date_start")}..${request.url.queryParameter("date_end")}"
         gate?.let { check(it.await(WAIT_SECONDS, TimeUnit.SECONDS)) { "The answer was never released" } }
+        failure?.let { throw it }
         status to (body ?: """{"code":0,"data":[${days.joinToString(",")}],"message":null}""")
     }.api
     private val clock = MutableClock(Instant.parse("2026-09-07T09:00:00Z"))
@@ -129,6 +134,22 @@ class ScheduleChangesRepositoryImplTest {
 
         assertEquals(before, store.read())
         body = null
+        assertEquals(AppResult.Success(ScheduleCheckResult.Compared(0)), repository.check())
+    }
+
+    @Test
+    fun `no network is a network failure that keeps the snapshot and finds nothing`() = runTest {
+        days = WEEK
+        val repository = repository()
+        repository.check()
+        val before = store.read()
+
+        failure = UnknownHostException("Synthetic")
+        assertEquals(AppResult.Failure(AppError.Network), repository.check())
+
+        assertEquals(before, store.read())
+        assertEquals(emptyList<ScheduleChange>(), repository.observeChanges().first())
+        failure = null
         assertEquals(AppResult.Success(ScheduleCheckResult.Compared(0)), repository.check())
     }
 

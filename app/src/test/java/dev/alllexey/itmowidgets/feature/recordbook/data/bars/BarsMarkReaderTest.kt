@@ -131,6 +131,17 @@ class BarsMarkReaderTest {
         assertEquals(listOf("current_year=2025/2026", "current_term=0"), fake.settings.takeLast(2))
     }
 
+    @Test fun `the network lost on the second journal of three fails the whole read`() = runTest {
+        store.install(123, old)
+        fake.plans = listOf(1L, 2L, 3L)
+        fake.disconnected += 2L
+
+        val read = reader.read(HALF)
+
+        assertEquals(BarsMarkRead.Failure(AppError.Network), read)
+        assertEquals(0, backgroundLogin.requests)
+    }
+
     private inner class FakeJournals : Dispatcher() {
         var year = "2026/2027"
         var term = 1
@@ -138,6 +149,7 @@ class BarsMarkReaderTest {
         val settings = CopyOnWriteArrayList<String>()
         val courseProjects = mutableSetOf<Long>()
         val disconnected = mutableSetOf<Long>()
+        var plans = listOf(1L, 2L)
 
         override fun dispatch(request: RecordedRequest): MockResponse {
             val path = request.path.orEmpty()
@@ -156,9 +168,9 @@ class BarsMarkReaderTest {
                     MockResponse().setBody(body)
                 }
                 path.startsWith("/backend/rest/journal/disciplines") ->
-                    MockResponse().setBody("[{\"id\":90,\"name\":\"Тестовый предмет\",\"checkpoint_plan_ids\":[1,2]}]")
+                    MockResponse().setBody("[{\"id\":90,\"name\":\"Тестовый предмет\",\"checkpoint_plan_ids\":${plans.joinToString(",", "[", "]")}}]")
                 path.startsWith("/backend/rest/journal/groups-and-flows") ->
-                    MockResponse().setBody("[{\"type\":\"flow\",\"name\":\"Поток\",\"identifier\":\"7\",\"checkpoint_plan_ids\":[1,2]}]")
+                    MockResponse().setBody("[{\"type\":\"flow\",\"name\":\"Поток\",\"identifier\":\"7\",\"checkpoint_plan_ids\":${plans.joinToString(",", "[", "]")}}]")
                 journal != null && journal in disconnected -> MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START)
                 journal != null -> MockResponse().setBody(journal(journal, courseProject = journal in courseProjects))
                 else -> MockResponse().setResponseCode(404)

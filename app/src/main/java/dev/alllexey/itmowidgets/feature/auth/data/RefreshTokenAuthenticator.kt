@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.auth.data
 
 import api.myitmo.MyItmo
 import dev.alllexey.itmowidgets.core.session.SessionTokens
-import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -40,14 +39,4 @@ internal fun api.myitmo.model.other.TokenResponse.toSessionTokens(): SessionToke
         refreshExpiresInSeconds = refreshExpiresIn,
         idToken = identity
     )
-}
-
-internal fun Throwable.isCausedByNetworkFailure(): Boolean {
-    var current: Throwable? = this
-    val seen = mutableSetOf<Throwable>()
-    while (current != null && seen.add(current)) {
-        if (current is IOException) return true
-        current = current.cause
-    }
-    return false
 }

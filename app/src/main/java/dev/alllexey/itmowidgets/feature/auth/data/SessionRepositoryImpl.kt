@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.auth.data
 
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
+import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import api.myitmo.MyItmo
 import api.myitmo.model.other.TokenResponse
 import com.google.gson.Gson

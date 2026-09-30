@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.work
 
 import androidx.work.ListenableWorker.Result
+import dev.alllexey.itmowidgets.core.result.AppError
 import java.time.LocalTime
 
 /*
@@ -17,6 +18,15 @@ object QuietHours {
 
 /** How one background run ended, for the worker to decide on a retry. */
 enum class CheckOutcome { SKIPPED, DONE, RETRY }
+
+/**
+ * The outcome of a run whose checks failed with [errors]: [CheckOutcome.RETRY] unless every error is
+ * [AppError.Unauthorized], which only a new sign-in fixes. A network failure before any answer (`UnknownHostException`
+ * and other `IOException`s; MIUI cuts the network of a backgrounded app although WorkManager's `CONNECTED` constraint
+ * holds) is temporary: the run is retried within [MAX_RETRIES], the snapshot stays and no sign-in prompt is shown.
+ */
+fun outcomeOf(errors: Collection<AppError>): CheckOutcome =
+    if (errors.any { it != AppError.Unauthorized }) CheckOutcome.RETRY else CheckOutcome.DONE
 
 /** Retries of one failed run; after them the next period tries again. */
 const val MAX_RETRIES = 2

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.work
 
 import androidx.work.ListenableWorker.Result
+import dev.alllexey.itmowidgets.core.result.AppError
 import java.time.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -14,6 +15,15 @@ class BackgroundChecksTest {
         assertEquals(Result.retry(), workResultOf(CheckOutcome.RETRY, 0))
         assertEquals(Result.retry(), workResultOf(CheckOutcome.RETRY, 1))
         assertEquals(Result.success(), workResultOf(CheckOutcome.RETRY, 2))
+    }
+
+    @Test
+    fun `any error but an ended session is retried`() {
+        assertEquals(CheckOutcome.DONE, outcomeOf(emptyList()))
+        assertEquals(CheckOutcome.RETRY, outcomeOf(listOf(AppError.Network)))
+        assertEquals(CheckOutcome.RETRY, outcomeOf(listOf(AppError.Unknown())))
+        assertEquals(CheckOutcome.RETRY, outcomeOf(listOf(AppError.Unauthorized, AppError.Network)))
+        assertEquals(CheckOutcome.DONE, outcomeOf(listOf(AppError.Unauthorized)))
     }
 
     @Test

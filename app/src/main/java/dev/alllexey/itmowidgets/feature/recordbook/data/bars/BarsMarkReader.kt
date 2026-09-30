@@ -33,7 +33,8 @@ interface BarsMarkSource {
 /**
  * Reads the own journals of [StudyHalf] in the background, renewing the session through ITMO.ID cookies. The period
  * selection is shared with the BARS website, so the one the user had is selected again afterwards; a failure to do so
- * does not change the result. Any failed request fails the whole read: a partial answer is never a snapshot.
+ * does not change the result. Any failed request fails the whole read: a partial answer is never a snapshot. A network
+ * failure of any request (the period, the disciplines, any journal) is [BarsMarkRead.Failure] with [AppError.Network].
  */
 class BarsMarkReader @Inject constructor(private val client: BarsClient) : BarsMarkSource {
     private val mapper = BarsRecordbookMapper()
