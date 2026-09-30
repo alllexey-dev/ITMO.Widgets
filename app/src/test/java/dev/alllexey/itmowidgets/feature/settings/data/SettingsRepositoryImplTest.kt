@@ -116,6 +116,17 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
+    fun `the background work hint starts not shown and stays shown once written`() = runTest {
+        val fixture = createRepository()
+        assertFalse(fixture.repository.observeLocalSettings().first().backgroundWorkHintShown)
+
+        fixture.repository.setBackgroundWorkHintShown()
+
+        assertEquals(LocalSettings(backgroundWorkHintShown = true), fixture.repository.observeLocalSettings().first())
+        assertTrue(fixture.storage.observeBackgroundWorkHintShown().first())
+    }
+
+    @Test
     fun `mark switches default to My ITMO on and BARS undecided and follow the stored values`() = runTest {
         val fixture = createRepository()
         val defaults = fixture.repository.observeLocalSettings().first()

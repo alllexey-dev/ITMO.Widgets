@@ -29,6 +29,7 @@ import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.ui.resolve
+import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
@@ -404,6 +405,7 @@ class SettingsRendererTest {
                     AppVersion(activity.getString(R.string.app_version)),
                     RendererScheduleChangeTracking,
                     RendererMarkTracking,
+                    RendererBackgroundWork,
                     NoDiagnostics,
                     SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
@@ -519,6 +521,10 @@ class SettingsRendererTest {
         override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
             local.value = local.value.copy(hiddenHomeCards = if (visible) local.value.hiddenHomeCards - kind else local.value.hiddenHomeCards + kind)
         }
+
+        override suspend fun setBackgroundWorkHintShown() {
+            local.value = local.value.copy(backgroundWorkHintShown = true)
+        }
     }
 
     private companion object {
@@ -545,4 +551,9 @@ private object RendererMarkTracking : MarkTracking {
     override suspend fun syncWork() = Unit
     override fun stopWork() = Unit
     override fun checkNow() = Unit
+}
+
+/** Unrestricted, so the background work row stays out of these pages. */
+private object RendererBackgroundWork : BackgroundWorkAccess {
+    override fun isUnrestricted() = true
 }

@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
@@ -42,8 +43,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 
 sealed interface SettingsEvent {
     data object WidgetsRefreshStarted : SettingsEvent
@@ -54,6 +57,10 @@ sealed interface SettingsEvent {
     data object ResetCustomSpoiler : SettingsEvent
     data object OpenDiagnostics : SettingsEvent
     data object CloseOverlays : SettingsEvent
+    /** Opens the system page where Android stops restricting the app in the background. */
+    data object OpenBackgroundWorkSettings : SettingsEvent
+    /** The one-time dialog about background work, offered when a background check is turned on. */
+    data object ShowBackgroundWorkHint : SettingsEvent
     data class ShowError(val error: AppError) : SettingsEvent
 }
 
@@ -66,6 +73,7 @@ class SettingsViewModel @Inject constructor(
     private val appVersion: AppVersion,
     private val tracking: ScheduleChangeTracking,
     private val markTracking: MarkTracking,
+    private val backgroundWork: BackgroundWorkAccess,
     diagnostics: AppDiagnostics,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -73,6 +81,9 @@ class SettingsViewModel @Inject constructor(
     val page = SettingsPage.fromArgument(savedStateHandle[SettingsPage.ARGUMENT])
 
     private val notificationPermissionGranted = MutableStateFlow<Boolean?>(null)
+    // Unknown until the screen asks; the row stays hidden rather than flash in.
+    private val backgroundWorkUnrestricted = MutableStateFlow<Boolean?>(null)
+    private val backgroundWorkHintMutex = Mutex()
     private val customSpoilerConfigured = MutableStateFlow(false)
     private val customSpoilerBusy = MutableStateFlow(false)
     // Start masked so cached backend values cannot flash before the fresh request.
@@ -121,7 +132,8 @@ class SettingsViewModel @Inject constructor(
             notificationPermissionGranted,
             customSpoilerConfigured,
             customSpoilerBusy,
-            diagnosticsCount
+            diagnosticsCount,
+            backgroundWorkUnrestricted
         ) { values ->
             @Suppress("UNCHECKED_CAST")
             buildSections(
@@ -130,7 +142,8 @@ class SettingsViewModel @Inject constructor(
                 notificationsGranted = values[2] as Boolean?,
                 hasCustomSpoiler = values[3] as Boolean,
                 imageBusy = values[4] as Boolean,
-                diagnosticsCount = values[5] as Int
+                diagnosticsCount = values[5] as Int,
+                backgroundWorkRestricted = values[6] == false
             )
         }
             .onEach {
@@ -173,6 +186,11 @@ class SettingsViewModel @Inject constructor(
         notificationPermissionGranted.value = granted
     }
 
+    /** Re-reads whether Android restricts the app in the background; the screen calls it on every return. */
+    fun onBackgroundWorkChanged() {
+        backgroundWorkUnrestricted.value = backgroundWork.isUnrestricted()
+    }
+
     fun onCustomSpoilerChanged(configured: Boolean, refreshWidgets: Boolean = false, busy: Boolean = false) {
         customSpoilerConfigured.value = configured
         customSpoilerBusy.value = busy
@@ -190,18 +208,21 @@ class SettingsViewModel @Inject constructor(
                 if (checked && notificationPermissionGranted.value == false) {
                     eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
                 }
+                if (checked) offerBackgroundWorkHint()
             }
             KEY_MYITMO_MARKS -> {
                 updateLocalSetting { markTracking.setMyItmoEnabled(checked) }
                 if (checked && notificationPermissionGranted.value == false) {
                     eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
                 }
+                if (checked) offerBackgroundWorkHint()
             }
             KEY_BARS_MARKS -> {
                 updateLocalSetting { markTracking.setBarsEnabled(checked) }
                 if (checked && notificationPermissionGranted.value == false) {
                     eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
                 }
+                if (checked) offerBackgroundWorkHint()
             }
             KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SCHEDULE_CHANGES, KEY_HOME_CARD_MARKS, KEY_HOME_CARD_SPORT,
             KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
@@ -282,6 +303,7 @@ class SettingsViewModel @Inject constructor(
             KEY_QR_CUSTOM_IMAGE -> eventChannel.trySend(SettingsEvent.ChooseCustomSpoiler)
             KEY_QR_RESET_IMAGE -> eventChannel.trySend(SettingsEvent.ResetCustomSpoiler)
             KEY_DIAGNOSTICS -> eventChannel.trySend(SettingsEvent.OpenDiagnostics)
+            KEY_BACKGROUND_WORK -> eventChannel.trySend(SettingsEvent.OpenBackgroundWorkSettings)
             KEY_RESTART_ONBOARDING -> viewModelScope.launch {
                 // The stored flag is what the root gate reads; the overlay only has to get out of the way.
                 onboardingRepository.reset()
@@ -289,6 +311,25 @@ class SettingsViewModel @Inject constructor(
             }
             KEY_RETRY_PRIVACY -> viewModelScope.launch {
                 refreshPrivacySettings()
+            }
+        }
+    }
+
+    /** Once per device, when a background check is turned on while Android restricts the app in the background. */
+    private fun offerBackgroundWorkHint() {
+        if (backgroundWorkUnrestricted.value != false) return
+        viewModelScope.launch {
+            backgroundWorkHintMutex.withLock {
+                if (localSettings.first().backgroundWorkHintShown) return@launch
+                try {
+                    repository.setBackgroundWorkHintShown()
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (error: Exception) {
+                    eventChannel.send(SettingsEvent.ShowError(AppError.Unknown(error)))
+                    return@launch
+                }
+                eventChannel.send(SettingsEvent.ShowBackgroundWorkHint)
             }
         }
     }
@@ -346,7 +387,8 @@ class SettingsViewModel @Inject constructor(
         notificationsGranted: Boolean?,
         hasCustomSpoiler: Boolean,
         imageBusy: Boolean,
-        diagnosticsCount: Int
+        diagnosticsCount: Int,
+        backgroundWorkRestricted: Boolean
     ): List<SettingSection> = when (page) {
         SettingsPage.ROOT -> listOf(
             SettingSection(
@@ -527,7 +569,7 @@ class SettingsViewModel @Inject constructor(
         SettingsPage.SCHEDULE -> listOf(
             SettingSection(
                 title = null,
-                items = listOf(
+                items = listOfNotNull(
                     SettingItem.Toggle(
                         key = KEY_SCHEDULE_CHANGES,
                         title = UiText.Resource(R.string.settings_schedule_changes_title),
@@ -539,7 +581,8 @@ class SettingsViewModel @Inject constructor(
                             }
                         ),
                         checked = local.scheduleChangesEnabled
-                    )
+                    ),
+                    backgroundWorkRow().takeIf { backgroundWorkRestricted && local.scheduleChangesEnabled }
                 )
             ),
             SettingSection(
@@ -571,6 +614,9 @@ class SettingsViewModel @Inject constructor(
                             title = UiText.Resource(R.string.settings_marks_bars_title),
                             checked = enabled
                         )
+                    },
+                    backgroundWorkRow().takeIf {
+                        backgroundWorkRestricted && (local.myItmoMarksEnabled || local.barsMarksEnabled == true)
                     }
                 ),
                 footer = UiText.Resource(
@@ -699,6 +745,14 @@ class SettingsViewModel @Inject constructor(
         }
     )
 
+    /** The whole row is the button: it opens the system page, and the row leaves once Android lets the app work. */
+    private fun backgroundWorkRow() = SettingItem.Action(
+        key = KEY_BACKGROUND_WORK,
+        title = UiText.Resource(R.string.settings_background_work_title),
+        description = UiText.Resource(R.string.background_work_hint),
+        trailingIconRes = R.drawable.ic_open_in_new
+    )
+
     private fun navigation(
         page: SettingsPage,
         title: UiText = page.title,
@@ -753,6 +807,7 @@ class SettingsViewModel @Inject constructor(
         const val KEY_HOME_CARD_MARKS = "home_card_marks"
         const val KEY_MYITMO_MARKS = "myitmo_marks"
         const val KEY_BARS_MARKS = "bars_marks"
+        const val KEY_BACKGROUND_WORK = "background_work"
         const val KEY_HOME_CARD_SPORT = "home_card_sport"
         const val KEY_HOME_CARD_FRIENDS = "home_card_friends"
 

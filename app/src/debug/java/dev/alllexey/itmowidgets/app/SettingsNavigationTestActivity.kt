@@ -277,7 +277,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, MemoryMarkTracking, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
+                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, MemoryMarkTracking, MemoryBackgroundWork, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
                         CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(customSpoiler)
                         else -> error("Unexpected ViewModel")
                     } as T
@@ -442,6 +442,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
             local.value = local.value.copy(hiddenHomeCards = if (visible) local.value.hiddenHomeCards - kind else local.value.hiddenHomeCards + kind)
         }
 
+        override suspend fun setBackgroundWorkHintShown() {
+            local.value = local.value.copy(backgroundWorkHintShown = true)
+        }
+
         override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {
             val widget = local.value.scheduleWidget
             local.value = local.value.copy(scheduleWidget = widget.copy(compact = widget.compact.copy(textSize = size)))
@@ -472,6 +476,12 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         override suspend fun syncWork() = Unit
         override fun stopWork() = Unit
         override fun checkNow() = Unit
+    }
+
+    /** Whether Android restricts the app in the background; the settings screen re-reads it on every resume. */
+    object MemoryBackgroundWork : BackgroundWorkAccess {
+        @Volatile var unrestricted = false
+        override fun isUnrestricted() = unrestricted
     }
 
     private object Services : CustomServicesRepository {

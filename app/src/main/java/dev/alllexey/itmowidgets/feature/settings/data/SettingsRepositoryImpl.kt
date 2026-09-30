@@ -62,19 +62,28 @@ class SettingsRepositoryImpl @Inject constructor(
             )
         }
 
+        val device = combine(
+            settings.observeHiddenHomeCards(),
+            settings.observeBackgroundWorkHintShown()
+        ) { hiddenHomeCards, backgroundWorkHintShown ->
+            DeviceLocalSettings(
+                hiddenHomeCards = hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet(),
+                backgroundWorkHintShown = backgroundWorkHintShown
+            )
+        }
         val app = combine(
             settings.observeScheduleSportAutoSignEnabled(),
             settings.observeScheduleChangesEnabled(),
             settings.observeMyItmoMarksEnabled(),
             settings.observeBarsMarksEnabled(),
-            settings.observeHiddenHomeCards()
-        ) { showSportAutoSign, scheduleChangesEnabled, myItmoMarksEnabled, barsMarksEnabled, hiddenHomeCards ->
+            device
+        ) { showSportAutoSign, scheduleChangesEnabled, myItmoMarksEnabled, barsMarksEnabled, deviceSettings ->
             AppLocalSettings(
                 showSportAutoSign = showSportAutoSign,
                 scheduleChangesEnabled = scheduleChangesEnabled,
                 myItmoMarksEnabled = myItmoMarksEnabled,
                 barsMarksEnabled = barsMarksEnabled,
-                hiddenHomeCards = hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet()
+                device = deviceSettings
             )
         }
 
@@ -94,7 +103,8 @@ class SettingsRepositoryImpl @Inject constructor(
                 scheduleChangesEnabled = appSettings.scheduleChangesEnabled,
                 myItmoMarksEnabled = appSettings.myItmoMarksEnabled,
                 barsMarksEnabled = appSettings.barsMarksEnabled,
-                hiddenHomeCards = appSettings.hiddenHomeCards
+                hiddenHomeCards = appSettings.device.hiddenHomeCards,
+                backgroundWorkHintShown = appSettings.device.backgroundWorkHintShown
             )
         }
     }
@@ -145,6 +155,10 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
         settings.setHomeCardHidden(kind.name, hidden = !visible)
+    }
+
+    override suspend fun setBackgroundWorkHintShown() {
+        settings.setBackgroundWorkHintShown()
     }
 
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) {
@@ -260,5 +274,10 @@ private data class AppLocalSettings(
     val scheduleChangesEnabled: Boolean,
     val myItmoMarksEnabled: Boolean,
     val barsMarksEnabled: Boolean?,
-    val hiddenHomeCards: Set<HomeCardKind>
+    val device: DeviceLocalSettings
+)
+
+private data class DeviceLocalSettings(
+    val hiddenHomeCards: Set<HomeCardKind>,
+    val backgroundWorkHintShown: Boolean
 )

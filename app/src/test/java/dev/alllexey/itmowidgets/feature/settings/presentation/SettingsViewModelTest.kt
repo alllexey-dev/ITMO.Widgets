@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
@@ -38,6 +39,9 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -921,6 +925,129 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `schedule page shows the background work row after the changes switch only while restricted and on`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.SCHEDULE, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
+            advanceUntilIdle()
+            val keys = { fixture.viewModel.sections.value.first().items.map { it.key } }
+            // Not asked yet: the row stays out rather than flash in.
+            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_CHANGES), keys())
+
+            fixture.viewModel.onBackgroundWorkChanged()
+            advanceUntilIdle()
+            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_CHANGES, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
+            val row = fixture.viewModel.action(SettingsViewModel.KEY_BACKGROUND_WORK)
+            assertEquals(UiText.Resource(R.string.settings_background_work_title), row.title)
+            assertEquals(UiText.Resource(R.string.background_work_hint), row.description)
+            assertEquals(R.drawable.ic_open_in_new, row.trailingIconRes)
+            assertTrue(row.enabled)
+
+            fixture.tracking.enabled.value = false
+            advanceUntilIdle()
+            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_CHANGES), keys())
+
+            fixture.tracking.enabled.value = true
+            fixture.backgroundWork.unrestricted = true
+            fixture.viewModel.onBackgroundWorkChanged()
+            advanceUntilIdle()
+            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_CHANGES), keys())
+        }
+
+    @Test
+    fun `recordbook page shows the background work row while any mark check is on`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.RECORDBOOK, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
+            fixture.viewModel.onBackgroundWorkChanged()
+            advanceUntilIdle()
+            val keys = { fixture.viewModel.sections.value.single().items.map { it.key } }
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
+
+            fixture.repository.myItmoMarks.value = false
+            advanceUntilIdle()
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS), keys())
+
+            fixture.repository.barsMarks.value = false
+            advanceUntilIdle()
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS), keys())
+
+            fixture.repository.barsMarks.value = true
+            advanceUntilIdle()
+            assertEquals(
+                listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK),
+                keys()
+            )
+        }
+
+    @Test
+    fun `the background work row opens the system page`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.SCHEDULE, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
+            advanceUntilIdle()
+
+            fixture.viewModel.onAction(SettingsViewModel.KEY_BACKGROUND_WORK)
+
+            assertEquals(SettingsEvent.OpenBackgroundWorkSettings, fixture.viewModel.events.first())
+        }
+
+    @Test
+    fun `turning a background check on offers the hint once while restricted`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val switches = listOf(
+                SettingsPage.SCHEDULE to SettingsViewModel.KEY_SCHEDULE_CHANGES,
+                SettingsPage.RECORDBOOK to SettingsViewModel.KEY_MYITMO_MARKS,
+                SettingsPage.RECORDBOOK to SettingsViewModel.KEY_BARS_MARKS
+            )
+            for ((page, key) in switches) {
+                val fixture = createFixture(
+                    page = page,
+                    local = LocalSettings(barsMarksEnabled = false),
+                    backgroundWork = FakeBackgroundWorkAccess(unrestricted = false)
+                )
+                val events = recordEvents(fixture)
+                fixture.viewModel.onNotificationPermissionChanged(granted = true)
+                fixture.viewModel.onBackgroundWorkChanged()
+                advanceUntilIdle()
+
+                fixture.viewModel.onToggleChanged(key, false)
+                advanceUntilIdle()
+                assertEquals(key, emptyList<SettingsEvent>(), events)
+
+                fixture.viewModel.onToggleChanged(key, true)
+                advanceUntilIdle()
+                assertEquals(key, listOf(SettingsEvent.ShowBackgroundWorkHint), events)
+                assertEquals(key, 1, fixture.repository.hintShownCalls)
+
+                fixture.viewModel.onToggleChanged(key, true)
+                advanceUntilIdle()
+                assertEquals(key, listOf(SettingsEvent.ShowBackgroundWorkHint), events)
+                assertEquals(key, 1, fixture.repository.hintShownCalls)
+            }
+        }
+
+    @Test
+    fun `an unrestricted app gets no hint and missing notifications are asked for first`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val unrestricted = createFixture(page = SettingsPage.SCHEDULE)
+            val quiet = recordEvents(unrestricted)
+            unrestricted.viewModel.onNotificationPermissionChanged(granted = true)
+            unrestricted.viewModel.onBackgroundWorkChanged()
+            advanceUntilIdle()
+            unrestricted.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_CHANGES, true)
+            advanceUntilIdle()
+            assertEquals(emptyList<SettingsEvent>(), quiet)
+            assertEquals(0, unrestricted.repository.hintShownCalls)
+
+            val restricted = createFixture(page = SettingsPage.SCHEDULE, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
+            val events = recordEvents(restricted)
+            restricted.viewModel.onNotificationPermissionChanged(granted = false)
+            restricted.viewModel.onBackgroundWorkChanged()
+            advanceUntilIdle()
+            restricted.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_CHANGES, true)
+            advanceUntilIdle()
+            assertEquals(listOf(SettingsEvent.RequestNotificationPermission, SettingsEvent.ShowBackgroundWorkHint), events)
+        }
+
+    @Test
     fun `home page offers the marks card third and hides it`() =
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.HOME)
@@ -1269,7 +1396,8 @@ class SettingsViewModelTest {
         local: LocalSettings = LocalSettings(),
         sharing: SharingSettingsState = SharingSettingsState.Disabled,
         localInitiallyAvailable: Boolean = true,
-        page: SettingsPage = SettingsPage.ROOT
+        page: SettingsPage = SettingsPage.ROOT,
+        backgroundWork: FakeBackgroundWorkAccess = FakeBackgroundWorkAccess()
     ): Fixture {
         val tracking = FakeScheduleChangeTracking(enabled = local.scheduleChangesEnabled)
         val markTracking = FakeMarkTracking()
@@ -1289,10 +1417,18 @@ class SettingsViewModelTest {
             appVersion = AppVersion("2.1-test"),
             tracking = tracking,
             markTracking = markTracking,
+            backgroundWork = backgroundWork,
             diagnostics = RecordingDiagnostics(),
             savedStateHandle = SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
         )
-        return Fixture(viewModel, repository, customServicesRepository, refresher, onboarding, tracking, markTracking)
+        return Fixture(viewModel, repository, customServicesRepository, refresher, onboarding, tracking, markTracking, backgroundWork)
+    }
+
+    /** Collects every event from now on; the channel has one receiver, so a test uses either this or `events.first()`. */
+    private fun TestScope.recordEvents(fixture: Fixture): List<SettingsEvent> {
+        val events = mutableListOf<SettingsEvent>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { fixture.viewModel.events.toList(events) }
+        return events
     }
 
     private fun SettingsViewModel.allItems(): List<SettingItem> =
@@ -1314,8 +1450,14 @@ class SettingsViewModelTest {
         val widgetRefresher: FakeWidgetRefreshRequester,
         val onboardingRepository: FakeOnboardingRepository,
         val tracking: FakeScheduleChangeTracking,
-        val markTracking: FakeMarkTracking
+        val markTracking: FakeMarkTracking,
+        val backgroundWork: FakeBackgroundWorkAccess
     )
+
+    /** Unrestricted by default, so the background work row stays out of the other cases. */
+    private class FakeBackgroundWorkAccess(var unrestricted: Boolean = true) : BackgroundWorkAccess {
+        override fun isUnrestricted(): Boolean = unrestricted
+    }
 
     private class FakeOnboardingRepository : OnboardingRepository {
         val completed = MutableStateFlow(true)
@@ -1345,6 +1487,8 @@ class SettingsViewModelTest {
         /** The mark switches live behind [dev.alllexey.itmowidgets.core.recordbook.MarkTracking]; tests move them here. */
         val myItmoMarks = MutableStateFlow(initialLocal.myItmoMarksEnabled)
         val barsMarks = MutableStateFlow(initialLocal.barsMarksEnabled)
+        val backgroundWorkHintShown = MutableStateFlow(initialLocal.backgroundWorkHintShown)
+        var hintShownCalls = 0
         private val localAvailable = MutableStateFlow(localInitiallyAvailable)
         val sharing = MutableStateFlow(initialSharing)
         var refreshSharingCount = 0
@@ -1368,8 +1512,13 @@ class SettingsViewModelTest {
         var scheduleSportAutoSignWrite: suspend () -> Unit = {}
 
         override fun observeLocalSettings(): Flow<LocalSettings> =
-            combine(localAvailable, local, scheduleChangesEnabled, myItmoMarks, barsMarks) {
-                    available, settings, scheduleChanges, myItmo, bars ->
+            combine(
+                localAvailable,
+                combine(local, backgroundWorkHintShown) { settings, hintShown -> settings.copy(backgroundWorkHintShown = hintShown) },
+                scheduleChangesEnabled,
+                myItmoMarks,
+                barsMarks
+            ) { available, settings, scheduleChanges, myItmo, bars ->
                 settings.copy(scheduleChangesEnabled = scheduleChanges, myItmoMarksEnabled = myItmo, barsMarksEnabled = bars)
                     .takeIf { available }
             }.filterNotNull()
@@ -1528,6 +1677,11 @@ class SettingsViewModelTest {
         override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
             homeCardRequests += kind to visible
             local.value = local.value.copy(hiddenHomeCards = if (visible) local.value.hiddenHomeCards - kind else local.value.hiddenHomeCards + kind)
+        }
+
+        override suspend fun setBackgroundWorkHintShown() {
+            hintShownCalls += 1
+            backgroundWorkHintShown.value = true
         }
     }
 

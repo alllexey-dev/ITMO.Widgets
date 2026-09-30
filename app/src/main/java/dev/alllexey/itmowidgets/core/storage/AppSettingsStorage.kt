@@ -231,6 +231,14 @@ class AppSettingsStorage(
         }
     }
 
+    /** Whether the one-time dialog about background work was offered; a setting of the device, sign-out keeps it. */
+    fun observeBackgroundWorkHintShown(): Flow<Boolean> =
+        preferences.map { it[BACKGROUND_WORK_HINT_SHOWN] ?: false }.distinctUntilChanged()
+
+    suspend fun setBackgroundWorkHintShown() {
+        write(BACKGROUND_WORK_HINT_SHOWN, true)
+    }
+
     /** Names of the home hints the user closed; the set belongs to the installation. */
     fun observeDismissedHomeHints(): Flow<Set<String>> =
         preferences.map { it[HOME_DISMISSED_HINTS].orEmpty() }.distinctUntilChanged()
@@ -291,6 +299,7 @@ class AppSettingsStorage(
         private val MYITMO_MARKS_ENABLED = booleanPreferencesKey("myitmo_marks_enabled")
         private val BARS_MARKS_ENABLED = booleanPreferencesKey("bars_marks_enabled")
         private val BARS_MARKS_PROMPT = stringPreferencesKey("bars_marks_prompt")
+        private val BACKGROUND_WORK_HINT_SHOWN = booleanPreferencesKey("background_work_hint_shown")
         private val HOME_DISMISSED_HINTS = stringSetPreferencesKey("home_dismissed_hints")
         private val HOME_HIDDEN_CARDS = stringSetPreferencesKey("home_hidden_cards")
     }

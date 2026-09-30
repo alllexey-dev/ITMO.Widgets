@@ -224,6 +224,16 @@ class AppSettingsStorageTest {
         assertFalse(storage.getMyItmoMarksEnabled())
     }
 
+    @Test
+    fun `the background work hint is not shown until written`() = runTest {
+        val storage = createStorage()
+        assertFalse(storage.observeBackgroundWorkHintShown().first())
+
+        storage.setBackgroundWorkHintShown()
+
+        assertTrue(storage.observeBackgroundWorkHintShown().first())
+    }
+
     private fun kotlinx.coroutines.test.TestScope.createStorage(
         file: File = temporaryFolder.newFile("settings.preferences_pb").apply { delete() },
         scope: CoroutineScope = backgroundScope

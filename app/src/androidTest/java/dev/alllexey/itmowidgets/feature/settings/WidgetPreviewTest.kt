@@ -44,6 +44,7 @@ import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrColorResolver
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
+import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
@@ -333,7 +334,7 @@ class WidgetPreviewTest {
                         override suspend fun reset() = Unit
                     },
                     object : WidgetRefreshRequester { override fun refreshAll() = Unit },
-                    AppVersion(activity.getString(R.string.app_version)), WidgetPreviewScheduleChangeTracking, WidgetPreviewMarkTracking, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
+                    AppVersion(activity.getString(R.string.app_version)), WidgetPreviewScheduleChangeTracking, WidgetPreviewMarkTracking, WidgetPreviewBackgroundWork, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
             })[SettingsViewModel::class.java]
             activity.findViewById<TextView>(R.id.settings_title).text = page.title.resolve(activity)
@@ -413,6 +414,10 @@ class WidgetPreviewTest {
         override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
             local.value = local.value.copy(hiddenHomeCards = if (visible) local.value.hiddenHomeCards - kind else local.value.hiddenHomeCards + kind)
         }
+
+        override suspend fun setBackgroundWorkHintShown() {
+            local.value = local.value.copy(backgroundWorkHintShown = true)
+        }
     }
 
     private companion object {
@@ -437,4 +442,9 @@ private object WidgetPreviewMarkTracking : MarkTracking {
     override suspend fun syncWork() = Unit
     override fun stopWork() = Unit
     override fun checkNow() = Unit
+}
+
+/** Unrestricted, so the background work row stays out of these pages. */
+private object WidgetPreviewBackgroundWork : BackgroundWorkAccess {
+    override fun isUnrestricted() = true
 }

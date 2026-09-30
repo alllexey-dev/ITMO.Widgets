@@ -105,6 +105,7 @@ class SettingsFragment : Fragment() {
         viewModel.onNotificationPermissionChanged(
             NotificationManagerCompat.from(requireContext()).areNotificationsEnabled()
         )
+        viewModel.onBackgroundWorkChanged()
     }
 
     override fun onCreateView(
@@ -192,6 +193,8 @@ class SettingsFragment : Fragment() {
                     SettingsEvent.OpenDiagnostics -> openScreen(AppScreen.DIAGNOSTICS)
                     // The root gate already switched to the flow; the overlay just has to leave.
                     SettingsEvent.CloseOverlays -> dismissOverlays()
+                    SettingsEvent.OpenBackgroundWorkSettings -> requireContext().openBackgroundWorkSettings()
+                    SettingsEvent.ShowBackgroundWorkHint -> showBackgroundWorkHint()
                     is SettingsEvent.ShowError -> {
                         restoreRenderedValues()
                         Snackbar.make(
@@ -252,6 +255,8 @@ class SettingsFragment : Fragment() {
         viewModel.onNotificationPermissionChanged(
             NotificationManagerCompat.from(requireContext()).areNotificationsEnabled()
         )
+        // Back from the system page, the row leaves by itself once Android lets the app work in the background.
+        viewModel.onBackgroundWorkChanged()
     }
 
     override fun onStop() {
@@ -287,6 +292,15 @@ class SettingsFragment : Fragment() {
                 viewModel.onToggleChanged(key, true)
             }
             .setOnCancelListener { restoreRenderedValues() }
+            .show()
+    }
+
+    private fun showBackgroundWorkHint() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.settings_background_work_title)
+            .setMessage(R.string.background_work_hint)
+            .setNegativeButton(R.string.background_work_later, null)
+            .setPositiveButton(R.string.background_work_allow) { _, _ -> requireContext().openBackgroundWorkSettings() }
             .show()
     }
 

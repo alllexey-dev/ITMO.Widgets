@@ -1,5 +1,10 @@
 package dev.alllexey.itmowidgets.feature.settings
 
+import android.Manifest
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import androidx.core.app.NotificationManagerCompat
 import android.view.View
@@ -11,7 +16,12 @@ import androidx.core.view.children
 import androidx.core.view.descendants
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
+import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -29,6 +39,7 @@ import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
+import org.hamcrest.Matchers.allOf
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -127,6 +138,8 @@ class SettingsNavigationTest {
         }
         // The schedule page again, at font 1.3 as well: both switches arrive together and fit.
         val specs = (Appearances.default + Appearances.all.first { it.fontScale > 1f }).distinct()
+        // The background work row has its own test; here Android lets the app work, so the pages show only switches.
+        SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = true
         try {
             for (spec in specs) {
                 SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
@@ -181,6 +194,140 @@ class SettingsNavigationTest {
         } finally {
             SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
             SettingsNavigationTestActivity.MemoryMarkTracking.bars.value = null
+            SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = false
+        }
+    }
+
+    @Test
+    fun backgroundWorkRowAndHintFit() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        // A switch turned on without the permission would open the system prompt over the hint.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            instrumentation.uiAutomation.grantRuntimePermission(
+                instrumentation.targetContext.packageName, Manifest.permission.POST_NOTIFICATIONS
+            )
+        }
+        val specs = (Appearances.default + Appearances.all.first { it.fontScale > 1f }).distinct()
+        try {
+            for (spec in specs) {
+                SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
+                for (page in listOf(SettingsPage.SCHEDULE, SettingsPage.RECORDBOOK)) {
+                    SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = false
+                    ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                        openPage(scenario, page)
+                        var switchTop = 0
+                        scenario.onActivity { activity ->
+                            val root = settingsRoot(activity)
+                            assertEquals(spec.fontScale, root.resources.configuration.fontScale, 0.001f)
+                            assertBackgroundWorkRow(activity, root)
+                            switchTop = firstSwitchTop(root)
+                        }
+                        Screenshots.capture("settings-screenshots", "settings-background-work-${spec.name}-${page.name.lowercase()}") { settle() }
+
+                        // Back from the system page with the restriction lifted: the row leaves, the switches stay put.
+                        SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = true
+                        scenario.moveToState(Lifecycle.State.STARTED)
+                        scenario.moveToState(Lifecycle.State.RESUMED)
+                        settle()
+                        scenario.onActivity { activity ->
+                            val root = settingsRoot(activity)
+                            assertNull(backgroundWorkRow(activity, root))
+                            assertEquals(switchTop, firstSwitchTop(root))
+                            ViewChecks.assertTextFits(root)
+                        }
+                    }
+                }
+
+                // Turning the schedule check on offers the hint once; turning it off offers nothing.
+                SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = false
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    openPage(scenario, SettingsPage.SCHEDULE)
+                    onView(withText(R.string.settings_schedule_changes_title)).perform(click())
+                    settle()
+                    onView(hintMessage()).check(doesNotExist())
+                    onView(withText(R.string.settings_schedule_changes_title)).perform(click())
+                    settle()
+                    assertBackgroundWorkDialog()
+                    Screenshots.capture("settings-screenshots", "settings-background-work-dialog-${spec.name}") { settle() }
+                    onView(withText(R.string.background_work_later)).inRoot(isDialog()).perform(click())
+                    settle()
+                    onView(hintMessage()).check(doesNotExist())
+
+                    onView(withText(R.string.settings_schedule_changes_title)).perform(click())
+                    settle()
+                    onView(withText(R.string.settings_schedule_changes_title)).perform(click())
+                    settle()
+                    onView(hintMessage()).check(doesNotExist())
+                    scenario.onActivity { activity -> assertNotNull(backgroundWorkRow(activity, settingsRoot(activity))) }
+                }
+            }
+        } finally {
+            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = false
+        }
+    }
+
+    private fun openPage(scenario: ActivityScenario<SettingsNavigationTestActivity>, page: SettingsPage) {
+        scenario.onActivity { it.openScreen(AppScreen.SETTINGS, Bundle().apply { putString(SettingsPage.ARGUMENT, page.name) }) }
+        settle()
+    }
+
+    private fun settingsRoot(activity: SettingsNavigationTestActivity): ViewGroup {
+        val fragment = activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment as SettingsFragment
+        return fragment.requireView() as ViewGroup
+    }
+
+    private fun backgroundWorkRow(activity: SettingsNavigationTestActivity, root: ViewGroup): View? =
+        root.descendants.filterIsInstance<TextView>()
+            .firstOrNull { it.id == R.id.setting_title && it.isShown && it.text.toString() == activity.getString(R.string.settings_background_work_title) }
+            ?.let { it.parent.parent as View }
+
+    private fun assertBackgroundWorkRow(activity: SettingsNavigationTestActivity, root: ViewGroup) {
+        assertEquals(View.GONE, root.findViewById<View>(R.id.settings_progress).visibility)
+        val row = checkNotNull(backgroundWorkRow(activity, root)) { "The background work row is missing" }
+        assertEquals(activity.getString(R.string.background_work_hint), row.findViewById<TextView>(R.id.setting_description).text.toString())
+        val icon = row.findViewById<ImageView>(R.id.setting_chevron)
+        assertTrue(icon.isShown)
+        val size = icon.width
+        assertArrayEquals(alphaMask(activity.getDrawable(R.drawable.ic_open_in_new)!!, size), alphaMask(icon.drawable, size))
+        // The whole row is the button.
+        assertTrue(row.isClickable && row.isEnabled)
+        assertTrue(row.height >= 48 * row.resources.displayMetrics.density - 1)
+        assertTrue(activity.offlineLoadingFrames.isEmpty())
+        ViewChecks.assertTextFits(root)
+        ViewChecks.assertTouchTargets(root.findViewById(R.id.sections_container), requireWidth = false)
+    }
+
+    private fun firstSwitchTop(root: ViewGroup): Int {
+        val switch = root.findViewById<ViewGroup>(R.id.sections_container).descendants.first { it.id == R.id.setting_switch && it.isShown }
+        return IntArray(2).also { (switch.parent as View).getLocationInWindow(it) }[1]
+    }
+
+    /** Tint aside, the icon's shape: the alpha of every pixel at [size]. */
+    private fun alphaMask(drawable: Drawable, size: Int): IntArray {
+        val copy = checkNotNull(drawable.constantState).newDrawable().mutate()
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        copy.setBounds(0, 0, size, size)
+        copy.draw(Canvas(bitmap))
+        val pixels = IntArray(size * size).also { bitmap.getPixels(it, 0, size, 0, 0, size, size) }
+        bitmap.recycle()
+        return IntArray(pixels.size) { pixels[it] ushr 24 }
+    }
+
+    /** The dialog's message; the row under it carries the same text as its description. */
+    private fun hintMessage() = allOf(withId(android.R.id.message), withText(R.string.background_work_hint))
+
+    private fun assertBackgroundWorkDialog() {
+        onView(withText(R.string.settings_background_work_title)).inRoot(isDialog()).check(matches(isDisplayed()))
+        onView(hintMessage()).inRoot(isDialog()).check { view, error ->
+            if (error != null) throw error
+            ViewChecks.assertTextFits(view.rootView)
+        }
+        for (button in listOf(R.string.background_work_allow, R.string.background_work_later)) {
+            onView(withText(button)).inRoot(isDialog()).check { view, error ->
+                if (error != null) throw error
+                assertTrue(view.isShown && view.height >= 48 * view.resources.displayMetrics.density - 1)
+            }
         }
     }
 

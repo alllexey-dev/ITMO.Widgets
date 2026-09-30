@@ -18,7 +18,9 @@ data class LocalSettings(
     val myItmoMarksEnabled: Boolean = true,
     /** Null until the account's first BARS answer: the switch is hidden then. */
     val barsMarksEnabled: Boolean? = null,
-    val hiddenHomeCards: Set<HomeCardKind> = emptySet()
+    val hiddenHomeCards: Set<HomeCardKind> = emptySet(),
+    /** The one-time dialog about background work was offered on this device. */
+    val backgroundWorkHintShown: Boolean = false
 )
 
 /** Stored as `hide*` to preserve the existing preference keys. */
@@ -65,6 +67,8 @@ interface SettingsRepository {
     suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean)
 
     suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean)
+
+    suspend fun setBackgroundWorkHintShown()
 
     suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean)
 
