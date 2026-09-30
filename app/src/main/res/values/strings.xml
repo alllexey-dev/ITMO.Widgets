@@ -658,7 +658,8 @@
     <string name="settings_marks_footer">Уведомлять о новых и изменённых оценках.</string>
     <string name="settings_marks_notifications_off">Уведомления выключены.</string>
     <string name="settings_background_work_title">Работа в фоне</string>
-    <string name="background_work_hint">Чтобы проверки работали в фоне, разрешите работу без ограничений</string>
+    <string name="background_work_hint">Разрешите работу без ограничений.</string>
+    <string name="background_work_dialog_message">Чтобы проверки приходили вовремя, разрешите приложению работу без ограничений.</string>
     <string name="background_work_allow">Разрешить</string>
     <string name="background_work_later">Не сейчас</string>
     <plurals name="schedule_changes_notification_title">

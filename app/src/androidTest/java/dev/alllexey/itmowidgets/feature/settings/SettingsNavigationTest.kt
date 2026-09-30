@@ -314,8 +314,8 @@ class SettingsNavigationTest {
         return IntArray(pixels.size) { pixels[it] ushr 24 }
     }
 
-    /** The dialog's message; the row under it carries the same text as its description. */
-    private fun hintMessage() = allOf(withId(android.R.id.message), withText(R.string.background_work_hint))
+    /** The dialog's message; the row under it carries a shorter hint as its description. */
+    private fun hintMessage() = allOf(withId(android.R.id.message), withText(R.string.background_work_dialog_message))
 
     private fun assertBackgroundWorkDialog() {
         onView(withText(R.string.settings_background_work_title)).inRoot(isDialog()).check(matches(isDisplayed()))

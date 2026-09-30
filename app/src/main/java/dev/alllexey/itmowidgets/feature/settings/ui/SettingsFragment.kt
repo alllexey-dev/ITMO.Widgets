@@ -298,7 +298,7 @@ class SettingsFragment : Fragment() {
     private fun showBackgroundWorkHint() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.settings_background_work_title)
-            .setMessage(R.string.background_work_hint)
+            .setMessage(R.string.background_work_dialog_message)
             .setNegativeButton(R.string.background_work_later, null)
             .setPositiveButton(R.string.background_work_allow) { _, _ -> requireContext().openBackgroundWorkSettings() }
             .show()
