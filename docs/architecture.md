@@ -26,7 +26,8 @@ Paths are relative to `app/src/main/java/dev/alllexey/itmowidgets/`.
 ```text
 app/            Application, MainActivity, navigation coordinator, notifier, widget coordinator
 core/           cross-cutting; knows nothing about features
-  debug/        BuildConfig.DEBUG fixtures (provider / controller / store)
+  debug/        BuildConfig.DEBUG fixtures (provider / controller / store); BarsSessionProbe, the debug
+                probe of the BARS cookie renewal
   diagnostics/  AppDiagnostics journal, sanitizer, crash handler
   location/     BuildingDirectory (res/raw/itmo_buildings.json), MapDestination geo URIs
   ui/           LessonTypes and LocationTitles shared by schedule and recordbook rows;
@@ -36,10 +37,15 @@ core/           cross-cutting; knows nothing about features
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
   navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders,
                 LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs,
-                TeacherReviewArgs); UserScreenArgs.profileIsu validates nullable Long ISUs before Int navigation
+                TeacherReviewArgs, RecordbookSubjectArgs — the subject page's arguments, validated when a
+                notification carries them); UserScreenArgs.profileIsu validates nullable Long ISUs before Int
+                navigation
   onboarding/   OnboardingRepository — whether the first-run flow was passed
-  network/      WidgetsClient, error mapping, serialization adapters
+  network/      WidgetsClient, error mapping (isCausedByNetworkFailure: an IOException anywhere in the cause
+                chain is AppError.Network), serialization adapters
   notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
+  recordbook/   MarkTracking (the mark check's switches and work), BarsLoginPrompt, MarkSubjects (the
+                names a marks notification or the home card shows)
   resources/    SubjectLinksRepository, link models, ResourceScope, subjectLinkChips
   reviews/      TeacherReviewsRepository, TeacherReviews, TeacherReview with ReviewOrigin, OwnTeacherReview,
                 OwnReviewStatus, ReviewReportReason, TeacherReviewDraft, TeacherReviewLimits, ReviewDate,
@@ -62,20 +68,27 @@ core/           cross-cutting; knows nothing about features
                 the details-sheet header (view_details_header.xml + DetailsHeader.kt), ConditionTone,
                 TeacherLevelTone (the tone dot of teachers' AI summaries), ScheduleChangeTexts (summary,
                 headline and "было → стало" lines of a schedule change for the schedule, the home card
-                and the notification),
+                and the notification), MarkTexts (markSubjectList for the marks notification and card),
                 BottomSheets.kt (expandToContent() for sheets that open at their content height)
   weblogin/     WebLoginRepository and WebLoginPreview — approving a browser's sign-in to the web version
+  work/         rules shared by the background checks: QuietHours, CheckOutcome, outcomeOf, workResultOf
 di/             Hilt modules, one per feature or concern
 feature/<name>/ ui | presentation | domain | data
 ```
 
 Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
 `recordbook`, `resources`, `reviews`, `schedule`, `settings`, `social`, `sport`, `update`,
-`weblogin`, `widget`. A feature does not need all four layers. `qr` and
-`schedule` also have `work` for their WorkManager workers, schedulers and
-entry points: the widget updates and, in `schedule/work`, the schedule change
-check (`ScheduleChangesWorker`, `WorkManagerScheduleChangesScheduler`,
-`AndroidScheduleChangeNotifier`). `weblogin` holds
+`weblogin`, `widget`. A feature does not need all four layers. `qr`,
+`schedule` and `recordbook` also have `work` for their WorkManager workers,
+schedulers and entry points: the widget updates; in `schedule/work` the
+schedule change check (`ScheduleChangesWorker`,
+`WorkManagerScheduleChangesScheduler`, `AndroidScheduleChangeNotifier`); in
+`recordbook/work` the mark check (`MarksWorker`, `WorkManagerMarksScheduler`,
+`AndroidMarksNotifier`) and the debug probe of the BARS cookie renewal
+(`BarsCookieProbeWorker`, `WorkManagerBarsSessionProbe`). `settings` owns the
+`Работа в фоне` row: `BackgroundWorkAccess` and `BackgroundWorkScreens` in
+`domain`, `AndroidBackgroundWorkAccess` in `data` and
+`openBackgroundWorkSettings` in `ui`. `weblogin` holds
 the code and link parser, the User-Agent description, the view model and
 `WebLoginBottomSheet` ([web sign-in](features/web-login.md)). `social` owns the
 person profile and its direct My ITMO `PersonRepository`; `reviews` owns
@@ -150,6 +163,7 @@ thread until it suspends.
 | Finished weeks of the personal schedule for review suggestions | `filesDir/teacher_lessons/weeks.json`, atomic writes, excluded from backup and device transfer |
 | Tones of teachers' AI summaries, a day per answer | `filesDir/teacher_levels/levels.json`, atomic writes, excluded from backup and device transfer |
 | The last snapshot of the own schedule for the change check and the changes of the last 30 days | `filesDir/schedule_changes/state.json`, one atomic write for both, excluded from backup and device transfer |
+| The last My ITMO and BARS mark snapshots of the current half-year and the unread subjects (30 days, at most 100) | `filesDir/marks/state.json`, bound to the owner's ISU, one atomic write for all, excluded from backup and device transfer |
 
 `SharedPreferences` is banned. *Enforced.* Anything caching user-scoped data
 implements `SessionDataCleaner`; sign-out and account change invoke every
@@ -192,7 +206,8 @@ registers its own in its module).
 
 Workers are built by WorkManager and take their dependencies through an
 `@EntryPoint` (`QrWidgetEntryPoint`, `ScheduleWidgetEntryPoint`,
-`ScheduleChangesEntryPoint`, the FCM workers in `core/notification/FcmWork.kt`),
+`ScheduleChangesEntryPoint`, `MarksEntryPoint`, `BarsCookieProbeEntryPoint`,
+the FCM workers in `core/notification/FcmWork.kt`),
 not `@HiltWorker`: `androidx.hilt`'s processor cannot read Kotlin 2.0 metadata
 under kapt, and an entry point needs no custom `WorkManager` configuration.
 

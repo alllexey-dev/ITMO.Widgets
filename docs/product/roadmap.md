@@ -123,6 +123,33 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   mark on changed lessons and `было → стало` in the lesson sheet came with it,
   the lesson sheet gained a `Поток` row, and the schedule settings a
   `Изменения расписания` switch, on by default. Not released to production.
+- Stages 37–38: implemented on 2026-10-01 through
+  `vibe/marks-tracking-plan.md` (Android 2.2-SNAPSHOT and MyItmoApi
+  1.8.2-SNAPSHOT in Maven Local; Core and Backend unchanged), with these
+  corrections to the stage texts: My ITMO marks are tracked too (points and
+  grade of the recordbook list), and one unique work `marks-check` checks both
+  sources every 3 hours instead of `bars-mark-sync`; the worker takes its
+  dependencies through an `@EntryPoint` (`MarksEntryPoint`), not `@HiltWorker`.
+  Instead of a notification per subject there is one digest `Новые оценки`
+  with the names of the unread subjects and no marks, in the channel `marks`
+  (`Оценки`), with the public version `Новые оценки` and nothing from 00:00 to
+  06:00 Moscow time; a subject that changed in both sources is named once, and
+  a My ITMO change that only repeats BARS is not notified. Instead of the
+  `Следить за оценками БАРС` toggle the new settings page `Зачётка` has
+  `Оценки My ITMO` (on by default) and `Оценки БАРС` (appears and turns on
+  with the account's first successful BARS answer). A tap opens the subject
+  page or the recordbook and never turns the `БАРС` chip on. The ITMO.ID
+  answer is read in MyItmoApi (`BarsAuthHelper.requestCodeWithCookies`,
+  1.8.2-SNAPSHOT), not in the app (decision
+  [0012](../decisions/0012-bars-background-renewal.md)). Snapshots and unread
+  subjects live in `filesDir/marks/state.json` (the pattern of decision 0013).
+  The home card `Новые оценки`, the dot of unread subjects in the recordbook
+  and reading on the subject page came with it. A probe on a Xiaomi phone
+  showed that MIUI's default battery mode leaves a backgrounded app without
+  network (`UnknownHostException`) while `Без ограничений` works, so network
+  failures of both background checks are now retried without touching the
+  snapshot or asking to sign in, and the `Расписание` and `Зачётка` settings
+  show `Работа в фоне` with a one-time dialog. Not released to production.
 
 ## Plan Structure
 

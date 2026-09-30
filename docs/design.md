@@ -277,6 +277,11 @@ settings, and restore them if a separate test explicitly changes them.
 - Settings and profile groups: `res/values/styles.xml`, `feature/settings/ui/SettingsRenderer.kt`.
 - Recordbook row: `res/layout/item_recordbook_subject.xml` (name, metadata, a number
   with a thin bar or a grade badge), `feature/recordbook/ui/RecordbookAdapter.kt`.
+  The name and the dot `new_mark` for unread marks share a horizontal row
+  centred vertically: the name takes the remaining width and wraps, the dot
+  (8 dp `shape_circle_filled`, `colorPrimary`, `design_spacing_compact` before
+  it) follows it like the new-change dot of `item_schedule_change.xml`, is set
+  on every bind and adds `Новое` at the start of the row's TalkBack description.
 - Subject page: `feature/recordbook/ui/SubjectHubAdapter.kt` (result card with
   `GradeScaleView`, link chips, chats, control groups, teachers, lessons),
   `res/layout/item_subject_hero.xml`, `res/layout/item_recordbook_control_group.xml`.
@@ -323,7 +328,10 @@ settings, and restore them if a separate test explicitly changes them.
   a header with `ic_edit_calendar` in `colorPrimary`, the title, the count
   badge (`bg_home_badge`) and a trailing 48 dp close button, then the headline
   of the latest change wrapping without truncation; the whole card opens the
-  history.
+  history. `res/layout/item_home_marks.xml` has the same geometry with
+  `ic_menu_book`, `Новые оценки`, the number of subjects and `Прочитано`; its
+  body is the list of names, wrapping without truncation, and the whole card
+  opens the recordbook.
 - Schedule changes: the history row `res/layout/item_schedule_change.xml`
   (`Card.Content`, not clickable: subject with an 8 dp `colorPrimary` dot for a
   new change, the main line, one `item_schedule_change_line.xml` per changed

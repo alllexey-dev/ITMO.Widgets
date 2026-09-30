@@ -10,7 +10,8 @@ The settings root is a compact catalogue, not a scrolling list of every switch:
 
 - `Сервисы и доступ`: user services, privacy, and the Android notifications action.
 - `Виджеты`: `Компактное расписание`, `Полное расписание` and the QR widget.
-- `Приложение`: schedule, sport, and maintenance.
+- `Приложение`: home screen, schedule, recordbook (`Зачётка`), sport, and
+  maintenance.
 
 Each category opens a separate back-stack entry with its own title and scroll
 position. Notification permissions open Android settings directly. Rows show a
@@ -147,9 +148,9 @@ only among installed instances of that same format:
 ## Home screen
 
 - `Главный экран` lists one switch per feed card: `Расписание на сегодня`,
-  `Изменения в расписании`, `Спорт`, `Заявки в друзья`. A switched-off card
-  leaves the feed
-  at once; nothing else changes and no widget is refreshed.
+  `Изменения в расписании`, `Новые оценки`, `Спорт`, `Заявки в друзья`. A
+  switched-off card leaves the feed at once; nothing else changes and no widget
+  is refreshed.
 - Stored as the string set `home_hidden_cards` (card kind names; absent means
   shown). The page is an offline category; its footer explains that hints on
   the home screen are closed with their own button and do not return.
@@ -172,6 +173,8 @@ only among installed instances of that same format:
   Switching it on without the permission asks for it on Android 13+ while the
   system dialog can still appear, otherwise opens the app's notification page.
   The switch stays on whatever the answer is.
+- Below the switch, `Работа в фоне` appears while the switch is on and Android
+  restricts the app in the background ([background work](#background-work)).
 - `Автозапись на спорт` displays pending sport auto-sign entries in the user's own
   schedule in the application and schedule widgets. It is disabled by default
   and does not represent a confirmed booking.
@@ -183,21 +186,78 @@ only among installed instances of that same format:
   value is successfully saved. Loading or observing the preference does not
   refresh widgets; a failed save preserves the previous value and does not refresh.
 - The page is an offline settings category with two untitled groups: the
-  schedule-changes switch, then the auto-sign switch with a footer that explains
+  schedule-changes switch with `Работа в фоне`, then the auto-sign switch with a
+  footer that explains
   the user-services requirement and that pending entries are not confirmed
   bookings. An untitled group after another one keeps the group gap
   (`design_spacing_group`) above its card.
+
+## Recordbook
+
+`Зачётка` (`SettingsPage.RECORDBOOK`, after `Расписание`) is an offline page
+with one untitled group for the background mark check
+([mark tracking](features/recordbook.md#mark-tracking)). Neither switch needs
+`Подключение к ITMO.Widgets`: the check talks only to My ITMO and BARS.
+
+| Switch | Key | Default |
+|---|---|---|
+| `Оценки My ITMO` | `myitmo_marks_enabled` | on (absent means on); a device setting that survives sign-out |
+| `Оценки БАРС` | `bars_marks_enabled` | absent: the switch is hidden. The first successful BARS answer of the account (sign-in, the `БАРС` chip or the background read) stores on; cleared with the BARS session on sign-out |
+
+- `Оценки БАРС` appears only once BARS has answered for this account; before
+  that there is nothing to check.
+- Switching a source off forgets its snapshot and stops its part of the check;
+  the unread subjects stay. The work is cancelled when both are off. Switching
+  `Оценки БАРС` off also withdraws the `Войдите в БАРС` reminder. Switching on
+  schedules the work, and the first check of that source only takes a snapshot.
+- The footer is `Уведомлять о новых и изменённых оценках.`, or
+  `Уведомления выключены.` while Android notifications are off for the app.
+  Switching either on without the permission asks for it as on the schedule
+  page; the switch stays on whatever the answer is.
+- Below the switches, `Работа в фоне` appears while at least one is on and
+  Android restricts the app in the background ([background work](#background-work)).
+
+## Background work
+
+On some devices background checks work only when the app may run without
+battery restrictions: on Xiaomi (MIUI, HyperOS) the default `Умный режим`
+leaves a backgrounded app without network.
+
+- The row `Работа в фоне` (`Разрешите работу без ограничений.`, an action row
+  with `ic_open_in_new`; the whole row is the button) sits on the `Расписание`
+  and `Зачётка` pages while that page's check is on and
+  `PowerManager.isIgnoringBatteryOptimizations` is false
+  (`BackgroundWorkAccess`). The state is read when the page is created and on
+  every return, so the row leaves by itself once the user has lifted the limit.
+- A tap opens the first system page the device can open
+  (`BackgroundWorkScreens.forDevice`, `openBackgroundWorkSettings`): on Xiaomi,
+  Redmi and POCO the app's `Контроль активности`
+  (`com.miui.powerkeeper/.ui.HiddenAppsConfigActivity`), otherwise the app's
+  details; elsewhere the battery optimisation list
+  (`ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS`), otherwise the app's details.
+- The app does not hold `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` and never shows
+  the system exemption dialog: Google Play allows it only for apps whose core
+  function needs it. It only opens the page.
+- Turning on `Изменения расписания`, `Оценки My ITMO` or `Оценки БАРС` while the
+  app is restricted shows a dialog once per device: the title `Работа в фоне`,
+  the text
+  `Чтобы проверки приходили вовремя, разрешите приложению работу без ограничений.`,
+  `Разрешить` (opens the same page) and `Не сейчас`. The fact is stored as
+  `background_work_hint_shown` in DataStore and survives sign-out.
+- On MIUI the `Без ограничений` mode may leave
+  `isIgnoringBatteryOptimizations` unchanged; the row then stays.
 
 ## Notification channels
 
 `Уведомления` opens Android's application notification settings. FCM categories
 are `Спорт: автозапись` (`sport`) and `Друзья` (`friends`); the local schedule
-check posts to `Изменения расписания` (`schedule_changes`). All three are at
-default importance. Android controls permission, sound and category visibility;
-there are no duplicate in-app switches, and `Изменения расписания` in the
-schedule settings switches the check itself, not the category. Disabled
-notification permission suppresses only the visual alert, not sport automation
-already enabled by the user or the schedule check. Disabling
+check posts to `Изменения расписания` (`schedule_changes`) and the mark check to
+`Оценки` (`marks`). All four are at default importance. Android controls
+permission, sound and category visibility; there are no duplicate in-app
+switches, and `Изменения расписания`, `Оценки My ITMO` and `Оценки БАРС` switch
+the checks themselves, not the categories. Disabled notification permission
+suppresses only the visual alert, not sport automation already enabled by the
+user or the background checks. Disabling
 user services suppresses FCM actions and attempts to unregister this device.
 
 ## Sport
@@ -215,7 +275,11 @@ user services suppresses FCM actions and attempts to unregister this device.
   of the same period. Periods, subject identities, PE and sport stay MyITMO.
 - BARS needs its own ITMO.ID token. It is renewed silently from the session the
   app's WebView already holds; a sign-in screen appears only when that session
-  has ended. Tokens are never editable settings or bundled credentials.
+  has ended. Screens renew it in a hidden WebView; the background mark check,
+  which has no WebView, repeats the official authorization request with the
+  WebView's ITMO.ID cookies (decision
+  [0012](decisions/0012-bars-background-renewal.md)). Tokens and cookies are
+  never editable settings or bundled credentials.
 - Changing the period while the chip is on also changes the saved period in web
   BARS: the server keeps that selection and offers no stateless read.
 - When BARS fails the list keeps MyITMO values and shows a snackbar; nothing
@@ -246,12 +310,14 @@ system `geo:` intent and lets Android resolve the installed mapping application.
 ## Debug-only controls
 
 Debug builds may additionally expose the academic-date override, synthetic sport
-scores, sport lesson templates, development-service diagnostics, and
-`Проверить изменения расписания`, a one-off schedule change check. These
-controls never appear in release builds and never change release behavior.
+scores, sport lesson templates, development-service diagnostics,
+`Проверить изменения расписания`, a one-off schedule change check,
+`Проверить оценки`, a one-off mark check, and `Проверить продление БАРС`, a
+read-only probe of the BARS cookie renewal that only writes its outcome to
+logcat. These controls never appear in release builds and never change release
+behavior.
 
 ## Deferred beyond v2.1
 
 Google Sheet mappings, calendar synchronization, community resources,
-teacher-review settings, the `Следить за оценками БАРС` toggle, and the
-`Добавить в шторку` action belong to v2.2.
+teacher-review settings and the `Добавить в шторку` action belong to v2.2.

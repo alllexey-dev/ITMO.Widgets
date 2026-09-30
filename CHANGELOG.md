@@ -6,6 +6,55 @@ publication or deployment.
 
 ## 2.2 — development
 
+### 2026-10-01
+
+- The app checks the own marks of the current half-year by itself: every
+  3 hours with a network one background check reads the My ITMO recordbook
+  (points and grade of every subject) and the BARS journals (checkpoint marks,
+  additional points, the statement) and compares them with the last snapshot
+  on the device. The first answer of each source after installation, sign-in,
+  switching on or a new half-year only takes a snapshot; what is missing from
+  an answer is carried over, so a short answer is never news. Android picks the
+  moment of a check, so delivery is not immediate. Snapshots and unread
+  subjects live in `filesDir/marks/state.json`; nothing reaches Backend, and
+  the check does not need `Подключение к ITMO.Widgets`.
+- One notification per check in the new `Оценки` channel: `Новые оценки` with
+  the names of the unread subjects, up to three and `… и ещё N`, never the
+  marks; the lock screen shows the title only. A subject that changed in both
+  sources is named once, and a My ITMO change that only repeats BARS is not
+  notified. Nothing from 00:00 to 06:00 Moscow time. A tap opens the subject
+  page when one subject is unread, otherwise the recordbook.
+- BARS is renewed in the background without a WebView, by repeating the
+  official ITMO.ID request with the WebView's cookies (decision
+  [0012](docs/decisions/0012-bars-background-renewal.md)); the check selects
+  the user's BARS period back after reading. When the ITMO.ID session has
+  ended, one `Войдите в БАРС` notification opens the BARS sign-in, and nothing
+  more until BARS answers again.
+- The home card `Новые оценки` after `Изменения в расписании`: the number of
+  unread subjects and their names; a tap opens the recordbook, the close button
+  marks everything read. It can be hidden in `Главный экран`.
+- In the recordbook a subject with unread marks has a dot until its page is
+  opened; a list opened in the app advances the snapshots, so a mark already
+  seen there is not notified later.
+- The settings page `Зачётка`: `Оценки My ITMO`, on by default, and
+  `Оценки БАРС`, which appears and turns on with the first successful BARS
+  answer. Off forgets that source's snapshot; on without the notification
+  permission asks for it.
+- Both background checks (marks and schedule changes) treat a network failure
+  before any answer as temporary, including a My ITMO token refresh that could
+  not reach ITMO.ID: the run is retried, the snapshot stays, and nobody is asked
+  to sign in. On Xiaomi the default battery mode cuts the network of a
+  backgrounded app, so the `Расписание` and `Зачётка` settings show
+  `Работа в фоне` (`Разрешите работу без ограничений.`) while Android restricts
+  the app; it opens `Контроль активности` on Xiaomi and the battery
+  optimisation list elsewhere. Turning a check on while restricted shows a
+  one-time dialog.
+- Debug tools: `Проверить оценки` runs one mark check,
+  `Проверить продление БАРС` probes the cookie renewal and writes only its
+  outcome to logcat.
+- Needs MyItmoApi 1.8.2-SNAPSHOT (Maven Local) with
+  `BarsAuthHelper.requestCodeWithCookies`; Core and Backend are unchanged.
+
 ### 2026-09-30
 
 - The app checks the own schedule for changes by itself: every 2 hours with a

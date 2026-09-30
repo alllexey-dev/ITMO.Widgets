@@ -202,9 +202,17 @@ Backend (decision [0013](../decisions/0013-schedule-changes-on-device.md)).
   refresh token or the switch is off. Otherwise it runs
   `ScheduleChangesRepository.check()` and then delivers the notification, even
   when the check failed, so changes found in the quiet hours are delivered by
-  the first run after them whatever the network does. `Unauthorized` and
-  success end the run; another error asks for a retry, which the worker grants
-  twice (`runAttemptCount < 2`) before it gives up until the next period.
+  the first run after them whatever the network does. The outcome is
+  `outcomeOf(errors)` from `core/work`, shared with the mark check:
+  `Unauthorized` and success end the run; another error asks for a retry,
+  which `workResultOf` grants twice (`runAttemptCount < 2`) before it gives up
+  until the next period. The quiet hours are `QuietHours` from the same
+  package.
+- A network failure before any answer (`UnknownHostException` and other
+  `IOException`s anywhere in the cause chain, `isCausedByNetworkFailure` in
+  `core/network`), including a My ITMO token refresh that could not reach
+  ITMO.ID, is `AppError.Network`, not `Unauthorized`: the run is retried
+  through `outcomeOf` and the snapshot and the changes stay as they were.
 - `ScheduleChangeTracking` (`core/schedule`, implemented by
   `DefaultScheduleChangeTracking`) keeps the work in line with the session and
   the switch: `syncWork()` enqueues it with a refresh token and the switch on
@@ -219,6 +227,13 @@ Backend (decision [0013](../decisions/0013-schedule-changes-on-device.md)).
 - Android picks the moment of a run. Doze, App Standby and vendor limits can
   delay a check by hours or stop it for an application that is not exempt from
   battery optimisation. Prompt delivery is not promised.
+- On Xiaomi (MIUI, HyperOS) the default battery mode `Умный режим` cuts the
+  network of a backgrounded application although the `CONNECTED` constraint
+  holds, so every background run fails with `UnknownHostException` and is only
+  retried; `Без ограничений` lifts it. While the check is on and Android
+  restricts the application, the schedule settings show the row
+  `Работа в фоне` that opens the right system page
+  ([settings](../settings.md#schedule)).
 
 ### Snapshot and comparison
 
@@ -383,8 +398,10 @@ the same `ScheduleChangesCheck` on the real account. Debug builds only.
 digest. `ScheduleChangesFileStoreTest` and `ScheduleChangesRepositoryImplTest`
 cover the file, the request, baselines, held empty answers, the publication
 rule, retention, the session clear and the snapshot reset against My ITMO stubs.
-`ScheduleChangesCheckTest`, `ScheduleChangesWorkerTest` and
-`DefaultScheduleChangeTrackingTest` cover the run, retries and the work;
+`ScheduleChangesCheckTest`, `BackgroundChecksTest` (quiet hours,
+`outcomeOf`, `workResultOf`) and `DefaultScheduleChangeTrackingTest` cover the
+run, retries and the work, `ScheduleChangesRepositoryImplTest` also a network
+failure that keeps the file;
 `ScheduleChangesViewModelTest`, `ScheduleViewModelTest`,
 `LessonDetailsViewModelTest` and `LessonDetailsMappingTest` the history, the
 marks, the block and the flow. Instrumented: `ScheduleChangesWorkTest` (the
