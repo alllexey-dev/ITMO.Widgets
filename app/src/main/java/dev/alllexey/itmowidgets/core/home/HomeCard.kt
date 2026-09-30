@@ -48,6 +48,11 @@ sealed interface HomeCard {
         override val kind: HomeCardKind get() = HomeCardKind.SCHEDULE_CHANGES
     }
 
+    /** [subjects] are the names of the unread subjects with new or changed marks, newest first. */
+    data class Marks(val subjects: List<String>) : HomeCard {
+        override val kind: HomeCardKind get() = HomeCardKind.MARKS
+    }
+
     data class Sport(val score: SportScoreSummary?, val queue: List<PendingSportBooking>) : HomeCard {
         override val kind: HomeCardKind get() = HomeCardKind.SPORT
     }

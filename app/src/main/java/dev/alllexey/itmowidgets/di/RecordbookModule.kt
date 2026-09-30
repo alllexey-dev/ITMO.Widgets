@@ -11,6 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
+import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
@@ -18,6 +19,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsSessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.home.MarksHomeCardSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
@@ -102,6 +104,11 @@ abstract class RecordbookModule {
     @Binds
     @IntoSet
     abstract fun bindMarkTrackingCleaner(impl: MarkTrackingRepositoryImpl): SessionDataCleaner
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindMarksHomeCards(impl: MarksHomeCardSource): HomeCardSource
 
     @Binds
     abstract fun bindBarsMarkSource(impl: BarsMarkReader): BarsMarkSource

@@ -114,6 +114,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     val groupedProfileFrames = mutableListOf<Boolean>()
     val webLoginOpened = mutableListOf<Unit>()
     val openedScreens = mutableListOf<AppScreen>()
+    val openedRoots = mutableListOf<AppRoot>()
     private val repository = FixtureRepository()
     private val refresh = object : WidgetRefreshRequester { override fun refreshAll() = Unit }
     private val onboardingServices = FixtureOnboardingServices()
@@ -371,7 +372,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
 
     override fun dismissOverlays() = navigation.dismissOverlays()
 
-    override fun openRoot(root: AppRoot) = Unit
+    override fun openRoot(root: AppRoot) {
+        openedRoots += root
+    }
 
     override fun openSubjectLinks(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs) = Unit
 

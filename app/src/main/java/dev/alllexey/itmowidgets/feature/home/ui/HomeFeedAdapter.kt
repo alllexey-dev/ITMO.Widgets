@@ -26,10 +26,12 @@ import dev.alllexey.itmowidgets.core.ui.buildingShortTitle
 import dev.alllexey.itmowidgets.core.ui.headline
 import dev.alllexey.itmowidgets.core.ui.lessonTypeColorRes
 import dev.alllexey.itmowidgets.core.ui.lessonTypeNameRes
+import dev.alllexey.itmowidgets.core.ui.markSubjectList
 import dev.alllexey.itmowidgets.core.ui.roomShortTitle
 import dev.alllexey.itmowidgets.databinding.ItemHomeFriendRequestsBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeHintBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeLessonRowBinding
+import dev.alllexey.itmowidgets.databinding.ItemHomeMarksBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeScheduleBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeScheduleChangesBinding
 import dev.alllexey.itmowidgets.databinding.ItemHomeSportBinding
@@ -51,7 +53,9 @@ data class HomeFeedActions(
     val onHint: (HomeHint) -> Unit = {},
     val onDismissHint: (HomeHint) -> Unit = {},
     val onOpenScheduleChanges: () -> Unit = {},
-    val onDismissScheduleChanges: () -> Unit = {}
+    val onDismissScheduleChanges: () -> Unit = {},
+    val onOpenMarks: () -> Unit = {},
+    val onDismissMarks: () -> Unit = {}
 )
 
 /**
@@ -73,6 +77,7 @@ class HomeFeedAdapter(
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
         is HomeCard.Schedule -> TYPE_SCHEDULE
         is HomeCard.ScheduleChanges -> TYPE_SCHEDULE_CHANGES
+        is HomeCard.Marks -> TYPE_MARKS
         is HomeCard.Sport -> TYPE_SPORT
         is HomeCard.FriendRequests -> TYPE_FRIENDS
         is HomeCard.Hint -> TYPE_HINT
@@ -83,6 +88,7 @@ class HomeFeedAdapter(
         return when (viewType) {
             TYPE_SCHEDULE -> ScheduleHolder(ItemHomeScheduleBinding.inflate(inflater, parent, false))
             TYPE_SCHEDULE_CHANGES -> ScheduleChangesHolder(ItemHomeScheduleChangesBinding.inflate(inflater, parent, false))
+            TYPE_MARKS -> MarksHolder(ItemHomeMarksBinding.inflate(inflater, parent, false))
             TYPE_SPORT -> SportHolder(ItemHomeSportBinding.inflate(inflater, parent, false))
             TYPE_FRIENDS -> FriendsHolder(ItemHomeFriendRequestsBinding.inflate(inflater, parent, false))
             else -> HintHolder(ItemHomeHintBinding.inflate(inflater, parent, false))
@@ -93,6 +99,7 @@ class HomeFeedAdapter(
         when (val card = getItem(position)) {
             is HomeCard.Schedule -> (holder as ScheduleHolder).bind(card)
             is HomeCard.ScheduleChanges -> (holder as ScheduleChangesHolder).bind(card)
+            is HomeCard.Marks -> (holder as MarksHolder).bind(card)
             is HomeCard.Sport -> (holder as SportHolder).bind(card)
             is HomeCard.FriendRequests -> (holder as FriendsHolder).bind(card)
             is HomeCard.Hint -> (holder as HintHolder).bind(card)
@@ -203,6 +210,23 @@ class HomeFeedAdapter(
         }
     }
 
+    inner class MarksHolder(private val binding: ItemHomeMarksBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(card: HomeCard.Marks) {
+            val context = binding.root.context
+            val subjects = markSubjectList(context, card.subjects)
+            binding.marksCount.text = card.subjects.size.toString()
+            binding.marksSubjects.text = subjects
+            binding.homeMarksCard.contentDescription = context.getString(
+                R.string.home_marks_description,
+                context.getString(R.string.marks_new_title),
+                card.subjects.size,
+                subjects
+            )
+            binding.homeMarksCard.setOnClickListener { actions.onOpenMarks() }
+            binding.marksDismiss.setOnClickListener { actions.onDismissMarks() }
+        }
+    }
+
     inner class SportHolder(private val binding: ItemHomeSportBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(card: HomeCard.Sport) {
             val context = binding.root.context
@@ -298,6 +322,7 @@ class HomeFeedAdapter(
         const val TYPE_SPORT = 3
         const val TYPE_FRIENDS = 4
         const val TYPE_HINT = 5
+        const val TYPE_MARKS = 6
         const val QUEUE_LIMIT = 3
         const val FRIENDS_LIMIT = 3
         const val SPORT_TYPE_ID = 11

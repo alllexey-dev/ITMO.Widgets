@@ -102,9 +102,13 @@ data class HomeFixture(
             teacherName = "Преподаватель Тестовый"
         )
 
+        /** Three synthetic unread subjects, newest first. */
+        fun marksSample() = HomeCard.Marks(listOf("Тестовый предмет 1", "Тестовый предмет 2", "Тестовый предмет 3"))
+
         fun defaultCards() = listOf(
             HomeCard.Hint(HomeHint.WIDGETS),
             HomeCard.ScheduleChanges(unread = 3, latest = scheduleChangeSample()),
+            marksSample(),
             HomeCard.FriendRequests(listOf(user(300001, "Александра Константинопольская"), user(300002, "Иван Петров"))),
             HomeCard.Sport(SportScoreSummary(attendances = 50, bonus = 22), listOf(booking(1, 16), booking(2, 18, prediction = true))),
             schedule()

@@ -138,7 +138,9 @@ class HomeFragment : Fragment() {
                 onHint = ::actOnHint,
                 onDismissHint = viewModel::dismissHint,
                 onOpenScheduleChanges = { openScreen(AppScreen.SCHEDULE_CHANGES) },
-                onDismissScheduleChanges = { viewModel.dismissCard(HomeCardKind.SCHEDULE_CHANGES) }
+                onDismissScheduleChanges = { viewModel.dismissCard(HomeCardKind.SCHEDULE_CHANGES) },
+                onOpenMarks = { openRoot(AppRoot.RECORDBOOK) },
+                onDismissMarks = { viewModel.dismissCard(HomeCardKind.MARKS) }
             ),
             zoneId = timeProvider.zoneId
         )

@@ -107,6 +107,43 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `new marks sit right after schedule changes and hide by their own kind`() = runTest {
+        val changes = FakeHomeCardSource(HomeCard.ScheduleChanges(unread = 2, latest = scheduleChange()))
+        val marks = FakeHomeCardSource(HomeCard.Marks(listOf("Тестовый предмет")))
+        val vm = model(marks, hints, sport, changes, schedule)
+        subscribe(vm)
+        advanceUntilIdle()
+        assertEquals(
+            listOf(
+                HomeCardKind.SCHEDULE, HomeCardKind.SCHEDULE_CHANGES, HomeCardKind.MARKS, HomeCardKind.SPORT,
+                HomeCardKind.HINT_WIDGETS
+            ),
+            vm.content().cards.map { it.kind }
+        )
+
+        preferences.hidden.value = setOf(HomeCardKind.MARKS)
+        advanceUntilIdle()
+        assertEquals(
+            listOf(HomeCardKind.SCHEDULE, HomeCardKind.SCHEDULE_CHANGES, HomeCardKind.SPORT, HomeCardKind.HINT_WIDGETS),
+            vm.content().cards.map { it.kind }
+        )
+    }
+
+    @Test
+    fun `dismissing new marks reaches every source`() = runTest {
+        val marks = FakeHomeCardSource(HomeCard.Marks(listOf("Тестовый предмет")))
+        val vm = model(marks, hints, sport, schedule)
+
+        vm.dismissCard(HomeCardKind.MARKS)
+        advanceUntilIdle()
+
+        assertEquals(
+            List(4) { listOf(HomeCardKind.MARKS) },
+            listOf(marks.dismissed, hints.dismissed, sport.dismissed, schedule.dismissed)
+        )
+    }
+
+    @Test
     fun `dismissing a card reaches every source`() = runTest {
         val vm = model()
 
