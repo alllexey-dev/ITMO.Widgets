@@ -17,6 +17,9 @@
             android:name=".feature.schedule.ui.ScheduleLifecycleTestActivity"
             android:exported="false" />
         <activity
+            android:name=".feature.schedule.ui.changes.ScheduleChangesPreviewActivity"
+            android:exported="false" />
+        <activity
             android:name=".feature.settings.ui.SettingsPreviewActivity"
             android:exported="false" />
     </application>

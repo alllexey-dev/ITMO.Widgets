@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.ItmoWidgets.Card.Content"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="@dimen/design_screen_margin"
+    android:layout_marginBottom="@dimen/design_spacing_compact"
+    android:clickable="false"
+    android:focusable="false">
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="noHideDescendants"
+        android:orientation="vertical"
+        android:padding="@dimen/design_card_padding">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/subject"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="Математический анализ" />
+
+            <ImageView
+                android:id="@+id/new_mark"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="@dimen/design_spacing_compact"
+                android:contentDescription="@null"
+                android:src="@drawable/shape_circle_filled"
+                app:tint="?attr/colorPrimary" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_related"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Перенесена на ср, 9 сентября, 10:00" />
+
+        <!-- One text per changed field, so a wrapped field does not run into the next one. -->
+        <LinearLayout
+            android:id="@+id/lines"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_related"
+            android:orientation="vertical" />
+
+        <TextView
+            android:id="@+id/meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/design_spacing_compact"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Лекция · ФИЗ ПИИКТ 3.2" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

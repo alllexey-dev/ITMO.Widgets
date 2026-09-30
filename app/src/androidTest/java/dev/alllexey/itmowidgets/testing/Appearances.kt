@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
 import dev.alllexey.itmowidgets.feature.reviews.ui.ReviewEditorPreviewActivity
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
+import dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesPreviewActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity
 import dev.alllexey.itmowidgets.feature.sport.ui.SportCardsPreviewActivity
@@ -86,6 +87,9 @@ object Appearances {
 
     fun Spec.toScheduleLifecycle() =
         ScheduleLifecycleTestActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
+
+    fun Spec.toScheduleChanges() =
+        ScheduleChangesPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
 
     fun Spec.toUserProfile() =
         UserProfilePreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)

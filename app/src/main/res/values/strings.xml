@@ -156,6 +156,24 @@
     <string name="schedule_selected_friend_label">Расписание друга</string>
     <string name="schedule_change_friend">Сменить</string>
     <string name="schedule_return_to_mine">Вернуться к своему</string>
+    <string name="schedule_changes_title">Изменения в расписании</string>
+    <string name="schedule_changes_empty_title">Изменений нет</string>
+    <string name="schedule_changes_empty_description">За последние 30 дней</string>
+    <string name="schedule_changes_yesterday">Вчера</string>
+    <string name="schedule_change_new">Новое</string>
+    <string name="schedule_change_added">Добавлена: %1$s</string>
+    <string name="schedule_change_cancelled">Отменена: %1$s</string>
+    <string name="schedule_change_moved">Перенесена на %1$s</string>
+    <string name="schedule_change_format">Формат: %1$s</string>
+    <string name="schedule_change_place">Аудитория: %1$s</string>
+    <string name="schedule_change_teacher">Преподаватель: %1$s</string>
+    <string name="schedule_change_headline">%1$s — %2$s</string>
+    <string name="schedule_change_field_line">%1$s: %2$s → %3$s</string>
+    <string name="schedule_change_field_time">Время</string>
+    <string name="schedule_change_field_format">Формат</string>
+    <string name="schedule_change_field_place">Аудитория</string>
+    <string name="schedule_change_field_teacher">Преподаватель</string>
+    <string name="schedule_change_value_none">—</string>
 
     <string name="friend_picker_title">Чьё расписание?</string>
     <string name="friend_picker_subtitle">Выберите друга — расписание откроется вместо вашего</string>

@@ -72,4 +72,5 @@ internal val AppScreen.destinationId: Int
         AppScreen.USER_PROFILE -> R.id.user_profile
         AppScreen.USER_SCHEDULE -> R.id.user_schedule
         AppScreen.USER_SPORT -> R.id.user_sport
+        AppScreen.SCHEDULE_CHANGES -> R.id.schedule_changes
     }

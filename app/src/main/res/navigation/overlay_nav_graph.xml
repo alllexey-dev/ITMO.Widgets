@@ -99,6 +99,12 @@
     </fragment>
 
     <fragment
+        android:id="@+id/schedule_changes"
+        android:name="dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesFragment"
+        android:label="@string/schedule_changes_title"
+        tools:layout="@layout/fragment_schedule_changes" />
+
+    <fragment
         android:id="@+id/qr_pass"
         android:name="dev.alllexey.itmowidgets.feature.qr.ui.QrCodeFragment"
         android:label="@string/title_qr"

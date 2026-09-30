@@ -12,7 +12,8 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 
 enum class AppScreen {
     SETTINGS, DIAGNOSTICS, DEBUG_TOOLS, RECORDBOOK_SUBJECT, APP_UPDATE, QR_PASS, MY_ITMO_WEB,
-    FRIENDS, USER_FRIENDS, USER_SEARCH, USER_PROFILE, USER_SCHEDULE, USER_SPORT
+    FRIENDS, USER_FRIENDS, USER_SEARCH, USER_PROFILE, USER_SCHEDULE, USER_SPORT,
+    SCHEDULE_CHANGES
 }
 
 /** The bottom tabs; selecting one discards the contextual stack. */

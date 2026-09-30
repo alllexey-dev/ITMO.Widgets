@@ -69,6 +69,7 @@ class DesignCardResourcesTest {
             "item_recordbook_subject" to "Content",
             "item_recordbook_control" to "Content",
             "item_recordbook_note" to "Content",
+            "item_schedule_change" to "Content",
             "item_teacher_review" to "Content",
             "item_own_teacher_review" to "Content.Own",
             "item_teacher_summary" to "Content.Tonal",

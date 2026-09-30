@@ -2,4 +2,5 @@
 <resources>
     <item name="settings_test_container" type="id" />
     <item name="schedule_test_container" type="id" />
+    <item name="schedule_changes_test_container" type="id" />
 </resources>
