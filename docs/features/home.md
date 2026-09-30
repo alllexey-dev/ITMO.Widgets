@@ -7,9 +7,12 @@ two FABs at the bottom end; the list reserves space under them.
 
 ## Feed
 
-`core/home` holds the contract: `HomeCard` (`Schedule`, `Sport`,
-`FriendRequests`, `Hint`) and `HomeCardSource` with `observe`, `refresh` and
-`revalidate`. Every feature that owns data contributes a source from its `data`
+`core/home` holds the contract: `HomeCard` (`Schedule`, `ScheduleChanges`,
+`Sport`, `FriendRequests`, `Hint`) and `HomeCardSource` with `observe`,
+`refresh`, `revalidate` and `dismiss(kind)`. `dismiss` is for a card with its
+own close button: `HomeViewModel.dismissCard(kind)` passes it to every source,
+and only the owner of that kind resets what the card shows; the default does
+nothing. Every feature that owns data contributes a source from its `data`
 package through the `@IntoSet` multibinding in its Hilt module; `HomeViewModel`
 receives the set, flattens the flows, drops the kinds hidden in settings and
 sorts by `HomeCardKind`, whose declaration order is the feed order. Nothing in
@@ -18,6 +21,7 @@ sorts by `HomeCardKind`, whose declaration order is the feed order. Nothing in
 | Card | Source | Shown when |
 |---|---|---|
 | `Сегодня` / `Завтра` | `feature/schedule/data/home/ScheduleHomeCardSource` on `HomeScheduleSelector`: today's remaining lessons and pending sport rows, the lesson in progress marked `сейчас` with a progress line for the elapsed share, the next one `далее`, finished lessons counted in the footer; tomorrow once today is over; a one-minute ticker moves the focus | always (an empty day says so) |
+| `Изменения в расписании` | `feature/schedule/data/home/ScheduleChangesHomeCardSource`, from the local [schedule changes](schedule.md#schedule-changes) only: a badge with the number of unread changes of lessons still ahead and the headline of the newest one (by detection, then the sooner lesson), for example `Физика — перенесена на ср, 9 сентября, 10:00`. A tap opens the history; the 48 dp close button `Прочитано` (`dismiss`) marks every change read and removes the notification. A one-minute ticker drops changes whose lessons are over; `refresh` asks nothing, the check runs in the background. TalkBack reads `Изменения в расписании, N. <headline>` | at least one unread change of a lesson not yet over |
 | `Спорт` | `feature/sport/data/home/SportHomeCardSource`: score progress out of 100 and own queues (three, then `ещё N`) | a score below 100 or a non-empty queue |
 | `Заявки в друзья` | `feature/social/data/home/SocialHomeCardSource`: incoming requests as `item_user_row.xml` rows, `Все заявки` opens the friends screen | at least one incoming request behind the opt-in |
 | Hints | `feature/home/data/HintHomeCardSource`: no widget on the launcher (`Добавить` pins the single-lesson widget through `core/ui/widget/WidgetPinRequester`), notifications off (`Включить` asks for the permission while the dialog can still appear, otherwise opens the app's notification page), user services off (`Включить` opens the services settings page) | while the reason holds and the hint was not closed; closed hints are kept per installation in `home_dismissed_hints` |

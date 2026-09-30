@@ -198,7 +198,7 @@ deliberately small: card variants, named dimensions, refresh helper, content-sta
 styles, the accessible selection row (`bindSelectionAccessibility`), the user row
 (`item_user_row.xml`), the contextual screen header and the details-sheet header
 (`view_details_header.xml`: title, kind, date with the time range and duration,
-teacher, place, map button) that every bottom sheet with a session starts with. Shared helpers belong to
+teacher, flow, place, map button) that every bottom sheet with a session starts with. Shared helpers belong to
 `core/ui`; screen-specific behaviour to `feature/<name>/ui`. Extract only rules
 that genuinely repeat; do not build a universal renderer.
 
@@ -319,7 +319,24 @@ settings, and restore them if a separate test explicitly changes them.
 - Friend picker: `res/layout/dialog_friend_selector.xml`.
 - Home feed: `res/layout/fragment_home.xml`, `res/layout/item_home_*.xml`,
   `feature/home/ui/HomeFeedAdapter.kt`, `feature/home/HomeFeedVisualTest.kt`.
+  `res/layout/item_home_schedule_changes.xml` is a `Card.Content` that closes:
+  a header with `ic_edit_calendar` in `colorPrimary`, the title, the count
+  badge (`bg_home_badge`) and a trailing 48 dp close button, then the headline
+  of the latest change wrapping without truncation; the whole card opens the
+  history.
+- Schedule changes: the history row `res/layout/item_schedule_change.xml`
+  (`Card.Content`, not clickable: subject with an 8 dp `colorPrimary` dot for a
+  new change, the main line, one `item_schedule_change_line.xml` per changed
+  field so a wrapped field never runs into the next, `вид · поток`; one TalkBack
+  node), day titles `res/layout/item_schedule_change_day.xml`, the screen
+  `res/layout/fragment_schedule_changes.xml` with
+  `feature/schedule/ui/changes/ScheduleChangesAdapter.kt`. On lesson cards the
+  mark `change_indicator` (`ic_edit_calendar`, 16 dp, `colorPrimary`) after the
+  video-call icon in `res/layout/item_schedule_lesson.xml`; in the lesson sheet
+  the block `changes_card` (divider, `Изменения`, `было → стало` lines) in
+  `res/layout/fragment_lesson_details.xml` and the informational `flow_fact` row
+  between teacher and place in `res/layout/view_details_header.xml`.
 - Visual tests: `feature/sport/cards/SportCardsVisualTest.kt`,
   `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
   `feature/friendselector/SelectionRowsTest.kt`, `feature/social/UserProfileVisualTest.kt`,
-  `feature/reviews/ReviewEditorVisualTest.kt`.
+  `feature/reviews/ReviewEditorVisualTest.kt`, `feature/schedule/ScheduleChangesVisualTest.kt`.

@@ -147,7 +147,8 @@ only among installed instances of that same format:
 ## Home screen
 
 - `Главный экран` lists one switch per feed card: `Расписание на сегодня`,
-  `Спорт`, `Заявки в друзья`. A switched-off card leaves the feed
+  `Изменения в расписании`, `Спорт`, `Заявки в друзья`. A switched-off card
+  leaves the feed
   at once; nothing else changes and no widget is refreshed.
 - Stored as the string set `home_hidden_cards` (card kind names; absent means
   shown). The page is an offline category; its footer explains that hints on
@@ -158,6 +159,19 @@ only among installed instances of that same format:
 
 ## Schedule
 
+- `Изменения расписания` turns on the background check of the own schedule
+  for changes, its notifications, the home card and the marks in the schedule
+  ([schedule changes](features/schedule.md#schedule-changes)). It is enabled by
+  default and stored as `schedule_changes_enabled` (absent means on). It does
+  not need `Подключение к ITMO.Widgets`: the check talks only to My ITMO.
+- Switching it off cancels the background work and forgets the snapshot; the
+  history of changes stays. Switching it on schedules the work again, and the
+  first check only takes a new snapshot.
+- The description is `Уведомлять о переносах и отменах пар.`, or
+  `Уведомления выключены.` while Android notifications are off for the app.
+  Switching it on without the permission asks for it on Android 13+ while the
+  system dialog can still appear, otherwise opens the app's notification page.
+  The switch stays on whatever the answer is.
 - `Автозапись на спорт` displays pending sport auto-sign entries in the user's own
   schedule in the application and schedule widgets. It is disabled by default
   and does not represent a confirmed booking.
@@ -168,16 +182,22 @@ only among installed instances of that same format:
   user's schedule. An explicit toggle refreshes installed widgets only after the
   value is successfully saved. Loading or observing the preference does not
   refresh widgets; a failed save preserves the previous value and does not refresh.
-- The page is an offline settings category with one toggle. Its footer explains
-  the user-services requirement and that pending entries are not confirmed bookings.
+- The page is an offline settings category with two untitled groups: the
+  schedule-changes switch, then the auto-sign switch with a footer that explains
+  the user-services requirement and that pending entries are not confirmed
+  bookings. An untitled group after another one keeps the group gap
+  (`design_spacing_group`) above its card.
 
 ## Notification channels
 
 `Уведомления` opens Android's application notification settings. FCM categories
-are `Спорт: автозапись` (`sport`) and `Друзья` (`friends`), both at default
-importance. Android controls permission, sound and category visibility; there are
-no duplicate in-app switches. Disabled notification permission suppresses only
-the visual alert, not sport automation already enabled by the user. Disabling
+are `Спорт: автозапись` (`sport`) and `Друзья` (`friends`); the local schedule
+check posts to `Изменения расписания` (`schedule_changes`). All three are at
+default importance. Android controls permission, sound and category visibility;
+there are no duplicate in-app switches, and `Изменения расписания` in the
+schedule settings switches the check itself, not the category. Disabled
+notification permission suppresses only the visual alert, not sport automation
+already enabled by the user or the schedule check. Disabling
 user services suppresses FCM actions and attempts to unregister this device.
 
 ## Sport
@@ -226,11 +246,12 @@ system `geo:` intent and lets Android resolve the installed mapping application.
 ## Debug-only controls
 
 Debug builds may additionally expose the academic-date override, synthetic sport
-scores, sport lesson templates, and development-service diagnostics. These
+scores, sport lesson templates, development-service diagnostics, and
+`Проверить изменения расписания`, a one-off schedule change check. These
 controls never appear in release builds and never change release behavior.
 
 ## Deferred beyond v2.1
 
-Google Sheet mappings, schedule-change notifications, calendar synchronization,
-community resources, teacher-review settings, the `Следить за оценками БАРС`
-toggle, and the `Добавить в шторку` action belong to v2.2.
+Google Sheet mappings, calendar synchronization, community resources,
+teacher-review settings, the `Следить за оценками БАРС` toggle, and the
+`Добавить в шторку` action belong to v2.2.

@@ -6,6 +6,39 @@ publication or deployment.
 
 ## 2.2 — development
 
+### 2026-09-30
+
+- The app checks the own schedule for changes by itself: every 2 hours with a
+  network it asks My ITMO for today and the next 7 days and compares the
+  academic lessons with the last snapshot on the device. Added, cancelled and
+  moved lessons and changes of room, format and teacher are kept for 30 days in
+  `filesDir/schedule_changes/state.json`; the first check after installation,
+  sign-in or switching on only takes a snapshot, a single empty answer is held
+  once, a new term landing on empty weeks is not a list of additions, and
+  changes of lessons already over are dropped. Android picks the moment of a
+  check, so delivery is not immediate. Nothing reaches Backend; see decision
+  [0013](docs/decisions/0013-schedule-changes-on-device.md).
+- One notification per check in the new `Изменения расписания` channel,
+  `Расписание изменилось: 3 пары` with the nearest change; with a sound only
+  for today and tomorrow, nothing from 00:00 to 06:00 Moscow time (the first
+  check after 06:00 delivers it). A tap opens the history over the schedule.
+- The history `Изменения в расписании` groups changes by the day they were
+  found, marks new ones with a dot and marks everything read while open. A
+  change of one field reads as its `было → стало` line.
+- The home card `Изменения в расписании` after `Сегодня`/`Завтра`: the number
+  of unread changes and the latest one; the close button marks them read. It
+  can be hidden in `Главный экран`.
+- Changed lessons get a small mark in the own and in friends' schedules, and
+  the lesson sheet shows `Изменения` with `было → стало` lines.
+- `Изменения расписания` in the schedule settings, on by default: off cancels
+  the check and forgets the snapshot, the history stays; on without the
+  notification permission asks for it. An untitled settings group after
+  another one now keeps the group gap.
+- The lesson sheet shows the My ITMO flow of the lesson as `Поток` between the
+  teacher and the room.
+- Debug tools: `Проверить изменения расписания` runs one check.
+- Core, Backend and MyItmoApi are unchanged.
+
 ### 2026-09-29
 
 - Own teacher reviews in the person profile: `Написать` in the `Отзывы · N`

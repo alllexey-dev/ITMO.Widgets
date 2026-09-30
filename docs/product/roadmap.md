@@ -105,6 +105,24 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   dots stand next to teachers in the lesson sheet and on the subject page; the
   web admin has `ИИ-сводки`, the summaries table and the Gemini key. Not
   released to production.
+- Stages 35–36: implemented on 2026-09-30 through
+  `vibe/schedule-changes-plan.md` (Android 2.2-SNAPSHOT only; Core, Backend and
+  MyItmoApi unchanged), with these corrections to the stage texts: the
+  snapshot and the changes live in one atomically written file,
+  `filesDir/schedule_changes/state.json`, instead of Room, so there is no
+  `AppDatabase`, no database in `StorageModule` and no
+  `AppDatabaseMigrationTest` (decision
+  [0013](../decisions/0013-schedule-changes-on-device.md)); only academic
+  lessons are compared; the check runs every 2 hours on the device, reads
+  My ITMO itself and never touches Backend or the schedule cache
+  (`ScheduleChangesWorker`, `ScheduleDiff` and `ScheduleChangesRepositoryImpl`
+  instead of `ScheduleSyncWorker`, `ScheduleDiffEngine` and changes in
+  `ScheduleRepositoryImpl`); one summary notification per run, with a sound
+  only for today and tomorrow and nothing from 00:00 to 06:00 Moscow time; the
+  history screen groups changes by the day they were found. The home card, the
+  mark on changed lessons and `было → стало` in the lesson sheet came with it,
+  the lesson sheet gained a `Поток` row, and the schedule settings a
+  `Изменения расписания` switch, on by default. Not released to production.
 
 ## Plan Structure
 
@@ -942,7 +960,7 @@ planned own-review behavior below.
 
 * Track the BARS journal in the background and notify about new marks, changed marks, and changed approvals. Everything stays on the device: BARS data never reaches Backend, and the feature does not depend on the custom-services opt-in.
 * Renew the BARS token in the background without a WebView: `BarsCookieSilentLogin` replays the official OIDC authorization URL through OkHttp with the ITMO.ID cookies read from `CookieManager`, accepts only the exact callback with a checked `state`, and exchanges the code through the library's `BarsCodeSupplier`. No credentials, no JavaScript, no cookie leaves the device. Foreground renewal keeps `BarsWebSilentLogin`. Record the rule as decision 0012.
-* Persist a normalized per-checkpoint snapshot (discipline, checkpoint plan, checkpoint, mark, approval) per ISU in the Room database introduced in Stage 35. `BarsMarkDiffEngine` is pure: it emits `MarkAdded`, `MarkChanged`, and `ApprovalChanged` events, ignores reorder-only responses, treats an empty journal (`total = 0`, no marks) as "no marks" rather than a removal, and skips plans with `has_course_project` exactly like the overlay mapper. The first successful sync after enabling only writes the baseline and notifies nothing.
+* Persist a normalized per-checkpoint snapshot (discipline, checkpoint plan, checkpoint, mark, approval) per ISU in a file store like the schedule changes (decision 0013). `BarsMarkDiffEngine` is pure: it emits `MarkAdded`, `MarkChanged`, and `ApprovalChanged` events, ignores reorder-only responses, treats an empty journal (`total = 0`, no marks) as "no marks" rather than a removal, and skips plans with `has_course_project` exactly like the overlay mapper. The first successful sync after enabling only writes the baseline and notifies nothing.
 * Run a unique periodic WorkManager job (`bars-mark-sync`, every three hours, network constraint, `@HiltWorker`). It exits quietly without a BARS session, backs off after a failed renewal, and when the ITMO.ID cookie session is gone posts one `Войдите в БАРС` notification and stays silent until the next successful BARS login. Opening the recordbook with the `БАРС` chip runs the same diff on the fresh journal so foreground use advances the baseline. Do not claim immediate delivery because Android controls periodic execution.
 * Add the `BARS` notification channel next to `SPORT` and `FRIENDS`. One notification per subject per sync with a stable id: subject and checkpoint in the title, the mark in the expanded text, `VISIBILITY_PRIVATE` with the public version `Новая оценка в БАРС`. Tapping opens the recordbook subject with the chip on through `MainActivityIntentRouting`.
 * Add the `Следить за оценками БАРС` toggle to the recordbook BARS section of settings. It appears once a BARS session exists, is enabled on the first successful BARS login, and disabling cancels the job and deletes the snapshot. `BarsMarkTrackingRepositoryImpl` is a `SessionDataCleaner`, so sign-out and account change clear snapshots, events, and the job.
@@ -951,7 +969,7 @@ planned own-review behavior below.
 
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/domain/BarsMarkDiffEngine.kt` - pure snapshot diff producing `BarsMarkEvent` values.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/domain/BarsMarkTrackingRepository.kt` - contract: enable and disable, snapshot sync, unread events.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsMarkSnapshotEntity.kt` - Room entity and DAO registered in the Stage 35 database.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsMarkSnapshotEntity.kt` - file-store model of the snapshot.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsMarkEventEntity.kt` - durable events with read state.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsMarkTrackingRepositoryImpl.kt` - journal fetch, diff, persistence, session cleaner.
 * `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/bars/BarsCookieSilentLogin.kt` - OkHttp cookie-replay renewal for background use.

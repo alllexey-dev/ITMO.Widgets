@@ -23,7 +23,7 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 - [First-run flow](features/onboarding.md) — the three steps after sign-in, the
   root gate and the replay from maintenance.
 - [Schedule](features/schedule.md) — academic schedule, friends' schedules,
-  pending sport rows.
+  pending sport rows, lesson details, schedule changes checked on the device.
 - [Sport](features/sport.md) — catalog, bookings, queues, cards and details.
 - [Recordbook](features/recordbook.md) — MyITMO recordbook, BARS overlay,
   physical-education link, the one-page subject screen.
@@ -33,7 +33,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 - [Teacher reviews](features/reviews.md) — own reviews with premoderation, votes
   and reports, and Reviews copies in person profiles; the AI summary and the
   teacher tone dots; the editor and the report.
-- [Notifications](features/notifications.md) — FCM receiver, token sync, handlers.
+- [Notifications](features/notifications.md) — FCM receiver, token sync,
+  handlers, the local schedule-changes notification.
 - [Widgets](features/widgets.md) — schedule and QR widgets and their previews.
 - [Update offer](features/update.md) — version check and reminder policy.
 - [Web sign-in](features/web-login.md) — approving a browser's sign-in to the
@@ -55,6 +56,7 @@ editing an old one when a decision changes.
 - [0009 One person profile, direct My ITMO identity and copied reviews](decisions/0009-person-profile.md)
 - [0010 Own teacher reviews verified through ISU flows](decisions/0010-review-verification.md)
 - [0011 AI summaries of teacher reviews through Gemini behind a proxy](decisions/0011-ai-review-summaries.md)
+- [0013 Schedule changes are detected on the device](decisions/0013-schedule-changes-on-device.md)
 
 ## Sibling repositories
 

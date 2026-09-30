@@ -2,7 +2,9 @@
 
 `core/notification` owns the FCM receiver, token sync, the payload dispatcher and
 the notification contract. Feature handlers are Hilt multibindings; the app
-layer renders notifications and PendingIntents.
+layer renders notifications and PendingIntents. Next to the pushes, the
+schedule's background check posts a local notification through the same
+contract ([schedule changes](#schedule-changes)).
 
 ## Wire contract
 
@@ -32,8 +34,10 @@ payloads above 4 KB are dropped.
    clears shown notifications.
 3. `FcmPayloadDispatcher` parses the envelope and calls the handler for its type.
 4. Handlers produce `AppNotification` values (channel, stable id, `UiText`
-   title and text, destination); `AndroidAppNotifier` renders them, checks the
-   permission, and builds an immutable PendingIntent into `MainActivity`.
+   title and text, destination, `silent`); `AndroidAppNotifier` renders them
+   with the channel as the tag, checks the permission, and builds an immutable
+   PendingIntent into `MainActivity`. `AppNotifier.cancel(channel, id)` removes
+   one notification, `clear()` all of them.
 
 ## Token sync
 
@@ -46,8 +50,9 @@ before clearing credentials.
 
 ## Channels
 
-`sport` (`Спорт: автозапись`) and `friends` (`Друзья`), both at default
-importance, created on application start. Android owns permission, sound and
+`sport` (`Спорт: автозапись`) and `friends` (`Друзья`) for pushes and
+`schedule_changes` (`Изменения расписания`) for the local check, all at default
+importance, created on application start (`AppNotificationChannels`). Android owns permission, sound and
 per-channel visibility; the app has no duplicate switches. Friend notifications
 use the actor's ISU as id, so a repeated request replaces the old notification,
 and are grouped under a summary.
@@ -75,9 +80,37 @@ a loaded list. Tapping opens the actor's profile: the intent carries
 `ACTION_OPEN_USER_PROFILE` and the ISU, `MainActivityIntentRouting` validates
 it, the activity selects the profile root and opens `USER_PROFILE` once.
 
+## Schedule changes
+
+A local notification, not a push: `ScheduleChangesCheck` in
+`feature/schedule` decides it after every background run and
+`AndroidScheduleChangeNotifier` shows it (the rules are in
+[schedule](schedule.md#notification)).
+
+- One summary notification in `schedule_changes` with the tag
+  `schedule_changes` and id 1, so a new one replaces the previous. The title is
+  the plural `Расписание изменилось: N пара/пары/пар` of unread changes, the
+  text the headline of the nearest new change.
+- A change of today or tomorrow makes a sound; later ones arrive silently
+  (`setSilent(true)`). `VISIBILITY_PRIVATE` like every notification of the app.
+  Nothing is shown from 00:00 to 06:00 Moscow time.
+- Tapping sends `ACTION_OPEN_SCHEDULE_CHANGES`; `MainActivityIntentRouting`
+  turns it into the schedule root with `screen = SCHEDULE_CHANGES`, and
+  `MainActivity` selects the root and opens the history overlay on top. The
+  pending screen is saved across recreation and consumed once.
+- `ScheduleChangesRepository.markAllRead()` (the history screen, the home
+  card's close button) cancels it through `AppNotifier.cancel`; sign-out
+  clears every notification as before.
+- Without the notification permission nothing is shown, but the changes still
+  count as delivered and wait in the history and on the home card.
+
 ## Tests
 
 `FcmPayloadDispatcherTest`, `FcmDeliveryGuardTest`, `DefaultFcmTokenSyncTest`,
 `BackendDeviceRegistrationTest`, `SportSignPushHandlerTest`,
-`FriendshipPushHandlerTest`, `MainActivityIntentRoutingTest`; the instrumented
-`FcmNotificationFlowTest` drives the flow through a debug entry point.
+`FriendshipPushHandlerTest`, `MainActivityIntentRoutingTest` (including
+`ACTION_OPEN_SCHEDULE_CHANGES`); the instrumented `FcmNotificationFlowTest`
+drives the flow through a debug entry point. `ScheduleChangesNotificationTest`
+shows the digest through the app's notifier: tag and id, channel, title and
+text, the tap intent, replacement, `cancel` and the channel's importance and
+name.

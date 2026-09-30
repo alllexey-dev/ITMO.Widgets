@@ -46,7 +46,8 @@ core/           cross-cutting; knows nothing about features
                 TeacherSummary with its scales, tags and TeacherLevel, TeacherLevelsRepository
   result/       AppError, AppResult
   schedule/     schedule preferences, widget-refresh, SubjectLessonsGateway and TeacherLessonsGateway
-                (TeacherLessons.kt) contracts
+                (TeacherLessons.kt) contracts; ScheduleChange with LessonSlot and LessonOccurrence (shared
+                with the home card) and ScheduleChangeTracking (the background check's switch and work)
   services/     CustomServicesRepository — the Backend opt-in
   settings/     WidgetAppearanceRepository and CustomSpoilerRepository — widget appearance
                 for screens outside settings (the first-run flow)
@@ -59,7 +60,9 @@ core/           cross-cutting; knows nothing about features
   qr/           CustomSpoilerManager
   ui/           AvatarView, state helpers, AppNavigator port, WidgetPinRequester, the spoiler crop screen,
                 the details-sheet header (view_details_header.xml + DetailsHeader.kt), ConditionTone,
-                TeacherLevelTone (the tone dot of teachers' AI summaries),
+                TeacherLevelTone (the tone dot of teachers' AI summaries), ScheduleChangeTexts (summary,
+                headline and "было → стало" lines of a schedule change for the schedule, the home card
+                and the notification),
                 BottomSheets.kt (expandToContent() for sheets that open at their content height)
   weblogin/     WebLoginRepository and WebLoginPreview — approving a browser's sign-in to the web version
 di/             Hilt modules, one per feature or concern
@@ -68,7 +71,11 @@ feature/<name>/ ui | presentation | domain | data
 
 Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
 `recordbook`, `resources`, `reviews`, `schedule`, `settings`, `social`, `sport`, `update`,
-`weblogin`, `widget`. A feature does not need all four layers. `weblogin` holds
+`weblogin`, `widget`. A feature does not need all four layers. `qr` and
+`schedule` also have `work` for their WorkManager workers, schedulers and
+entry points: the widget updates and, in `schedule/work`, the schedule change
+check (`ScheduleChangesWorker`, `WorkManagerScheduleChangesScheduler`,
+`AndroidScheduleChangeNotifier`). `weblogin` holds
 the code and link parser, the User-Agent description, the view model and
 `WebLoginBottomSheet` ([web sign-in](features/web-login.md)). `social` owns the
 person profile and its direct My ITMO `PersonRepository`; `reviews` owns
@@ -142,6 +149,7 @@ thread until it suspends.
 | Device-only subject links and the last links answer per subject period | `filesDir/subject_links/cache.json`, atomic writes, excluded from backup and device transfer |
 | Finished weeks of the personal schedule for review suggestions | `filesDir/teacher_lessons/weeks.json`, atomic writes, excluded from backup and device transfer |
 | Tones of teachers' AI summaries, a day per answer | `filesDir/teacher_levels/levels.json`, atomic writes, excluded from backup and device transfer |
+| The last snapshot of the own schedule for the change check and the changes of the last 30 days | `filesDir/schedule_changes/state.json`, one atomic write for both, excluded from backup and device transfer |
 
 `SharedPreferences` is banned. *Enforced.* Anything caching user-scoped data
 implements `SessionDataCleaner`; sign-out and account change invoke every
@@ -177,10 +185,16 @@ debug-only academic date override exists.
 ### Dependency injection
 
 `@Binds` with constructor injection by default, `@Provides` for types the project
-does not construct, one module per feature or concern, `@HiltWorker` for
-workers, `@IntoSet` multibindings for open sets such as `SessionDataCleaner`,
-`FcmPayloadHandler` and `HomeCardSource` (the home feed knows its sources only as
-a set; each feature registers its own in its module).
+does not construct, one module per feature or concern, `@IntoSet` multibindings
+for open sets such as `SessionDataCleaner`, `FcmPayloadHandler` and
+`HomeCardSource` (the home feed knows its sources only as a set; each feature
+registers its own in its module).
+
+Workers are built by WorkManager and take their dependencies through an
+`@EntryPoint` (`QrWidgetEntryPoint`, `ScheduleWidgetEntryPoint`,
+`ScheduleChangesEntryPoint`, the FCM workers in `core/notification/FcmWork.kt`),
+not `@HiltWorker`: `androidx.hilt`'s processor cannot read Kotlin 2.0 metadata
+under kapt, and an entry point needs no custom `WorkManager` configuration.
 
 ### Navigation
 
