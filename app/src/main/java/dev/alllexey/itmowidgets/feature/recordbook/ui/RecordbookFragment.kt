@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -17,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -26,7 +26,6 @@ import dev.alllexey.itmowidgets.databinding.FragmentRecordbookBinding
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSelection
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import kotlinx.coroutines.flow.launchIn
@@ -171,17 +170,15 @@ class RecordbookFragment : Fragment() {
 
     private fun openSubject(subject: RecordbookSubject) {
         val selected = selection ?: return
-        val arguments = bundleOf(
-            RecordbookSubjectViewModel.ARG_ENTRY_ID to subject.entryId,
-            RecordbookSubjectViewModel.ARG_PROGRAM_ID to selected.program.id,
-            RecordbookSubjectViewModel.ARG_SEMESTER to selected.period.semester,
-            RecordbookSubjectViewModel.ARG_STUDY_YEAR to selected.period.studyYear
-        )
-        subject.barsJournal?.let {
-            arguments.putLong(RecordbookSubjectViewModel.ARG_BARS_PLAN, it.planId)
-            arguments.putString(RecordbookSubjectViewModel.ARG_BARS_TYPE, it.type)
-            arguments.putString(RecordbookSubjectViewModel.ARG_BARS_IDENTIFIER, it.identifier)
-        }
+        val arguments = RecordbookSubjectArgs(
+            entryId = subject.entryId,
+            programId = selected.program.id,
+            semester = selected.period.semester,
+            studyYear = selected.period.studyYear,
+            barsPlan = subject.barsJournal?.planId,
+            barsType = subject.barsJournal?.type,
+            barsIdentifier = subject.barsJournal?.identifier
+        ).toBundle()
         openScreen(AppScreen.RECORDBOOK_SUBJECT, arguments)
     }
 }

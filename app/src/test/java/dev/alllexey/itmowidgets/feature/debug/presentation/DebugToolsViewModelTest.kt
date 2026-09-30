@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -38,6 +39,7 @@ class DebugToolsViewModelTest {
     private val customServicesRepository = FakeCustomServicesRepository()
     private val scheduleChangeTracking = FakeScheduleChangeTracking()
     private val barsSessionProbe = FakeBarsSessionProbe()
+    private val markTracking = FakeMarkTracking()
 
     private fun createViewModel(): DebugToolsViewModel = DebugToolsViewModel(
         timeProvider = FixedTimeProvider,
@@ -47,7 +49,8 @@ class DebugToolsViewModelTest {
         refreshTokenController = refreshTokenController,
         customServicesRepository = customServicesRepository,
         scheduleChangeTracking = scheduleChangeTracking,
-        barsSessionProbe = barsSessionProbe
+        barsSessionProbe = barsSessionProbe,
+        markTracking = markTracking
     )
 
     @Test
@@ -57,6 +60,15 @@ class DebugToolsViewModelTest {
         viewModel.checkScheduleChanges()
 
         assertEquals(1, scheduleChangeTracking.checkNowCalls)
+    }
+
+    @Test
+    fun `checking marks asks for one background check`() {
+        val viewModel = createViewModel()
+
+        viewModel.checkMarks()
+
+        assertEquals(1, markTracking.checkNowCalls)
     }
 
     @Test

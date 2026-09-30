@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -53,7 +54,8 @@ class DebugToolsViewModel @Inject constructor(
     private val refreshTokenController: DebugRefreshTokenController,
     private val customServicesRepository: CustomServicesRepository,
     private val scheduleChangeTracking: ScheduleChangeTracking,
-    private val barsSessionProbe: BarsSessionProbe
+    private val barsSessionProbe: BarsSessionProbe,
+    private val markTracking: MarkTracking
 ) : ViewModel() {
 
     private val mutableUiState =
@@ -79,6 +81,9 @@ class DebugToolsViewModel @Inject constructor(
 
     /** One background check of the own schedule, as soon as the network allows. */
     fun checkScheduleChanges() = scheduleChangeTracking.checkNow()
+
+    /** One background check of own marks in both sources, as soon as the network allows. */
+    fun checkMarks() = markTracking.checkNow()
 
     /** Renews BARS through ITMO.ID cookies once, in a fresh process; the outcome goes to logcat only. */
     fun probeBarsSession() = barsSessionProbe.start()

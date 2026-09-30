@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.subjectLinkChips
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -312,12 +313,12 @@ class RecordbookSubjectViewModel @Inject constructor(
         private const val WINDOW_DAYS = 28L
         private val EMPTY_LINKS = SubjectLinksSnapshot(emptyList(), emptyList(), emptyList(), null, emptyList(),
             premoderation = false, servicesEnabled = false)
-        const val ARG_ENTRY_ID = "entry_id"
-        const val ARG_PROGRAM_ID = "program_id"
-        const val ARG_SEMESTER = "semester"
-        const val ARG_STUDY_YEAR = "study_year"
-        const val ARG_BARS_PLAN = "bars_plan"
-        const val ARG_BARS_TYPE = "bars_type"
-        const val ARG_BARS_IDENTIFIER = "bars_identifier"
+        const val ARG_ENTRY_ID = RecordbookSubjectArgs.ENTRY_ID
+        const val ARG_PROGRAM_ID = RecordbookSubjectArgs.PROGRAM_ID
+        const val ARG_SEMESTER = RecordbookSubjectArgs.SEMESTER
+        const val ARG_STUDY_YEAR = RecordbookSubjectArgs.STUDY_YEAR_KEY
+        const val ARG_BARS_PLAN = RecordbookSubjectArgs.BARS_PLAN
+        const val ARG_BARS_TYPE = RecordbookSubjectArgs.BARS_TYPE
+        const val ARG_BARS_IDENTIFIER = RecordbookSubjectArgs.BARS_IDENTIFIER
     }
 }

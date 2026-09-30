@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.diagnostics.FileAppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.notification.FcmWork
+import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +19,7 @@ class ItmoWidgetsApplication : Application() {
     @Inject lateinit var diagnostics: FileAppDiagnostics
     @Inject @field:ApplicationScope lateinit var applicationScope: CoroutineScope
     @Inject lateinit var scheduleChangeTracking: ScheduleChangeTracking
+    @Inject lateinit var markTracking: MarkTracking
 
     override fun onCreate() {
         super.onCreate()
@@ -25,7 +27,10 @@ class ItmoWidgetsApplication : Application() {
         diagnostics.importPendingCrashes()
         AppNotificationChannels.create(this)
         FcmWork.syncToken(this)
-        // Enrols the periodic check after an update or a restore, and drops it when the session is gone.
-        applicationScope.launch { scheduleChangeTracking.syncWork() }
+        // Enrols the periodic checks after an update or a restore, and drops them when the session is gone.
+        applicationScope.launch {
+            scheduleChangeTracking.syncWork()
+            markTracking.syncWork()
+        }
     }
 }

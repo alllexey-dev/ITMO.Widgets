@@ -3,14 +3,18 @@ package dev.alllexey.itmowidgets.feature.recordbook
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkRead
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkSource
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheckpointMark
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkCheckResult
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigest
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNews
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSource
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MyItmoSubjectMark
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.ReadStamp
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
@@ -103,6 +107,48 @@ class FakeBarsMarkSource(vararg answers: BarsMarkRead) : BarsMarkSource {
         requests += half
         beforeAnswer?.invoke()
         return if (answers.size > 1) answers.removeFirst() else answers.firstOrNull() ?: BarsMarkRead.NoSession
+    }
+}
+
+/** Counts calls; no work is scheduled. */
+class FakeMarksScheduler : MarksScheduler {
+    var ensureCalls = 0
+    var runOnceCalls = 0
+    var cancelCalls = 0
+
+    override fun ensurePeriodic() {
+        ensureCalls++
+    }
+
+    override fun runOnce() {
+        runOnceCalls++
+    }
+
+    override fun cancel() {
+        cancelCalls++
+    }
+}
+
+/** Records every digest with its target and every sign-in prompt. */
+class RecordingMarksNotifier : MarksNotifier {
+    val digests = mutableListOf<Pair<MarkDigest, MarkSubjectTarget?>>()
+    var prompts = 0
+
+    override fun showDigest(digest: MarkDigest, target: MarkSubjectTarget?) {
+        digests += digest to target
+    }
+
+    override fun showBarsPrompt() {
+        prompts++
+    }
+}
+
+/** Counts successful BARS answers reported by the client. */
+class CountingBarsSessionListener : BarsSessionListener {
+    var answers = 0
+
+    override suspend fun onBarsAnswered() {
+        answers++
     }
 }
 

@@ -209,6 +209,7 @@
 
     <string name="debug_schedule_changes_check">Проверить изменения расписания</string>
     <string name="debug_bars_session_probe">Проверить продление БАРС</string>
+    <string name="debug_marks_check">Проверить оценки</string>
     <string name="debug_academic_time_title">Тестовое академическое время</string>
     <string name="debug_academic_time_description">Подменяет дату только для расписания и спорта. Авторизация, кэш и QR живут по системному времени.</string>
     <string name="debug_academic_time_system">Системная дата</string>
@@ -647,6 +648,10 @@
     <string name="notification_channel_friends">Друзья</string>
     <string name="notification_channel_schedule_changes">Изменения расписания</string>
     <string name="notification_channel_marks">Оценки</string>
+    <string name="marks_new_title">Новые оценки</string>
+    <string name="marks_subjects_more">%1$s и ещё %2$d</string>
+    <string name="marks_bars_login_title">Войдите в БАРС</string>
+    <string name="marks_bars_login_text">Без входа оценки БАРС не проверяются.</string>
     <plurals name="schedule_changes_notification_title">
         <item quantity="one">Расписание изменилось: %d пара</item>
         <item quantity="few">Расписание изменилось: %d пары</item>

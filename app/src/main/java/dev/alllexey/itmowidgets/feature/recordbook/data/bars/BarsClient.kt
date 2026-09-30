@@ -25,7 +25,8 @@ import retrofit2.Call
  * period selection, and turns library failures into [AppError]. Silent renewal goes through the
  * library's [BarsCodeSupplier]: screens ([account]) renew through the headless WebView flow, the
  * background ([backgroundAccount]) through ITMO.ID cookies without a WebView. Only one block runs
- * at a time, so the supplier's mode belongs to the block that holds the lock.
+ * at a time, so the supplier's mode belongs to the block that holds the lock. Every successful
+ * answer is reported to [BarsSessionListener] after the lock is released.
  */
 @Singleton
 class BarsClient @Inject constructor(
@@ -33,7 +34,8 @@ class BarsClient @Inject constructor(
     private val storage: OwnerBoundBarsStorage,
     private val currentUser: CurrentUserProvider,
     silentLogin: BarsSilentLogin,
-    backgroundLogin: BarsBackgroundLogin
+    backgroundLogin: BarsBackgroundLogin,
+    private val listener: BarsSessionListener
 ) {
     private val mutex = Mutex()
 
@@ -55,14 +57,17 @@ class BarsClient @Inject constructor(
             account.open()
             account.block()
         }
-    }
+    }.also { if (it is AppResult.Success) listener.onBarsAnswered() }
 
     /**
      * The background form of [account]: the session is renewed through ITMO.ID cookies, and an ended ITMO.ID
      * session is [BarsBackground.SessionEnded] instead of a failure. Without a saved session for the current
      * ISU nothing is requested.
      */
-    suspend fun <T> backgroundAccount(block: suspend Account.() -> T): BarsBackground<T> = try {
+    suspend fun <T> backgroundAccount(block: suspend Account.() -> T): BarsBackground<T> = runBackground(block)
+        .also { if (it is BarsBackground.Success) listener.onBarsAnswered() }
+
+    private suspend fun <T> runBackground(block: suspend Account.() -> T): BarsBackground<T> = try {
         mutex.withLock {
             val owner = owner()
             if (withContext(Dispatchers.IO) { storage.getAuthorization() } == null) {
@@ -100,7 +105,7 @@ class BarsClient @Inject constructor(
                 fail(AppError.Forbidden)
             }
         }
-    }
+    }.also { if (it is AppResult.Success) listener.onBarsAnswered() }
 
     inner class Account(val owner: Int) {
         val api: BarsApi get() = bars.api
@@ -171,6 +176,11 @@ class BarsClient @Inject constructor(
         null -> if (cause is IOException) AppError.Network else AppError.Unknown()
         else -> AppError.Unknown()
     }
+}
+
+/** Told about every successful BARS answer of the account, outside the client's lock. */
+fun interface BarsSessionListener {
+    suspend fun onBarsAnswered()
 }
 
 /** Result of a [BarsClient.backgroundAccount] block. */

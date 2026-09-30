@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
+import dev.alllexey.itmowidgets.feature.recordbook.CountingBarsSessionListener
 import java.util.Base64
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -52,6 +53,7 @@ class BarsClientTest {
             return backgroundRenewals.removeFirstOrNull() ?: BarsCookieRenewal.SessionEnded
         }
     }
+    private val listener = CountingBarsSessionListener()
     private val server = MockWebServer()
     private val fake = FakeBars()
     private lateinit var client: BarsClient
@@ -63,7 +65,7 @@ class BarsClientTest {
             override fun getHost() = server.hostName
             override fun getRestUrl() = server.url("/backend/rest/").toString()
         }).apply { storage = this@BarsClientTest.storage }
-        client = BarsClient(bars, storage, owner, silentLogin, backgroundLogin)
+        client = BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener)
     }
     @After fun stop() = server.shutdown()
 
@@ -201,6 +203,27 @@ class BarsClientTest {
             execute { client.bars.api.getDisciplines(true) }
         }
         assertEquals(BarsBackground.Failure(AppError.Unauthorized), result)
+    }
+    @Test fun `the listener hears successful account, login and background answers only`() = runTest {
+        store.install(123, old)
+        assertTrue(client.account { Unit } is AppResult.Success)
+        assertEquals(1, listener.answers)
+        assertTrue(client.account<Unit> { throw IllegalStateException("synthetic failure") } is AppResult.Failure)
+        assertEquals(1, listener.answers)
+
+        assertTrue(client.backgroundAccount { Unit } is BarsBackground.Success)
+        assertEquals(2, listener.answers)
+        fake.rejected = old
+        backgroundRenewals += BarsCookieRenewal.SessionEnded
+        assertEquals(BarsBackground.SessionEnded, client.backgroundAccount { execute { client.bars.api.getDisciplines(true) } })
+        assertEquals(2, listener.answers)
+
+        fake.login = "999"
+        assertEquals(AppResult.Failure(AppError.Forbidden), client.login("synthetic-code"))
+        assertEquals(2, listener.answers)
+        fake.login = "123"
+        assertTrue(client.login("synthetic-code") is AppResult.Success)
+        assertEquals(3, listener.answers)
     }
 
     /** Stateful BARS stand-in: identity, selected period, one issued session and one rejected header. */

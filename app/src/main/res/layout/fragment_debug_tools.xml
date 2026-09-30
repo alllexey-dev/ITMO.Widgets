@@ -347,6 +347,15 @@
                     android:text="@string/debug_schedule_changes_check" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/debug_marks_check_button"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/design_spacing_compact"
+                    android:minHeight="@dimen/design_touch_target"
+                    android:text="@string/debug_marks_check" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/debug_bars_session_probe_button"
                     style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="match_parent"

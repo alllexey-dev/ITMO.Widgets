@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -32,18 +33,7 @@ class AndroidAppNotifier @Inject constructor(
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return
         AppNotificationChannels.create(context)
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            data = Uri.parse("itmowidgets-notification://${notification.channel}/${notification.id}")
-            when (val target = notification.destination) {
-                NotificationDestination.Sport -> action = MainActivity.ACTION_OPEN_SPORT
-                is NotificationDestination.UserProfile -> {
-                    action = MainActivity.ACTION_OPEN_USER_PROFILE
-                    putExtra(UserScreenArgs.ISU, target.isu)
-                }
-                NotificationDestination.ScheduleChanges -> action = MainActivity.ACTION_OPEN_SCHEDULE_CHANGES
-            }
-        }
+        val intent = intentFor(notification)
         val pendingIntent = PendingIntent.getActivity(context, notification.id, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val built = NotificationCompat.Builder(context, notification.channel)
@@ -61,6 +51,18 @@ class AndroidAppNotifier @Inject constructor(
             }
             .setAutoCancel(true)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .apply {
+                notification.publicTitle?.let { title ->
+                    setPublicVersion(
+                        NotificationCompat.Builder(context, notification.channel)
+                            .setSmallIcon(R.drawable.ic_stat_notifications)
+                            .setContentTitle(title.resolve(context))
+                            .setContentIntent(pendingIntent)
+                            .setAutoCancel(true)
+                            .build()
+                    )
+                }
+            }
             .build()
         try {
             manager.notify(notification.channel, notification.id, built)
@@ -82,6 +84,27 @@ class AndroidAppNotifier @Inject constructor(
             }
         } catch (_: SecurityException) {
             // Notification permission can be revoked between the check and notify.
+        }
+    }
+
+    /** What a tap opens; the data URI keeps pending intents of different notifications apart. */
+    @VisibleForTesting
+    internal fun intentFor(notification: AppNotification): Intent = Intent(context, MainActivity::class.java).apply {
+        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        data = Uri.parse("itmowidgets-notification://${notification.channel}/${notification.id}")
+        when (val target = notification.destination) {
+            NotificationDestination.Sport -> action = MainActivity.ACTION_OPEN_SPORT
+            is NotificationDestination.UserProfile -> {
+                action = MainActivity.ACTION_OPEN_USER_PROFILE
+                putExtra(UserScreenArgs.ISU, target.isu)
+            }
+            NotificationDestination.ScheduleChanges -> action = MainActivity.ACTION_OPEN_SCHEDULE_CHANGES
+            NotificationDestination.Recordbook -> action = MainActivity.ACTION_OPEN_RECORDBOOK
+            is NotificationDestination.RecordbookSubject -> {
+                action = MainActivity.ACTION_OPEN_RECORDBOOK_SUBJECT
+                putExtras(target.args.toBundle())
+            }
+            NotificationDestination.BarsLogin -> action = MainActivity.ACTION_OPEN_BARS_LOGIN
         }
     }
 

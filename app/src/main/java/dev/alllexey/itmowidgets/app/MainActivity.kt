@@ -17,6 +17,7 @@ import androidx.navigation.navOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
@@ -28,6 +29,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.databinding.ActivityMainBinding
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGate
+import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGateViewModel
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateGateViewModel
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
@@ -72,6 +74,8 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private var pendingRootDestination: Int? = null
     private var pendingUserIsu: Int? = null
     private var pendingScreen: AppScreen? = null
+    private var pendingSubject: RecordbookSubjectArgs? = null
+    private var pendingBarsLogin = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +84,8 @@ class MainActivity : AppCompatActivity(), AppNavigator {
             pendingUserIsu = savedInstanceState.getInt(PENDING_USER).takeIf { it > 0 }
             pendingScreen = savedInstanceState.getString(PENDING_SCREEN)
                 ?.let { name -> AppScreen.entries.firstOrNull { it.name == name } }
+            pendingSubject = RecordbookSubjectArgs.from(savedInstanceState.getBundle(PENDING_SUBJECT))
+            pendingBarsLogin = savedInstanceState.getBoolean(PENDING_BARS_LOGIN)
         } else {
             acceptIntent(intent)
         }
@@ -261,6 +267,8 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         outState.putInt(PENDING_ROOT, pendingRootDestination ?: 0)
         outState.putInt(PENDING_USER, pendingUserIsu ?: 0)
         outState.putString(PENDING_SCREEN, pendingScreen?.name)
+        outState.putBundle(PENDING_SUBJECT, pendingSubject?.toBundle())
+        outState.putBoolean(PENDING_BARS_LOGIN, pendingBarsLogin)
         super.onSaveInstanceState(outState)
     }
 
@@ -326,12 +334,19 @@ class MainActivity : AppCompatActivity(), AppNavigator {
                             pendingUserIsu = null
                             val screen = pendingScreen
                             pendingScreen = null
-                            screen?.let { navigation.openScreen(it) }
+                            val subject = pendingSubject
+                            pendingSubject = null
+                            val barsLogin = pendingBarsLogin
+                            pendingBarsLogin = false
+                            // The subject page cannot open without its arguments; the recordbook root stays then.
+                            screen?.takeIf { it != AppScreen.RECORDBOOK_SUBJECT || subject != null }
+                                ?.let { navigation.openScreen(it, subject?.toBundle()) }
                             if (userIsu != null) {
                                 navigation.openScreen(AppScreen.USER_PROFILE, Bundle().apply {
                                     putInt(UserScreenArgs.ISU, userIsu)
                                 })
                             }
+                            if (barsLogin) startActivity(Intent(this, BarsLoginActivity::class.java))
                         }
                     }
                     // A signed-in session is what the update check needs; it runs once per process.
@@ -352,10 +367,16 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     }
 
     private fun acceptIntent(intent: Intent) {
-        val route = MainActivityIntentRouting.parse(intent.action, intent.getIntExtra(UserScreenArgs.ISU, 0)) ?: return
+        val route = MainActivityIntentRouting.parse(
+            intent.action,
+            intent.getIntExtra(UserScreenArgs.ISU, 0),
+            RecordbookSubjectArgs.from(intent.extras)
+        ) ?: return
         pendingRootDestination = route.rootDestination
         pendingUserIsu = route.userIsu
         pendingScreen = route.screen
+        pendingSubject = route.subject
+        pendingBarsLogin = route.barsLogin
     }
 
     companion object {
@@ -365,8 +386,13 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         const val ACTION_OPEN_USER_PROFILE = "dev.alllexey.itmowidgets.action.OPEN_USER_PROFILE"
         const val ACTION_OPEN_SCHEDULE = "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE"
         const val ACTION_OPEN_SCHEDULE_CHANGES = "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE_CHANGES"
+        const val ACTION_OPEN_RECORDBOOK = "dev.alllexey.itmowidgets.action.OPEN_RECORDBOOK"
+        const val ACTION_OPEN_RECORDBOOK_SUBJECT = "dev.alllexey.itmowidgets.action.OPEN_RECORDBOOK_SUBJECT"
+        const val ACTION_OPEN_BARS_LOGIN = "dev.alllexey.itmowidgets.action.OPEN_BARS_LOGIN"
         private const val PENDING_USER = "pending_user_isu"
         private const val PENDING_ROOT = "pending_root_destination"
         private const val PENDING_SCREEN = "pending_screen"
+        private const val PENDING_SUBJECT = "pending_subject"
+        private const val PENDING_BARS_LOGIN = "pending_bars_login"
     }
 }

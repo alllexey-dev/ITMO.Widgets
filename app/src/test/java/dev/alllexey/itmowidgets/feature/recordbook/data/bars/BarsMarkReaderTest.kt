@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
+import dev.alllexey.itmowidgets.feature.recordbook.CountingBarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheckpointMark
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import java.util.concurrent.CopyOnWriteArrayList
@@ -58,7 +59,7 @@ class BarsMarkReaderTest {
             override fun getHost() = server.hostName
             override fun getRestUrl() = server.url("/backend/rest/").toString()
         }).apply { storage = this@BarsMarkReaderTest.storage }
-        reader = BarsMarkReader(BarsClient(bars, storage, owner, silentLogin, backgroundLogin))
+        reader = BarsMarkReader(BarsClient(bars, storage, owner, silentLogin, backgroundLogin, CountingBarsSessionListener()))
     }
 
     @After fun stop() = server.shutdown()
