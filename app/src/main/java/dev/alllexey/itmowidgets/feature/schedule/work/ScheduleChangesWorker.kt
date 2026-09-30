@@ -8,7 +8,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
-import dev.alllexey.itmowidgets.feature.schedule.data.changes.CheckOutcome
+import dev.alllexey.itmowidgets.core.work.workResultOf
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesCheck
 
 /** Workers are built by WorkManager; see `QrWidgetEntryPoint` for why this is not `@HiltWorker`. */
@@ -25,9 +25,3 @@ class ScheduleChangesWorker(context: Context, params: WorkerParameters) : Corout
         return workResultOf(check.run(), runAttemptCount)
     }
 }
-
-/** A failed check is retried twice with backoff; after that the next period tries again. */
-internal fun workResultOf(outcome: CheckOutcome, attempt: Int): Result =
-    if (outcome == CheckOutcome.RETRY && attempt < MAX_RETRIES) Result.retry() else Result.success()
-
-internal const val MAX_RETRIES = 2

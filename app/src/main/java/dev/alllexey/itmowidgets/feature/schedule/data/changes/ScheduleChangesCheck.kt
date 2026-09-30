@@ -5,14 +5,12 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigests
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
-
-/** How one background run ended, for the worker to decide on a retry. */
-enum class CheckOutcome { SKIPPED, DONE, RETRY }
 
 /** One background run: check the own schedule, then deliver what waits, even when the check failed. */
 class ScheduleChangesCheck @Inject constructor(

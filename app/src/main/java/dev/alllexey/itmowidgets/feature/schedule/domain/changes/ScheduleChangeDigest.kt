@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.changes
 
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
+import dev.alllexey.itmowidgets.core.work.QuietHours
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 /** One summary notification: how many changes are unread, which one it names and whether it makes a sound. */
 data class ScheduleChangeDigest(val unread: Int, val first: ScheduleChange, val audible: Boolean)
@@ -12,12 +12,10 @@ data class DigestDecision(val digest: ScheduleChangeDigest?, val handled: Set<St
 
 /** Chooses the summary notification after a check. Pure: [decide] takes Moscow time from the caller. */
 object ScheduleChangeDigests {
-    /** Quiet hours run from midnight up to, not including, this time; they never cross midnight. */
-    val QUIET_UNTIL: LocalTime = LocalTime.of(6, 0)
     const val NOTIFICATION_ID = 1
 
     fun decide(changes: List<ScheduleChange>, now: LocalDateTime): DigestDecision {
-        if (now.toLocalTime() < QUIET_UNTIL) return DigestDecision(null, emptySet())
+        if (QuietHours.isQuiet(now.toLocalTime())) return DigestDecision(null, emptySet())
         val pending = changes.filter { !it.read && !it.notified }
         val handled = pending.mapTo(mutableSetOf()) { it.id }
         val fresh = pending.filterNot { it.isOver(now) }

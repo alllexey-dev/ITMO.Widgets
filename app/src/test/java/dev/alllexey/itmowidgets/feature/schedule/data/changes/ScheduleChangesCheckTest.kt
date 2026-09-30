@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.RecordingScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
