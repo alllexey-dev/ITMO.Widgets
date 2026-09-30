@@ -646,6 +646,7 @@
     <string name="notification_channel_sport">Спорт: автозапись</string>
     <string name="notification_channel_friends">Друзья</string>
     <string name="notification_channel_schedule_changes">Изменения расписания</string>
+    <string name="notification_channel_marks">Оценки</string>
     <plurals name="schedule_changes_notification_title">
         <item quantity="one">Расписание изменилось: %d пара</item>
         <item quantity="few">Расписание изменилось: %d пары</item>

@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.feature.schedule
 
-import dev.alllexey.itmowidgets.core.notification.AppNotification
-import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
@@ -40,24 +38,6 @@ class FakeScheduleChangesRepository(vararg initial: ScheduleChange) : ScheduleCh
 
     override suspend fun resetSnapshot() {
         resets++
-    }
-}
-
-class RecordingAppNotifier : AppNotifier {
-    val shown = mutableListOf<AppNotification>()
-    val cancelled = mutableListOf<Pair<String, Int>>()
-    var cleared = 0
-
-    override fun show(notification: AppNotification) {
-        shown += notification
-    }
-
-    override fun cancel(channel: String, id: Int) {
-        cancelled += channel to id
-    }
-
-    override fun clear() {
-        cleared++
     }
 }
 

@@ -9,6 +9,7 @@ object AppNotificationChannels {
     const val SPORT = "sport"
     const val FRIENDS = "friends"
     const val SCHEDULE_CHANGES = "schedule_changes"
+    const val MARKS = "marks"
 
     fun create(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
@@ -16,7 +17,8 @@ object AppNotificationChannels {
             NotificationChannel(SPORT, context.getString(R.string.notification_channel_sport), NotificationManager.IMPORTANCE_DEFAULT),
             NotificationChannel(FRIENDS, context.getString(R.string.notification_channel_friends), NotificationManager.IMPORTANCE_DEFAULT),
             NotificationChannel(SCHEDULE_CHANGES, context.getString(R.string.notification_channel_schedule_changes),
-                NotificationManager.IMPORTANCE_DEFAULT)
+                NotificationManager.IMPORTANCE_DEFAULT),
+            NotificationChannel(MARKS, context.getString(R.string.notification_channel_marks), NotificationManager.IMPORTANCE_DEFAULT)
         ))
         manager.deleteNotificationChannel("fcm_default_channel")
     }

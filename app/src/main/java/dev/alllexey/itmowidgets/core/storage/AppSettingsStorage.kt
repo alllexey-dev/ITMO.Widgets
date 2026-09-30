@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
@@ -184,6 +185,52 @@ class AppSettingsStorage(
         write(SPORT_SIGN_TIME_SELECTOR_ENABLED, enabled)
     }
 
+    /** The background check of My ITMO marks; on unless the user turned it off. A setting of the device. */
+    suspend fun getMyItmoMarksEnabled(): Boolean = read()[MYITMO_MARKS_ENABLED] ?: true
+
+    fun observeMyItmoMarksEnabled(): Flow<Boolean> =
+        preferences.map { it[MYITMO_MARKS_ENABLED] ?: true }.distinctUntilChanged()
+
+    suspend fun setMyItmoMarksEnabled(enabled: Boolean) {
+        write(MYITMO_MARKS_ENABLED, enabled)
+    }
+
+    /** The background check of BARS marks; null (the switch is hidden) until the account's first BARS answer. */
+    suspend fun getBarsMarksEnabled(): Boolean? = read()[BARS_MARKS_ENABLED]
+
+    fun observeBarsMarksEnabled(): Flow<Boolean?> = preferences.map { it[BARS_MARKS_ENABLED] }.distinctUntilChanged()
+
+    suspend fun setBarsMarksEnabled(enabled: Boolean) {
+        write(BARS_MARKS_ENABLED, enabled)
+    }
+
+    /** Turns BARS marks on when the user has never decided; true when this call changed it. One transaction. */
+    suspend fun enableBarsMarksIfUnset(): Boolean {
+        var changed = false
+        dataStore.edit {
+            if (it[BARS_MARKS_ENABLED] == null) {
+                it[BARS_MARKS_ENABLED] = true
+                changed = true
+            }
+        }
+        return changed
+    }
+
+    /** Missing or unknown values are [BarsLoginPrompt.NONE]. */
+    suspend fun getBarsLoginPrompt(): BarsLoginPrompt = safeEnumOf(read()[BARS_MARKS_PROMPT], BarsLoginPrompt.NONE)
+
+    suspend fun setBarsLoginPrompt(prompt: BarsLoginPrompt) {
+        write(BARS_MARKS_PROMPT, prompt.name)
+    }
+
+    /** Forgets the BARS switch and the sign-in prompt with the BARS session; My ITMO's switch stays. */
+    suspend fun clearBarsMarkState() {
+        dataStore.edit {
+            it.remove(BARS_MARKS_ENABLED)
+            it.remove(BARS_MARKS_PROMPT)
+        }
+    }
+
     /** Names of the home hints the user closed; the set belongs to the installation. */
     fun observeDismissedHomeHints(): Flow<Set<String>> =
         preferences.map { it[HOME_DISMISSED_HINTS].orEmpty() }.distinctUntilChanged()
@@ -241,6 +288,9 @@ class AppSettingsStorage(
             booleanPreferencesKey("sport_sign_teacher_selector_enabled")
         private val SPORT_SIGN_TIME_SELECTOR_ENABLED =
             booleanPreferencesKey("sport_sign_hide_time_selector_enabled")
+        private val MYITMO_MARKS_ENABLED = booleanPreferencesKey("myitmo_marks_enabled")
+        private val BARS_MARKS_ENABLED = booleanPreferencesKey("bars_marks_enabled")
+        private val BARS_MARKS_PROMPT = stringPreferencesKey("bars_marks_prompt")
         private val HOME_DISMISSED_HINTS = stringSetPreferencesKey("home_dismissed_hints")
         private val HOME_HIDDEN_CARDS = stringSetPreferencesKey("home_hidden_cards")
     }

@@ -1,7 +1,10 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
+import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenPersistence
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import java.io.File
@@ -30,7 +33,8 @@ class BarsPreferenceRepositoryImplTest {
                 override fun encrypt(value: String) = value
                 override fun decrypt(value: String) = value
             })
-            fun repository() = BarsPreferenceRepositoryImpl(store, preferences)
+            val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+            fun repository() = BarsPreferenceRepositoryImpl(store, preferences, settings)
             assertFalse(repository().isEnabled())
             repository().setEnabled(true)
             assertTrue(repository().isEnabled())
@@ -38,6 +42,31 @@ class BarsPreferenceRepositoryImplTest {
             repository().clearSessionData()
             assertFalse(repository().isEnabled())
             assertNull(store.load(123))
+        } finally { scope.cancel() }
+    }
+    @Test fun `logout forgets the BARS marks switch and prompt but keeps My ITMO's`() = runTest {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        try {
+            val preferences = PreferenceDataStoreFactory.create(scope = scope, produceFile = { File(folder.root, "marks.preferences_pb") })
+            val memory = object : BarsTokenPersistence {
+                var text: String? = null
+                override fun read() = text
+                override fun write(value: String?) { text = value }
+            }
+            val store = BarsTokenStore(memory, object : TokenCipher {
+                override fun encrypt(value: String) = value
+                override fun decrypt(value: String) = value
+            })
+            val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+            settings.setBarsMarksEnabled(true)
+            settings.setBarsLoginPrompt(BarsLoginPrompt.PENDING)
+            settings.setMyItmoMarksEnabled(false)
+
+            BarsPreferenceRepositoryImpl(store, preferences, settings).clearSessionData()
+
+            assertNull(settings.getBarsMarksEnabled())
+            assertEquals(BarsLoginPrompt.NONE, settings.getBarsLoginPrompt())
+            assertFalse(settings.getMyItmoMarksEnabled())
         } finally { scope.cancel() }
     }
 }

@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.core.storage
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import java.io.File
@@ -15,6 +18,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -174,6 +178,50 @@ class AppSettingsStorageTest {
         val restored = createStorage(file)
         assertEquals(setOf("WIDGETS", "SERVICES"), restored.observeDismissedHomeHints().first())
         assertEquals(setOf("SPORT"), restored.observeHiddenHomeCards().first())
+    }
+
+    @Test
+    fun `mark switches start with My ITMO on, BARS undecided and no prompt`() = runTest {
+        val storage = createStorage()
+
+        assertTrue(storage.getMyItmoMarksEnabled())
+        assertTrue(storage.observeMyItmoMarksEnabled().first())
+        assertNull(storage.getBarsMarksEnabled())
+        assertNull(storage.observeBarsMarksEnabled().first())
+        assertEquals(BarsLoginPrompt.NONE, storage.getBarsLoginPrompt())
+    }
+
+    @Test
+    fun `BARS marks are switched on only while undecided`() = runTest {
+        val storage = createStorage()
+
+        assertTrue(storage.enableBarsMarksIfUnset())
+        assertEquals(true, storage.getBarsMarksEnabled())
+        assertFalse(storage.enableBarsMarksIfUnset())
+
+        storage.setBarsMarksEnabled(false)
+        assertFalse(storage.enableBarsMarksIfUnset())
+        assertEquals(false, storage.getBarsMarksEnabled())
+    }
+
+    @Test
+    fun `an unknown prompt reads as none and clearing BARS keeps My ITMO's switch`() = runTest {
+        val file = temporaryFolder.newFile("marks.preferences_pb").apply { delete() }
+        val dataStore = PreferenceDataStoreFactory.create(scope = backgroundScope, produceFile = { file })
+        dataStore.edit { it[stringPreferencesKey("bars_marks_prompt")] = "LATER" }
+        val storage = AppSettingsStorage(dataStore)
+        assertEquals(BarsLoginPrompt.NONE, storage.getBarsLoginPrompt())
+
+        storage.setBarsLoginPrompt(BarsLoginPrompt.SHOWN)
+        storage.setBarsMarksEnabled(true)
+        storage.setMyItmoMarksEnabled(false)
+        assertEquals(BarsLoginPrompt.SHOWN, storage.getBarsLoginPrompt())
+
+        storage.clearBarsMarkState()
+
+        assertNull(storage.getBarsMarksEnabled())
+        assertEquals(BarsLoginPrompt.NONE, storage.getBarsLoginPrompt())
+        assertFalse(storage.getMyItmoMarksEnabled())
     }
 
     private fun kotlinx.coroutines.test.TestScope.createStorage(

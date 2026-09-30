@@ -17,8 +17,11 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsSessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsBackgroundLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsCookieSilentLogin
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkReader
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
@@ -31,6 +34,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookReposito
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.work.WorkManagerBarsSessionProbe
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -82,6 +86,17 @@ abstract class RecordbookModule {
 
     @Binds
     abstract fun bindBarsSessionProbe(impl: WorkManagerBarsSessionProbe): BarsSessionProbe
+
+    @Binds
+    @Singleton
+    abstract fun bindMarkTrackingRepository(impl: MarkTrackingRepositoryImpl): MarkTrackingRepository
+
+    @Binds
+    @IntoSet
+    abstract fun bindMarkTrackingCleaner(impl: MarkTrackingRepositoryImpl): SessionDataCleaner
+
+    @Binds
+    abstract fun bindBarsMarkSource(impl: BarsMarkReader): BarsMarkSource
 
     @Binds
     @IntoSet

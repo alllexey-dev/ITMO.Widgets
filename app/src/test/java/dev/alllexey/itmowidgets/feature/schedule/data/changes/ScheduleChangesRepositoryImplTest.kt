@@ -6,9 +6,9 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
+import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.core.testing.myItmoResponses
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.feature.schedule.RecordingAppNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
 import java.io.File
 import java.time.Clock

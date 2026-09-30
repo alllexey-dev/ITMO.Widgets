@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
+import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import javax.inject.Inject
@@ -20,7 +21,8 @@ import kotlinx.coroutines.withContext
 @Singleton
 class BarsPreferenceRepositoryImpl @Inject constructor(
     private val tokens: BarsTokenStore,
-    @param:AppPreferences private val preferences: DataStore<Preferences>
+    @param:AppPreferences private val preferences: DataStore<Preferences>,
+    private val settings: AppSettingsStorage
 ) : BarsPreferenceRepository, SessionDataCleaner {
     override suspend fun isEnabled(): Boolean = withContext(Dispatchers.IO) {
         try { preferences.data.first()[KEY] == true }
@@ -37,7 +39,8 @@ class BarsPreferenceRepositoryImpl @Inject constructor(
     override suspend fun clearSessionData() = withContext(Dispatchers.IO) {
         tokens.clear()
         preferences.edit { it.remove(KEY) }
-        Unit
+        // The BARS marks switch and its sign-in prompt belong to the BARS session of this account.
+        settings.clearBarsMarkState()
     }
 
     private companion object { val KEY = booleanPreferencesKey("recordbook_bars") }

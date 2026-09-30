@@ -24,16 +24,9 @@ class BarsRecordbookRepositoryImpl @Inject constructor(
     private val controls = ConcurrentHashMap<BarsJournalReference, List<RecordbookControl>>()
 
     override suspend fun getSubjects(period: RecordbookPeriod): AppResult<List<RecordbookSubject>> = client.account {
-        val api = client.bars.api
         val yearStart = period.studyYear.substringBefore('/').toInt()
         selectPeriod(period.studyYear, period.semesterInCourse == 1)
-        val disciplines = execute { api.getDisciplines(true) }
-        val groups = execute { api.getGroupsAndFlows(null) }
-        // A student's marks are plan-scoped. Lecture/practice flows can reference the same plan.
-        val references = disciplines.flatMap { it.checkpointPlanIds }.distinct().mapNotNull { plan ->
-            val group = groups.firstOrNull { plan in it.checkpointPlanIds } ?: return@mapNotNull null
-            BarsJournalReference(plan, group.type, group.identifier, yearStart, period.semesterInCourse)
-        }
+        val references = journalReferences(yearStart, period.semesterInCourse)
         coroutineScope {
             references.map { reference ->
                 async {

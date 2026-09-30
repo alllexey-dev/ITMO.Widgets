@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
     <cloud-backup>
+        <exclude domain="file" path="marks/" />
         <exclude domain="file" path="schedule_changes/" />
         <exclude domain="file" path="subject_links/" />
         <exclude domain="file" path="teacher_lessons/" />
@@ -10,6 +11,7 @@
             path="datastore/app_preferences.preferences_pb" />
     </cloud-backup>
     <device-transfer>
+        <exclude domain="file" path="marks/" />
         <exclude domain="file" path="schedule_changes/" />
         <exclude domain="file" path="subject_links/" />
         <exclude domain="file" path="teacher_lessons/" />

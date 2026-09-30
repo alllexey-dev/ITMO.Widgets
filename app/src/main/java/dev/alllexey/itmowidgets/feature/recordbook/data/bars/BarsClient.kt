@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import api.bars.Bars
+import api.bars.BarsApi
 import api.bars.model.Term
 import api.bars.model.User
 import api.bars.utils.BarsApiException
@@ -102,6 +103,8 @@ class BarsClient @Inject constructor(
     }
 
     inner class Account(val owner: Int) {
+        val api: BarsApi get() = bars.api
+
         /** Server-side selection as of the last read; period changes update it. */
         lateinit var user: User
             private set
