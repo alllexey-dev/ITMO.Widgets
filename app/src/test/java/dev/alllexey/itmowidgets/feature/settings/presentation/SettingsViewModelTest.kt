@@ -979,6 +979,27 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `the background work row leaves when the system saves the choice after the screen returns`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.RECORDBOOK, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
+            advanceUntilIdle()
+            val keys = { fixture.viewModel.sections.value.single().items.map { it.key } }
+
+            fixture.viewModel.onBackgroundWorkChanged()
+            runCurrent()
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
+
+            fixture.backgroundWork.unrestricted = true
+            advanceTimeBy(999)
+            runCurrent()
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
+
+            advanceTimeBy(1)
+            runCurrent()
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS), keys())
+        }
+
+    @Test
     fun `the background work row opens the system page`() =
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.SCHEDULE, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))

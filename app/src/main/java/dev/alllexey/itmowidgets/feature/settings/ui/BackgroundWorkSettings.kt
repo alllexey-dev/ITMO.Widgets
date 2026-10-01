@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.feature.settings.ui
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -14,11 +14,13 @@ import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkScreens
 /**
  * Opens the first system page of this device where the user can let the app work in the background; false when none
  * opens. The app does not hold `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` (Google Play policy), so it only shows the page.
+ * The page opens in the app's task: with `FLAG_ACTIVITY_NEW_TASK` Android brought back a stale Settings task and
+ * showed whatever page was left on top of it.
  */
-fun Context.openBackgroundWorkSettings(): Boolean =
+fun Activity.openBackgroundWorkSettings(): Boolean =
     BackgroundWorkScreens.forDevice(Build.MANUFACTURER, Build.BRAND).any { screen ->
         try {
-            startActivity(intentFor(screen).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            startActivity(intentFor(screen))
             true
         } catch (_: ActivityNotFoundException) {
             false
@@ -28,7 +30,11 @@ fun Context.openBackgroundWorkSettings(): Boolean =
         }
     }
 
-private fun Context.intentFor(screen: BackgroundWorkScreen): Intent = when (screen) {
+private fun Activity.intentFor(screen: BackgroundWorkScreen): Intent = when (screen) {
+    BackgroundWorkScreen.MIUI_POWER_DETAIL -> Intent()
+        .setComponent(ComponentName(MIUI_SECURITY_CENTER, "com.miui.powercenter.legacypowerrank.PowerDetailActivity"))
+        .putExtra("package_name", packageName)
+        .putExtra("package_label", getString(R.string.app_name))
     BackgroundWorkScreen.MIUI_POWER_KEEPER -> Intent()
         .setComponent(ComponentName(MIUI_POWER_KEEPER, "$MIUI_POWER_KEEPER.ui.HiddenAppsConfigActivity"))
         .putExtra("package_name", packageName)
@@ -38,4 +44,5 @@ private fun Context.intentFor(screen: BackgroundWorkScreen): Intent = when (scre
         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null))
 }
 
+private const val MIUI_SECURITY_CENTER = "com.miui.securitycenter"
 private const val MIUI_POWER_KEEPER = "com.miui.powerkeeper"

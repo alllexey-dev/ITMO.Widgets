@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -84,6 +85,7 @@ class SettingsViewModel @Inject constructor(
     // Unknown until the screen asks; the row stays hidden rather than flash in.
     private val backgroundWorkUnrestricted = MutableStateFlow<Boolean?>(null)
     private val backgroundWorkHintMutex = Mutex()
+    private var backgroundWorkRecheck: Job? = null
     private val customSpoilerConfigured = MutableStateFlow(false)
     private val customSpoilerBusy = MutableStateFlow(false)
     // Start masked so cached backend values cannot flash before the fresh request.
@@ -189,6 +191,12 @@ class SettingsViewModel @Inject constructor(
     /** Re-reads whether Android restricts the app in the background; the screen calls it on every return. */
     fun onBackgroundWorkChanged() {
         backgroundWorkUnrestricted.value = backgroundWork.isUnrestricted()
+        backgroundWorkRecheck?.cancel()
+        // HyperOS saves «Нет ограничений» only once its page has gone, which is after this screen resumes.
+        backgroundWorkRecheck = viewModelScope.launch {
+            delay(BACKGROUND_WORK_RECHECK_MS)
+            backgroundWorkUnrestricted.value = backgroundWork.isUnrestricted()
+        }
     }
 
     fun onCustomSpoilerChanged(configured: Boolean, refreshWidgets: Boolean = false, busy: Boolean = false) {
@@ -794,6 +802,7 @@ class SettingsViewModel @Inject constructor(
 
     companion object {
         private const val MIN_PRIVACY_LOADING_MS = 300L
+        private const val BACKGROUND_WORK_RECHECK_MS = 1_000L
 
         const val KEY_CUSTOM_SERVICES = "custom_services"
         const val KEY_NOTIFICATIONS = "notifications"

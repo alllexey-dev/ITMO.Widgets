@@ -193,7 +193,7 @@ class SettingsFragment : Fragment() {
                     SettingsEvent.OpenDiagnostics -> openScreen(AppScreen.DIAGNOSTICS)
                     // The root gate already switched to the flow; the overlay just has to leave.
                     SettingsEvent.CloseOverlays -> dismissOverlays()
-                    SettingsEvent.OpenBackgroundWorkSettings -> requireContext().openBackgroundWorkSettings()
+                    SettingsEvent.OpenBackgroundWorkSettings -> requireActivity().openBackgroundWorkSettings()
                     SettingsEvent.ShowBackgroundWorkHint -> showBackgroundWorkHint()
                     is SettingsEvent.ShowError -> {
                         restoreRenderedValues()
@@ -300,7 +300,7 @@ class SettingsFragment : Fragment() {
             .setTitle(R.string.settings_background_work_title)
             .setMessage(R.string.background_work_dialog_message)
             .setNegativeButton(R.string.background_work_later, null)
-            .setPositiveButton(R.string.background_work_allow) { _, _ -> requireContext().openBackgroundWorkSettings() }
+            .setPositiveButton(R.string.background_work_allow) { _, _ -> requireActivity().openBackgroundWorkSettings() }
             .show()
     }
 

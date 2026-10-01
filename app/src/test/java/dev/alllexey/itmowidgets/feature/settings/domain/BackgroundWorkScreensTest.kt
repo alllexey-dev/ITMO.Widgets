@@ -7,7 +7,11 @@ class BackgroundWorkScreensTest {
 
     @Test
     fun `Xiaomi, Redmi and POCO open the activity control first`() {
-        val miui = listOf(BackgroundWorkScreen.MIUI_POWER_KEEPER, BackgroundWorkScreen.APP_DETAILS)
+        val miui = listOf(
+            BackgroundWorkScreen.MIUI_POWER_DETAIL,
+            BackgroundWorkScreen.MIUI_POWER_KEEPER,
+            BackgroundWorkScreen.APP_DETAILS
+        )
 
         assertEquals(miui, BackgroundWorkScreens.forDevice("Xiaomi", "Redmi"))
         assertEquals(miui, BackgroundWorkScreens.forDevice("Xiaomi", "POCO"))

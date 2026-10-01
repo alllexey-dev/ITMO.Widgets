@@ -228,10 +228,15 @@ leaves a backgrounded app without network.
   and `Зачётка` pages while that page's check is on and
   `PowerManager.isIgnoringBatteryOptimizations` is false
   (`BackgroundWorkAccess`). The state is read when the page is created and on
-  every return, so the row leaves by itself once the user has lifted the limit.
-- A tap opens the first system page the device can open
+  every return, and once more a second after the return because HyperOS saves
+  the choice only after its page has gone, so the row leaves by itself once the
+  user has lifted the limit.
+- A tap opens, in the app's own task, the first system page the device can
+  open
   (`BackgroundWorkScreens.forDevice`, `openBackgroundWorkSettings`): on Xiaomi,
-  Redmi and POCO the app's `Контроль активности`
+  Redmi and POCO the app's `Сведения о батарее` with `Контроль активности`
+  (`com.miui.securitycenter/com.miui.powercenter.legacypowerrank.PowerDetailActivity`,
+  HyperOS), then the older MIUI page
   (`com.miui.powerkeeper/.ui.HiddenAppsConfigActivity`), otherwise the app's
   details; elsewhere the battery optimisation list
   (`ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS`), otherwise the app's details.
