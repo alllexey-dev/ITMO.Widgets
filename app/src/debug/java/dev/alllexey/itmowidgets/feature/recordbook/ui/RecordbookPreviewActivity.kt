@@ -136,7 +136,7 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
                             val handle = SavedStateHandle(values)
                             RecordbookSubjectViewModel(checkNotNull(repository), bars ?: NoBars, handle, resolver,
                                 lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime, resourceRepository, levelsRepository,
-                                MemoryMarkTracking) as T
+                                MemoryMarkTracking, MemorySheetScores) as T
                         }
                     }
                 }

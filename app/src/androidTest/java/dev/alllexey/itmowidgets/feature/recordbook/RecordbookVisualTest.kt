@@ -1,5 +1,17 @@
 package dev.alllexey.itmowidgets.feature.recordbook
 
+import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.SheetScoresBottomSheet
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
+import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
+import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.Espresso.onView
 import android.content.Intent
 import android.view.View
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
@@ -553,6 +565,152 @@ class RecordbookVisualTest {
         }
     }
 
+    @Test fun subjectPageShowsTheSheetTotalInEveryState() {
+        Appearances.default.forEach { spec ->
+            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
+                RecordbookPreviewActivity.MemorySheetScores.scores.value = listOf(RecordbookPreviewFixtures.sheetScore())
+                openSubject(scenario, "Математический")
+                scenario.onActivity { activity ->
+                    val items = activity.hubItems()
+                    val position = items.indexOfFirst { it is DetailItem.SheetScore }
+                    assertEquals(DetailItem.Section(R.string.subject_scores_title), items[position - 1])
+                    assertTrue(position < items.indexOfFirst { it is DetailItem.Group || it is DetailItem.Control })
+                    assertTrue(items.none { it is DetailItem.Notice })
+                }
+                scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.SheetScore } - 1 }
+                var below = 0
+                scenario.onActivity { activity ->
+                    val row = activity.sheetRow()
+                    assertEquals("66,3", row.findViewById<TextView>(R.id.value).text.toString())
+                    assertEquals("P3110 · ИТОГО баллов", row.findViewById<TextView>(R.id.caption).text.toString())
+                    assertEquals(activity.getString(R.string.sheet_scores_updated_time, "12:00"), row.findViewById<TextView>(R.id.status).text.toString())
+                    assertTrue(row.contentDescription.contains("66,3"))
+                    val menu = row.findViewById<View>(R.id.menu)
+                    val density = activity.resources.displayMetrics.density
+                    assertTrue(menu.width >= 48 * density - 1 && menu.height >= 48 * density - 1)
+                    assertTextFits(row)
+                    below = activity.belowSheetRow()
+                }
+                screenshot("subject-sheet-ok-${spec.name}")
+                val states = listOf(
+                    SheetStatus.NETWORK to R.string.sheet_scores_offline,
+                    SheetStatus.CLOSED to R.string.sheet_scores_closed,
+                    SheetStatus.ROW_NOT_FOUND to R.string.sheet_scores_row_not_found,
+                    SheetStatus.COLUMN_NOT_FOUND to R.string.sheet_scores_column_not_found,
+                    SheetStatus.TOO_LARGE to R.string.sheet_scores_too_large,
+                )
+                for ((status, text) in states) {
+                    RecordbookPreviewActivity.MemorySheetScores.scores.value = listOf(RecordbookPreviewFixtures.sheetScore(status))
+                    settle()
+                    scenario.onActivity { activity ->
+                        val row = activity.sheetRow()
+                        assertEquals("66,3", row.findViewById<TextView>(R.id.value).text.toString())
+                        assertTrue(row.findViewById<TextView>(R.id.status).text.toString().endsWith(activity.getString(text)))
+                        assertEquals(status.name, below, activity.belowSheetRow())
+                        assertTextFits(row)
+                    }
+                    screenshot("subject-sheet-${status.name.lowercase()}-${spec.name}")
+                }
+                RecordbookPreviewActivity.MemorySheetScores.scores.value = listOf(
+                    RecordbookPreviewFixtures.sheetScore(headerPath = LONG_PATH, tabName = "BARS (Fall semester 2026)")
+                )
+                settle()
+                scenario.onActivity { activity ->
+                    val caption = activity.sheetRow().findViewById<TextView>(R.id.caption)
+                    assertTrue(caption.lineCount > 1)
+                    assertTextFits(activity.sheetRow())
+                }
+                screenshot("subject-sheet-long-${spec.name}")
+
+                scenario.onActivity { it.sheetRow().findViewById<View>(R.id.menu).performClick() }
+                settle()
+                listOf(R.string.sheet_scores_open, R.string.sheet_scores_disconnect).forEach {
+                    onView(withText(it)).inRoot(isPlatformPopup()).check(matches(isDisplayed()))
+                }
+                onView(withText(R.string.sheet_scores_change_total)).inRoot(isPlatformPopup()).perform(click())
+                settle()
+                assertTrue(RecordbookPreviewActivity.linkNavigation.contains("sheet:TOTAL"))
+            }
+        }
+    }
+
+    @Test fun subjectPageOffersTheSheetHintWithoutAConnection() {
+        Appearances.default.forEach { spec ->
+            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
+                openSubject(scenario, "Математический")
+                scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.SheetHint } - 1 }
+                scenario.onActivity { activity ->
+                    val row = activity.hintRow()
+                    assertEquals(activity.getString(R.string.sheet_scores_hint), row.findViewById<TextView>(R.id.title).text.toString())
+                    assertTrue(row.height >= 48 * activity.resources.displayMetrics.density - 1)
+                    assertTextFits(row)
+                    row.performClick()
+                }
+                settle()
+                assertEquals(listOf("sheet:CONNECT"), RecordbookPreviewActivity.linkNavigation.filter { it.startsWith("sheet") })
+                assertEquals(RecordbookPreviewFixtures.SHEET_URL, RecordbookPreviewActivity.sheetRequests.single().url)
+                scenario.onActivity { (it.supportFragmentManager.findFragmentByTag(SheetScoresBottomSheet.TAG) as DialogFragment).dismiss() }
+                settle()
+
+                val second = "https://docs.google.com/spreadsheets/d/1SyntheticSecondSheet0123456789/edit"
+                val links = RecordbookPreviewActivity.resourceRepository as MemorySubjectLinksRepository
+                val scope = RecordbookPreviewFixtures.MATH_SCOPE
+                val snapshot = checkNotNull(links.snapshots.value[scope.key])
+                val extra = snapshot.mine.first().copy(id = "flow-sheet", url = second, title = "Баллы лектора", isMine = false, score = 3)
+                links.snapshots.value = links.snapshots.value + (scope.key to snapshot.copy(shared = snapshot.shared + extra))
+                settle()
+                scenario.onActivity { it.hintRow().performClick() }
+                settle()
+                onView(withText(R.string.sheet_scores_choose_link)).inRoot(isDialog()).check(matches(isDisplayed()))
+                onView(withText("Таблица баллов потока · Моя")).inRoot(isDialog()).check(matches(isDisplayed()))
+                screenshot("subject-sheet-choose-${spec.name}")
+                onView(withText("Баллы лектора")).inRoot(isDialog()).perform(click())
+                settle()
+                assertEquals(second, RecordbookPreviewActivity.sheetRequests.last().url)
+                assertEquals(SheetScoresArgs.Step.CONNECT, RecordbookPreviewActivity.sheetRequests.last().step)
+                scenario.onActivity { (it.supportFragmentManager.findFragmentByTag(SheetScoresBottomSheet.TAG) as DialogFragment).dismiss() }
+                settle()
+            }
+
+            // A subject without controls: «Баллы» holds the offer and no «no details» card.
+            withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
+                val base = RecordbookPreviewFixtures.Recordbook(Phase.MIDDLE)
+                RecordbookPreviewActivity.repository = object : RecordbookRepository by base {
+                    override suspend fun getControls(entryId: Long) =
+                        if (entryId == HISTORY_ID) AppResult.Success(emptyList()) else base.getControls(entryId)
+                }
+                val links = RecordbookPreviewActivity.resourceRepository as MemorySubjectLinksRepository
+                val math = checkNotNull(links.snapshots.value[RecordbookPreviewFixtures.MATH_SCOPE.key])
+                val history = ResourceScope(HISTORY_ID, "История", "2025-2")
+                links.snapshots.value = links.snapshots.value + (history.key to math.copy(
+                    mine = listOf(math.mine.first().copy(scope = history)), shared = emptyList()
+                ))
+                openSubject(scenario, "История")
+                scenario.onActivity { activity ->
+                    val items = activity.hubItems()
+                    val hint = items.indexOfFirst { it is DetailItem.SheetHint }
+                    assertTrue(hint > 0)
+                    assertEquals(DetailItem.Section(R.string.subject_scores_title), items[hint - 1])
+                    assertTrue(items.none { it is DetailItem.Notice })
+                }
+                screenshot("subject-sheet-hint-${spec.name}")
+            }
+        }
+    }
+
+    private fun RecordbookPreviewActivity.sheetRow(): View =
+        checkNotNull(hubList().findViewHolderForAdapterPosition(hubItems().indexOfFirst { it is DetailItem.SheetScore })).itemView
+
+    private fun RecordbookPreviewActivity.hintRow(): View =
+        checkNotNull(hubList().findViewHolderForAdapterPosition(hubItems().indexOfFirst { it is DetailItem.SheetHint })).itemView
+
+    /** The window position of the row under the sheet row. */
+    private fun RecordbookPreviewActivity.belowSheetRow(): Int {
+        val position = hubItems().indexOfFirst { it is DetailItem.SheetScore } + 1
+        val view = checkNotNull(hubList().findViewHolderForAdapterPosition(position)).itemView
+        return IntArray(2).also(view::getLocationInWindow)[1]
+    }
+
     private fun withFixture(phase: Phase, appearance: RecordbookPreviewActivity.Appearance, block: (ActivityScenario<RecordbookPreviewActivity>) -> Unit) {
         RecordbookPreviewActivity.appearance = appearance
         RecordbookPreviewFixtures.install(phase)
@@ -769,5 +927,10 @@ class RecordbookVisualTest {
             name, id, id, if (id == 3L || id == 5L) "Зачёт" else "Экзамен", score, rate, null, null, details,
             "Тестовый преподаватель с длинным именем и отчеством"
         )
+    }
+
+    private companion object {
+        const val HISTORY_ID = 6L
+        val LONG_PATH = "Итоговая аттестация · " + "Сумма баллов за все контрольные и лабораторные работы семестра ".repeat(2).trim().take(120)
     }
 }

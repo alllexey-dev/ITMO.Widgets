@@ -18,6 +18,11 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookContro
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -37,6 +42,10 @@ object RecordbookPreviewFixtures {
     const val PE = "Физическая культура и спорт (элективная)"
     const val MATH_ID = 1L
     const val LMS_URL = "https://lms.itmo.ru/course/1"
+    /** A synthetic Google Sheet address: no real sheet has this id. */
+    const val SHEET_URL = "https://docs.google.com/spreadsheets/d/1SyntheticPreviewSheet0123456789/edit#gid=22"
+    /** The math subject in the spring of 2025/2026, the period of the preview. */
+    val MATH_SCOPE = ResourceScope(MATH_ID, MATH, "2025-2")
     private val SPORT_END: OffsetDateTime = OffsetDateTime.parse("2026-06-20T23:59:00+03:00")
     private val UPDATED: OffsetDateTime = OffsetDateTime.parse("2026-05-20T09:00:00+03:00")
     private val LECTURE_FLOW = LinkAudience(7101, "МАТ АН ПИИКТ 3", typeId = 1, depth = 1)
@@ -147,7 +156,8 @@ object RecordbookPreviewFixtures {
         snapshots.value = mapOf(
             current.key to SubjectLinksSnapshot(
                 mine = listOf(
-                    link(current, "own-table", LinkCategory.SCORES, "Таблица баллов потока", LinkVisibility.PRIVATE, mine = true),
+                    link(current, "own-table", LinkCategory.SCORES, "Таблица баллов потока", LinkVisibility.PRIVATE, mine = true,
+                        url = SHEET_URL),
                     link(current, "own-chat", LinkCategory.CHAT, "Чат практики", LinkVisibility.FLOW, mine = true, flow = PRACTICE_FLOW)
                 ),
                 shared = listOf(
@@ -169,8 +179,21 @@ object RecordbookPreviewFixtures {
 
     private fun link(
         scope: ResourceScope, id: String, category: LinkCategory, title: String, visibility: LinkVisibility,
-        mine: Boolean = false, flow: LinkAudience? = null, score: Int = 0
-    ) = SubjectLink(id, scope, category, "https://example.org/$id", title, visibility, flow?.flowId, flow?.label,
+        mine: Boolean = false, flow: LinkAudience? = null, score: Int = 0, url: String = "https://example.org/$id"
+    ) = SubjectLink(id, scope, category, url, title, visibility, flow?.flowId, flow?.label,
         if (mine && visibility == LinkVisibility.PRIVATE) SubjectLinkStatus.PRIVATE else SubjectLinkStatus.PUBLISHED, null,
         score, 0, isMine = mine, reportedByMe = false, author = null, updatedAt = UPDATED)
+
+    /** The own total of the math subject in [status]: read at 12:00 on the preview's today, unless [updatedAt]. */
+    fun sheetScore(
+        status: SheetStatus = SheetStatus.OK,
+        value: String? = "66,3",
+        headerPath: String = "ИТОГО баллов",
+        tabName: String = "P3110",
+        updatedAt: Instant? = Instant.parse("2026-06-01T09:00:00Z"),
+    ) = SheetScore(
+        scope = MATH_SCOPE, url = SHEET_URL, tabGid = 22, tabName = tabName, rowKey = "123456", keyColumn = 0,
+        keyKind = KeyKind.ISU, column = SheetColumnRef(headerPath, 11), value = value, baseline = value, tracked = true,
+        status = status, updatedAt = updatedAt, connectedAt = Instant.parse("2026-05-01T09:00:00Z"),
+    )
 }

@@ -669,6 +669,16 @@
     <string name="sheet_scores_pick_total">Выберите итог</string>
     <string name="sheet_scores_no_values">В строке нет значений</string>
     <string name="sheet_scores_column">Столбец %1$s</string>
+    <string name="sheet_scores_hint">Мои баллы из таблицы</string>
+    <string name="sheet_scores_choose_link">Какая таблица?</string>
+    <string name="sheet_scores_link_untitled">Таблица</string>
+    <string name="sheet_scores_link_mine">%1$s · Моя</string>
+    <string name="sheet_scores_open">Открыть таблицу</string>
+    <string name="sheet_scores_change_total">Изменить итог</string>
+    <string name="sheet_scores_disconnect">Отключить</string>
+    <string name="sheet_scores_actions">Действия с таблицей</string>
+    <string name="sheet_scores_updated_time">Обновлено в %1$s</string>
+    <string name="sheet_scores_updated_date">Обновлено %1$s</string>
     <string name="settings_marks_footer">Уведомлять о новых и изменённых оценках.</string>
     <string name="settings_marks_notifications_off">Уведомления выключены.</string>
     <string name="settings_background_work_title">Работа в фоне</string>

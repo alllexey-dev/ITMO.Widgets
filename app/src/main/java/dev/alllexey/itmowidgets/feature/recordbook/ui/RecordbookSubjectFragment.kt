@@ -13,9 +13,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
@@ -23,12 +25,15 @@ import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkActions
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
+import dev.alllexey.itmowidgets.core.ui.navigation.openSheetScores
 import dev.alllexey.itmowidgets.core.ui.navigation.openSubjectLinks
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.openLink
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookSubjectBinding
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SheetLinkOption
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -64,7 +69,11 @@ class RecordbookSubjectFragment : Fragment() {
             onLinkActions = { link -> linksArgs()?.let { openLinkActions(it, link.id) } },
             onAllLinks = { linksArgs()?.let(::openSubjectLinks) },
             onAddLink = { linksArgs()?.let { openLinkEditor(it) } },
-            onOpenTeacher = ::openUserProfile
+            onOpenTeacher = ::openUserProfile,
+            onOpenSheet = { openLink(it, binding.root) },
+            onChangeSheetTotal = ::changeSheetTotal,
+            onDisconnectSheet = viewModel::disconnectSheet,
+            onConnectSheet = ::connectSheet
         ))
         binding.recyclerView.adapter = adapter
         binding.recyclerView.itemAnimator = null
@@ -87,6 +96,35 @@ class RecordbookSubjectFragment : Fragment() {
     private fun linksArgs(): SubjectLinksArgs? =
         (viewModel.uiState.value as? RecordbookSubjectUiState.Content)?.hub?.resourceScope
             ?.let { SubjectLinksArgs(it.subjectId, it.subjectName, it.periodKey) }
+
+    private fun changeSheetTotal() {
+        val content = viewModel.uiState.value as? RecordbookSubjectUiState.Content ?: return
+        val score = (content.hub.sheet as? SubjectSheetState.Connected)?.score ?: return
+        openSheetScores(sheetArgs(score.url, SheetScoresArgs.Step.TOTAL) ?: return)
+    }
+
+    /** One sheet link starts at once; several ask which one first, own links on top. */
+    private fun connectSheet(links: List<SheetLinkOption>) {
+        val single = links.singleOrNull()
+        if (single != null) {
+            sheetArgs(single.url, SheetScoresArgs.Step.CONNECT)?.let(::openSheetScores)
+            return
+        }
+        val names = links.map { link ->
+            val title = link.title?.takeIf(String::isNotBlank) ?: getString(R.string.sheet_scores_link_untitled)
+            if (link.mine) getString(R.string.sheet_scores_link_mine, title) else title
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.sheet_scores_choose_link)
+            .setItems(names.toTypedArray()) { _, index ->
+                sheetArgs(links[index].url, SheetScoresArgs.Step.CONNECT)?.let(::openSheetScores)
+            }
+            .show()
+    }
+
+    private fun sheetArgs(url: String, step: SheetScoresArgs.Step): SheetScoresArgs? =
+        (viewModel.uiState.value as? RecordbookSubjectUiState.Content)?.hub?.resourceScope
+            ?.let { SheetScoresArgs(it.subjectId, it.subjectName, it.periodKey, url, step) }
 
     private fun render(state: RecordbookSubjectUiState) {
         if (state !is RecordbookSubjectUiState.Content) binding.loading.isVisible = state is RecordbookSubjectUiState.Loading

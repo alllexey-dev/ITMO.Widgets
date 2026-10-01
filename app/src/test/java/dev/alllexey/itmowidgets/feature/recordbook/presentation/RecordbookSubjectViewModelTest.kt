@@ -1,52 +1,55 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
-import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
-import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChip
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
-import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
-import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
-import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroup
-import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroupKind
-import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
-import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
-import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookGradeScale
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.feature.resources.presentation.FakeSubjectLinksRepository
-import dev.alllexey.itmowidgets.feature.resources.presentation.linksSnapshot
-import dev.alllexey.itmowidgets.feature.resources.presentation.subjectLink
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
+import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
+import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeScheduleRefreshGateway
+import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSubjectLessonsGateway
 import dev.alllexey.itmowidgets.feature.recordbook.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.recordbook.barsJournal
 import dev.alllexey.itmowidgets.feature.recordbook.barsSubject
-import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
-import dev.alllexey.itmowidgets.feature.recordbook.subjectLesson
-import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
-import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContext
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import java.time.LocalDate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
+import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
+import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroup
+import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroupKind
+import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
+import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookGradeScale
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
+import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContext
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
+import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.sheetScore
+import dev.alllexey.itmowidgets.feature.recordbook.subjectLesson
+import dev.alllexey.itmowidgets.feature.resources.presentation.FakeSubjectLinksRepository
+import dev.alllexey.itmowidgets.feature.resources.presentation.linksSnapshot
+import dev.alllexey.itmowidgets.feature.resources.presentation.subjectLink
+import dev.alllexey.itmowidgets.feature.reviews.presentation.FakeTeacherLevelsRepository
+import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
-import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
-import dev.alllexey.itmowidgets.feature.reviews.presentation.FakeTeacherLevelsRepository
 import org.junit.Rule
 import org.junit.Test
 
@@ -58,10 +61,10 @@ class RecordbookSubjectViewModelTest {
     private val resources = FakeSubjectLinksRepository()
     private val levels = FakeTeacherLevelsRepository()
     private val marks = FakeMarkTrackingRepository()
-    private fun model(withBars: Boolean = false) = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
+    private fun model(withBars: Boolean = false, sheets: FakeSheetScoresRepository = FakeSheetScoresRepository()) = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
         put("entry_id", 42L); put("program_id", 1L); put("semester", 2); put("study_year", "2025/2026")
         if (withBars) { put("bars_plan", 8L); put("bars_type", "flow"); put("bars_identifier", "7") }
-    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels, marks)
+    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels, marks, sheets)
     private val lessons = FakeSubjectLessonsGateway()
     private val scheduleRefresh = FakeScheduleRefreshGateway()
     private val bindingStore = FakeSubjectBindingStore()
@@ -181,12 +184,15 @@ class RecordbookSubjectViewModelTest {
 
     private fun content() = model().let { it to it }.first
     private fun RecordbookSubjectViewModel.hub() = (uiState.value as RecordbookSubjectUiState.Content).hub
-    private fun currentPeriodModel(subject: RecordbookSubject = recordbookSubject()): RecordbookSubjectViewModel {
+    private fun currentPeriodModel(
+        subject: RecordbookSubject = recordbookSubject(),
+        sheets: FakeSheetScoresRepository = FakeSheetScoresRepository(),
+    ): RecordbookSubjectViewModel {
         // FixedAcademicTime is 2026-09-07: autumn of 2026/2027, semester 3 for a second-year student.
         repository.subjects = AppResult.Success(listOf(subject))
         return RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
             put("entry_id", 42L); put("program_id", 1L); put("semester", 3); put("study_year", "2026/2027")
-        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels, marks)
+        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels, marks, sheets)
     }
 
     @Test fun `an exact discipline id shows the upcoming lessons and their teachers without asking`() = runTest {
@@ -371,6 +377,100 @@ class RecordbookSubjectViewModelTest {
         assertNull((vm.uiState.value as RecordbookSubjectUiState.Content).gradeStep)
     }
 
+    @Test fun `a connection of this subject period is shown and read on entry and on every pull`() = runTest {
+        val sheets = FakeSheetScoresRepository()
+        val vm = model(sheets = sheets); advanceUntilIdle()
+        val scope = vm.hub().resourceScope!!
+        sheets.scores.value = listOf(sheetScore(scope = scope))
+        advanceUntilIdle()
+
+        val connected = vm.hub().sheet as SubjectSheetState.Connected
+        assertEquals("66,3", connected.score.value)
+        assertEquals(LocalDateTime.of(2026, 9, 7, 12, 0), connected.updatedAt)
+        assertEquals(listOf(scope), sheets.refreshes)
+
+        vm.refresh(); advanceUntilIdle()
+        assertEquals(listOf(scope, scope), sheets.refreshes)
+    }
+
+    @Test fun `without a connection the sheet links are offered own first, then pinned, then scores`() = runTest {
+        val sheets = FakeSheetScoresRepository()
+        fun sheetLink(id: String, category: LinkCategory, mine: Boolean, score: Int = 0, url: String = sheetUrl(id)) =
+            subjectLink(id, category, isMine = mine, score = score).copy(url = url)
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(
+            mine = listOf(sheetLink("own", LinkCategory.OTHER, mine = true)),
+            shared = listOf(
+                sheetLink("scores", LinkCategory.SCORES, mine = false, score = 1),
+                sheetLink("pinned", LinkCategory.MATERIALS, mine = false),
+                sheetLink("copy", LinkCategory.SCORES, mine = false, score = 9, url = sheetUrl("scores")),
+                subjectLink("github", LinkCategory.TASKS, isMine = false).copy(url = "https://github.com/synthetic/tasks"),
+            ),
+            pinnedId = "pinned",
+        ))
+        val vm = model(sheets = sheets); advanceUntilIdle()
+        sheets.scores.value = listOf(sheetScore(scope = vm.hub().resourceScope!!.copy(periodKey = "2024-2")))
+        advanceUntilIdle()
+
+        val hint = vm.hub().sheet as SubjectSheetState.Hint
+        assertEquals(listOf(sheetUrl("own"), sheetUrl("pinned"), sheetUrl("scores")), hint.links.map { it.url })
+        assertEquals(listOf(true, false, false), hint.links.map { it.mine })
+        assertEquals("Ссылка copy", hint.links.last().title)
+    }
+
+    @Test fun `one sheet link is one option and links without a sheet offer nothing`() = runTest {
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(
+            shared = listOf(subjectLink("sheet", LinkCategory.SCORES, isMine = false).copy(url = sheetUrl("sheet")))
+        ))
+        val vm = model(); advanceUntilIdle()
+        assertEquals(listOf(SheetLinkOption(sheetUrl("sheet"), "Ссылка sheet", mine = false)), (vm.hub().sheet as SubjectSheetState.Hint).links)
+
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(
+            shared = listOf(subjectLink("github", LinkCategory.TASKS, isMine = false).copy(url = "https://github.com/synthetic/tasks"))
+        ))
+        advanceUntilIdle()
+        assertNull(vm.hub().sheet)
+    }
+
+    @Test fun `a new total reaches the open page without a reload`() = runTest {
+        val sheets = FakeSheetScoresRepository()
+        val vm = model(sheets = sheets); advanceUntilIdle()
+        val scope = vm.hub().resourceScope!!
+        sheets.scores.value = listOf(sheetScore(scope = scope))
+        advanceUntilIdle()
+        val requests = repository.subjectRequests.size
+
+        sheets.scores.value = listOf(sheetScore(scope = scope, value = "70"))
+        advanceUntilIdle()
+
+        assertEquals("70", (vm.hub().sheet as SubjectSheetState.Connected).score.value)
+        assertEquals(requests, repository.subjectRequests.size)
+        assertEquals(listOf(scope), sheets.refreshes)
+    }
+
+    @Test fun `physical education has no sheet and reads none`() = runTest {
+        val sheets = FakeSheetScoresRepository()
+        repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Физическая культура и спорт (базовая)")))
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(mine = listOf(subjectLink("own").copy(url = sheetUrl("own")))))
+        val vm = model(sheets = sheets); advanceUntilIdle()
+
+        assertNull(vm.hub().sheet)
+        assertTrue(sheets.refreshes.isEmpty())
+    }
+
+    @Test fun `disconnecting leaves the offer to connect again`() = runTest {
+        val sheets = FakeSheetScoresRepository()
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(mine = listOf(subjectLink("own").copy(url = sheetUrl("own")))))
+        val vm = model(sheets = sheets); advanceUntilIdle()
+        val scope = vm.hub().resourceScope!!
+        sheets.scores.value = listOf(sheetScore(scope = scope))
+        advanceUntilIdle()
+
+        vm.disconnectSheet(); advanceUntilIdle()
+
+        assertEquals(listOf(scope), sheets.disconnected)
+        assertTrue(vm.hub().sheet is SubjectSheetState.Hint)
+    }
+
     @Test fun `the grade step follows the score and the kind of assessment`() = runTest {
         repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = 72.0)))
         val exam = model(); advanceUntilIdle()
@@ -419,4 +519,6 @@ class RecordbookSubjectViewModelTest {
         model.refresh(); advanceUntilIdle()
         assertTrue(model.hub().lessonsExpanded)
     }
+
+    private fun sheetUrl(id: String) = "https://docs.google.com/spreadsheets/d/1SyntheticSheet${id.padEnd(16, '0')}/edit"
 }

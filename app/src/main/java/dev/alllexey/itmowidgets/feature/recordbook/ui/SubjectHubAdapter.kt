@@ -5,6 +5,7 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
@@ -27,10 +28,10 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.ui.bindLevel
 import dev.alllexey.itmowidgets.core.ui.buildingShortTitle
 import dev.alllexey.itmowidgets.core.ui.iconRes
-import dev.alllexey.itmowidgets.core.ui.linkIconRes
 import dev.alllexey.itmowidgets.core.ui.label
 import dev.alllexey.itmowidgets.core.ui.lessonTypeColorRes
 import dev.alllexey.itmowidgets.core.ui.lessonTypeNameRes
+import dev.alllexey.itmowidgets.core.ui.linkIconRes
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.roomShortTitle
@@ -49,6 +50,8 @@ import dev.alllexey.itmowidgets.databinding.ItemSubjectLessonBinding
 import dev.alllexey.itmowidgets.databinding.ItemSubjectLinkChipsBinding
 import dev.alllexey.itmowidgets.databinding.ItemSubjectMessageBinding
 import dev.alllexey.itmowidgets.databinding.ItemSubjectMoreBinding
+import dev.alllexey.itmowidgets.databinding.ItemSubjectSheetHintBinding
+import dev.alllexey.itmowidgets.databinding.ItemSubjectSheetScoreBinding
 import dev.alllexey.itmowidgets.databinding.ItemSubjectTeacherBinding
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroup
@@ -60,10 +63,16 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookContro
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookProgress
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SheetLinkOption
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonsState
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacher
+import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.columnTitle
+import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.tabLabel
+import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.textRes
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -85,6 +94,10 @@ sealed interface DetailItem {
     data class BindingProposal(val candidate: ScheduleSubject) : DetailItem
     data class BindingChoice(val candidates: List<ScheduleSubject>) : DetailItem
     data class Teacher(val teacher: SubjectTeacher, val level: TeacherLevel?) : DetailItem
+    /** The own total from a connected sheet, first under «Баллы». */
+    data class SheetScore(val state: SubjectSheetState.Connected) : DetailItem
+    /** «Мои баллы из таблицы» for a subject with sheet links and no connection. */
+    data class SheetHint(val links: List<SheetLinkOption>) : DetailItem
 }
 
 /** Actions the subject page forwards to its view model and the link sheets. */
@@ -97,7 +110,11 @@ data class SubjectHubActions(
     val onLinkActions: (SubjectLink) -> Unit = {},
     val onAllLinks: () -> Unit = {},
     val onAddLink: () -> Unit = {},
-    val onOpenTeacher: (Int) -> Unit = {}
+    val onOpenTeacher: (Int) -> Unit = {},
+    val onOpenSheet: (String) -> Unit = {},
+    val onChangeSheetTotal: () -> Unit = {},
+    val onDisconnectSheet: () -> Unit = {},
+    val onConnectSheet: (List<SheetLinkOption>) -> Unit = {}
 )
 
 /** The whole subject page as one list: result, links, chats, scores, teachers and the nearest lessons. */
@@ -118,13 +135,24 @@ class SubjectHubAdapter(
                 add(DetailItem.Section(R.string.links_chats))
                 addAll(hub.chats.map(DetailItem::Chat))
             }
+            val sheet = when (val sheetState = hub.sheet) {
+                is SubjectSheetState.Connected -> DetailItem.SheetScore(sheetState)
+                is SubjectSheetState.Hint -> DetailItem.SheetHint(sheetState.links)
+                null -> null
+            }
             if (state.controlsError != null || state.controls.isEmpty()) {
-                // PE often has no control tree by design; do not add a second empty card.
-                if (state.controlsError != null || !state.subject.isPhysicalEducation) {
+                if (sheet != null) {
+                    // The sheet is the detail: «no details» goes, a failure to load the controls stays under it.
+                    add(DetailItem.Section(R.string.subject_scores_title))
+                    add(sheet)
+                    state.controlsError?.let { add(DetailItem.Notice(it.messageRes())) }
+                } else if (state.controlsError != null || !state.subject.isPhysicalEducation) {
+                    // PE often has no control tree by design; do not add a second empty card.
                     add(DetailItem.Notice(state.controlsError?.messageRes()))
                 }
             } else {
                 add(DetailItem.Section(R.string.subject_scores_title))
+                sheet?.let(::add)
                 state.controlGroups.forEach { entry ->
                     when (entry) {
                         is ControlEntry.Single -> add(DetailItem.Control(RecordbookControlRow(entry.control, 0), state.subject.teacherName))
@@ -168,6 +196,8 @@ class SubjectHubAdapter(
         is DetailItem.Chat -> 10
         is DetailItem.Group -> 11
         is DetailItem.AllLessons -> 12
+        is DetailItem.SheetScore -> 13
+        is DetailItem.SheetHint -> 14
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -185,6 +215,8 @@ class SubjectHubAdapter(
             10 -> ChatHolder(ItemSubjectChatBinding.inflate(inflater, parent, false))
             11 -> GroupHolder(ItemRecordbookControlGroupBinding.inflate(inflater, parent, false))
             12 -> AllLessonsHolder(ItemSubjectMoreBinding.inflate(inflater, parent, false))
+            13 -> SheetScoreHolder(ItemSubjectSheetScoreBinding.inflate(inflater, parent, false))
+            14 -> SheetHintHolder(ItemSubjectSheetHintBinding.inflate(inflater, parent, false))
             else -> ControlHolder(ItemRecordbookControlBinding.inflate(inflater, parent, false))
         }
     }
@@ -205,6 +237,8 @@ class SubjectHubAdapter(
             is DetailItem.BindingProposal -> (holder as BindingHolder).bindProposal(item.candidate)
             is DetailItem.BindingChoice -> (holder as BindingHolder).bindChoice(item.candidates)
             is DetailItem.Teacher -> (holder as TeacherHolder).bind(item.teacher, item.level)
+            is DetailItem.SheetScore -> (holder as SheetScoreHolder).bind(item.state)
+            is DetailItem.SheetHint -> (holder as SheetHintHolder).bind(item.links)
         }
     }
 
@@ -301,6 +335,55 @@ class SubjectHubAdapter(
             binding.caption.text = link.visibility.label(link.audienceLabel).resolve(context)
             binding.root.setOnClickListener { hubActions.onOpenLink(link.url) }
             binding.root.setOnLongClickListener { hubActions.onLinkActions(link); true }
+        }
+    }
+
+    /** Value, «лист · заголовок» and when it was read; the row opens the tab, `⋮` holds the rest. */
+    private inner class SheetScoreHolder(val binding: ItemSubjectSheetScoreBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(state: SubjectSheetState.Connected) {
+            val context = binding.root.context
+            val score = state.score
+            binding.value.text = score.value ?: context.getString(R.string.recordbook_score_pending)
+            binding.caption.text = tabLabel(score.tabName, context.columnTitle(score.column.headerPath, score.column.index))
+            val updated = state.updatedAt?.let { at ->
+                if (at.toLocalDate() == state.today) context.getString(R.string.sheet_scores_updated_time, at.format(TIME_FORMAT))
+                else context.getString(R.string.sheet_scores_updated_date, at.format(DAY_FORMAT))
+            }
+            val failure = score.status.textRes()?.let(context::getString)
+            // Offline keeps the stored value and says only that; the time of a stale value would wrap on narrow screens.
+            binding.status.text = if (score.status == SheetStatus.OK) updated else failure
+            binding.status.isVisible = !binding.status.text.isNullOrEmpty()
+            binding.status.setTextColor(
+                if (score.status == SheetStatus.OK || score.status == SheetStatus.NETWORK) {
+                    context.color.resolve(com.google.android.material.R.attr.colorOnSurfaceVariant)
+                } else {
+                    context.color.resolve(androidx.appcompat.R.attr.colorError)
+                }
+            )
+            binding.root.contentDescription = listOf(binding.value.text, binding.caption.text, binding.status.text)
+                .filter { !it.isNullOrEmpty() }.joinToString(", ")
+            binding.root.setOnClickListener { hubActions.onOpenSheet(score.tabUrl) }
+            binding.menu.setOnClickListener { button ->
+                val popup = PopupMenu(button.context, button)
+                popup.menu.add(0, MENU_OPEN, 0, R.string.sheet_scores_open)
+                popup.menu.add(0, MENU_TOTAL, 1, R.string.sheet_scores_change_total)
+                popup.menu.add(0, MENU_DISCONNECT, 2, R.string.sheet_scores_disconnect)
+                popup.setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        MENU_OPEN -> hubActions.onOpenSheet(score.tabUrl)
+                        MENU_TOTAL -> hubActions.onChangeSheetTotal()
+                        MENU_DISCONNECT -> hubActions.onDisconnectSheet()
+                    }
+                    true
+                }
+                popup.show()
+            }
+        }
+    }
+
+    private inner class SheetHintHolder(val binding: ItemSubjectSheetHintBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(links: List<SheetLinkOption>) {
+            binding.root.setOnClickListener { hubActions.onConnectSheet(links) }
         }
     }
 
@@ -476,5 +559,9 @@ class SubjectHubAdapter(
     private companion object {
         val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.forLanguageTag("ru"))
         val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
+        val DAY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru"))
+        const val MENU_OPEN = 1
+        const val MENU_TOTAL = 2
+        const val MENU_DISCONNECT = 3
     }
 }

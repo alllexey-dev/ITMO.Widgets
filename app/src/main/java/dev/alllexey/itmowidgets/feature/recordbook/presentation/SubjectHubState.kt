@@ -9,6 +9,21 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContext
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
+import java.time.LocalDate
+import java.time.LocalDateTime
+
+/** A link of the subject whose address is a Google Sheet; [mine] for the viewer's own links. */
+data class SheetLinkOption(val url: String, val title: String?, val mine: Boolean)
+
+/** The own total from a sheet on the subject page: a connection, or the offer to make one. */
+sealed interface SubjectSheetState {
+    /** [updatedAt] is the last successful reading in the academic time zone; [today] decides how it is written. */
+    data class Connected(val score: SheetScore, val updatedAt: LocalDateTime?, val today: LocalDate) : SubjectSheetState
+
+    /** «Мои баллы из таблицы»: the subject's sheet links, own first, then pinned, scores, the rest by rank. */
+    data class Hint(val links: List<SheetLinkOption>) : SubjectSheetState
+}
 
 /** A person teaching the subject, with the lesson types they run (`typeId`s), most frequent first. */
 data class SubjectTeacher(val name: String, val isu: Long?, val roles: List<Int>)
@@ -38,7 +53,9 @@ data class SubjectHubState(
     val links: SubjectLinksState? = null,
     val chips: SubjectLinkChips = SubjectLinkChips(emptyList(), 0),
     val chats: List<SubjectLink> = emptyList(),
-    val teacherLevels: Map<Long, TeacherLevel> = emptyMap()
+    val teacherLevels: Map<Long, TeacherLevel> = emptyMap(),
+    /** Null for physical education and for a subject without sheet links or a connection. */
+    val sheet: SubjectSheetState? = null
 ) {
     /** The nearest lessons first; the rest only after «Все пары». */
     val visibleLessons: List<SubjectLesson>

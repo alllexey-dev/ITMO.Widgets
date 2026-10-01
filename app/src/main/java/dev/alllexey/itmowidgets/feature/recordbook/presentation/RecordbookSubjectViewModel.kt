@@ -4,15 +4,18 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.alllexey.itmowidgets.core.resources.LinkCategory
-import dev.alllexey.itmowidgets.core.resources.ResourceScope
-import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
-import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
-import dev.alllexey.itmowidgets.core.resources.subjectLinkChips
-import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
-import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
+import dev.alllexey.itmowidgets.core.resources.LinkCategory
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.resources.SubjectLink
+import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
+import dev.alllexey.itmowidgets.core.resources.SubjectLinkRanking
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
+import dev.alllexey.itmowidgets.core.resources.subjectLinkChips
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
@@ -33,13 +36,15 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContext
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.studyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.studyHalf
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.domain.withBars
 import javax.inject.Inject
@@ -93,6 +98,7 @@ class RecordbookSubjectViewModel @Inject constructor(
     private val subjectLinks: SubjectLinksRepository,
     private val teacherLevels: TeacherLevelsRepository,
     private val marks: MarkTrackingRepository,
+    private val sheets: SheetScoresRepository,
 ) : ViewModel() {
     private val entryId = checkNotNull(savedStateHandle.get<Long>(ARG_ENTRY_ID))
     private val programId = checkNotNull(savedStateHandle.get<Long>(ARG_PROGRAM_ID))
@@ -251,7 +257,9 @@ class RecordbookSubjectViewModel @Inject constructor(
     private fun loadLinks(subject: RecordbookSubject) {
         linksJob?.cancel()
         if (subject.isPhysicalEducation) {
-            updateHub { copy(resourceScope = null, links = null, chips = SubjectLinkChips(emptyList(), 0), chats = emptyList()) }
+            updateHub {
+                copy(resourceScope = null, links = null, chips = SubjectLinkChips(emptyList(), 0), chats = emptyList(), sheet = null)
+            }
             return
         }
         val scope = ResourceScope(subject.disciplineId, subject.name,
@@ -260,8 +268,40 @@ class RecordbookSubjectViewModel @Inject constructor(
         updateHub { withLinks(scope, cached, subject.lmsLink) }
         linksJob = viewModelScope.launch {
             launch { subjectLinks.refresh(scope) }
-            subjectLinks.observe(scope).collect { state -> updateHub { withLinks(scope, state, subject.lmsLink) } }
+            // On entry and on every pull, without an indicator: the stored total shows until the new one arrives.
+            launch { sheets.refresh(scope) }
+            combine(subjectLinks.observe(scope), sheets.observe()) { state, scores -> state to scores }
+                .collect { (state, scores) ->
+                    updateHub { withLinks(scope, state, subject.lmsLink).copy(sheet = sheetState(scope, state, scores)) }
+                }
         }
+    }
+
+    fun disconnectSheet() {
+        val scope = (_uiState.value as? RecordbookSubjectUiState.Content)?.hub?.resourceScope ?: return
+        viewModelScope.launch { sheets.disconnect(scope) }
+    }
+
+    /** The connection of [scope], else the sheet links to connect, else nothing. */
+    private fun sheetState(scope: ResourceScope, links: SubjectLinksState, scores: List<SheetScore>): SubjectSheetState? {
+        scores.firstOrNull { it.scope.key == scope.key }?.let { score ->
+            val updatedAt = score.updatedAt?.atZone(time.zoneId)?.toLocalDateTime()
+            return SubjectSheetState.Connected(score, updatedAt, time.today())
+        }
+        val snapshot = (links as? SubjectLinksState.Content)?.snapshot ?: return null
+        val options = (snapshot.mine + snapshot.shared + snapshot.previous)
+            .filter { GoogleSheetUrl.parse(it.url) != null }
+            .sortedWith(compareBy<SubjectLink> { link ->
+                when {
+                    link.isMine -> 0
+                    link.id == snapshot.pinnedId -> 1
+                    link.category == LinkCategory.SCORES -> 2
+                    else -> 3
+                }
+            }.then(SubjectLinkRanking))
+            .distinctBy { it.url.trim() }
+            .map { SheetLinkOption(it.url, it.title, it.isMine) }
+        return options.takeIf { it.isNotEmpty() }?.let(SubjectSheetState::Hint)
     }
 
     private fun SubjectHubState.withLinks(scope: ResourceScope, state: SubjectLinksState, lmsUrl: String?): SubjectHubState {
