@@ -61,13 +61,30 @@ class ProfileFactsTest {
     }
 
     @Test
-    fun `the headline is the first position with a short department`() {
+    fun `the headline is the short role of the first position`() {
         val person = samplePerson(5).copy(positions = listOf(
-            PersonPosition("Доцент", "Факультет информационных технологий и программирования, кафедра прикладной математики"),
+            PersonPosition("преподаватель (квалификационная категория \"преподаватель иностранного языка\")",
+                "Центр изучения иностранных языков"),
             PersonPosition("Ассистент", "Кафедра"),
         ))
 
-        assertEquals(ProfileHeadline.Position("Доцент", "ФИТиП"), profileHeadline(person, UserGroup("M3100", 1, "ФИТиП")))
+        assertEquals(ProfileHeadline.Position("Преподаватель"), profileHeadline(person, UserGroup("M3100", 1, "ФИТиП")))
+    }
+
+    @Test
+    fun `a position without a title is headed by its short department`() {
+        val person = samplePerson(5).copy(positions = listOf(
+            PersonPosition(null, "Факультет информационных технологий и программирования, кафедра прикладной математики"),
+        ))
+
+        assertEquals(ProfileHeadline.Position("ФИТиП"), profileHeadline(person, null))
+    }
+
+    @Test
+    fun `roles drop their qualifications and start with a capital`() {
+        assertEquals("Доцент", shortRole("доцент"))
+        assertEquals("Старший преподаватель", shortRole("старший преподаватель, кафедра физики"))
+        assertEquals("Преподаватель", shortRole("преподаватель (квалификационная категория)"))
     }
 
     @Test
@@ -87,10 +104,5 @@ class ProfileFactsTest {
         assertEquals("ФПИиКТ", shortDepartment("Факультет программной инженерии и компьютерной техники (ФПИиКТ)"))
         assertEquals("Кафедра физики", shortDepartment("Кафедра физики"))
         assertEquals("ЦРОД", shortDepartment("Центр по работе с «Одарёнными детьми»"))
-    }
-
-    @Test
-    fun `the ISU fact shows the number`() {
-        assertEquals(ProfileFact(ProfileFactKind.ISU, "123456", null, null), isuFact(123456))
     }
 }

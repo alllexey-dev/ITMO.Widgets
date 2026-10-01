@@ -29,7 +29,7 @@ class UserProfileStateTest {
         name = "Персона 5",
         pictureUrl = "https://example.test/person.jpg",
         headline = null,
-        facts = listOf(isuFact(5)),
+        facts = emptyList(),
         social = null,
         reviews = null
     )
@@ -68,7 +68,7 @@ class UserProfileStateTest {
                     name = "Пользователь 5",
                     pictureUrl = "https://example.test/backend.jpg",
                     headline = ProfileHeadline.Group("M3100", 1),
-                    facts = listOf(ProfileFact(ProfileFactKind.EDUCATION, "M3100", "ФИТиП", 1), isuFact(5)),
+                    facts = listOf(ProfileFact(ProfileFactKind.EDUCATION, "M3100", "ФИТиП", 1)),
                     social = social,
                     reviews = null
                 )

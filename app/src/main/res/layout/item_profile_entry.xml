@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A fact as a row of a connected group: the symbol, the title and a second line. Informational, not clickable. -->
+<!-- One ITMO.Widgets entry of a person: the symbol, the title, what opens or why it is closed, a chevron or a lock. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
     android:gravity="center_vertical"
     android:minHeight="56dp"
     android:orientation="horizontal"
@@ -14,41 +15,43 @@
     android:paddingBottom="@dimen/design_spacing_content">
 
     <ImageView
-        android:id="@+id/fact_icon"
+        android:id="@+id/icon"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_marginEnd="@dimen/design_card_padding"
         android:contentDescription="@null"
-        app:tint="?attr/colorOnSurfaceVariant"
-        tools:src="@drawable/ic_work" />
+        app:tint="?attr/colorOnSurfaceVariant" />
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/design_spacing_compact"
         android:layout_weight="1"
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/fact_title"
+            android:id="@+id/entry_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:breakStrategy="high_quality"
-            android:hyphenationFrequency="normal"
             android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface"
-            tools:text="Доцент" />
+            android:textColor="?attr/colorOnSurface" />
 
         <TextView
-            android:id="@+id/fact_subtitle"
+            android:id="@+id/description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:visibility="gone"
-            tools:text="Факультет информационных технологий и программирования"
-            tools:visibility="visible" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/trailing"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_chevron_right"
+        app:tint="?attr/colorOnSurfaceVariant" />
 
 </LinearLayout>

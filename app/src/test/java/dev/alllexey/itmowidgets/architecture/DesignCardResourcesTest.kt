@@ -50,11 +50,6 @@ class DesignCardResourcesTest {
             )
         }
         assertEquals("?attr/colorOutlineVariant", property(cardStyle("Content.Outlined"), "strokeColor"))
-        // The own review keeps the quiet surface and shape; only its 1 dp outline takes the accent.
-        assertEquals("?attr/colorSurfaceContainerLow", property(cardStyle("Content.Own"), "cardBackgroundColor"))
-        assertEquals("20dp", property(cardStyle("Content.Own"), "cardCornerRadius"))
-        assertEquals("1dp", property(cardStyle("Content.Own"), "strokeWidth"))
-        assertEquals("?attr/colorPrimary", property(cardStyle("Content.Own"), "strokeColor"))
         // The AI summary is told apart from reviews by a slightly stronger surface, never by an outline.
         assertEquals("?attr/colorSurfaceContainerHigh", property(cardStyle("Content.Tonal"), "cardBackgroundColor"))
         assertEquals("20dp", property(cardStyle("Content.Tonal"), "cardCornerRadius"))
@@ -72,11 +67,10 @@ class DesignCardResourcesTest {
             "item_schedule_change" to "Content",
             "item_home_schedule_changes" to "Content",
             "item_home_marks" to "Content",
-            "item_teacher_review" to "Content",
-            "item_own_teacher_review" to "Content.Own",
             "item_teacher_summary" to "Content.Tonal",
             "item_recordbook_summary" to "CompactSummary",
             "item_subject_hero" to "Hero",
+            "item_profile_header" to "Hero",
             "item_recordbook_sport" to "Summary",
             "item_day_schedule" to "ScheduleDay"
         )
@@ -112,7 +106,8 @@ class DesignCardResourcesTest {
         assertEquals("4dp", dimensions.getValue("design_group_radius_inner"))
         assertEquals("2dp", dimensions.getValue("design_group_gap"))
         // Rows of a group are drawn by core/ui/ConnectedGroup.kt, never by a card of their own.
-        listOf("item_recordbook_control", "item_subject_link", "item_group_action_row", "item_subject_teacher", "item_subject_lesson")
+        listOf("item_recordbook_control", "item_subject_link", "item_group_action_row", "item_subject_teacher", "item_subject_lesson",
+            "item_profile_fact", "item_profile_entry", "item_teacher_review", "item_own_teacher_review")
             .forEach { layout -> assertEquals(layout, emptyList<Element>(), elements("layout/$layout.xml", MATERIAL_CARD)) }
     }
 

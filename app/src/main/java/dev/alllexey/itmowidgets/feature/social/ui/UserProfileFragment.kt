@@ -1,9 +1,13 @@
 package dev.alllexey.itmowidgets.feature.social.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -61,6 +65,7 @@ class UserProfileFragment : Fragment() {
             onFriends = { openUserScreen(AppScreen.USER_FRIENDS) },
             onSchedule = { openUserScreen(AppScreen.USER_SCHEDULE) },
             onSport = { openUserScreen(AppScreen.USER_SPORT) },
+            onCopyIsu = ::copyIsu,
             onSource = { openLink(it, binding.root) },
             onWriteReview = { reviewArgs()?.let(::openReviewEditor) },
             onEditReview = { reviewArgs()?.let(::openReviewEditor) },
@@ -133,6 +138,15 @@ class UserProfileFragment : Fragment() {
             UserScreenArgs.ISU to content.isu,
             UserScreenArgs.NAME to requireContext().userDisplayName(content.name, content.isu)
         ))
+    }
+
+    /** The number goes to the clipboard; Android 13 and newer confirm a copy themselves. */
+    private fun copyIsu(isu: Int) {
+        val clipboard = requireContext().getSystemService(ClipboardManager::class.java) ?: return
+        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.person_isu_label), isu.toString()))
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            Toast.makeText(requireContext(), R.string.person_isu_copied, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun reviewArgs(): TeacherReviewArgs? {

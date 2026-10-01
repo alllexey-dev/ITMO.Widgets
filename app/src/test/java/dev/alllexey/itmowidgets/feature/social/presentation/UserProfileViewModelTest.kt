@@ -965,7 +965,7 @@ class UserProfileViewModelTest {
     private fun reviewsRepository() = FakeTeacherReviewsRepository().apply { results = mapOf(5 to AppResult.Success(sampleReviews())) }
     private fun sampleReviews() = teacherReviews(5, listOf(TeacherReview("review-1", "Предмет", null, "Текст отзыва", 0, 0,
         ReviewOrigin.Reviews("Источник", "https://example.org/review"))))
-    private fun personContent() = UserProfileUiState.Content(5, "Персона 5", null, null, listOf(isuFact(5)), null, null)
+    private fun personContent() = UserProfileUiState.Content(5, "Персона 5", null, null, emptyList(), null, null)
     private fun section(reviews: TeacherReviews = sampleReviews(), busyId: String? = null) = profileReviews(reviews, samplePerson(5), busyId)
     private fun TestScope.expireDeadline() { advanceTimeBy(UserProfileViewModel.PART_DEADLINE.inWholeMilliseconds); runCurrent() }
     private fun TestScope.states(viewModel: UserProfileViewModel) = mutableListOf<UserProfileUiState>().also { states ->
@@ -985,7 +985,7 @@ class UserProfileViewModelTest {
 
     private fun backendContent(relationship: RelationshipState = RelationshipState.NONE) = UserProfileUiState.Content(
         5, "Пользователь 5", null, ProfileHeadline.Group("M3100", 1),
-        listOf(ProfileFact(ProfileFactKind.EDUCATION, "M3100", "ФИТиП", 1), isuFact(5)),
+        listOf(ProfileFact(ProfileFactKind.EDUCATION, "M3100", "ФИТиП", 1)),
         SocialBlock(profile(5, relationship), isSelf = false, busy = false), null
     )
 

@@ -23,7 +23,7 @@ sealed interface UserProfileUiState {
         val name: String,
         val pictureUrl: String?,
         val headline: ProfileHeadline?,
-        /** Ends with the ISU number. */
+        /** Positions, rooms and education; the ISU number is in the header. */
         val facts: List<ProfileFact>,
         val social: SocialBlock?,
         val reviews: ProfileReviews?
@@ -51,7 +51,7 @@ fun userProfileUiState(
             name = personality?.name ?: checkNotNull(user).name,
             pictureUrl = if (personality != null) personality.photoUrl else user?.pictureUrl,
             headline = profileHeadline(personality, if (personality == null) group else null),
-            facts = profileFacts(personality, if (personality == null) group else null) + isuFact(isu),
+            facts = profileFacts(personality, if (personality == null) group else null),
             social = block,
             reviews = profileReviews((reviews as? ProfilePart.Ready)?.value, personality, busyId, summaryExpanded)
         )

@@ -16,7 +16,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.R as MaterialR
@@ -52,6 +51,7 @@ import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonRoom
+import dev.alllexey.itmowidgets.feature.social.presentation.ProfileFactKind
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.ui.ProfileItem
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfileAdapter
@@ -75,7 +75,7 @@ import org.junit.runner.RunWith
 class UserProfileVisualTest {
     private val defaultPrimary = mutableMapOf<Boolean, Int>()
 
-    @Test fun teacherHasAccessibleFactsAndCompleteReviews() = appearances { spec ->
+    @Test fun teacherHasAHeroGroupedFactsAndCompleteReviews() = appearances { spec ->
         preview(spec, configure = {
             UserProfilePreviewActivity.person = AppResult.Success(teacher())
             UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(teacherReviews()))
@@ -84,29 +84,39 @@ class UserProfileVisualTest {
             scenario.onActivity { activity ->
                 val items = activity.items()
                 assertEquals(3, items.count { it is ProfileItem.Review })
-                assertTrue(items.none { it is ProfileItem.Sharing || it is ProfileItem.Relationship })
+                assertTrue(items.none { it is ProfileItem.Sharing })
                 assertNull(activity.findViewById<View>(R.id.friends_row))
-                assertNull(activity.findViewById<View>(R.id.primary_action))
+                assertFalse(activity.findViewById<View>(R.id.primary_action).isShown)
+                assertFalse(activity.findViewById<View>(R.id.badge).isShown)
                 assertEquals(LONG_NAME, activity.findViewById<TextView>(R.id.name).text.toString())
-                assertEquals("Доцент · ФИТиП", activity.findViewById<TextView>(R.id.headline).text.toString())
+                // One short line: the role without its department, which stays under «Должности».
+                assertEquals("Доцент", activity.findViewById<TextView>(R.id.headline).text.toString())
                 assertTrue(activity.findViewById<View>(R.id.name).isAccessibilityHeading)
                 assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS,
                     activity.findViewById<View>(R.id.avatar).importantForAccessibility)
-                val facts = activity.holder<ProfileItem.Facts>().findViewById<LinearLayout>(R.id.facts)
-                val rows = facts.children.filter { it.findViewById<View>(R.id.fact_title) != null }.toList()
-                assertEquals(4, rows.size)
+                assertIsu(activity)
+                assertEquals(listOf(ProfileFactKind.POSITION, ProfileFactKind.ROOM), activity.items().filterIsInstance<ProfileItem.Facts>().map { it.kind })
+                val positions = activity.factsHolder(ProfileFactKind.POSITION)
+                assertEquals("Должности", positions.findViewById<TextView>(R.id.heading).text.toString())
+                val rows = positions.findViewById<LinearLayout>(R.id.facts).children.toList()
+                assertEquals(2, rows.size)
+                assertGroup(rows)
                 assertEquals("Должность: Доцент", rows[0].findViewById<TextView>(R.id.fact_title).contentDescription)
-                assertEquals("ИСУ $ISU", rows[3].findViewById<TextView>(R.id.fact_title).text.toString())
-                assertEquals("ИСУ: $ISU", rows[3].findViewById<TextView>(R.id.fact_title).contentDescription)
-                assertTrue(rows[0].findViewById<View>(R.id.fact_subtitle).isShown)
+                assertEquals(LONG_DEPARTMENT, rows[0].findViewById<TextView>(R.id.fact_subtitle).text.toString())
                 assertEquals(View.GONE, rows[1].findViewById<View>(R.id.fact_subtitle).visibility)
-                assertEquals(1, facts.descendants().filterIsInstance<TextView>().count { it.text.toString() == UNTITLED_DEPARTMENT })
+                assertEquals(1, positions.descendants().filterIsInstance<TextView>().count { it.text.toString() == UNTITLED_DEPARTMENT })
+                val rooms = activity.factsHolder(ProfileFactKind.ROOM)
+                assertEquals("Где найти", rooms.findViewById<TextView>(R.id.heading).text.toString())
+                assertEquals("Кронверкский проспект, 49", rooms.findViewById<TextView>(R.id.fact_subtitle).text.toString())
+                assertTrue(activity.window.decorView.descendants().filterIsInstance<TextView>().none { "·" in it.text })
             }
             frame(scenario, "teacher-top-${spec.name}")
             scrollTo<ProfileItem.Section>(scenario)
             scenario.onActivity {
                 val title = it.holder<ProfileItem.Section>().findViewById<TextView>(R.id.title)
-                assertEquals("Отзывы · 3", title.text.toString())
+                assertEquals("Отзывы", title.text.toString())
+                assertEquals("3", it.holder<ProfileItem.Section>().findViewById<TextView>(R.id.count).text.toString())
+                assertEquals("Отзывы, 3", title.contentDescription)
                 assertTrue(title.isAccessibilityHeading)
                 assertFalse(it.holder<ProfileItem.Section>().findViewById<View>(R.id.action).isShown)
             }
@@ -115,20 +125,72 @@ class UserProfileVisualTest {
         }
     }
 
-    @Test fun friendKeepsRelationshipActionsAboveFacts() = appearances { spec ->
+    @Test fun friendHasABadgeAndTheWidgetsGroupAboveStudy() = appearances { spec ->
         preview(spec, ::friendFixture) { scenario ->
             content(scenario)
             scenario.onActivity { activity ->
-                val button = activity.findViewById<TextView>(R.id.primary_action)
-                assertEquals("Удалить из друзей", button.text.toString())
-                for (id in listOf(R.id.friends_row, R.id.schedule_row, R.id.sport_row)) {
-                    assertTrue(activity.findViewById<View>(id).isClickable)
-                    assertTrue(activity.findViewById<View>(id).isEnabled)
+                assertEquals("M3234, 2 курс", activity.findViewById<TextView>(R.id.headline).text.toString())
+                assertEquals("в друзьях", activity.findViewById<TextView>(R.id.badge).text.toString())
+                assertFalse(activity.findViewById<View>(R.id.actions).isShown)
+                assertIsu(activity)
+                val sharing = activity.holder<ProfileItem.Sharing>()
+                assertEquals("ITMO.Widgets", sharing.findViewById<TextView>(R.id.heading).text.toString())
+                val rows = listOf(R.id.friends_row, R.id.schedule_row, R.id.sport_row).map { activity.findViewById<View>(it) }
+                rows.forEach {
+                    assertTrue(it.isClickable)
+                    assertTrue(it.isEnabled)
                 }
-                assertTrue(activity.items().none { it is ProfileItem.Section })
-                assertTrue(button.screenTop() < activity.holder<ProfileItem.Facts>().screenTop())
+                assertGroup(rows)
+                val remove = activity.findViewById<TextView>(R.id.remove_friend)
+                assertEquals("Удалить из друзей", remove.text.toString())
+                assertTrue(remove.isShown)
+                assertFalse(activity.findViewById<View>(R.id.hidden_hint).isShown)
+                val items = activity.items()
+                assertTrue(items.indexOfFirst { it is ProfileItem.Sharing } <
+                    items.indexOfFirst { it is ProfileItem.Facts && it.kind == ProfileFactKind.EDUCATION })
+                assertEquals("2 курс, ФИТиП", activity.factsHolder(ProfileFactKind.EDUCATION)
+                    .findViewById<TextView>(R.id.fact_subtitle).text.toString())
+                assertTrue(items.none { it is ProfileItem.Section })
             }
             frame(scenario, "friend-${spec.name}")
+        }
+    }
+
+    @Test fun isuNumberCopiesOnATap() {
+        preview(Appearances.light, { UserProfilePreviewActivity.person = AppResult.Success(teacher()) }) { scenario ->
+            content(scenario)
+            scenario.onActivity { assertIsu(it, copy = true) }
+        }
+    }
+
+    @Test fun everyFriendshipStateHasItsLineAndButtons() = appearances { spec ->
+        val cases = listOf(
+            RelationshipState.NONE to (null to listOf("Добавить в друзья")),
+            RelationshipState.OUTGOING to ("Заявка отправлена" to listOf("Отменить заявку")),
+            RelationshipState.INCOMING to ("Хочет добавить вас" to listOf("Принять заявку", "Отклонить")),
+            RelationshipState.BLOCKED to (null to emptyList()),
+        )
+        for ((relationship, expected) in cases) {
+            preview(spec, {
+                friendFixture()
+                UserProfilePreviewActivity.social = AppResult.Success(friend().copy(relationship = relationship,
+                    user = friend().user.copy(sharing = UserSharing(schedule = false, sport = false, friends = false))))
+            }) { scenario ->
+                content(scenario)
+                scenario.onActivity { activity ->
+                    val status = activity.findViewById<TextView>(R.id.relationship_status)
+                    assertEquals(expected.first, status.text?.toString()?.takeIf { status.isShown })
+                    val buttons = listOf(R.id.primary_action, R.id.secondary_action).map { activity.findViewById<TextView>(it) }
+                        .filter { it.isShown }.map { it.text.toString() }
+                    assertEquals(relationship.name, expected.second, buttons)
+                    assertFalse(activity.findViewById<View>(R.id.badge).isShown)
+                    assertFalse(activity.findViewById<View>(R.id.remove_friend).isShown)
+                    // Closed entries keep their surface, say why and are no targets.
+                    assertFalse(activity.findViewById<View>(R.id.schedule_row).isClickable)
+                    assertTrue(activity.findViewById<View>(R.id.hidden_hint).isShown)
+                }
+                frame(scenario, "friendship-${relationship.name.lowercase()}-${spec.name}")
+            }
         }
     }
 
@@ -139,9 +201,11 @@ class UserProfileVisualTest {
         }) { scenario ->
             content(scenario)
             scenario.onActivity {
-                assertEquals("Это вы", it.findViewById<TextView>(R.id.relationship_status).text.toString())
+                assertEquals("это вы", it.findViewById<TextView>(R.id.badge).text.toString())
+                assertFalse(it.findViewById<View>(R.id.relationship_status).isShown)
                 assertFalse(it.findViewById<View>(R.id.primary_action).isShown)
                 assertFalse(it.findViewById<View>(R.id.secondary_action).isShown)
+                assertFalse(it.findViewById<View>(R.id.remove_friend).isShown)
             }
             frame(scenario, "self-${spec.name}")
         }
@@ -156,7 +220,10 @@ class UserProfileVisualTest {
             content(scenario)
             TestUi.settle(250)
             assertEquals(1, states().filterIsInstance<UserProfileUiState.Content>().size)
-            scenario.onActivity { assertEquals(listOf(ProfileItem.Header::class, ProfileItem.Facts::class), it.items().map { item -> item::class }) }
+            scenario.onActivity {
+                assertEquals(listOf(ProfileItem.Header::class, ProfileItem.Facts::class, ProfileItem.Facts::class),
+                    it.items().map { item -> item::class })
+            }
             frame(scenario, "disabled-${spec.name}")
             TestUi.settle(250)
             assertEquals(1, states().filterIsInstance<UserProfileUiState.Content>().size)
@@ -172,7 +239,7 @@ class UserProfileVisualTest {
                 content(scenario)
                 scenario.onActivity {
                     assertEquals(BACKEND_NAME, it.findViewById<TextView>(R.id.name).text.toString())
-                    assertEquals("M3234 · 2 курс", it.findViewById<TextView>(R.id.headline).text.toString())
+                    assertEquals("M3234, 2 курс", it.findViewById<TextView>(R.id.headline).text.toString())
                     assertEquals("M3234", it.holder<ProfileItem.Facts>().findViewById<TextView>(R.id.fact_title).text.toString())
                 }
                 if (error == AppError.Network) snackbar(scenario) else noSnackbar(scenario)
@@ -181,15 +248,13 @@ class UserProfileVisualTest {
         }
     }
 
-    @Test fun personWithoutFactsHasOnlyTheIsuFact() = appearances { spec ->
+    @Test fun personWithoutFactsHasOnlyTheHeroWithTheIsu() = appearances { spec ->
         preview(spec, { UserProfilePreviewActivity.person = AppResult.Success(teacher().copy(positions = emptyList(), rooms = emptyList())) }) { scenario ->
             content(scenario)
             scenario.onActivity {
-                assertEquals(listOf(ProfileItem.Header::class, ProfileItem.Facts::class), it.items().map { item -> item::class })
+                assertEquals(listOf(ProfileItem.Header::class), it.items().map { item -> item::class })
                 assertEquals(View.GONE, it.findViewById<View>(R.id.headline).visibility)
-                val titles = it.findViewById<View>(R.id.facts).descendants().filterIsInstance<TextView>()
-                    .filter { view -> view.id == R.id.fact_title }.map { view -> view.text.toString() }.toList()
-                assertEquals(listOf("ИСУ $ISU"), titles)
+                assertIsu(it)
             }
             frame(scenario, "isu-only-${spec.name}")
         }
@@ -324,11 +389,12 @@ class UserProfileVisualTest {
             frame(scenario, "mixed-top-${spec.name}")
             scrollTo<ProfileItem.Section>(scenario)
             scenario.onActivity { activity ->
-                assertEquals("Отзывы · 4", activity.holder<ProfileItem.Section>().findViewById<TextView>(R.id.title).text.toString())
+                assertEquals("4", activity.holder<ProfileItem.Section>().findViewById<TextView>(R.id.count).text.toString())
                 val own = activity.holder<ProfileItem.OwnReview>()
+                assertEquals("мой", own.findViewById<TextView>(R.id.own_badge).text.toString())
                 assertEquals("На проверке", own.findViewById<TextView>(R.id.status).text.toString())
-                assertEquals("Ваш отзыв · Математический анализ · анонимно", own.findViewById<TextView>(R.id.meta).text.toString())
-                assertNull(own.findViewById<View>(R.id.vote_up))
+                assertEquals("Математический анализ, анонимно", own.findViewById<TextView>(R.id.meta).text.toString())
+                assertFalse(own.findViewById<View>(R.id.vote_up).isShown)
                 assertFalse(own.findViewById<View>(R.id.score).isShown)
                 assertFalse(own.findViewById<View>(R.id.verified).isShown)
                 assertTrue(own.findViewById<View>(R.id.more).isShown)
@@ -356,6 +422,8 @@ class UserProfileVisualTest {
                 UserProfilePreviewActivity.reviews = AppResult.Success(fixture.second)
             }) { scenario ->
                 content(scenario)
+                // The taller hero and the fact groups can push the heading below the fold on a narrow screen.
+                if (write != null) scrollTo<ProfileItem.Section>(scenario)
                 scenario.onActivity { activity ->
                     val section = activity.items().filterIsInstance<ProfileItem.Section>().singleOrNull()
                     if (write == null) assertNull(name, section)
@@ -385,7 +453,7 @@ class UserProfileVisualTest {
             fun assertVote(score: Int, vote: Int) = TestUi.eventually {
                 scenario.onActivity { activity ->
                     val row = row(activity)
-                    assertEquals(score.toString(), row.findViewById<TextView>(R.id.score).text.toString())
+                    assertEquals(score.toString().replace('-', '−'), row.findViewById<TextView>(R.id.score).text.toString())
                     assertEquals("Рейтинг $score", row.findViewById<TextView>(R.id.score).contentDescription)
                     assertEquals(vote > 0, row.findViewById<View>(R.id.vote_up).isSelected)
                     assertEquals(vote < 0, row.findViewById<View>(R.id.vote_down).isSelected)
@@ -478,8 +546,10 @@ class UserProfileVisualTest {
                     assertEquals(published && !mine.verified, own.findViewById<View>(R.id.unverified).isShown)
                     assertEquals(published, own.findViewById<View>(R.id.score).isShown)
                     if (published) assertEquals("Рейтинг ${mine.score}", own.findViewById<View>(R.id.score).contentDescription)
-                    assertEquals("Ваш отзыв · Математический анализ · ${if (mine.anonymous) "анонимно" else "с вашим именем"}",
+                    assertEquals("Математический анализ, ${if (mine.anonymous) "анонимно" else "с вашим именем"}",
                         own.findViewById<TextView>(R.id.meta).text.toString())
+                    assertTrue(own.findViewById<View>(R.id.own_badge).isShown)
+                    assertFalse(own.findViewById<View>(R.id.vote_up).isShown)
                 }
                 frame(scenario, "own-${mine.status.name.lowercase()}${if (mine.verified) "-verified" else ""}-${spec.name}")
             }
@@ -613,14 +683,14 @@ class UserProfileVisualTest {
             content(scenario, attempts = 200)
             var top = 0
             scenario.onActivity {
-                assertTrue(it.items().none { item -> item is ProfileItem.Sharing || item is ProfileItem.Relationship })
+                assertTrue(it.items().none { item -> item is ProfileItem.Sharing })
                 top = it.holder<ProfileItem.Facts>().screenTop()
             }
             frame(scenario, "late-social-before-${spec.name}")
             snackbar(scenario, attempts = 200)
             scenario.onActivity {
                 assertNull(it.findViewById<View>(R.id.friends_row))
-                assertNull(it.findViewById<View>(R.id.primary_action))
+                assertFalse(it.findViewById<View>(R.id.badge).isShown)
                 assertEquals(top, it.holder<ProfileItem.Facts>().screenTop())
             }
             frame(scenario, "late-social-deferred-${spec.name}")
@@ -629,7 +699,7 @@ class UserProfileVisualTest {
             TestUi.eventually {
                 scenario.onActivity {
                     assertTrue(it.findViewById<View>(R.id.friends_row)?.isShown == true)
-                    assertEquals("Удалить из друзей", it.findViewById<TextView>(R.id.primary_action).text.toString())
+                    assertEquals("в друзьях", it.findViewById<TextView>(R.id.badge).text.toString())
                 }
             }
             TestUi.eventually { scenario.onActivity { assertTrue(it.findViewById<View>(MaterialR.id.snackbar_text)?.isShown != true) } }
@@ -712,7 +782,7 @@ class UserProfileVisualTest {
                 }
                 frame(scenario, "summary-collapsed-${spec.name}")
 
-                onView(withId(R.id.scales_toggle)).perform(click())
+                clickScalesToggle(scenario)
                 TestUi.eventually {
                     scenario.onActivity { activity ->
                         val card = activity.holder<ProfileItem.Summary>()
@@ -742,7 +812,7 @@ class UserProfileVisualTest {
                     activity.holder<ProfileItem.Summary>().assertScalesFolded(expanded = true)
                 }
 
-                onView(withId(R.id.scales_toggle)).perform(click())
+                clickScalesToggle(scenario)
                 TestUi.eventually {
                     scenario.onActivity { activity ->
                         val card = activity.holder<ProfileItem.Summary>()
@@ -928,10 +998,55 @@ class UserProfileVisualTest {
             if (overflow > 0) list.scrollBy(0, overflow)
         }
         TestUi.settle(80)
-        onView(withId(R.id.scales_toggle)).perform(click())
+        clickScalesToggle(scenario)
         TestUi.eventually { scenario.onActivity { it.holder<ProfileItem.Summary>().assertScalesFolded(expanded = true) } }
         scrollTo<ProfileItem.Section>(scenario)
     }
+
+    /**
+     * Taps «Подробнее»/«Свернуть» on the main thread. Espresso's click needs the button 90 % on screen and fails with
+     * an animations hint on a busy emulator; the toggle's own behaviour is what is under test here.
+     */
+    private fun clickScalesToggle(scenario: ActivityScenario<UserProfilePreviewActivity>) {
+        scenario.onActivity { activity ->
+            val toggle = activity.holder<ProfileItem.Summary>().findViewById<View>(R.id.scales_toggle)
+            assertTrue(toggle.isShown && toggle.isEnabled)
+            toggle.performClick()
+        }
+        TestUi.settle(80)
+    }
+
+    /**
+     * The ISU number in the hero: just the number, a copy symbol and a full target. [copy] taps it and checks the
+     * clipboard; the system's copy preview then covers the screen, so screenshots come before or not at all.
+     */
+    private fun assertIsu(activity: UserProfilePreviewActivity, copy: Boolean = false) {
+        val isu = activity.findViewById<View>(R.id.isu)
+        assertEquals(ISU.toString(), activity.findViewById<TextView>(R.id.isu_value).text.toString())
+        assertEquals("Номер ИСУ $ISU, скопировать", isu.contentDescription)
+        assertTrue(isu.isClickable && isu.height >= activity.resources.getDimensionPixelSize(R.dimen.design_touch_target))
+        if (!copy) return
+        isu.performClick()
+        val clip = checkNotNull(activity.getSystemService(android.content.ClipboardManager::class.java).primaryClip)
+        assertEquals(ISU.toString(), clip.getItemAt(0).text.toString())
+    }
+
+    /** Rows of one connected group: one width, 2 dp apart, the outer corners only at the ends. */
+    private fun assertGroup(rows: List<View>) {
+        val density = rows.first().resources.displayMetrics.density
+        assertEquals(1, rows.map { it.width }.distinct().size)
+        rows.zipWithNext().forEach { (upper, lower) -> assertEquals(2 * density, (lower.screenTop() - upper.screenTop() - upper.height).toFloat(), 1f) }
+        val bounds = android.graphics.RectF(0f, 0f, 100f, 100f)
+        rows.forEachIndexed { index, row ->
+            val shape = ((row.background as android.graphics.drawable.RippleDrawable).getDrawable(0)
+                as com.google.android.material.shape.MaterialShapeDrawable).shapeAppearanceModel
+            assertEquals(if (index == 0) 20 * density else 4 * density, shape.topLeftCornerSize.getCornerSize(bounds), 0.5f)
+            assertEquals(if (index == rows.lastIndex) 20 * density else 4 * density, shape.bottomLeftCornerSize.getCornerSize(bounds), 0.5f)
+        }
+    }
+
+    private fun UserProfilePreviewActivity.factsHolder(kind: ProfileFactKind): View =
+        checkNotNull(list().findViewHolderForAdapterPosition(items().indexOfFirst { it is ProfileItem.Facts && it.kind == kind })).itemView
 
     /** The scales and their text button: label, TalkBack state, a full touch target and the content edge. */
     private fun View.assertScalesFolded(expanded: Boolean) {
@@ -1104,7 +1219,7 @@ class UserProfileVisualTest {
         scenario.onActivity { activity ->
             val row = activity.reviewRow(review.id)
             val meta = row.findViewById<TextView>(R.id.meta)
-            val expectedMeta = listOfNotNull(review.subject, review.written?.text(activity)).joinToString(" · ")
+            val expectedMeta = listOfNotNull(review.subject, review.written?.text(activity)).joinToString(", ")
             assertEquals(expectedMeta.isNotEmpty(), meta.isShown)
             assertEquals(expectedMeta, meta.text.toString())
             assertEquals(review.text, row.findViewById<TextView>(R.id.text).text.toString())
@@ -1127,7 +1242,8 @@ class UserProfileVisualTest {
             assertEquals(canReport && community != null && !community.reportedByMe, row.findViewById<View>(R.id.more).isShown)
             assertEquals(canVote, row.findViewById<View>(R.id.vote_up).isShown)
             assertEquals(canVote, row.findViewById<View>(R.id.vote_down).isShown)
-            assertEquals(review.score.toString(), row.findViewById<TextView>(R.id.score).text.toString())
+            assertEquals(review.score.toString().replace('-', '−'), row.findViewById<TextView>(R.id.score).text.toString())
+            assertEquals(community != null && community.author == null, row.findViewById<View>(R.id.anonymous).isShown)
             assertEquals(canVote || review.score != 0, row.findViewById<View>(R.id.score).isShown)
             ViewChecks.assertTextFits(activity.window.decorView, ellipsizable = ::isReviewMeta)
             ViewChecks.assertTouchTargets(activity.window.decorView)

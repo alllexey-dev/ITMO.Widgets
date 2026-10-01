@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.feature.social.presentation
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 
-enum class ProfileFactKind { POSITION, ROOM, EDUCATION, ISU }
+enum class ProfileFactKind { POSITION, ROOM, EDUCATION }
 
 data class ProfileFact(val kind: ProfileFactKind, val title: String, val detail: String?, val course: Int?)
 
@@ -26,20 +26,30 @@ fun profileFacts(person: Person?, fallbackGroup: UserGroup?): List<ProfileFact> 
     }
 }
 
-/** The ISU number closes the facts card; the header keeps the name and one headline. */
-fun isuFact(isu: Int) = ProfileFact(ProfileFactKind.ISU, isu.toString(), null, null)
-
-/** One line under the name: the first position with a short department, otherwise the student group. */
+/**
+ * One short line under the name: the role of the first position («Преподаватель»), or a short department when the
+ * position has no title, otherwise the student group. The full positions follow under «Должности».
+ */
 sealed interface ProfileHeadline {
-    data class Position(val title: String?, val department: String?) : ProfileHeadline
+    data class Position(val role: String) : ProfileHeadline
     data class Group(val name: String, val course: Int?) : ProfileHeadline
 }
 
 fun profileHeadline(person: Person?, group: UserGroup?): ProfileHeadline? {
-    person?.positions?.firstOrNull()?.let { return ProfileHeadline.Position(it.title, it.department?.let(::shortDepartment)) }
+    person?.positions?.firstOrNull()?.let { position ->
+        val role = position.title?.let(::shortRole)?.takeIf(String::isNotEmpty) ?: position.department?.let(::shortDepartment)
+        if (role != null) return ProfileHeadline.Position(role)
+    }
     person?.education?.firstOrNull { it.group != null }?.let { return ProfileHeadline.Group(checkNotNull(it.group), it.course) }
     return group?.let { ProfileHeadline.Group(it.name, it.course) }
 }
+
+/**
+ * The role without its qualifications: the first clause before a parenthesis or a comma, capitalised
+ * («преподаватель (квалификационная категория …)» → «Преподаватель»).
+ */
+fun shortRole(title: String): String =
+    title.substringBefore('(').substringBefore(',').trim().replaceFirstChar { it.titlecase() }
 
 /**
  * A department short enough for the headline: an abbreviation given in trailing parentheses, a short name as it

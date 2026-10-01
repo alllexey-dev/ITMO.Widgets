@@ -13,11 +13,6 @@
         <item name="strokeWidth">@dimen/design_card_stroke</item>
     </style>
 
-    <!-- The viewer's own review among others: the same surface with a thin accent outline. -->
-    <style name="Widget.ItmoWidgets.Card.Content.Own" parent="Widget.ItmoWidgets.Card.Content.Outlined">
-        <item name="strokeColor">?attr/colorPrimary</item>
-    </style>
-
     <!-- A generated summary above reviews: the same shape on a slightly stronger surface, no outline. -->
     <style name="Widget.ItmoWidgets.Card.Content.Tonal" parent="Widget.ItmoWidgets.Card.Content">
         <item name="cardBackgroundColor">?attr/colorSurfaceContainerHigh</item>

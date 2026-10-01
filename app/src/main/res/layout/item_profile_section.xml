@@ -1,35 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- «Отзывы» in the accent, the count right after it and «Написать» at the end. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:clipToPadding="false"
     android:gravity="center_vertical"
+    android:minHeight="@dimen/design_touch_target"
     android:orientation="horizontal"
-    android:paddingStart="4dp"
-    android:paddingTop="12dp"
+    android:paddingStart="@dimen/design_card_padding"
     android:paddingEnd="0dp"
-    android:paddingBottom="4dp">
+    android:paddingTop="@dimen/design_spacing_group"
+    android:paddingBottom="@dimen/design_spacing_related">
 
     <TextView
         android:id="@+id/title"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:accessibilityHeading="true"
         android:textAppearance="?attr/textAppearanceTitleSmall"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="?attr/colorPrimary"
         tools:targetApi="p"
-        tools:text="Отзывы · 4" />
+        tools:text="Отзывы" />
+
+    <TextView
+        android:id="@+id/count"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/design_spacing_compact"
+        android:layout_weight="1"
+        android:fontFeatureSettings="tnum"
+        android:importantForAccessibility="no"
+        android:textAppearance="?attr/textAppearanceTitleSmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        tools:text="4" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/action"
         style="@style/Widget.Material3.Button.TextButton.Icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="-8dp"
-        android:layout_marginBottom="-4dp"
         android:insetTop="0dp"
         android:insetBottom="0dp"
         android:minHeight="@dimen/design_touch_target"

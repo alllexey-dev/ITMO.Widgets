@@ -12,22 +12,24 @@ import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
+import dev.alllexey.itmowidgets.core.ui.bindGroupPosition
+import dev.alllexey.itmowidgets.core.ui.bindVotes
 import dev.alllexey.itmowidgets.core.ui.shortPersonName
 import dev.alllexey.itmowidgets.core.ui.userDisplayName
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemOwnTeacherReviewBinding
 import dev.alllexey.itmowidgets.databinding.ItemTeacherReviewBinding
-import dev.alllexey.itmowidgets.databinding.ViewReviewVotesBinding
-import java.util.Locale
 
 /**
- * Another viewer's or a copied review. A named author heads the card; the bottom row holds the verification mark or
- * the Reviews source and the votes; reporting sits in the overflow menu. Every mutable property is set here.
+ * Another viewer's or a copied review as a row of the reviews group. The top line names who wrote it: a named
+ * author or the Reviews source, both links, otherwise «Анонимный отзыв»; reporting sits in ⋮ there. The bottom row
+ * holds the verification mark and the vote pill. Every mutable property is set here.
  */
 internal fun ItemTeacherReviewBinding.bind(item: ProfileItem.Review, actions: ProfileActions) {
     val context = root.context
     val review = item.review
-    val meta = listOfNotNull(review.subject, review.written?.text(context)).joinToString(" · ")
+    root.bindGroupPosition(item.position)
+    val meta = listOfNotNull(review.subject, review.written?.text(context)).joinToString(", ")
     this.meta.text = meta
     this.meta.isVisible = meta.isNotEmpty()
     text.text = review.text
@@ -39,18 +41,24 @@ internal fun ItemTeacherReviewBinding.bind(item: ProfileItem.Review, actions: Pr
     this.author.text = author?.let { if (it.name.isBlank()) context.userDisplayName(it.name, it.isu) else shortPersonName(it.name) }
     this.author.contentDescription = author?.let { context.userDisplayName(it.name, it.isu) }
     this.author.setOnClickListener(author?.let { View.OnClickListener { actions.onAuthor(author.isu) } })
-    verified.root.isVisible = community?.verified == true
-    verified.root.setText(R.string.teacher_review_verified)
-    unverified.isVisible = community != null && !community.verified
+    anonymous.isVisible = community != null && author == null
     source.isVisible = copy != null
     // The label is just the source; «Reviews» stays for TalkBack and for a copy without a source title.
     source.text = copy?.let { it.sourceTitle ?: context.getString(R.string.teacher_review_source_default) }
     source.contentDescription = copy?.sourceTitle?.let { context.getString(R.string.teacher_review_source, it) }
     source.setOnClickListener(copy?.let { View.OnClickListener { actions.onSource(copy.sourceUrl) } })
-    votes.bind(review, item.canVote, item.busy) { up -> actions.onVote(review.id, up) }
+    verified.root.isVisible = community?.verified == true
+    verified.root.setText(R.string.teacher_review_verified)
+    unverified.isVisible = community != null && !community.verified
+    // Without arrows a zero score says nothing and is left out.
+    votes.root.isVisible = item.canVote || review.score != 0
+    votes.bindVotes(review.score, review.myVote, item.canVote, context.getString(R.string.teacher_review_score, review.score),
+        enabled = !item.busy, upDescription = R.string.teacher_review_vote_up, downDescription = R.string.teacher_review_vote_down,
+    ) { up -> actions.onVote(review.id, up) }
+    footer.isVisible = verified.root.isVisible || unverified.isVisible || votes.root.isVisible
     val canReport = item.canReport && community != null && !community.reportedByMe
-    // Without a menu the votes sit flush with the card's end.
-    more.isVisible = canReport
+    // Without a report the place of ⋮ stays, so the names line up from row to row.
+    more.visibility = if (canReport) View.VISIBLE else View.INVISIBLE
     more.isEnabled = !item.busy
     more.setOnClickListener(if (canReport) View.OnClickListener { anchor ->
         (anchor as ImageButton).showMenu(R.string.teacher_review_report to { actions.onReport(review.id) })
@@ -58,53 +66,30 @@ internal fun ItemTeacherReviewBinding.bind(item: ProfileItem.Review, actions: Pr
 }
 
 /**
- * Arrows only while voting is allowed, the score in the accent once the viewer has voted. Without arrows a zero
- * score says nothing and is left out.
- */
-private fun ViewReviewVotesBinding.bind(review: TeacherReview, canVote: Boolean, busy: Boolean, onVote: (up: Boolean) -> Unit) {
-    val context = root.context
-    voteUp.isVisible = canVote
-    voteDown.isVisible = canVote
-    score.isVisible = canVote || review.score != 0
-    voteUp.isEnabled = !busy
-    voteDown.isEnabled = !busy
-    score.text = String.format(Locale.getDefault(), "%d", review.score)
-    score.contentDescription = context.getString(R.string.teacher_review_score, review.score)
-    val accent = context.color.primary
-    val neutral = context.color.onSurfaceVariant
-    score.setTextColor(if (review.myVote != 0) accent else context.color.onSurface)
-    voteUp.imageTintList = ColorStateList.valueOf(if (review.myVote > 0) accent else neutral)
-    voteDown.imageTintList = ColorStateList.valueOf(if (review.myVote < 0) accent else neutral)
-    voteUp.isSelected = review.myVote > 0
-    voteDown.isSelected = review.myVote < 0
-    voteUp.setOnClickListener { onVote(true) }
-    voteDown.setOnClickListener { onVote(false) }
-}
-
-/**
- * The viewer's own review: a status pill while it is not public (or the verification mark once it is), how others
- * see it, a rejection reason, the text and, once published, the read-only score. Editing and deleting are in the menu.
+ * The viewer's own review, first in the group: `мой`, a status pill while it is not public, how others see it, a
+ * rejection reason, the text and, once published, the verification mark and the read-only score. Editing and
+ * deleting are in the menu.
  */
 internal fun ItemOwnTeacherReviewBinding.bind(item: ProfileItem.OwnReview, actions: ProfileActions) {
     val context = root.context
     val review = item.review
+    root.bindGroupPosition(item.position)
     bindStatus(context, review)
     val published = review.status == OwnReviewStatus.PUBLISHED
     verified.root.isVisible = published && review.verified
     verified.root.setText(R.string.teacher_review_verified_mine)
     unverified.isVisible = published && !review.verified
     meta.text = listOfNotNull(
-        context.getString(R.string.teacher_review_mine),
         review.subject,
         context.getString(if (review.anonymous) R.string.teacher_review_anonymous_mine else R.string.teacher_review_named_mine),
-    ).joinToString(" · ")
+    ).joinToString(", ")
     val note = review.reviewNote.takeIf { review.status == OwnReviewStatus.REJECTED }
     reason.isVisible = note != null
     reason.text = note?.let { context.getString(R.string.teacher_review_reason, it) }
     text.text = review.text
-    score.isVisible = published
-    score.text = String.format(Locale.getDefault(), "%d", review.score)
-    score.contentDescription = context.getString(R.string.teacher_review_score, review.score)
+    votes.root.isVisible = published
+    votes.bindVotes(review.score, 0, canVote = false, context.getString(R.string.teacher_review_score, review.score)) { }
+    footer.isVisible = published
     more.isEnabled = !item.busy
     more.setOnClickListener { anchor ->
         (anchor as ImageButton).showMenu(
