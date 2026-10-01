@@ -11,10 +11,14 @@ import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.network.WidgetsClient
 import dev.alllexey.itmowidgets.core.network.OffsetDateTimeAdapter
+import dev.alllexey.itmowidgets.core.network.PublicWebClient
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
 import java.time.OffsetDateTime
+import java.util.concurrent.TimeUnit
 import javax.inject.Qualifier
 import javax.inject.Singleton
+import okhttp3.CookieJar
+import okhttp3.OkHttpClient
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
@@ -59,4 +63,17 @@ object NetworkModule {
             .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeAdapter())
             .create()
     }
+
+    /** Public Google Sheets: no cookies, no HTTPS-to-HTTP redirects. */
+    @Provides
+    @Singleton
+    @PublicWebClient
+    fun providePublicWebClient(): OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .callTimeout(90, TimeUnit.SECONDS)
+        .cookieJar(CookieJar.NO_COOKIES)
+        .followRedirects(true)
+        .followSslRedirects(false)
+        .build()
 }

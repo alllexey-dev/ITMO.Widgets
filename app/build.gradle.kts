@@ -104,6 +104,8 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.play.services.code.scanner)
     implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.okhttp)
+    implementation(libs.jsoup)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     testImplementation(libs.junit)

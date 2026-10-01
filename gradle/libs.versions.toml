@@ -31,7 +31,9 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 androidx-navigation-ui = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigationFragmentKtx" }
 itmo-widgets-core = { module = "dev.alllexey:itmo-widgets-core", version.ref = "itmoWidgetsCore" }
 my-itmo-api = { module = "dev.alllexey:my-itmo-api", version.ref = "myItmoApi" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version = "4.12.0" }
 okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version = "4.12.0" }
+jsoup = { module = "org.jsoup:jsoup", version = "1.21.1" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
