@@ -679,6 +679,7 @@
     <string name="sheet_scores_actions">Действия с таблицей</string>
     <string name="sheet_scores_updated_time">Обновлено в %1$s</string>
     <string name="sheet_scores_updated_date">Обновлено %1$s</string>
+    <string name="sheet_scores_from_table">Из таблицы: %1$s</string>
     <string name="settings_marks_footer">Уведомлять о новых и изменённых оценках.</string>
     <string name="settings_marks_notifications_off">Уведомления выключены.</string>
     <string name="settings_background_work_title">Работа в фоне</string>

@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookAttent
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookProgress
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.displayedScore
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheetFallback
 import java.util.Locale
 
 sealed interface RecordbookListItem {
@@ -32,7 +33,9 @@ sealed interface RecordbookListItem {
         val reason: RecordbookAttentionReason? = null,
         val barsMissing: Boolean = false,
         /** An unread new or changed mark: the dot stays until the subject's page opens. */
-        val isNew: Boolean = false
+        val isNew: Boolean = false,
+        /** The connected sheet's total while the official points are empty; shown instead of «—». */
+        val sheetTotal: String? = null
     ) : RecordbookListItem
 }
 
@@ -48,7 +51,8 @@ class RecordbookAdapter(private val onSubjectClick: (RecordbookSubject) -> Unit)
             reason = state.attention[subject.entryId],
             // PE is graded outside BARS; only other unmatched subjects need the hint.
             barsMissing = state.barsApplied && subject.barsJournal == null && !subject.isPhysicalEducation,
-            isNew = subjectNameKey(subject.name) in state.newSubjects)
+            isNew = subjectNameKey(subject.name) in state.newSubjects,
+            sheetTotal = subject.sheetFallback(state.sheetTotals[subject.disciplineId]))
         submitList(buildList {
             if (state.showSummary) {
                 add(RecordbookListItem.Summary(subjects.count { it.status == RecordbookSubjectStatus.PASSED }, subjects.size))
@@ -116,10 +120,17 @@ class RecordbookAdapter(private val onSubjectClick: (RecordbookSubject) -> Unit)
                 else context.color.resolve(com.google.android.material.R.attr.colorOnSurfaceVariant))
             // A final result is a badge; until then the points with their share of 100.
             val progress = subject.displayedScore(item.sport)
-            val final = subject.absent || subject.normalizedRate != RecordbookRate.InProgress || progress.value == null
+            val sheetTotal = item.sheetTotal
+            val final = sheetTotal == null &&
+                (subject.absent || subject.normalizedRate != RecordbookRate.InProgress || progress.value == null)
             binding.grade.isVisible = final
             binding.scoreGroup.isVisible = !final
-            val result = if (final) {
+            binding.sheetMark.isVisible = sheetTotal != null
+            binding.progress.isVisible = sheetTotal == null
+            val result = if (sheetTotal != null) {
+                binding.score.text = sheetTotal
+                context.getString(R.string.sheet_scores_from_table, sheetTotal)
+            } else if (final) {
                 binding.grade.bindGradeBadge(subject)
                 subject.displayRate(context)
             } else {

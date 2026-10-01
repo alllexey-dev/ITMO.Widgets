@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -23,6 +24,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -52,7 +54,9 @@ sealed interface RecordbookUiState {
         /** Subjects for «Требуют внимания» by `entryId`; everything else is the regular list. */
         val attention: Map<Long, RecordbookAttentionReason> = emptyMap(),
         /** `subjectNameKey`s of unread new or changed marks in the selected period's half-year. */
-        val newSubjects: Set<String> = emptySet()
+        val newSubjects: Set<String> = emptySet(),
+        /** Totals of connected sheets in the selected period by `disciplineId`; the list never downloads them. */
+        val sheetTotals: Map<Long, String> = emptyMap()
     ) : RecordbookUiState {
         /** The pass count means something only once a final grade or credit exists. */
         val showSummary: Boolean get() = subjects.any { it.normalizedRate != RecordbookRate.InProgress }
@@ -73,7 +77,8 @@ class RecordbookViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val sportResolver: RecordbookSportResolver,
     private val time: AcademicTimeProvider,
-    private val marks: MarkTrackingRepository
+    private val marks: MarkTrackingRepository,
+    private val sheets: SheetScoresRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<RecordbookUiState>(RecordbookUiState.Loading())
     val uiState: StateFlow<RecordbookUiState> = _uiState.asStateFlow()
@@ -84,6 +89,8 @@ class RecordbookViewModel @Inject constructor(
     private var selection: RecordbookSelection? = null
     private var loadJob: Job? = null
     private var newsByHalf: Map<StudyHalf, Set<String>> = emptyMap()
+    /** Non-empty sheet totals by `ResourceScope.key`. */
+    private var sheetValues: Map<String, String> = emptyMap()
 
     init {
         // Unread marks come from the local store; a new one reaches the open list without a request.
@@ -92,6 +99,15 @@ class RecordbookViewModel @Inject constructor(
                 newsByHalf = news.groupBy({ it.half }, { it.nameKey }).mapValues { it.value.toSet() }
                 (_uiState.value as? RecordbookUiState.Content)?.let { content ->
                     _uiState.value = content.copy(newSubjects = newSubjectsIn(content.selection.period))
+                }
+            }
+        }
+        // Stored totals only: a changed total reaches the open list, nothing is downloaded here.
+        viewModelScope.launch {
+            sheets.observe().collect { scores ->
+                sheetValues = scores.mapNotNull { score -> score.value?.takeIf(String::isNotBlank)?.let { score.scope.key to it } }.toMap()
+                (_uiState.value as? RecordbookUiState.Content)?.let { content ->
+                    _uiState.value = content.copy(sheetTotals = sheetTotalsIn(content.selection.period, content.subjects))
                 }
             }
         }
@@ -206,7 +222,14 @@ class RecordbookViewModel @Inject constructor(
     private fun content(selected: RecordbookSelection, subjects: List<RecordbookSubject>, sport: RecordbookSportState?) =
         RecordbookUiState.Content(programs, selected, subjects, sport, attention = subjects.mapNotNull { subject ->
             attentionReason(subject, sport, knownControls(subject), time.now())?.let { subject.entryId to it }
-        }.toMap(), newSubjects = newSubjectsIn(selected.period))
+        }.toMap(), newSubjects = newSubjectsIn(selected.period), sheetTotals = sheetTotalsIn(selected.period, subjects))
+
+    private fun sheetTotalsIn(period: RecordbookPeriod, subjects: List<RecordbookSubject>): Map<Long, String> {
+        val periodKey = period.studyHalf()?.periodKey ?: return emptyMap()
+        return subjects.mapNotNull { subject ->
+            sheetValues[ResourceScope(subject.disciplineId, subject.name, periodKey).key]?.let { subject.disciplineId to it }
+        }.toMap()
+    }
 
     private fun newSubjectsIn(period: RecordbookPeriod): Set<String> =
         period.studyHalf()?.let(newsByHalf::get).orEmpty()

@@ -1,27 +1,28 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
-import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
-import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
+import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
+import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.recordbook.TEST_HALF
-import dev.alllexey.itmowidgets.feature.recordbook.markNews
-import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
-import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
-import dev.alllexey.itmowidgets.feature.recordbook.recordbookProgram
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
-import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
-import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
-import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
+import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
+import dev.alllexey.itmowidgets.feature.recordbook.markNews
+import dev.alllexey.itmowidgets.feature.recordbook.recordbookProgram
+import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import java.time.OffsetDateTime
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,9 +41,12 @@ class RecordbookViewModelTest {
 
     private val marks = FakeMarkTrackingRepository()
 
-    private fun model(state: SavedStateHandle = SavedStateHandle(), date: String = "2026-09-07") =
-        RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), state, RecordbookSportResolver(sport),
-            FixedAcademicTime(date), marks)
+    private fun model(
+        state: SavedStateHandle = SavedStateHandle(),
+        date: String = "2026-09-07",
+        sheets: FakeSheetScoresRepository = FakeSheetScoresRepository(),
+    ) = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), state, RecordbookSportResolver(sport),
+        FixedAcademicTime(date), marks, sheets)
 
     @Test fun `loads current academic period without asking sport for regular subjects`() = runTest {
         val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
@@ -230,7 +234,7 @@ class RecordbookViewModelTest {
         val failing = FakeMarkTrackingRepository()
         repository.subjects = AppResult.Failure(AppError.Network)
         val failed = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), SavedStateHandle(),
-            RecordbookSportResolver(sport), FixedAcademicTime(), failing)
+            RecordbookSportResolver(sport), FixedAcademicTime(), failing, FakeSheetScoresRepository())
         failed.ensureDataLoaded(); advanceUntilIdle()
         assertTrue(failed.uiState.value is RecordbookUiState.Error)
         assertTrue(failing.seenMyItmo.isEmpty())

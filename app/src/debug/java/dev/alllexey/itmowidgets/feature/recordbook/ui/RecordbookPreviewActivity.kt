@@ -120,7 +120,7 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
                         val resolver = RecordbookSportResolver(checkNotNull(sportRepository))
                         return if (fragment is RecordbookFragment) {
                             RecordbookViewModel(checkNotNull(repository), bars ?: NoBars, preference, SavedStateHandle(), resolver, FixedTime,
-                                MemoryMarkTracking) as T
+                                MemoryMarkTracking, MemorySheetScores) as T
                         } else {
                             val args = fragment.requireArguments()
                             val values = mutableMapOf<String, Any>(
