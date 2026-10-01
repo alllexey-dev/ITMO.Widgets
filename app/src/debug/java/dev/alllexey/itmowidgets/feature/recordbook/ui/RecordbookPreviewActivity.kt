@@ -4,12 +4,14 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Gravity
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.SavedStateHandle
@@ -22,7 +24,9 @@ import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
@@ -61,6 +65,17 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCheck
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetInspection
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRowMatch
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
+import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.SheetScoresBottomSheet
+import kotlinx.coroutines.CompletableDeferred
 import java.time.LocalDate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -86,6 +101,18 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
     override fun onCreate(savedInstanceState: Bundle?) {
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
+                if (fragment is SheetScoresBottomSheet) {
+                    val arguments = fragment.requireArguments()
+                    @Suppress("DEPRECATION")
+                    val handle = SavedStateHandle(arguments.keySet().associateWith { arguments.get(it) })
+                    val factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            SheetScoresViewModel(handle, MemorySheetScores) as T
+                    }
+                    ViewModelProvider(fragment, factory)[SheetScoresViewModel::class.java]
+                    return
+                }
                 if (fragment !is RecordbookFragment && fragment !is RecordbookSubjectFragment) return
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
@@ -115,6 +142,13 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
                 }
                 if (fragment is RecordbookFragment) ViewModelProvider(fragment, factory)[RecordbookViewModel::class.java]
                 else ViewModelProvider(fragment, factory)[RecordbookSubjectViewModel::class.java]
+            }
+
+            /** A sheet takes the host's narrow width too. */
+            override fun onFragmentStarted(fm: FragmentManager, fragment: Fragment) {
+                val width = appearance.widthDp.takeIf { it > 0 } ?: return
+                val window = (fragment as? DialogFragment)?.dialog?.window ?: return
+                window.setLayout((width * fragment.resources.displayMetrics.density).toInt(), ViewGroup.LayoutParams.MATCH_PARENT)
             }
         }, false)
         super.onCreate(savedInstanceState)
@@ -170,6 +204,13 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
 
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) { linkNavigation += "actions:$linkId" }
 
+    override fun openSheetScores(args: SheetScoresArgs) {
+        linkNavigation += "sheet:${args.step}"
+        sheetRequests += args
+        if (supportFragmentManager.isStateSaved || supportFragmentManager.findFragmentByTag(SheetScoresBottomSheet.TAG) != null) return
+        SheetScoresBottomSheet.newInstance(args).show(supportFragmentManager, SheetScoresBottomSheet.TAG)
+    }
+
     override fun openLessonDetails(args: LessonDetailsArgs) = Unit
 
     override fun openWebLogin() = Unit
@@ -213,8 +254,10 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         @Volatile var resourceRepository: SubjectLinksRepository = MemorySubjectLinksRepository()
         /** The host's clock; spring 2025/2026 by default. */
         @Volatile var today: LocalDate = LocalDate.of(2026, 6, 1)
-        /** Link sheets the page asked for: `links`, `editor` or `actions:<id>`. */
+        /** Link sheets the page asked for: `links`, `editor`, `actions:<id>` or `sheet:<step>`. */
         val linkNavigation: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+        /** The arguments of every «Мои баллы» sheet asked for. */
+        val sheetRequests: MutableList<SheetScoresArgs> = java.util.Collections.synchronizedList(mutableListOf())
         @Volatile var bindingStore: SubjectBindingStore = MemoryBindings()
         /** Teacher tones a test hands in; never Backend. */
         @Volatile var levelsRepository: TeacherLevelsRepository = MemoryLevels()
@@ -279,6 +322,58 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         }
 
         override suspend fun resetSource(source: MarkSource) = Unit
+    }
+
+    /** Sheet connections and inspections a test hands in; never the network or the device's file. */
+    object MemorySheetScores : SheetScoresRepository {
+        val scores = MutableStateFlow<List<SheetScore>>(emptyList())
+        val inspections = ArrayDeque<SheetInspection>()
+        /** Holds [inspect] until completed, for the loading state. */
+        @Volatile var inspectGate: CompletableDeferred<Unit>? = null
+        val refreshCalls: MutableList<ResourceScope> = java.util.Collections.synchronizedList(mutableListOf())
+        val connected: MutableList<SheetCell> = java.util.Collections.synchronizedList(mutableListOf())
+        val disconnected: MutableList<ResourceScope> = java.util.Collections.synchronizedList(mutableListOf())
+
+        init { check(BuildConfig.DEBUG) }
+
+        fun reset() {
+            scores.value = emptyList()
+            synchronized(inspections) { inspections.clear() }
+            inspectGate?.cancel()
+            inspectGate = null
+            refreshCalls.clear()
+            connected.clear()
+            disconnected.clear()
+        }
+
+        override fun observe(): Flow<List<SheetScore>> = scores
+        override suspend fun refresh(scope: ResourceScope) { refreshCalls += scope }
+
+        override suspend fun inspect(url: String): SheetInspection {
+            inspectGate?.await()
+            return synchronized(inspections) { inspections.removeFirstOrNull() } ?: SheetInspection.Failed(SheetStatus.NETWORK)
+        }
+
+        override suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell): AppResult<Unit> {
+            connected += total
+            return AppResult.Success(Unit)
+        }
+
+        override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell): AppResult<Unit> {
+            connected += total
+            scores.value = scores.value.map {
+                if (it.scope.key == scope.key) it.copy(column = SheetColumnRef(total.headerPath, total.column), value = total.value) else it
+            }
+            return AppResult.Success(Unit)
+        }
+
+        override suspend fun disconnect(scope: ResourceScope) {
+            disconnected += scope
+            scores.value = scores.value.filterNot { it.scope.key == scope.key }
+        }
+
+        override suspend fun check(half: StudyHalf) = SheetCheck(emptyList(), emptyList())
+        override suspend fun untrack() = Unit
     }
 
     class MemoryBindings : SubjectBindingStore {

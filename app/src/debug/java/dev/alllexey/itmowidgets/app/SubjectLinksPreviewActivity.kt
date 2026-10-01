@@ -19,6 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
@@ -72,6 +73,10 @@ class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator {
 
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) =
         LinkActionsBottomSheet.newInstance(args, linkId).show(supportFragmentManager, LinkActionsBottomSheet.TAG)
+
+    override fun openSheetScores(args: SheetScoresArgs) {
+        sheetRequests += args
+    }
 
     override fun openScreen(screen: AppScreen, arguments: Bundle?) = Unit
 
@@ -128,5 +133,7 @@ class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator {
 
         @Volatile var appearance = Appearance()
         @Volatile var repository: SubjectLinksRepository = MemorySubjectLinksRepository()
+        /** «Мои баллы» the sheets asked for; the sheet itself belongs to the recordbook. */
+        val sheetRequests: MutableList<SheetScoresArgs> = java.util.Collections.synchronizedList(mutableListOf())
     }
 }

@@ -382,6 +382,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
 
     override fun openLinkActions(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs, linkId: String) = Unit
 
+
+    override fun openSheetScores(args: dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs) = Unit
+
     override fun openLessonDetails(args: LessonDetailsArgs) = navigation.openLessonDetails(args)
 
     /** Only recorded: the sheet itself talks to Backend and has its own preview host. */

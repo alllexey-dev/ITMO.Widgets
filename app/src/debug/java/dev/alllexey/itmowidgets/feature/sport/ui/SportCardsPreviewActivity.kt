@@ -20,6 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -128,6 +129,8 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
     override fun openSubjectLinks(args: SubjectLinksArgs) = Unit
     override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) = Unit
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
+
+    override fun openSheetScores(args: SheetScoresArgs) = Unit
     override fun openWebLogin() = Unit
 
     override fun openReviewEditor(args: TeacherReviewArgs) = Unit

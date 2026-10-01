@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
@@ -145,6 +146,8 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
     override fun openSubjectLinks(args: SubjectLinksArgs) = Unit
     override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) = Unit
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
+
+    override fun openSheetScores(args: SheetScoresArgs) = Unit
     override fun openWebLogin() = Unit
 
     override fun openReviewEditor(args: TeacherReviewArgs) {

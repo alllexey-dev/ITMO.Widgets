@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
 import dev.alllexey.itmowidgets.core.model.UserGroup
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.resources.LinkAudience
@@ -46,6 +47,7 @@ import java.time.OffsetDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -152,6 +154,42 @@ class SubjectLinksVisualTest {
                 assertScore(-1, -1)
                 scenario.onActivity { assertNotNull(it.supportFragmentManager.findFragmentByTag(LinkActionsBottomSheet.TAG)) }
             }
+        }
+    }
+
+    @Test fun actionsSheetOffersMyScoresOnlyForAGoogleSheet() {
+        val sheetLink = link("sheet-scores", LinkCategory.SCORES, SHEET_URL, "Баллы по таблице преподавателя", score = 2)
+        val configure: (MemorySubjectLinksRepository) -> Unit = {
+            it.snapshots.value = mapOf(SCOPE.key to fixture().let { snapshot -> snapshot.copy(shared = snapshot.shared + sheetLink) })
+        }
+        Appearances.default.forEach { spec ->
+            SubjectLinksPreviewActivity.sheetRequests.clear()
+            withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "sheet-scores", configure = configure) { scenario, _ ->
+                settle()
+                scenario.onActivity { activity ->
+                    val sheet = actions(activity)
+                    val scores = sheet.findViewById<TextView>(R.id.action_scores)
+                    assertTrue(scores.isShown)
+                    assertEquals(activity.getString(R.string.sheet_scores_action), scores.text.toString())
+                    assertTrue(scores.height >= 48 * activity.resources.displayMetrics.density - 1)
+                    assertTrue(sheet.findViewById<View>(R.id.action_open).bottomOnScreen() <= scores.topOnScreen())
+                    assertTextFits(sheet)
+                    assertTouchTargets(sheet)
+                }
+                screenshot("links-actions-scores-${spec.name}")
+                scenario.onActivity { actions(it).findViewById<View>(R.id.action_scores).performClick() }
+                TestUi.eventually(idleBetween = true) {
+                    scenario.onActivity { assertNull(it.supportFragmentManager.findFragmentByTag(LinkActionsBottomSheet.TAG)) }
+                }
+                assertEquals(
+                    listOf(SheetScoresArgs(SCOPE.subjectId, SCOPE.subjectName, SCOPE.periodKey, SHEET_URL, SheetScoresArgs.Step.CONNECT)),
+                    SubjectLinksPreviewActivity.sheetRequests.toList()
+                )
+            }
+        }
+        withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "tasks-flow", configure = configure) { scenario, _ ->
+            settle()
+            scenario.onActivity { activity -> assertFalse(actions(activity).findViewById<View>(R.id.action_scores).isShown) }
         }
     }
 
@@ -473,6 +511,7 @@ class SubjectLinksVisualTest {
 
     private companion object {
         val SCOPE = ResourceScope(42L, "Математический анализ", "2026-1")
+        const val SHEET_URL = "https://docs.google.com/spreadsheets/d/1SyntheticSheetForVisualTests_0123456/edit"
         val PAST = ResourceScope(42L, "Математический анализ", "2025-1")
         val LECTURE_FLOW = LinkAudience(7101, "ФИЗ ПИИКТ 3", typeId = 1, depth = 1)
         val PRACTICE_FLOW = LinkAudience(7102, "ФИЗ ПИИКТ 3.2", typeId = 3, depth = 2)

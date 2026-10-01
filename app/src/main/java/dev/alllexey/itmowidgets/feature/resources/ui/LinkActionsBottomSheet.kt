@@ -14,11 +14,14 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
+import dev.alllexey.itmowidgets.core.ui.navigation.openSheetScores
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.SheetLinkActionsBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
@@ -31,7 +34,7 @@ import dev.alllexey.itmowidgets.core.ui.expandToContent
 
 /**
  * What can be done with one link. Own: open, pin, edit, delete, with the review state and the reason
- * of a rejection. Others': the vote arrows, open, pin, report. Actions that need the server are
+ * of a rejection. A Google Sheet of any author also offers «Мои баллы», the own total from it. Others': the vote arrows, open, pin, report. Actions that need the server are
  * absent without it. A vote keeps the sheet open; every other action closes it on success.
  */
 @AndroidEntryPoint
@@ -88,6 +91,8 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
 
         val online = snapshot.servicesEnabled
         actionOpen.setOnClickListener { openLink(link.url, root); dismiss() }
+        actionScores.isVisible = GoogleSheetUrl.parse(link.url) != null
+        actionScores.setOnClickListener { openScores(link) }
         actionPin.isVisible = link.isMine || online
         actionPin.setText(if (pinned) R.string.links_unpin else R.string.links_pin)
         actionPin.setCompoundDrawablesRelativeWithIntrinsicBounds(if (pinned) R.drawable.ic_keep_off else R.drawable.ic_keep, 0, 0, 0)
@@ -119,6 +124,13 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
     private fun edit(link: SubjectLink) {
         if (pending) return
         openLinkEditor(viewModel.scope.toArgs(), link.id)
+        dismiss()
+    }
+
+    private fun openScores(link: SubjectLink) {
+        if (pending) return
+        val scope = viewModel.scope
+        openSheetScores(SheetScoresArgs(scope.subjectId, scope.subjectName, scope.periodKey, link.url, SheetScoresArgs.Step.CONNECT))
         dismiss()
     }
 

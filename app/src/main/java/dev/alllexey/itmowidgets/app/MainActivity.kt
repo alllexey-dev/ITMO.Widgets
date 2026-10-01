@@ -18,6 +18,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
@@ -162,6 +163,12 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
         if (onboardingGate.state.value != OnboardingGate.Passed) return
         navigation.openLinkActions(args, linkId)
+    }
+
+    override fun openSheetScores(args: SheetScoresArgs) {
+        if (sessionRepository.state.value !is SessionState.SignedIn) return
+        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        navigation.openSheetScores(args)
     }
 
     override fun openReviewEditor(args: TeacherReviewArgs) {

@@ -82,6 +82,14 @@
             app:drawableStartCompat="@drawable/ic_open_in_new" />
 
         <TextView
+            android:id="@+id/action_scores"
+            style="@style/Widget.ItmoWidgets.SheetAction"
+            android:text="@string/sheet_scores_action"
+            android:visibility="gone"
+            app:drawableStartCompat="@drawable/ic_table"
+            tools:visibility="visible" />
+
+        <TextView
             android:id="@+id/action_pin"
             style="@style/Widget.ItmoWidgets.SheetAction"
             android:text="@string/links_pin"

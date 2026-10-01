@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -87,6 +88,8 @@ class ReviewEditorPreviewActivity : AppCompatActivity(), AppNavigator {
     override fun openSubjectLinks(args: SubjectLinksArgs) = Unit
     override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) = Unit
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
+
+    override fun openSheetScores(args: SheetScoresArgs) = Unit
     override fun openWebLogin() = Unit
 
     /** Hands both screens a view model over the fixtures before Hilt could create one, and narrows their window. */
