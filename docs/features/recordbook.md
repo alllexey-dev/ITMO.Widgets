@@ -617,10 +617,11 @@ exception.
   teacher) and is skipped. A group title spans to the next title of its row or
   of a row above; the last header row does not span. A column's path joins its
   titles top-down with ` · `; a column without one is `Столбец <буква>`.
-- The total (`SheetTotals.detect`): keyword groups by priority, matched as whole
-  words of the path: `итог`/`итого`, `σ`/`∑`, `сумма`/`сум`/`sum`, `total`,
-  `score`, `bars credits`/`барс`, `оценка`, `зачет`. Ties: a path segment equal
-  to the keyword, a filled value, an earlier tab, a column further right.
+- The total (`SheetTotals.detect`): keyword groups by priority, matched as
+  words of the path by their start (`итог` finds `ИТОГО` and `Итоговый балл`):
+  `итог`, `σ`/`∑`, `сумма`/`сум`/`sum`, `total`, `score`, `bars credits`/`барс`,
+  `оценка`, `зачет`. Ties: a one-word path segment starting with the keyword, a
+  filled value, an earlier tab, a column further right.
 - The column is stored as the tab's `gid` and the header path; a reading finds
   the same path again (the nearest to the old index when repeated) and falls
   back to the old index while the tab is that wide, else `Столбец не найден`.

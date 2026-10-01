@@ -8,9 +8,12 @@ data class SheetCell(val tab: SheetTab, val column: Int, val headerPath: String,
 /** The cells of the own row and which of them is the total. Pure. */
 object SheetTotals {
 
-    /** Header words of a total, the strongest group first; a multi-word entry matches consecutive words. */
+    /**
+     * Header words of a total, the strongest group first; a multi-word entry matches consecutive words and the last
+     * one by its start, so «итог» also finds «Итоговый балл».
+     */
     val KEYWORDS: List<List<String>> = listOf(
-        listOf("итог", "итого"),
+        listOf("итог"),
         listOf("σ", "∑"),
         listOf("сумма", "сум", "sum"),
         listOf("total"),
@@ -72,11 +75,17 @@ object SheetTotals {
         val segments = path.split(SheetHeaders.SEPARATOR).map(SheetText::normalize)
         KEYWORDS.forEachIndexed { group, keywords ->
             val hits = keywords.filter { keyword -> contains(words, keyword.split(' ')) }
-            if (hits.isNotEmpty()) return Rank(group, hits.any { it in segments })
+            if (hits.isNotEmpty()) return Rank(group, segments.any { segment -> hits.any { isWhole(segment, it) } })
         }
         return null
     }
 
+    /** A segment that is the keyword itself, or one word starting with a one-word keyword («ИТОГО» for «итог»). */
+    private fun isWhole(segment: String, keyword: String): Boolean =
+        segment == keyword || (' ' !in keyword && ' ' !in segment && segment.startsWith(keyword))
+
     private fun contains(words: List<String>, keyword: List<String>): Boolean =
-        words.windowed(keyword.size).any { it == keyword }
+        words.windowed(keyword.size).any { window ->
+            window.dropLast(1) == keyword.dropLast(1) && window.last().startsWith(keyword.last())
+        }
 }

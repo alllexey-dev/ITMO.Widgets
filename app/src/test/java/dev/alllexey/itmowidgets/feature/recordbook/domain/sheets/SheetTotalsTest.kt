@@ -48,6 +48,12 @@ class SheetTotalsTest {
         assertEquals(1, SheetTotals.detect(listOf(cell("ЛР · Итог", 1), cell("Итог КР", 5)))?.column)
     }
 
+    @Test fun `a total keyword matches the start of a word`() {
+        assertEquals(4, SheetTotals.detect(listOf(cell("Оценка", 2), cell("Итоговый балл", 4)))?.column)
+        assertEquals(3, SheetTotals.detect(listOf(cell("ИТОГО", 3), cell("Итоговый балл", 6)))?.column)
+        assertEquals(2, SheetTotals.detect(listOf(cell("Total score", 2), cell("Subtotal", 5)))?.column)
+    }
+
     @Test fun `a filled value, then an earlier tab, then a further right column break ties`() {
         assertEquals(2, SheetTotals.detect(listOf(cell("Итог", 2, "10"), cell("Итог", 5, "")))?.column)
         assertEquals(tabA, SheetTotals.detect(listOf(cell("Итог", 2), cell("Итог", 5, tab = tabB)))?.tab)
