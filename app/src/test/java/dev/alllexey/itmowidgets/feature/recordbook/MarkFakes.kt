@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MyItmoSubjectMark
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.ReadStamp
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.SheetsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
@@ -29,6 +30,8 @@ class FakeMarkTrackingRepository(vararg initial: MarkNews) : MarkTrackingReposit
     val news = MutableStateFlow(initial.toList())
     var myItmoResult: AppResult<MarkCheckResult> = AppResult.Success(MarkCheckResult.Compared(0))
     var barsResult: BarsCheck = BarsCheck.Done(MarkCheckResult.Compared(0))
+    var sheetsResult = SheetsCheck(MarkCheckResult.Compared(0), emptyList())
+    var sheetsChecks = 0
     var myItmoChecks = 0
     var barsChecks = 0
     var stamp = 0L
@@ -53,6 +56,11 @@ class FakeMarkTrackingRepository(vararg initial: MarkNews) : MarkTrackingReposit
     override suspend fun checkBars(): BarsCheck {
         barsChecks++
         return barsResult
+    }
+
+    override suspend fun checkSheets(): SheetsCheck {
+        sheetsChecks++
+        return sheetsResult
     }
 
     override fun readStarted(): ReadStamp = ReadStamp(stamp)

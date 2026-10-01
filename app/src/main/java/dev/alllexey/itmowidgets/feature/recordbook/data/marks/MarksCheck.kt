@@ -29,7 +29,8 @@ class MarksCheck @Inject constructor(
         if (!sessionTokens.hasRefreshToken()) return CheckOutcome.SKIPPED
         val myItmo = settings.getMyItmoMarksEnabled()
         val bars = settings.getBarsMarksEnabled() == true
-        if (!myItmo && !bars) return CheckOutcome.SKIPPED
+        val sheets = settings.getSheetMarksEnabled()
+        if (!myItmo && !bars && !sheets) return CheckOutcome.SKIPPED
         val errors = mutableListOf<AppError>()
         if (myItmo) (repository.checkMyItmo() as? AppResult.Failure)?.let { errors += it.error }
         if (bars) {
@@ -41,6 +42,7 @@ class MarksCheck @Inject constructor(
                 is BarsCheck.Done, BarsCheck.NoSession -> Unit
             }
         }
+        if (sheets) errors += repository.checkSheets().errors
         // Marks found in the quiet hours wait here for the first run after them, whatever the network does then.
         deliver()
         return outcomeOf(errors)

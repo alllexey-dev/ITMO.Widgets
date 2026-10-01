@@ -53,6 +53,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSource
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.ReadStamp
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.SheetsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
@@ -252,6 +253,7 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         override fun observeNews(): Flow<List<MarkNews>> = news
         override suspend fun checkMyItmo(): AppResult<MarkCheckResult> = AppResult.Failure(AppError.Unauthorized)
         override suspend fun checkBars(): BarsCheck = BarsCheck.NoSession
+        override suspend fun checkSheets(): SheetsCheck = SheetsCheck(MarkCheckResult.Compared(0), emptyList())
         override fun readStarted(): ReadStamp = ReadStamp(0)
 
         override suspend fun recordMyItmoSeen(

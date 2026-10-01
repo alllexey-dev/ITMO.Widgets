@@ -25,6 +25,9 @@ sealed interface BarsCheck {
     data class Failed(val error: AppError) : BarsCheck
 }
 
+/** How a background read of the connected sheets ended: the comparison and the failed downloads. */
+data class SheetsCheck(val result: MarkCheckResult, val errors: List<AppError>)
+
 /** Wall-clock moment a screen started asking for marks. */
 @JvmInline
 value class ReadStamp(val millis: Long)
@@ -39,6 +42,9 @@ interface MarkTrackingRepository {
 
     /** Reads the BARS journals of the current half-year in the background, renewing through ITMO.ID cookies. */
     suspend fun checkBars(): BarsCheck
+
+    /** Reads the connected sheets of the current half-year; a changed total is an unread subject. */
+    suspend fun checkSheets(): SheetsCheck
 
     /** Taken before a screen asks for marks; a later snapshot write makes that answer stale. */
     fun readStarted(): ReadStamp
@@ -65,6 +71,9 @@ interface MarkTrackingRepository {
     /** Reads everything and removes the digest notification. */
     suspend fun markAllRead()
 
-    /** Forgets one source's snapshot, keeps the unread subjects; the next check of it is a baseline. */
+    /**
+     * Forgets one source's snapshot, keeps the unread subjects; the next check of it is a baseline. For [MarkSource.SHEETS]
+     * the totals stay and the next background read of every sheet is only a baseline.
+     */
     suspend fun resetSource(source: MarkSource)
 }

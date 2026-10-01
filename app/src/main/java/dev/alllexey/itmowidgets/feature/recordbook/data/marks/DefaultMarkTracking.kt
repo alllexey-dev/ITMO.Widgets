@@ -14,7 +14,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * The two switches and the session decide whether the periodic check exists: it runs with a session and at least one
+ * The three switches and the session decide whether the periodic check exists: it runs with a session and at least one
  * source on. Off forgets that source's snapshot, so turning it on again starts from a baseline, not a flood.
  */
 @Singleton
@@ -42,8 +42,15 @@ class DefaultMarkTracking @Inject constructor(
         syncWork()
     }
 
+    override suspend fun setSheetsEnabled(enabled: Boolean) {
+        settings.setSheetMarksEnabled(enabled)
+        if (!enabled) repository.resetSource(MarkSource.SHEETS)
+        syncWork()
+    }
+
     override suspend fun syncWork() {
-        val anySource = settings.getMyItmoMarksEnabled() || settings.getBarsMarksEnabled() == true
+        val anySource = settings.getMyItmoMarksEnabled() || settings.getBarsMarksEnabled() == true ||
+            settings.getSheetMarksEnabled()
         if (sessionTokens.hasRefreshToken() && anySource) scheduler.ensurePeriodic() else scheduler.cancel()
     }
 

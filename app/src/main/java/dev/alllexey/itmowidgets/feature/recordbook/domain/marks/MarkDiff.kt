@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.marks
 
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 
-enum class MarkSource { MY_ITMO, BARS }
+enum class MarkSource { MY_ITMO, BARS, SHEETS }
 
 enum class MarkEventKind { MARK_ADDED, MARK_CHANGED, FINAL_CHANGED }
 

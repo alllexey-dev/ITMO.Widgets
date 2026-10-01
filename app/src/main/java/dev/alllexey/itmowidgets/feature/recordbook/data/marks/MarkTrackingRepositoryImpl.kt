@@ -27,10 +27,12 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepo
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MyItmoMarkSnapshot
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MyItmoSubjectMark
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.ReadStamp
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.SheetsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.studyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.toMyItmoMark
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import java.time.Clock
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
@@ -48,8 +50,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
- * Compares the own marks of the current half-year in My ITMO and BARS with the last snapshots on the device. Nothing
- * leaves the device.
+ * Compares the own marks of the current half-year in My ITMO and BARS with the last snapshots on the device and turns
+ * changed totals of the connected sheets into unread subjects. Nothing leaves the device.
  *
  * Checks run one at a time; the state has its own lock, so reading marks and advancing from a list never wait for the
  * network. A cleared session (generation), a reset source (epoch) or a newer write of the source ([StoredMarks]'s
@@ -64,6 +66,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     @param:WallClock private val clock: Clock,
     private val notifier: AppNotifier,
     private val currentUser: CurrentUserProvider,
+    private val sheets: SheetScoresRepository,
 ) : MarkTrackingRepository, SessionDataCleaner {
 
     private val checks = Mutex()
@@ -145,6 +148,30 @@ class MarkTrackingRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun checkSheets(): SheetsCheck = checks.withLock {
+        val started = generation.get()
+        val epoch = epochs.getValue(MarkSource.SHEETS).get()
+        val half = StudyHalf.of(time.today())
+        val check = sheets.check(half)
+        lock.withLock {
+            if (generation.get() != started) return@withLock SheetsCheck(MarkCheckResult.Stale, listOf(AppError.Unauthorized))
+            if (epochs.getValue(MarkSource.SHEETS).get() != epoch) return@withLock SheetsCheck(MarkCheckResult.Stale, check.errors)
+            val events = check.changes.map { MarkEvent(MarkSource.SHEETS, half, it.scope.subjectName, it.kind) }
+            val found = MarkCheckResult.Compared(events.mapTo(mutableSetOf()) { it.half to it.nameKey }.size)
+            if (events.isEmpty()) return@withLock SheetsCheck(found, check.errors)
+            val stored = loaded()
+            val next = stored.copy(owner = currentUser.getCurrentUser()?.isu, news = merged(stored, events, notify = true))
+            try {
+                persist(next)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                return@withLock SheetsCheck(found, check.errors + AppError.Unknown(error))
+            }
+            SheetsCheck(found, check.errors)
+        }
+    }
+
     override fun readStarted(): ReadStamp = ReadStamp(clock.millis())
 
     override suspend fun recordMyItmoSeen(
@@ -200,11 +227,11 @@ class MarkTrackingRepositoryImpl @Inject constructor(
 
     override suspend fun resetSource(source: MarkSource) {
         epochs.getValue(source).incrementAndGet()
-        update { stored ->
-            when (source) {
-                MarkSource.MY_ITMO -> stored.copy(myItmo = null)
-                MarkSource.BARS -> stored.copy(bars = null)
-            }
+        when (source) {
+            MarkSource.MY_ITMO -> update { stored -> stored.copy(myItmo = null) }
+            MarkSource.BARS -> update { stored -> stored.copy(bars = null) }
+            // The totals are what the subject pages show; only the next background read of each becomes a baseline.
+            MarkSource.SHEETS -> sheets.untrack()
         }
     }
 

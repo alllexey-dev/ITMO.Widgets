@@ -34,6 +34,7 @@ class DefaultMarkTrackingTest {
 
     @Test
     fun `turning My ITMO off forgets its snapshot and keeps the check only for BARS`() = runTest {
+        settings.setSheetMarksEnabled(false)
         tracking.setMyItmoEnabled(false)
         assertEquals(listOf(MarkSource.MY_ITMO), repository.resets)
         assertEquals(1, scheduler.cancelCalls)
@@ -78,6 +79,7 @@ class DefaultMarkTrackingTest {
             val settings = AppSettingsStorage(InMemoryPreferencesDataStore()).apply {
                 setMyItmoMarksEnabled(myItmo)
                 barsSwitch?.let { setBarsMarksEnabled(it) }
+                setSheetMarksEnabled(false)
             }
             val tracking = DefaultMarkTracking(settings, Tokens(signedIn), scheduler, FakeMarkTrackingRepository(),
                 RecordingAppNotifier())
@@ -101,6 +103,34 @@ class DefaultMarkTrackingTest {
         assertEquals(0, scheduler.ensureCalls)
     }
 
+
+    @Test
+    fun `sheet marks are on by default`() = runTest {
+        assertTrue(settings.getSheetMarksEnabled())
+    }
+
+    @Test
+    fun `turning sheets off untracks them and keeps the check while My ITMO is on`() = runTest {
+        tracking.setSheetsEnabled(false)
+
+        assertEquals(false, settings.getSheetMarksEnabled())
+        assertEquals(listOf(MarkSource.SHEETS), repository.resets)
+        assertEquals(1, scheduler.ensureCalls)
+        assertEquals(0, scheduler.cancelCalls)
+    }
+
+    @Test
+    fun `all three off cancel the check and sheets alone keep it`() = runTest {
+        settings.setMyItmoMarksEnabled(false)
+        settings.setBarsMarksEnabled(false)
+
+        tracking.setSheetsEnabled(false)
+        assertEquals(1, scheduler.cancelCalls)
+
+        tracking.setSheetsEnabled(true)
+        assertEquals(1, scheduler.ensureCalls)
+        assertEquals(listOf(MarkSource.SHEETS), repository.resets)
+    }
     private class Tokens(var refresh: Boolean = true) : SessionTokenStore {
         override fun hasRefreshToken() = refresh
         override fun getIdToken(): String? = null

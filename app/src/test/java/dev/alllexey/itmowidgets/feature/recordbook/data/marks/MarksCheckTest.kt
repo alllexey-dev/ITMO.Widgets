@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.SheetsCheck
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -48,6 +49,7 @@ class MarksCheckTest {
         tokens.refresh = true
         settings.setMyItmoMarksEnabled(false)
         settings.setBarsMarksEnabled(false)
+        settings.setSheetMarksEnabled(false)
         assertEquals(CheckOutcome.SKIPPED, check.run())
 
         assertEquals(0, repository.myItmoChecks)
@@ -173,6 +175,43 @@ class MarksCheckTest {
         assertEquals(BarsLoginPrompt.NONE, settings.getBarsLoginPrompt())
     }
 
+
+    @Test
+    fun `all three sources off skip and only sheets check only sheets`() = runTest {
+        settings.setMyItmoMarksEnabled(false)
+        settings.setBarsMarksEnabled(false)
+        settings.setSheetMarksEnabled(false)
+        assertEquals(CheckOutcome.SKIPPED, check.run())
+        assertEquals(0, repository.sheetsChecks)
+
+        settings.setSheetMarksEnabled(true)
+        assertEquals(CheckOutcome.DONE, check.run())
+
+        assertEquals(1, repository.sheetsChecks)
+        assertEquals(0, repository.myItmoChecks)
+        assertEquals(0, repository.barsChecks)
+    }
+
+    @Test
+    fun `no network for a sheet is retried after delivery`() = runTest {
+        repository.news.value = listOf(markNews("Тестовый предмет 1"))
+        repository.sheetsResult = SheetsCheck(MarkCheckResult.Compared(0), listOf(AppError.Network))
+
+        assertEquals(CheckOutcome.RETRY, check.run())
+
+        assertEquals(1, notifier.digests.size)
+        assertEquals(1, repository.sheetsChecks)
+    }
+
+    @Test
+    fun `a waiting record from a sheet is named in the digest`() = runTest {
+        settings.setMyItmoMarksEnabled(false)
+        repository.news.value = listOf(markNews("Тестовый предмет из таблицы"))
+
+        check.run()
+
+        assertEquals(listOf("Тестовый предмет из таблицы"), notifier.digests.single().first.subjects)
+    }
     private class Tokens : SessionTokenStore {
         var refresh = true
         override fun hasRefreshToken() = refresh

@@ -90,6 +90,29 @@ class MarkNewsRulesTest {
         assertNull(MarkNewsRules.target(physics, null, bars, withBars = true))
     }
 
+
+    @Test
+    fun `a sheet and a My ITMO event of one subject are one record named by My ITMO`() {
+        val events = listOf(
+            MarkEvent(MarkSource.SHEETS, HALF, "ФИЗИКА", MarkEventKind.MARK_CHANGED),
+            MarkEvent(MarkSource.MY_ITMO, HALF, "Физика", MarkEventKind.MARK_ADDED)
+        )
+
+        val merged = MarkNewsRules.merge(emptyList(), events, NOW, notify = true)
+
+        assertEquals(listOf("Физика"), merged.map { it.name })
+        assertFalse(merged.single().notified)
+    }
+
+    @Test
+    fun `a sheet event alone is a record with its name`() {
+        val event = MarkEvent(MarkSource.SHEETS, HALF, "Тестовый предмет", MarkEventKind.MARK_ADDED)
+
+        val merged = MarkNewsRules.merge(emptyList(), listOf(event), NOW, notify = true)
+
+        assertEquals(listOf("Тестовый предмет"), merged.map { it.name })
+        assertEquals("2026/2027-1|тестовый предмет", merged.single().id)
+    }
     private companion object {
         val HALF = StudyHalf(2026, 1)
         val NOW: Instant = Instant.parse("2026-09-07T09:00:00Z")

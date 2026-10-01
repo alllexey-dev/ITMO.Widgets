@@ -195,6 +195,16 @@ class AppSettingsStorage(
         write(MYITMO_MARKS_ENABLED, enabled)
     }
 
+    /** The background check of the connected sheets' totals; on unless the user turned it off. A setting of the device. */
+    suspend fun getSheetMarksEnabled(): Boolean = read()[SHEET_MARKS_ENABLED] ?: true
+
+    fun observeSheetMarksEnabled(): Flow<Boolean> =
+        preferences.map { it[SHEET_MARKS_ENABLED] ?: true }.distinctUntilChanged()
+
+    suspend fun setSheetMarksEnabled(enabled: Boolean) {
+        write(SHEET_MARKS_ENABLED, enabled)
+    }
+
     /** The background check of BARS marks; null (the switch is hidden) until the account's first BARS answer. */
     suspend fun getBarsMarksEnabled(): Boolean? = read()[BARS_MARKS_ENABLED]
 
@@ -298,6 +308,7 @@ class AppSettingsStorage(
             booleanPreferencesKey("sport_sign_hide_time_selector_enabled")
         private val MYITMO_MARKS_ENABLED = booleanPreferencesKey("myitmo_marks_enabled")
         private val BARS_MARKS_ENABLED = booleanPreferencesKey("bars_marks_enabled")
+        private val SHEET_MARKS_ENABLED = booleanPreferencesKey("sheet_marks_enabled")
         private val BARS_MARKS_PROMPT = stringPreferencesKey("bars_marks_prompt")
         private val BACKGROUND_WORK_HINT_SHOWN = booleanPreferencesKey("background_work_hint_shown")
         private val HOME_DISMISSED_HINTS = stringSetPreferencesKey("home_dismissed_hints")

@@ -224,6 +224,18 @@ class AppSettingsStorageTest {
         assertFalse(storage.getMyItmoMarksEnabled())
     }
 
+
+    @Test
+    fun `sheet marks start on and keep what is written`() = runTest {
+        val storage = createStorage()
+        assertTrue(storage.getSheetMarksEnabled())
+        assertTrue(storage.observeSheetMarksEnabled().first())
+
+        storage.setSheetMarksEnabled(false)
+
+        assertFalse(storage.getSheetMarksEnabled())
+        assertFalse(storage.observeSheetMarksEnabled().first())
+    }
     @Test
     fun `the background work hint is not shown until written`() = runTest {
         val storage = createStorage()

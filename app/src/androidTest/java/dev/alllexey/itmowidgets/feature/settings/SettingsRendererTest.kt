@@ -548,6 +548,7 @@ private object RendererScheduleChangeTracking : ScheduleChangeTracking {
 private object RendererMarkTracking : MarkTracking {
     override suspend fun setMyItmoEnabled(enabled: Boolean) = Unit
     override suspend fun setBarsEnabled(enabled: Boolean) = Unit
+    override suspend fun setSheetsEnabled(enabled: Boolean) = Unit
     override suspend fun syncWork() = Unit
     override fun stopWork() = Unit
     override fun checkNow() = Unit

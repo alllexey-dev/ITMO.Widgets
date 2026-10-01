@@ -1,5 +1,11 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 
+import kotlinx.coroutines.test.runCurrent
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCheck
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetChange
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.SheetsCheck
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkEventKind
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -11,6 +17,7 @@ import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsMarkSource
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkRead
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheckpointMark
@@ -54,6 +61,7 @@ class MarkTrackingRepositoryImplTest {
     }
     private val bars = FakeBarsMarkSource(BarsMarkRead.Journals(listOf(plan(1, "Химия", BarsCheckpointMark(10, 5.0, false))), 0))
     private val notifier = RecordingAppNotifier()
+    private val sheets = FakeSheetScoresRepository()
     private var isu: Int? = 123
     private val users = object : CurrentUserProvider {
         override suspend fun getCurrentUser() = isu?.let { CurrentUser(it, null, null) }
@@ -355,7 +363,88 @@ class MarkTrackingRepositoryImplTest {
         assertEquals(BarsJournalReference(8L, "flow", "7", 2026, 1), repository.target(news, withBars = true)?.bars)
     }
 
-    private fun repository() = MarkTrackingRepositoryImpl(recordbook, bars, store, ClockTime(clock), clock, notifier, users)
+
+    @Test
+    fun `a changed sheet total is one undelivered record of the half-year`() = runTest {
+        sheets.checkResult = SheetCheck(listOf(SheetChange(SHEET_SCOPE, MarkEventKind.MARK_CHANGED)), emptyList())
+        val repository = repository()
+
+        val check = repository.checkSheets()
+
+        assertEquals(SheetsCheck(MarkCheckResult.Compared(1), emptyList()), check)
+        assertEquals(listOf(HALF), sheets.checks)
+        val news = repository.observeNews().first().single()
+        assertEquals("Тестовый предмет", news.name)
+        assertEquals(HALF, news.half)
+        assertFalse(news.notified)
+        assertEquals(listOf(news.id), store.read()!!.news.map { it.id })
+    }
+
+    @Test
+    fun `a sheet and My ITMO change of one subject are one record named by My ITMO`() = runTest {
+        val repository = repository()
+        repository.checkMyItmo()
+        recordbook.subjects = AppResult.Success(listOf(subject(42, "Физика", 12.0)))
+        repository.checkMyItmo()
+        sheets.checkResult = SheetCheck(
+            listOf(SheetChange(ResourceScope(142, "ФИЗИКА", "2026-1"), MarkEventKind.MARK_ADDED)), emptyList()
+        )
+
+        repository.checkSheets()
+
+        assertEquals(listOf("Физика"), repository.observeNews().first().map { it.name })
+    }
+
+    @Test
+    fun `resetting sheets untracks them, keeps the snapshots and drops a check already on its way`() = runTest {
+        barsAnswer(BarsMarkRead.Journals(listOf(plan(1, "Химия", BarsCheckpointMark(10, 5.0, false))), 0))
+        val repository = repository()
+        repository.checkMyItmo()
+        repository.checkBars()
+        recordbook.subjects = AppResult.Success(listOf(subject(42, "Физика", 11.0)))
+        repository.checkMyItmo()
+        val before = store.read()!!
+
+        repository.resetSource(MarkSource.SHEETS)
+
+        assertEquals(1, sheets.untrackCalls)
+        assertEquals(before, store.read())
+        sheets.checkResult = SheetCheck(listOf(SheetChange(SHEET_SCOPE, MarkEventKind.MARK_CHANGED)), emptyList())
+        val gate = CompletableDeferred<Unit>()
+        sheets.checkGate = gate
+        val check = async { repository.checkSheets() }
+        runCurrent()
+        repository.resetSource(MarkSource.SHEETS)
+        gate.complete(Unit)
+
+        assertEquals(MarkCheckResult.Stale, check.await().result)
+        assertEquals(listOf("Физика"), store.read()!!.news.map { it.name })
+    }
+
+    @Test
+    fun `clearing the session during a sheet check writes nothing`() = runTest {
+        val repository = repository()
+        sheets.checkResult = SheetCheck(listOf(SheetChange(SHEET_SCOPE, MarkEventKind.MARK_CHANGED)), emptyList())
+        val gate = CompletableDeferred<Unit>()
+        sheets.checkGate = gate
+        val check = async { repository.checkSheets() }
+        runCurrent()
+
+        repository.clearSessionData()
+        gate.complete(Unit)
+
+        assertEquals(SheetsCheck(MarkCheckResult.Stale, listOf(AppError.Unauthorized)), check.await())
+        assertFalse(File(folder, "state.json").exists())
+        assertEquals(emptyList<MarkNews>(), repository.observeNews().first())
+    }
+
+    @Test
+    fun `failed sheet downloads reach the check errors`() = runTest {
+        sheets.checkResult = SheetCheck(emptyList(), listOf(AppError.Network))
+
+        assertEquals(SheetsCheck(MarkCheckResult.Compared(0), listOf(AppError.Network)), repository().checkSheets())
+    }
+    private fun repository() = MarkTrackingRepositoryImpl(recordbook, bars, store, ClockTime(clock), clock, notifier, users, sheets)
 
     private fun barsAnswer(answer: BarsMarkRead) {
         bars.answers.clear()
@@ -371,6 +460,7 @@ class MarkTrackingRepositoryImplTest {
 
     private companion object {
         val HALF = StudyHalf(2026, 1)
+        val SHEET_SCOPE = ResourceScope(1, "Тестовый предмет", "2026-1")
 
         fun program(id: Long, vararg periods: RecordbookPeriod) = RecordbookProgram(id, "Тестовая программа $id", periods.toList())
 

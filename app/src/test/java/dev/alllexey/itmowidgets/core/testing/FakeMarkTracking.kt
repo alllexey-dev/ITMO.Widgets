@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 class FakeMarkTracking : MarkTracking {
     val myItmoCalls = mutableListOf<Boolean>()
     val barsCalls = mutableListOf<Boolean>()
+    val sheetsCalls = mutableListOf<Boolean>()
     var syncCalls = 0
     var stopCalls = 0
     var checkNowCalls = 0
@@ -16,6 +17,10 @@ class FakeMarkTracking : MarkTracking {
 
     override suspend fun setBarsEnabled(enabled: Boolean) {
         barsCalls += enabled
+    }
+
+    override suspend fun setSheetsEnabled(enabled: Boolean) {
+        sheetsCalls += enabled
     }
 
     override suspend fun syncWork() {

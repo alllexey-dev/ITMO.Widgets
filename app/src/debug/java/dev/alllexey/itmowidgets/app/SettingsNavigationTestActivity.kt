@@ -474,8 +474,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     object MemoryMarkTracking : MarkTracking {
         val myItmo = MutableStateFlow(true)
         val bars = MutableStateFlow<Boolean?>(null)
+        val sheets = MutableStateFlow(true)
         override suspend fun setMyItmoEnabled(enabled: Boolean) { myItmo.value = enabled }
         override suspend fun setBarsEnabled(enabled: Boolean) { bars.value = enabled }
+        override suspend fun setSheetsEnabled(enabled: Boolean) { sheets.value = enabled }
         override suspend fun syncWork() = Unit
         override fun stopWork() = Unit
         override fun checkNow() = Unit
