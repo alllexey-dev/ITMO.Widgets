@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    A review as a row of the reviews group: who wrote it (a named author or a Reviews source, both links; «Анонимный отзыв»
-    otherwise) with ⋮, one meta line, the full text, then the verification mark and the vote pill.
+    A review as a row of the reviews group: the caption (subject, date) with ⋮, the full text, then the footer: who
+    wrote it (a named author or the source, both links; «Анонимный отзыв» otherwise), its verification and the votes.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -15,54 +15,24 @@
     android:paddingBottom="@dimen/design_spacing_related">
 
     <LinearLayout
+        android:id="@+id/top"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:minHeight="@dimen/design_touch_target"
         android:orientation="horizontal">
 
-        <FrameLayout
+        <TextView
+            android:id="@+id/meta"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/design_spacing_compact"
-            android:layout_weight="1">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/author"
-                style="@style/Widget.ItmoWidgets.ReviewOriginButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceTitleSmall"
-                android:visibility="gone"
-                tools:text="Иванова А. С."
-                tools:visibility="visible" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/source"
-                style="@style/Widget.ItmoWidgets.ReviewOriginButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceTitleSmall"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:visibility="gone"
-                app:icon="@drawable/ic_open_in_new"
-                app:iconGravity="textEnd"
-                app:iconPadding="@dimen/design_spacing_related"
-                app:iconSize="16dp"
-                app:iconTint="?attr/colorOnSurfaceVariant"
-                tools:text="Reviews" />
-
-            <TextView
-                android:id="@+id/anonymous"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="@string/teacher_review_anonymous"
-                android:textAppearance="?attr/textAppearanceTitleSmall"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:visibility="gone" />
-
-        </FrameLayout>
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Математический анализ, сентябрь 2024" />
 
         <ImageButton
             android:id="@+id/more"
@@ -79,23 +49,9 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/meta"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/design_spacing_content"
-        android:ellipsize="end"
-        android:maxLines="2"
-        android:textAppearance="?attr/textAppearanceBodySmall"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:visibility="gone"
-        tools:text="Математический анализ, сентябрь 2024"
-        tools:visibility="visible" />
-
-    <TextView
         android:id="@+id/text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/design_spacing_related"
         android:layout_marginEnd="@dimen/design_spacing_content"
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurface"
@@ -108,11 +64,55 @@
         android:layout_marginTop="@dimen/design_spacing_related"
         android:minHeight="@dimen/design_touch_target">
 
-        <LinearLayout
+        <FrameLayout
             android:id="@+id/origin"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/author"
+                style="@style/Widget.ItmoWidgets.ReviewOriginButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:visibility="gone"
+                tools:text="Иванова А. С."
+                tools:visibility="visible" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/source"
+                style="@style/Widget.ItmoWidgets.ReviewOriginButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone"
+                app:icon="@drawable/ic_open_in_new"
+                app:iconGravity="textEnd"
+                app:iconPadding="@dimen/design_spacing_related"
+                app:iconSize="16dp"
+                app:iconTint="?attr/colorOnSurfaceVariant"
+                tools:text="Reviews" />
+
+            <TextView
+                android:id="@+id/anonymous"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:minHeight="@dimen/design_touch_target"
+                android:gravity="center_vertical"
+                android:paddingEnd="@dimen/design_spacing_compact"
+                android:text="@string/teacher_review_anonymous"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/verification"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
 
             <include
                 android:id="@+id/verified"
@@ -127,7 +127,7 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
 
-        </LinearLayout>
+        </FrameLayout>
 
         <include
             android:id="@+id/votes"

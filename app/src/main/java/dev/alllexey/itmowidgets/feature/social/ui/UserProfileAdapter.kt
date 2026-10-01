@@ -104,12 +104,11 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
                 add(ProfileItem.Section(R.string.teacher_reviews_title, reviews.count,
                     R.string.teacher_review_write.takeIf { reviews.canWrite }))
                 reviews.summary?.let { add(ProfileItem.Summary(it, reviews.summaryExpanded)) }
-                val size = reviews.count
-                var index = 0
-                reviews.mine?.let { add(ProfileItem.OwnReview(it, busy = reviews.busyId == it.id, GroupPosition.of(index++, size))) }
-                reviews.items.forEach {
-                    add(ProfileItem.Review(it, reviews.canVote, reviews.canReport, busy = reviews.busyId == it.id,
-                        GroupPosition.of(index++, size)))
+                // The own review is a group of its own; the others follow as one group under it.
+                reviews.mine?.let { add(ProfileItem.OwnReview(it, busy = reviews.busyId == it.id, GroupPosition.SINGLE)) }
+                reviews.items.forEachIndexed { index, review ->
+                    add(ProfileItem.Review(review, reviews.canVote, reviews.canReport, busy = reviews.busyId == review.id,
+                        GroupPosition.of(index, reviews.items.size)))
                 }
             }
         }, onCommitted)
@@ -297,8 +296,9 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
 }
 
 /**
- * The only gap the items do not carry themselves: the AI card stands 8 dp above the first review row. Insets
- * depend on neighbouring rows, not recycled view margins, so insertions preserve existing geometry.
+ * The gaps the items do not carry themselves: the AI card stands 8 dp above the first review, and the own review's
+ * group 16 dp above the others' group. Insets depend on neighbouring rows, not recycled view margins, so insertions
+ * preserve existing geometry.
  */
 internal class ProfileItemSpacing : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
@@ -307,9 +307,12 @@ internal class ProfileItemSpacing : RecyclerView.ItemDecoration() {
         val items = (parent.adapter as? UserProfileAdapter)?.currentList ?: return
         val item = items.getOrNull(position) ?: return
         val previous = items.getOrNull(position - 1) ?: return
-        if ((item is ProfileItem.Review || item is ProfileItem.OwnReview) && previous is ProfileItem.Summary) {
-            outRect.top = parent.resources.getDimensionPixelSize(R.dimen.design_spacing_compact)
+        val gap = when {
+            (item is ProfileItem.Review || item is ProfileItem.OwnReview) && previous is ProfileItem.Summary -> R.dimen.design_spacing_compact
+            item is ProfileItem.Review && previous is ProfileItem.OwnReview -> R.dimen.design_spacing_group
+            else -> return
         }
+        outRect.top = parent.resources.getDimensionPixelSize(gap)
     }
 }
 

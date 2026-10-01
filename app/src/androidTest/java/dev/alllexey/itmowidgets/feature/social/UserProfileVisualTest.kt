@@ -42,6 +42,7 @@ import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
 import dev.alllexey.itmowidgets.core.reviews.SummaryTag
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
+import dev.alllexey.itmowidgets.core.ui.GroupPosition
 import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
 import dev.alllexey.itmowidgets.core.ui.tone
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
@@ -406,6 +407,71 @@ class UserProfileVisualTest {
         }
     }
 
+    @Test fun ownReviewIsAGroupOfItsOwnAboveTheOthers() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews())
+        }) { scenario ->
+            content(scenario)
+            scrollTo<ProfileItem.Section>(scenario)
+            scenario.onActivity { activity ->
+                val density = activity.resources.displayMetrics.density
+                val items = activity.items()
+                assertEquals(GroupPosition.SINGLE, items.filterIsInstance<ProfileItem.OwnReview>().single().position)
+                assertEquals(listOf(GroupPosition.FIRST, GroupPosition.MIDDLE, GroupPosition.LAST),
+                    items.filterIsInstance<ProfileItem.Review>().map { it.position })
+                val own = activity.holder<ProfileItem.OwnReview>()
+                val corners = ((own.background as android.graphics.drawable.RippleDrawable).getDrawable(0)
+                    as com.google.android.material.shape.MaterialShapeDrawable).shapeAppearanceModel
+                val bounds = android.graphics.RectF(0f, 0f, 100f, 100f)
+                assertEquals(20 * density, corners.topLeftCornerSize.getCornerSize(bounds), 0.5f)
+                assertEquals(20 * density, corners.bottomLeftCornerSize.getCornerSize(bounds), 0.5f)
+                val next = activity.reviewRow("named")
+                assertEquals(activity.resources.getDimensionPixelSize(R.dimen.design_spacing_group), next.screenTop() - own.screenTop() - own.height)
+                // A pending review ends with its text and the content padding, not glued to the edge.
+                assertFalse(own.findViewById<View>(R.id.footer).isShown)
+                val text = own.findViewById<View>(R.id.text)
+                assertEquals(activity.resources.getDimensionPixelSize(R.dimen.design_card_padding),
+                    own.screenTop() + own.height - text.screenTop() - text.height)
+            }
+            frame(scenario, "own-group-${spec.name}")
+        }
+    }
+
+    @Test fun footerPutsWhoWroteItBeforeTheVerificationAndKeepsTheVotesOnItsFirstLine() = appearances { spec ->
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews())
+        }) { scenario ->
+            content(scenario)
+            for ((id, origin) in listOf("named" to R.id.author, "anonymous" to R.id.anonymous, "copy" to R.id.source)) {
+                showReview(scenario, id)
+                scenario.onActivity { activity ->
+                    val row = activity.reviewRow(id)
+                    // The top line is the caption alone; who wrote it sits at the start of the footer.
+                    val footer = row.findViewById<View>(R.id.footer)
+                    val who = row.findViewById<View>(origin)
+                    assertTrue(id, who.isShown)
+                    assertTrue(id, who.screenTop() >= footer.screenTop())
+                    assertTrue(id, row.findViewById<View>(R.id.meta).screenTop() < row.findViewById<View>(R.id.text).screenTop())
+                    val votes = row.findViewById<View>(R.id.votes)
+                    assertTrue(id, who.screenLeft() + who.width <= votes.screenLeft())
+                    assertEquals(id, (who.screenTop() + who.height / 2).toFloat(), (votes.screenTop() + votes.height / 2).toFloat(),
+                        2 * activity.resources.displayMetrics.density)
+                    val verification = row.findViewById<View>(R.id.verification)
+                    if (verification.isShown) {
+                        val beside = verification.screenTop() < who.screenTop() + who.height
+                        if (beside) assertTrue(id, who.screenLeft() + who.width <= verification.screenLeft())
+                        else assertTrue(id, verification.screenTop() >= votes.screenTop() + votes.height - 1)
+                    }
+                    ViewChecks.assertTextFits(activity.window.decorView, ellipsizable = ::isReviewMeta)
+                    ViewChecks.assertTouchTargets(activity.window.decorView)
+                }
+                frame(scenario, "footer-$id-${spec.name}")
+            }
+        }
+    }
+
     @Test fun writeIsOfferedOnlyForTeachersWithoutAnOwnReview() = appearances { spec ->
         val lecturer = teacher()
         val student = teacher().copy(positions = emptyList())
@@ -431,7 +497,16 @@ class UserProfileVisualTest {
                         assertEquals(name, write, section?.actionRes != null)
                         val action = activity.holder<ProfileItem.Section>().findViewById<TextView>(R.id.action)
                         assertEquals(name, write, action.isShown)
-                        if (write) assertEquals("Написать", action.text.toString())
+                        if (write) {
+                            assertEquals("Написать", action.text.toString())
+                            assertTrue(action.height >= activity.resources.getDimensionPixelSize(R.dimen.design_touch_target))
+                            // «Написать» stands at the end of the heading row on the title's baseline.
+                            val title = activity.holder<ProfileItem.Section>().findViewById<TextView>(R.id.title)
+                            assertEquals((title.screenTop() + title.baseline).toFloat(), (action.screenTop() + action.baseline).toFloat(),
+                                activity.resources.displayMetrics.density)
+                            val section = activity.holder<ProfileItem.Section>()
+                            assertEquals(section.screenLeft() + section.width, action.screenLeft() + action.width)
+                        }
                     }
                 }
                 if (name == "known") {
@@ -1260,6 +1335,7 @@ class UserProfileVisualTest {
     private inline fun <reified T : ProfileItem> UserProfilePreviewActivity.holder(): View =
         checkNotNull(list().findViewHolderForAdapterPosition(items().indexOfFirst { it is T })).itemView
     private fun View.screenTop(): Int = IntArray(2).also(::getLocationOnScreen)[1]
+    private fun View.screenLeft(): Int = IntArray(2).also(::getLocationOnScreen)[0]
     private fun UserProfilePreviewActivity.identityPositions(): Pair<Int, Int> =
         findViewById<View>(R.id.name).screenTop() to holder<ProfileItem.Facts>().screenTop()
     private fun UserProfilePreviewActivity.scrollAnchor(): Pair<Int, Int> {

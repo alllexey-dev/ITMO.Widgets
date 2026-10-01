@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The viewer's own review, first in the reviews group: «мой» and its state with ⋮, the subject and how others see it,
-    a rejection reason, the text and, once published, the verification and the read-only score.
+    The viewer's own review, a group of its own above the others: «мой» and its state with ⋮, the subject and how
+    others see it, a rejection reason, the text and, once published, the verification and the read-only score.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -102,11 +102,17 @@
         android:layout_marginTop="@dimen/design_spacing_related"
         android:minHeight="@dimen/design_touch_target">
 
-        <LinearLayout
+        <!-- No source: the own review is told by «мой» on its top line. -->
+        <Space
             android:id="@+id/origin"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <FrameLayout
+            android:id="@+id/verification"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
             <include
                 android:id="@+id/verified"
@@ -121,7 +127,7 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
 
-        </LinearLayout>
+        </FrameLayout>
 
         <include
             android:id="@+id/votes"

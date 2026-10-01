@@ -4,60 +4,75 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
-import kotlin.math.max
+import androidx.core.view.isGone
 
 /**
- * The bottom row of a review: the origin (first child) at the start and the actions (second child) at the end.
- * They share one line, centred, when the origin fits beside the actions in one line of its own; otherwise the
- * origin takes the full width above and the actions follow at the end, so long names never break inside words.
+ * The bottom row of a review: who wrote it (first child) and its verification (second child) at the start, the votes
+ * (third child) at the end. The source comes first and wraps inside the space left of the votes; the verification
+ * follows it on the same line when it fits, otherwise it takes a line of its own below. The votes always stay on the
+ * first line, centred on it, so they line up from review to review. No extra gaps: the source carries its own 8 dp
+ * end padding (a text button) and the vote pill is drawn 16 dp inside its arrows.
  */
 class ReviewFooterLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : ViewGroup(context, attrs) {
-    private val gap = (GAP_DP * resources.displayMetrics.density).toInt()
-    private var stacked = false
+    private var sameLine = true
+    private var firstLine = 0
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight
-        val origin = getChildAt(0)
-        val actions = getChildAt(1)
+        val source = getChildAt(SOURCE)
+        val verification = getChildAt(VERIFICATION)
+        val votes = getChildAt(VOTES)
         val unspecified = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        actions.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST), unspecified)
-        val actionsWidth = if (actions.visibility == View.GONE) 0 else actions.measuredWidth + gap
-        val beside = width - actionsWidth
-        origin.measure(unspecified, unspecified)
-        stacked = origin.visibility != View.GONE && actions.visibility != View.GONE && origin.measuredWidth > beside
-        origin.measure(MeasureSpec.makeMeasureSpec(if (stacked) width else beside, MeasureSpec.AT_MOST), unspecified)
-        val originHeight = if (origin.visibility == View.GONE) 0 else origin.measuredHeight
-        val actionsHeight = if (actions.visibility == View.GONE) 0 else actions.measuredHeight
-        val content = if (stacked) gap / 2 + originHeight + actionsHeight else max(max(originHeight, actionsHeight), minimumHeight)
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), content + paddingTop + paddingBottom)
+        fun atMost(size: Int) = MeasureSpec.makeMeasureSpec(size.coerceAtLeast(0), MeasureSpec.AT_MOST)
+        votes.measure(atMost(width), unspecified)
+        val votesWidth = if (votes.isGone) 0 else votes.measuredWidth
+        val line = width - votesWidth
+        source.measure(atMost(line), unspecified)
+        val sourceWidth = if (source.isGone) 0 else source.measuredWidth
+        verification.measure(unspecified, unspecified)
+        val beside = line - sourceWidth
+        sameLine = verification.isGone || verification.measuredWidth <= beside
+        if (!sameLine) verification.measure(atMost(width), unspecified)
+        else if (!verification.isGone) verification.measure(atMost(beside), unspecified)
+        val sourceHeight = if (source.isGone) 0 else source.measuredHeight
+        val verificationHeight = if (verification.isGone) 0 else verification.measuredHeight
+        val votesHeight = if (votes.isGone) 0 else votes.measuredHeight
+        firstLine = maxOf(sourceHeight, if (sameLine) verificationHeight else 0, votesHeight, minimumHeight)
+        val height = firstLine + if (sameLine) 0 else verificationHeight
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), height + paddingTop + paddingBottom)
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        val origin = getChildAt(0)
-        val actions = getChildAt(1)
+        val source = getChildAt(SOURCE)
+        val verification = getChildAt(VERIFICATION)
+        val votes = getChildAt(VOTES)
         val width = right - left
         val rtl = layoutDirection == View.LAYOUT_DIRECTION_RTL
-        val rowHeight = bottom - top - paddingTop - paddingBottom
-        fun place(child: View, atEnd: Boolean, y: Int) {
-            val x = if (atEnd != rtl) width - paddingRight - child.measuredWidth else paddingLeft
-            child.layout(x, y, x + child.measuredWidth, y + child.measuredHeight)
+        fun place(child: View, x: Int, y: Int, atEnd: Boolean = false) {
+            if (child.isGone) return
+            val start = if (atEnd) width - paddingRight - x - child.measuredWidth else paddingLeft + x
+            val mirrored = if (rtl) width - start - child.measuredWidth else start
+            child.layout(mirrored, y, mirrored + child.measuredWidth, y + child.measuredHeight)
         }
-        if (stacked) {
-            // A little air between the text above and an origin that no longer sits in a 48 dp row.
-            place(origin, atEnd = false, y = paddingTop + gap / 2)
-            place(actions, atEnd = true, y = paddingTop + gap / 2 + origin.measuredHeight)
+        fun centred(child: View) = paddingTop + (firstLine - child.measuredHeight) / 2
+        place(source, 0, centred(source))
+        if (sameLine) {
+            val x = if (source.isGone) 0 else source.measuredWidth
+            place(verification, x, centred(verification))
         } else {
-            place(origin, atEnd = false, y = paddingTop + (rowHeight - origin.measuredHeight) / 2)
-            place(actions, atEnd = true, y = paddingTop + (rowHeight - actions.measuredHeight) / 2)
+            place(verification, 0, paddingTop + firstLine)
         }
+        place(votes, 0, centred(votes), atEnd = true)
     }
 
     override fun generateDefaultLayoutParams(): LayoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
 
     private companion object {
-        const val GAP_DP = 8
+        const val SOURCE = 0
+        const val VERIFICATION = 1
+        const val VOTES = 2
     }
 }
