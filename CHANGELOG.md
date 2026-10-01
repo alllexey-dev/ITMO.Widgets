@@ -22,6 +22,8 @@ publication or deployment.
   `Изменить итог`, `Отключить`; a subject with sheet links and no connection
   offers `Мои баллы из таблицы` (`Какая таблица?` for several). The recordbook
   list shows the total with a table mark while My ITMO and BARS have no points.
+  A long list of people to choose from has `Поиск по фамилии`.
+- Subject links have `Скопировать ссылку` in their actions.
 - A changed total is a `Новые оценки` subject of the existing mark check
   behind the new switch `Оценки из таблиц` on the `Зачётка` page, on by
   default; a total already seen in the app is not notified.

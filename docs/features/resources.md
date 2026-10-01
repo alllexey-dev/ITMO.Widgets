@@ -125,7 +125,9 @@ per tag and nothing once the state is saved.
   follows the repository and a vote keeps the sheet open. The arrows are
   hidden under a `VOTE` restriction and without the connection. An own shared
   link shows its score without arrows, an own private one none. Then
-  `Открыть`; `Мои баллы` for a Google Sheet address of any author
+  `Открыть`; `Скопировать ссылку` (the address to the clipboard; below Android 13
+  a toast `Ссылка скопирована`, the system shows its own above); `Мои баллы`
+  for a Google Sheet address of any author
   (`GoogleSheetUrl.parse`), which closes the sheet and opens the recordbook's
   connection sheet through `AppNavigator.openSheetScores` with the link's
   address and scope ([sheet scores](recordbook.md#sheet-scores));

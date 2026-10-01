@@ -570,7 +570,12 @@ and `ui/sheets`; `feature/resources` only offers the action.
   collected from every tab; a total found by its header is connected at once
   and the sheet closes, otherwise `Выберите итог` lists the filled cells by tab.
   Several rows: `Выберите свою строку`. No row: `Выберите лист`, then the
-  student rows of that tab. The workbook lives only in the view model, never in
+  student rows of that tab; more than 8 rows get `Поиск по фамилии` (case and
+  `ё` ignored, `Никого не нашлось` when empty). Step prompts are `titleSmall`
+  in `colorPrimary`, apart from the choices. The students start at the topmost
+  name or ISU above the row in its column; empty cells and up to two other
+  texts in a row are skipped, a people title such as `ФИО` ends them. A name
+  is 2–8 words. The workbook lives only in the view model, never in
   the saved state; after process death the sheet is downloaded again.
 - States share one bounded area of the sheet (288 dp): loading, the choices,
   and failures with `ic_error_rounded` and their text (`Нет связи` with a tonal
