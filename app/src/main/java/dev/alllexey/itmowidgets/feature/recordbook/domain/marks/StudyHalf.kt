@@ -11,8 +11,12 @@ data class StudyHalf(val yearStart: Int, val half: Int) {
     val studyYear: String get() = "$yearStart/${yearStart + 1}"
     val key: String get() = "$studyYear-$half"
 
+    /** The half as `ResourceScope.periodKey` writes it: `2026-1`. */
+    val periodKey: String get() = "$yearStart-$half"
+
     companion object {
         private val KEY = Regex("""(\d{4})/(\d{4})-([12])""")
+        private val PERIOD_KEY = Regex("""(\d{4})-([12])""")
 
         /** The half [today] belongs to; [today] comes from `AcademicTimeProvider`. */
         fun of(today: LocalDate): StudyHalf = StudyHalf(
@@ -25,6 +29,13 @@ data class StudyHalf(val yearStart: Int, val half: Int) {
             val match = KEY.matchEntire(key) ?: return null
             val (start, end, half) = match.destructured
             if (end.toInt() != start.toInt() + 1) return null
+            return StudyHalf(start.toInt(), half.toInt())
+        }
+
+        /** The inverse of [periodKey]; null for anything else. */
+        fun fromPeriodKey(key: String): StudyHalf? {
+            val match = PERIOD_KEY.matchEntire(key) ?: return null
+            val (start, half) = match.destructured
             return StudyHalf(start.toInt(), half.toInt())
         }
     }

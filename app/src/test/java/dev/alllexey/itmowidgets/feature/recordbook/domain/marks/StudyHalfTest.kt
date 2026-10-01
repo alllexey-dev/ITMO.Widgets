@@ -34,4 +34,11 @@ class StudyHalfTest {
         assertEquals(StudyHalf(2026, 2), RecordbookPeriod("2026/2027", 4, 2, actual = false).studyHalf())
         assertNull(RecordbookPeriod("2026", 3, 2, actual = true).studyHalf())
     }
+
+    @Test
+    fun `a half writes and reads the period key of a resource scope`() {
+        assertEquals("2026-1", StudyHalf(2026, 1).periodKey)
+        assertEquals(StudyHalf(2026, 2), StudyHalf.fromPeriodKey("2026-2"))
+        listOf("", "2026-3", "2026/2027-1", "26-1", "2026-1x").forEach { assertNull(it, StudyHalf.fromPeriodKey(it)) }
+    }
 }
