@@ -22,15 +22,21 @@ val SubjectLinkRanking: Comparator<SubjectLink> =
 
 /**
  * Chip order: the pinned link, the LMS page, then own, added and shared links together by [SubjectLinkRanking].
+ * [arrange] may reorder the ranked links, so a page keeps the order it has shown while it is open.
  * Chats never become chips: the subject screen lists them separately.
  */
-fun subjectLinkChips(snapshot: SubjectLinksSnapshot, lmsUrl: String?, limit: Int = 4): SubjectLinkChips {
+fun subjectLinkChips(
+    snapshot: SubjectLinksSnapshot,
+    lmsUrl: String?,
+    limit: Int = 4,
+    arrange: (List<SubjectLink>) -> List<SubjectLink> = { it },
+): SubjectLinkChips {
     val current = (snapshot.mine + snapshot.shared).filter { it.category != LinkCategory.CHAT }.distinctBy { it.id }
     val pinned = (current + snapshot.previous).firstOrNull { it.id == snapshot.pinnedId && it.category != LinkCategory.CHAT }
     val visible = buildList {
         pinned?.let { add(SubjectLinkChip.Link(it)) }
         lmsUrl?.let { add(SubjectLinkChip.Lms(it)) }
-        current.filter { it.id != pinned?.id }.sortedWith(SubjectLinkRanking).mapTo(this, SubjectLinkChip::Link)
+        arrange(current.filter { it.id != pinned?.id }.sortedWith(SubjectLinkRanking)).mapTo(this, SubjectLinkChip::Link)
     }.take(limit)
     val visibleIds = visible.filterIsInstance<SubjectLinkChip.Link>().map { it.link.id }.toSet()
     return SubjectLinkChips(visible, current.count { it.id !in visibleIds })

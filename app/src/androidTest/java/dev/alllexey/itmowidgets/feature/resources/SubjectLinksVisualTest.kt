@@ -99,6 +99,38 @@ class SubjectLinksVisualTest {
         }
     }
 
+    @Test fun aVoteKeepsTheRowInItsPlace() {
+        // «Старая таблица» ties the first row at 8 and stays second by age; one vote up would rank it first.
+        withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS, configure = {
+            it.snapshots.value = mapOf(SCOPE.key to fixture().let { snapshot ->
+                snapshot.copy(shared = snapshot.shared.map { link -> if (link.id == "scores-old") link.copy(score = 8) else link })
+            })
+        }) { scenario, repository ->
+            settle()
+            fun scores(): List<Pair<String, String>> {
+                val rows = mutableListOf<Pair<String, String>>()
+                var inScores = false
+                visitRows(scenario) { row ->
+                    if (row is TextView) inScores = row.text.toString() == "Таблица баллов"
+                    else if (inScores) rows += row.findViewById<TextView>(R.id.title).text.toString() to
+                        row.findViewById<TextView>(R.id.score).let { if (it.isShown) it.text.toString() else "" }
+                }
+                return rows
+            }
+            assertEquals(listOf("Баллы всего потока" to "8", "Старая таблица" to "8", "Баллы нашей группы" to ""), scores())
+            val position = positionOf(scenario, "Старая таблица")
+            scenario.onActivity {
+                checkNotNull(sheetList(it).findViewHolderForAdapterPosition(position)).itemView.findViewById<View>(R.id.vote_up).performClick()
+            }
+            TestUi.eventually(idleBetween = true) { assertEquals(9, repository.peek(SCOPE).shared.first { it.id == "scores-old" }.score) }
+            settle()
+            assertEquals(listOf("Баллы всего потока" to "8", "Старая таблица" to "9", "Баллы нашей группы" to ""), scores())
+            scenario.onActivity { sheetList(it).scrollToPosition(0) }
+            settle()
+            screenshot("vote-keeps-place")
+        }
+    }
+
     @Test fun ownLinksRankAmongOthersWithTheBadgeOnOneGroupSurface() {
         Appearances.default.forEachIndexed { index, spec ->
             withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS) { scenario, _ ->

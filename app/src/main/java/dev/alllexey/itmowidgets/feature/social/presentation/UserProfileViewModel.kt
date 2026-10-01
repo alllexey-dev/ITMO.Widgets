@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.util.StableOrder
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.social.SocialRepository
@@ -74,26 +75,30 @@ class UserProfileViewModel @Inject constructor(
     private var loadJob: Job? = null
     private var isSelf = false
     private val lateParts = mutableSetOf<Part>()
+    /** The order of the shown reviews: a vote must not move a review under the finger. */
+    private val reviewOrder = StableOrder()
 
     init {
         viewModelScope.launch {
             reviews.observeUpdates().filter { it.isu == isu }.collect {
                 lateParts -= Part.REVIEWS
-                reviewsPart.value = ProfilePart.Ready(it)
+                reviewsPart.value = shown(it)
             }
         }
         load()
     }
 
+    /** A load on entry or an explicit retry ranks the reviews afresh; votes and updates in between keep the order. */
     fun load() {
         loadJob?.cancel()
+        reviewOrder.reset()
         val hadContent = partsState() is UserProfileUiState.Content
         inFlight.value = true
         val previouslyLate = lateParts.toSet()
         lateParts.clear()
         if (!hadContent) {
             if (personPart.value !is ProfilePart.Ready) personPart.value = people.cachedPerson(isu)?.let { ProfilePart.Ready(it) } ?: ProfilePart.Loading
-            if (reviewsPart.value !is ProfilePart.Ready) reviewsPart.value = reviews.cachedReviews(isu)?.let { ProfilePart.Ready(it) } ?: ProfilePart.Loading
+            if (reviewsPart.value !is ProfilePart.Ready) reviewsPart.value = reviews.cachedReviews(isu)?.let(::shown) ?: ProfilePart.Loading
             if (socialPart.value !is ProfilePart.Ready) socialPart.value = ProfilePart.Loading
         }
         loadJob = viewModelScope.launch {
@@ -192,7 +197,7 @@ class UserProfileViewModel @Inject constructor(
     }
 
     private fun applyReviews(result: AppResult<TeacherReviews>): Boolean = when (result) {
-        is AppResult.Success -> { reviewsPart.value = ProfilePart.Ready(result.value); false }
+        is AppResult.Success -> { reviewsPart.value = shown(result.value); false }
         is AppResult.Failure -> {
             if (result.error == AppError.CustomServicesDisabled || reviewsPart.value !is ProfilePart.Ready) reviewsPart.value = ProfilePart.Absent
             result.error != AppError.CustomServicesDisabled
@@ -251,7 +256,7 @@ class UserProfileViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 when (val result = action()) {
-                    is AppResult.Success -> reviewsPart.value = ProfilePart.Ready(result.value)
+                    is AppResult.Success -> reviewsPart.value = shown(result.value)
                     is AppResult.Failure -> events.send(UserProfileEvent.ActionFailed(result.error))
                 }
             } finally {
@@ -277,6 +282,8 @@ class UserProfileViewModel @Inject constructor(
 
     private fun partsState() =
         userProfileUiState(isu, personPart.value, socialPart.value, reviewsPart.value, reviewBusy.value, summaryExpanded.value)
+    private fun shown(value: TeacherReviews): ProfilePart<TeacherReviews> =
+        ProfilePart.Ready(value.copy(reviews = reviewOrder.arrange(value.reviews) { it.id }))
     private fun readyReviews() = (reviewsPart.value as? ProfilePart.Ready)?.value
     private fun socialBlock() = (socialPart.value as? ProfilePart.Ready)?.value
     private fun AppError.isSocialAbsence() = this == AppError.NotFound || this == AppError.CustomServicesDisabled

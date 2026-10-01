@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkRanking
+import dev.alllexey.itmowidgets.core.util.StableOrder
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
@@ -70,6 +71,8 @@ class SubjectLinksViewModel @Inject constructor(
     val scope = ResourceScope(checkNotNull(handle[SubjectLinksArgs.SUBJECT_ID]),
         checkNotNull(handle[SubjectLinksArgs.SUBJECT_NAME]), checkNotNull(handle[SubjectLinksArgs.PERIOD_KEY]))
     private val refreshing = MutableStateFlow(false)
+    /** The order of the shown links while the sheet is open: a vote must not move a row under the finger. */
+    private val shownOrder = StableOrder()
     private var refreshInFlight = false
     private var busy = false
     private val channel = Channel<LinkEvent>(Channel.BUFFERED)
@@ -82,15 +85,18 @@ class SubjectLinksViewModel @Inject constructor(
             SubjectLinksState.Loading -> SubjectLinksUiState(restrictions = restrictions, refreshing = pulling)
             is SubjectLinksState.Error -> SubjectLinksUiState(restrictions = restrictions, refreshing = pulling, error = state.error)
             is SubjectLinksState.Content ->
-                SubjectLinksUiState(state.snapshot, linkSections(state.snapshot), restrictions, pulling)
+                SubjectLinksUiState(state.snapshot, linkSections(state.snapshot, shownOrder), restrictions, pulling)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SubjectLinksUiState())
 
     init { refresh(silent = true) }
 
-    /** A pull shows the indicator and reports a failure; the load on entry is silent behind the cache. */
+    /** A pull shows the indicator, reports a failure and ranks the links afresh; the load on entry is silent behind the cache. */
     fun refresh(silent: Boolean = false) {
-        if (!silent) refreshing.value = true
+        if (!silent) {
+            shownOrder.reset()
+            refreshing.value = true
+        }
         if (refreshInFlight) return
         refreshInFlight = true
         viewModelScope.launch {
@@ -147,9 +153,17 @@ class SubjectLinksViewModel @Inject constructor(
 }
 
 /** Categories in declaration order with chats after them, then the links of past periods. */
-internal fun linkSections(snapshot: SubjectLinksSnapshot): List<LinkSection> {
-    val byCategory = (snapshot.mine + snapshot.shared).distinctBy { it.id }.sortedWith(SubjectLinkRanking).groupBy { it.category }
+/**
+ * Categories in declaration order, chats after them and past years last; within a section by [SubjectLinkRanking],
+ * or in the order [shown] keeps while the sheet is open, so a vote does not move a row.
+ */
+internal fun linkSections(snapshot: SubjectLinksSnapshot, shown: StableOrder? = null): List<LinkSection> {
+    val ranked = (snapshot.mine + snapshot.shared).distinctBy { it.id }.sortedWith(SubjectLinkRanking)
+    val currentIds = ranked.mapTo(HashSet()) { it.id }
+    val arranged = shown?.arrange(ranked + snapshot.previous) { it.id } ?: (ranked + snapshot.previous)
+    val byCategory = arranged.filter { it.id in currentIds }.groupBy { it.category }
+    val previous = arranged.filter { it.id !in currentIds }
     val order = LinkCategory.entries.filter { it != LinkCategory.CHAT } + LinkCategory.CHAT
     val current = order.mapNotNull { category -> byCategory[category]?.let { LinkSection.Category(category, it) } }
-    return current + listOfNotNull(snapshot.previous.takeIf { it.isNotEmpty() }?.let(LinkSection::Previous))
+    return current + listOfNotNull(previous.takeIf { it.isNotEmpty() }?.let(LinkSection::Previous))
 }

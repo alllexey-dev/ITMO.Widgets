@@ -397,6 +397,29 @@ class RecordbookSubjectViewModelTest {
         collector.cancel()
     }
 
+    @Test fun `a vote does not change which links the page shows until a pull`() = runTest {
+        val links = listOf(
+            subjectLink("a", LinkCategory.TASKS, LinkVisibility.ALL, isMine = false, score = 3),
+            subjectLink("b", LinkCategory.NOTES, LinkVisibility.ALL, isMine = false, score = 2),
+            subjectLink("c", LinkCategory.EXAM, LinkVisibility.ALL, isMine = false, score = 1),
+            subjectLink("d", LinkCategory.OTHER, LinkVisibility.ALL, isMine = false, score = 0),
+        )
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(shared = links))
+        val vm = model(); advanceUntilIdle()
+        fun shown() = vm.hub().chips.visible.map { (it as SubjectLinkChip.Link).link.id }
+        assertEquals(listOf("a", "b", "c"), shown())
+
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(shared = links.dropLast(1) + links.last().copy(score = 10, myVote = 1)))
+        advanceUntilIdle()
+        assertEquals(listOf("a", "b", "c"), shown())
+
+        vm.refresh()
+        advanceUntilIdle()
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(shared = links.dropLast(1) + links.last().copy(score = 10, myVote = 1)))
+        advanceUntilIdle()
+        assertEquals(listOf("d", "a", "b"), shown())
+    }
+
     @Test fun `new links reach the open page without a reload`() = runTest {
         resources.state.value = SubjectLinksState.Content(linksSnapshot())
         val vm = model(); advanceUntilIdle()

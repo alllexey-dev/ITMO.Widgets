@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.subjectsIn
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.util.StableOrder
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
 import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
@@ -129,6 +130,8 @@ class RecordbookSubjectViewModel @Inject constructor(
     private val bindingVersion = MutableStateFlow(0)
     private var proposalRejected = false
     private var voting = false
+    /** The order of the ranked links while the page is open, so a vote does not change which three are shown. */
+    private val linkOrder = StableOrder()
     private val linkFailures = Channel<AppError>(Channel.BUFFERED)
     /** A vote on the page that did not reach the server. */
     val linkErrors: Flow<AppError> = linkFailures.receiveAsFlow()
@@ -145,8 +148,10 @@ class RecordbookSubjectViewModel @Inject constructor(
     }
 
     /** A pull shows the indicator; the load on entry stays silent behind the cached subject. */
+    /** A pull also ranks the links afresh; votes in between keep the rows the page shows in their places. */
     fun refresh(silent: Boolean = false) {
         loadJob?.cancel()
+        if (!silent) linkOrder.reset()
         val previous = (_uiState.value as? RecordbookSubjectUiState.Content)?.copy(refreshing = false)
             ?: seedFromCache()
         _uiState.value = previous?.copy(refreshing = !silent, refreshError = null)
@@ -345,7 +350,9 @@ class RecordbookSubjectViewModel @Inject constructor(
         return copy(
             resourceScope = scope,
             links = state,
-            chips = subjectLinkChips(snapshot ?: EMPTY_LINKS, lmsUrl, limit = SubjectHubState.LINK_ROWS),
+            chips = subjectLinkChips(snapshot ?: EMPTY_LINKS, lmsUrl, limit = SubjectHubState.LINK_ROWS) { ranked ->
+                linkOrder.arrange(ranked) { it.id }
+            },
             linkCount = snapshot?.let { (it.mine + it.shared + it.previous).distinctBy { link -> link.id }.size } ?: 0,
             chats = snapshot?.let { (it.mine + it.shared).filter { link -> link.category == LinkCategory.CHAT }.distinctBy { link -> link.id } }
                 .orEmpty()

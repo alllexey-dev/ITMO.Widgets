@@ -892,6 +892,36 @@ class UserProfileViewModelTest {
     }
 
     @Test
+    fun `a vote keeps every review in its place until a retry ranks them afresh`() = runTest(mainDispatcherRule.dispatcher) {
+        val first = teacherReviews(5, listOf(communityReview("a").copy(score = 3), communityReview("b").copy(score = 2),
+            communityReview("c").copy(score = 1)))
+        // Backend answers a vote with its own ranking: «c» jumps to the top.
+        val ranked = teacherReviews(5, listOf(communityReview("c").copy(score = 9, myVote = 1), communityReview("a").copy(score = 3),
+            communityReview("b").copy(score = 2)))
+        val reviews = FakeTeacherReviewsRepository().apply {
+            results = mapOf(5 to AppResult.Success(first))
+            voteResult = AppResult.Success(ranked)
+        }
+        val viewModel = viewModel(people = personRepository(), reviews = reviews)
+        runCurrent()
+
+        viewModel.vote("c", up = true)
+        runCurrent()
+        assertEquals(listOf("a", "b", "c"), viewModel.content().reviews?.items?.map { it.id })
+        assertEquals(9, viewModel.content().reviews?.items?.last()?.score)
+
+        // A review that was not shown yet follows the shown ones; an update from the editor keeps the order too.
+        reviews.updates.emit(teacherReviews(5, listOf(communityReview("new").copy(score = 20)) + ranked.reviews))
+        runCurrent()
+        assertEquals(listOf("a", "b", "c", "new"), viewModel.content().reviews?.items?.map { it.id })
+
+        reviews.results = mapOf(5 to AppResult.Success(ranked))
+        viewModel.retry()
+        runCurrent()
+        assertEquals(listOf("c", "a", "b"), viewModel.content().reviews?.items?.map { it.id })
+    }
+
+    @Test
     fun `an arrow votes, the arrow of the current vote takes it back and the other arrow switches`() = runTest(mainDispatcherRule.dispatcher) {
         val voted = teacherReviews(5, listOf(communityReview("r1").copy(score = 1, myVote = 1)))
         val reviews = FakeTeacherReviewsRepository().apply {

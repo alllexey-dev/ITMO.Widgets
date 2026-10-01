@@ -67,6 +67,35 @@ class SubjectLinksViewModelTest {
         assertEquals(listOf(LinkSection.Category(LinkCategory.MATERIALS, listOf(ownTop, newerTied, ownTied, low))), vm.uiState.value.sections)
     }
 
+    @Test fun `a vote keeps the rows in place until a pull ranks them afresh`() = runTest(main.dispatcher) {
+        val a = subjectLink("a", LinkCategory.SCORES, LinkVisibility.ALL, isMine = false, score = 3)
+        val b = subjectLink("b", LinkCategory.SCORES, LinkVisibility.ALL, isMine = false, score = 2)
+        val c = subjectLink("c", LinkCategory.SCORES, LinkVisibility.ALL, isMine = false, score = 1)
+        repository.state.value = SubjectLinksState.Content(linksSnapshot(shared = listOf(a, b, c)))
+        val vm = model()
+        backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+        assertEquals(listOf("a", "b", "c"), vm.uiState.value.scores())
+
+        repository.state.value = SubjectLinksState.Content(linksSnapshot(shared = listOf(a, b, c.copy(score = 9, myVote = 1))))
+        runCurrent()
+        assertEquals(listOf("a", "b", "c"), vm.uiState.value.scores())
+
+        val added = subjectLink("new", LinkCategory.SCORES, LinkVisibility.ALL, isMine = false, score = 20)
+        repository.state.value = SubjectLinksState.Content(linksSnapshot(shared = listOf(a, b, c.copy(score = 9), added)))
+        runCurrent()
+        assertEquals(listOf("a", "b", "c", "new"), vm.uiState.value.scores())
+
+        vm.refresh()
+        runCurrent()
+        repository.state.value = SubjectLinksState.Content(linksSnapshot(shared = listOf(a, b, c.copy(score = 9), added)))
+        runCurrent()
+        assertEquals(listOf("new", "c", "a", "b"), vm.uiState.value.scores())
+    }
+
+    private fun SubjectLinksUiState.scores() =
+        sections.filterIsInstance<LinkSection.Category>().single { it.category == LinkCategory.SCORES }.links.map { it.id }
+
     @Test fun `arrows set a vote and the same arrow removes it`() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared.copy(myVote = 1))))
         val vm = model()
