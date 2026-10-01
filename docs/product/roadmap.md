@@ -4,7 +4,7 @@
 
 Complete the current application refactor and extend ITMO.Widgets into a student assistant with a social layer around lessons, subjects, teachers, friends, schedules, and shared study resources. The Android application must provide user profiles, lesson details, subject pages, moderated teacher reviews, community Google Sheets links, schedule change tracking, BARS mark notifications, range export to a dedicated calendar, map hand-off, and verified App Links.
 
-Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source of social and moderated community data, ITMO.Widgets Core as the typed client contract, and Android as the source of local caches, personal sheet mappings, calendar mappings, and schedule diffs. Achievements, messages, posts, followers, and free-window discovery are outside this roadmap.
+Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source of social and moderated community data, ITMO.Widgets Core as the typed client contract, and Android as the source of local caches, own sheet totals, calendar mappings, and schedule diffs. Achievements, messages, posts, followers, and free-window discovery are outside this roadmap.
 
 ## Progress
 
@@ -150,6 +150,19 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   failures of both background checks are now retried without touching the
   snapshot or asking to sign in, and the `Расписание` and `Зачётка` settings
   show `Работа в фоне` with a one-time dialog. Not released to production.
+- Stages 33–34: implemented on 2026-10-01 through `vibe/sheet-scores-plan.md`
+  (Android 2.2-SNAPSHOT only; Core, Backend and MyItmoApi unchanged), with
+  these corrections to the stage texts: only the own total is read, not a
+  configured set of score columns or a computed total; the own row and the
+  total column are found automatically (ISU, then the forms of the ITMO.ID
+  name; header keywords), with a manual choice only when the search leaves one,
+  instead of a manual mapping of header row, lookup column and formula; the
+  code lives in `feature/recordbook` instead of `feature/subject`; any link
+  whose address is a Google Sheet offers `Мои баллы`, not only approved
+  resources; changed totals are news of the existing `marks-check` behind the
+  switch `Оценки из таблиц` (decision
+  [0014](../decisions/0014-sheet-scores-on-device.md)). Connections live in
+  `filesDir/sheet_scores/state.json`. Not released to production.
 
 ## Plan Structure
 
@@ -157,7 +170,7 @@ The work is delivered through the completed v2.0.1 baseline and two large produc
 
 * v2.0.1 completes Android legacy parity in the current refactor: authentication, onboarding, FCM, QR, widgets, settings, diagnostics, and regression coverage (Stages 1-2).
 * v2.1 delivers the social and study-context release. Its internal preparation introduces explicit database migrations, followed by friendship and privacy, own and public profiles, friends on lessons, lesson details, map hand-off, and the subject hub (Stages 3-18).
-* v2.2 delivers the community and schedule-intelligence release: moderated resources, teacher reviews, legacy reviews synced from the Reviews project, personal Google Sheet mappings, schedule changes, BARS mark notifications, range calendar export, verified App Links, sharing, the QR quick-settings tile and app shortcuts, and the smart home feed (Stages 19-45).
+* v2.2 delivers the community and schedule-intelligence release: moderated resources, teacher reviews, legacy reviews synced from the Reviews project, own totals from public Google Sheets, schedule changes, BARS mark notifications, range calendar export, verified App Links, sharing, the QR quick-settings tile and app shortcuts, and the smart home feed (Stages 19-45).
 
 No additional v2.0 feature release is planned after v2.0.1. A v2.0.2 version is reserved only for a required compatibility or bug-fix release discovered after v2.0.1 ships.
 
@@ -885,47 +898,37 @@ planned own-review behavior below.
 * `JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew test`
 * `cd ../itmo-widgets-web/web && npm test`
 
-### Stage 33: Add personal public-Google-Sheet score mappings
+### Stage 33: Read the own total from public Google Sheets
 
 **What to add/implement:**
 
-* Support only publicly readable Google Sheets links selected from approved subject resources.
-* Parse sheet ID and gid, let the user configure header row, student lookup column, own row or identifier, score columns, and total calculation.
-* Download and parse values on device, store mappings and extracted personal results locally, and never upload the complete grade table to Backend.
-* Treat unsupported or changed formats as `BROKEN_SCHEMA` and keep the resource link usable without score parsing.
+* `Мои баллы` for any subject link whose address is a Google Sheet (`core/resources/GoogleSheetUrl.kt`), own, shared or from past years; one connection per subject period, made and kept only on the device.
+* Download every tab of the public sheet as CSV, falling back to the HTML view when the export is forbidden, and the list of tabs from the HTML view; no `gviz` or `pubhtml`, at most 5 MiB per answer.
+* Find the own row by the ISU, then by the forms of the ITMO.ID name, rebuild header paths from merged titles and detect the total by header keywords; let the student pick the row, the tab or the total when the search leaves a choice. Store the row key and the header path, never a row number.
+* Show the total under `Баллы` on the subject page with `Открыть таблицу`, `Изменить итог` and `Отключить`, offer `Мои баллы из таблицы` for subjects with sheet links, show the total in the recordbook list while official points are empty, and notify changed totals through the existing mark check (`MarkSource.SHEETS`, switch `Оценки из таблиц`).
 
 **Files to edit/create:**
 
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/data/sheets/PublicGoogleSheetClient.kt` - public sheet download.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/domain/sheets/GoogleSheetUrlParser.kt` - URL normalization.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/domain/sheets/SheetScoreExtractor.kt` - configured extraction.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/data/sheets/SheetMappingStore.kt` - local mappings and last result.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/ui/sheets/SheetMappingFragment.kt` - mapping UI.
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/subject/presentation/sheets/SheetScoreViewModel.kt` - refresh and schema state.
-
-**Framework/Library Documentation:**
-
-* `https://developers.google.com/workspace/sheets/api/guides/values` - Google Sheets value model.
-
-**Examples in existing code:**
-
-* `app/src/main/java/dev/alllexey/itmowidgets/feature/schedule/data/local/ScheduleLocalDataSourceImpl.kt` - local cached data pattern.
+* `app/src/main/java/dev/alllexey/itmowidgets/core/resources/GoogleSheetUrl.kt` - address parsing shared with the link actions.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/domain/sheets/` - grid, CSV, own row, header paths, total detection and reading rules.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/data/sheets/` - `PublicSheetClient`, HTML and tab parsers, `SheetScoresFileStore`, `SheetScoresRepositoryImpl`.
+* `app/src/main/java/dev/alllexey/itmowidgets/feature/recordbook/presentation/sheets/SheetScoresViewModel.kt` and `ui/sheets/SheetScoresBottomSheet.kt` - the connection sheet.
 
 **Verification commands:**
 
-* `./gradlew :app:assembleDebug lintDebug`
+* `./gradlew :app:assembleDebug :app:lintDebug`
 
 ### Stage 34: Add Google Sheet parser tests
 
 **What to add/implement:**
 
-* Test URL forms, gid parsing, Cyrillic names, ISU lookup, merged or blank cells represented in exported values, decimal formats, formulas rendered as values, missing columns, changed headers, and large sheets.
+* Test address forms and `gid`, CSV quoting, header paths with merged groups, own-row search by ISU and name forms, ambiguous and missing rows, total detection and its ties, moved rows and columns, the reading and comparison rules, HTML tabs, closed and too large sheets, storage and the background check.
 
 **Files to edit/create:**
 
-* `app/src/test/resources/sheets/` - anonymized table fixtures.
-* `app/src/test/java/dev/alllexey/itmowidgets/feature/subject/domain/sheets/GoogleSheetUrlParserTest.kt` - URL tests.
-* `app/src/test/java/dev/alllexey/itmowidgets/feature/subject/domain/sheets/SheetScoreExtractorTest.kt` - extraction tests.
+* `app/src/test/resources/sheets/` - synthetic table fixtures.
+* `app/src/test/java/dev/alllexey/itmowidgets/feature/recordbook/domain/sheets/` and `data/sheets/` - parser, rule, client and repository tests.
+* `app/src/test/java/dev/alllexey/itmowidgets/core/resources/GoogleSheetUrlTest.kt` - address tests.
 
 **Verification commands:**
 

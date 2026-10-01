@@ -27,7 +27,7 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 - [Sport](features/sport.md) — catalog, bookings, queues, cards and details.
 - [Recordbook](features/recordbook.md) — MyITMO recordbook, BARS overlay,
   physical-education link, the one-page subject screen, new marks checked on
-  the device.
+  the device, the own total from a public Google Sheet.
 - [Subject links](features/resources.md) — link categories and audiences,
   chips, sheets, the local mode without the connection.
 - [Social](features/social.md) — friends, requests, people search, person profiles.
@@ -59,6 +59,7 @@ editing an old one when a decision changes.
 - [0011 AI summaries of teacher reviews through Gemini behind a proxy](decisions/0011-ai-review-summaries.md)
 - [0012 BARS is renewed in the background by replaying ITMO.ID with cookies](decisions/0012-bars-background-renewal.md)
 - [0013 Schedule changes are detected on the device](decisions/0013-schedule-changes-on-device.md)
+- [0014 Own totals from public Google Sheets are read on the device](decisions/0014-sheet-scores-on-device.md)
 
 ## Sibling repositories
 

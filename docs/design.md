@@ -282,9 +282,26 @@ settings, and restore them if a separate test explicitly changes them.
   (8 dp `shape_circle_filled`, `colorPrimary`, `design_spacing_compact` before
   it) follows it like the new-change dot of `item_schedule_change.xml`, is set
   on every bind and adds `Новое` at the start of the row's TalkBack description.
+  A total from a connected sheet stands where the points would be while the
+  official points are empty: `sheet_mark` (`ic_table`, 16 dp,
+  `colorOnSurfaceVariant`, 4 dp before the value) and the value (`titleMedium`,
+  one line, at most 96 dp) in `score_group` (`wrap_content`, at least 64 dp),
+  without the bar; TalkBack reads `Из таблицы: …`.
 - Subject page: `feature/recordbook/ui/SubjectHubAdapter.kt` (result card with
   `GradeScaleView`, link chips, chats, control groups, teachers, lessons),
   `res/layout/item_subject_hero.xml`, `res/layout/item_recordbook_control_group.xml`.
+- Sheet total on the subject page: `res/layout/item_subject_sheet_score.xml`
+  (the geometry of a chat row: `ic_table`, the value in `titleMedium`,
+  `лист · путь` and a status line in `bodySmall`, the status under the 48 dp `⋮`
+  so it never wraps beside it; failures in `colorError`) and
+  `res/layout/item_subject_sheet_hint.xml` (`ic_table`, `Мои баллы из таблицы`,
+  a chevron), bound in `feature/recordbook/ui/SubjectHubAdapter.kt`.
+- The «Мои баллы» sheet: `res/layout/sheet_scores_setup.xml` (handle, title,
+  subject, one bounded area of at least 288 dp for loading, failures and the
+  choices) with `res/layout/item_sheet_scores_option.xml` (title `bodyLarge`,
+  caption `bodySmall`, value `titleSmall` at the end, `ic_check` in
+  `colorPrimary` and `selected` for the current total; the whole row is the
+  target), `feature/recordbook/ui/sheets/SheetScoresBottomSheet.kt`.
 - Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt`,
   `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`, `res/layout/item_subject_link.xml`.
 - User row: `res/layout/item_user_row.xml`.
@@ -347,4 +364,5 @@ settings, and restore them if a separate test explicitly changes them.
 - Visual tests: `feature/sport/cards/SportCardsVisualTest.kt`,
   `feature/recordbook/RecordbookVisualTest.kt`, `feature/resources/SubjectLinksVisualTest.kt`,
   `feature/friendselector/SelectionRowsTest.kt`, `feature/social/UserProfileVisualTest.kt`,
-  `feature/reviews/ReviewEditorVisualTest.kt`, `feature/schedule/ScheduleChangesVisualTest.kt`.
+  `feature/reviews/ReviewEditorVisualTest.kt`, `feature/schedule/ScheduleChangesVisualTest.kt`,
+  `feature/recordbook/SheetScoresVisualTest.kt`.

@@ -125,7 +125,11 @@ per tag and nothing once the state is saved.
   follows the repository and a vote keeps the sheet open. The arrows are
   hidden under a `VOTE` restriction and without the connection. An own shared
   link shows its score without arrows, an own private one none. Then
-  `Открыть`; `Закрепить` / `Открепить`; `Изменить`
+  `Открыть`; `Мои баллы` for a Google Sheet address of any author
+  (`GoogleSheetUrl.parse`), which closes the sheet and opens the recordbook's
+  connection sheet through `AppNavigator.openSheetScores` with the link's
+  address and scope ([sheet scores](recordbook.md#sheet-scores));
+  `Закрепить` / `Открепить`; `Изменить`
   and `Удалить` (confirmed) for own links; `Пожаловаться` opens
   `ReportLinkDialogFragment` once per link. Actions run one at a time; a
   failure is a snackbar. Every action but a vote closes the sheet on success.
@@ -198,5 +202,6 @@ the editor without the connection, an own rejected link, another student's
 link, an own row ranked between others' rows on its tonal surface (one step
 above the sheet's surface), voting in
 the actions sheet, the own score without arrows, arrows hidden by a restriction,
+`Мои баллы` only for a Google Sheet (`actionsSheetOffersMyScoresOnlyForAGoogleSheet`),
 and long titles at a large font on a narrow screen. The subject page's
 `Ссылки` header, chips and chats are covered by `RecordbookVisualTest`.

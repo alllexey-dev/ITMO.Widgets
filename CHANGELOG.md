@@ -8,6 +8,25 @@ publication or deployment.
 
 ### 2026-10-01
 
+- `Мои баллы` for any subject link whose address is a public Google Sheet:
+  the app downloads every tab on the device (CSV, or the HTML view when the
+  export is forbidden; at most 5 MiB per answer), finds the own row by the ISU
+  or the ITMO.ID name and the total by its header, and asks only when the sheet
+  leaves a choice of row, tab or total. One connection per subject period,
+  stored in `filesDir/sheet_scores/state.json`; names and marks of others are
+  never stored, nothing reaches Backend, and `Подключение к ITMO.Widgets` is
+  not needed (decision [0014](docs/decisions/0014-sheet-scores-on-device.md)).
+- The subject page shows the total under `Баллы` with the tab, the header and
+  when it was read, `Нет связи`, `Таблица закрыта`, `Строка не найдена`,
+  `Столбец не найден` or `Таблица слишком большая`, and `Открыть таблицу`,
+  `Изменить итог`, `Отключить`; a subject with sheet links and no connection
+  offers `Мои баллы из таблицы` (`Какая таблица?` for several). The recordbook
+  list shows the total with a table mark while My ITMO and BARS have no points.
+- A changed total is a `Новые оценки` subject of the existing mark check
+  behind the new switch `Оценки из таблиц` on the `Зачётка` page, on by
+  default; a total already seen in the app is not notified.
+- New explicit dependencies: OkHttp 4.12.0 (it came transitively before) and
+  Jsoup 1.21.1. Core, Backend and MyItmoApi are unchanged.
 - The app checks the own marks of the current half-year by itself: every
   3 hours with a network one background check reads the My ITMO recordbook
   (points and grade of every subject) and the BARS journals (checkpoint marks,

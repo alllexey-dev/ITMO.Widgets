@@ -93,6 +93,9 @@ fifteen subjects, so no search or filters.
 - A subject with unread new marks has an 8 dp `colorPrimary` dot `new_mark`
   after its name until its page is opened
   ([mark tracking](#in-the-recordbook)).
+- A subject without My ITMO or BARS points, final grade or no-show shows the
+  total of its connected sheet instead of `—`: `ic_table` and the value, no bar
+  ([sheet scores](#in-the-recordbook-list)).
 
 Subjects open with `program_id`, `semester`, `study_year` and `entry_id`; the
 subject's own `discipline_id` comes with the reloaded official subject.
@@ -113,7 +116,9 @@ list drawn by `SubjectHubAdapter`, in this order:
 2. `Ссылки` with a trailing `Все` that opens the links sheet, link chips and
    then `Чаты` for everything except PE, including past periods; the header is
    there even without links. See [resources](resources.md).
-3. `Баллы`: controls and [control groups](#control-groups), groups expanded.
+3. `Баллы`: the own total from a connected sheet or the offer to connect one
+   ([sheet scores](#on-the-subject-page)), then controls and
+   [control groups](#control-groups), groups expanded.
 4. `Преподаватели`: distinct people from the subject's lessons, each with the
    lesson types they run, most frequent first; without lessons the recordbook
    teacher stands in. A row with a usable teacher ISU opens the shared person
@@ -266,7 +271,9 @@ plans with `has_course_project` are rejected for now.
 ## Mark tracking
 
 The application notices new and changed own marks of the current half-year in
-My ITMO and BARS by itself and names the subjects in one notification.
+My ITMO and BARS and changed totals of the connected sheets
+([sheet scores](#background-check-of-sheets)) by itself and names the subjects
+in one notification.
 Everything stays on the device: marks, the BARS token and the ITMO.ID cookies
 never reach Backend, and the feature works without
 `Подключение к ITMO.Widgets`. BARS is read in the background through the
@@ -283,8 +290,9 @@ storage and delivery follow the schedule changes (decision
   push the next run away. It gets `MarksCheck` through `MarksEntryPoint`, not
   `@HiltWorker`.
 - `MarksCheck.run()` ends `SKIPPED` without a request when there is no refresh
-  token or both switches are off. Otherwise it runs `checkMyItmo()` when
-  `Оценки My ITMO` is on and `checkBars()` when `Оценки БАРС` is on, then
+  token or all three switches are off. Otherwise it runs `checkMyItmo()` when
+  `Оценки My ITMO` is on, `checkBars()` when `Оценки БАРС` is on and
+  `checkSheets()` when `Оценки из таблиц` is on, then
   delivers, even when a check failed: what was found in the quiet hours is
   delivered by the first run after them whatever the network does. The outcome
   is `outcomeOf(errors)` from `core/work`: any error except `Unauthorized` asks
@@ -400,6 +408,7 @@ repository would be a cycle `BarsClient → repository → BARS read → BarsCli
 | `myitmo_marks_enabled` | on | no, a device setting like `schedule_changes_enabled` |
 | `bars_marks_enabled` | no `Оценки БАРС` switch yet | yes, with the BARS session (`BarsPreferenceRepositoryImpl`) |
 | `bars_marks_prompt` | `NONE` (`BarsLoginPrompt`: `NONE`, `PENDING`, `SHOWN`) | yes, with the BARS session |
+| `sheet_marks_enabled` | on | no, a device setting like `myitmo_marks_enabled` |
 
 Any successful BARS answer of the account, an interactive sign-in, the overlay
 or the background read, runs `BarsMarksActivation.onBarsAnswered()`: the first
@@ -536,11 +545,172 @@ and advancing in `RecordbookViewModelTest`, `RecordbookBarsOverlayTest` and
 in `HomeFeedVisualTest`. They use synthetic subjects and restore the
 WorkManager state they found.
 
+## Sheet scores
+
+A student connects the own total of a subject from a teacher's public Google
+Sheet and sees it on the subject page and, while the official points are empty,
+in the list. The connection, the downloaded sheet and other people's names stay
+on the device: no Backend, no `Подключение к ITMO.Widgets` (decision
+[0014](../decisions/0014-sheet-scores-on-device.md)). The code lives in
+`feature/recordbook` under `domain/sheets`, `data/sheets`, `presentation/sheets`
+and `ui/sheets`; `feature/resources` only offers the action.
+
+### Connecting
+
+- Any link of a subject period whose address is a Google Sheet
+  (`core/resources/GoogleSheetUrl`: `https://docs.google.com/spreadsheets/d/<id>`
+  or `…/u/<n>/d/<id>`, `gid` from the fragment, then the parameter; published
+  `/d/e/…` addresses are not sheets) has `Мои баллы` in its action sheet, own,
+  shared or from past years. It opens `SheetScoresBottomSheet` through
+  `AppNavigator.openSheetScores(SheetScoresArgs)` with the link's
+  `ResourceScope` (`discipline_id` and period). One connection per scope; a new
+  one replaces the old after a successful choice.
+- `SheetScoresViewModel` downloads every tab (`inspect`) and looks for the own
+  row. Found in one row per tab with one key: the cells of that row are
+  collected from every tab; a total found by its header is connected at once
+  and the sheet closes, otherwise `Выберите итог` lists the filled cells by tab.
+  Several rows: `Выберите свою строку`. No row: `Выберите лист`, then the
+  student rows of that tab. The workbook lives only in the view model, never in
+  the saved state; after process death the sheet is downloaded again.
+- States share one bounded area of the sheet (288 dp): loading, the choices,
+  and failures with `ic_error_rounded` and their text (`Нет связи` with a tonal
+  `Повторить`, `Таблица закрыта`, `Таблица слишком большая`,
+  `Строка не найдена`). A failed write keeps the choice and shows a snackbar.
+
+### Downloading
+
+`PublicSheetClient` uses its own `@PublicWebClient OkHttpClient`: no cookies,
+no HTTPS-to-HTTP redirects, timeouts 15/30/90 s, requests only to
+`https://docs.google.com/`. Addresses and bodies never reach the log or an
+exception.
+
+- A tab: CSV `GET /spreadsheets/d/<id>/export?format=csv&gid=<gid>` (redirects
+  to the download host are followed). An answer that is not `text/csv`, or 401
+  or 403, falls back to the HTML tab
+  `GET /spreadsheets/d/<id>/htmlview/sheet?headers=false&gid=<gid>`, parsed by
+  `SheetHtmlGrid` (Jsoup, `table.waffle`, `colspan`/`rowspan` spread as in CSV).
+- The tabs: `GET /spreadsheets/d/<id>/htmlview`, the JavaScript
+  `items.push({name, pageUrl, gid})` lines (`SheetTabsParser`). The link's tab
+  comes first; at most 50 tabs, 4 at a time. `gviz/tq` and `pubhtml` are not used.
+- Closed: a sign-in page (`accounts.google.com`, `/ServiceLogin…`,
+  `/v3/signin…`) at any step, 401/403 of the HTML tab, 404 of the tab list.
+  400/404 of a tab: the tab is gone (`Столбец не найден`). No connection, 5xx
+  and 429: `Нет связи`, the stored value stays. Over 5 MiB per answer
+  (`Content-Length` or counted): `Таблица слишком большая`; such a tab is
+  skipped while connecting, and the sheet is too large only when every tab is.
+- CSV is parsed by `CsvGrid` (RFC 4180, BOM, CRLF/LF, line breaks in quotes,
+  ragged rows padded).
+
+### Own row, header and total
+
+- The own row: a cell equal to the ISU (`CurrentUser.isu`, spaces ignored) in
+  any tab, else a cell equal to a form of the ITMO.ID name after `SheetText`
+  normalisation (case, `ё`, spaces, the space after a dot): `Фамилия Имя
+  Отчество`, `Фамилия Имя`, `Фамилия И.О.`, `Фамилия И.`, built with the surname
+  first and with it last, because the order of the words in ITMO.ID is not
+  known. The stored key is the ISU or the normalised name, never a row number;
+  every reading finds the row again (`SheetRows.locate`: the key column first,
+  then any column, exactly one row).
+- The header (`SheetHeaders`): the students start at the topmost row of the
+  same kind of key above the own row; up to 6 rows above it are the header. A
+  row whose only text is at or left of the key column is the tab's title (a
+  teacher) and is skipped. A group title spans to the next title of its row or
+  of a row above; the last header row does not span. A column's path joins its
+  titles top-down with ` · `; a column without one is `Столбец <буква>`.
+- The total (`SheetTotals.detect`): keyword groups by priority, matched as whole
+  words of the path: `итог`/`итого`, `σ`/`∑`, `сумма`/`сум`/`sum`, `total`,
+  `score`, `bars credits`/`барс`, `оценка`, `зачет`. Ties: a path segment equal
+  to the keyword, a filled value, an earlier tab, a column further right.
+- The column is stored as the tab's `gid` and the header path; a reading finds
+  the same path again (the nearest to the old index when repeated) and falls
+  back to the old index while the tab is that wide, else `Столбец не найден`.
+  Values are shown as the sheet shows them, never recomputed.
+
+### On the subject page
+
+Under `Баллы` (`SubjectHubAdapter`, before the controls):
+
+- A connection: `item_subject_sheet_score.xml` with `ic_table`, the value
+  (`titleMedium`, `—` when empty), `лист · путь` and a status line: `Обновлено в
+  HH:mm` today or `Обновлено d MMMM`; `Нет связи` keeps the stored value;
+  `Таблица закрыта`, `Строка не найдена`, `Столбец не найден`,
+  `Таблица слишком большая` in the error colour. The status line runs under the
+  48 dp `⋮`, so a status never wraps on a narrow screen. A tap opens the tab
+  (`tabUrl`); `⋮` offers `Открыть таблицу`, `Изменить итог` (the sheet at the
+  choice of the total, the current one checked) and `Отключить`.
+- No connection but sheet links: `Мои баллы из таблицы`
+  (`item_subject_sheet_hint.xml`). One sheet link opens the connection for it;
+  several ask `Какая таблица?` first: own links (`· Моя`), the pinned one,
+  `SCORES`, the rest by rank, one entry per address.
+- With either row `Баллы` always exists; without controls the
+  `My ITMO не присылает детализацию…` card is not shown (the sheet is the
+  detail), a failure to load the controls stays under the row.
+- The stored value shows at once; the page downloads the tab on entry and on
+  every pull, without an indicator. PE has neither row.
+
+### In the recordbook list
+
+`RecordbookViewModel` collects `SheetScoresRepository.observe()` only, never
+downloads, and passes the totals of the selected period
+(`Content.sheetTotals` by `discipline_id`). `sheetFallback` keeps a total only
+for a non-PE subject without a no-show, a final grade and My ITMO or BARS
+points. The row then shows `sheet_mark` (`ic_table`, 16 dp) and the value
+(`titleMedium`, one line, at most 96 dp) without the bar; TalkBack reads
+`Из таблицы: 66,3`.
+
+### Background check of sheets
+
+- `MarksCheck` runs `MarkTrackingRepository.checkSheets()` after My ITMO and
+  BARS while `Оценки из таблиц` (`sheet_marks_enabled`, on by default, kept on
+  sign-out) is on. It reads every connection of the current half-year
+  (`StudyHalf.of(today).periodKey`), one at a time.
+- A connection keeps `value` (the last read, shown) and `baseline` (the last
+  non-empty). Only a background read of a `tracked` connection with a new
+  non-empty value different from the baseline is news: `MARK_ADDED` from an
+  empty baseline, else `MARK_CHANGED`, a `MarkEvent` of `MarkSource.SHEETS`
+  named by the scope's subject. An emptied cell is no news and keeps the
+  baseline. Any successful read, also connecting, opening the page or a pull,
+  moves the baseline and tracks the connection, so a total seen in the app is
+  not notified later. A failed read changes only the status; `Нет связи` is an
+  error of the run (retry), other statuses are not.
+- Switching `Оценки из таблиц` off keeps the totals and untracks every
+  connection (`resetSource(SHEETS)` → `untrack()`), so the first background read
+  after switching on is a baseline. A check started before the reset or a
+  session clear writes nothing (`Stale`).
+
+### Storage
+
+`SheetScoresFileStore` keeps every connection in
+`filesDir/sheet_scores/state.json` (format 1, `owner` is the ISU): the scope,
+the address, the tab, the row key and its column and kind, the header path and
+index, `value`, `baseline`, `tracked`, the status, `updatedAt` and
+`connectedAt` (wall clock). Atomic writes, excluded from backup and device
+transfer. A corrupt file, another format, a missing required field or another
+account's file is deleted. `SheetScoresRepositoryImpl` is a `@Singleton`
+`SessionDataCleaner`: sign-out deletes the file; a reading is written only when
+the session generation and the whole connection it was taken for are unchanged.
+
+### Tests
+
+Unit: `GoogleSheetUrlTest`, `CsvGridTest`, `SheetIdentityTest`,
+`SheetHeadersTest`, `SheetRowsTest`, `SheetTotalsTest`, `SheetScoreRulesTest`
+on synthetic sheets in `app/src/test/resources/sheets/`;
+`SheetTabsParserTest`, `SheetHtmlGridTest`, `PublicSheetClientTest`
+(MockWebServer), `SheetScoresFileStoreTest`, `SheetScoresRepositoryImplTest`,
+`SheetScoresViewModelTest`; the sheet cases of `MarkTrackingRepositoryImplTest`,
+`MarksCheckTest`, `DefaultMarkTrackingTest`, `MarkNewsRulesTest`,
+`RecordbookSubjectViewModelTest`, `RecordbookViewModelTest` and
+`RecordbookDisplayedScoreTest`. Instrumented: `SheetScoresVisualTest`, the sheet
+cases of `RecordbookVisualTest` and
+`SubjectLinksVisualTest.actionsSheetOffersMyScoresOnlyForAGoogleSheet`. No real
+sheet is opened; names and ISUs are made up.
+
 ## Verification
 
 ```bash
 ./gradlew :app:testDebugUnitTest
 ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.RecordbookVisualTest,dev.alllexey.itmowidgets.feature.recordbook.RecordbookBarsVisualTest
+./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.SheetScoresVisualTest
 ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.work.MarksWorkTest,dev.alllexey.itmowidgets.feature.recordbook.MarksNotificationTest
 ```
 
@@ -557,8 +727,9 @@ run the real Fragments in `RecordbookPreviewActivity` with synthetic data
 (`RecordbookPreviewFixtures`): compact rows, `Требуют внимания` with PE, the
 summary only in the session, the one-page subject with its hint, `Ссылки` with
 `Все`, chips ranked by score with the own one filled, `Ещё N`, chats, expanded groups, two lessons and `Все пары`, a past period with
-links and PE without chips, and the dot of unread marks until the subject
-opens. Add
+links and PE without chips, the dot of unread marks until the subject
+opens, and the sheet total in every state, the connect hint and the list
+fallback; `SheetScoresVisualTest` covers the connection sheet. Add
 `-Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full` and
 `-Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true` for all
 four appearances and the PNGs (see

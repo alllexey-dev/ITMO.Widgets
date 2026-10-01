@@ -36,17 +36,20 @@ core/           cross-cutting; knows nothing about features
   home/         HomeCard model and the HomeCardSource contract every feature contributes to
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
   navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders,
-                LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs,
+                LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs, SheetScoresArgs
+                (the «Мои баллы» sheet: subject period, link address, connect or pick another total),
                 TeacherReviewArgs, RecordbookSubjectArgs — the subject page's arguments, validated when a
                 notification carries them); UserScreenArgs.profileIsu validates nullable Long ISUs before Int
                 navigation
   onboarding/   OnboardingRepository — whether the first-run flow was passed
-  network/      WidgetsClient, error mapping (isCausedByNetworkFailure: an IOException anywhere in the cause
+  network/      WidgetsClient, PublicWebClient (the qualifier of the cookie-free OkHttpClient for public
+                Google Sheets), error mapping (isCausedByNetworkFailure: an IOException anywhere in the cause
                 chain is AppError.Network), serialization adapters
   notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
   recordbook/   MarkTracking (the mark check's switches and work), BarsLoginPrompt, MarkSubjects (the
                 names a marks notification or the home card shows)
-  resources/    SubjectLinksRepository, link models, ResourceScope, subjectLinkChips
+  resources/    SubjectLinksRepository, link models, ResourceScope, subjectLinkChips, GoogleSheetUrl (a Google
+                Sheet address, shared by the link actions and the recordbook)
   reviews/      TeacherReviewsRepository, TeacherReviews, TeacherReview with ReviewOrigin, OwnTeacherReview,
                 OwnReviewStatus, ReviewReportReason, TeacherReviewDraft, TeacherReviewLimits, ReviewDate,
                 TeacherSummary with its scales, tags and TeacherLevel, TeacherLevelsRepository
@@ -84,8 +87,12 @@ schedulers and entry points: the widget updates; in `schedule/work` the
 schedule change check (`ScheduleChangesWorker`,
 `WorkManagerScheduleChangesScheduler`, `AndroidScheduleChangeNotifier`); in
 `recordbook/work` the mark check (`MarksWorker`, `WorkManagerMarksScheduler`,
-`AndroidMarksNotifier`) and the debug probe of the BARS cookie renewal
-(`BarsCookieProbeWorker`, `WorkManagerBarsSessionProbe`). `settings` owns the
+`AndroidMarksNotifier`), which also reads the connected sheets, and the debug
+probe of the BARS cookie renewal (`BarsCookieProbeWorker`,
+`WorkManagerBarsSessionProbe`). `recordbook` keeps the own totals from public
+Google Sheets in `sheets` subpackages of `domain`, `data`, `presentation` and
+`ui` ([sheet scores](features/recordbook.md#sheet-scores)); `resources` only
+offers `Мои баллы` and opens that sheet through `AppNavigator`. `settings` owns the
 `Работа в фоне` row: `BackgroundWorkAccess` and `BackgroundWorkScreens` in
 `domain`, `AndroidBackgroundWorkAccess` in `data` and
 `openBackgroundWorkSettings` in `ui`. `weblogin` holds
@@ -164,6 +171,7 @@ thread until it suspends.
 | Tones of teachers' AI summaries, a day per answer | `filesDir/teacher_levels/levels.json`, atomic writes, excluded from backup and device transfer |
 | The last snapshot of the own schedule for the change check and the changes of the last 30 days | `filesDir/schedule_changes/state.json`, one atomic write for both, excluded from backup and device transfer |
 | The last My ITMO and BARS mark snapshots of the current half-year and the unread subjects (30 days, at most 100) | `filesDir/marks/state.json`, bound to the owner's ISU, one atomic write for all, excluded from backup and device transfer |
+| Connections to public Google Sheets with the last own total of each subject period | `filesDir/sheet_scores/state.json`, format 1, bound to the owner's ISU, atomic writes, excluded from backup and device transfer |
 
 `SharedPreferences` is banned. *Enforced.* Anything caching user-scoped data
 implements `SessionDataCleaner`; sign-out and account change invoke every
@@ -224,7 +232,8 @@ Features open contextual screens through `core/ui/navigation.AppNavigator`,
 implemented by `MainActivity` and `MainNavigationCoordinator`. The same port
 shows the lesson and pending-sport sheets (`openLessonDetails`,
 `openPendingSportDetails`) and the subject link sheets (`openSubjectLinks`,
-`openLinkEditor`, `openLinkActions`), the web sign-in sheet (`openWebLogin`)
+`openLinkEditor`, `openLinkActions`), the own sheet total (`openSheetScores`,
+with `SheetScoresArgs`), the web sign-in sheet (`openWebLogin`)
 and the review editor and report dialog (`openReviewEditor`,
 `openReviewReport`, with `TeacherReviewArgs`) on the Activity's
 FragmentManager, so a screen in another feature can open them without

@@ -119,7 +119,8 @@ Local notifications of the recordbook's mark check: `MarksCheck` in
 tag `marks`.
 
 - The digest, id 1: the title `Новые оценки`, the text the names of the unread
-  subjects without marks, up to three and then `… и ещё N`
+  subjects without marks, also the subjects whose connected sheet total changed
+  ([sheet scores](recordbook.md#background-check-of-sheets)), up to three and then `… и ещё N`
   (`Физика, Математический анализ`). A new digest replaces the previous one.
   `publicTitle` is the same title, so the lock screen shows `Новые оценки`
   without names.

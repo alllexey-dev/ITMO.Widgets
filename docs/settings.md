@@ -196,13 +196,15 @@ only among installed instances of that same format:
 
 `Зачётка` (`SettingsPage.RECORDBOOK`, after `Расписание`) is an offline page
 with one untitled group for the background mark check
-([mark tracking](features/recordbook.md#mark-tracking)). Neither switch needs
-`Подключение к ITMO.Widgets`: the check talks only to My ITMO and BARS.
+([mark tracking](features/recordbook.md#mark-tracking)). No switch needs
+`Подключение к ITMO.Widgets`: the check talks only to My ITMO, BARS and public
+Google Sheets.
 
 | Switch | Key | Default |
 |---|---|---|
 | `Оценки My ITMO` | `myitmo_marks_enabled` | on (absent means on); a device setting that survives sign-out |
 | `Оценки БАРС` | `bars_marks_enabled` | absent: the switch is hidden. The first successful BARS answer of the account (sign-in, the `БАРС` chip or the background read) stores on; cleared with the BARS session on sign-out |
+| `Оценки из таблиц` | `sheet_marks_enabled` | on (absent means on); always shown, a device setting that survives sign-out |
 
 - `Оценки БАРС` appears only once BARS has answered for this account; before
   that there is nothing to check.
@@ -210,11 +212,17 @@ with one untitled group for the background mark check
   the unread subjects stay. The work is cancelled when both are off. Switching
   `Оценки БАРС` off also withdraws the `Войдите в БАРС` reminder. Switching on
   schedules the work, and the first check of that source only takes a snapshot.
+- `Оценки из таблиц` follows `Оценки БАРС` (or `Оценки My ITMO` while BARS is
+  hidden). Off keeps the totals of the connected sheets, which the subject pages
+  show, and untracks every connection, so the first background read after
+  switching on only takes a baseline
+  ([sheet scores](features/recordbook.md#background-check-of-sheets)). The work
+  is cancelled only when all three are off.
 - The footer is `Уведомлять о новых и изменённых оценках.`, or
   `Уведомления выключены.` while Android notifications are off for the app.
   Switching either on without the permission asks for it as on the schedule
   page; the switch stays on whatever the answer is.
-- Below the switches, `Работа в фоне` appears while at least one is on and
+- Below the switches, `Работа в фоне` appears while at least one of the three is on and
   Android restricts the app in the background ([background work](#background-work)).
 
 ## Background work
@@ -243,7 +251,8 @@ leaves a backgrounded app without network.
 - The app does not hold `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` and never shows
   the system exemption dialog: Google Play allows it only for apps whose core
   function needs it. It only opens the page.
-- Turning on `Изменения расписания`, `Оценки My ITMO` or `Оценки БАРС` while the
+- Turning on `Изменения расписания`, `Оценки My ITMO`, `Оценки БАРС` or
+  `Оценки из таблиц` while the
   app is restricted shows a dialog once per device: the title `Работа в фоне`,
   the text
   `Чтобы проверки приходили вовремя, разрешите приложению работу без ограничений.`,
@@ -259,7 +268,7 @@ are `Спорт: автозапись` (`sport`) and `Друзья` (`friends`);
 check posts to `Изменения расписания` (`schedule_changes`) and the mark check to
 `Оценки` (`marks`). All four are at default importance. Android controls
 permission, sound and category visibility; there are no duplicate in-app
-switches, and `Изменения расписания`, `Оценки My ITMO` and `Оценки БАРС` switch
+switches, and `Изменения расписания`, `Оценки My ITMO`, `Оценки БАРС` and `Оценки из таблиц` switch
 the checks themselves, not the categories. Disabled notification permission
 suppresses only the visual alert, not sport automation already enabled by the
 user or the background checks. Disabling
@@ -324,5 +333,5 @@ behavior.
 
 ## Deferred beyond v2.1
 
-Google Sheet mappings, calendar synchronization, community resources,
+Calendar synchronization, community resources,
 teacher-review settings and the `Добавить в шторку` action belong to v2.2.

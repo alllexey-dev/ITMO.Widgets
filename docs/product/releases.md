@@ -16,7 +16,7 @@
    cached content kept on screen during refresh, skeleton first loads. No
    product features, no Core or Backend change.
 5. **v2.2** adds moderated community resources and reviews, legacy reviews
-   synced from the Reviews project, personal Google Sheet mappings, schedule
+   synced from the Reviews project, own sheet totals, schedule
    change tracking, My ITMO and BARS mark notifications, range calendar export, verified
    App Links, sharing, the QR quick-settings tile with app shortcuts, and the
    home feed.
