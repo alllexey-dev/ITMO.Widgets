@@ -8,6 +8,19 @@ publication or deployment.
 
 ### 2026-10-01
 
+- The subject page is a result card and connected groups under accent
+  headings: `Ссылки`, `Чаты`, `Контрольные точки`, `Преподаватели`,
+  `Ближайшие пары`. The sheet total (or `Мои баллы из таблицы`) moved into the
+  result card under a hairline. Links are rows instead of chips: at most three,
+  the own one marked `моя`, others with the vote pill `▲ N ▼` that votes from
+  the page, then `Все ссылки, N`, or `Добавить ссылку` without links. Control
+  groups are headings with their sum over their own group of controls.
+- The links sheet groups every category the same way; own and others' links
+  share one row style (`моя` instead of a tonal row, the pill instead of the
+  vote column), captions name the review state of an own link.
+- « · » is gone from these screens: `Экзамен, 2 семестр`, `Все пары, N`,
+  `путь, лист «Лист»`, comma-separated captions.
+
 - `Мои баллы` for any subject link whose address is a public Google Sheet:
   the app downloads every tab on the device (CSV, or the HTML view when the
   export is forbidden; at most 5 MiB per answer), finds the own row by the ISU

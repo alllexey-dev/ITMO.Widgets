@@ -103,23 +103,29 @@ subject's own `discipline_id` comes with the reloaded official subject.
 ## Subject page
 
 `RecordbookSubjectFragment` is one page without tabs: the toolbar holds the
-subject name and `<assessment kind> · N семестр`; below it one pull-to-refresh
-list drawn by `SubjectHubAdapter`, in this order:
+subject name and `<assessment kind>, N семестр`; below it one pull-to-refresh
+list drawn by `SubjectHubAdapter`. Every list section is a heading in
+`colorPrimary` over one connected group of rows
+([design](../design.md#connected-groups)); nothing on the page is separated
+by « · ». In this order:
 
-1. The result card (`item_subject_hero.xml`): points, the grade badge once a
-   final result exists, and `GradeScaleView`, a bar on the 100 scale with a tick
-   at the lowest whole score of each grade, labelled by its letter (E 60, D 68,
-   C 75, B 84, A 91; a plain credit has one `зачёт` tick at 60). While the
-   result is open the hint names the next step, `до 4C ещё 3` or `до зачёта ещё 8`
-   (`RecordbookGradeScale.nextStep`); a passed plain credit has none. PE shows
-   the sport card instead.
-2. `Ссылки` with a trailing `Все` that opens the links sheet, link chips and
-   then `Чаты` for everything except PE, including past periods; the header is
-   there even without links. See [resources](resources.md).
-3. `Баллы`: the own total from a connected sheet or the offer to connect one
-   ([sheet scores](#on-the-subject-page)), then controls and
-   [control groups](#control-groups), groups expanded.
-4. `Преподаватели`: distinct people from the subject's lessons, each with the
+1. The result card (`item_subject_hero.xml`, `Card.Hero`): points, the grade
+   badge once a final result exists, and `GradeScaleView`, a bar on the 100
+   scale with a tick at the lowest whole score of each grade, labelled by its
+   letter (E 60, D 68, C 75, B 84, A 91; a plain credit has one `зачёт` tick at
+   60). While the result is open the hint names the next step, `до 4C ещё 3` or
+   `до зачёта ещё 8` (`RecordbookGradeScale.nextStep`); a passed plain credit
+   has none. Under a hairline the card ends with the own total from a
+   connected sheet, or with the offer to connect one
+   ([sheet scores](#on-the-subject-page)). PE shows the sport card instead.
+2. `Ссылки` for everything except PE, including past periods: at most three
+   link rows, then `Все ссылки, N` that opens the links sheet, or
+   `Добавить ссылку` while the subject has no links. See
+   [resources](resources.md#subject-page).
+3. `Чаты`: own and shared chat links in a group of their own.
+4. `Контрольные точки`: controls and [control groups](#control-groups),
+   groups expanded.
+5. `Преподаватели`: distinct people from the subject's lessons, each with the
    lesson types they run, most frequent first; without lessons the recordbook
    teacher stands in. A row with a usable teacher ISU opens the shared person
    profile. A recordbook-only teacher without ISU remains informational, including
@@ -132,19 +138,21 @@ list drawn by `SubjectHubAdapter`, in this order:
    ([teacher levels](reviews.md#teacher-levels)). A row with an ISU but no level
    keeps the place of the dot, so the chevrons stay in one column; a row without
    an ISU has none. TalkBack adds `, тон отзывов: …` to the row.
-5. `Ближайшие пары`: only for the current period and never for PE.
+6. `Ближайшие пары`: only for the current period and never for PE.
 
 The scale is `RecordbookGradeScale`: above 90 is 5A, above 83 4B, above 74 4C,
 above 67 3D, 60 and above 3E, below 60 unsatisfactory; a plain credit
 (`Зачёт`, not graded) has the single threshold 60. Hints count whole points,
 so a strict threshold is aimed at the next whole score.
 
-A control row shows `score / maximum` with a bar relative to its maximum:
+A control row (`item_recordbook_control.xml`, a row of a connected group)
+shows the name and `score / maximum` with a thin bar relative to its maximum:
 error colour below the minimum, green once the minimum is met or the maximum
 reached, primary otherwise. Requirements appear only when broken: `минимум N`
 below the minimum and `Неявка`, both in the error colour. A date and a teacher
-who differs from the subject's teacher follow on the next line; additional
-points are named `Дополнительные баллы`.
+who differs from the subject's teacher follow on the next line, separated by a
+comma; additional points are named `Дополнительные баллы`. Lone controls in a
+row share one group; each control group has its own heading and group.
 
 ### Control groups
 
@@ -159,10 +167,11 @@ first control:
   the number. `ControlGroupKind` names the known kinds through string resources
   (`Лабораторные`, `Контрольные`, `Практические`, `Домашние задания`); any other
   title keeps the source text.
-- A group shows the sum of its known scores out of the sum of known maxima
-  (`—` while nothing is graded) and a `ниже минимума` label when any graded
-  control in it is under its positive minimum. Ungraded controls are never
-  below anything.
+- A group is a heading (`item_recordbook_control_group.xml`: the title in
+  `titleSmall`, the sum of its known scores out of the sum of known maxima at
+  the end, `—` while nothing is graded) and a `ниже минимума` label when any
+  graded control in it is under its positive minimum. Its controls follow as
+  one connected group. Ungraded controls are never below anything.
 
 ### Lessons
 
@@ -173,7 +182,8 @@ other.
 - The window is today … +28 days. The view model refreshes it through
   `ScheduleRefreshGateway` (a failed refresh with an empty cache is an error
   with `Повторить`; with cached lessons the cache is shown) and observes the
-  gateway. The two nearest lessons are shown; `Все пары · N` opens the rest in
+  gateway. The two nearest lessons are shown (`вид, аудитория, корпус` on one
+  line); `Все пары, N`, the last row of the group, opens the rest in
   place. Lesson rows are informational; the details sheet belongs to the
   schedule feature.
 - The link between a recordbook discipline and a schedule subject is
@@ -634,23 +644,27 @@ exception.
 
 ### On the subject page
 
-Under `Баллы` (`SubjectHubAdapter`, before the controls):
+At the bottom of the result card (`item_subject_hero.xml`, bound in
+`SubjectHubAdapter`), under a hairline:
 
-- A connection: `item_subject_sheet_score.xml` with `ic_table`, the value
-  (`titleMedium`, `—` when empty), `лист · путь` and a status line: `Обновлено в
-  HH:mm` today or `Обновлено d MMMM`; `Нет связи` keeps the stored value;
-  `Таблица закрыта`, `Строка не найдена`, `Столбец не найден`,
-  `Таблица слишком большая` in the error colour. The status line runs under the
-  48 dp `⋮`, so a status never wraps on a narrow screen. A tap opens the tab
-  (`tabUrl`); `⋮` offers `Открыть таблицу`, `Изменить итог` (the sheet at the
-  choice of the total, the current one checked) and `Отключить`.
-- No connection but sheet links: `Мои баллы из таблицы`
-  (`item_subject_sheet_hint.xml`). One sheet link opens the connection for it;
-  several ask `Какая таблица?` first: own links (`· Моя`), the pinned one,
+- A connection: `item_subject_sheet_score.xml` included in the card, with
+  `ic_table`, the value (`titleMedium`, `—` when empty), `путь, лист «Лист»`
+  (`sheetCaption`: the levels of a header path joined by ` › `, the tab name
+  only when it has one) and a status line: `Обновлено в HH:mm` today or
+  `Обновлено d MMMM`; `Нет связи` keeps the stored value; `Таблица закрыта`,
+  `Строка не найдена`, `Столбец не найден`, `Таблица слишком большая` in the
+  error colour. The status line runs under the 48 dp `⋮`, whose glyph lines up
+  with the card's content edge, so a status never wraps on a narrow screen. A
+  tap opens the tab (`tabUrl`); `⋮` offers `Открыть таблицу`, `Изменить итог`
+  (the sheet at the choice of the total, the current one checked) and
+  `Отключить`. The row has no surface of its own.
+- No connection but sheet links: the text button `Мои баллы из таблицы` with
+  `ic_table` in the same place. One sheet link opens the connection for it;
+  several ask `Какая таблица?` first: own links (`, моя`), the pinned one,
   `SCORES`, the rest by rank, one entry per address.
-- With either row `Баллы` always exists; without controls the
-  `My ITMO не присылает детализацию…` card is not shown (the sheet is the
-  detail), a failure to load the controls stays under the row.
+- Without controls the `My ITMO не присылает детализацию…` card is not shown
+  when the card has either row (the sheet is the detail); a failure to load
+  the controls stays.
 - The stored value shows at once; the page downloads the tab on entry and on
   every pull, without an indicator. PE has neither row.
 
@@ -731,9 +745,11 @@ subject context resolver, the binding store and every subject-page state of
 tracking ([Tests](#tests) above). Visual tests
 run the real Fragments in `RecordbookPreviewActivity` with synthetic data
 (`RecordbookPreviewFixtures`): compact rows, `Требуют внимания` with PE, the
-summary only in the session, the one-page subject with its hint, `Ссылки` with
-`Все`, chips ranked by score with the own one filled, `Ещё N`, chats, expanded groups, two lessons and `Все пары`, a past period with
-links and PE without chips, the dot of unread marks until the subject
+summary only in the session, the one-page subject with its hint, `Ссылки` as
+a connected group of three rows ranked by score with votes and `Все ссылки, N`,
+a vote from the page, chats with the own one marked `моя`,
+`Добавить ссылку` without links, expanded groups, two lessons and `Все пары`,
+a past period with its own link and PE without links, the dot of unread marks until the subject
 opens, and the sheet total in every state, the connect hint and the list
 fallback; `SheetScoresVisualTest` covers the connection sheet. Add
 `-Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full` and

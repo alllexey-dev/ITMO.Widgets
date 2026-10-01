@@ -67,9 +67,38 @@ The grid is 4 dp. Compactness never shrinks the touch target.
 | `Card.Content.Outlined` | 20 dp radius, 1 dp `colorOutlineVariant` | Sport lesson and booking cards, debug cards |
 | `Card.Content.Own` | 20 dp radius, 1 dp `colorPrimary` | The viewer's own teacher review above the others |
 | `Card.Content.Tonal` | 20 dp radius, no stroke, `colorSurfaceContainerHigh` | The AI summary of a teacher's reviews above the reviews |
-| `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius | Recordbook summary; subject result and PE sport card |
+| `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius | Recordbook summary; PE sport card |
+| `Card.Hero` | 28 dp radius, no stroke, `colorSurfaceContainer` | The subject result above the page's connected groups |
 | `Card.SettingsGroup` | 20 dp radius, no stroke, inner dividers | One card per settings or profile group, never per row |
 | `Card.ScheduleDay` | 16 dp radius, 16 dp between days | A day of lessons with its timeline |
+
+### Connected groups
+
+A list section of a contextual page (the subject page, the links sheet) is a
+heading over one connected group, not a card per row and not rows on the bare
+background:
+
+- The heading (`item_section_heading.xml`): `titleSmall` in `colorPrimary`,
+  16 dp in from the group's edge, 24 dp above (16 dp in a sheet, 8 dp for the
+  first one), 8 dp below; `accessibilityHeading`.
+- The rows: one surface, `colorSurfaceContainerHigh`, 2 dp apart
+  (`design_group_gap`); the first and the last row round 20 dp outside
+  (`design_group_radius_outer`), every corner between rows is 4 dp
+  (`design_group_radius_inner`). `core/ui/ConnectedGroup.kt`
+  (`GroupPosition`, `View.bindGroupPosition`) draws a row by its position
+  (single, first, middle, last) with a ripple of the same shape, so a
+  RecyclerView row needs no decoration. A row is at least 56 dp high with
+  16 dp of content padding.
+- A sub-heading inside a section (a control group) is `titleSmall` in
+  `colorOnSurface` with its value at the end and starts a group of its own; a
+  group right after another group without a heading keeps 12 dp to it.
+- Own and others' items share the row style; an own one is told by a small
+  `моя` badge (`colorSecondaryContainer`), never by a different surface or
+  outline. Others' links carry the compact vote pill `▲ N ▼`
+  (`view_link_vote_pill.xml`: a 32 dp pill inside 48 dp arrow targets).
+- Captions put a second fact on a second line or join facts with a comma; no
+  « · ». The last row that leads further (`Все ссылки, N`, `Все пары, N`,
+  `Добавить ссылку`) is `item_group_action_row.xml`.
 
 Chips, date tiles and avatars have their own geometry. Vertical padding is
 symmetric; height grows with content and font scale. Clipped text is fixed
@@ -287,23 +316,30 @@ settings, and restore them if a separate test explicitly changes them.
   `colorOnSurfaceVariant`, 4 dp before the value) and the value (`titleMedium`,
   one line, at most 96 dp) in `score_group` (`wrap_content`, at least 64 dp),
   without the bar; TalkBack reads `Из таблицы: …`.
-- Subject page: `feature/recordbook/ui/SubjectHubAdapter.kt` (result card with
-  `GradeScaleView`, link chips, chats, control groups, teachers, lessons),
-  `res/layout/item_subject_hero.xml`, `res/layout/item_recordbook_control_group.xml`.
+- Subject page: `feature/recordbook/ui/SubjectHubAdapter.kt` (the result card
+  with `GradeScaleView` and the sheet total, then connected groups of links,
+  chats, controls, teachers and lessons), `res/layout/item_subject_hero.xml`,
+  `res/layout/item_recordbook_control.xml`,
+  `res/layout/item_recordbook_control_group.xml`.
+- Connected groups: `core/ui/ConnectedGroup.kt`, `res/layout/item_section_heading.xml`,
+  `res/layout/item_group_action_row.xml`; link rows `res/layout/item_subject_link.xml`
+  with `res/layout/view_link_vote_pill.xml`, bound by `core/ui/SubjectLinkRow.kt`.
 - Sheet total on the subject page: `res/layout/item_subject_sheet_score.xml`
-  (the geometry of a chat row: `ic_table`, the value in `titleMedium`,
-  `лист · путь` and a status line in `bodySmall`, the status under the 48 dp `⋮`
-  so it never wraps beside it; failures in `colorError`) and
-  `res/layout/item_subject_sheet_hint.xml` (`ic_table`, `Мои баллы из таблицы`,
-  a chevron), bound in `feature/recordbook/ui/SubjectHubAdapter.kt`.
+  included at the bottom of the result card under a hairline (`ic_table`, the
+  value in `titleMedium`, `путь, лист «Лист»` and a status line in
+  `bodySmall`, the status under the 48 dp `⋮` so it never wraps beside it, the
+  glyph in line with the card's content edge; failures in `colorError`), or the
+  text button `Мои баллы из таблицы` with `ic_table` in its place, bound in
+  `feature/recordbook/ui/SubjectHubAdapter.kt`.
 - The «Мои баллы» sheet: `res/layout/sheet_scores_setup.xml` (handle, title,
   subject, one bounded area of at least 288 dp for loading, failures and the
   choices) with `res/layout/item_sheet_scores_option.xml` (title `bodyLarge`,
   caption `bodySmall`, value `titleSmall` at the end, `ic_check` in
   `colorPrimary` and `selected` for the current total; the whole row is the
   target), `feature/recordbook/ui/sheets/SheetScoresBottomSheet.kt`.
-- Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt`,
-  `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`, `res/layout/item_subject_link.xml`.
+- Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt` (connected
+  groups per category), `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`,
+  `res/layout/item_subject_link.xml`.
 - User row: `res/layout/item_user_row.xml`.
 - Person profile: `res/layout/fragment_user_profile.xml`,
   `feature/social/ui/UserProfileAdapter.kt`, the section heading with an action

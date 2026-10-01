@@ -32,8 +32,8 @@ display order:
 | `CHAT` | `Чат` | `ic_chat` |
 | `OTHER` | `Другое` | `ic_link` |
 
-A chat is an ordinary link with category `CHAT`; it is never a chip and is
-listed in its own block. Labels, icons and visibility texts live in
+A chat is an ordinary link with category `CHAT`; it never joins the short
+list of the subject page and is listed in its own block. Labels, icons and visibility texts live in
 `core/ui/SubjectLinkTexts.kt`, so the recordbook and the sheets share them.
 
 | Visibility | Label | Who sees it |
@@ -69,18 +69,27 @@ browser only through `core/util/HttpsNavigationPolicy`
 
 ## Subject page
 
-The links block starts with a `Ссылки` header whose trailing `Все` (a 48 dp
-text button with a chevron) opens the links sheet whenever the subject has
-links, even with none yet: the sheet has its own empty state and
-`Добавить ссылку`. `subjectLinkChips` in `core/resources` builds at most four
-chips in this order: the pinned link, the MyITMO LMS page (`lms_link`, shown as
-`LMS`), then every other non-chat link of the period, own and shared alike, by `SubjectLinkRanking`: the higher score first, of equal scores the
-newer link. A link is shown once. An own link is a filled
-`colorSurfaceContainerHighest` chip with `colorOnSurface` text, the others stay outlined. `Ещё N` counts the
-other non-chat links and also opens the links sheet; the last chip is `+`,
-which reads `Добавить ссылку` when it is alone. A tap opens the link, a long
-press opens its actions. `Чаты` follows the chips: own and shared chat links
-with the title (or the host) and the visibility label.
+`Ссылки` is a heading over one connected group
+([design](../design.md#connected-groups)) and is there whenever the subject
+has links, even with none yet. `subjectLinkChips` in `core/resources` builds
+at most three link rows (`SubjectHubState.LINK_ROWS`) in this order: the
+pinned link, the MyITMO LMS page (`lms_link`, shown as `LMS` with its host),
+then every other non-chat link of the period, own and shared alike, by
+`SubjectLinkRanking`: the higher score first, of equal scores the newer link.
+A link is shown once. A row (`item_subject_link.xml`, bound by
+`core/ui/SubjectLinkRow.kt`) has the category symbol, the title (or the
+category name) and the host on the second line. Own and others' links share
+the style: an own link is told only by the `моя` badge, another student's
+link has the vote pill `▲ N ▼` (`view_link_vote_pill.xml`) whose arrows vote
+from the page like in the sheet (`RecordbookSubjectViewModel.voteLink`; tapping
+the current arrow takes the vote back, one vote at a time, a failure is a
+snackbar). Without the connection or under a `VOTE` restriction the pill keeps
+the score without arrows. A tap opens the link, a long press opens its
+actions. The last row is `Все ссылки, N` (`N` counts what the sheet lists,
+chats and past years included), which opens the links sheet; a subject without
+links has `Добавить ссылку` there instead. `Чаты` follows as a group of its
+own: own and shared chat links with the messenger's symbol, the title (or the
+host), the visibility label and `моя` on an own one.
 
 The recordbook reads the cached snapshot through `SubjectLinksRepository.peek`
 first, so a second visit opens without a spinner, then refreshes the scope.
@@ -93,18 +102,21 @@ The sheets sit on the Activity's FragmentManager and belong to no back stack.
 per tag and nothing once the state is saved.
 
 - `SubjectLinksBottomSheet` (`Ссылки` and the subject name): one section per
-  category in declaration order, `Чаты` after them, `С прошлых лет` last.
-  Within a category own and others' links are ranked together by
-  `SubjectLinkRanking`; an own row sits on a rounded `colorSurfaceContainer`
-  surface (20 dp, as other list rows), one tonal step above the sheet's
-  `colorSurfaceContainerLow`, and its caption names who sees it and its review
-  state, so the colour is not the only cue. A row shows the title or host and
+  category in declaration order, `Чаты` after them, `С прошлых лет` last. A
+  section is a heading in `colorPrimary` over one connected group on
+  `colorSurfaceContainerHigh`, two tonal steps above the sheet's
+  `colorSurfaceContainerLow`. Within a category own and others' links are
+  ranked together by `SubjectLinkRanking` and share one row style
+  (`item_subject_link.xml` without the category symbol): the title or host and
   a line with the host when titled, the visibility of an own link or the
   author's group of another's, the study year of a past link, `закреплена` and
-  the owner's review state. Others' links have vote arrows; an own link shows
-  its score, or a lock while it is private. The sheet refreshes silently on open; a failed first load offers
-  `Повторить`, an empty one says `Ссылок пока нет`. The add button opens the
-  editor.
+  the owner's review state (`на проверке`, `отклонена`, `скрыта`), joined by
+  commas. An own link has the `моя` badge; others' links have the vote pill
+  `▲ N ▼` (a negative score in the error colour, the own vote in
+  `colorPrimary`), whose arrows are hidden under a `VOTE` restriction and
+  without the connection. The sheet refreshes silently on open; a failed first
+  load offers `Повторить`, an empty one says `Ссылок пока нет`. The add button
+  opens the editor.
 - `LinkEditorBottomSheet` (`Новая ссылка` / `Изменить ссылку`): the URL is
   pasted from the clipboard when the sheet gets focus and the clipboard holds a
   single HTTPS link. `guessCategory` suggests a category by site until the user
@@ -120,8 +132,8 @@ per tag and nothing once the state is saved.
   line saying sharing needs the connection. The new link's UUID survives
   process death, so a retried save reaches the same link.
 - `LinkActionsBottomSheet` (long press): another student's link starts with
-  the same vote arrows and score as the list row (`view_link_votes.xml`,
-  `LinkVotes.kt`; tapping the current arrow takes the vote back); the score
+  vote arrows around the score (`view_link_votes.xml`, `LinkVotes.kt`; tapping
+  the current arrow takes the vote back); the score
   follows the repository and a vote keeps the sheet open. The arrows are
   hidden under a `VOTE` restriction and without the connection. An own shared
   link shows its score without arrows, an own private one none. Then
@@ -190,7 +202,8 @@ Strict verification of flow membership is deferred, see
 ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.resources.SubjectLinksVisualTest
 ```
 
-JVM tests cover chip order, ranking ties and `Ещё N` (`SubjectLinkChipsTest`), period keys
+JVM tests cover the order of the short list, ranking ties and the count of the rest (`SubjectLinkChipsTest`),
+the headings and group positions of the sheet (`SubjectLinkRowsTest`), period keys
 (`ResourceScopeTest`), category guessing (`LinkCategoryGuessTest`), the
 repository without and with the connection, the upload of local links, cached
 snapshots on errors, session cleanup and a corrupted file
@@ -199,11 +212,14 @@ and votes that keep the actions sheet open (`SubjectLinksViewModelTest`,
 `LinkEditorViewModelTest`).
 `SubjectLinksVisualTest` runs the real sheets in `SubjectLinksPreviewActivity`
 over the debug-only `MemorySubjectLinksRepository`: every category with chats
-and past years, voting, the editor with three nested flows, the editor with a guessed link and available audiences,
+and past years, voting with the pill, the editor with three nested flows, the editor with a guessed link and available audiences,
 the editor without the connection, an own rejected link, another student's
-link, an own row ranked between others' rows on its tonal surface (one step
-above the sheet's surface), voting in
+link, an own row with `моя` ranked between others' rows on the same group
+surface, the review state in an own row's caption and pills without arrows
+under a restriction (`ownRowsSayTheirReviewStateAndOthersShowVotesWithoutArrowsUnderARestriction`), voting in
 the actions sheet, the own score without arrows, arrows hidden by a restriction,
 `Мои баллы` only for a Google Sheet (`actionsSheetOffersMyScoresOnlyForAGoogleSheet`),
 and long titles at a large font on a narrow screen. The subject page's
-`Ссылки` header, chips and chats are covered by `RecordbookVisualTest`.
+`Ссылки` rows, votes, `Все ссылки, N`, `Добавить ссылку` and chats are
+covered by `RecordbookVisualTest`; votes from the page and `canVote` by
+`RecordbookSubjectViewModelTest`.
