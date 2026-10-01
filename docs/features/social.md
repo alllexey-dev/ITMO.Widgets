@@ -95,31 +95,44 @@ when either identity source succeeds. Its name and photo come from My ITMO when
 that person exists, otherwise from Backend; a missing photo uses initials rather
 than another source's photo. Empty Backend names use `Context.userDisplayName`.
 
-`UserProfileAdapter` renders one RecyclerView in this order:
+`UserProfileAdapter` renders one RecyclerView in the language of the subject
+page: a result card, then sections whose headings are in `colorPrimary` over
+connected groups ([design](../design.md#connected-groups)); no line is joined
+by « · ». In this order:
 
-1. Photo or initials, name and one headline: the first position with a short
-   department (`Должность · ФИТиП`: an abbreviation in trailing parentheses, a
-   short name as is, otherwise the initials of its first clause), otherwise the
-   student group with its course. Backend's group is used only without a My ITMO
-   person; without either the line is absent.
-2. Relationship status and actions, only with a social block and for self or
-   a relationship other than `BLOCKED`.
-3. The ITMO.Widgets sharing card: `Друзья`, `Расписание`, `Спорт`.
-4. One facts card: positions, rooms and education, then `ИСУ N` last with
-   `ic_badge`.
-5. `Отзывы`, see [Reviews](#reviews) below.
+1. The hero card (`item_profile_header.xml`, `Card.Hero`): photo or initials,
+   the name and one short line: the role of the first position without its
+   qualifications (`shortRole`: the first clause before a parenthesis or a
+   comma, capitalised, «Преподаватель»), a short department when the position
+   has no title, otherwise the student group with its course (`M3234, 2 курс`).
+   Backend's group is used only without a My ITMO person; without either the
+   line is absent. Under it the ISU number alone with a 16 dp copy symbol: a
+   48 dp target drawn into the gaps around the line that copies the number
+   (below Android 13 a toast `Номер ИСУ скопирован`), TalkBack reads
+   `Номер ИСУ N, скопировать`. With a social block the card ends with the
+   friendship (below).
+2. `Должности`: every position, its title and the department on the second
+   line; a position with no title uses its department once.
+3. `Где найти`: rooms with the building on the second line.
+4. `ITMO.Widgets` (with a social block): `Друзья`, `Расписание`, `Спорт` as one
+   group, the privacy hint under it and, for a friend, `Удалить из друзей`.
+5. `Учёба`: the group with its course and faculty on the second line. Backend's
+   primary group supplies it only when the My ITMO person is absent.
+6. `Отзывы`, see [Reviews](#reviews) below.
 
-A position with no title uses its department once, without a repeated
-subtitle; education combines course and faculty in the subtitle. Backend's
-primary group supplies the education fact only when the My ITMO person is
-absent. Facts have non-clickable rows and accessible category descriptions.
+Fact rows are informational, not clickable, with accessible category
+descriptions (`Должность: Доцент`).
 
-The relationship action is `Добавить в друзья` (filled), `Отменить заявку`
-(tonal), `Принять заявку` (filled, with `Отклонить`), or `Удалить из друзей`
-(tonal, with confirmation); the own profile shows `Это вы` without buttons.
-Sharing rows follow Backend's viewer capabilities; own schedule and sport are
-available to self. Closed rows show a lock, not an action. Open rows lead to
-`USER_FRIENDS`, `USER_SCHEDULE` or `USER_SPORT` with the ISU and displayed name.
+The friendship lives in the hero card, only with a social block: a friend has
+the badge `в друзьях` and the viewer `это вы`, without buttons; `Заявка
+отправлена` over `Отменить заявку` (tonal); `Хочет добавить вас` over `Принять
+заявку` (filled) and `Отклонить` (tonal); anyone else `Добавить в друзья`
+(filled); a blocked person nothing. A friend is removed by the error-coloured
+text button `Удалить из друзей` under the `ITMO.Widgets` group, after
+confirmation. Sharing rows follow Backend's viewer capabilities; own schedule
+and sport are available to self. A closed row keeps its surface, fades its
+content and shows a lock, not an action. Open rows lead to `USER_FRIENDS`,
+`USER_SCHEDULE` or `USER_SPORT` with the ISU and displayed name.
 
 ### Reviews
 
@@ -127,8 +140,10 @@ The last section shows reviews of the person as a teacher, only with the
 connection ([teacher reviews](reviews.md#the-profile-section)). It exists when
 there is at least one review, an own review, or `Написать`: the viewer may
 write (`canWrite`), has no review of this person yet and the person teaches
-(Backend's `knownTeacher` or any My ITMO position). The heading `Отзывы · N`
-counts the own review too and carries `Написать`, which opens the review editor.
+(Backend's `knownTeacher` or any My ITMO position). The heading `Отзывы` with
+the count after it (TalkBack `Отзывы, N`) counts the own review too and
+carries `Написать`, which opens the review editor. The AI summary card follows
+the heading; the reviews are one connected group 8 dp under it.
 
 - The viewer's own review comes first with its status, anonymity, rejection
   reason and, once published, its score; its menu edits it or deletes it after
@@ -224,11 +239,12 @@ values with `UiText` labels; the adapter maps `UserAction` to strings.
 
 `PersonRepositoryImplTest`, `SocialRepositoryImplTest`, `ProfileFactsTest`,
 `ProfileReviewsTest`, `UserProfileStateTest` and `UserProfileViewModelTest`
-cover the source boundary, cache invalidation, the headline and facts, the
-reviews section and deterministic loading/deadline/action behavior.
-`UserProfileVisualTest` exercises all profile states, delayed parts, recycling,
-accessibility, photo failure and scroll restoration in the full appearance
-matrix; `UserFriendsVisualTest` checks the existing friends navigation.
+cover the source boundary, cache invalidation, the short role and the
+headline, the facts, the reviews section and deterministic
+loading/deadline/action behavior. `UserProfileVisualTest` exercises all
+profile states, the hero with the copied ISU number, the grouped facts, every
+friendship state, delayed parts, recycling, accessibility, photo failure and
+scroll restoration in the full appearance matrix; `UserFriendsVisualTest` checks the existing friends navigation.
 See [visual test commands](../design.md#running-the-visual-tests).
 
 ## Not implemented yet

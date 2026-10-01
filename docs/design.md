@@ -65,10 +65,9 @@ The grid is 4 dp. Compactness never shrinks the touch target.
 |---|---|---|
 | `Card.Content` | 20 dp radius, no stroke | Subject, control, user rows |
 | `Card.Content.Outlined` | 20 dp radius, 1 dp `colorOutlineVariant` | Sport lesson and booking cards, debug cards |
-| `Card.Content.Own` | 20 dp radius, 1 dp `colorPrimary` | The viewer's own teacher review above the others |
 | `Card.Content.Tonal` | 20 dp radius, no stroke, `colorSurfaceContainerHigh` | The AI summary of a teacher's reviews above the reviews |
 | `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius | Recordbook summary; PE sport card |
-| `Card.Hero` | 28 dp radius, no stroke, `colorSurfaceContainer` | The subject result above the page's connected groups |
+| `Card.Hero` | 28 dp radius, no stroke, `colorSurfaceContainer` | The subject result and the person on a profile, above the page's connected groups |
 | `Card.SettingsGroup` | 20 dp radius, no stroke, inner dividers | One card per settings or profile group, never per row |
 | `Card.ScheduleDay` | 16 dp radius, 16 dp between days | A day of lessons with its timeline |
 
@@ -342,16 +341,20 @@ settings, and restore them if a separate test explicitly changes them.
   `res/layout/item_subject_link.xml`.
 - User row: `res/layout/item_user_row.xml`.
 - Person profile: `res/layout/fragment_user_profile.xml`,
-  `feature/social/ui/UserProfileAdapter.kt`, the section heading with an action
-  `res/layout/item_profile_section.xml`.
-- Teacher reviews: `res/layout/item_teacher_review.xml` (a named author on top
-  as a link, `subject · date`, the full text, a bottom row in
+  `feature/social/ui/UserProfileAdapter.kt`: the hero `res/layout/item_profile_header.xml`
+  (`Card.Hero`: avatar, name, one short line, the ISU number with a copy symbol
+  in a 48 dp target, the friendship badge or status and buttons), fact sections
+  `res/layout/item_profile_facts.xml` with rows `item_profile_fact.xml`, the
+  `ITMO.Widgets` group `res/layout/item_profile_sharing.xml` with rows
+  `item_profile_entry.xml`, and the reviews heading `res/layout/item_profile_section.xml`.
+- Teacher reviews: rows of one connected group, `res/layout/item_teacher_review.xml`
+  (who wrote it with `⋮`: a named author or the Reviews source as a link,
+  otherwise `Анонимный отзыв`; `subject, date`; the full text; a bottom row in
   `feature/social/ui/ReviewFooterLayout.kt` with the verification pill
-  `view_review_verified.xml`, a muted `Не подтверждён` or the Reviews source,
-  compact votes `view_review_votes.xml` and `⋮`),
-  `res/layout/item_own_teacher_review.xml` (`Card.Content.Own`, a status pill as a
-  12 % wash of its tone: content-based palettes make `…Container` colours too
-  dark for the tone as text), bound in `feature/social/ui/ReviewViews.kt`.
+  `view_review_verified.xml` or a muted `Не подтверждён` and the vote pill
+  `view_link_vote_pill.xml`), `res/layout/item_own_teacher_review.xml` (`мой`,
+  a status pill as a 12 % wash of its tone: content-based palettes make
+  `…Container` colours too dark for the tone as text), bound in `feature/social/ui/ReviewViews.kt`.
 - AI summary: `res/layout/item_teacher_summary.xml` (`Card.Content.Tonal`, a
   header with `auto_awesome` and a muted `ИИ`, the tone row with the dot, pros
   and cons as icon rows `view_summary_point.xml`, tag chips

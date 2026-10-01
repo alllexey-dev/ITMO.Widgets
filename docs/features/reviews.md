@@ -163,43 +163,47 @@ review or `Написать`. `Написать` needs `canWrite` from Backend, 
 yet and a person who teaches: Backend's `knownTeacher` (the person teaches a
 loaded academic pair, a cached ISU flow, has a Reviews copy or a published
 review; a room booking, which names the person who booked it, does not count)
-or any position of the My ITMO person. The heading is `Отзывы · N`, counting the
-own review too, or `Отзывы` without reviews; `Написать` is a text button with
-`ic_edit` in the heading.
+or any position of the My ITMO person. The heading is `Отзывы` in
+`colorPrimary` with the count after it (TalkBack `Отзывы, N`, counting the own
+review too), or `Отзывы` without reviews; `Написать` is a text button with
+`ic_edit` at its end. The reviews are rows of one connected group
+([design](../design.md#connected-groups)); the AI summary card stands 8 dp
+above them.
 
-The own review comes first on an outlined card
-(`Widget.ItmoWidgets.Card.Content.Own`, 1 dp `colorPrimary`):
+The own review is the first row (`item_own_teacher_review.xml`):
 
-- a status pill while it is not public: `На проверке` in `colorTertiary`,
-  `Отклонён` or `Скрыт` in `colorError`, each on a 12 % wash of its tone; once
-  published, `Вёл у вас` or a muted `Не подтверждён`;
-- `Ваш отзыв · <subject> · анонимно` or `· с вашим именем`;
+- the `мой` badge and a status pill while it is not public: `На проверке` in
+  `colorTertiary`, `Отклонён` or `Скрыт` in `colorError`, each on a 12 % wash of
+  its tone; `⋮` at the end with `Изменить` (the editor) and `Удалить`
+  (confirmed by `Удалить отзыв?`; afterwards `Написать` returns);
+- `<subject>, анонимно` or `, с вашим именем`;
 - `Причина: <note>` in `colorError` for a rejected review;
-- the full text, and the read-only score only when published;
-- `⋮` with `Изменить` (the editor) and `Удалить` (confirmed by
-  `Удалить отзыв?`; afterwards `Написать` returns).
+- the full text and, once published, `Вёл у вас` or a muted `Не подтверждён`
+  with the read-only score in the vote pill.
 
-Every other review is one card in three zones:
+Every other review is a row in three zones (`item_teacher_review.xml`):
 
-- a named author on top as a link, `Фамилия И. О.` (`labelMedium`, initials
-  joined by a no-break space, the full name as content description), which opens
-  that person's profile; anonymous reviews and copies have no author row;
-- `<subject> · <date>` in at most two lines, then the full text, never truncated;
+- who wrote it with `⋮`: a named author as a link, `Фамилия И. О.`
+  (`titleSmall`, initials joined by a no-break space, the full name as content
+  description), which opens that person's profile; a copy's source as a muted
+  link with `ic_open_in_new` (`Reviews` or the source title, TalkBack
+  `Источник: Reviews, <source>`), which opens it; otherwise `Анонимный отзыв`;
+- `<subject>, <date>` in at most two lines, then the full text, never truncated;
 - a bottom row (`ReviewFooterLayout`): the `Вёл у автора` pill
-  (`view_review_verified.xml` with `ic_check_small`) or a muted `Не подтверждён`
-  for every unverified own review, named or anonymous, or the muted
-  `Reviews · <source>` link of a copy; on the right the votes
-  (`view_review_votes.xml`) and `⋮`. The source and the votes share one line
-  when the source fits, otherwise the source takes the full width above them.
+  (`view_review_verified.xml` with `ic_check_small`) or a muted
+  `Не подтверждён`, and on the right the vote pill `▲ N ▼`
+  (`view_link_vote_pill.xml`, `core/ui` `bindVotes`). A row with neither has no
+  bottom row.
 
 Votes show arrows only with `canVote`; the score turns to the accent once the
 viewer voted, and without arrows a zero score is left out. Tapping the arrow of
 the current vote takes the vote back. One vote or deletion runs at a time: the
-card's controls are disabled until the answer replaces the section; a failure
+row's controls are disabled until the answer replaces the section; a failure
 (for example `AppError.Restricted`) shows a snackbar and keeps the section.
 `⋮` holds `Пожаловаться` only on an own review of another user with `canReport`
 that the viewer has not reported yet; otherwise it stays invisible in place, so
-the votes line up from card to card. Copies have no report.
+the rows keep one rhythm. Copies have no report. A negative score is written
+with a typographic minus in the error colour.
 
 ## Editor
 
@@ -266,8 +270,8 @@ partial flows and validation; `ProfileReviewsTest`,
 votes, deletion, updates, the summary and its collapsed scales kept in the saved
 state. `UserProfileVisualTest` (with
 `UserProfilePreviewActivity`) and `ReviewEditorVisualTest` (with
-`ReviewEditorPreviewActivity`, debug only) cover the mixed list with the own
-review first, statuses, votes, reports, author navigation, long names, 20
+`ReviewEditorPreviewActivity`, debug only) cover the reviews group with the
+own review first, statuses, votes in the pill, reports, author navigation, long names, 20
 recycled reviews, the summary card in every state (tone, low confidence, empty
 blocks, long texts at 320 dp and font 1.3, every tone, collapsed and expanded
 scales across recreation, a late answer), the editor and the report dialog in

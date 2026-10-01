@@ -8,6 +8,17 @@ publication or deployment.
 
 ### 2026-10-01
 
+- The person profile follows the subject page: a result card with the photo,
+  the name, one short line (`Преподаватель` instead of the full position and
+  department, `M3234, 2 курс` for a student) and the ISU number that copies on
+  a tap; the friendship badge, status and buttons sit in the card. `Должности`,
+  `Где найти`, `ITMO.Widgets` (with `Удалить из друзей` for a friend) and
+  `Учёба` are headings over connected groups; the `ИСУ` row is gone.
+- Reviews are rows of one group under `Отзывы N` and `Написать`: the own one
+  with `мой` and its status, others headed by the author, the Reviews source
+  link or `Анонимный отзыв`, with the vote pill `▲ N ▼`. Captions use commas
+  instead of « · ».
+
 - The subject page is a result card and connected groups under accent
   headings: `Ссылки`, `Чаты`, `Контрольные точки`, `Преподаватели`,
   `Ближайшие пары`. The sheet total (or `Мои баллы из таблицы`) moved into the
