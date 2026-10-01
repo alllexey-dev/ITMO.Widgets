@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
@@ -23,6 +24,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.markNews
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.sheetScore
 import java.time.OffsetDateTime
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -52,6 +54,36 @@ class RecordbookViewModelTest {
         val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
         assertEquals(3, (vm.uiState.value as RecordbookUiState.Content).selection.period.semester)
         assertEquals(0, sport.periodRequests)
+    }
+
+    @Test fun `stored sheet totals of the selected period reach the list`() = runTest {
+        val sheets = FakeSheetScoresRepository(
+            sheetScore(scope = ResourceScope(1, "Тестовый предмет", "2026-1")),
+            sheetScore(scope = ResourceScope(2, "Тестовый предмет 2", "2026-1"), value = null),
+            sheetScore(scope = ResourceScope(3, "Тестовый предмет 3", "2025-2")),
+        )
+        repository.subjects = AppResult.Success(listOf(
+            recordbookSubject(), recordbookSubject(id = 43, name = "Тестовый предмет 2").copy(disciplineId = 2),
+            recordbookSubject(id = 44, name = "Тестовый предмет 3").copy(disciplineId = 3),
+        ))
+        val vm = model(sheets = sheets); vm.ensureDataLoaded(); advanceUntilIdle()
+
+        assertEquals(mapOf(1L to "66,3"), (vm.uiState.value as RecordbookUiState.Content).sheetTotals)
+    }
+
+    @Test fun `a new sheet total reaches the open list without a request or a download`() = runTest {
+        val sheets = FakeSheetScoresRepository()
+        val vm = model(sheets = sheets); vm.ensureDataLoaded(); advanceUntilIdle()
+        val requests = repository.subjectRequests.size
+        assertEquals(emptyMap<Long, String>(), (vm.uiState.value as RecordbookUiState.Content).sheetTotals)
+
+        sheets.scores.value = listOf(sheetScore(scope = ResourceScope(1, "Тестовый предмет", "2026-1"), value = "70"))
+        advanceUntilIdle()
+
+        assertEquals(mapOf(1L to "70"), (vm.uiState.value as RecordbookUiState.Content).sheetTotals)
+        assertEquals(requests, repository.subjectRequests.size)
+        assertTrue(sheets.refreshes.isEmpty())
+        assertTrue(sheets.inspected.isEmpty())
     }
 
     @Test fun `academic override selects spring even when server actual is autumn`() = runTest {

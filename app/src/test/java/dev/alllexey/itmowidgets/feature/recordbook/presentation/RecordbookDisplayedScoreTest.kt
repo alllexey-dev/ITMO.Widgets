@@ -9,6 +9,17 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class RecordbookDisplayedScoreTest {
+    @Test fun `a sheet total stands in only for empty official points`() {
+        val empty = recordbookSubject().copy(score = null, rate = null)
+
+        assertEquals("66,3", empty.sheetFallback("66,3"))
+        assertNull(empty.sheetFallback(null))
+        assertNull(empty.copy(score = 12.0).sheetFallback("66,3"))
+        assertNull(empty.copy(rate = "4/C").sheetFallback("66,3"))
+        assertNull(empty.copy(absent = true).sheetFallback("66,3"))
+        assertNull(recordbookSubject(name = "Физическая культура и спорт (базовая)").copy(score = null, rate = null).sheetFallback("66,3"))
+    }
+
     @Test fun `sport points appear before the official credit`() {
         val subject = recordbookSubject(name = "Физическая культура и спорт (элективная)").copy(score = null, rate = null)
         val result = subject.displayedScore(sport(66, 28))

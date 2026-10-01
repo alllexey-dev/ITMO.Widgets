@@ -328,6 +328,65 @@ class RecordbookVisualTest {
         }
     }
 
+    @Test fun listShowsTheSheetTotalWhenOfficialPointsAreEmpty() {
+        Appearances.default.forEach { spec ->
+            withFixture(Phase.START, spec.toRecordbook()) { scenario ->
+                fun total(id: Long, name: String, value: String) = RecordbookPreviewFixtures.sheetScore(value = value)
+                    .copy(scope = ResourceScope(id, name, "2025-2"))
+                RecordbookPreviewActivity.MemorySheetScores.scores.value = listOf(
+                    total(2, "Алгоритмы и структуры данных", "66,3"),
+                    total(5, "Иностранный язык", "100%"),
+                    total(6, "История", "ИСТИНА"),
+                    total(RecordbookPreviewFixtures.MATH_ID, RecordbookPreviewFixtures.MATH, "50"),
+                )
+                settle()
+                fun assertRows() {
+                    scenario.onActivity { activity ->
+                        val algorithms = activity.row("Алгоритмы")
+                        assertTrue(algorithms.findViewById<View>(R.id.sheet_mark).isShown)
+                        assertEquals("66,3", algorithms.findViewById<TextView>(R.id.score).text.toString())
+                        assertEquals(View.GONE, algorithms.findViewById<View>(R.id.progress).visibility)
+                        assertEquals(View.GONE, algorithms.findViewById<View>(R.id.grade).visibility)
+                        assertTrue(algorithms.contentDescription.contains(activity.getString(R.string.sheet_scores_from_table, "66,3")))
+                        val math = activity.row("Математический")
+                        assertFalse(math.findViewById<View>(R.id.sheet_mark).isShown)
+                        assertTrue(math.findViewById<View>(R.id.progress).isShown)
+                        assertEquals("8", math.findViewById<TextView>(R.id.score).text.toString())
+                        listOf(algorithms, math).forEach(::assertSheetRowFits)
+                    }
+                }
+                assertRows()
+                screenshot("list-sheet-${spec.name}")
+                scenario.onActivity { it.findViewById<RecyclerView>(R.id.main_recycler_view).scrollToPosition(Int.MAX_VALUE.coerceAtMost(
+                    it.findViewById<RecyclerView>(R.id.main_recycler_view).adapter!!.itemCount - 1)) }
+                settle()
+                scenario.onActivity { activity ->
+                    listOf("Иностранный" to "100%", "История" to "ИСТИНА").forEach { (name, value) ->
+                        val row = activity.row(name)
+                        assertTrue(row.findViewById<View>(R.id.sheet_mark).isShown)
+                        assertEquals(value, row.findViewById<TextView>(R.id.score).text.toString())
+                        assertSheetRowFits(row)
+                    }
+                }
+                screenshot("list-sheet-end-${spec.name}")
+                scenario.onActivity { it.findViewById<RecyclerView>(R.id.main_recycler_view).scrollToPosition(0) }
+                settle()
+                assertRows()
+            }
+        }
+    }
+
+    /** The value is whole and stays clear of the name; a long name may end in an ellipsis on two lines, as always. */
+    private fun assertSheetRowFits(row: View) {
+        assertTextFits(row, ellipsizable = { it.id == R.id.name })
+        val name = row.findViewById<View>(R.id.name)
+        val group = row.findViewById<View>(R.id.score_group)
+        if (group.isShown) {
+            val nameRight = IntArray(2).also(name::getLocationOnScreen)[0] + name.width
+            assertTrue(nameRight <= IntArray(2).also(group::getLocationOnScreen)[0])
+        }
+    }
+
     @Test fun subjectIsOnePageWithHeroChipsChatsGroupsAndLessons() {
         Appearances.default.forEach { spec ->
             withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
