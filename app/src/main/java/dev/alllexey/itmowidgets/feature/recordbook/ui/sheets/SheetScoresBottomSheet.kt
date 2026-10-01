@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +19,7 @@ import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.SheetScoresSetupBinding
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRowMatch
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetText
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresEvent
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresUiState
@@ -35,6 +37,7 @@ class SheetScoresBottomSheet : BottomSheetDialogFragment() {
     private val binding get() = _binding!!
     private val viewModel: SheetScoresViewModel by viewModels()
     private val adapter = SheetScoresOptionsAdapter()
+    private var rows: List<SheetOption.Choice> = emptyList()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = SheetScoresSetupBinding.inflate(inflater, container, false)
@@ -49,6 +52,7 @@ class SheetScoresBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.subject.text = viewModel.scope.subjectName
         binding.options.adapter = adapter
+        binding.searchInput.doAfterTextChanged { showRows() }
         binding.state.stateIcon.setImageResource(R.drawable.ic_error_rounded)
         binding.state.stateDescription.isVisible = false
         binding.state.stateAction.setText(R.string.common_retry)
@@ -69,14 +73,14 @@ class SheetScoresBottomSheet : BottomSheetDialogFragment() {
         choice.isVisible = state is SheetScoresUiState.PickRow || state is SheetScoresUiState.PickTab ||
             state is SheetScoresUiState.PickTabRow || state is SheetScoresUiState.PickTotal
         when (state) {
-            SheetScoresUiState.Loading -> adapter.submitList(emptyList())
+            SheetScoresUiState.Loading -> showChoices(R.string.sheet_scores_title, emptyList())
             SheetScoresUiState.Done -> dismiss()
             is SheetScoresUiState.Failed -> {
                 this.state.stateTitle.setText(state.status.textRes() ?: R.string.sheet_scores_offline)
                 this.state.stateAction.isVisible = state.status == SheetStatus.NETWORK
             }
-            is SheetScoresUiState.PickRow -> showChoices(R.string.sheet_scores_pick_row, state.candidates.map(::rowOption))
-            is SheetScoresUiState.PickTabRow -> showChoices(R.string.sheet_scores_pick_row, state.rows.map(::rowOption))
+            is SheetScoresUiState.PickRow -> showRows(state.candidates)
+            is SheetScoresUiState.PickTabRow -> showRows(state.rows)
             is SheetScoresUiState.PickTab -> showChoices(
                 R.string.sheet_scores_pick_tab,
                 state.tabs.map { tab ->
@@ -90,9 +94,29 @@ class SheetScoresBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun showChoices(prompt: Int, options: List<SheetOption>) = with(binding) {
+        rows = emptyList()
+        searchLayout.isVisible = false
         this.prompt.setText(prompt)
+        empty.setText(R.string.sheet_scores_no_values)
         empty.isVisible = options.isEmpty()
         adapter.submitList(options)
+    }
+
+    /** The people to choose from; a long list gets a search by name that keeps its text across states. */
+    private fun showRows(matches: List<SheetRowMatch>) = with(binding) {
+        rows = matches.map(::rowOption)
+        prompt.setText(R.string.sheet_scores_pick_row)
+        searchLayout.isVisible = rows.size > SEARCH_FROM
+        showRows()
+    }
+
+    private fun showRows() = with(binding) {
+        if (rows.isEmpty()) return@with
+        val query = SheetText.normalize(searchInput.text?.toString().orEmpty()).takeIf { searchLayout.isVisible }
+        val shown = if (query.isNullOrEmpty()) rows else rows.filter { query in SheetText.normalize(it.title) }
+        empty.setText(R.string.sheet_scores_search_empty)
+        empty.isVisible = shown.isEmpty()
+        adapter.submitList(shown)
     }
 
     /** The name in the row with its tab under it, so a long tab name does not bury the name. */
@@ -126,6 +150,7 @@ class SheetScoresBottomSheet : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "SheetScoresBottomSheet"
+        private const val SEARCH_FROM = 8
 
         fun newInstance(args: SheetScoresArgs) = SheetScoresBottomSheet().apply { arguments = args.toBundle() }
     }

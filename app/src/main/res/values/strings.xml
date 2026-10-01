@@ -667,6 +667,8 @@
     <string name="sheet_scores_pick_row">Выберите свою строку</string>
     <string name="sheet_scores_pick_tab">Выберите лист</string>
     <string name="sheet_scores_pick_total">Выберите итог</string>
+    <string name="sheet_scores_search_hint">Поиск по фамилии</string>
+    <string name="sheet_scores_search_empty">Никого не нашлось</string>
     <string name="sheet_scores_no_values">В строке нет значений</string>
     <string name="sheet_scores_column">Столбец %1$s</string>
     <string name="sheet_scores_hint">Мои баллы из таблицы</string>

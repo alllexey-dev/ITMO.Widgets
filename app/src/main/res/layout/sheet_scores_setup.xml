@@ -69,10 +69,35 @@
                 android:layout_marginHorizontal="@dimen/design_screen_margin"
                 android:layout_marginTop="@dimen/design_spacing_compact"
                 android:accessibilityHeading="true"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="?attr/colorOnSurface"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textColor="?attr/colorPrimary"
                 tools:targetApi="p"
                 tools:text="@string/sheet_scores_pick_total" />
+
+            <!-- Shown for a long list of people only; it filters the rows by name. -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/search_layout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/design_screen_margin"
+                android:layout_marginTop="@dimen/design_spacing_compact"
+                android:hint="@string/sheet_scores_search_hint"
+                android:visibility="gone"
+                app:endIconMode="clear_text"
+                app:startIconDrawable="@drawable/ic_search"
+                tools:visibility="visible">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/search_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPersonName"
+                    android:maxLines="1"
+                    android:singleLine="true" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
                 android:id="@+id/empty"
