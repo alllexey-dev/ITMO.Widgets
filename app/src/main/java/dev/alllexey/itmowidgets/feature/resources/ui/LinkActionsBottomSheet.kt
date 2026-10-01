@@ -1,9 +1,13 @@
 package dev.alllexey.itmowidgets.feature.resources.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.viewModels
@@ -70,6 +74,16 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
         }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
+    private fun copyLink(url: String) {
+        val clipboard = requireContext().getSystemService(ClipboardManager::class.java) ?: return
+        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.links_copy), url))
+        // Android 13+ shows its own confirmation overlay; the sheet closes either way.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            Toast.makeText(requireContext(), R.string.links_copied, Toast.LENGTH_SHORT).show()
+        }
+        dismiss()
+    }
+
     private fun render(state: SubjectLinksUiState) = with(binding) {
         val snapshot = state.content ?: return@with
         val link = (snapshot.mine + snapshot.shared + snapshot.previous).firstOrNull { it.id == linkId }
@@ -91,6 +105,7 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
 
         val online = snapshot.servicesEnabled
         actionOpen.setOnClickListener { openLink(link.url, root); dismiss() }
+        actionCopy.setOnClickListener { copyLink(link.url) }
         actionScores.isVisible = GoogleSheetUrl.parse(link.url) != null
         actionScores.setOnClickListener { openScores(link) }
         actionPin.isVisible = link.isMine || online

@@ -82,6 +82,12 @@
             app:drawableStartCompat="@drawable/ic_open_in_new" />
 
         <TextView
+            android:id="@+id/action_copy"
+            style="@style/Widget.ItmoWidgets.SheetAction"
+            android:text="@string/links_copy"
+            app:drawableStartCompat="@drawable/ic_content_copy" />
+
+        <TextView
             android:id="@+id/action_scores"
             style="@style/Widget.ItmoWidgets.SheetAction"
             android:text="@string/sheet_scores_action"

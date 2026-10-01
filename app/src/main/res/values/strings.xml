@@ -841,6 +841,8 @@
     <string name="links_save">Сохранить</string>
     <string name="links_connection_required">Поделиться можно с подключением к ITMO.Widgets</string>
     <string name="links_open">Открыть</string>
+    <string name="links_copy">Скопировать ссылку</string>
+    <string name="links_copied">Ссылка скопирована</string>
     <string name="links_pin">Закрепить</string>
     <string name="links_unpin">Открепить</string>
     <string name="links_edit">Изменить</string>
