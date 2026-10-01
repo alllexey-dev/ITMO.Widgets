@@ -9,19 +9,25 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.sheets
 object SheetHeaders {
     const val MAX_HEADER_ROWS = 6
     const val SEPARATOR = " · "
+    private const val MAX_ODD_KEYS = 2
 
     /**
      * The topmost row of the students around [row]: upward from it while the key column holds the same kind of
-     * key, skipping empty key cells and stopping at the first other text.
+     * key, skipping empty key cells and up to [MAX_ODD_KEYS] other texts in a row (a note, an unusual name); a
+     * column title such as «ФИО» ends the students at once.
      */
     fun firstDataRow(grid: SheetGrid, row: Int, keyColumn: Int, kind: KeyKind): Int {
         var first = row
+        var odd = 0
         for (above in row - 1 downTo 0) {
             val cell = grid.cell(above, keyColumn)
             when {
                 cell.isBlank() -> continue
-                SheetIdentity.personKind(cell) == kind -> first = above
-                else -> break
+                SheetIdentity.personKind(cell) == kind -> {
+                    first = above
+                    odd = 0
+                }
+                SheetIdentity.isPeopleTitle(cell) || ++odd > MAX_ODD_KEYS -> break
             }
         }
         return first

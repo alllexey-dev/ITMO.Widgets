@@ -13,6 +13,23 @@ class SheetHeadersTest {
         assertEquals(4, SheetHeaders.firstDataRow(grid, row = 7, keyColumn = 0, kind = KeyKind.ISU))
     }
 
+    @Test fun `long names and a stray note stay among the students and a people title ends them`() {
+        val block = SheetGrid(
+            listOf(
+                listOf("Преподаватель Тестов Пётр Петрович", "", ""),
+                listOf("ФИО", "Тест", "Сумма"),
+                listOf("_", "10", "100"),
+                listOf("Тестова Анна Петровна", "5", "50"),
+                listOf("Тест Мд Тестин Хасан Тестов", "6", "60"),
+                listOf("академ", "", ""),
+                listOf("Тестов Иван Иванович", "7", "70"),
+            )
+        )
+
+        assertEquals(3, SheetHeaders.firstDataRow(block, row = 6, keyColumn = 0, kind = KeyKind.NAME))
+        assertEquals(listOf("ФИО · _", "Тест · 10", "Сумма · 100"), SheetHeaders.paths(block, 3, 0))
+    }
+
     @Test fun `the tab title is not part of any path`() {
         assertFalse(paths.any { "Преподаватель" in it })
         assertEquals("№", paths[0])

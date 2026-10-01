@@ -45,18 +45,22 @@ object SheetIdentity {
     }
 
     /**
-     * Whether [cell] looks like a student's key: an ISU is 4–8 digits, a name is 2–4 words of letters, dots and
-     * hyphens and not a column title such as «ФИО студента».
+     * Whether [cell] looks like a student's key: an ISU is 4–8 digits, a name is 2–8 words of letters, dots and
+     * hyphens (foreign students' names run long) and not a column title such as «ФИО студента».
      */
     fun personKind(cell: String): KeyKind? {
         val compact = cell.filterNot(Char::isWhitespace)
         if (ISU.matches(compact)) return KeyKind.ISU
         val words = SheetText.normalize(cell).replace(".", ". ").trim().split(' ').filter { it.isNotEmpty() }
-        if (words.size !in 2..4) return null
+        if (words.size !in 2..8) return null
         if (words.any { !NAME_WORD.matches(it) || !HAS_LETTER.containsMatchIn(it) }) return null
         if (words.any { it.trimEnd('.') in NOT_NAMES }) return null
         return KeyKind.NAME
     }
+
+    /** Whether [cell] is a column title of the people, such as «ФИО» or «FULL NAME ↓». */
+    fun isPeopleTitle(cell: String): Boolean =
+        SheetText.tokens(cell).any { it in NOT_NAMES } || SheetText.normalize(cell).filter(Char::isLetter).startsWith("фио")
 
     /** Whether [cell] holds [key] of [kind]: digits without spaces for an ISU, the normalised text for a name. */
     fun holds(cell: String, key: String, kind: KeyKind): Boolean = when (kind) {

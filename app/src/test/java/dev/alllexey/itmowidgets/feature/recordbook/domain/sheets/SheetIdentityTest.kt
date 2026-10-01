@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.sheets
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SheetIdentityTest {
@@ -59,5 +61,14 @@ class SheetIdentityTest {
         assertEquals(KeyKind.NAME, SheetIdentity.personKind("Тестова Анна"))
         assertEquals(KeyKind.NAME, SheetIdentity.personKind("Тестов Т.Т."))
         assertEquals(KeyKind.ISU, SheetIdentity.personKind("100001"))
+        assertEquals(KeyKind.NAME, SheetIdentity.personKind("Тест Мд Тестин Хасан Тестов"))
+    }
+
+    @Test fun `a people column title is told from a name`() {
+        assertTrue(SheetIdentity.isPeopleTitle("ФИО"))
+        assertTrue(SheetIdentity.isPeopleTitle("FULL NAME ↓"))
+        assertTrue(SheetIdentity.isPeopleTitle("Ф.И.О. студента"))
+        assertFalse(SheetIdentity.isPeopleTitle("Тестова Анна"))
+        assertFalse(SheetIdentity.isPeopleTitle("_"))
     }
 }
