@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     «▲ N ▼»: the arrows keep 48 dp targets with their icons padded towards the score; the visible pill is 32 dp high
-    and starts 16 dp inside the arrows, so it is symmetric around the score. No negative margins: LinearLayout drops a
+    and starts 16 dp inside the arrows, so it is symmetric around the score. minHeight keeps the 48 dp row when a parent
+    measures it without a height (a review footer) and the arrows are hidden. No negative margins: LinearLayout drops a
     child's negative share of the width, which once left the pill wider on the right.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -10,6 +11,7 @@
     android:layout_width="wrap_content"
     android:layout_height="@dimen/design_touch_target"
     android:background="@drawable/bg_link_vote_pill"
+    android:minHeight="@dimen/design_touch_target"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:padding="0dp">
