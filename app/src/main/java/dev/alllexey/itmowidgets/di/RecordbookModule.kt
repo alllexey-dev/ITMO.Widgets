@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.home.MarksHomeCardSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsBackgroundLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsCookieSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsMarkReader
@@ -43,6 +44,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.work.AndroidMarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.work.WorkManagerBarsSessionProbe
 import dev.alllexey.itmowidgets.feature.recordbook.work.WorkManagerMarksScheduler
@@ -104,6 +106,14 @@ abstract class RecordbookModule {
     @Binds
     @IntoSet
     abstract fun bindMarkTrackingCleaner(impl: MarkTrackingRepositoryImpl): SessionDataCleaner
+
+    @Binds
+    @Singleton
+    abstract fun bindSheetScoresRepository(impl: SheetScoresRepositoryImpl): SheetScoresRepository
+
+    @Binds
+    @IntoSet
+    abstract fun bindSheetScoresCleaner(impl: SheetScoresRepositoryImpl): SessionDataCleaner
 
     @Binds
     @IntoSet
