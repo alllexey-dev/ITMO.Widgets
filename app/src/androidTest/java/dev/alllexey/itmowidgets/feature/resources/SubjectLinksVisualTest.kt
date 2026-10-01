@@ -80,7 +80,8 @@ class SubjectLinksVisualTest {
             fun assertScore(score: Int, vote: Int) = TestUi.eventually(idleBetween = true) {
                 scenario.onActivity { activity ->
                     val view = row(activity)
-                    assertEquals(score.toString(), view.findViewById<TextView>(R.id.score).text.toString())
+                    // A negative score is written with a typographic minus.
+                    assertEquals(score.toString().replace('-', '−'), view.findViewById<TextView>(R.id.score).text.toString())
                     assertEquals(vote > 0, view.findViewById<View>(R.id.vote_up).isSelected)
                     assertEquals(vote < 0, view.findViewById<View>(R.id.vote_down).isSelected)
                 }
@@ -98,23 +99,29 @@ class SubjectLinksVisualTest {
         }
     }
 
-    @Test fun ownLinksRankAmongOthersOnATonalRow() {
+    @Test fun ownLinksRankAmongOthersWithTheBadgeOnOneGroupSurface() {
         Appearances.default.forEachIndexed { index, spec ->
             withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS) { scenario, _ ->
                 settle()
-                // The own row sits one tonal step above the sheet: Container on ContainerLow.
+                // Every row of a category sits on the group surface, two tonal steps above the sheet.
                 scenario.onActivity { activity ->
                     val sheet = sheetList(activity)
                     assertEquals(MaterialColors.getColor(sheet, com.google.android.material.R.attr.colorSurfaceContainerLow),
                         sheetSurface(activity))
                 }
-                val scores = mutableListOf<Pair<String, Boolean>>()
+                data class Row(val title: String, val badge: Boolean, val votes: Boolean, val groupSurface: Boolean)
+                val scores = mutableListOf<Row>()
                 var inScores = false
                 visitRows(scenario) { row ->
                     if (row is TextView) inScores = row.text.toString() == "Таблица баллов"
-                    else if (inScores) scores += row.findViewById<TextView>(R.id.title).text.toString() to row.hasTonalSurface()
+                    else if (inScores) scores += Row(row.findViewById<TextView>(R.id.title).text.toString(),
+                        row.findViewById<View>(R.id.own_badge).isShown, row.findViewById<View>(R.id.votes).isShown, row.hasGroupSurface())
                 }
-                assertEquals(listOf("Баллы всего потока" to false, "Баллы нашей группы" to true, "Старая таблица" to false), scores)
+                assertEquals(listOf(
+                    Row("Баллы всего потока", badge = false, votes = true, groupSurface = true),
+                    Row("Баллы нашей группы", badge = true, votes = false, groupSurface = true),
+                    Row("Старая таблица", badge = false, votes = true, groupSurface = true),
+                ), scores)
                 // «Таблица баллов» is the first section.
                 scenario.onActivity { sheetList(it).scrollToPosition(0) }
                 settle()
@@ -367,6 +374,43 @@ class SubjectLinksVisualTest {
         }
     }
 
+    @Test fun ownRowsSayTheirReviewStateAndOthersShowVotesWithoutArrowsUnderARestriction() {
+        Appearances.default.forEachIndexed { index, spec ->
+            withPreview(spec.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_LINKS, configure = {
+                it.snapshots.value = mapOf(SCOPE.key to fixture())
+                it.restrictions.value = listOf(UserRestriction("r", RestrictionCapability.VOTE, "Правила", null))
+            }) { scenario, _ ->
+                settle()
+                var rejected = false
+                var others = 0
+                visitRows(scenario) { row ->
+                    if (row is TextView) {
+                        // Headings carry no « · » and no icon; the accent tells them apart from the rows.
+                        assertEquals(MaterialColors.getColor(row, androidx.appcompat.R.attr.colorPrimary), row.currentTextColor)
+                        return@visitRows
+                    }
+                    val meta = row.findViewById<TextView>(R.id.meta).text.toString()
+                    assertFalse(meta, meta.contains("·"))
+                    if (row.findViewById<TextView>(R.id.title).text.startsWith("Полный конспект")) {
+                        rejected = true
+                        assertTrue(row.findViewById<View>(R.id.own_badge).isShown)
+                        assertTrue(meta.endsWith("отклонена"))
+                    }
+                    if (row.findViewById<View>(R.id.votes).isShown) {
+                        others++
+                        assertFalse(row.findViewById<View>(R.id.vote_up).isShown || row.findViewById<View>(R.id.vote_down).isShown)
+                        assertTrue(row.findViewById<View>(R.id.score).isShown)
+                    }
+                }
+                assertTrue(rejected)
+                assertEquals(11, others)
+                scenario.onActivity { sheetList(it).scrollToPosition(0) }
+                settle()
+                screenshot("links-restricted-$index")
+            }
+        }
+    }
+
     @Test fun othersLinkOffersPinningAndReporting() {
         withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "materials-all") { scenario, repository ->
             settle()
@@ -486,12 +530,12 @@ class SubjectLinksVisualTest {
         listOf(R.id.action_open, R.id.action_pin, R.id.action_edit, R.id.action_delete, R.id.action_report)
             .filter { sheet.findViewById<View>(it).visibility == View.VISIBLE }
 
-    /** Whether the row paints the own-link surface: sampled at the trailing edge, clear of the content. */
-    private fun View.hasTonalSurface(): Boolean {
+    /** Whether the row paints the connected group's surface: sampled at the trailing edge, clear of the content. */
+    private fun View.hasGroupSurface(): Boolean {
         val bitmap = drawToBitmap()
-        val pixel = bitmap.getPixel(width - (4 * resources.displayMetrics.density).toInt(), height / 2)
+        val pixel = bitmap.getPixel(width - (2 * resources.displayMetrics.density).toInt(), height / 2)
         bitmap.recycle()
-        return pixel == MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurfaceContainer)
+        return pixel == MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurfaceContainerHigh)
     }
 
     /** The fill of the links sheet itself, as the bottom sheet behaviour paints it. */

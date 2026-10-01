@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
 import dev.alllexey.itmowidgets.core.ui.navigation.openSheetScores
+import dev.alllexey.itmowidgets.core.ui.displayTitle
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.SheetLinkActionsBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
