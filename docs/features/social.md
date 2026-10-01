@@ -143,7 +143,8 @@ write (`canWrite`), has no review of this person yet and the person teaches
 (Backend's `knownTeacher` or any My ITMO position). The heading `Отзывы` with
 the count after it (TalkBack `Отзывы, N`) counts the own review too and
 carries `Написать`, which opens the review editor. The AI summary card follows
-the heading; the reviews are one connected group 8 dp under it.
+the heading; the own review is a group of its own 8 dp under it and the others'
+reviews one connected group 16 dp further down.
 
 - The viewer's own review comes first with its status, anonymity, rejection
   reason and, once published, its score; its menu edits it or deletes it after

@@ -347,12 +347,13 @@ settings, and restore them if a separate test explicitly changes them.
   `res/layout/item_profile_facts.xml` with rows `item_profile_fact.xml`, the
   `ITMO.Widgets` group `res/layout/item_profile_sharing.xml` with rows
   `item_profile_entry.xml`, and the reviews heading `res/layout/item_profile_section.xml`.
-- Teacher reviews: rows of one connected group, `res/layout/item_teacher_review.xml`
-  (who wrote it with `⋮`: a named author or the Reviews source as a link,
-  otherwise `Анонимный отзыв`; `subject, date`; the full text; a bottom row in
-  `feature/social/ui/ReviewFooterLayout.kt` with the verification pill
-  `view_review_verified.xml` or a muted `Не подтверждён` and the vote pill
-  `view_link_vote_pill.xml`), `res/layout/item_own_teacher_review.xml` (`мой`,
+- Teacher reviews: the own review as a group of its own, the others as one
+  connected group, `res/layout/item_teacher_review.xml` (`subject, date` with
+  `⋮`; the full text; a footer in `feature/social/ui/ReviewFooterLayout.kt`:
+  who wrote it, a named author or the source as a link, otherwise
+  `Анонимный отзыв`, then the verification pill `view_review_verified.xml` or a
+  muted `Не подтверждён`, and the vote pill `view_link_vote_pill.xml` flush at
+  the end on the first line), `res/layout/item_own_teacher_review.xml` (`мой`,
   a status pill as a 12 % wash of its tone: content-based palettes make
   `…Container` colours too dark for the tone as text), bound in `feature/social/ui/ReviewViews.kt`.
 - AI summary: `res/layout/item_teacher_summary.xml` (`Card.Content.Tonal`, a

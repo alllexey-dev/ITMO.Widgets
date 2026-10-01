@@ -6,6 +6,16 @@ publication or deployment.
 
 ## 2.2 — development
 
+### 2026-10-02
+
+- Who wrote a review (the author, the source link or `Анонимный отзыв`) moved
+  from its top into its footer, before the verification and left of the votes;
+  the top line is the caption with `⋮`. The own review is a group of its own
+  above the others and every review row ends with the same padding.
+- A vote no longer moves a row: profile reviews, the links sheet and the
+  subject page's three links keep the order they were shown in until the screen
+  is opened again or refreshed by hand.
+
 ### 2026-10-01
 
 - The person profile follows the subject page: a result card with the photo,

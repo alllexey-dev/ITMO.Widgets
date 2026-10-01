@@ -76,7 +76,10 @@ at most three link rows (`SubjectHubState.LINK_ROWS`) in this order: the
 pinned link, the MyITMO LMS page (`lms_link`, shown as `LMS` with its host),
 then every other non-chat link of the period, own and shared alike, by
 `SubjectLinkRanking`: the higher score first, of equal scores the newer link.
-A link is shown once. A row (`item_subject_link.xml`, bound by
+A link is shown once. While the page is open the order it has shown stays
+(`core/util/StableOrder`): a vote changes a score in place but neither moves a
+row nor changes which three are shown; a new screen or a pull ranks afresh, and
+a link seen for the first time follows the shown ones. A row (`item_subject_link.xml`, bound by
 `core/ui/SubjectLinkRow.kt`) has the category symbol, the title (or the
 category name) and the host on the second line. Own and others' links share
 the style: an own link is told only by the `моя` badge, another student's
@@ -114,7 +117,9 @@ per tag and nothing once the state is saved.
   commas. An own link has the `моя` badge; others' links have the vote pill
   `▲ N ▼` (a negative score in the error colour, the own vote in
   `colorPrimary`), whose arrows are hidden under a `VOTE` restriction and
-  without the connection. The sheet refreshes silently on open; a failed first
+  without the connection. While the sheet is open its rows keep the order they
+  were first shown in (`StableOrder`): a vote updates the pill in place, a new
+  link follows the shown ones, and a new sheet or `Повторить` ranks afresh. The sheet refreshes silently on open; a failed first
   load offers `Повторить`, an empty one says `Ссылок пока нет`. The add button
   opens the editor.
 - `LinkEditorBottomSheet` (`Новая ссылка` / `Изменить ссылку`): the URL is
@@ -208,14 +213,14 @@ the headings and group positions of the sheet (`SubjectLinkRowsTest`), period ke
 repository without and with the connection, the upload of local links, cached
 snapshots on errors, session cleanup and a corrupted file
 (`SubjectLinksRepositoryImplTest`), and the sheet and editor view models, including the ranking within a category
-and votes that keep the actions sheet open (`SubjectLinksViewModelTest`,
+votes that keep the actions sheet open and rows that keep their place after a vote (`SubjectLinksViewModelTest`, `StableOrderTest`,
 `LinkEditorViewModelTest`).
 `SubjectLinksVisualTest` runs the real sheets in `SubjectLinksPreviewActivity`
 over the debug-only `MemorySubjectLinksRepository`: every category with chats
 and past years, voting with the pill, the editor with three nested flows, the editor with a guessed link and available audiences,
 the editor without the connection, an own rejected link, another student's
 link, an own row with `моя` ranked between others' rows on the same group
-surface, the review state in an own row's caption and pills without arrows
+surface, a voted row that keeps its place (`aVoteKeepsTheRowInItsPlace`), the review state in an own row's caption and pills without arrows
 under a restriction (`ownRowsSayTheirReviewStateAndOthersShowVotesWithoutArrowsUnderARestriction`), voting in
 the actions sheet, the own score without arrows, arrows hidden by a restriction,
 `Мои баллы` only for a Google Sheet (`actionsSheetOffersMyScoresOnlyForAGoogleSheet`),

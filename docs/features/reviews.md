@@ -166,11 +166,14 @@ review; a room booking, which names the person who booked it, does not count)
 or any position of the My ITMO person. The heading is `Отзывы` in
 `colorPrimary` with the count after it (TalkBack `Отзывы, N`, counting the own
 review too), or `Отзывы` without reviews; `Написать` is a text button with
-`ic_edit` at its end. The reviews are rows of one connected group
+`ic_edit` at its end. The own review is a group of its own with all four
+corners rounded; the others' reviews follow 16 dp below as one connected group
 ([design](../design.md#connected-groups)); the AI summary card stands 8 dp
-above them.
+above the first of them. Every row ends with the same bottom edge: a footer
+brings its 48 dp row, a row that ends with its text or a rejection reason gets
+16 dp of padding.
 
-The own review is the first row (`item_own_teacher_review.xml`):
+The own review (`item_own_teacher_review.xml`):
 
 - the `мой` badge and a status pill while it is not public: `На проверке` in
   `colorTertiary`, `Отклонён` or `Скрыт` in `colorError`, each on a 12 % wash of
@@ -178,25 +181,33 @@ The own review is the first row (`item_own_teacher_review.xml`):
   (confirmed by `Удалить отзыв?`; afterwards `Написать` returns);
 - `<subject>, анонимно` or `, с вашим именем`;
 - `Причина: <note>` in `colorError` for a rejected review;
-- the full text and, once published, `Вёл у вас` or a muted `Не подтверждён`
-  with the read-only score in the vote pill.
+- the full text and, once published, a footer with `Вёл у вас` or a muted
+  `Не подтверждён` and the read-only score in the vote pill.
 
 Every other review is a row in three zones (`item_teacher_review.xml`):
 
-- who wrote it with `⋮`: a named author as a link, `Фамилия И. О.`
-  (`titleSmall`, initials joined by a no-break space, the full name as content
-  description), which opens that person's profile; a copy's source as a muted
-  link with `ic_open_in_new` (`Reviews` or the source title, TalkBack
-  `Источник: Reviews, <source>`), which opens it; otherwise `Анонимный отзыв`;
-- `<subject>, <date>` in at most two lines, then the full text, never truncated;
-- a bottom row (`ReviewFooterLayout`): the `Вёл у автора` pill
-  (`view_review_verified.xml` with `ic_check_small`) or a muted
-  `Не подтверждён`, and on the right the vote pill `▲ N ▼`
-  (`view_link_vote_pill.xml`, `core/ui` `bindVotes`). A row with neither has no
-  bottom row.
+- the caption `<subject>, <date>` in at most two lines with `⋮` at the end;
+- the full text, never truncated;
+- the footer (`ReviewFooterLayout`): who wrote it at the start, a named
+  author as a link, `Фамилия И. О.` (`labelLarge`, initials joined by a
+  no-break space, the full name as content description), which opens that
+  person's profile; a copy's source as a muted link with `ic_open_in_new`
+  (`Reviews` or the source title such as `Google-форма`, TalkBack
+  `Источник: Reviews, <source>`), which opens it; otherwise `Анонимный отзыв`.
+  Then the `Вёл у автора` pill (`view_review_verified.xml` with
+  `ic_check_small`) or a muted `Не подтверждён`, and the vote pill `▲ N ▼`
+  (`view_link_vote_pill.xml`, `core/ui` `bindVotes`) flush at the end. The
+  source wraps inside the room left of the votes; the verification follows it
+  on the same line when it fits, otherwise on a line of its own below; the
+  votes stay centred on the first line.
 
 Votes show arrows only with `canVote`; the score turns to the accent once the
-viewer voted, and without arrows a zero score is left out. Tapping the arrow of
+viewer voted, and without arrows a zero score is left out. While the profile is open
+the others' reviews keep the order they were first shown in
+(`core/util/StableOrder` in `UserProfileViewModel`): Backend's answer to a vote
+or an update from the editor changes the scores in place, a review not shown
+yet follows the shown ones, and a new screen or `Повторить` takes Backend's
+order again. Tapping the arrow of
 the current vote takes the vote back. One vote or deletion runs at a time: the
 row's controls are disabled until the answer replaces the section; a failure
 (for example `AppError.Restricted`) shows a snackbar and keeps the section.
