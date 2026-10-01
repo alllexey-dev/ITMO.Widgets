@@ -330,6 +330,7 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_HOME_CARD_FRIENDS,
                     SettingsViewModel.KEY_MYITMO_MARKS,
                     SettingsViewModel.KEY_BARS_MARKS,
+                    SettingsViewModel.KEY_SHEET_MARKS,
                     SettingsViewModel.KEY_REFRESH_WIDGETS,
                     SettingsViewModel.KEY_RESTART_ONBOARDING,
                     SettingsViewModel.KEY_DIAGNOSTICS,
@@ -869,7 +870,7 @@ class SettingsViewModelTest {
 
             val section = fixture.viewModel.sections.value.single()
             assertEquals(null, section.title)
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS), section.items.map { it.key })
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS), section.items.map { it.key })
             val myItmo = fixture.viewModel.toggle(SettingsViewModel.KEY_MYITMO_MARKS)
             assertEquals(UiText.Resource(R.string.settings_marks_myitmo_title), myItmo.title)
             assertFalse(myItmo.checked)
@@ -878,13 +879,75 @@ class SettingsViewModelTest {
                 fixture.repository.barsMarks.value = bars
                 advanceUntilIdle()
                 assertEquals(
-                    listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS),
+                    listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS, SettingsViewModel.KEY_SHEET_MARKS),
                     fixture.viewModel.sections.value.single().items.map { it.key }
                 )
                 val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_BARS_MARKS)
                 assertEquals(UiText.Resource(R.string.settings_marks_bars_title), toggle.title)
                 assertEquals(bars, toggle.checked)
             }
+        }
+
+    @Test
+    fun `recordbook page puts the sheets switch after My ITMO and BARS`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.RECORDBOOK, local = LocalSettings(sheetMarksEnabled = false))
+            advanceUntilIdle()
+            val keys = { fixture.viewModel.sections.value.single().items.map { it.key } }
+
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS), keys())
+            val sheets = fixture.viewModel.toggle(SettingsViewModel.KEY_SHEET_MARKS)
+            assertEquals(UiText.Resource(R.string.settings_marks_sheets_title), sheets.title)
+            assertFalse(sheets.checked)
+
+            fixture.repository.barsMarks.value = true
+            fixture.repository.sheetMarks.value = true
+            advanceUntilIdle()
+            assertEquals(
+                listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS, SettingsViewModel.KEY_SHEET_MARKS),
+                keys()
+            )
+            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SHEET_MARKS).checked)
+        }
+
+    @Test
+    fun `the sheets switch goes through tracking and asks for notifications, then offers the hint`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.RECORDBOOK, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
+            val events = recordEvents(fixture)
+            fixture.viewModel.onNotificationPermissionChanged(granted = false)
+            fixture.viewModel.onBackgroundWorkChanged()
+            advanceUntilIdle()
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SHEET_MARKS, false)
+            advanceUntilIdle()
+            assertEquals(listOf(false), fixture.markTracking.sheetsCalls)
+            assertEquals(emptyList<SettingsEvent>(), events)
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SHEET_MARKS, true)
+            advanceUntilIdle()
+            assertEquals(listOf(false, true), fixture.markTracking.sheetsCalls)
+            assertEquals(listOf(SettingsEvent.RequestNotificationPermission, SettingsEvent.ShowBackgroundWorkHint), events)
+            assertTrue(fixture.markTracking.myItmoCalls.isEmpty())
+            assertTrue(fixture.markTracking.barsCalls.isEmpty())
+        }
+
+    @Test
+    fun `the background work row follows the sheets switch alone`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(
+                page = SettingsPage.RECORDBOOK,
+                local = LocalSettings(myItmoMarksEnabled = false, barsMarksEnabled = false),
+                backgroundWork = FakeBackgroundWorkAccess(unrestricted = false)
+            )
+            fixture.viewModel.onBackgroundWorkChanged()
+            advanceUntilIdle()
+            val keys = { fixture.viewModel.sections.value.single().items.map { it.key } }
+            assertEquals(SettingsViewModel.KEY_BACKGROUND_WORK, keys().last())
+
+            fixture.repository.sheetMarks.value = false
+            advanceUntilIdle()
+            assertFalse(SettingsViewModel.KEY_BACKGROUND_WORK in keys())
         }
 
     @Test
@@ -960,20 +1023,32 @@ class SettingsViewModelTest {
             fixture.viewModel.onBackgroundWorkChanged()
             advanceUntilIdle()
             val keys = { fixture.viewModel.sections.value.single().items.map { it.key } }
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
+            assertEquals(
+                listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK),
+                keys()
+            )
 
             fixture.repository.myItmoMarks.value = false
+            fixture.repository.sheetMarks.value = false
             advanceUntilIdle()
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS), keys())
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS), keys())
 
             fixture.repository.barsMarks.value = false
             advanceUntilIdle()
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS), keys())
+            assertEquals(
+                listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS, SettingsViewModel.KEY_SHEET_MARKS),
+                keys()
+            )
 
             fixture.repository.barsMarks.value = true
             advanceUntilIdle()
             assertEquals(
-                listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK),
+                listOf(
+                    SettingsViewModel.KEY_MYITMO_MARKS,
+                    SettingsViewModel.KEY_BARS_MARKS,
+                    SettingsViewModel.KEY_SHEET_MARKS,
+                    SettingsViewModel.KEY_BACKGROUND_WORK
+                ),
                 keys()
             )
         }
@@ -987,16 +1062,16 @@ class SettingsViewModelTest {
 
             fixture.viewModel.onBackgroundWorkChanged()
             runCurrent()
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
 
             fixture.backgroundWork.unrestricted = true
             advanceTimeBy(999)
             runCurrent()
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
 
             advanceTimeBy(1)
             runCurrent()
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS), keys())
+            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS), keys())
         }
 
     @Test
@@ -1508,6 +1583,7 @@ class SettingsViewModelTest {
         /** The mark switches live behind [dev.alllexey.itmowidgets.core.recordbook.MarkTracking]; tests move them here. */
         val myItmoMarks = MutableStateFlow(initialLocal.myItmoMarksEnabled)
         val barsMarks = MutableStateFlow(initialLocal.barsMarksEnabled)
+        val sheetMarks = MutableStateFlow(initialLocal.sheetMarksEnabled)
         val backgroundWorkHintShown = MutableStateFlow(initialLocal.backgroundWorkHintShown)
         var hintShownCalls = 0
         private val localAvailable = MutableStateFlow(localInitiallyAvailable)
@@ -1535,7 +1611,9 @@ class SettingsViewModelTest {
         override fun observeLocalSettings(): Flow<LocalSettings> =
             combine(
                 localAvailable,
-                combine(local, backgroundWorkHintShown) { settings, hintShown -> settings.copy(backgroundWorkHintShown = hintShown) },
+                combine(local, backgroundWorkHintShown, sheetMarks) { settings, hintShown, sheets ->
+                    settings.copy(backgroundWorkHintShown = hintShown, sheetMarksEnabled = sheets)
+                },
                 scheduleChangesEnabled,
                 myItmoMarks,
                 barsMarks

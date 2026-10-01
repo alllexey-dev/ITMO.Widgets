@@ -656,6 +656,7 @@
     <string name="settings_home_card_marks_title">Новые оценки</string>
     <string name="settings_marks_myitmo_title">Оценки My ITMO</string>
     <string name="settings_marks_bars_title">Оценки БАРС</string>
+    <string name="settings_marks_sheets_title">Оценки из таблиц</string>
     <string name="settings_marks_footer">Уведомлять о новых и изменённых оценках.</string>
     <string name="settings_marks_notifications_off">Уведомления выключены.</string>
     <string name="settings_background_work_title">Работа в фоне</string>

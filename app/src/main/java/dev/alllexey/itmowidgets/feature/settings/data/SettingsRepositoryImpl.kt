@@ -71,18 +71,23 @@ class SettingsRepositoryImpl @Inject constructor(
                 backgroundWorkHintShown = backgroundWorkHintShown
             )
         }
+        // The typed combine takes at most five flows, so the three mark switches travel together.
+        val marks = combine(
+            settings.observeMyItmoMarksEnabled(),
+            settings.observeBarsMarksEnabled(),
+            settings.observeSheetMarksEnabled(),
+            ::MarkLocalSettings
+        )
         val app = combine(
             settings.observeScheduleSportAutoSignEnabled(),
             settings.observeScheduleChangesEnabled(),
-            settings.observeMyItmoMarksEnabled(),
-            settings.observeBarsMarksEnabled(),
+            marks,
             device
-        ) { showSportAutoSign, scheduleChangesEnabled, myItmoMarksEnabled, barsMarksEnabled, deviceSettings ->
+        ) { showSportAutoSign, scheduleChangesEnabled, markSettings, deviceSettings ->
             AppLocalSettings(
                 showSportAutoSign = showSportAutoSign,
                 scheduleChangesEnabled = scheduleChangesEnabled,
-                myItmoMarksEnabled = myItmoMarksEnabled,
-                barsMarksEnabled = barsMarksEnabled,
+                marks = markSettings,
                 device = deviceSettings
             )
         }
@@ -101,8 +106,9 @@ class SettingsRepositoryImpl @Inject constructor(
                 sport = sportSettings,
                 showSportAutoSign = appSettings.showSportAutoSign,
                 scheduleChangesEnabled = appSettings.scheduleChangesEnabled,
-                myItmoMarksEnabled = appSettings.myItmoMarksEnabled,
-                barsMarksEnabled = appSettings.barsMarksEnabled,
+                myItmoMarksEnabled = appSettings.marks.myItmo,
+                barsMarksEnabled = appSettings.marks.bars,
+                sheetMarksEnabled = appSettings.marks.sheets,
                 hiddenHomeCards = appSettings.device.hiddenHomeCards,
                 backgroundWorkHintShown = appSettings.device.backgroundWorkHintShown
             )
@@ -272,9 +278,14 @@ class SettingsRepositoryImpl @Inject constructor(
 private data class AppLocalSettings(
     val showSportAutoSign: Boolean,
     val scheduleChangesEnabled: Boolean,
-    val myItmoMarksEnabled: Boolean,
-    val barsMarksEnabled: Boolean?,
+    val marks: MarkLocalSettings,
     val device: DeviceLocalSettings
+)
+
+private data class MarkLocalSettings(
+    val myItmo: Boolean,
+    val bars: Boolean?,
+    val sheets: Boolean
 )
 
 private data class DeviceLocalSettings(

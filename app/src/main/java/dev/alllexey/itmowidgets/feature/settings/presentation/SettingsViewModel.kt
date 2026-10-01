@@ -232,6 +232,13 @@ class SettingsViewModel @Inject constructor(
                 }
                 if (checked) offerBackgroundWorkHint()
             }
+            KEY_SHEET_MARKS -> {
+                updateLocalSetting { markTracking.setSheetsEnabled(checked) }
+                if (checked && notificationPermissionGranted.value == false) {
+                    eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
+                }
+                if (checked) offerBackgroundWorkHint()
+            }
             KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SCHEDULE_CHANGES, KEY_HOME_CARD_MARKS, KEY_HOME_CARD_SPORT,
             KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
                 val kind = HOME_CARDS.first { it.first == key }.second
@@ -623,8 +630,14 @@ class SettingsViewModel @Inject constructor(
                             checked = enabled
                         )
                     },
+                    SettingItem.Toggle(
+                        key = KEY_SHEET_MARKS,
+                        title = UiText.Resource(R.string.settings_marks_sheets_title),
+                        checked = local.sheetMarksEnabled
+                    ),
                     backgroundWorkRow().takeIf {
-                        backgroundWorkRestricted && (local.myItmoMarksEnabled || local.barsMarksEnabled == true)
+                        backgroundWorkRestricted &&
+                            (local.myItmoMarksEnabled || local.barsMarksEnabled == true || local.sheetMarksEnabled)
                     }
                 ),
                 footer = UiText.Resource(
@@ -816,6 +829,7 @@ class SettingsViewModel @Inject constructor(
         const val KEY_HOME_CARD_MARKS = "home_card_marks"
         const val KEY_MYITMO_MARKS = "myitmo_marks"
         const val KEY_BARS_MARKS = "bars_marks"
+        const val KEY_SHEET_MARKS = "sheet_marks"
         const val KEY_BACKGROUND_WORK = "background_work"
         const val KEY_HOME_CARD_SPORT = "home_card_sport"
         const val KEY_HOME_CARD_FRIENDS = "home_card_friends"

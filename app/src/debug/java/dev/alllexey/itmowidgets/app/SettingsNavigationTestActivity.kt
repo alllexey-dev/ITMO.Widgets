@@ -404,9 +404,15 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                 local,
                 MemoryScheduleChangeTracking.enabled,
                 MemoryMarkTracking.myItmo,
-                MemoryMarkTracking.bars
-            ) { settings, scheduleChanges, myItmoMarks, barsMarks ->
-                settings.copy(scheduleChangesEnabled = scheduleChanges, myItmoMarksEnabled = myItmoMarks, barsMarksEnabled = barsMarks)
+                MemoryMarkTracking.bars,
+                MemoryMarkTracking.sheets
+            ) { settings, scheduleChanges, myItmoMarks, barsMarks, sheetMarks ->
+                settings.copy(
+                    scheduleChangesEnabled = scheduleChanges,
+                    myItmoMarksEnabled = myItmoMarks,
+                    barsMarksEnabled = barsMarks,
+                    sheetMarksEnabled = sheetMarks
+                )
             }.onStart { delay(80) }
         override fun observeSharingSettings() = sharing
         override suspend fun refreshSharingSettings() { sharing.value = SharingSettingsState.Content(SharingSettings()) }

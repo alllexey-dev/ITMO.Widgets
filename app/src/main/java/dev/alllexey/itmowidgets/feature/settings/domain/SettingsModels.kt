@@ -18,6 +18,7 @@ data class LocalSettings(
     val myItmoMarksEnabled: Boolean = true,
     /** Null until the account's first BARS answer: the switch is hidden then. */
     val barsMarksEnabled: Boolean? = null,
+    val sheetMarksEnabled: Boolean = true,
     val hiddenHomeCards: Set<HomeCardKind> = emptySet(),
     /** The one-time dialog about background work was offered on this device. */
     val backgroundWorkHintShown: Boolean = false

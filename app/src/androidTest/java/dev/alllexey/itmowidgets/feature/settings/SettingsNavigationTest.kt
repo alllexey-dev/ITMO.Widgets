@@ -213,6 +213,8 @@ class SettingsNavigationTest {
                 SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
                 for (page in listOf(SettingsPage.SCHEDULE, SettingsPage.RECORDBOOK)) {
                     SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = false
+                    // The recordbook page with all three mark switches: My ITMO, BARS and the sheets.
+                    SettingsNavigationTestActivity.MemoryMarkTracking.bars.value = true.takeIf { page == SettingsPage.RECORDBOOK }
                     ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
                         openPage(scenario, page)
                         var switchTop = 0
@@ -220,6 +222,7 @@ class SettingsNavigationTest {
                             val root = settingsRoot(activity)
                             assertEquals(spec.fontScale, root.resources.configuration.fontScale, 0.001f)
                             assertBackgroundWorkRow(activity, root)
+                            if (page == SettingsPage.RECORDBOOK) assertRowUnderThreeSwitches(activity, root)
                             switchTop = firstSwitchTop(root)
                         }
                         Screenshots.capture("settings-screenshots", "settings-background-work-${spec.name}-${page.name.lowercase()}") { settle() }
@@ -264,8 +267,36 @@ class SettingsNavigationTest {
         } finally {
             SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
             SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = false
+            SettingsNavigationTestActivity.MemoryMarkTracking.bars.value = null
         }
     }
+
+    /** My ITMO, BARS and the sheets in this order, each 48 dp, the background work row and the footer below them. */
+    private fun assertRowUnderThreeSwitches(activity: SettingsNavigationTestActivity, root: ViewGroup) {
+        val sections = root.findViewById<ViewGroup>(R.id.sections_container)
+        val titles = root.descendants.filterIsInstance<TextView>()
+            .filter { it.id == R.id.setting_title && it.isShown }.map { it.text.toString() }.toList()
+        assertEquals(
+            listOf(
+                activity.getString(R.string.settings_marks_myitmo_title),
+                activity.getString(R.string.settings_marks_bars_title),
+                activity.getString(R.string.settings_marks_sheets_title),
+                activity.getString(R.string.settings_background_work_title)
+            ),
+            titles
+        )
+        val switches = sections.descendants.filter { it.id == R.id.setting_switch && it.isShown }.toList()
+        assertEquals(3, switches.size)
+        val minimum = 48 * root.resources.displayMetrics.density - 1
+        switches.forEach { assertTrue((it.parent as View).height >= minimum) }
+        val row = checkNotNull(backgroundWorkRow(activity, root))
+        val lastSwitch = switches.last()
+        assertTrue(screenTop(row) >= screenTop(lastSwitch) + lastSwitch.height)
+        val footer = sections.descendants.filterIsInstance<TextView>().single { it.id == R.id.setting_section_footer }
+        assertTrue(footer.isShown && screenTop(footer) >= screenTop(row) + row.height)
+    }
+
+    private fun screenTop(view: View): Int = IntArray(2).also { view.getLocationOnScreen(it) }[1]
 
     private fun openPage(scenario: ActivityScenario<SettingsNavigationTestActivity>, page: SettingsPage) {
         scenario.onActivity { it.openScreen(AppScreen.SETTINGS, Bundle().apply { putString(SettingsPage.ARGUMENT, page.name) }) }
@@ -342,7 +373,8 @@ class SettingsNavigationTest {
         assertEquals(
             listOfNotNull(
                 activity.getString(R.string.settings_marks_myitmo_title),
-                activity.getString(R.string.settings_marks_bars_title).takeIf { barsShown }
+                activity.getString(R.string.settings_marks_bars_title).takeIf { barsShown },
+                activity.getString(R.string.settings_marks_sheets_title)
             ),
             titles
         )

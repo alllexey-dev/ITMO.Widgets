@@ -145,6 +145,18 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
+    fun `sheet marks default on and follow the stored value`() = runTest {
+        val fixture = createRepository()
+        assertTrue(fixture.repository.observeLocalSettings().first().sheetMarksEnabled)
+
+        fixture.storage.setSheetMarksEnabled(false)
+        assertEquals(LocalSettings(sheetMarksEnabled = false), fixture.repository.observeLocalSettings().first())
+
+        fixture.storage.setSheetMarksEnabled(true)
+        assertEquals(LocalSettings(), fixture.repository.observeLocalSettings().first())
+    }
+
+    @Test
     fun `does not fetch sharing settings while custom services are disabled`() = runTest {
         val fixture = createRepository()
 
