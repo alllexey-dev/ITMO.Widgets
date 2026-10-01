@@ -27,9 +27,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.color.MaterialColors
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
@@ -40,6 +37,7 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
+import dev.alllexey.itmowidgets.core.ui.GroupPosition
 import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
@@ -52,6 +50,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgra
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
 import dev.alllexey.itmowidgets.feature.recordbook.ui.DetailItem
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewFixtures
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewFixtures.Phase
@@ -387,7 +386,7 @@ class RecordbookVisualTest {
         }
     }
 
-    @Test fun subjectIsOnePageWithHeroChipsChatsGroupsAndLessons() {
+    @Test fun subjectIsOnePageWithHeroLinksChatsControlsAndLessons() {
         Appearances.default.forEach { spec ->
             withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
                 openSubject(scenario, "Математический")
@@ -397,37 +396,53 @@ class RecordbookVisualTest {
                     assertEquals(0, activity.window.decorView.descendants().count { it.javaClass.simpleName == "TabLayout" })
                     val items = activity.hubItems()
                     assertTrue(items.first() is DetailItem.Hero)
-                    assertTrue(items[1] is DetailItem.LinkChips)
+                    assertEquals(DetailItem.Section(R.string.links_title), items[1])
                     assertEquals("72", activity.findViewById<TextView>(R.id.points).text.toString())
                     assertEquals(activity.getString(R.string.subject_grade_next, "4C", "3"), activity.findViewById<TextView>(R.id.hint).text.toString())
-                    val chips = activity.findViewById<ChipGroup>(R.id.chips).descendants().filterIsInstance<Chip>().toList()
-                    // Pin, LMS, then links by score: the own table has none and follows the rated ones.
+                    // Pin, LMS, then links by score, three rows at most, and «Все ссылки» with what the sheet lists.
+                    val links = activity.hubRows { it is DetailItem.Link || it is DetailItem.Lms || it is DetailItem.AllLinks }
                     assertEquals(listOf(activity.getString(R.string.subject_link_lms), "Записи лекций весны 2026 года с разбором задач",
-                        "Конспекты", "Таблица баллов потока", activity.getString(R.string.links_more, 2), ""),
-                        chips.map { it.text.toString() })
-                    assertEquals(activity.getString(R.string.links_add), chips.last().contentDescription)
-                    chips.forEach { assertTrue(it.height >= 48 * activity.resources.displayMetrics.density - 1) }
-                    assertOwnChip(chips[3], own = true)
-                    chips.subList(0, 3).forEach { assertOwnChip(it, own = false) }
-                    val all = activity.findViewById<MaterialButton>(R.id.all_links)
-                    assertEquals(activity.getString(R.string.links_all), all.text.toString())
-                    assertEquals(activity.getString(R.string.links_title), activity.findViewById<TextView>(R.id.links_title).text.toString())
-                    assertTrue(all.height >= 48 * activity.resources.displayMetrics.density - 1 &&
-                        all.width >= 48 * activity.resources.displayMetrics.density - 1)
-                    all.performClick()
-                    chips[4].performClick()
-                    chips.last().performClick()
-                    chips[3].performLongClick()
-                    assertEquals(listOf("links", "links", "editor", "actions:own-table"), RecordbookPreviewActivity.linkNavigation.toList())
-                    assertEquals(2, items.count { it is DetailItem.Chat })
+                        "Конспекты", activity.getString(R.string.links_all_count, 7)),
+                        links.map { it.findViewById<TextView>(R.id.title).text.toString() })
+                    assertConnectedGroup(activity, links)
+                    links.forEach { assertTrue(it.height >= 48 * activity.resources.displayMetrics.density - 1) }
+                    val video = links[1]
+                    assertEquals(View.GONE, video.findViewById<View>(R.id.own_badge).visibility)
+                    assertTrue(video.findViewById<View>(R.id.votes).isShown)
+                    assertEquals("5", video.findViewById<TextView>(R.id.score).text.toString())
+                    dev.alllexey.itmowidgets.testing.ViewChecks.assertTouchTargets(video)
+                    assertEquals(View.GONE, links[0].findViewById<View>(R.id.votes).visibility)
+                    links.last().performClick()
+                    video.performLongClick()
+                    assertEquals(listOf("links", "actions:video"), RecordbookPreviewActivity.linkNavigation.toList())
+                    video.findViewById<View>(R.id.vote_up).performClick()
+                    val chats = items.filterIsInstance<DetailItem.Chat>()
+                    assertEquals(listOf("own-chat", "flow-chat"), chats.map { it.link.id })
+                    assertEquals(DetailItem.Section(R.string.links_chats), items[items.indexOf(chats.first()) - 1])
+                    assertTrue(items.indexOf(chats.last()) < items.indexOf(DetailItem.Section(R.string.subject_controls_title)))
                     val groups = items.filterIsInstance<DetailItem.Group>()
                     assertEquals(3, groups.size)
                     assertEquals(listOf(false, true, false), groups.map { it.group.belowMinimum.isNotEmpty() })
                     assertEquals(2, items.count { it is DetailItem.Lesson })
-                    assertEquals(DetailItem.AllLessons(4), items.last())
+                    assertEquals(DetailItem.AllLessons(4, GroupPosition.LAST), items.last())
                     assertVisibleTextFits(activity.window.decorView)
                 }
+                settle()
+                scenario.onActivity { activity ->
+                    val video = activity.hubRows { it is DetailItem.Link }.first()
+                    assertEquals("6", video.findViewById<TextView>(R.id.score).text.toString())
+                    assertTrue(video.findViewById<View>(R.id.vote_up).isSelected)
+                }
                 screenshot("subject-top-${spec.name}")
+                scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.Chat } - 1 }
+                scenario.onActivity { activity ->
+                    val chats = activity.hubRows { it is DetailItem.Chat }
+                    assertConnectedGroup(activity, chats)
+                    assertTrue(chats[0].findViewById<View>(R.id.own_badge).isShown)
+                    assertEquals(View.GONE, chats[1].findViewById<View>(R.id.own_badge).visibility)
+                    assertVisibleTextFits(activity.window.decorView)
+                }
+                screenshot("subject-chats-${spec.name}")
                 scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.Group } }
                 scenario.onActivity { activity ->
                     assertTrue(activity.hubList().texts().contains(activity.getString(R.string.recordbook_group_labs)))
@@ -444,7 +459,7 @@ class RecordbookVisualTest {
                 screenshot("subject-below-minimum-${spec.name}")
                 scrollToEnd(scenario)
                 scenario.onActivity { activity ->
-                    activity.hubList().descendants().first { it.id == R.id.more && it.isShown }.performClick()
+                    activity.hubRows { it is DetailItem.AllLessons }.single().performClick()
                 }
                 settle()
                 scrollToEnd(scenario)
@@ -467,13 +482,11 @@ class RecordbookVisualTest {
             openSubject(scenario, "Иностранный")
             scenario.onActivity { activity ->
                 assertEquals(activity.getString(R.string.subject_credit_next, "8"), activity.findViewById<TextView>(R.id.hint).text.toString())
-                // Without links yet the add chip explains itself and «Все» still opens the sheet.
-                val chips = activity.findViewById<ChipGroup>(R.id.chips).descendants().filterIsInstance<Chip>().toList()
-                assertEquals(listOf(activity.getString(R.string.links_add)), chips.map { it.text.toString() })
-                val all = activity.findViewById<MaterialButton>(R.id.all_links)
-                assertTrue(all.isShown)
-                all.performClick()
-                assertEquals(listOf("links"), RecordbookPreviewActivity.linkNavigation.toList())
+                // Without links yet «Ссылки» holds one row that adds the first one.
+                val add = activity.hubRows { it is DetailItem.Link || it is DetailItem.Lms || it is DetailItem.AllLinks || it is DetailItem.AddLink }.single()
+                assertEquals(activity.getString(R.string.links_add), add.findViewById<TextView>(R.id.title).text.toString())
+                add.performClick()
+                assertEquals(listOf("editor"), RecordbookPreviewActivity.linkNavigation.toList())
                 assertVisibleTextFits(activity.window.decorView)
             }
             screenshot("subject-credit-narrow")
@@ -502,10 +515,14 @@ class RecordbookVisualTest {
             openSubject(scenario, "Математический")
             scenario.onActivity { activity ->
                 val items = activity.hubItems()
-                assertTrue(items.any { it is DetailItem.LinkChips })
                 assertTrue(items.none { it is DetailItem.Lesson || it is DetailItem.LessonsMessage })
-                val chips = activity.findViewById<ChipGroup>(R.id.chips).descendants().filterIsInstance<Chip>().map { it.text.toString() }.toList()
-                assertTrue("Таблица баллов осени" in chips)
+                val own = activity.hubRows { it is DetailItem.Link }.single()
+                assertEquals("Таблица баллов осени", own.findViewById<TextView>(R.id.title).text.toString())
+                // An own link is told by «моя» alone; it has no votes.
+                assertTrue(own.findViewById<View>(R.id.own_badge).isShown)
+                assertEquals(View.GONE, own.findViewById<View>(R.id.votes).visibility)
+                assertEquals(activity.getString(R.string.links_all_count, 1),
+                    activity.hubRows { it is DetailItem.AllLinks }.single().findViewById<TextView>(R.id.title).text.toString())
             }
             scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.Teacher } }
             scenario.onActivity { activity ->
@@ -529,7 +546,7 @@ class RecordbookVisualTest {
                 scenario.onActivity { activity ->
                     val items = activity.hubItems()
                     assertTrue(items.first() is DetailItem.SportOverview)
-                    assertTrue(items.none { it is DetailItem.LinkChips || it is DetailItem.Chat || it is DetailItem.Hero })
+                    assertTrue(items.none { it is DetailItem.Link || it is DetailItem.Lms || it is DetailItem.AddLink || it is DetailItem.Chat || it is DetailItem.Hero })
                     assertEquals("64", activity.findViewById<TextView>(R.id.total).text.toString())
                     assertEquals(RecordbookPreviewFixtures.PE, activity.findViewById<TextView>(R.id.title).text.toString())
                     assertVisibleTextFits(activity.window.decorView)
@@ -631,17 +648,16 @@ class RecordbookVisualTest {
                 openSubject(scenario, "Математический")
                 scenario.onActivity { activity ->
                     val items = activity.hubItems()
-                    val position = items.indexOfFirst { it is DetailItem.SheetScore }
-                    assertEquals(DetailItem.Section(R.string.subject_scores_title), items[position - 1])
-                    assertTrue(position < items.indexOfFirst { it is DetailItem.Group || it is DetailItem.Control })
+                    assertTrue((items.first() as DetailItem.Hero).sheet is SubjectSheetState.Connected)
                     assertTrue(items.none { it is DetailItem.Notice })
                 }
-                scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.SheetScore } - 1 }
                 var below = 0
                 scenario.onActivity { activity ->
                     val row = activity.sheetRow()
+                    assertTrue(activity.findViewById<View>(R.id.sheet_divider).isShown)
+                    assertEquals(View.GONE, activity.findViewById<View>(R.id.sheet_hint).visibility)
                     assertEquals("66,3", row.findViewById<TextView>(R.id.value).text.toString())
-                    assertEquals("P3110 · ИТОГО баллов", row.findViewById<TextView>(R.id.caption).text.toString())
+                    assertEquals("ИТОГО баллов, лист «P3110»", row.findViewById<TextView>(R.id.caption).text.toString())
                     assertEquals(activity.getString(R.string.sheet_scores_updated_time, "12:00"), row.findViewById<TextView>(R.id.status).text.toString())
                     assertTrue(row.contentDescription.contains("66,3"))
                     val menu = row.findViewById<View>(R.id.menu)
@@ -676,6 +692,8 @@ class RecordbookVisualTest {
                 settle()
                 scenario.onActivity { activity ->
                     val caption = activity.sheetRow().findViewById<TextView>(R.id.caption)
+                    assertFalse(caption.text.contains("·"))
+                    assertTrue(caption.text.contains(" › "))
                     assertTrue(caption.lineCount > 1)
                     assertTextFits(activity.sheetRow())
                 }
@@ -697,10 +715,11 @@ class RecordbookVisualTest {
         Appearances.default.forEach { spec ->
             withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
                 openSubject(scenario, "Математический")
-                scrollTo(scenario) { items -> items.indexOfFirst { it is DetailItem.SheetHint } - 1 }
                 scenario.onActivity { activity ->
                     val row = activity.hintRow()
-                    assertEquals(activity.getString(R.string.sheet_scores_hint), row.findViewById<TextView>(R.id.title).text.toString())
+                    assertTrue((activity.hubItems().first() as DetailItem.Hero).sheet is SubjectSheetState.Hint)
+                    assertEquals(View.GONE, activity.findViewById<View>(R.id.sheet_divider).visibility)
+                    assertEquals(activity.getString(R.string.sheet_scores_hint), (row as TextView).text.toString())
                     assertTrue(row.height >= 48 * activity.resources.displayMetrics.density - 1)
                     assertTextFits(row)
                     row.performClick()
@@ -721,7 +740,7 @@ class RecordbookVisualTest {
                 scenario.onActivity { it.hintRow().performClick() }
                 settle()
                 onView(withText(R.string.sheet_scores_choose_link)).inRoot(isDialog()).check(matches(isDisplayed()))
-                onView(withText("Таблица баллов потока · Моя")).inRoot(isDialog()).check(matches(isDisplayed()))
+                onView(withText("Таблица баллов потока, моя")).inRoot(isDialog()).check(matches(isDisplayed()))
                 screenshot("subject-sheet-choose-${spec.name}")
                 onView(withText("Баллы лектора")).inRoot(isDialog()).perform(click())
                 settle()
@@ -731,7 +750,7 @@ class RecordbookVisualTest {
                 settle()
             }
 
-            // A subject without controls: «Баллы» holds the offer and no «no details» card.
+            // A subject without controls: the offer in the result card is the detail; no «no details» card.
             withFixture(Phase.MIDDLE, spec.toRecordbook()) { scenario ->
                 val base = RecordbookPreviewFixtures.Recordbook(Phase.MIDDLE)
                 RecordbookPreviewActivity.repository = object : RecordbookRepository by base {
@@ -747,25 +766,46 @@ class RecordbookVisualTest {
                 openSubject(scenario, "История")
                 scenario.onActivity { activity ->
                     val items = activity.hubItems()
-                    val hint = items.indexOfFirst { it is DetailItem.SheetHint }
-                    assertTrue(hint > 0)
-                    assertEquals(DetailItem.Section(R.string.subject_scores_title), items[hint - 1])
-                    assertTrue(items.none { it is DetailItem.Notice })
+                    assertTrue((items.first() as DetailItem.Hero).sheet is SubjectSheetState.Hint)
+                    assertTrue(activity.hintRow().isShown)
+                    assertTrue(items.none { it is DetailItem.Notice || it == DetailItem.Section(R.string.subject_controls_title) })
                 }
                 screenshot("subject-sheet-hint-${spec.name}")
             }
         }
     }
 
-    private fun RecordbookPreviewActivity.sheetRow(): View =
-        checkNotNull(hubList().findViewHolderForAdapterPosition(hubItems().indexOfFirst { it is DetailItem.SheetScore })).itemView
+    private fun RecordbookPreviewActivity.heroCard(): View =
+        checkNotNull(hubList().findViewHolderForAdapterPosition(hubItems().indexOfFirst { it is DetailItem.Hero })).itemView
 
-    private fun RecordbookPreviewActivity.hintRow(): View =
-        checkNotNull(hubList().findViewHolderForAdapterPosition(hubItems().indexOfFirst { it is DetailItem.SheetHint })).itemView
+    private fun RecordbookPreviewActivity.sheetRow(): View = heroCard().findViewById(R.id.sheet)
 
-    /** The window position of the row under the sheet row. */
+    private fun RecordbookPreviewActivity.hintRow(): View = heroCard().findViewById(R.id.sheet_hint)
+
+    /** The bound rows of the items matching [predicate], in list order; they must be on screen. */
+    private fun RecordbookPreviewActivity.hubRows(predicate: (DetailItem) -> Boolean): List<View> = hubItems().withIndex()
+        .filter { predicate(it.value) }
+        .map { checkNotNull(hubList().findViewHolderForAdapterPosition(it.index)) { "Row ${it.index} is off screen" }.itemView }
+
+    /** Rows of one group: one width and surface, 2 dp apart, the outer corners only at the ends. */
+    private fun assertConnectedGroup(activity: RecordbookPreviewActivity, rows: List<View>) {
+        val density = activity.resources.displayMetrics.density
+        assertEquals(1, rows.map { it.width }.distinct().size)
+        rows.zipWithNext().forEach { (upper, lower) -> assertEquals(2 * density, (lower.top - upper.bottom).toFloat(), 1f) }
+        val shapes = rows.map { ((it.background as android.graphics.drawable.RippleDrawable).getDrawable(0)
+            as com.google.android.material.shape.MaterialShapeDrawable).shapeAppearanceModel }
+        val outer = 20 * density
+        val inner = 4 * density
+        val bounds = android.graphics.RectF(0f, 0f, 100f, 100f)
+        shapes.forEachIndexed { index, shape ->
+            assertEquals(if (index == 0) outer else inner, shape.topLeftCornerSize.getCornerSize(bounds), 0.5f)
+            assertEquals(if (index == shapes.lastIndex) outer else inner, shape.bottomLeftCornerSize.getCornerSize(bounds), 0.5f)
+        }
+    }
+
+    /** The window position of the row under the result card. */
     private fun RecordbookPreviewActivity.belowSheetRow(): Int {
-        val position = hubItems().indexOfFirst { it is DetailItem.SheetScore } + 1
+        val position = hubItems().indexOfFirst { it is DetailItem.Hero } + 1
         val view = checkNotNull(hubList().findViewHolderForAdapterPosition(position)).itemView
         return IntArray(2).also(view::getLocationInWindow)[1]
     }
@@ -828,12 +868,6 @@ class RecordbookVisualTest {
         }
     }
     private fun View.texts(): List<String> = descendants().filterIsInstance<TextView>().filter { it.isShown }.map { it.text.toString() }.toList()
-
-    /** An own link is a filled neutral tonal chip; the others stay outlined. */
-    private fun assertOwnChip(chip: Chip, own: Boolean) {
-        val container = MaterialColors.getColor(chip, com.google.android.material.R.attr.colorSurfaceContainerHighest)
-        assertEquals(chip.text.toString(), own, chip.chipStrokeWidth == 0f && chip.chipBackgroundColor?.defaultColor == container)
-    }
 
     private fun assertTouchTargets(activity: RecordbookPreviewActivity) {
         val minimum = 48 * activity.resources.displayMetrics.density - 1
@@ -936,11 +970,11 @@ class RecordbookVisualTest {
 
     private fun screenshot(name: String) = Screenshots.capture("recordbook-screenshots", name)
 
-    /** Only subject names (two lines) and link chips (bounded width) may end in an ellipsis. */
+    /** Only subject names (two lines) may end in an ellipsis. */
     private fun assertVisibleTextFits(root: View) {
         assertTextFits(root, allowEllipsis = true)
         root.descendants().filterIsInstance<TextView>()
-            .filter { it.isShown && it !is Chip && it.id != R.id.name && it.id != R.id.title }
+            .filter { it.isShown && it.id != R.id.name && it.id != R.id.title }
             .forEach { view ->
                 val layout = view.layout ?: return@forEach
                 (0 until layout.lineCount).forEach { line -> assertEquals("Ellipsis: ${view.text}", 0, layout.getEllipsisCount(line)) }

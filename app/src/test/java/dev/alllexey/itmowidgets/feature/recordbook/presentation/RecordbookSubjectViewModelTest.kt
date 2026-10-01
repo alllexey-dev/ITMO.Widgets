@@ -3,6 +3,10 @@ package dev.alllexey.itmowidgets.feature.recordbook.presentation
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
+import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
+import dev.alllexey.itmowidgets.core.resources.UserRestriction
+import kotlinx.coroutines.launch
+import org.junit.Assert.assertFalse
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChip
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -46,6 +50,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -348,11 +353,48 @@ class RecordbookSubjectViewModelTest {
         ))
         val vm = model(); advanceUntilIdle()
         val hub = vm.hub()
-        assertEquals(listOf("notes", "table", "tasks", "video"),
+        assertEquals(listOf("notes", "table", "tasks"),
             hub.chips.visible.map { (it as SubjectLinkChip.Link).link.id })
-        assertEquals(1, hub.chips.moreCount)
+        assertEquals(2, hub.chips.moreCount)
         assertEquals(listOf("chat", "group-chat"), hub.chats.map { it.id })
+        // «Все ссылки, N» counts what the links sheet lists, chats included.
+        assertEquals(7, hub.linkCount)
         assertEquals(1, resources.refreshes)
+    }
+
+    @Test fun `votes on the page toggle like in the sheet and follow the connection and restrictions`() = runTest {
+        val shared = subjectLink("notes", LinkCategory.NOTES, LinkVisibility.ALL, isMine = false, score = 3)
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(shared = listOf(shared)))
+        val vm = model(); advanceUntilIdle()
+        assertTrue(vm.hub().canVote)
+
+        vm.voteLink("notes", up = true); advanceUntilIdle()
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(shared = listOf(shared.copy(myVote = 1))))
+        advanceUntilIdle()
+        vm.voteLink("notes", up = true); advanceUntilIdle()
+        vm.voteLink("notes", up = false); advanceUntilIdle()
+        assertEquals(listOf("vote:notes:1", "vote:notes:0", "vote:notes:-1"), resources.actions)
+
+        resources.restrictions.value = listOf(UserRestriction("r", RestrictionCapability.VOTE, "spam", null))
+        advanceUntilIdle()
+        assertFalse(vm.hub().canVote)
+        resources.restrictions.value = emptyList()
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(shared = listOf(shared)).copy(servicesEnabled = false))
+        advanceUntilIdle()
+        assertFalse(vm.hub().canVote)
+    }
+
+    @Test fun `a vote that fails on the page is reported once`() = runTest {
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(
+            shared = listOf(subjectLink("notes", LinkCategory.NOTES, LinkVisibility.ALL, isMine = false))
+        ))
+        resources.result = AppResult.Failure(AppError.Network)
+        val vm = model(); advanceUntilIdle()
+        val errors = mutableListOf<AppError>()
+        val collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.linkErrors.collect(errors::add) }
+        vm.voteLink("notes", up = false); advanceUntilIdle()
+        assertEquals(listOf<AppError>(AppError.Network), errors)
+        collector.cancel()
     }
 
     @Test fun `new links reach the open page without a reload`() = runTest {

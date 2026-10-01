@@ -9,6 +9,8 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
+import dev.alllexey.itmowidgets.core.resources.blocks
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkRanking
@@ -49,6 +51,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.domain.withBars
 import javax.inject.Inject
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -123,6 +128,10 @@ class RecordbookSubjectViewModel @Inject constructor(
     /** Bumped after a binding is written so the lesson flow is re-evaluated. */
     private val bindingVersion = MutableStateFlow(0)
     private var proposalRejected = false
+    private var voting = false
+    private val linkFailures = Channel<AppError>(Channel.BUFFERED)
+    /** A vote on the page that did not reach the server. */
+    val linkErrors: Flow<AppError> = linkFailures.receiveAsFlow()
 
     init {
         refresh(silent = true)
@@ -258,7 +267,8 @@ class RecordbookSubjectViewModel @Inject constructor(
         linksJob?.cancel()
         if (subject.isPhysicalEducation) {
             updateHub {
-                copy(resourceScope = null, links = null, chips = SubjectLinkChips(emptyList(), 0), chats = emptyList(), sheet = null)
+                copy(resourceScope = null, links = null, chips = SubjectLinkChips(emptyList(), 0), chats = emptyList(),
+                    linkCount = 0, canVote = false, sheet = null)
             }
             return
         }
@@ -270,10 +280,36 @@ class RecordbookSubjectViewModel @Inject constructor(
             launch { subjectLinks.refresh(scope) }
             // On entry and on every pull, without an indicator: the stored total shows until the new one arrives.
             launch { sheets.refresh(scope) }
-            combine(subjectLinks.observe(scope), sheets.observe()) { state, scores -> state to scores }
-                .collect { (state, scores) ->
-                    updateHub { withLinks(scope, state, subject.lmsLink).copy(sheet = sheetState(scope, state, scores)) }
+            combine(subjectLinks.observe(scope), sheets.observe(), subjectLinks.observeRestrictions()) { state, scores, restrictions ->
+                Triple(state, scores, restrictions)
+            }.collect { (state, scores, restrictions) ->
+                updateHub {
+                    withLinks(scope, state, subject.lmsLink).copy(
+                        sheet = sheetState(scope, state, scores),
+                        canVote = (state as? SubjectLinksState.Content)?.snapshot?.servicesEnabled == true &&
+                            restrictions.blocks(RestrictionCapability.VOTE) == null
+                    )
                 }
+            }
+        }
+    }
+
+    /** Tapping the arrow of the current vote takes it back; one vote at a time, a failure is reported once. */
+    fun voteLink(id: String, up: Boolean) {
+        val hub = (_uiState.value as? RecordbookSubjectUiState.Content)?.hub ?: return
+        val scope = hub.resourceScope ?: return
+        val snapshot = (hub.links as? SubjectLinksState.Content)?.snapshot ?: return
+        val link = (snapshot.mine + snapshot.shared + snapshot.previous).firstOrNull { it.id == id } ?: return
+        if (voting) return
+        voting = true
+        val value = if (up) 1 else -1
+        viewModelScope.launch {
+            try {
+                val result = subjectLinks.vote(scope, id, if (link.myVote == value) 0 else value)
+                if (result is AppResult.Failure) linkFailures.send(result.error)
+            } finally {
+                voting = false
+            }
         }
     }
 
@@ -309,7 +345,8 @@ class RecordbookSubjectViewModel @Inject constructor(
         return copy(
             resourceScope = scope,
             links = state,
-            chips = subjectLinkChips(snapshot ?: EMPTY_LINKS, lmsUrl),
+            chips = subjectLinkChips(snapshot ?: EMPTY_LINKS, lmsUrl, limit = SubjectHubState.LINK_ROWS),
+            linkCount = snapshot?.let { (it.mine + it.shared + it.previous).distinctBy { link -> link.id }.size } ?: 0,
             chats = snapshot?.let { (it.mine + it.shared).filter { link -> link.category == LinkCategory.CHAT }.distinctBy { link -> link.id } }
                 .orEmpty()
         )

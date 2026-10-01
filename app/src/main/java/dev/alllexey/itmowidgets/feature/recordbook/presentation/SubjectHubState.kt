@@ -42,7 +42,9 @@ sealed interface SubjectLessonsState {
 
 /**
  * The schedule and links half of the subject page. Physical education has no [resourceScope]:
- * no links, chips or chats. [chips] also hold the MyITMO LMS page while the links load or fail.
+ * no links or chats. [chips] are the short list of at most [LINK_ROWS] link rows and also hold the
+ * MyITMO LMS page while the links load or fail. [linkCount] counts what the links sheet lists;
+ * [canVote] is false without the connection or under a `VOTE` restriction.
  * [teacherLevels] are the review tones of [teachers] by ISU; a teacher without one is absent.
  */
 data class SubjectHubState(
@@ -53,6 +55,8 @@ data class SubjectHubState(
     val links: SubjectLinksState? = null,
     val chips: SubjectLinkChips = SubjectLinkChips(emptyList(), 0),
     val chats: List<SubjectLink> = emptyList(),
+    val linkCount: Int = 0,
+    val canVote: Boolean = false,
     val teacherLevels: Map<Long, TeacherLevel> = emptyMap(),
     /** Null for physical education and for a subject without sheet links or a connection. */
     val sheet: SubjectSheetState? = null
@@ -69,5 +73,7 @@ data class SubjectHubState(
 
     companion object {
         const val COLLAPSED_LESSONS = 2
+        /** Pinned, LMS and the best ranked links on the page; the rest is behind «Все ссылки». */
+        const val LINK_ROWS = 3
     }
 }

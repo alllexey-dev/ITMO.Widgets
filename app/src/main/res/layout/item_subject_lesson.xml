@@ -6,9 +6,10 @@
     android:layout_height="wrap_content"
     android:baselineAligned="false"
     android:gravity="top"
+    android:minHeight="56dp"
     android:orientation="horizontal"
-    android:paddingHorizontal="4dp"
-    android:paddingVertical="@dimen/design_spacing_compact">
+    android:paddingHorizontal="@dimen/design_card_padding"
+    android:paddingVertical="@dimen/design_spacing_content">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -63,7 +64,7 @@
                 android:layout_weight="1"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurface"
-                tools:text="Лекция · 1506 · Кронва" />
+                tools:text="Лекция, 1506, Кронва" />
         </LinearLayout>
 
         <TextView

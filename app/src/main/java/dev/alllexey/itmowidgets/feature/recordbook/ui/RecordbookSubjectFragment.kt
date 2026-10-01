@@ -67,6 +67,7 @@ class RecordbookSubjectFragment : Fragment() {
             onShowAllLessons = viewModel::showAllLessons,
             onOpenLink = { openLink(it, binding.root) },
             onLinkActions = { link -> linksArgs()?.let { openLinkActions(it, link.id) } },
+            onVoteLink = { link, up -> viewModel.voteLink(link.id, up) },
             onAllLinks = { linksArgs()?.let(::openSubjectLinks) },
             onAddLink = { linksArgs()?.let { openLinkEditor(it) } },
             onOpenTeacher = ::openUserProfile,
@@ -81,6 +82,9 @@ class RecordbookSubjectFragment : Fragment() {
         binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh() })
         viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
+        viewModel.linkErrors.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { error ->
+            Snackbar.make(binding.root, error.messageRes(), Snackbar.LENGTH_SHORT).show()
+        }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     override fun onDestroyView() {

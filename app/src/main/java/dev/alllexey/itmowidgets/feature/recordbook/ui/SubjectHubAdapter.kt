@@ -1,32 +1,34 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
 import android.content.res.ColorStateList
-import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat
-import androidx.core.view.isEmpty
 import androidx.core.view.isVisible
-import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.chip.Chip
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChip
-import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
+import dev.alllexey.itmowidgets.core.ui.GroupPosition
+import dev.alllexey.itmowidgets.core.ui.LinkRowTrailing
+import dev.alllexey.itmowidgets.core.ui.bind
+import dev.alllexey.itmowidgets.core.ui.bindGroupPosition
 import dev.alllexey.itmowidgets.core.ui.bindLevel
 import dev.alllexey.itmowidgets.core.ui.buildingShortTitle
+import dev.alllexey.itmowidgets.core.ui.describeActions
+import dev.alllexey.itmowidgets.core.ui.host
 import dev.alllexey.itmowidgets.core.ui.iconRes
 import dev.alllexey.itmowidgets.core.ui.label
 import dev.alllexey.itmowidgets.core.ui.lessonTypeColorRes
@@ -38,20 +40,17 @@ import dev.alllexey.itmowidgets.core.ui.roomShortTitle
 import dev.alllexey.itmowidgets.core.ui.title
 import dev.alllexey.itmowidgets.core.ui.tone
 import dev.alllexey.itmowidgets.core.util.color
+import dev.alllexey.itmowidgets.databinding.ItemGroupActionRowBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookControlBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookControlGroupBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookNoteBinding
-import dev.alllexey.itmowidgets.databinding.ItemRecordbookSectionBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookSportBinding
+import dev.alllexey.itmowidgets.databinding.ItemSectionHeadingBinding
 import dev.alllexey.itmowidgets.databinding.ItemSubjectBindingBinding
-import dev.alllexey.itmowidgets.databinding.ItemSubjectChatBinding
 import dev.alllexey.itmowidgets.databinding.ItemSubjectHeroBinding
 import dev.alllexey.itmowidgets.databinding.ItemSubjectLessonBinding
-import dev.alllexey.itmowidgets.databinding.ItemSubjectLinkChipsBinding
+import dev.alllexey.itmowidgets.databinding.ItemSubjectLinkBinding
 import dev.alllexey.itmowidgets.databinding.ItemSubjectMessageBinding
-import dev.alllexey.itmowidgets.databinding.ItemSubjectMoreBinding
-import dev.alllexey.itmowidgets.databinding.ItemSubjectSheetHintBinding
-import dev.alllexey.itmowidgets.databinding.ItemSubjectSheetScoreBinding
 import dev.alllexey.itmowidgets.databinding.ItemSubjectTeacherBinding
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroup
@@ -71,33 +70,40 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonsSt
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacher
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.columnTitle
-import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.tabLabel
+import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.sheetCaption
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.textRes
+import java.net.URI
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 sealed interface DetailItem {
-    data class Hero(val subject: RecordbookSubject, val step: GradeStep?) : DetailItem
+    /** The result with the own sheet total, or the offer to connect one, at its bottom. */
+    data class Hero(val subject: RecordbookSubject, val step: GradeStep?, val sheet: SubjectSheetState? = null) : DetailItem
     data class SportOverview(val subject: RecordbookSubject, val sport: RecordbookSportState?) : DetailItem
-    data class LinkChips(val chips: SubjectLinkChips) : DetailItem
-    data class Chat(val link: SubjectLink) : DetailItem
+    /** A link of the short list under «Ссылки»: own ones carry «моя», others their votes. */
+    data class Link(val link: SubjectLink, val canVote: Boolean, val position: GroupPosition) : DetailItem
+    /** The MyITMO LMS page of the subject, one of the short list. */
+    data class Lms(val url: String, val position: GroupPosition) : DetailItem
+    /** «Все ссылки, N»: opens the links sheet. */
+    data class AllLinks(val count: Int, val position: GroupPosition) : DetailItem
+    /** «Добавить ссылку» in place of «Все ссылки» while the subject has no links. */
+    data class AddLink(val position: GroupPosition) : DetailItem
+    data class Chat(val link: SubjectLink, val position: GroupPosition) : DetailItem
     /** A heading with its own string. */
     data class Section(val titleRes: Int) : DetailItem
+    /** The heading of a control group with its sum; its controls follow as their own connected group. */
     data class Group(val group: ControlGroup) : DetailItem
-    data class Control(val row: RecordbookControlRow, val subjectTeacher: String?) : DetailItem
+    /** [spaced] parts a first row from a group of controls right above it. */
+    data class Control(val row: RecordbookControlRow, val subjectTeacher: String?, val position: GroupPosition, val spaced: Boolean = false) : DetailItem
     data class Notice(val errorRes: Int?) : DetailItem
-    data class Lesson(val lesson: SubjectLesson) : DetailItem
-    /** «Все пары · N»: the rest of the window opens in place. */
-    data class AllLessons(val count: Int) : DetailItem
+    data class Lesson(val lesson: SubjectLesson, val position: GroupPosition) : DetailItem
+    /** «Все пары, N»: the rest of the window opens in place. */
+    data class AllLessons(val count: Int, val position: GroupPosition) : DetailItem
     /** Loading, empty, unmatched or failed lessons; never used for content. */
     data class LessonsMessage(val state: SubjectLessonsState) : DetailItem
     data class BindingProposal(val candidate: ScheduleSubject) : DetailItem
     data class BindingChoice(val candidates: List<ScheduleSubject>) : DetailItem
-    data class Teacher(val teacher: SubjectTeacher, val level: TeacherLevel?) : DetailItem
-    /** The own total from a connected sheet, first under «Баллы». */
-    data class SheetScore(val state: SubjectSheetState.Connected) : DetailItem
-    /** «Мои баллы из таблицы» for a subject with sheet links and no connection. */
-    data class SheetHint(val links: List<SheetLinkOption>) : DetailItem
+    data class Teacher(val teacher: SubjectTeacher, val level: TeacherLevel?, val position: GroupPosition) : DetailItem
 }
 
 /** Actions the subject page forwards to its view model and the link sheets. */
@@ -108,6 +114,7 @@ data class SubjectHubActions(
     val onShowAllLessons: () -> Unit = {},
     val onOpenLink: (String) -> Unit = {},
     val onLinkActions: (SubjectLink) -> Unit = {},
+    val onVoteLink: (SubjectLink, Boolean) -> Unit = { _, _ -> },
     val onAllLinks: () -> Unit = {},
     val onAddLink: () -> Unit = {},
     val onOpenTeacher: (Int) -> Unit = {},
@@ -117,7 +124,14 @@ data class SubjectHubActions(
     val onConnectSheet: (List<SheetLinkOption>) -> Unit = {}
 )
 
-/** The whole subject page as one list: result, links, chats, scores, teachers and the nearest lessons. */
+/** Adds [rows] as one connected group: each row learns its place for the corners and gaps. */
+private fun MutableList<DetailItem>.addGroup(rows: List<(GroupPosition) -> DetailItem>) =
+    rows.forEachIndexed { index, row -> add(row(GroupPosition.of(index, rows.size))) }
+
+/**
+ * The whole subject page as one list: the result with the sheet total, links, chats, controls, teachers
+ * and the nearest lessons. Every list section is a heading over one connected group.
+ */
 class SubjectHubAdapter(
     private val onRetry: () -> Unit = {},
     private val hubActions: SubjectHubActions = SubjectHubActions()
@@ -129,51 +143,47 @@ class SubjectHubAdapter(
         val hub = state.hub
         submitList(buildList {
             if (state.subject.isPhysicalEducation) add(DetailItem.SportOverview(state.subject, state.sport))
-            else add(DetailItem.Hero(state.subject, state.gradeStep))
-            if (hub.resourceScope != null) add(DetailItem.LinkChips(hub.chips))
+            else add(DetailItem.Hero(state.subject, state.gradeStep, hub.sheet))
+            if (hub.resourceScope != null) {
+                add(DetailItem.Section(R.string.links_title))
+                addGroup(buildList {
+                    hub.chips.visible.forEach { chip ->
+                        when (chip) {
+                            is SubjectLinkChip.Link -> add { position: GroupPosition -> DetailItem.Link(chip.link, hub.canVote, position) }
+                            is SubjectLinkChip.Lms -> add { position: GroupPosition -> DetailItem.Lms(chip.url, position) }
+                        }
+                    }
+                    if (hub.linkCount > 0) add { position: GroupPosition -> DetailItem.AllLinks(hub.linkCount, position) }
+                    else add { position: GroupPosition -> DetailItem.AddLink(position) }
+                })
+            }
             if (hub.chats.isNotEmpty()) {
                 add(DetailItem.Section(R.string.links_chats))
-                addAll(hub.chats.map(DetailItem::Chat))
-            }
-            val sheet = when (val sheetState = hub.sheet) {
-                is SubjectSheetState.Connected -> DetailItem.SheetScore(sheetState)
-                is SubjectSheetState.Hint -> DetailItem.SheetHint(sheetState.links)
-                null -> null
+                addGroup(hub.chats.map { link -> { position: GroupPosition -> DetailItem.Chat(link, position) } })
             }
             if (state.controlsError != null || state.controls.isEmpty()) {
-                if (sheet != null) {
-                    // The sheet is the detail: «no details» goes, a failure to load the controls stays under it.
-                    add(DetailItem.Section(R.string.subject_scores_title))
-                    add(sheet)
-                    state.controlsError?.let { add(DetailItem.Notice(it.messageRes())) }
-                } else if (state.controlsError != null || !state.subject.isPhysicalEducation) {
-                    // PE often has no control tree by design; do not add a second empty card.
+                // The sheet (or the offer of one) is the detail: «no details» goes, a failure to load the controls stays.
+                // PE often has no control tree by design; it gets no empty card either.
+                if (state.controlsError != null || (hub.sheet == null && !state.subject.isPhysicalEducation)) {
                     add(DetailItem.Notice(state.controlsError?.messageRes()))
                 }
             } else {
-                add(DetailItem.Section(R.string.subject_scores_title))
-                sheet?.let(::add)
-                state.controlGroups.forEach { entry ->
-                    when (entry) {
-                        is ControlEntry.Single -> add(DetailItem.Control(RecordbookControlRow(entry.control, 0), state.subject.teacherName))
-                        is ControlGroup -> {
-                            add(DetailItem.Group(entry))
-                            addAll(entry.controls.map { DetailItem.Control(RecordbookControlRow(it, 1), state.subject.teacherName) })
-                        }
-                    }
-                }
+                add(DetailItem.Section(R.string.subject_controls_title))
+                addControls(state)
             }
             if (hub.teachers.isNotEmpty()) {
                 add(DetailItem.Section(R.string.subject_teachers_title))
-                addAll(hub.teachers.map { DetailItem.Teacher(it, it.isu?.let(hub.teacherLevels::get)) })
+                addGroup(hub.teachers.map { teacher ->
+                    { position: GroupPosition -> DetailItem.Teacher(teacher, teacher.isu?.let(hub.teacherLevels::get), position) }
+                })
             }
             if (hub.lessons != SubjectLessonsState.Hidden) {
                 add(DetailItem.Section(R.string.subject_lessons_title))
                 when (val lessons = hub.lessons) {
-                    is SubjectLessonsState.Content -> {
-                        addAll(hub.visibleLessons.map(DetailItem::Lesson))
-                        if (hub.allLessonsCount > 0) add(DetailItem.AllLessons(hub.allLessonsCount))
-                    }
+                    is SubjectLessonsState.Content -> addGroup(buildList {
+                        hub.visibleLessons.forEach { lesson -> add { position: GroupPosition -> DetailItem.Lesson(lesson, position) } }
+                        if (hub.allLessonsCount > 0) add { position: GroupPosition -> DetailItem.AllLessons(hub.allLessonsCount, position) }
+                    })
                     is SubjectLessonsState.Proposed -> add(DetailItem.BindingProposal(lessons.candidate))
                     is SubjectLessonsState.Ambiguous -> add(DetailItem.BindingChoice(lessons.candidates))
                     else -> add(DetailItem.LessonsMessage(lessons))
@@ -182,41 +192,64 @@ class SubjectHubAdapter(
         }, onCommitted)
     }
 
+    /** Lone controls in a row share a group; each control group gets its heading and a group of its own. */
+    private fun MutableList<DetailItem>.addControls(state: RecordbookSubjectUiState.Content) {
+        val teacher = state.subject.teacherName
+        val singles = mutableListOf<ControlEntry.Single>()
+        var afterGroup = false
+        fun flushSingles() {
+            if (singles.isEmpty()) return
+            val spaced = afterGroup
+            addGroup(singles.map { entry ->
+                { position: GroupPosition -> DetailItem.Control(RecordbookControlRow(entry.control, 0), teacher, position, spaced) }
+            })
+            singles.clear()
+        }
+        state.controlGroups.forEach { entry ->
+            when (entry) {
+                is ControlEntry.Single -> singles += entry
+                is ControlGroup -> {
+                    flushSingles()
+                    add(DetailItem.Group(entry))
+                    addGroup(entry.controls.map { control ->
+                        { position: GroupPosition -> DetailItem.Control(RecordbookControlRow(control, 1), teacher, position) }
+                    })
+                    afterGroup = true
+                }
+            }
+        }
+        flushSingles()
+    }
+
     override fun getItemViewType(position: Int): Int = when (getItem(position)) {
-        is DetailItem.Hero -> 0
-        is DetailItem.Notice -> 1
-        is DetailItem.Section -> 2
-        is DetailItem.Control -> 3
-        is DetailItem.SportOverview -> 4
-        is DetailItem.Lesson -> 5
-        is DetailItem.LessonsMessage -> 6
-        is DetailItem.BindingProposal, is DetailItem.BindingChoice -> 7
-        is DetailItem.Teacher -> 8
-        is DetailItem.LinkChips -> 9
-        is DetailItem.Chat -> 10
-        is DetailItem.Group -> 11
-        is DetailItem.AllLessons -> 12
-        is DetailItem.SheetScore -> 13
-        is DetailItem.SheetHint -> 14
+        is DetailItem.Hero -> TYPE_HERO
+        is DetailItem.Notice -> TYPE_NOTICE
+        is DetailItem.Section -> TYPE_SECTION
+        is DetailItem.Control -> TYPE_CONTROL
+        is DetailItem.SportOverview -> TYPE_SPORT
+        is DetailItem.Lesson -> TYPE_LESSON
+        is DetailItem.LessonsMessage -> TYPE_LESSONS_MESSAGE
+        is DetailItem.BindingProposal, is DetailItem.BindingChoice -> TYPE_BINDING
+        is DetailItem.Teacher -> TYPE_TEACHER
+        is DetailItem.Link, is DetailItem.Lms, is DetailItem.Chat -> TYPE_LINK
+        is DetailItem.Group -> TYPE_GROUP
+        is DetailItem.AllLinks, is DetailItem.AddLink, is DetailItem.AllLessons -> TYPE_ACTION
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
-            0 -> HeroHolder(ItemSubjectHeroBinding.inflate(inflater, parent, false))
-            1 -> NoteHolder(ItemRecordbookNoteBinding.inflate(inflater, parent, false))
-            2 -> HeadingHolder(ItemRecordbookSectionBinding.inflate(inflater, parent, false))
-            4 -> RecordbookSportHolder(ItemRecordbookSportBinding.inflate(inflater, parent, false), onRetry)
-            5 -> LessonHolder(ItemSubjectLessonBinding.inflate(inflater, parent, false))
-            6 -> LessonsMessageHolder(ItemSubjectMessageBinding.inflate(inflater, parent, false))
-            7 -> BindingHolder(ItemSubjectBindingBinding.inflate(inflater, parent, false))
-            8 -> TeacherHolder(ItemSubjectTeacherBinding.inflate(inflater, parent, false))
-            9 -> ChipsHolder(ItemSubjectLinkChipsBinding.inflate(inflater, parent, false))
-            10 -> ChatHolder(ItemSubjectChatBinding.inflate(inflater, parent, false))
-            11 -> GroupHolder(ItemRecordbookControlGroupBinding.inflate(inflater, parent, false))
-            12 -> AllLessonsHolder(ItemSubjectMoreBinding.inflate(inflater, parent, false))
-            13 -> SheetScoreHolder(ItemSubjectSheetScoreBinding.inflate(inflater, parent, false))
-            14 -> SheetHintHolder(ItemSubjectSheetHintBinding.inflate(inflater, parent, false))
+            TYPE_HERO -> HeroHolder(ItemSubjectHeroBinding.inflate(inflater, parent, false))
+            TYPE_NOTICE -> NoteHolder(ItemRecordbookNoteBinding.inflate(inflater, parent, false))
+            TYPE_SECTION -> HeadingHolder(ItemSectionHeadingBinding.inflate(inflater, parent, false))
+            TYPE_SPORT -> RecordbookSportHolder(ItemRecordbookSportBinding.inflate(inflater, parent, false), onRetry)
+            TYPE_LESSON -> LessonHolder(ItemSubjectLessonBinding.inflate(inflater, parent, false))
+            TYPE_LESSONS_MESSAGE -> LessonsMessageHolder(ItemSubjectMessageBinding.inflate(inflater, parent, false))
+            TYPE_BINDING -> BindingHolder(ItemSubjectBindingBinding.inflate(inflater, parent, false))
+            TYPE_TEACHER -> TeacherHolder(ItemSubjectTeacherBinding.inflate(inflater, parent, false))
+            TYPE_LINK -> LinkHolder(ItemSubjectLinkBinding.inflate(inflater, parent, false))
+            TYPE_GROUP -> GroupHolder(ItemRecordbookControlGroupBinding.inflate(inflater, parent, false))
+            TYPE_ACTION -> ActionHolder(ItemGroupActionRowBinding.inflate(inflater, parent, false))
             else -> ControlHolder(ItemRecordbookControlBinding.inflate(inflater, parent, false))
         }
     }
@@ -229,20 +262,21 @@ class SubjectHubAdapter(
             is DetailItem.Section -> (holder as HeadingHolder).binding.title.setText(item.titleRes)
             is DetailItem.Group -> (holder as GroupHolder).bind(item.group)
             is DetailItem.Control -> (holder as ControlHolder).bind(item)
-            is DetailItem.LinkChips -> (holder as ChipsHolder).bind(item.chips)
-            is DetailItem.Chat -> (holder as ChatHolder).bind(item.link)
-            is DetailItem.Lesson -> (holder as LessonHolder).bind(item.lesson)
-            is DetailItem.AllLessons -> (holder as AllLessonsHolder).bind(item.count)
+            is DetailItem.Link -> (holder as LinkHolder).bindLink(item)
+            is DetailItem.Lms -> (holder as LinkHolder).bindLms(item)
+            is DetailItem.Chat -> (holder as LinkHolder).bindChat(item)
+            is DetailItem.AllLinks -> (holder as ActionHolder).bindAllLinks(item)
+            is DetailItem.AddLink -> (holder as ActionHolder).bindAddLink(item)
+            is DetailItem.AllLessons -> (holder as ActionHolder).bindAllLessons(item)
+            is DetailItem.Lesson -> (holder as LessonHolder).bind(item)
             is DetailItem.LessonsMessage -> (holder as LessonsMessageHolder).bind(item.state)
             is DetailItem.BindingProposal -> (holder as BindingHolder).bindProposal(item.candidate)
             is DetailItem.BindingChoice -> (holder as BindingHolder).bindChoice(item.candidates)
-            is DetailItem.Teacher -> (holder as TeacherHolder).bind(item.teacher, item.level)
-            is DetailItem.SheetScore -> (holder as SheetScoreHolder).bind(item.state)
-            is DetailItem.SheetHint -> (holder as SheetHintHolder).bind(item.links)
+            is DetailItem.Teacher -> (holder as TeacherHolder).bind(item)
         }
     }
 
-    private class HeroHolder(val binding: ItemSubjectHeroBinding) : RecyclerView.ViewHolder(binding.root) {
+    private inner class HeroHolder(val binding: ItemSubjectHeroBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: DetailItem.Hero) {
             val subject = item.subject
             val context = binding.root.context
@@ -261,109 +295,52 @@ class SubjectHubAdapter(
             val hint = item.step?.text(context)
             binding.hint.text = hint
             binding.hint.isVisible = hint != null
-            (binding.root.getChildAt(0)).contentDescription = listOfNotNull(
+            binding.summary.contentDescription = listOfNotNull(
                 progress.value?.let { context.getString(R.string.recordbook_points_out_of, formatRecordbookNumber(it), "100") }
                     ?: context.getString(R.string.recordbook_points_missing),
                 if (final) subject.displayRate(context) else null,
                 hint
             ).joinToString(". ")
+            bindSheet(item.sheet)
         }
-    }
 
-    private inner class ChipsHolder(val binding: ItemSubjectLinkChipsBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(chips: SubjectLinkChips) {
-            val group = binding.chips
-            val context = group.context
-            val inflater = LayoutInflater.from(context)
-            binding.allLinks.setOnClickListener { hubActions.onAllLinks() }
-            group.removeAllViews()
-            fun chip(text: CharSequence, icon: Int?): Chip =
-                (inflater.inflate(R.layout.item_subject_link_chip, group, false) as Chip).apply {
-                    this.text = text
-                    isChipIconVisible = icon != null
-                    icon?.let(::setChipIconResource)
-                    group.addView(this)
-                }
-            chips.visible.forEach { item ->
-                when (item) {
-                    is SubjectLinkChip.Link -> chip(item.link.title ?: item.link.category.title().resolve(context), item.category.iconRes()).apply {
-                        if (item.link.isMine) highlightOwn()
-                        setOnClickListener { hubActions.onOpenLink(item.link.url) }
-                        setOnLongClickListener { hubActions.onLinkActions(item.link); true }
-                    }
-                    is SubjectLinkChip.Lms -> chip(context.getString(R.string.subject_link_lms), item.category.iconRes()).apply {
-                        setOnClickListener { hubActions.onOpenLink(item.url) }
-                    }
-                }
-            }
-            if (chips.moreCount > 0) {
-                chip(context.getString(R.string.links_more, chips.moreCount), null).setOnClickListener { hubActions.onAllLinks() }
-            }
-            // Alone, the add chip says what it does; next to links it is an icon with a description.
-            val alone = group.isEmpty()
-            chip(if (alone) context.getString(R.string.links_add) else "", R.drawable.ic_add).apply {
-                contentDescription = context.getString(R.string.links_add)
-                if (!alone) {
-                    textStartPadding = 0f
-                    textEndPadding = 0f
-                    chipEndPadding = chipStartPadding
-                }
-                setOnClickListener { hubActions.onAddLink() }
+        private fun bindSheet(state: SubjectSheetState?) {
+            binding.sheetDivider.isVisible = state is SubjectSheetState.Connected
+            binding.sheet.root.isVisible = state is SubjectSheetState.Connected
+            binding.sheetHint.isVisible = state is SubjectSheetState.Hint
+            when (state) {
+                is SubjectSheetState.Connected -> bindConnected(state)
+                is SubjectSheetState.Hint -> binding.sheetHint.setOnClickListener { hubActions.onConnectSheet(state.links) }
+                null -> Unit
             }
         }
-    }
 
-    /**
-     * An own link is a filled neutral chip among outlined ones, the same tone as own rows in the
-     * links sheet; secondaryContainer read too faintly with some dynamic palettes.
-     */
-    private fun Chip.highlightOwn() {
-        val onSurface = context.color.onSurface
-        chipBackgroundColor = ColorStateList.valueOf(
-            context.color.resolve(com.google.android.material.R.attr.colorSurfaceContainerHighest)
-        )
-        chipStrokeWidth = 0f
-        setTextColor(onSurface)
-        chipIconTint = ColorStateList.valueOf(onSurface)
-    }
-
-    private inner class ChatHolder(val binding: ItemSubjectChatBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(link: SubjectLink) {
-            val context = binding.root.context
-            binding.icon.setImageResource(linkIconRes(link.category, link.url))
-            binding.title.text = link.title ?: link.url.toUri().host ?: link.url
-            binding.caption.text = link.visibility.label(link.audienceLabel).resolve(context)
-            binding.root.setOnClickListener { hubActions.onOpenLink(link.url) }
-            binding.root.setOnLongClickListener { hubActions.onLinkActions(link); true }
-        }
-    }
-
-    /** Value, «лист · заголовок» and when it was read; the row opens the tab, `⋮` holds the rest. */
-    private inner class SheetScoreHolder(val binding: ItemSubjectSheetScoreBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(state: SubjectSheetState.Connected) {
-            val context = binding.root.context
+        /** Value, «путь, лист «Лист»» and when it was read; the row opens the tab, `⋮` holds the rest. */
+        private fun bindConnected(state: SubjectSheetState.Connected) {
+            val row = binding.sheet
+            val context = row.root.context
             val score = state.score
-            binding.value.text = score.value ?: context.getString(R.string.recordbook_score_pending)
-            binding.caption.text = tabLabel(score.tabName, context.columnTitle(score.column.headerPath, score.column.index))
+            row.value.text = score.value ?: context.getString(R.string.recordbook_score_pending)
+            row.caption.text = context.sheetCaption(score.tabName, context.columnTitle(score.column.headerPath, score.column.index))
             val updated = state.updatedAt?.let { at ->
                 if (at.toLocalDate() == state.today) context.getString(R.string.sheet_scores_updated_time, at.format(TIME_FORMAT))
                 else context.getString(R.string.sheet_scores_updated_date, at.format(DAY_FORMAT))
             }
             val failure = score.status.textRes()?.let(context::getString)
             // Offline keeps the stored value and says only that; the time of a stale value would wrap on narrow screens.
-            binding.status.text = if (score.status == SheetStatus.OK) updated else failure
-            binding.status.isVisible = !binding.status.text.isNullOrEmpty()
-            binding.status.setTextColor(
+            row.status.text = if (score.status == SheetStatus.OK) updated else failure
+            row.status.isVisible = !row.status.text.isNullOrEmpty()
+            row.status.setTextColor(
                 if (score.status == SheetStatus.OK || score.status == SheetStatus.NETWORK) {
                     context.color.resolve(com.google.android.material.R.attr.colorOnSurfaceVariant)
                 } else {
                     context.color.resolve(androidx.appcompat.R.attr.colorError)
                 }
             )
-            binding.root.contentDescription = listOf(binding.value.text, binding.caption.text, binding.status.text)
+            row.root.contentDescription = listOf(row.value.text, row.caption.text, row.status.text)
                 .filter { !it.isNullOrEmpty() }.joinToString(", ")
-            binding.root.setOnClickListener { hubActions.onOpenSheet(score.tabUrl) }
-            binding.menu.setOnClickListener { button ->
+            row.root.setOnClickListener { hubActions.onOpenSheet(score.tabUrl) }
+            row.menu.setOnClickListener { button ->
                 val popup = PopupMenu(button.context, button)
                 popup.menu.add(0, MENU_OPEN, 0, R.string.sheet_scores_open)
                 popup.menu.add(0, MENU_TOTAL, 1, R.string.sheet_scores_change_total)
@@ -381,9 +358,71 @@ class SubjectHubAdapter(
         }
     }
 
-    private inner class SheetHintHolder(val binding: ItemSubjectSheetHintBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(links: List<SheetLinkOption>) {
-            binding.root.setOnClickListener { hubActions.onConnectSheet(links) }
+    /** Links, the LMS page and chats share one row; a tap opens, a long press opens a link's actions. */
+    private inner class LinkHolder(val binding: ItemSubjectLinkBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bindLink(item: DetailItem.Link) {
+            val link = item.link
+            val trailing = if (link.isMine) LinkRowTrailing.Own
+                else LinkRowTrailing.Votes(link, item.canVote) { up -> hubActions.onVoteLink(link, up) }
+            binding.bind(link.category.iconRes(), link.title ?: link.category.title().resolve(binding.root.context), link.host(), trailing)
+            bindLinkActions(link, item.position)
+        }
+
+        fun bindLms(item: DetailItem.Lms) {
+            val host = runCatching { URI(item.url).host }.getOrNull()?.removePrefix("www.")
+            binding.bind(LinkCategory.MATERIALS.iconRes(), binding.root.context.getString(R.string.subject_link_lms), host, LinkRowTrailing.None)
+            binding.root.bindGroupPosition(item.position)
+            binding.root.setOnClickListener { hubActions.onOpenLink(item.url) }
+            binding.root.setOnLongClickListener(null)
+            binding.root.isLongClickable = false
+            ViewCompat.removeAccessibilityAction(binding.root, AccessibilityActionCompat.ACTION_LONG_CLICK.id)
+        }
+
+        fun bindChat(item: DetailItem.Chat) {
+            val link = item.link
+            val context = binding.root.context
+            binding.bind(linkIconRes(link.category, link.url), link.title ?: link.host(),
+                link.visibility.label(link.audienceLabel).resolve(context),
+                if (link.isMine) LinkRowTrailing.Own else LinkRowTrailing.None)
+            bindLinkActions(link, item.position)
+        }
+
+        private fun bindLinkActions(link: SubjectLink, position: GroupPosition) {
+            binding.root.bindGroupPosition(position)
+            binding.root.setOnClickListener { hubActions.onOpenLink(link.url) }
+            binding.root.setOnLongClickListener { hubActions.onLinkActions(link); true }
+            binding.describeActions()
+        }
+    }
+
+    /** The row that ends a group and leads further: all links, adding the first one, all lessons. */
+    private inner class ActionHolder(val binding: ItemGroupActionRowBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bindAllLinks(item: DetailItem.AllLinks) {
+            // No symbol of its own, but the text stays in line with the link titles above it.
+            bind(binding.root.context.getString(R.string.links_all_count, item.count), icon = null, keepIconSpace = true,
+                trailing = R.drawable.ic_chevron_right, position = item.position) { hubActions.onAllLinks() }
+        }
+
+        fun bindAddLink(item: DetailItem.AddLink) =
+            bind(binding.root.context.getString(R.string.links_add), icon = R.drawable.ic_add, keepIconSpace = true,
+                trailing = null, position = item.position) { hubActions.onAddLink() }
+
+        fun bindAllLessons(item: DetailItem.AllLessons) =
+            bind(binding.root.context.getString(R.string.subject_lessons_all, item.count), icon = null, keepIconSpace = false,
+                trailing = R.drawable.ic_expand_more, position = item.position) { hubActions.onShowAllLessons() }
+
+        private fun bind(text: String, icon: Int?, keepIconSpace: Boolean, trailing: Int?, position: GroupPosition, onClick: () -> Unit) {
+            binding.title.text = text
+            binding.icon.visibility = when {
+                icon != null -> View.VISIBLE
+                keepIconSpace -> View.INVISIBLE
+                else -> View.GONE
+            }
+            icon?.let(binding.icon::setImageResource)
+            binding.chevron.isVisible = trailing != null
+            trailing?.let(binding.chevron::setImageResource)
+            binding.root.bindGroupPosition(position)
+            binding.root.setOnClickListener { onClick() }
         }
     }
 
@@ -405,16 +444,11 @@ class SubjectHubAdapter(
         }
     }
 
-    private inner class AllLessonsHolder(val binding: ItemSubjectMoreBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(count: Int) {
-            binding.more.text = binding.root.context.getString(R.string.subject_lessons_all, count)
-            binding.more.setOnClickListener { hubActions.onShowAllLessons() }
-        }
-    }
-
     private class LessonHolder(val binding: ItemSubjectLessonBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(lesson: SubjectLesson) {
+        fun bind(item: DetailItem.Lesson) {
+            val lesson = item.lesson
             val context = binding.root.context
+            binding.root.bindGroupPosition(item.position)
             binding.date.text = lesson.date.format(DateTimeFormatter.ofPattern(context.getString(R.string.subject_lesson_date), Locale.forLanguageTag("ru")))
             binding.time.text = context.getString(R.string.schedule_break_range_short, lesson.start.format(TIME_FORMAT), lesson.end.format(TIME_FORMAT))
             binding.typeIndicator.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context, lessonTypeColorRes(lesson.typeId)))
@@ -422,7 +456,7 @@ class SubjectHubAdapter(
                 context.getString(lessonTypeNameRes(lesson.typeId)),
                 lesson.room?.let { roomShortTitle(context, it) },
                 lesson.building?.let { buildingShortTitle(context, it, maxLength = 10) }
-            ).joinToString(" · ")
+            ).joinToString(", ")
             binding.teacher.text = lesson.teacherFio
             binding.teacher.isVisible = !lesson.teacherFio.isNullOrBlank()
         }
@@ -430,6 +464,7 @@ class SubjectHubAdapter(
 
     private inner class LessonsMessageHolder(val binding: ItemSubjectMessageBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(state: SubjectLessonsState) {
+            binding.root.bindGroupPosition(GroupPosition.SINGLE)
             binding.progress.isVisible = state == SubjectLessonsState.Loading
             binding.retry.isVisible = state is SubjectLessonsState.Error
             binding.retry.setOnClickListener { hubActions.onRetryLessons() }
@@ -467,28 +502,28 @@ class SubjectHubAdapter(
     }
 
     private inner class TeacherHolder(val binding: ItemSubjectTeacherBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(teacher: SubjectTeacher, level: TeacherLevel?) {
+        fun bind(item: DetailItem.Teacher) {
+            val teacher = item.teacher
+            val level = item.level
             val context = binding.root.context
             binding.avatar.setUser(teacher.name, null)
             binding.name.text = teacher.name
             // A teacher with an ISU keeps the dot's place, so a tone arriving later does not move the chevron.
             binding.levelDot.bindLevel(level, reserve = UserScreenArgs.profileIsu(teacher.isu) != null)
             binding.name.contentDescription = level?.let { "${teacher.name}, ${it.tone().description(context).lowercase()}" }
-            binding.roles.text = teacher.roles.joinToString(" · ") { context.getString(lessonTypeNameRes(it)) }
+            binding.roles.text = teacher.roles.joinToString(", ") { context.getString(lessonTypeNameRes(it)) }
             binding.roles.isVisible = teacher.roles.isNotEmpty()
             val isu = UserScreenArgs.profileIsu(teacher.isu)
             binding.root.setOnClickListener(if (isu != null) { _ -> hubActions.onOpenTeacher(isu) } else null)
             binding.root.isClickable = isu != null
             binding.root.isFocusable = isu != null
             binding.trailing.isVisible = isu != null
+            // The ripple of the group surface shows only for a clickable row.
+            binding.root.bindGroupPosition(item.position)
             if (isu != null) {
-                val background = TypedValue()
-                context.theme.resolveAttribute(android.R.attr.selectableItemBackground, background, true)
-                binding.root.setBackgroundResource(background.resourceId)
                 ViewCompat.replaceAccessibilityAction(binding.root, AccessibilityActionCompat.ACTION_CLICK,
                     context.getString(R.string.teacher_open_profile), null)
             } else {
-                binding.root.background = null
                 ViewCompat.removeAccessibilityAction(binding.root, AccessibilityActionCompat.ACTION_CLICK.id)
             }
         }
@@ -503,7 +538,7 @@ class SubjectHubAdapter(
         }
     }
 
-    private class HeadingHolder(val binding: ItemRecordbookSectionBinding) : RecyclerView.ViewHolder(binding.root)
+    private class HeadingHolder(val binding: ItemSectionHeadingBinding) : RecyclerView.ViewHolder(binding.root)
 
     private class ControlHolder(val binding: ItemRecordbookControlBinding) : RecyclerView.ViewHolder(binding.root) {
         init { binding.name.textLocale = Locale.forLanguageTag("ru") }
@@ -512,9 +547,8 @@ class SubjectHubAdapter(
             val row = item.row
             val control = row.control
             val context = binding.root.context
-            binding.root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                marginStart = (row.depth.coerceAtMost(3) * 12 * context.resources.displayMetrics.density).toInt()
-            }
+            binding.root.bindGroupPosition(item.position, spaceBefore =
+                if (item.spaced) context.resources.getDimensionPixelSize(R.dimen.design_spacing_content) else 0)
             binding.name.text = if (control.additional) context.getString(R.string.recordbook_additional_points) else control.name
             val progress = RecordbookProgress(control.score, control.maximum)
             val earned = progress.value?.let(::formatRecordbookNumber) ?: context.getString(R.string.recordbook_score_pending)
@@ -534,11 +568,11 @@ class SubjectHubAdapter(
             binding.meta.text = buildList {
                 if (belowMinimum) add(context.getString(R.string.recordbook_control_minimum, formatRecordbookNumber(minimum!!)))
                 if (control.absent) add(context.getString(R.string.recordbook_absent))
-            }.joinToString(" · ")
+            }.joinToString(", ")
             binding.meta.isVisible = binding.meta.text.isNotEmpty()
             binding.meta.setTextColor(context.color.resolve(androidx.appcompat.R.attr.colorError))
             binding.details.text = listOfNotNull(control.date?.format(DATE_FORMAT),
-                control.teacherName?.takeUnless { it == item.subjectTeacher }).joinToString(" · ")
+                control.teacherName?.takeUnless { it == item.subjectTeacher }).joinToString(", ")
             binding.details.isVisible = binding.details.text.isNotEmpty()
         }
     }
@@ -549,6 +583,7 @@ class SubjectHubAdapter(
             old is DetailItem.Section && new is DetailItem.Section -> old.titleRes == new.titleRes
             old is DetailItem.Group && new is DetailItem.Group -> old.group.controls.firstOrNull()?.id == new.group.controls.firstOrNull()?.id
             old is DetailItem.Chat && new is DetailItem.Chat -> old.link.id == new.link.id
+            old is DetailItem.Link && new is DetailItem.Link -> old.link.id == new.link.id
             old is DetailItem.Lesson && new is DetailItem.Lesson -> old.lesson.pairId == new.lesson.pairId
             old is DetailItem.Teacher && new is DetailItem.Teacher -> old.teacher.name == new.teacher.name
             else -> old::class == new::class
@@ -563,5 +598,17 @@ class SubjectHubAdapter(
         const val MENU_OPEN = 1
         const val MENU_TOTAL = 2
         const val MENU_DISCONNECT = 3
+        const val TYPE_HERO = 0
+        const val TYPE_NOTICE = 1
+        const val TYPE_SECTION = 2
+        const val TYPE_CONTROL = 3
+        const val TYPE_SPORT = 4
+        const val TYPE_LESSON = 5
+        const val TYPE_LESSONS_MESSAGE = 6
+        const val TYPE_BINDING = 7
+        const val TYPE_TEACHER = 8
+        const val TYPE_LINK = 9
+        const val TYPE_GROUP = 10
+        const val TYPE_ACTION = 11
     }
 }

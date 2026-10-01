@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The status line runs under the menu button, so a status never wraps on a narrow screen. -->
+<!-- The sheet row inside the result card. The status line runs under the menu button, so a status never wraps on a narrow screen. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -9,7 +9,7 @@
     android:clickable="true"
     android:focusable="true"
     android:minHeight="@dimen/design_touch_target"
-    android:paddingStart="4dp"
+    android:paddingStart="0dp"
     android:paddingTop="@dimen/design_spacing_compact"
     android:paddingEnd="0dp"
     android:paddingBottom="@dimen/design_spacing_compact">

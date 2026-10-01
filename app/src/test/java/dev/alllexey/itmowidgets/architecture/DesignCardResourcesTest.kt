@@ -29,6 +29,7 @@ class DesignCardResourcesTest {
             "Content.Outlined" to "20dp",
             "CompactSummary" to "20dp",
             "Summary" to "24dp",
+            "Hero" to "28dp",
             "ScheduleDay" to "16dp",
             "SettingsGroup" to "20dp"
         )
@@ -39,7 +40,7 @@ class DesignCardResourcesTest {
             assertEquals(variant, "0dp", property(style, "cardElevation"))
             assertEquals(
                 variant,
-                if (variant == "CompactSummary") "?attr/colorSurfaceContainer" else "?attr/colorSurfaceContainerLow",
+                if (variant == "CompactSummary" || variant == "Hero") "?attr/colorSurfaceContainer" else "?attr/colorSurfaceContainerLow",
                 property(style, "cardBackgroundColor")
             )
             assertEquals(
@@ -67,7 +68,6 @@ class DesignCardResourcesTest {
             "item_sport_lesson" to "Content.Outlined",
             "item_sport_booking" to "Content.Outlined",
             "item_recordbook_subject" to "Content",
-            "item_recordbook_control" to "Content",
             "item_recordbook_note" to "Content",
             "item_schedule_change" to "Content",
             "item_home_schedule_changes" to "Content",
@@ -76,7 +76,7 @@ class DesignCardResourcesTest {
             "item_own_teacher_review" to "Content.Own",
             "item_teacher_summary" to "Content.Tonal",
             "item_recordbook_summary" to "CompactSummary",
-            "item_subject_hero" to "Summary",
+            "item_subject_hero" to "Hero",
             "item_recordbook_sport" to "Summary",
             "item_day_schedule" to "ScheduleDay"
         )
@@ -104,6 +104,16 @@ class DesignCardResourcesTest {
         assertEquals("16dp", dimensions.getValue("design_card_padding"))
         assertEquals("20dp", dimensions.getValue("design_summary_padding"))
         assertEquals("48dp", dimensions.getValue("design_touch_target"))
+    }
+
+    @Test
+    fun `connected groups join rows with small gaps and inner corners`() {
+        assertEquals("20dp", dimensions.getValue("design_group_radius_outer"))
+        assertEquals("4dp", dimensions.getValue("design_group_radius_inner"))
+        assertEquals("2dp", dimensions.getValue("design_group_gap"))
+        // Rows of a group are drawn by core/ui/ConnectedGroup.kt, never by a card of their own.
+        listOf("item_recordbook_control", "item_subject_link", "item_group_action_row", "item_subject_teacher", "item_subject_lesson")
+            .forEach { layout -> assertEquals(layout, emptyList<Element>(), elements("layout/$layout.xml", MATERIAL_CARD)) }
     }
 
     @Test

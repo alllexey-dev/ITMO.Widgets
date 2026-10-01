@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.ui.sheets
 import android.content.Context
 import androidx.annotation.StringRes
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetHeaders
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.columnName
 
@@ -21,5 +22,11 @@ fun SheetStatus.textRes(): Int? = when (this) {
 fun Context.columnTitle(headerPath: String, index: Int): String =
     headerPath.ifEmpty { getString(R.string.sheet_scores_column, columnName(index)) }
 
-/** «лист · подпись», or the caption alone for a tab without a name. */
-fun tabLabel(tabName: String, label: String): String = if (tabName.isBlank()) label else "$tabName · $label"
+/**
+ * «Итог › Σ, лист «Лист»» under the subject's total, or the path alone for a tab without a name. The levels
+ * of a header path read as a hierarchy, so the stored « · » between them is shown as « › ».
+ */
+fun Context.sheetCaption(tabName: String, label: String): String {
+    val path = label.replace(SheetHeaders.SEPARATOR, " › ")
+    return if (tabName.isBlank()) path else getString(R.string.sheet_scores_caption, path, tabName)
+}

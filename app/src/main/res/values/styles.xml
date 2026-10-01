@@ -32,6 +32,12 @@
         <item name="cardCornerRadius">@dimen/design_card_radius_summary</item>
     </style>
 
+    <!-- The subject result: one step stronger than the groups' rows around it and a larger shape. -->
+    <style name="Widget.ItmoWidgets.Card.Hero" parent="Widget.ItmoWidgets.Card.Content">
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainer</item>
+        <item name="cardCornerRadius">@dimen/design_card_radius_hero</item>
+    </style>
+
     <style name="Widget.ItmoWidgets.Card.ScheduleDay" parent="Widget.ItmoWidgets.Card.Content">
         <item name="cardCornerRadius">@dimen/design_card_radius_day</item>
     </style>
