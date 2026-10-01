@@ -14,8 +14,14 @@
     <dimen name="design_card_radius_day">16dp</dimen>
     <dimen name="design_card_radius_content">20dp</dimen>
     <dimen name="design_card_radius_summary">24dp</dimen>
+    <dimen name="design_card_radius_hero">28dp</dimen>
     <dimen name="design_card_elevation">0dp</dimen>
     <dimen name="design_card_stroke">1dp</dimen>
+
+    <!-- Connected group: rows of one section on one surface, joined by small gaps and inner corners. -->
+    <dimen name="design_group_radius_outer">20dp</dimen>
+    <dimen name="design_group_radius_inner">4dp</dimen>
+    <dimen name="design_group_gap">2dp</dimen>
 
     <dimen name="design_state_padding">32dp</dimen>
     <dimen name="design_state_icon">64dp</dimen>
