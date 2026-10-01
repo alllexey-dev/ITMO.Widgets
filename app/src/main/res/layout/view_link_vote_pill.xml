@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- «▲ N ▼»: 48 dp arrow targets overlap the score by 12 dp each; the visible pill is 32 dp high. -->
+<!--
+    «▲ N ▼»: the arrows keep 48 dp targets with their icons padded towards the score; the visible pill is 32 dp high
+    and starts 16 dp inside the arrows, so it is symmetric around the score. No negative margins: LinearLayout drops a
+    child's negative share of the width, which once left the pill wider on the right.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -16,6 +20,9 @@
         android:layout_height="@dimen/design_touch_target"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/links_vote_up"
+        android:paddingStart="20dp"
+        android:paddingEnd="4dp"
+        android:scaleType="fitCenter"
         android:src="@drawable/ic_arrow_drop_up"
         app:tint="?attr/colorOnSurfaceVariant" />
 
@@ -23,11 +30,10 @@
         android:id="@+id/score"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="-12dp"
         android:fontFeatureSettings="tnum"
         android:gravity="center"
         android:maxLines="1"
-        android:minWidth="16dp"
+        android:minWidth="12dp"
         android:textAppearance="?attr/textAppearanceLabelLarge"
         android:textColor="?attr/colorOnSurface"
         tools:text="12" />
@@ -38,6 +44,9 @@
         android:layout_height="@dimen/design_touch_target"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/links_vote_down"
+        android:paddingStart="4dp"
+        android:paddingEnd="20dp"
+        android:scaleType="fitCenter"
         android:src="@drawable/ic_arrow_drop_down"
         app:tint="?attr/colorOnSurfaceVariant" />
 

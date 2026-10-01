@@ -67,9 +67,11 @@ fun ViewLinkVotePillBinding.bind(link: SubjectLink, canVote: Boolean, onVote: (u
     voteDown.isVisible = canVote
     score.text = if (link.score < 0) "−${-link.score}" else String.format(Locale.getDefault(), "%d", link.score)
     score.contentDescription = context.getString(R.string.links_score, link.score)
-    // The arrows' 48 dp targets overlap the number; alone, the number keeps the pill's padding instead.
-    val margin = if (canVote) -context.resources.getDimensionPixelSize(R.dimen.design_spacing_content)
-        else context.resources.getDimensionPixelSize(R.dimen.design_spacing_group)
+    // The arrows pad their icons towards the number; alone, the number keeps the pill's 16 dp inset plus 12 dp.
+    val resources = context.resources
+    val margin = if (canVote) 0
+        else resources.getDimensionPixelSize(R.dimen.design_spacing_group) +
+            resources.getDimensionPixelSize(R.dimen.design_spacing_content)
     score.updateLayoutParams<ViewGroup.MarginLayoutParams> {
         marginStart = margin
         marginEnd = margin
