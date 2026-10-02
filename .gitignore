@@ -14,6 +14,7 @@
 .cxx
 local.properties
 .refresh-token
+.keycloak-identity
 *.har
 app-keystore.jks
 app/release/
