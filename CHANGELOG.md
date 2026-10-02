@@ -10,7 +10,6 @@ publication or deployment.
 
 - The link actions sheet votes with the same pill as the lists, at the end of its title;
   the vertical arrow column, whose arrows had come to overlap the score, is gone.
-
 - Connected groups and the AI summary card moved to the quieter
   `colorSurfaceContainerLow` of schedule days; the hero cards keep
   `colorSurfaceContainer` and groups inside the links sheet stay on
