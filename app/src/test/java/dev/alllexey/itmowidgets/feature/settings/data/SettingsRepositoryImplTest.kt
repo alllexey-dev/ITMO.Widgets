@@ -127,6 +127,17 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
+    fun `the QR tile starts not added and follows the stored flag`() = runTest {
+        val fixture = createRepository()
+        assertFalse(fixture.repository.observeLocalSettings().first().qrTileAdded)
+
+        fixture.repository.setQrTileAdded(true)
+
+        assertEquals(LocalSettings(qrTileAdded = true), fixture.repository.observeLocalSettings().first())
+        assertTrue(fixture.storage.observeQrTileAdded().first())
+    }
+
+    @Test
     fun `mark switches default to My ITMO on and BARS undecided and follow the stored values`() = runTest {
         val fixture = createRepository()
         val defaults = fixture.repository.observeLocalSettings().first()

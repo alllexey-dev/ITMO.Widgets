@@ -20,6 +20,8 @@ import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
+import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
+import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
@@ -62,6 +64,9 @@ sealed interface SettingsEvent {
     data object OpenBackgroundWorkSettings : SettingsEvent
     /** The one-time dialog about background work, offered when a background check is turned on. */
     data object ShowBackgroundWorkHint : SettingsEvent
+    /** Asks the system to add the QR pass tile; the answer comes back through `onQrTileResult`. */
+    data object RequestQrTile : SettingsEvent
+    data class ShowMessage(val text: UiText) : SettingsEvent
     data class ShowError(val error: AppError) : SettingsEvent
 }
 
@@ -75,6 +80,7 @@ class SettingsViewModel @Inject constructor(
     private val tracking: ScheduleChangeTracking,
     private val markTracking: MarkTracking,
     private val backgroundWork: BackgroundWorkAccess,
+    private val tileAccess: QuickSettingsTileAccess,
     diagnostics: AppDiagnostics,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -319,6 +325,7 @@ class SettingsViewModel @Inject constructor(
             KEY_QR_RESET_IMAGE -> eventChannel.trySend(SettingsEvent.ResetCustomSpoiler)
             KEY_DIAGNOSTICS -> eventChannel.trySend(SettingsEvent.OpenDiagnostics)
             KEY_BACKGROUND_WORK -> eventChannel.trySend(SettingsEvent.OpenBackgroundWorkSettings)
+            KEY_QR_TILE -> eventChannel.trySend(SettingsEvent.RequestQrTile)
             KEY_RESTART_ONBOARDING -> viewModelScope.launch {
                 // The stored flag is what the root gate reads; the overlay only has to get out of the way.
                 onboardingRepository.reset()
@@ -327,6 +334,31 @@ class SettingsViewModel @Inject constructor(
             KEY_RETRY_PRIVACY -> viewModelScope.launch {
                 refreshPrivacySettings()
             }
+        }
+    }
+
+    /** The system's answer to the add request: the row leaves once the tile is known to be in the quick settings. */
+    fun onQrTileResult(result: QrTileAddResult) {
+        when (result) {
+            QrTileAddResult.ADDED -> rememberQrTileAdded()
+            QrTileAddResult.ALREADY_ADDED -> rememberQrTileAdded(R.string.settings_qr_tile_already_added)
+            QrTileAddResult.NOT_ADDED, QrTileAddResult.IN_PROGRESS -> Unit
+            QrTileAddResult.FAILED ->
+                eventChannel.trySend(SettingsEvent.ShowMessage(UiText.Resource(R.string.settings_qr_tile_failed)))
+        }
+    }
+
+    private fun rememberQrTileAdded(messageRes: Int? = null) {
+        viewModelScope.launch {
+            try {
+                repository.setQrTileAdded(true)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                eventChannel.send(SettingsEvent.ShowError(AppError.Unknown(error)))
+                return@launch
+            }
+            messageRes?.let { eventChannel.send(SettingsEvent.ShowMessage(UiText.Resource(it))) }
         }
     }
 
@@ -518,7 +550,8 @@ class SettingsViewModel @Inject constructor(
                 )
             )
         )
-        SettingsPage.QR_WIDGET -> listOf(
+        SettingsPage.QR_WIDGET -> listOfNotNull(
+            qrTileSection(local),
             SettingSection(
                 title = null,
                 items = listOf(
@@ -766,6 +799,21 @@ class SettingsViewModel @Inject constructor(
         }
     )
 
+    /** Android 13+ asks the system to add the tile; the row leaves once the tile is known to be added. */
+    private fun qrTileSection(local: LocalSettings): SettingSection? {
+        if (!tileAccess.canRequestAdd() || local.qrTileAdded) return null
+        return SettingSection(
+            title = null,
+            items = listOf(
+                SettingItem.Action(
+                    key = KEY_QR_TILE,
+                    title = UiText.Resource(R.string.settings_qr_tile_title),
+                    description = UiText.Resource(R.string.settings_qr_tile_description)
+                )
+            )
+        )
+    }
+
     /** The whole row is the button: it opens the system page, and the row leaves once Android lets the app work. */
     private fun backgroundWorkRow() = SettingItem.Action(
         key = KEY_BACKGROUND_WORK,
@@ -859,6 +907,7 @@ class SettingsViewModel @Inject constructor(
         const val KEY_QR_ANIMATION = "qr_animation"
         const val KEY_QR_CUSTOM_IMAGE = "qr_custom_image"
         const val KEY_QR_RESET_IMAGE = "qr_reset_image"
+        const val KEY_QR_TILE = "qr_tile"
         const val KEY_SPORT_TEACHER_FILTER = "sport_teacher_filter"
         const val KEY_SPORT_TIME_FILTER = "sport_time_filter"
         const val KEY_REFRESH_WIDGETS = "refresh_widgets"

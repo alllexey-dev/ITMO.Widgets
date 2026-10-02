@@ -195,6 +195,14 @@ class SettingsFragment : Fragment() {
                     SettingsEvent.CloseOverlays -> dismissOverlays()
                     SettingsEvent.OpenBackgroundWorkSettings -> requireActivity().openBackgroundWorkSettings()
                     SettingsEvent.ShowBackgroundWorkHint -> showBackgroundWorkHint()
+                    SettingsEvent.RequestQrTile -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        requireActivity().requestAddQrTile(viewModel::onQrTileResult)
+                    }
+                    is SettingsEvent.ShowMessage -> Snackbar.make(
+                        binding.root,
+                        event.text.resolve(requireContext()),
+                        Snackbar.LENGTH_SHORT
+                    ).show()
                     is SettingsEvent.ShowError -> {
                         restoreRenderedValues()
                         Snackbar.make(

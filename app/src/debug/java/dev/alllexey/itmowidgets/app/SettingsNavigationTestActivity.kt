@@ -143,6 +143,8 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         @Volatile var qrRefreshResult: AppResult<Unit> = AppResult.Success(Unit)
         @Volatile var qrDelayMs = 0L
         @Volatile var homeFixture = HomeFixture()
+        /** The stored «плитка добавлена» flag of the settings fixture; tests set and read it directly. */
+        val qrTileAdded = MutableStateFlow(false)
         /** Social fixtures for the profile tab, public profiles and the friend picker. */
         /** The opt-in as the profile tab sees it; settings keep their own always-on fixture. */
         @Volatile var profileServicesEnabled = true
@@ -278,7 +280,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, MemoryMarkTracking, MemoryBackgroundWork, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
+                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, MemoryMarkTracking, MemoryBackgroundWork, MemoryQuickSettingsTile, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
                         CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(customSpoiler)
                         else -> error("Unexpected ViewModel")
                     } as T
@@ -404,7 +406,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         private val sharing = MutableStateFlow<SharingSettingsState>(SharingSettingsState.Loading)
         override fun observeLocalSettings() =
             combine(
-                local,
+                combine(local, qrTileAdded) { settings, tileAdded -> settings.copy(qrTileAdded = tileAdded) },
                 MemoryScheduleChangeTracking.enabled,
                 MemoryMarkTracking.myItmo,
                 MemoryMarkTracking.bars,
@@ -458,6 +460,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
             local.value = local.value.copy(backgroundWorkHintShown = true)
         }
 
+        override suspend fun setQrTileAdded(added: Boolean) {
+            qrTileAdded.value = added
+        }
+
         override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {
             val widget = local.value.scheduleWidget
             local.value = local.value.copy(scheduleWidget = widget.copy(compact = widget.compact.copy(textSize = size)))
@@ -490,6 +496,12 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         override suspend fun syncWork() = Unit
         override fun stopWork() = Unit
         override fun checkNow() = Unit
+    }
+
+    /** Whether the system can be asked to add the QR pass tile (Android 13+ on a device). */
+    object MemoryQuickSettingsTile : QuickSettingsTileAccess {
+        @Volatile var canRequest = false
+        override fun canRequestAdd() = canRequest
     }
 
     /** Whether Android restricts the app in the background; the settings screen re-reads it on every resume. */

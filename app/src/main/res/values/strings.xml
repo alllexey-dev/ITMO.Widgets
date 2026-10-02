@@ -724,6 +724,10 @@
     <string name="shortcut_qr_long">Открыть QR-пропуск</string>
     <string name="shortcut_today_short">Сегодня</string>
     <string name="shortcut_today_long">Расписание на сегодня</string>
+    <string name="settings_qr_tile_title">Добавить в шторку</string>
+    <string name="settings_qr_tile_description">Плитка «QR-пропуск» в быстрых настройках</string>
+    <string name="settings_qr_tile_already_added">Плитка уже в шторке</string>
+    <string name="settings_qr_tile_failed">Не удалось добавить плитку</string>
     <string name="home_open_my_itmo">Открыть My ITMO</string>
     <string name="home_empty_title">Пока пусто</string>
     <string name="home_schedule_today">Сегодня</string>

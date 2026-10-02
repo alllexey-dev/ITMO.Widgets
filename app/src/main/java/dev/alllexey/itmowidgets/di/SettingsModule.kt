@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.feature.settings.data.AndroidBackgroundWorkAccess
+import dev.alllexey.itmowidgets.feature.settings.data.AndroidQuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.CustomSpoilerRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
@@ -22,6 +23,7 @@ import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesReposit
 import dev.alllexey.itmowidgets.feature.settings.data.WidgetAppearanceRepositoryImpl
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
+import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
@@ -64,6 +66,9 @@ abstract class SettingsModule {
 
     @Binds
     abstract fun bindBackgroundWorkAccess(impl: AndroidBackgroundWorkAccess): BackgroundWorkAccess
+
+    @Binds
+    abstract fun bindQuickSettingsTileAccess(impl: AndroidQuickSettingsTileAccess): QuickSettingsTileAccess
 
     @Binds
     @Singleton

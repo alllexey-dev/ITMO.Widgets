@@ -16,6 +16,8 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
+import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
+import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
@@ -46,6 +48,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -1144,6 +1147,71 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `the QR page offers the tile only where it can be requested and until it is added`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val unsupported = createFixture(page = SettingsPage.QR_WIDGET)
+            advanceUntilIdle()
+            assertTrue(unsupported.viewModel.allItems().none { it.key == SettingsViewModel.KEY_QR_TILE })
+
+            val fixture = createFixture(page = SettingsPage.QR_WIDGET, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
+            advanceUntilIdle()
+            val first = fixture.viewModel.sections.value.first()
+            assertNull(first.title)
+            assertEquals(
+                listOf(
+                    SettingItem.Action(
+                        key = SettingsViewModel.KEY_QR_TILE,
+                        title = UiText.Resource(R.string.settings_qr_tile_title),
+                        description = UiText.Resource(R.string.settings_qr_tile_description)
+                    )
+                ),
+                first.items
+            )
+
+            fixture.repository.qrTileAdded.value = true
+            advanceUntilIdle()
+            assertTrue(fixture.viewModel.allItems().none { it.key == SettingsViewModel.KEY_QR_TILE })
+        }
+
+    @Test
+    fun `tapping the tile row asks the system to add the tile`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.QR_WIDGET, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
+            val events = recordEvents(fixture)
+            advanceUntilIdle()
+
+            fixture.viewModel.onAction(SettingsViewModel.KEY_QR_TILE)
+            advanceUntilIdle()
+
+            assertEquals(listOf(SettingsEvent.RequestQrTile), events)
+        }
+
+    @Test
+    fun `the system answer remembers an added tile and explains only what the user should know`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            fun answer(result: QrTileAddResult): Pair<List<Boolean>, List<SettingsEvent>> {
+                val fixture = createFixture(page = SettingsPage.QR_WIDGET, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
+                val events = recordEvents(fixture)
+                advanceUntilIdle()
+                fixture.viewModel.onQrTileResult(result)
+                advanceUntilIdle()
+                return fixture.repository.qrTileAddedRequests.toList() to events.toList()
+            }
+
+            assertEquals(listOf(true) to emptyList<SettingsEvent>(), answer(QrTileAddResult.ADDED))
+            assertEquals(
+                listOf(true) to listOf(SettingsEvent.ShowMessage(UiText.Resource(R.string.settings_qr_tile_already_added))),
+                answer(QrTileAddResult.ALREADY_ADDED)
+            )
+            assertEquals(emptyList<Boolean>() to emptyList<SettingsEvent>(), answer(QrTileAddResult.NOT_ADDED))
+            assertEquals(emptyList<Boolean>() to emptyList<SettingsEvent>(), answer(QrTileAddResult.IN_PROGRESS))
+            assertEquals(
+                emptyList<Boolean>() to listOf(SettingsEvent.ShowMessage(UiText.Resource(R.string.settings_qr_tile_failed))),
+                answer(QrTileAddResult.FAILED)
+            )
+        }
+
+    @Test
     fun `home page offers the marks card third and hides it`() =
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.HOME)
@@ -1493,7 +1561,8 @@ class SettingsViewModelTest {
         sharing: SharingSettingsState = SharingSettingsState.Disabled,
         localInitiallyAvailable: Boolean = true,
         page: SettingsPage = SettingsPage.ROOT,
-        backgroundWork: FakeBackgroundWorkAccess = FakeBackgroundWorkAccess()
+        backgroundWork: FakeBackgroundWorkAccess = FakeBackgroundWorkAccess(),
+        tileAccess: FakeQuickSettingsTileAccess = FakeQuickSettingsTileAccess()
     ): Fixture {
         val tracking = FakeScheduleChangeTracking(enabled = local.scheduleChangesEnabled)
         val markTracking = FakeMarkTracking()
@@ -1514,10 +1583,11 @@ class SettingsViewModelTest {
             tracking = tracking,
             markTracking = markTracking,
             backgroundWork = backgroundWork,
+            tileAccess = tileAccess,
             diagnostics = RecordingDiagnostics(),
             savedStateHandle = SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
         )
-        return Fixture(viewModel, repository, customServicesRepository, refresher, onboarding, tracking, markTracking, backgroundWork)
+        return Fixture(viewModel, repository, customServicesRepository, refresher, onboarding, tracking, markTracking, backgroundWork, tileAccess)
     }
 
     /** Collects every event from now on; the channel has one receiver, so a test uses either this or `events.first()`. */
@@ -1547,12 +1617,18 @@ class SettingsViewModelTest {
         val onboardingRepository: FakeOnboardingRepository,
         val tracking: FakeScheduleChangeTracking,
         val markTracking: FakeMarkTracking,
-        val backgroundWork: FakeBackgroundWorkAccess
+        val backgroundWork: FakeBackgroundWorkAccess,
+        val tileAccess: FakeQuickSettingsTileAccess
     )
 
     /** Unrestricted by default, so the background work row stays out of the other cases. */
     private class FakeBackgroundWorkAccess(var unrestricted: Boolean = true) : BackgroundWorkAccess {
         override fun isUnrestricted(): Boolean = unrestricted
+    }
+
+    /** Below Android 13 by default, so the tile row stays out of the other cases. */
+    private class FakeQuickSettingsTileAccess(var canRequest: Boolean = false) : QuickSettingsTileAccess {
+        override fun canRequestAdd(): Boolean = canRequest
     }
 
     private class FakeOnboardingRepository : OnboardingRepository {
@@ -1586,6 +1662,8 @@ class SettingsViewModelTest {
         val sheetMarks = MutableStateFlow(initialLocal.sheetMarksEnabled)
         val backgroundWorkHintShown = MutableStateFlow(initialLocal.backgroundWorkHintShown)
         var hintShownCalls = 0
+        val qrTileAdded = MutableStateFlow(initialLocal.qrTileAdded)
+        val qrTileAddedRequests = mutableListOf<Boolean>()
         private val localAvailable = MutableStateFlow(localInitiallyAvailable)
         val sharing = MutableStateFlow(initialSharing)
         var refreshSharingCount = 0
@@ -1611,8 +1689,8 @@ class SettingsViewModelTest {
         override fun observeLocalSettings(): Flow<LocalSettings> =
             combine(
                 localAvailable,
-                combine(local, backgroundWorkHintShown, sheetMarks) { settings, hintShown, sheets ->
-                    settings.copy(backgroundWorkHintShown = hintShown, sheetMarksEnabled = sheets)
+                combine(local, backgroundWorkHintShown, sheetMarks, qrTileAdded) { settings, hintShown, sheets, tileAdded ->
+                    settings.copy(backgroundWorkHintShown = hintShown, sheetMarksEnabled = sheets, qrTileAdded = tileAdded)
                 },
                 scheduleChangesEnabled,
                 myItmoMarks,
@@ -1781,6 +1859,11 @@ class SettingsViewModelTest {
         override suspend fun setBackgroundWorkHintShown() {
             hintShownCalls += 1
             backgroundWorkHintShown.value = true
+        }
+
+        override suspend fun setQrTileAdded(added: Boolean) {
+            qrTileAddedRequests += added
+            qrTileAdded.value = added
         }
     }
 

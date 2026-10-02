@@ -46,6 +46,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewSc
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
+import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
@@ -334,7 +335,7 @@ class WidgetPreviewTest {
                         override suspend fun reset() = Unit
                     },
                     object : WidgetRefreshRequester { override fun refreshAll() = Unit },
-                    AppVersion(activity.getString(R.string.app_version)), WidgetPreviewScheduleChangeTracking, WidgetPreviewMarkTracking, WidgetPreviewBackgroundWork, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
+                    AppVersion(activity.getString(R.string.app_version)), WidgetPreviewScheduleChangeTracking, WidgetPreviewMarkTracking, WidgetPreviewBackgroundWork, WidgetPreviewQuickSettingsTile, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
             })[SettingsViewModel::class.java]
             activity.findViewById<TextView>(R.id.settings_title).text = page.title.resolve(activity)
@@ -418,6 +419,10 @@ class WidgetPreviewTest {
         override suspend fun setBackgroundWorkHintShown() {
             local.value = local.value.copy(backgroundWorkHintShown = true)
         }
+
+        override suspend fun setQrTileAdded(added: Boolean) {
+            local.value = local.value.copy(qrTileAdded = added)
+        }
     }
 
     private companion object {
@@ -448,4 +453,9 @@ private object WidgetPreviewMarkTracking : MarkTracking {
 /** Unrestricted, so the background work row stays out of these pages. */
 private object WidgetPreviewBackgroundWork : BackgroundWorkAccess {
     override fun isUnrestricted() = true
+}
+
+/** Without the add request, so the tile row stays out of these pages. */
+private object WidgetPreviewQuickSettingsTile : QuickSettingsTileAccess {
+    override fun canRequestAdd() = false
 }

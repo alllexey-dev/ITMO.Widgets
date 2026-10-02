@@ -21,7 +21,9 @@ data class LocalSettings(
     val sheetMarksEnabled: Boolean = true,
     val hiddenHomeCards: Set<HomeCardKind> = emptySet(),
     /** The one-time dialog about background work was offered on this device. */
-    val backgroundWorkHintShown: Boolean = false
+    val backgroundWorkHintShown: Boolean = false,
+    /** The QR pass tile is in the quick settings, as far as the app saw; a flag of the device. */
+    val qrTileAdded: Boolean = false
 )
 
 /** Stored as `hide*` to preserve the existing preference keys. */
@@ -70,6 +72,8 @@ interface SettingsRepository {
     suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean)
 
     suspend fun setBackgroundWorkHintShown()
+
+    suspend fun setQrTileAdded(added: Boolean)
 
     suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean)
 

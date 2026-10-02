@@ -31,7 +31,10 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.transition.MaterialSharedAxis
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import androidx.lifecycle.ViewModelProvider
+import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.testing.Appearances
@@ -269,6 +272,98 @@ class SettingsNavigationTest {
             SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = false
             SettingsNavigationTestActivity.MemoryMarkTracking.bars.value = null
         }
+    }
+
+    @Test
+    fun qrTileRowFitsAndLeavesOnceAdded() {
+        val specs = (Appearances.default + Appearances.all.first { it.fontScale > 1f }).distinct()
+        try {
+            for (spec in specs) {
+                SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
+                SettingsNavigationTestActivity.MemoryQuickSettingsTile.canRequest = true
+                SettingsNavigationTestActivity.qrTileAdded.value = false
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    openPage(scenario, SettingsPage.QR_WIDGET)
+                    var previewTop = 0
+                    var tileRowTop = 0
+                    scenario.onActivity { activity ->
+                        val root = settingsRoot(activity)
+                        assertEquals(spec.fontScale, root.resources.configuration.fontScale, 0.001f)
+                        assertEquals(View.GONE, root.findViewById<View>(R.id.settings_progress).visibility)
+                        assertEquals(
+                            listOf(
+                                activity.getString(R.string.settings_qr_tile_title),
+                                activity.getString(R.string.settings_qr_dynamic_colors_title)
+                            ),
+                            visibleTitles(root).take(2)
+                        )
+                        val row = checkNotNull(settingRow(root, activity.getString(R.string.settings_qr_tile_title)))
+                        assertEquals(
+                            activity.getString(R.string.settings_qr_tile_description),
+                            row.findViewById<TextView>(R.id.setting_description).text.toString()
+                        )
+                        assertTrue(row.isClickable && row.isEnabled)
+                        assertTrue(row.height >= 48 * row.resources.displayMetrics.density - 1)
+                        assertTrue(screenTop(row) + row.height <= firstSwitchTop(root))
+                        val preview = root.findViewById<ViewGroup>(R.id.widget_preview_container)
+                        assertTrue(preview.isShown && preview.childCount > 0)
+                        previewTop = screenTop(preview)
+                        tileRowTop = IntArray(2).also { row.getLocationInWindow(it) }[1]
+                        ViewChecks.assertTextFits(root)
+                        ViewChecks.assertTouchTargets(root.findViewById(R.id.sections_container), requireWidth = false)
+                    }
+                    Screenshots.capture("settings-screenshots", "settings-qr-tile-${spec.name}") { settle() }
+
+                    scenario.onActivity { settingsViewModel(it).onQrTileResult(QrTileAddResult.FAILED) }
+                    settle()
+                    onView(withText(R.string.settings_qr_tile_failed)).check(matches(isDisplayed()))
+
+                    scenario.onActivity { settingsViewModel(it).onQrTileResult(QrTileAddResult.ADDED) }
+                    settle()
+                    assertTrue(SettingsNavigationTestActivity.qrTileAdded.value)
+                    scenario.onActivity { activity ->
+                        val root = settingsRoot(activity)
+                        assertNull(settingRow(root, activity.getString(R.string.settings_qr_tile_title)))
+                        assertEquals(activity.getString(R.string.settings_qr_dynamic_colors_title), visibleTitles(root).first())
+                        // The switches take the row's place; the preview above them does not move.
+                        assertEquals(tileRowTop, firstSwitchTop(root))
+                        assertEquals(previewTop, screenTop(root.findViewById(R.id.widget_preview_container)))
+                        ViewChecks.assertTextFits(root)
+                    }
+                    Screenshots.capture("settings-screenshots", "settings-qr-tile-${spec.name}-added") { settle() }
+                }
+
+                // Below Android 13 there is nothing to ask for.
+                SettingsNavigationTestActivity.MemoryQuickSettingsTile.canRequest = false
+                SettingsNavigationTestActivity.qrTileAdded.value = false
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    openPage(scenario, SettingsPage.QR_WIDGET)
+                    scenario.onActivity { activity ->
+                        val root = settingsRoot(activity)
+                        assertNull(settingRow(root, activity.getString(R.string.settings_qr_tile_title)))
+                        assertEquals(activity.getString(R.string.settings_qr_dynamic_colors_title), visibleTitles(root).first())
+                    }
+                }
+            }
+        } finally {
+            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.MemoryQuickSettingsTile.canRequest = false
+            SettingsNavigationTestActivity.qrTileAdded.value = false
+        }
+    }
+
+    private fun visibleTitles(root: ViewGroup): List<String> =
+        root.findViewById<ViewGroup>(R.id.sections_container).descendants.filterIsInstance<TextView>()
+            .filter { it.id == R.id.setting_title && it.isShown }.map { it.text.toString() }.toList()
+
+    private fun settingRow(root: ViewGroup, title: String): View? =
+        root.descendants.filterIsInstance<TextView>()
+            .firstOrNull { it.id == R.id.setting_title && it.isShown && it.text.toString() == title }
+            ?.let { it.parent.parent as View }
+
+    private fun settingsViewModel(activity: SettingsNavigationTestActivity): SettingsViewModel {
+        val fragment = activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment as SettingsFragment
+        return ViewModelProvider(fragment)[SettingsViewModel::class.java]
     }
 
     /** My ITMO, BARS and the sheets in this order, each 48 dp, the background work row and the footer below them. */

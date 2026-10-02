@@ -31,6 +31,7 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
+import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
@@ -406,6 +407,7 @@ class SettingsRendererTest {
                     RendererScheduleChangeTracking,
                     RendererMarkTracking,
                     RendererBackgroundWork,
+                    RendererQuickSettingsTile,
                     NoDiagnostics,
                     SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
@@ -525,6 +527,10 @@ class SettingsRendererTest {
         override suspend fun setBackgroundWorkHintShown() {
             local.value = local.value.copy(backgroundWorkHintShown = true)
         }
+
+        override suspend fun setQrTileAdded(added: Boolean) {
+            local.value = local.value.copy(qrTileAdded = added)
+        }
     }
 
     private companion object {
@@ -557,4 +563,9 @@ private object RendererMarkTracking : MarkTracking {
 /** Unrestricted, so the background work row stays out of these pages. */
 private object RendererBackgroundWork : BackgroundWorkAccess {
     override fun isUnrestricted() = true
+}
+
+/** Without the add request, so the tile row stays out of these pages. */
+private object RendererQuickSettingsTile : QuickSettingsTileAccess {
+    override fun canRequestAdd() = false
 }

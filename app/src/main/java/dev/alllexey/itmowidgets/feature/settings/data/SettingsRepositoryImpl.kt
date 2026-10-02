@@ -64,11 +64,13 @@ class SettingsRepositoryImpl @Inject constructor(
 
         val device = combine(
             settings.observeHiddenHomeCards(),
-            settings.observeBackgroundWorkHintShown()
-        ) { hiddenHomeCards, backgroundWorkHintShown ->
+            settings.observeBackgroundWorkHintShown(),
+            settings.observeQrTileAdded()
+        ) { hiddenHomeCards, backgroundWorkHintShown, qrTileAdded ->
             DeviceLocalSettings(
                 hiddenHomeCards = hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet(),
-                backgroundWorkHintShown = backgroundWorkHintShown
+                backgroundWorkHintShown = backgroundWorkHintShown,
+                qrTileAdded = qrTileAdded
             )
         }
         // The typed combine takes at most five flows, so the three mark switches travel together.
@@ -110,7 +112,8 @@ class SettingsRepositoryImpl @Inject constructor(
                 barsMarksEnabled = appSettings.marks.bars,
                 sheetMarksEnabled = appSettings.marks.sheets,
                 hiddenHomeCards = appSettings.device.hiddenHomeCards,
-                backgroundWorkHintShown = appSettings.device.backgroundWorkHintShown
+                backgroundWorkHintShown = appSettings.device.backgroundWorkHintShown,
+                qrTileAdded = appSettings.device.qrTileAdded
             )
         }
     }
@@ -165,6 +168,10 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setBackgroundWorkHintShown() {
         settings.setBackgroundWorkHintShown()
+    }
+
+    override suspend fun setQrTileAdded(added: Boolean) {
+        settings.setQrTileAdded(added)
     }
 
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) {
@@ -290,5 +297,6 @@ private data class MarkLocalSettings(
 
 private data class DeviceLocalSettings(
     val hiddenHomeCards: Set<HomeCardKind>,
-    val backgroundWorkHintShown: Boolean
+    val backgroundWorkHintShown: Boolean,
+    val qrTileAdded: Boolean
 )
