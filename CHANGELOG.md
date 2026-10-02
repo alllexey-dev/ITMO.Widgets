@@ -9,12 +9,16 @@ publication or deployment.
 ### 2026-10-02
 
 - `Синхронизация с календарём` on the `Расписание` settings page keeps the
-  own My ITMO schedule of today and the next 28 days in the phone's calendar:
-  the app's own local calendar `ITMO.Widgets` or any writable calendar picked
-  in `Календарь`. Every lesson of the answer goes as it is, sport and room
+  own My ITMO schedule of today and the next 28 days in the phone's calendar.
+  Turning it on opens the calendar picker first: Google-account calendars
+  under their accounts after the advice to make a separate one, and last the
+  app's own local calendar `ITMO.Widgets`, which only calendar apps reading the
+  phone's calendars (the Xiaomi or Yandex calendar) show, not Google Calendar.
+  Cancelling leaves the switch off; the `Календарь` row shows the calendar and
+  its account. Every lesson of the answer goes as it is, sport and room
   bookings included; new lessons are added, changed ones updated, vanished
   ones removed, past events stay, repeated syncs add no duplicates. It runs
-  every 2 hours and right after turning on, picking a calendar or a pull on
+  every 2 hours and right after picking a calendar or a pull on
   the own schedule; turning it off removes the app's events. A revoked
   permission or a deleted calendar turns it off with the reason under the
   switch. The calendar permission is asked only there.

@@ -33,9 +33,10 @@ class AndroidPhoneCalendars @Inject constructor(
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
 
+    /** Only Google accounts: their calendars reach Google Calendar and every device of the account. */
     override fun writable(): List<WritableCalendar> = query(
-        "${Calendars.CALENDAR_ACCESS_LEVEL} >= ? AND NOT (${Calendars.ACCOUNT_TYPE} = ? AND ${Calendars.ACCOUNT_NAME} = ?)",
-        arrayOf(Calendars.CAL_ACCESS_CONTRIBUTOR.toString(), ACCOUNT_TYPE, ACCOUNT_NAME)
+        "${Calendars.CALENDAR_ACCESS_LEVEL} >= ? AND ${Calendars.ACCOUNT_TYPE} = ?",
+        arrayOf(Calendars.CAL_ACCESS_CONTRIBUTOR.toString(), GOOGLE_ACCOUNT_TYPE)
     )
 
     override fun find(id: Long): WritableCalendar? = query(
@@ -134,5 +135,6 @@ class AndroidPhoneCalendars @Inject constructor(
         const val ACCOUNT_NAME = "ITMO.Widgets"
         const val ACCOUNT_TYPE = android.provider.CalendarContract.ACCOUNT_TYPE_LOCAL
         const val OWN_CALENDAR_NAME = "itmo_widgets_schedule"
+        const val GOOGLE_ACCOUNT_TYPE = "com.google"
     }
 }

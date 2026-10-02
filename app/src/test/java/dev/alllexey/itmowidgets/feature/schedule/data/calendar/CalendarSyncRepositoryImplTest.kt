@@ -147,7 +147,7 @@ class CalendarSyncRepositoryImplTest {
         assertFalse(own in calendars.calendars)
         assertEquals(listOf("lesson-1", "lesson-2"), calendars.eventsIn(GOOGLE.id).map { it.key })
         assertEquals(
-            CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(GOOGLE.id), calendarName = "Учёба"),
+            CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(GOOGLE.id), calendarName = "Учёба", calendarAccount = "student@gmail.com"),
             repository.observeState().first()
         )
         val inserts = calendars.inserts
@@ -200,7 +200,7 @@ class CalendarSyncRepositoryImplTest {
         assertEquals(AppResult.Success(Unit), repository.sync())
 
         assertEquals(
-            CalendarSyncState(target = CalendarTarget.PhoneCalendar(GOOGLE.id), calendarName = "Учёба", problem = CalendarSyncProblem.NO_PERMISSION),
+            CalendarSyncState(target = CalendarTarget.PhoneCalendar(GOOGLE.id), calendarName = "Учёба", calendarAccount = "student@gmail.com", problem = CalendarSyncProblem.NO_PERMISSION),
             repository.observeState().first()
         )
         calendars.access = true

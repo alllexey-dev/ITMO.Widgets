@@ -9,9 +9,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.CheckedTextView
+import android.widget.RadioButton
 import android.widget.TextView
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -28,24 +29,31 @@ import java.time.ZoneOffset
 internal const val ICS_DATES_TAG = "ics_dates"
 
 /**
- * The app's own calendar first, then the phone's writable calendars under their accounts, then the hint about a
- * separate Google calendar. Accounts and the hint are not clickable.
+ * The advice to make a separate Google calendar first, then the Google-account calendars under their accounts, then
+ * the app's own calendar last with its caption: Google Calendar does not show local calendars. Nothing is marked when
+ * turning on ([selected] null); the calendar in use is marked when reopening. Cancelling calls [onCancel].
  */
 internal fun Fragment.showCalendarPicker(
     calendars: List<WritableCalendar>,
     selected: CalendarTarget?,
-    onPick: (CalendarTarget) -> Unit
+    onPick: (CalendarTarget) -> Unit,
+    onCancel: () -> Unit
 ) {
     val rows = buildList {
-        add(PickerRow.Header(getString(R.string.calendar_picker_this_phone)))
-        add(PickerRow.Option(CalendarTarget.AppCalendar, getString(R.string.app_name)))
+        add(PickerRow.Hint(getString(R.string.calendar_picker_advice)))
         calendars.groupBy(WritableCalendar::account).forEach { (account, inAccount) ->
             add(PickerRow.Header(account))
             inAccount.forEach { add(PickerRow.Option(CalendarTarget.PhoneCalendar(it.id), it.name)) }
         }
-        add(PickerRow.Hint(getString(R.string.calendar_picker_hint)))
+        add(
+            PickerRow.Option(
+                CalendarTarget.AppCalendar,
+                getString(R.string.app_name),
+                getString(R.string.calendar_picker_own_caption)
+            )
+        )
     }
-    val adapter = PickerAdapter(rows, selected ?: CalendarTarget.AppCalendar)
+    val adapter = PickerAdapter(rows, selected)
     MaterialAlertDialogBuilder(requireContext())
         .setTitle(R.string.settings_calendar_target_title)
         .setAdapter(adapter) { dialog, position ->
@@ -54,7 +62,8 @@ internal fun Fragment.showCalendarPicker(
                 if (option.target != selected) onPick(option.target)
             }
         }
-        .setNegativeButton(R.string.common_cancel, null)
+        .setNegativeButton(R.string.common_cancel) { _, _ -> onCancel() }
+        .setOnCancelListener { onCancel() }
         .show()
 }
 
@@ -144,11 +153,11 @@ private const val ICS_TYPE = "text/calendar"
 
 private sealed interface PickerRow {
     data class Header(val text: String) : PickerRow
-    data class Option(val target: CalendarTarget, val title: String) : PickerRow
+    data class Option(val target: CalendarTarget, val title: String, val caption: String? = null) : PickerRow
     data class Hint(val text: String) : PickerRow
 }
 
-private class PickerAdapter(private val rows: List<PickerRow>, private val selected: CalendarTarget) : BaseAdapter() {
+private class PickerAdapter(private val rows: List<PickerRow>, private val selected: CalendarTarget?) : BaseAdapter() {
     override fun getCount() = rows.size
     override fun getItem(position: Int) = rows[position]
     override fun getItemId(position: Int) = position.toLong()
@@ -173,9 +182,13 @@ private class PickerAdapter(private val rows: List<PickerRow>, private val selec
         when (row) {
             is PickerRow.Header -> (view as TextView).text = row.text
             is PickerRow.Hint -> (view as TextView).text = row.text
-            is PickerRow.Option -> (view as CheckedTextView).apply {
-                text = row.title
-                isChecked = row.target == selected
+            is PickerRow.Option -> {
+                view.findViewById<TextView>(R.id.calendar_option_title).text = row.title
+                view.findViewById<TextView>(R.id.calendar_option_caption).apply {
+                    text = row.caption
+                    isVisible = row.caption != null
+                }
+                view.findViewById<RadioButton>(R.id.calendar_option_radio).isChecked = row.target == selected
             }
         }
         return view

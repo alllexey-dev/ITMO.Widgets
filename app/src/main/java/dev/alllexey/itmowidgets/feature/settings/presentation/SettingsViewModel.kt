@@ -372,18 +372,17 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    /** The calendar permission is there: turns synchronization on or lists the calendars to pick from. */
+    /**
+     * The calendar permission is there: the picker comes first, also when turning on, since Google Calendar does not
+     * show the app's own local calendar. Turning on marks nothing; synchronization starts only with a choice.
+     */
     fun onCalendarAccessGranted(purpose: CalendarAccessPurpose) {
         viewModelScope.launch {
             val state = calendarSync.observeState().first()
-            when (purpose) {
-                CalendarAccessPurpose.ENABLE -> enableCalendarSync(state.target ?: CalendarTarget.AppCalendar)
-                CalendarAccessPurpose.PICK -> {
-                    val calendars = calendarSync.writableCalendars()
-                    if (calendars == null) showMessage(R.string.calendar_access_denied)
-                    else eventChannel.send(SettingsEvent.ShowCalendarPicker(calendars, state.target))
-                }
-            }
+            val calendars = calendarSync.writableCalendars()
+            val selected = state.target.takeIf { purpose == CalendarAccessPurpose.PICK && state.enabled }
+            if (calendars == null) showMessage(R.string.calendar_access_denied)
+            else eventChannel.send(SettingsEvent.ShowCalendarPicker(calendars, selected))
         }
     }
 
@@ -920,7 +919,7 @@ class SettingsViewModel @Inject constructor(
             SettingItem.Action(
                 key = KEY_CALENDAR_TARGET,
                 title = UiText.Resource(R.string.settings_calendar_target_title),
-                value = calendar.calendarName?.let(UiText::Dynamic) ?: UiText.Resource(R.string.app_name),
+                value = calendarValue(calendar),
                 trailingIconRes = R.drawable.ic_chevron_right
             ).takeIf { calendar.enabled },
             SettingItem.Action(
@@ -932,6 +931,17 @@ class SettingsViewModel @Inject constructor(
             )
         )
     )
+
+    /** «Учёба, student@gmail.com» for a picked calendar, «ITMO.Widgets, на этом телефоне» for the app's own. */
+    private fun calendarValue(calendar: CalendarSyncState): UiText {
+        val name = calendar.calendarName
+        val account = calendar.calendarAccount
+        return when {
+            calendar.target == CalendarTarget.AppCalendar || name == null -> UiText.Resource(R.string.settings_calendar_target_own)
+            account.isNullOrBlank() -> UiText.Dynamic(name)
+            else -> UiText.Resource(R.string.settings_calendar_target_value, listOf(name, account))
+        }
+    }
 
     /** The whole row is the button: it opens the system page, and the row leaves once Android lets the app work. */
     private fun backgroundWorkRow() = SettingItem.Action(

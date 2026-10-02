@@ -440,12 +440,16 @@ Backend is not involved.
 
 ### Synchronization
 
-- `CalendarSyncRepositoryImpl` keeps the window today..today+28 in one
-  calendar: the app's own local calendar `ITMO.Widgets` (`ACCOUNT_TYPE_LOCAL`,
-  created and deleted through the sync-adapter URI, colour `calendar_app`,
-  visible, owner access) or a calendar the user picked among those with access
-  level contributor or higher. `AndroidPhoneCalendars` is the only
-  `CalendarContract` code. Events are busy, have no reminders, carry the
+- `CalendarSyncRepositoryImpl` keeps the window today..today+28 in the one
+  calendar the user picked when turning synchronization on: a Google-account
+  calendar (`com.google`, access level contributor or higher; the picker
+  offers only these) or the app's own local calendar `ITMO.Widgets`
+  (`ACCOUNT_TYPE_LOCAL`, created and deleted through the sync-adapter URI,
+  colour `calendar_app`, owner access). The own calendar exists only on this
+  phone: calendar apps that read the phone's calendars (the Xiaomi or Yandex
+  calendar) show it, Google Calendar does not, since it shows only
+  Google-account calendars. A separate Google calendar reaches every device of
+  the account. `AndroidPhoneCalendars` is the only `CalendarContract` code. Events are busy, have no reminders, carry the
   event time zone and `UID_2445`.
 - The app touches only the events it inserted: their ids, the calendar and
   the content they were given live in `filesDir/calendar_sync/state.json`
@@ -453,6 +457,8 @@ Backend is not involved.
   off), written atomically, excluded from backup and device transfer. A
   restored device therefore starts with synchronization off. A corrupt file
   is deleted and synchronization is off.
+- The state keeps the picked calendar's name and account for the settings
+  row.
 - `CalendarSyncPlanner.plan` (pure) compares the window with the stored
   events. Only occurrences that have not ended are touched: a new one is
   inserted, a changed one (title, time, location or description) is updated in
@@ -486,7 +492,7 @@ Backend is not involved.
   has no quiet hours, since it notifies nothing. Failures are retried through
   `outcomeOf` and `workResultOf` like the background checks.
 - The one-off work `calendar-sync-now` (`ExistingWorkPolicy.REPLACE`, network)
-  runs right after turning on or picking a calendar and after a successful
+  runs right after a calendar is picked (turning on is a pick) and after a successful
   pull on the own schedule (`ScheduleViewModel` calls `requestSync()`, which
   does nothing while synchronization is off).
 - `syncWork()` runs on application start and after sign-in, `stopWork()`

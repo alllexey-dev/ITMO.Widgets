@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.Flow
 interface PhoneCalendars {
     fun hasAccess(): Boolean
 
-    /** Calendars with access level contributor or higher, without the app's own calendar. */
+    /** Google-account calendars with access level contributor or higher; the picker offers only these. */
     fun writable(): List<WritableCalendar>
 
     /** The writable calendar [id], the app's own included; null when it is gone or read-only. */

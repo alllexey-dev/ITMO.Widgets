@@ -204,16 +204,23 @@ only among installed instances of that same format:
   `Пары на 4 недели вперёд.`, or `Выключена: нет доступа к календарю.` /
   `Выключена: календарь удалён.` after it turned itself off.
 - Turning it on asks for `READ_CALENDAR` and `WRITE_CALENDAR` (only here and
-  in the calendar picker): granted, it goes on; when Android suggests an
-  explanation, a dialog `Доступ к календарю` comes first; refused, the switch
-  stays off with `Нет доступа к календарю`, and a refusal for good adds
-  `Настройки` to the snackbar, which opens the app's system page. It turns on
-  into the last calendar, or the app's own `ITMO.Widgets`.
-- `Календарь` (while on) shows the calendar in use and opens the picker:
-  `На этом телефоне` with `ITMO.Widgets`, then the writable calendars under
-  their accounts, then `Чтобы пары были на всех устройствах, создайте
-  отдельный календарь в Google Календаре и выберите его.` Picking moves the
-  app's events there.
+  in the calendar picker): when Android suggests an explanation, a dialog
+  `Доступ к календарю` comes first; refused, the switch stays off with
+  `Нет доступа к календарю`, and a refusal for good adds `Настройки` to the
+  snackbar, which opens the app's system page. Granted, the calendar picker
+  opens with nothing marked; synchronization starts only with a choice, and
+  cancelling the picker leaves the switch off.
+- The picker (`Календарь`): first the advice `Создайте отдельный календарь в
+  Google Календаре, например «Пары ИТМО», и выберите его — пары будут на всех
+  устройствах`, then the writable Google-account calendars under their
+  accounts, then the app's own `ITMO.Widgets` last with `Только на этом
+  телефоне, не виден в Google Календаре`. Without Google calendars only the
+  own one is listed. The own calendar is seen only by calendar apps that read
+  the phone's calendars (the Xiaomi or Yandex calendar), not by Google
+  Calendar.
+- `Календарь` (while on) shows the calendar in use, `Учёба, student@gmail.com`
+  or `ITMO.Widgets, на этом телефоне`, and opens the picker with it marked.
+  Picking another moves the app's events there.
 - `Выгрузить в .ics` (`ic_download`) offers `Неделя`, `2 недели`,
   `До конца семестра` and `Свои даты`; while the file is written the row says
   `Готовим файл…` and is disabled. `Файл готов` names the number of lessons

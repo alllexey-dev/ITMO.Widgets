@@ -4,14 +4,17 @@ import kotlinx.coroutines.flow.Flow
 
 /** Where the own schedule is written in the phone's calendar. */
 sealed interface CalendarTarget {
-    /** The local calendar «ITMO.Widgets» the app creates and deletes itself. */
+    /**
+     * The local calendar «ITMO.Widgets» the app creates and deletes itself. Calendar apps that read the phone's
+     * calendars (Xiaomi, Yandex) show it; Google Calendar shows only Google-account calendars and does not.
+     */
     data object AppCalendar : CalendarTarget
 
     /** A calendar of the phone the user picked, usually one of a Google account. */
     data class PhoneCalendar(val id: Long) : CalendarTarget
 }
 
-/** A calendar of the phone the app may add events to (access level contributor or higher). */
+/** A Google-account calendar of the phone the app may add events to (access level contributor or higher). */
 data class WritableCalendar(val id: Long, val name: String, val account: String)
 
 /** Why synchronization turned itself off. */
@@ -26,6 +29,8 @@ data class CalendarSyncState(
     val target: CalendarTarget? = null,
     /** Display name of the picked calendar; null for the app's own calendar. */
     val calendarName: String? = null,
+    /** The account of the picked calendar; null for the app's own calendar. */
+    val calendarAccount: String? = null,
     /** Why synchronization turned itself off; cleared when the user turns it on or off. */
     val problem: CalendarSyncProblem? = null
 )
@@ -40,7 +45,7 @@ interface CalendarSync {
     /** Deletes the app's events (and its own calendar) and stops the work. */
     suspend fun disable()
 
-    /** Calendars the user may pick, without the app's own; null without the calendar permission. */
+    /** Google-account calendars the user may pick, without the app's own; null without the calendar permission. */
     suspend fun writableCalendars(): List<WritableCalendar>?
 
     /** Makes the periodic work match the switch and the session; safe to repeat. */

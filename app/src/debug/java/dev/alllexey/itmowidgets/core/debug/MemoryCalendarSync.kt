@@ -15,8 +15,8 @@ class MemoryCalendarSync(state: CalendarSyncState = CalendarSyncState()) : Calen
     override fun observeState() = state
 
     override suspend fun enable(target: CalendarTarget): CalendarSyncResult {
-        val name = (target as? CalendarTarget.PhoneCalendar)?.let { picked -> calendars.firstOrNull { it.id == picked.id }?.name }
-        state.value = CalendarSyncState(enabled = true, target = target, calendarName = name)
+        val picked = (target as? CalendarTarget.PhoneCalendar)?.let { picked -> calendars.firstOrNull { it.id == picked.id } }
+        state.value = CalendarSyncState(enabled = true, target = target, calendarName = picked?.name, calendarAccount = picked?.account)
         return CalendarSyncResult.DONE
     }
 

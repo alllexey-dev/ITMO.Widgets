@@ -66,18 +66,20 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         guarded {
             if (!calendars.hasAccess()) return@guarded CalendarSyncResult.NO_PERMISSION
             val stored = loaded()
-            val (calendarId, name) = when (target) {
-                CalendarTarget.AppCalendar -> ownCalendar(stored) to null
+            val picked = when (target) {
+                CalendarTarget.AppCalendar -> null
                 is CalendarTarget.PhoneCalendar ->
-                    (calendars.find(target.id) ?: return@guarded CalendarSyncResult.CALENDAR_MISSING).let { it.id to it.name }
+                    calendars.find(target.id) ?: return@guarded CalendarSyncResult.CALENDAR_MISSING
             }
+            val calendarId = picked?.id ?: ownCalendar(stored)
             val events = moved(stored, calendarId)
             persist(
                 StoredCalendarSync(
                     enabled = true,
                     target = if (target is CalendarTarget.AppCalendar) TARGET_APP else TARGET_PHONE,
                     calendarId = calendarId,
-                    calendarName = name,
+                    calendarName = picked?.name,
+                    calendarAccount = picked?.account,
                     events = events.map { it.toStored() }
                 )
             )

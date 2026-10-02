@@ -178,8 +178,9 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   lives on the `Расписание` settings page, not on the schedule root, which has
   no top-bar menu; it is two things: `Синхронизация с календарём`, a rolling
   window today..today+28 kept in the phone's calendar through
-  `CalendarContract` (the app's own local calendar `ITMO.Widgets` by default or
-  any writable calendar the user picks) and refreshed every 2 hours, and a
+  `CalendarContract` (a Google-account calendar the user picks when turning it
+  on, or the app's own local calendar `ITMO.Widgets`, which Google Calendar does
+  not show) and refreshed every 2 hours, and a
   one-off `Выгрузить в .ics` for a week, two weeks, the rest of the semester or
   chosen dates. The personal My ITMO schedule goes out as it is, sport and room
   bookings included, one event per `pair_id`. Mappings live in

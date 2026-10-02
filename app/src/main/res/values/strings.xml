@@ -1053,8 +1053,10 @@
     <string name="calendar_access_denied">Нет доступа к календарю</string>
     <string name="calendar_access_settings">Настройки</string>
     <string name="calendar_missing">Календарь не найден</string>
-    <string name="calendar_picker_this_phone">На этом телефоне</string>
-    <string name="calendar_picker_hint">Чтобы пары были на всех устройствах, создайте отдельный календарь в Google Календаре и выберите его.</string>
+    <string name="settings_calendar_target_own">ITMO.Widgets, на этом телефоне</string>
+    <string name="settings_calendar_target_value">%1$s, %2$s</string>
+    <string name="calendar_picker_advice">Создайте отдельный календарь в Google Календаре, например «Пары ИТМО», и выберите его — пары будут на всех устройствах</string>
+    <string name="calendar_picker_own_caption">Только на этом телефоне, не виден в Google Календаре</string>
     <string name="ics_range_week">Неделя</string>
     <string name="ics_range_two_weeks">2 недели</string>
     <string name="ics_range_semester">До конца семестра</string>

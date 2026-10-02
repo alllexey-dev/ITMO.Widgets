@@ -30,6 +30,7 @@ internal data class StoredCalendarSync(
     /** The calendar the [events] are in. */
     val calendarId: Long? = null,
     val calendarName: String? = null,
+    val calendarAccount: String? = null,
     val problem: String? = null,
     val events: List<StoredEvent> = emptyList()
 )
@@ -81,6 +82,7 @@ internal fun StoredCalendarSync.toModel() = CalendarSyncState(
         else -> error("Unknown calendar target $target")
     },
     calendarName = calendarName.takeIf { target == TARGET_PHONE },
+    calendarAccount = calendarAccount.takeIf { target == TARGET_PHONE },
     problem = problem?.let(CalendarSyncProblem::valueOf)
 )
 

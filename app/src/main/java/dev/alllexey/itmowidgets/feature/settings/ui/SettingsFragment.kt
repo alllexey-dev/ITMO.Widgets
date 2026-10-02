@@ -223,7 +223,8 @@ class SettingsFragment : Fragment() {
                     }
                     is SettingsEvent.RequestCalendarAccess -> requestCalendarAccess(event.purpose)
                     is SettingsEvent.ShowCalendarPicker ->
-                        showCalendarPicker(event.calendars, event.selected, viewModel::onCalendarPicked)
+                        // Cancelled while turning on, the switch goes back off.
+                        showCalendarPicker(event.calendars, event.selected, viewModel::onCalendarPicked, ::restoreRenderedValues)
                     SettingsEvent.ChooseIcsRange -> showIcsRanges(viewModel::onIcsRange) {
                         showIcsDatePicker(viewModel::onIcsRange)
                     }

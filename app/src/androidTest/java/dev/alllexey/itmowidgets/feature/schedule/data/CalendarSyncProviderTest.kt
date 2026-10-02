@@ -140,7 +140,8 @@ class CalendarSyncProviderTest {
         assertNull(calendars.findOwn())
         assertTrue(events(own).isEmpty())
         assertEquals(listOf("lesson-1", "lesson-2"), events(other).map { it.uid.substringBefore('@') })
-        assertTrue(calendars.writable().any { it.id == other && it.name == "Учёба" })
+        // The picker offers Google-account calendars only; this local stand-in is reached by id alone.
+        assertTrue(calendars.writable().none { it.id == other })
     }
 
     @Test

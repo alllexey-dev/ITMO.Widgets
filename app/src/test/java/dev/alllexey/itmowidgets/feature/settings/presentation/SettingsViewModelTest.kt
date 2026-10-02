@@ -1596,12 +1596,17 @@ class SettingsViewModelTest {
         assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
         val row = fixture.viewModel.action(SettingsViewModel.KEY_CALENDAR_TARGET)
         assertEquals(UiText.Resource(R.string.settings_calendar_target_title), row.title)
-        assertEquals(UiText.Resource(R.string.app_name), row.value)
+        assertEquals(UiText.Resource(R.string.settings_calendar_target_own), row.value)
         assertEquals(R.drawable.ic_chevron_right, row.trailingIconRes)
 
-        sync.state.value = CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(7), calendarName = "Учёба")
+        sync.state.value = CalendarSyncState(
+            enabled = true, target = CalendarTarget.PhoneCalendar(7), calendarName = "Учёба", calendarAccount = "student@gmail.com"
+        )
         advanceUntilIdle()
-        assertEquals(UiText.Dynamic("Учёба"), fixture.viewModel.action(SettingsViewModel.KEY_CALENDAR_TARGET).value)
+        assertEquals(
+            UiText.Resource(R.string.settings_calendar_target_value, listOf("Учёба", "student@gmail.com")),
+            fixture.viewModel.action(SettingsViewModel.KEY_CALENDAR_TARGET).value
+        )
     }
 
     @Test
@@ -1624,11 +1629,12 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `turning sync on asks for the permission first, then enables the last calendar or the app one`() =
+    fun `turning sync on asks for the permission, then the picker with nothing marked, and enables only the choice`() =
         runTest(mainDispatcherRule.dispatcher) {
+            val google = WritableCalendar(7, "Учёба", "student@gmail.com")
             val sync = FakeCalendarSync(
                 CalendarSyncState(target = CalendarTarget.PhoneCalendar(7), problem = CalendarSyncProblem.NO_PERMISSION)
-            )
+            ).apply { calendars = listOf(google) }
             val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
             val events = recordEvents(fixture)
             advanceUntilIdle()
@@ -1636,20 +1642,22 @@ class SettingsViewModelTest {
             fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, true)
             advanceUntilIdle()
             assertEquals(listOf(SettingsEvent.RequestCalendarAccess(CalendarAccessPurpose.ENABLE)), events)
-            assertTrue(sync.enabled.isEmpty())
 
             fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.ENABLE)
             advanceUntilIdle()
-            assertEquals(listOf<CalendarTarget>(CalendarTarget.PhoneCalendar(7)), sync.enabled)
+            assertEquals(SettingsEvent.ShowCalendarPicker(listOf(google), null), events.last())
+            // Nothing is enabled until a calendar is picked; a cancelled picker leaves the switch off.
+            assertTrue(sync.enabled.isEmpty())
+            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
+
+            fixture.viewModel.onCalendarPicked(CalendarTarget.AppCalendar)
+            advanceUntilIdle()
+            assertEquals(listOf<CalendarTarget>(CalendarTarget.AppCalendar), sync.enabled)
             assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
 
             fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, false)
             advanceUntilIdle()
             assertEquals(1, sync.disables)
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, true)
-            fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.ENABLE)
-            advanceUntilIdle()
-            assertEquals(CalendarTarget.AppCalendar, sync.enabled.last())
         }
 
     @Test
@@ -1665,7 +1673,7 @@ class SettingsViewModelTest {
             CalendarSyncResult.FAILED to SettingsEvent.ShowError(AppError.Unknown())
         )) {
             sync.enableResult = result
-            fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.ENABLE)
+            fixture.viewModel.onCalendarPicked(CalendarTarget.PhoneCalendar(7))
             advanceUntilIdle()
             assertEquals(expected, events.last())
             assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
