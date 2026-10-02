@@ -719,6 +719,10 @@
     <string name="qr_pass_refresh">Обновить QR-код</string>
     <string name="qr_pass_empty_title">QR-код пока недоступен</string>
     <string name="qr_pass_empty_description">Попробуйте обновить пропуск через My ITMO</string>
+    <string name="shortcut_qr_short">QR-пропуск</string>
+    <string name="shortcut_qr_long">Открыть QR-пропуск</string>
+    <string name="shortcut_today_short">Сегодня</string>
+    <string name="shortcut_today_long">Расписание на сегодня</string>
     <string name="home_open_my_itmo">Открыть My ITMO</string>
     <string name="home_empty_title">Пока пусто</string>
     <string name="home_schedule_today">Сегодня</string>

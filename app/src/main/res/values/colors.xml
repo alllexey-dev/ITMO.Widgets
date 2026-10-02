@@ -35,5 +35,6 @@
     <color name="widget_on_surface_variant">#FF49454F</color>
     <color name="widget_outline_variant">#FFCAC4D0</color>
     <color name="widget_primary">#FF6750A4</color>
+    <color name="shortcut_icon_background">#FFFFFFFF</color>
 
 </resources>

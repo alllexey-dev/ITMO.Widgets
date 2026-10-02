@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Material Symbols Outlined qr_code (FILL 0, wght 400), 36 dp in the safe zone of an adaptive shortcut icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="2880"
+    android:viewportHeight="2880">
+    <group
+        android:translateX="960"
+        android:translateY="960">
+        <path
+            android:fillColor="#FF4984E2"
+            android:pathData="M120,440v-320h320v320L120,440ZM200,360h160v-160L200,200v160ZM120,840v-320h320v320L120,840ZM200,760h160v-160L200,600v160ZM520,440v-320h320v320L520,440ZM600,360h160v-160L600,200v160ZM760,840v-80h80v80h-80ZM520,600v-80h80v80h-80ZM600,680v-80h80v80h-80ZM520,760v-80h80v80h-80ZM600,840v-80h80v80h-80ZM680,760v-80h80v80h-80ZM680,600v-80h80v80h-80ZM760,680v-80h80v80h-80Z" />
+    </group>
+</vector>
