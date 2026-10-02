@@ -50,16 +50,15 @@ internal fun ItemTeacherReviewBinding.bind(item: ProfileItem.Review, actions: Pr
     source.text = copy?.let { it.sourceTitle ?: context.getString(R.string.teacher_review_source_default) }
     source.contentDescription = copy?.sourceTitle?.let { context.getString(R.string.teacher_review_source, it) }
     source.setOnClickListener(copy?.let { View.OnClickListener { actions.onSource(copy.sourceUrl) } })
-    verified.root.isVisible = community?.verified == true
-    verified.root.setText(R.string.teacher_review_verified)
+    verified.isVisible = community?.verified == true
+    verifiedText.setText(R.string.teacher_review_verified)
     unverified.isVisible = community != null && !community.verified
-    verification.isVisible = verified.root.isVisible || unverified.isVisible
     // Without arrows a zero score says nothing and is left out.
     votes.root.isVisible = item.canVote || review.score != 0
     votes.bindVotes(review.score, review.myVote, item.canVote, context.getString(R.string.teacher_review_score, review.score),
         enabled = !item.busy, upDescription = R.string.teacher_review_vote_up, downDescription = R.string.teacher_review_vote_down,
     ) { up -> actions.onVote(review.id, up) }
-    footer.isVisible = origin.isVisible || verification.isVisible || votes.root.isVisible
+    footer.isVisible = origin.isVisible || verified.isVisible || unverified.isVisible || votes.root.isVisible
     // Without a report the place of ⋮ stays, so captions break at one width from row to row.
     more.visibility = if (canReport) View.VISIBLE else View.INVISIBLE
     top.isVisible = meta.isNotEmpty() || canReport
@@ -81,8 +80,8 @@ internal fun ItemOwnTeacherReviewBinding.bind(item: ProfileItem.OwnReview, actio
     root.bindGroupPosition(item.position)
     bindStatus(context, review)
     val published = review.status == OwnReviewStatus.PUBLISHED
-    verified.root.isVisible = published && review.verified
-    verified.root.setText(R.string.teacher_review_verified_mine)
+    verified.isVisible = published && review.verified
+    verifiedText.setText(R.string.teacher_review_verified_mine)
     unverified.isVisible = published && !review.verified
     meta.text = listOfNotNull(
         review.subject,
@@ -92,7 +91,6 @@ internal fun ItemOwnTeacherReviewBinding.bind(item: ProfileItem.OwnReview, actio
     reason.isVisible = note != null
     reason.text = note?.let { context.getString(R.string.teacher_review_reason, it) }
     text.text = review.text
-    verification.isVisible = published
     votes.root.isVisible = published
     votes.bindVotes(review.score, 0, canVote = false, context.getString(R.string.teacher_review_score, review.score)) { }
     footer.isVisible = published
@@ -107,13 +105,15 @@ internal fun ItemOwnTeacherReviewBinding.bind(item: ProfileItem.OwnReview, actio
 }
 
 /**
- * One bottom edge for every review row: a footer brings its own 48 dp row, so it needs only the row's 4 dp; a row
- * that ends with its text (or a rejection reason) gets the content padding instead. The same holds at the top.
+ * One bottom edge for every review row: a footer ends in the 48 dp row of the votes, whose pill and verification
+ * line already sit inside it, so 12 dp keep both clear of the edge; a row that ends with its text (or a rejection
+ * reason) gets the 16 dp content padding. At the top, a 48 dp line of ⋮ needs only 4 dp.
  */
 private fun View.bindReviewPadding(top: Boolean, footer: Boolean) {
     val related = resources.getDimensionPixelSize(R.dimen.design_spacing_related)
     val content = resources.getDimensionPixelSize(R.dimen.design_card_padding)
-    updatePadding(top = if (top) related else content, bottom = if (footer) related else content)
+    updatePadding(top = if (top) related else content,
+        bottom = if (footer) resources.getDimensionPixelSize(R.dimen.design_spacing_content) else content)
 }
 
 private fun ItemOwnTeacherReviewBinding.bindStatus(context: Context, review: OwnTeacherReview) {
@@ -141,5 +141,5 @@ private fun ImageButton.showMenu(vararg entries: Pair<Int, () -> Unit>) {
     popup.show()
 }
 
-/** 12 % of the tone, the same wash as `review_verified_container`. */
+/** 12 % of the tone: content-based palettes make `…Container` colours too dark for the tone as text. */
 private const val PILL_ALPHA = 31

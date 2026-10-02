@@ -45,7 +45,6 @@
             android:paddingVertical="2dp"
             android:textAppearance="?attr/textAppearanceLabelMedium"
             android:visibility="gone"
-            tools:backgroundTint="@color/review_verified_container"
             tools:text="На проверке"
             tools:textColor="?attr/colorTertiary"
             tools:visibility="visible" />
@@ -95,39 +94,62 @@
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurface" />
 
-    <dev.alllexey.itmowidgets.feature.social.ui.ReviewFooterLayout
+    <!-- Once published: the verification on the left, the read-only score centred on it on the right. -->
+    <LinearLayout
         android:id="@+id/footer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/design_spacing_related"
-        android:minHeight="@dimen/design_touch_target">
+        android:baselineAligned="false"
+        android:layout_marginTop="@dimen/design_spacing_compact"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <!-- No source: the own review is told by «мой» on its top line. -->
-        <Space
-            android:id="@+id/origin"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone" />
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/design_spacing_compact"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <FrameLayout
-            android:id="@+id/verification"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <include
+            <!-- An ImageView, not a compound drawable: the check is 16 dp, which a compound drawable cannot be in XML. -->
+            <LinearLayout
                 android:id="@+id/verified"
-                layout="@layout/view_review_verified" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:ignore="UseCompoundDrawables"
+                                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="@dimen/design_spacing_related"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_check"
+                    app:tint="?attr/colorPrimary" />
+
+                <TextView
+                    android:id="@+id/verified_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/teacher_review_verified"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorPrimary" />
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/unverified"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/teacher_review_unverified"
+                                android:text="@string/teacher_review_unverified"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
 
-        </FrameLayout>
+        </LinearLayout>
 
         <include
             android:id="@+id/votes"
@@ -135,6 +157,6 @@
             android:layout_width="wrap_content"
             android:layout_height="@dimen/design_touch_target" />
 
-    </dev.alllexey.itmowidgets.feature.social.ui.ReviewFooterLayout>
+    </LinearLayout>
 
 </LinearLayout>

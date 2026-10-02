@@ -438,38 +438,52 @@ class UserProfileVisualTest {
         }
     }
 
-    @Test fun footerPutsWhoWroteItBeforeTheVerificationAndKeepsTheVotesOnItsFirstLine() = appearances { spec ->
+    @Test fun footerStacksWhoWroteItOverTheVerificationWithTheVotesCentredBeside() = appearances { spec ->
         preview(spec, {
             UserProfilePreviewActivity.person = AppResult.Success(teacher())
-            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews())
+            UserProfilePreviewActivity.reviews = AppResult.Success(mixedReviews(ownReview(OwnReviewStatus.PUBLISHED, verified = true)))
         }) { scenario ->
             content(scenario)
             for ((id, origin) in listOf("named" to R.id.author, "anonymous" to R.id.anonymous, "copy" to R.id.source)) {
                 showReview(scenario, id)
                 scenario.onActivity { activity ->
+                    val density = activity.resources.displayMetrics.density
                     val row = activity.reviewRow(id)
-                    // The top line is the caption alone; who wrote it sits at the start of the footer.
-                    val footer = row.findViewById<View>(R.id.footer)
+                    // The top line is the caption alone; who wrote it opens the footer, its verification under it.
                     val who = row.findViewById<View>(origin)
                     assertTrue(id, who.isShown)
-                    assertTrue(id, who.screenTop() >= footer.screenTop())
                     assertTrue(id, row.findViewById<View>(R.id.meta).screenTop() < row.findViewById<View>(R.id.text).screenTop())
-                    val votes = row.findViewById<View>(R.id.votes)
-                    assertTrue(id, who.screenLeft() + who.width <= votes.screenLeft())
-                    assertEquals(id, (who.screenTop() + who.height / 2).toFloat(), (votes.screenTop() + votes.height / 2).toFloat(),
-                        2 * activity.resources.displayMetrics.density)
-                    val verification = row.findViewById<View>(R.id.verification)
-                    if (verification.isShown) {
-                        val beside = verification.screenTop() < who.screenTop() + who.height
-                        if (beside) assertTrue(id, who.screenLeft() + who.width <= verification.screenLeft())
-                        else assertTrue(id, verification.screenTop() >= votes.screenTop() + votes.height - 1)
+                    assertTrue(id, who.screenTop() > row.findViewById<View>(R.id.text).screenTop())
+                    val verification = listOf(R.id.verified, R.id.unverified).map { row.findViewById<View>(it) }.singleOrNull { it.isShown }
+                    if (verification != null) {
+                        assertTrue(id, verification.screenTop() > who.screenTop())
+                        assertTrue(id, verification.screenLeft() <= who.screenLeft() + who.paddingLeft + density)
                     }
+                    val votes = row.findViewById<View>(R.id.votes)
+                    val credit = row.findViewById<View>(R.id.credit)
+                    assertTrue(id, credit.screenLeft() + credit.width <= votes.screenLeft())
+                    assertEquals(id, (credit.screenTop() + credit.height / 2).toFloat(), (votes.screenTop() + votes.height / 2).toFloat(), 2 * density)
+                    assertClearOfTheBottom(row, verification ?: who)
                     ViewChecks.assertTextFits(activity.window.decorView, ellipsizable = ::isReviewMeta)
                     ViewChecks.assertTouchTargets(activity.window.decorView)
                 }
                 frame(scenario, "footer-$id-${spec.name}")
             }
+            scrollTo<ProfileItem.OwnReview>(scenario)
+            scenario.onActivity { activity ->
+                val own = activity.holder<ProfileItem.OwnReview>()
+                assertEquals("Вёл у вас", own.findViewById<TextView>(R.id.verified_text).text.toString())
+                assertTrue(own.findViewById<View>(R.id.score).isShown)
+                assertClearOfTheBottom(own, own.findViewById(R.id.verified))
+            }
+            frame(scenario, "footer-own-${spec.name}")
         }
+    }
+
+    /** Nothing ends flush with a row's edge: at least 12 dp under the last line. */
+    private fun assertClearOfTheBottom(row: View, last: View) {
+        val gap = row.screenTop() + row.height - (last.screenTop() + last.height - last.paddingBottom)
+        assertTrue("Gap $gap under the last line", gap >= row.resources.getDimensionPixelSize(R.dimen.design_spacing_content) - 1)
     }
 
     @Test fun writeIsOfferedOnlyForTeachersWithoutAnOwnReview() = appearances { spec ->
@@ -617,7 +631,7 @@ class UserProfileVisualTest {
                     assertEquals(if (mine.status == OwnReviewStatus.REJECTED) "Причина: $LONG_REASON" else null,
                         reason.text?.toString()?.takeIf { reason.isShown })
                     assertEquals(published && mine.verified, own.findViewById<View>(R.id.verified).isShown)
-                    if (published && mine.verified) assertEquals("Вёл у вас", own.findViewById<TextView>(R.id.verified).text.toString())
+                    if (published && mine.verified) assertEquals("Вёл у вас", own.findViewById<TextView>(R.id.verified_text).text.toString())
                     assertEquals(published && !mine.verified, own.findViewById<View>(R.id.unverified).isShown)
                     assertEquals(published, own.findViewById<View>(R.id.score).isShown)
                     if (published) assertEquals("Рейтинг ${mine.score}", own.findViewById<View>(R.id.score).contentDescription)
@@ -625,6 +639,9 @@ class UserProfileVisualTest {
                         own.findViewById<TextView>(R.id.meta).text.toString())
                     assertTrue(own.findViewById<View>(R.id.own_badge).isShown)
                     assertFalse(own.findViewById<View>(R.id.vote_up).isShown)
+                    val last = if (published) listOf(R.id.verified, R.id.unverified).map { own.findViewById<View>(it) }.single { it.isShown }
+                        else own.findViewById(R.id.text)
+                    assertClearOfTheBottom(own, last)
                 }
                 frame(scenario, "own-${mine.status.name.lowercase()}${if (mine.verified) "-verified" else ""}-${spec.name}")
             }
