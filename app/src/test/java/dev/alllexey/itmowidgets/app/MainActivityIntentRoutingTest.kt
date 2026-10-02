@@ -9,6 +9,7 @@ import org.junit.Test
 class MainActivityIntentRoutingTest {
     private companion object {
         val SUBJECT = RecordbookSubjectArgs(11, 1, 3, "2026/2027", 7, "flow", "7")
+        const val VIEW = "android.intent.action.VIEW"
     }
 
     @Test fun `routes schedule sport and a positive profile ISU to their stable roots`() {
@@ -105,5 +106,33 @@ class MainActivityIntentRoutingTest {
             assertFalse(route!!.today)
             assertNull(route.shortcutId())
         }
+    }
+
+    @Test fun `app links open the profile, the sport sign page or the unavailable dialog at home`() {
+        fun view(link: String?) = MainActivityIntentRouting.parse(VIEW, link = link)
+        assertEquals(MainActivityRoute(R.id.navigation_me, userIsu = 100001), view("https://dev.widgets.alllexey.dev/u/100001"))
+        assertEquals(
+            MainActivityRoute(R.id.navigation_sport, sportLessonId = 42),
+            view("https://widgets.alllexey.dev/sport/42")
+        )
+        assertEquals(
+            MainActivityRoute(R.id.navigation_sport, sportLessonId = 42, sportLessonPredicted = true),
+            view("https://widgets.alllexey.dev/sport/p/42")
+        )
+        assertEquals(MainActivityRoute(R.id.navigation_home, linkUnavailable = true), view("https://widgets.alllexey.dev/sport/abc"))
+        assertNull(view("https://example.com/u/1"))
+        assertNull(view(null))
+    }
+
+    @Test fun `an app link replayed from Recents opens no route`() {
+        listOf("https://widgets.alllexey.dev/u/1", "https://widgets.alllexey.dev/sport/1", "https://widgets.alllexey.dev/u/x")
+            .forEach { link -> assertNull(link, MainActivityIntentRouting.parse(VIEW, launchedFromHistory = true, link = link)) }
+    }
+
+    @Test fun `earlier actions ignore a link`() {
+        assertEquals(
+            MainActivityRoute(R.id.navigation_sport),
+            MainActivityIntentRouting.parse(MainActivity.ACTION_OPEN_SPORT, link = "https://widgets.alllexey.dev/u/1")
+        )
     }
 }
