@@ -71,6 +71,51 @@ The QR area keeps a square geometry in every state, the refresh control remains
 in place, and the existing widget palette determines QR contrast. Preview and
 test screenshots use synthetic non-credential payloads only.
 
+## Quick-settings tile and app shortcuts
+
+`QrTileService` (`feature/qr/ui`) is the «QR-пропуск» quick-settings tile. In
+`onStartListening` `QrTileController` initialises the session and shows the
+tile `STATE_ACTIVE` with a signed-in session, `STATE_INACTIVE` otherwise; the
+tile is not toggleable and declares no active-tile metadata. While a cold
+process answers, SystemUI may show the tile as unavailable for a moment. A tap
+always opens the app with `ACTION_OPEN_QR_PASS` (the widget's flags
+`NEW_TASK | CLEAR_TOP | SINGLE_TOP`); without a session the route waits for
+sign-in. On a locked device the tap goes through `unlockAndRun`. Android 14+
+starts the activity with `startActivityAndCollapse(PendingIntent)`, older
+versions with the `Intent` overload, which throws on Android 14+ for apps
+targeting it (`qrTileLaunchFor`). The icon `ic_tile_qr.xml` is white without a
+theme tint; SystemUI colours it.
+
+The device flag `qr_tile_added` (`AppSettingsStorage`, kept on sign-out)
+remembers whether the tile is in the quick settings: `onTileAdded` and
+`onTileRemoved` write it in the application scope, and so does the answer to
+the add request. Android has no public way to ask whether a tile is added. On
+Android 13+ the `Виджет QR-кода` settings page offers `Добавить в шторку` while
+the flag is off (see [settings](../settings.md#qr-widget)).
+
+Two static shortcuts (`res/xml/shortcuts.xml`, ids in `app/AppShortcuts`):
+
+| Id | Label (short / long) | Action | Opens |
+|---|---|---|---|
+| `qr_pass` | `QR-пропуск` / `Открыть QR-пропуск` | `ACTION_OPEN_QR_PASS` | home with the QR pass above it |
+| `today` | `Сегодня` / `Расписание на сегодня` | `ACTION_OPEN_TODAY` | the own schedule on today's day |
+
+Their icons are adaptive, without a tint: a white background like the launcher
+icon and the Material Symbols `qr_code` and `schedule` in `#4984E2`. The
+launcher shows the long or the short label depending on the width. `Сегодня`
+with a friend selected returns to the own schedule. Running a route reports its
+shortcut with `ShortcutManagerCompat.reportShortcutUsed`, for the tile too;
+the QR button inside the app does not. The launcher starts a shortcut with
+`NEW_TASK | CLEAR_TASK`, so a shortcut used while the app is open recreates
+`MainActivity` in the same task: the earlier tab state is not kept. The tile
+uses the widget's flags and keeps it.
+
+Tests: `QrTileClickTest`, `QrTileControllerTest`, `QrTilePreferencesImplTest`,
+`QuickSettingsTilesTest`, `MainActivityIntentRoutingTest`, `MainRouteQueueTest`
+(JVM); `AppShortcutsTest`, `MainActivityDeepLinkTest`, `QrTileFlowTest`
+(`cmd statusbar add-tile` and `click-tile` on the emulator) and the today
+request cases of `ScheduleFragmentLifecycleTest` (device).
+
 ## MyITMO web
 
 The second FAB opens the official `https://my.itmo.ru/` website in the

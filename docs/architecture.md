@@ -24,7 +24,8 @@ and fail the build when broken. Feature-specific behaviour lives in
 Paths are relative to `app/src/main/java/dev/alllexey/itmowidgets/`.
 
 ```text
-app/            Application, MainActivity, navigation coordinator, notifier, widget coordinator
+app/            Application, MainActivity, navigation coordinator, notifier, widget coordinator,
+                MainRouteQueue (the pending widget, notification, tile or shortcut route), AppShortcuts
 core/           cross-cutting; knows nothing about features
   debug/        BuildConfig.DEBUG fixtures (provider / controller / store); BarsSessionProbe, the debug
                 probe of the BARS cookie renewal
@@ -36,6 +37,8 @@ core/           cross-cutting; knows nothing about features
   home/         HomeCard model and the HomeCardSource contract every feature contributes to
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
   navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders,
+                QuickSettingsTiles (the QR tile's class name for the settings add request),
+                ScheduleTodayRequest (the Fragment result that shows today in the own schedule),
                 LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs, SheetScoresArgs
                 (the «Мои баллы» sheet: subject period, link address, connect or pick another total),
                 TeacherReviewArgs, RecordbookSubjectArgs — the subject page's arguments, validated when a
@@ -95,7 +98,12 @@ Google Sheets in `sheets` subpackages of `domain`, `data`, `presentation` and
 offers `Мои баллы` and opens that sheet through `AppNavigator`. `settings` owns the
 `Работа в фоне` row: `BackgroundWorkAccess` and `BackgroundWorkScreens` in
 `domain`, `AndroidBackgroundWorkAccess` in `data` and
-`openBackgroundWorkSettings` in `ui`. `weblogin` holds
+`openBackgroundWorkSettings` in `ui`; likewise `QuickSettingsTileAccess` and
+`QrTileAddResult` in `domain`, `AndroidQuickSettingsTileAccess` in `data` and
+`requestAddQrTile` in `ui` for `Добавить в шторку`. `qr` owns the quick-settings
+tile: `QrTilePreferences` in `domain`, `QrTileController` in `presentation`,
+`QrTileService` and `QrTileClick` in `ui` ([home](features/home.md#quick-settings-tile-and-app-shortcuts)).
+`weblogin` holds
 the code and link parser, the User-Agent description, the view model and
 `WebLoginBottomSheet` ([web sign-in](features/web-login.md)). `social` owns the
 person profile and its direct My ITMO `PersonRepository`; `reviews` owns
@@ -240,9 +248,44 @@ FragmentManager, so a screen in another feature can open them without
 importing `feature/schedule`, `feature/resources`, `feature/weblogin` or
 `feature/reviews`. Selecting or
 reselecting a root tab discards the whole overlay stack; Back pops one overlay
-level; rotation restores the current level. Widget and notification intents are
-parsed by `MainActivityIntentRouting`, queued until the session is signed in,
-saved across recreation and consumed exactly once.
+level; rotation restores the current level.
+
+Every root keeps its own state: `NavigationUI` selects a tab with
+`popUpTo(start, saveState = true)` and `restoreState = true`, so scroll
+positions and sub-tabs survive switches, recreation and process death. Home is
+the graph's start; when the first-run flow ends, `MainActivity` makes home the
+start before leaving `onboarding`, otherwise tabs would pile up in the stack.
+Back from another root leads home, Back from home leaves the app. Reselecting
+the current tab closes overlays and the friend-picker dialog and keeps the
+scroll. The bottom bar stays under a full-screen overlay instead of hiding:
+the overlay container is above it (`translationZ`), opaque and clickable, and
+the root and the bar are hidden from TalkBack, so the root never changes size.
+
+Widget, notification, tile and shortcut intents are parsed by
+`MainActivityIntentRouting` and wait in `MainRouteQueue` until the session is
+signed in and the first-run flow is passed. The queue keeps one route (a newer
+one replaces it), hands it out once its root is selected, and is saved across
+recreation; a route runs exactly once. An intent carrying
+`FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY` (Recents replaying the original intent on
+Android 8–11) opens no route.
+
+| Action | Root | Above it | Shortcut reported |
+|---|---|---|---|
+| `ACTION_OPEN_QR_PASS` (tile, shortcut) | home | `QR_PASS` | `qr_pass` |
+| `ACTION_OPEN_TODAY` (shortcut) | schedule, scrolled to today (`ScheduleTodayRequest`) | — | `today` |
+| `ACTION_OPEN_SCHEDULE` (widget) | schedule, at the reading place | — | — |
+| `ACTION_OPEN_SPORT` (notification) | sport | — | — |
+| `ACTION_OPEN_USER_PROFILE` (friendship) | profile | `USER_PROFILE` | — |
+| `ACTION_OPEN_SCHEDULE_CHANGES` | schedule | `SCHEDULE_CHANGES` | — |
+| `ACTION_OPEN_RECORDBOOK`, `ACTION_OPEN_RECORDBOOK_SUBJECT` | recordbook | `RECORDBOOK_SUBJECT` with valid arguments | — |
+| `ACTION_OPEN_BARS_LOGIN` | recordbook | `BarsLoginActivity` | — |
+
+Back after a route: an overlay first (QR pass, profile, changes, subject page,
+the BARS sign-in), then home, then out of the app. On Android 12+ the root
+launcher activity only moves the task to the background, below it
+`MainActivity` finishes; reopening from Recents does not repeat the route.
+`ScheduleTodayRequest` is a Fragment result on the Activity's FragmentManager:
+it is kept, also in the saved state, until the root schedule is `STARTED`.
 
 Every Fragment opens a person profile with `Fragment.openUserProfile(isu)` in
 `core/ui/navigation/AppNavigator.kt`. A sheet dismisses before invoking it.
@@ -306,8 +349,7 @@ Structural debt, in priority order:
 2. Cache write failures are swallowed silently.
 3. `MyItmoStorage` does Keystore crypto on the calling thread.
 4. Widget QR expiry is passive; the full-screen QR pass actively hides expired codes.
-5. The bottom bar does not hide on contextual screens.
-6. The profile tab cannot show live privacy values or the BARS session state
+5. The profile tab cannot show live privacy values or the BARS session state
    because those live inside other features; a `core` contract is needed.
 
 ## Architecture definition of done

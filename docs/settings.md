@@ -30,6 +30,8 @@ Every contextual section opened from Profile follows this overlay flow. Selectin
 or reselecting a root destination, including opening Schedule from a widget, closes
 the entire overlay stack. Returning to Profile then shows its menu, not old settings
 history. Rotation restores the current level; it does not act as a root switch.
+Back after a widget, notification, tile or shortcut route leads home, not to
+the tab that was open before.
 
 Navigation rows have a minimum 48 dp touch target and expand for large text.
 Settings use quiet surface-container cards without a stroke or elevation. The
@@ -144,6 +146,15 @@ only among installed instances of that same format:
   A failed replacement preserves the previous image.
 - `Сбросить изображение спойлера` removes the custom image.
 - Animation and custom-image controls are disabled when the spoiler is disabled.
+- `Добавить в шторку` (`Плитка «QR-пропуск» в быстрых настройках`) is the first
+  row, in a group of its own, on Android 13+ while the device flag
+  `qr_tile_added` is off. It shows the system dialog
+  (`StatusBarManager.requestAddTileService`). Added: the flag is set and the row
+  leaves without moving the preview. Already added: the flag is set and a
+  snackbar says `Плитка уже в шторке`. Declined or a request in progress:
+  nothing. Other errors: `Не удалось добавить плитку`. The flag belongs to the
+  device and survives sign-out; removing the tile from the shade clears it and
+  brings the row back.
 
 ## Home screen
 
@@ -333,5 +344,5 @@ behavior.
 
 ## Deferred beyond v2.1
 
-Calendar synchronization, community resources,
-teacher-review settings and the `Добавить в шторку` action belong to v2.2.
+Calendar synchronization, community resources and
+teacher-review settings belong to v2.2.

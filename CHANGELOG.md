@@ -8,6 +8,19 @@ publication or deployment.
 
 ### 2026-10-02
 
+- The «QR-пропуск» quick-settings tile opens the QR pass above home; it is
+  active with a session, and on a locked device it asks to unlock first. On
+  Android 13+ the `Виджет QR-кода` settings page offers `Добавить в шторку`
+  until the tile is added.
+- Static app shortcuts «QR-пропуск» and «Сегодня»; «Сегодня» opens the own
+  schedule on today's day, also from a friend's schedule.
+- Widget, notification, tile and shortcut taps share one route queue: a route
+  runs once, waits for sign-in and the first-run flow, and is not repeated when
+  the app is reopened from Recents; Back leads home.
+- After the first-run flow home becomes the navigation graph's start, so tabs
+  keep their scroll and state instead of piling up in the back stack until the
+  app restarts.
+- Core, Backend and MyItmoApi are unchanged.
 - The link actions sheet names the author of another student's link («Автор: …»);
   the row opens their profile.
 - A link's second line says who sees it (`Все` or the flow) for others' links too,

@@ -305,6 +305,12 @@ settings, and restore them if a separate test explicitly changes them.
 - Sport cards: `res/layout/item_sport_lesson.xml`, `res/layout/item_sport_booking.xml`,
   details sheet `feature/sport/ui/common/SportCommonDetailsBottomSheet.kt`.
 - Settings and profile groups: `res/values/styles.xml`, `feature/settings/ui/SettingsRenderer.kt`.
+- System surfaces: the quick-settings tile icon `res/drawable/ic_tile_qr.xml`
+  (Material Symbols `qr_code`, white, no theme tint: SystemUI colours tile icons
+  and resolves no app theme attributes); the shortcut icons
+  `res/drawable/ic_shortcut_qr.xml` and `ic_shortcut_today.xml`, adaptive icons
+  without a tint (white background like the launcher icon, `qr_code` and
+  `schedule` 36 dp in `#4984E2` in the safe zone of the 108 dp foreground).
 - Recordbook row: `res/layout/item_recordbook_subject.xml` (name, metadata, a number
   with a thin bar or a grade badge), `feature/recordbook/ui/RecordbookAdapter.kt`.
   The name and the dot `new_mark` for unread marks share a horizontal row

@@ -82,9 +82,18 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   QR pass, sport, friend requests, three dismissible hints, and a
   `Главный экран` settings page. The feed is fed through `core/home/HomeCardSource`
   multibindings, so the v2.2 cards (schedule changes, BARS marks, moderation
-  results, subject resources) plug in without touching `feature/home`. The QR
-  quick-settings tile, the app shortcuts, the study-root renaming and the
-  bottom-bar/back-stack rules of Stage 43 remain open.
+  results, subject resources) plug in without touching `feature/home`. The rest
+  of Stages 43–44 is the entry below.
+- Stages 43–44 (remainder): implemented on 2026-10-02 through
+  `vibe/qr-tile-shortcuts-plan.md`: the «QR-пропуск» quick-settings tile,
+  `Добавить в шторку` on the QR widget settings page (Android 13+), the static
+  shortcuts «QR-пропуск» and «Сегодня», one route queue in `MainActivity` for
+  widgets, notifications, the tile and shortcuts (once, not from Recents, Back
+  leads home), and home as the graph's start after the first-run flow, so tabs
+  keep their state instead of piling up. Corrections to the stage text by the
+  owner's decision of 2026-10-02: the recordbook keeps the name `Зачётка` and
+  there are no new home cards; the bottom bar stays covered by full-screen
+  screens instead of hiding. Not released to production.
 - Outside the numbered stages, 2026-09-24 through `vibe/web-app-plan.md`: a web
   version at `/app/` (repository `itmo-widgets-web`, next to the landing) with
   a shell and an admin area for moderators and the admin (moderation queue,

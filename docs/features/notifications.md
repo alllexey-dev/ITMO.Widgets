@@ -42,7 +42,9 @@ payloads above 4 KB are dropped.
    `publicTitle` it also gets a public version (`setPublicVersion`) with that
    title only and the same tap, otherwise the lock screen hides its content.
    `AppNotifier.cancel(channel, id)` removes one notification, `clear()` all of
-   them.
+   them. A tap goes through the shared route queue of `MainActivity`
+   ([navigation](../architecture.md#navigation)): Recents never repeats it and
+   Back leads home.
 
 ## Token sync
 

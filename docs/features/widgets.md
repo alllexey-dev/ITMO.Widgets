@@ -24,6 +24,9 @@ the app.
 - The snapshot store is a shared session cleaner; cleanup invalidates in-flight
   worker tickets before clearing disk so an old account's snapshot cannot be
   written into a new session.
+- A tap opens the schedule at its reading place through the shared route queue
+  of `MainActivity` ([navigation](../architecture.md#navigation)): Recents never
+  repeats it and Back leads home.
 - Successful sport actions, preference changes and the services gate enqueue a
   forced schedule-widget update through `WidgetRefreshCoordinator`; QR widgets
   are not touched. A sport action also enqueues a follow-up update 1 s later,
