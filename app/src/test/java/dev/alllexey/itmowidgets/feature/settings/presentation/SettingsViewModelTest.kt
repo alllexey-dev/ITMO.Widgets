@@ -1566,13 +1566,13 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `schedule page ends with the calendar group and its footer`() = runTest(mainDispatcherRule.dispatcher) {
+    fun `schedule page ends with the calendar group`() = runTest(mainDispatcherRule.dispatcher) {
         val fixture = createFixture(page = SettingsPage.SCHEDULE)
         advanceUntilIdle()
 
         val calendar = fixture.viewModel.sections.value.last()
         assertEquals(null, calendar.title)
-        assertEquals(UiText.Resource(R.string.settings_calendar_sync_footer), calendar.footer)
+        assertEquals(null, calendar.footer)
         assertEquals(listOf(SettingsViewModel.KEY_CALENDAR_SYNC, SettingsViewModel.KEY_ICS_EXPORT), calendar.items.map { it.key })
         val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC)
         assertEquals(UiText.Resource(R.string.settings_calendar_sync_title), toggle.title)

@@ -1041,11 +1041,10 @@
     <string name="review_report_comment">Комментарий</string>
     <string name="review_report_send">Отправить</string>
     <string name="settings_calendar_sync_title">Синхронизация с календарём</string>
-    <string name="settings_calendar_sync_description">Пары на 4 недели вперёд.</string>
+    <string name="settings_calendar_sync_description">Пары на 4 недели вперёд в системном календаре телефона.</string>
     <string name="settings_calendar_sync_no_permission">Выключена: нет доступа к календарю.</string>
     <string name="settings_calendar_sync_calendar_missing">Выключена: календарь удалён.</string>
     <string name="settings_ics_export_title">Выгрузить в .ics</string>
-    <string name="settings_calendar_sync_footer">Пары появятся в системном календаре телефона.</string>
     <string name="settings_ics_export_description">Можно импортировать в Google Календарь на calendar.google.com. Импортируйте в отдельный календарь — так его легко удалить или заменить свежим файлом.</string>
     <string name="settings_ics_export_busy">Готовим файл…</string>
     <string name="calendar_access_title">Доступ к календарю</string>

@@ -202,7 +202,7 @@ only among installed instances of that same format:
   Google-account calendars are never written. Off by default; the state lives
   in `filesDir/calendar_sync/state.json`, not in DataStore, so it is a device
   setting outside backups. It does not need `Подключение к ITMO.Widgets` or
-  `Изменения расписания`. The line under it is `Пары на 4 недели вперёд.`, or
+  `Изменения расписания`. The line under it is `Пары на 4 недели вперёд в системном календаре телефона.`, or
   `Выключена: нет доступа к календарю.` / `Выключена: календарь удалён.` after
   it turned itself off.
 - Turning it on asks for `READ_CALENDAR` and `WRITE_CALENDAR` (only here):
@@ -222,10 +222,11 @@ only among installed instances of that same format:
 - The page is an offline settings category with three untitled groups: the
   schedule-changes switch with `Работа в фоне`, the auto-sign switch with a
   footer that explains the user-services requirement and that pending entries
-  are not confirmed bookings, then the calendar group (`Синхронизация с
-  календарём`, `Выгрузить в .ics`) with the footer `Пары появятся в
-  системном календаре телефона.` (the phone's own calendar app; Google and
-  Yandex Calendar do not show device calendars) An untitled group after another one keeps the group gap
+  are not confirmed bookings, then the calendar group without a footer:
+  `Синхронизация с календарём` (`Пары на 4 недели вперёд в системном календаре
+  телефона.` — the phone's own calendar app; Google and Yandex Calendar do not
+  show device calendars) and `Выгрузить в .ics`. An untitled group after another
+  one keeps the group gap
   (`design_spacing_group`) above its card.
 
 ## Recordbook

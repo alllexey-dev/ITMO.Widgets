@@ -877,7 +877,7 @@ class SettingsViewModel @Inject constructor(
         )
     }
 
-    /** The switch says why it turned itself off; the footer says where the lessons go and where they do not show. */
+    /** The switch says where the lessons go, or why it turned itself off. */
     private fun calendarSection(calendar: CalendarSyncState, icsBusy: Boolean) = SettingSection(
         title = null,
         items = listOf(
@@ -901,8 +901,7 @@ class SettingsViewModel @Inject constructor(
                 trailingIconRes = R.drawable.ic_download,
                 enabled = !icsBusy
             )
-        ),
-        footer = UiText.Resource(R.string.settings_calendar_sync_footer)
+        )
     )
 
     /** The whole row is the button: it opens the system page, and the row leaves once Android lets the app work. */
