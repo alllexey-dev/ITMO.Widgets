@@ -8,6 +8,17 @@ publication or deployment.
 
 ### 2026-10-02
 
+- Shared links open in the app: `https://widgets.alllexey.dev/u/{isu}` the
+  person profile above the profile tab, `/sport/{lessonId}` the lesson card on
+  `Запись` with its day selected, `/sport/p/{prototypeLessonId}` a predicted
+  lesson rebuilt from the recipient's catalog (or its real repeat once it
+  exists). Verified App Links on both hosts; the route waits for sign-in and
+  the first-run flow and is not repeated from Recents. A damaged link shows
+  `Ссылка не открывается`, an ended or missing lesson `Занятие недоступно`.
+- `Поделиться` in the person profile, beside the own name on the profile tab
+  and in the sport lesson card (real lessons, bookings and predictions that
+  have not ended) opens the Sharesheet with a text and the link; debug builds
+  share `dev.widgets.alllexey.dev` links.
 - `Синхронизация с календарём` on the `Расписание` settings page keeps the
   own My ITMO schedule of today and the next 28 days in the app's own calendar
   `ITMO.Widgets` on the phone, which calendar apps reading the phone's

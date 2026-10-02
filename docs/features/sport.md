@@ -66,6 +66,13 @@ header also opens that profile when a usable ISU is available, with a chevron,
 48 dp target and localized click action. It dismisses the sheet first; without
 an ISU the teacher remains a non-clickable fact.
 
+The sheet's toolbar menu has `Поделиться` while the lesson has not ended, for
+a real lesson or booking with a positive id and for a prediction, which is
+shared by its prototype (`/sport/p/{prototypeLessonId}`). A shared link opens
+`Запись` with the lesson's day selected and its card, ignoring filters; a
+predicted link opens the real repeat once the catalog has it, and an ended or
+missing lesson shows `Занятие недоступно`. See [app-links.md](app-links.md).
+
 `SportBookingConditions` is the deterministic local offer policy shared by cards
 and details. Academic intersections only warn; official booking conflicts,
 quotas, selection, credit and health-group restrictions block a new offer; a full
@@ -125,4 +132,5 @@ waiting silently; network and auth failures only log. See
 
 `SportCardsVisualTest` runs the real adapters and sheet in an isolated debug host
 across both themes, two dynamic palettes, 320 dp width, font scale 1.0 and 1.3,
-queue states, busy-action protection, rebinding and recreation.
+queue states, busy-action protection, rebinding, recreation and where the share
+action shows. `SportSignViewModelTest` covers opening a shared lesson.

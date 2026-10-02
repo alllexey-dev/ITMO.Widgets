@@ -190,6 +190,16 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   `AndroidPhoneCalendars` and `IcsFileExport` instead of `CalendarExporter`, and
   there is no `ScheduleExportBottomSheet`. Event descriptions end with the
   tag `ITMO.Widgets · <lesson>` instead of deep links. Not released to production.
+- Stages 41–42: implemented on 2026-10-02 through `vibe/app-links-plan.md`
+  (Android 2.2-SNAPSHOT and the site; Core, Backend and MyItmoApi unchanged),
+  narrowed by the owner's decision of 2026-10-02: only person profiles
+  (`/u/{isu}`) and sport lessons (`/sport/{lessonId}`, predicted ones as
+  `/sport/p/{prototypeLessonId}`) are shared, no schedule lessons or subjects.
+  `assetlinks.json` and the pages without the app are served by the site
+  (`itmo-widgets-web`, `site/`), not by Backend. See
+  [app-links](../features/app-links.md). The dev and production site deploys,
+  the dev Caddy routing and the verification on a device are pending. Not
+  released to production.
 
 ## Plan Structure
 

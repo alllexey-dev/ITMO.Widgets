@@ -32,13 +32,17 @@ core/           cross-cutting; knows nothing about features
   diagnostics/  AppDiagnostics journal, sanitizer, crash handler
   location/     BuildingDirectory (res/raw/itmo_buildings.json), MapDestination geo URIs
   ui/           LessonTypes and LocationTitles shared by schedule and recordbook rows;
-                LinkOpener and SubjectLinkTexts shared by the recordbook and the link sheets
+                LinkOpener and SubjectLinkTexts shared by the recordbook and the link sheets;
+                ShareText (the Sharesheet for a shared link)
   friend/       FriendRepository — the schedule picker's narrow view of friends
   home/         HomeCard model and the HomeCardSource contract every feature contributes to
   model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
   navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders,
                 QuickSettingsTiles (the QR tile's class name for the settings add request),
                 ScheduleTodayRequest (the Fragment result that shows today in the own schedule),
+                AppLinks (parses the shared `/u/`, `/sport/` and `/sport/p/` links), ShareLinkFactory (builds
+                them from WIDGETS_BASE_URL), SportLessonRequest (the Fragment result that opens a shared
+                lesson on the sport sign page),
                 LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs, SheetScoresArgs
                 (the «Мои баллы» sheet: subject period, link address, connect or pick another total),
                 TeacherReviewArgs, RecordbookSubjectArgs — the subject page's arguments, validated when a
@@ -268,7 +272,7 @@ scroll. The bottom bar stays under a full-screen overlay instead of hiding:
 the overlay container is above it (`translationZ`), opaque and clickable, and
 the root and the bar are hidden from TalkBack, so the root never changes size.
 
-Widget, notification, tile and shortcut intents are parsed by
+Widget, notification, tile, shortcut and App Link intents are parsed by
 `MainActivityIntentRouting` and wait in `MainRouteQueue` until the session is
 signed in and the first-run flow is passed. The queue keeps one route (a newer
 one replaces it), hands it out once its root is selected, and is saved across
@@ -286,6 +290,9 @@ Android 8–11) opens no route.
 | `ACTION_OPEN_SCHEDULE_CHANGES` | schedule | `SCHEDULE_CHANGES` | — |
 | `ACTION_OPEN_RECORDBOOK`, `ACTION_OPEN_RECORDBOOK_SUBJECT` | recordbook | `RECORDBOOK_SUBJECT` with valid arguments | — |
 | `ACTION_OPEN_BARS_LOGIN` | recordbook | `BarsLoginActivity` | — |
+| `ACTION_VIEW` `/u/{isu}` (App Link) | profile | `USER_PROFILE` | — |
+| `ACTION_VIEW` `/sport/{id}`, `/sport/p/{id}` | sport, `Запись` (`SportLessonRequest`) | the lesson card or `Занятие недоступно` | — |
+| `ACTION_VIEW`, malformed link | home | `Ссылка не открывается` | — |
 
 Back after a route: an overlay first (QR pass, profile, changes, subject page,
 the BARS sign-in), then home, then out of the app. On Android 12+ the root
@@ -293,6 +300,8 @@ launcher activity only moves the task to the background, below it
 `MainActivity` finishes; reopening from Recents does not repeat the route.
 `ScheduleTodayRequest` is a Fragment result on the Activity's FragmentManager:
 it is kept, also in the saved state, until the root schedule is `STARTED`.
+`SportLessonRequest` works the same way for the root sport screen, which hands
+it to its sign page. Links and sharing: [features/app-links.md](features/app-links.md).
 
 Every Fragment opens a person profile with `Fragment.openUserProfile(isu)` in
 `core/ui/navigation/AppNavigator.kt`. A sheet dismisses before invoking it.

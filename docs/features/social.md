@@ -66,7 +66,9 @@ settings and debug tools; notification state and the version live in settings.
 Above sign-out, two compact tonal buttons with logos open the GitHub repository
 and the `@itmowidgets` Telegram channel. Telegram tries the `tg://` deep link
 first and falls back to the web page. The tab refreshes social data on start
-and when services are re-enabled.
+and when services are re-enabled. A `Поделиться` icon beside the own name,
+shown once the ISU is known, shares the own profile link
+([app-links.md](app-links.md)).
 
 ## Friends screen (`feature/social`, overlay `FRIENDS`)
 
@@ -208,7 +210,10 @@ Rows without a usable ISU remain informational and have neither chevron nor
 click action. Friend-sport cards remain read-only and do not open teacher
 profiles. Friendship pushes retain the Activity entry point
 `MainActivity.ACTION_OPEN_USER_PROFILE`, which opens `AppScreen.USER_PROFILE`
-through the navigation coordinator.
+through the navigation coordinator. A shared link `https://<host>/u/{isu}`
+opens it the same way above the profile tab. The top bar's `Поделиться` icon,
+shown only with a `Content` page (the own profile too), shares that link; see
+[app-links.md](app-links.md).
 
 ## Another user’s friends (overlay `USER_FRIENDS`)
 
