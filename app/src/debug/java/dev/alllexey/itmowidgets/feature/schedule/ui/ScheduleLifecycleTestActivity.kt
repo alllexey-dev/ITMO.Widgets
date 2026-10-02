@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
+import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
@@ -77,7 +78,7 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator {
                             }, object : PendingSportBookingsRepository {
                                 override fun observePendingBookings() = pendingSport
                                 override suspend fun refresh() = refreshPendingOutcome()
-                            }, PreviewChanges) as T
+                            }, PreviewChanges, MemoryCalendarSync()) as T
                 })[ScheduleViewModel::class.java]
             }
         }, false)

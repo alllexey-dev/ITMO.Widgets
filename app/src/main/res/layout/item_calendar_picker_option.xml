@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One calendar in the picker: the radio mark follows the calendar in use. -->
+<CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:checkMark="?android:attr/listChoiceIndicatorSingle"
+    android:ellipsize="end"
+    android:gravity="center_vertical"
+    android:maxLines="2"
+    android:minHeight="@dimen/design_touch_target"
+    android:paddingStart="@dimen/design_spacing_section"
+    android:paddingEnd="@dimen/design_spacing_group"
+    android:paddingVertical="@dimen/design_spacing_compact"
+    android:textAppearance="?attr/textAppearanceBodyLarge"
+    android:textColor="?attr/colorOnSurface" />

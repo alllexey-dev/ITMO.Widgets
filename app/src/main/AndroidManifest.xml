@@ -8,6 +8,14 @@
     <!-- Asked only when calendar synchronization is turned on or a calendar is picked. -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <!-- «Открыть в календаре» for an exported .ics shows only when an app can open it. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="text/calendar" />
+        </intent>
+    </queries>
+
     <application
         android:name=".app.ItmoWidgetsApplication"
         android:allowBackup="true"

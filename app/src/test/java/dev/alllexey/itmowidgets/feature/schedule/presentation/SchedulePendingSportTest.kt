@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
@@ -55,7 +56,7 @@ class SchedulePendingSportTest {
         }
         val official = OfficialRepository()
         val pending = PendingRepository()
-        val model = ScheduleViewModel(official, clock, SavedStateHandle(), Preferences(true), pending, FakeScheduleChangesRepository())
+        val model = ScheduleViewModel(official, clock, SavedStateHandle(), Preferences(true), pending, FakeScheduleChangesRepository(), FakeCalendarSync())
         model.ensureDataLoaded()
         runCurrent()
         val original = model.content().schedule
@@ -329,7 +330,7 @@ class SchedulePendingSportTest {
     private fun model(
         official: OfficialRepository = OfficialRepository(), preferences: Preferences = Preferences(),
         pending: PendingRepository = PendingRepository(), saved: SavedStateHandle = SavedStateHandle()
-    ) = ScheduleViewModel(official, Today, saved, preferences, pending, FakeScheduleChangesRepository())
+    ) = ScheduleViewModel(official, Today, saved, preferences, pending, FakeScheduleChangesRepository(), FakeCalendarSync())
 
     private fun ScheduleViewModel.content() = uiState.value as ScheduleUiState.Content
 

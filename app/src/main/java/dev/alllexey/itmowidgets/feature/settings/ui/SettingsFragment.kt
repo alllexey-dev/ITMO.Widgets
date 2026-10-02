@@ -42,6 +42,7 @@ import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
 import dev.alllexey.itmowidgets.databinding.FragmentSettingsBinding
+import dev.alllexey.itmowidgets.feature.settings.presentation.CalendarAccessPurpose
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
@@ -94,8 +95,29 @@ class SettingsFragment : Fragment() {
             )
         }
 
+    /** What the calendar permission dialog on screen was asked for; survives recreation. */
+    private var pendingCalendarAccess: CalendarAccessPurpose? = null
+
+    private val calendarPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+            val purpose = pendingCalendarAccess ?: return@registerForActivityResult
+            pendingCalendarAccess = null
+            if (results.isNotEmpty() && results.values.all { it }) {
+                viewModel.onCalendarAccessGranted(purpose)
+                return@registerForActivityResult
+            }
+            restoreRenderedValues()
+            // A refusal without a dialog means the permission is locked; only the app's system page can undo that.
+            val locked = !shouldShowRequestPermissionRationale(android.Manifest.permission.WRITE_CALENDAR)
+            val snackbar = Snackbar.make(binding.root, R.string.calendar_access_denied, Snackbar.LENGTH_LONG)
+            if (locked) snackbar.setAction(R.string.calendar_access_settings) { openAppSettings() }
+            snackbar.show()
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pendingCalendarAccess = savedInstanceState?.getString(PENDING_CALENDAR_ACCESS)
+            ?.let(CalendarAccessPurpose::valueOf)
         enterTransition = if (arguments?.getBoolean(ScreenTransitionHost.ARG_OVERLAY_ROOT) == true) null
         else SettingsLevelMotion.transition(forward = true)
         exitTransition = SettingsLevelMotion.transition(forward = true)
@@ -158,6 +180,7 @@ class SettingsFragment : Fragment() {
         if (viewModel.page == SettingsPage.QR_WIDGET) {
             observeCustomSpoiler()
         }
+        listenToIcsDatePicker(viewModel::onIcsRange)
 
         viewModel.sections
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
@@ -198,11 +221,22 @@ class SettingsFragment : Fragment() {
                     SettingsEvent.RequestQrTile -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         requireActivity().requestAddQrTile(viewModel::onQrTileResult)
                     }
-                    is SettingsEvent.ShowMessage -> Snackbar.make(
-                        binding.root,
-                        event.text.resolve(requireContext()),
-                        Snackbar.LENGTH_SHORT
-                    ).show()
+                    is SettingsEvent.RequestCalendarAccess -> requestCalendarAccess(event.purpose)
+                    is SettingsEvent.ShowCalendarPicker ->
+                        showCalendarPicker(event.calendars, event.selected, viewModel::onCalendarPicked)
+                    SettingsEvent.ChooseIcsRange -> showIcsRanges(viewModel::onIcsRange) {
+                        showIcsDatePicker(viewModel::onIcsRange)
+                    }
+                    is SettingsEvent.ShareIcs -> showIcsReady(event.file)
+                    is SettingsEvent.ShowMessage -> {
+                        // A switch the user flipped stays as the state says when the action did not go through.
+                        restoreRenderedValues()
+                        Snackbar.make(
+                            binding.root,
+                            event.text.resolve(requireContext()),
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
                     is SettingsEvent.ShowError -> {
                         restoreRenderedValues()
                         Snackbar.make(
@@ -274,6 +308,7 @@ class SettingsFragment : Fragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putBundle(PREVIEW_STATE, widgetPreview?.saveState() ?: previewState)
+        outState.putString(PENDING_CALENDAR_ACCESS, pendingCalendarAccess?.name)
         super.onSaveInstanceState(outState)
     }
 
@@ -346,6 +381,33 @@ class SettingsFragment : Fragment() {
         _binding?.let { Snackbar.make(it.root, R.string.settings_qr_custom_image_failed, Snackbar.LENGTH_LONG).show() }
     }
 
+    /** Granted: straight on. Otherwise a short explanation first when Android suggests one, then the system dialog. */
+    private fun requestCalendarAccess(purpose: CalendarAccessPurpose) {
+        val context = requireContext()
+        val granted = CALENDAR_PERMISSIONS.all {
+            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
+        if (granted) {
+            viewModel.onCalendarAccessGranted(purpose)
+            return
+        }
+        val ask = {
+            pendingCalendarAccess = purpose
+            calendarPermissionLauncher.launch(CALENDAR_PERMISSIONS)
+        }
+        if (!shouldShowRequestPermissionRationale(android.Manifest.permission.WRITE_CALENDAR)) {
+            ask()
+            return
+        }
+        MaterialAlertDialogBuilder(context)
+            .setTitle(R.string.calendar_access_title)
+            .setMessage(R.string.calendar_access_rationale)
+            .setNegativeButton(R.string.common_cancel) { _, _ -> restoreRenderedValues() }
+            .setPositiveButton(R.string.calendar_access_continue) { _, _ -> ask() }
+            .setOnCancelListener { restoreRenderedValues() }
+            .show()
+    }
+
     private fun requestNotifications() {
         val permissionGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS) ==
@@ -363,5 +425,10 @@ class SettingsFragment : Fragment() {
 
     private companion object {
         const val PREVIEW_STATE = "widget_preview_state"
+        const val PENDING_CALENDAR_ACCESS = "pending_calendar_access"
+        val CALENDAR_PERMISSIONS = arrayOf(
+            android.Manifest.permission.READ_CALENDAR,
+            android.Manifest.permission.WRITE_CALENDAR
+        )
     }
 }

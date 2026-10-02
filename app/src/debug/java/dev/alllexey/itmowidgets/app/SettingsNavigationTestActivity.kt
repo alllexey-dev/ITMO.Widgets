@@ -100,6 +100,8 @@ import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import kotlinx.coroutines.flow.onStart
 import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
+import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
+import dev.alllexey.itmowidgets.core.debug.NoIcsExport
 
 /** Actual settings/NavHost lifecycle, backed only by in-memory settings and no credentials. */
 @AndroidEntryPoint
@@ -145,6 +147,8 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         @Volatile var homeFixture = HomeFixture()
         /** The stored «плитка добавлена» flag of the settings fixture; tests set and read it directly. */
         val qrTileAdded = MutableStateFlow(false)
+        /** Calendar synchronization of the schedule page; tests set its state and calendars directly. */
+        val calendarSync = MemoryCalendarSync()
         /** Social fixtures for the profile tab, public profiles and the friend picker. */
         /** The opt-in as the profile tab sees it; settings keep their own always-on fixture. */
         @Volatile var profileServicesEnabled = true
@@ -280,7 +284,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, MemoryMarkTracking, MemoryBackgroundWork, MemoryQuickSettingsTile, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
+                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, MemoryMarkTracking, MemoryBackgroundWork, MemoryQuickSettingsTile, calendarSync, NoIcsExport, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
                         CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(customSpoiler)
                         else -> error("Unexpected ViewModel")
                     } as T

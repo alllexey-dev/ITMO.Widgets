@@ -1040,4 +1040,27 @@
     <string name="review_report_other">Другое</string>
     <string name="review_report_comment">Комментарий</string>
     <string name="review_report_send">Отправить</string>
+    <string name="settings_calendar_sync_title">Синхронизация с календарём</string>
+    <string name="settings_calendar_sync_description">Пары на 4 недели вперёд.</string>
+    <string name="settings_calendar_sync_no_permission">Выключена: нет доступа к календарю.</string>
+    <string name="settings_calendar_sync_calendar_missing">Выключена: календарь удалён.</string>
+    <string name="settings_calendar_target_title">Календарь</string>
+    <string name="settings_ics_export_title">Выгрузить в .ics</string>
+    <string name="settings_ics_export_busy">Готовим файл…</string>
+    <string name="calendar_access_title">Доступ к календарю</string>
+    <string name="calendar_access_rationale">Нужен, чтобы добавлять пары в календарь телефона.</string>
+    <string name="calendar_access_continue">Продолжить</string>
+    <string name="calendar_access_denied">Нет доступа к календарю</string>
+    <string name="calendar_access_settings">Настройки</string>
+    <string name="calendar_missing">Календарь не найден</string>
+    <string name="calendar_picker_this_phone">На этом телефоне</string>
+    <string name="calendar_picker_hint">Чтобы пары были на всех устройствах, создайте отдельный календарь в Google Календаре и выберите его.</string>
+    <string name="ics_range_week">Неделя</string>
+    <string name="ics_range_two_weeks">2 недели</string>
+    <string name="ics_range_semester">До конца семестра</string>
+    <string name="ics_range_custom">Свои даты</string>
+    <string name="ics_empty">В эти дни пар нет</string>
+    <string name="ics_ready_title">Файл готов</string>
+    <string name="ics_send">Отправить</string>
+    <string name="ics_open">Открыть в календаре</string>
 </resources>

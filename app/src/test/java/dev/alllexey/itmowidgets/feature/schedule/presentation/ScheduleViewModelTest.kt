@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
@@ -121,6 +122,33 @@ class ScheduleViewModelTest {
                 ScheduleUiState.Error(AppError.Network, selectedUser = null),
                 viewModel.uiState.value
             )
+        }
+
+    @Test
+    fun `a successful pull on the own schedule asks for a calendar sync, a failed or friend's one does not`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val repository = FakeScheduleRepository().apply {
+                schedules.value = listOf(daySchedule())
+                schedulesFor(123456).value = listOf(daySchedule())
+            }
+            val calendarSync = FakeCalendarSync()
+            val viewModel = createViewModel(repository, calendarSync = calendarSync)
+            viewModel.ensureDataLoaded()
+            advanceUntilIdle()
+            assertEquals(0, calendarSync.syncRequests)
+
+            viewModel.loadInitialSchedule(forceRefresh = true)
+            advanceUntilIdle()
+            assertEquals(1, calendarSync.syncRequests)
+
+            repository.refreshResult = AppResult.Failure(AppError.Network)
+            viewModel.loadInitialSchedule(forceRefresh = true)
+            advanceUntilIdle()
+            repository.refreshResult = AppResult.Success(Unit)
+            viewModel.setSelectedUser(SelectedUser(123456, "Иван Иванов", null))
+            viewModel.loadInitialSchedule(forceRefresh = true)
+            advanceUntilIdle()
+            assertEquals(1, calendarSync.syncRequests)
         }
 
     @Test
@@ -432,7 +460,8 @@ class ScheduleViewModelTest {
     private fun createViewModel(
         repository: ScheduleRepository,
         savedStateHandle: SavedStateHandle = SavedStateHandle(),
-        changesRepository: FakeScheduleChangesRepository = FakeScheduleChangesRepository()
+        changesRepository: FakeScheduleChangesRepository = FakeScheduleChangesRepository(),
+        calendarSync: FakeCalendarSync = FakeCalendarSync()
     ): ScheduleViewModel {
         return ScheduleViewModel(
             repository = repository,
@@ -445,7 +474,8 @@ class ScheduleViewModelTest {
                 override fun observePendingBookings() = flowOf<DataState<List<PendingSportBooking>>>(DataState.Success(emptyList()))
                 override suspend fun refresh() = Unit
             },
-            changesRepository = changesRepository
+            changesRepository = changesRepository,
+            calendarSync = calendarSync
         )
     }
 

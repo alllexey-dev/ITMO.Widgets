@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.LessonOccurrence
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
@@ -37,7 +38,8 @@ class ScheduleViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val preferences: SchedulePreferencesRepository,
     private val pendingRepository: PendingSportBookingsRepository,
-    private val changesRepository: ScheduleChangesRepository
+    private val changesRepository: ScheduleChangesRepository,
+    private val calendarSync: CalendarSync
 ) : ViewModel() {
 
     private val rootUserIsu = savedStateHandle
@@ -134,6 +136,8 @@ class ScheduleViewModel @Inject constructor(
             )
             ensureActive()
             handleRefreshResult(result)
+            // A pull on the own schedule also brings the phone's calendar up to date, when it is synced.
+            if (forceRefresh && userIsu == null && result is AppResult.Success) calendarSync.requestSync()
         }
     }
 

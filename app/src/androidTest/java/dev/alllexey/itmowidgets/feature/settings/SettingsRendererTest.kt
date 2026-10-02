@@ -61,6 +61,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
+import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
+import dev.alllexey.itmowidgets.core.debug.NoIcsExport
 
 @RunWith(AndroidJUnit4::class)
 class SettingsRendererTest {
@@ -408,6 +410,8 @@ class SettingsRendererTest {
                     RendererMarkTracking,
                     RendererBackgroundWork,
                     RendererQuickSettingsTile,
+                    MemoryCalendarSync(),
+                    NoIcsExport,
                     NoDiagnostics,
                     SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T

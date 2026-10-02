@@ -10,6 +10,15 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
+import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
+import dev.alllexey.itmowidgets.core.schedule.IcsFile
+import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
+import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
+import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
+import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
@@ -334,6 +343,8 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_MYITMO_MARKS,
                     SettingsViewModel.KEY_BARS_MARKS,
                     SettingsViewModel.KEY_SHEET_MARKS,
+                    SettingsViewModel.KEY_CALENDAR_SYNC,
+                    SettingsViewModel.KEY_ICS_EXPORT,
                     SettingsViewModel.KEY_REFRESH_WIDGETS,
                     SettingsViewModel.KEY_RESTART_ONBOARDING,
                     SettingsViewModel.KEY_DIAGNOSTICS,
@@ -1556,13 +1567,214 @@ class SettingsViewModelTest {
             assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
         }
 
+    @Test
+    fun `schedule page ends with the calendar group`() = runTest(mainDispatcherRule.dispatcher) {
+        val fixture = createFixture(page = SettingsPage.SCHEDULE)
+        advanceUntilIdle()
+
+        val calendar = fixture.viewModel.sections.value.last()
+        assertEquals(null, calendar.title)
+        assertEquals(null, calendar.footer)
+        assertEquals(listOf(SettingsViewModel.KEY_CALENDAR_SYNC, SettingsViewModel.KEY_ICS_EXPORT), calendar.items.map { it.key })
+        val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC)
+        assertEquals(UiText.Resource(R.string.settings_calendar_sync_title), toggle.title)
+        assertEquals(UiText.Resource(R.string.settings_calendar_sync_description), toggle.description)
+        assertFalse(toggle.checked)
+        val export = fixture.viewModel.action(SettingsViewModel.KEY_ICS_EXPORT)
+        assertEquals(UiText.Resource(R.string.settings_ics_export_title), export.title)
+        assertEquals(R.drawable.ic_download, export.trailingIconRes)
+        assertEquals(null, export.value)
+        assertTrue(export.enabled)
+    }
+
+    @Test
+    fun `while synced the calendar row names the calendar in use`() = runTest(mainDispatcherRule.dispatcher) {
+        val sync = FakeCalendarSync(CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar))
+        val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
+        advanceUntilIdle()
+
+        assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
+        val row = fixture.viewModel.action(SettingsViewModel.KEY_CALENDAR_TARGET)
+        assertEquals(UiText.Resource(R.string.settings_calendar_target_title), row.title)
+        assertEquals(UiText.Resource(R.string.app_name), row.value)
+        assertEquals(R.drawable.ic_chevron_right, row.trailingIconRes)
+
+        sync.state.value = CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(7), calendarName = "Учёба")
+        advanceUntilIdle()
+        assertEquals(UiText.Dynamic("Учёба"), fixture.viewModel.action(SettingsViewModel.KEY_CALENDAR_TARGET).value)
+    }
+
+    @Test
+    fun `a sync that turned itself off says why in one line`() = runTest(mainDispatcherRule.dispatcher) {
+        val sync = FakeCalendarSync(CalendarSyncState(problem = CalendarSyncProblem.NO_PERMISSION))
+        val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
+        advanceUntilIdle()
+
+        assertEquals(
+            UiText.Resource(R.string.settings_calendar_sync_no_permission),
+            fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).description
+        )
+        assertTrue(fixture.viewModel.allItems().none { it.key == SettingsViewModel.KEY_CALENDAR_TARGET })
+        sync.state.value = CalendarSyncState(problem = CalendarSyncProblem.CALENDAR_MISSING)
+        advanceUntilIdle()
+        assertEquals(
+            UiText.Resource(R.string.settings_calendar_sync_calendar_missing),
+            fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).description
+        )
+    }
+
+    @Test
+    fun `turning sync on asks for the permission first, then enables the last calendar or the app one`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val sync = FakeCalendarSync(
+                CalendarSyncState(target = CalendarTarget.PhoneCalendar(7), problem = CalendarSyncProblem.NO_PERMISSION)
+            )
+            val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
+            val events = recordEvents(fixture)
+            advanceUntilIdle()
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, true)
+            advanceUntilIdle()
+            assertEquals(listOf(SettingsEvent.RequestCalendarAccess(CalendarAccessPurpose.ENABLE)), events)
+            assertTrue(sync.enabled.isEmpty())
+
+            fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.ENABLE)
+            advanceUntilIdle()
+            assertEquals(listOf<CalendarTarget>(CalendarTarget.PhoneCalendar(7)), sync.enabled)
+            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, false)
+            advanceUntilIdle()
+            assertEquals(1, sync.disables)
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, true)
+            fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.ENABLE)
+            advanceUntilIdle()
+            assertEquals(CalendarTarget.AppCalendar, sync.enabled.last())
+        }
+
+    @Test
+    fun `a refused enable leaves the switch off with a message`() = runTest(mainDispatcherRule.dispatcher) {
+        val sync = FakeCalendarSync()
+        val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
+        val events = recordEvents(fixture)
+        advanceUntilIdle()
+
+        for ((result, expected) in listOf(
+            CalendarSyncResult.NO_PERMISSION to SettingsEvent.ShowMessage(UiText.Resource(R.string.calendar_access_denied)),
+            CalendarSyncResult.CALENDAR_MISSING to SettingsEvent.ShowMessage(UiText.Resource(R.string.calendar_missing)),
+            CalendarSyncResult.FAILED to SettingsEvent.ShowError(AppError.Unknown())
+        )) {
+            sync.enableResult = result
+            fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.ENABLE)
+            advanceUntilIdle()
+            assertEquals(expected, events.last())
+            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
+        }
+    }
+
+    @Test
+    fun `the calendar row lists the calendars after the permission and moves sync to the picked one`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val google = WritableCalendar(7, "Учёба", "student@gmail.com")
+            val sync = FakeCalendarSync(CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar))
+                .apply { calendars = listOf(google) }
+            val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
+            val events = recordEvents(fixture)
+            advanceUntilIdle()
+
+            fixture.viewModel.onAction(SettingsViewModel.KEY_CALENDAR_TARGET)
+            fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.PICK)
+            advanceUntilIdle()
+            assertEquals(
+                listOf(
+                    SettingsEvent.RequestCalendarAccess(CalendarAccessPurpose.PICK),
+                    SettingsEvent.ShowCalendarPicker(listOf(google), CalendarTarget.AppCalendar)
+                ),
+                events
+            )
+
+            fixture.viewModel.onCalendarPicked(CalendarTarget.PhoneCalendar(7))
+            advanceUntilIdle()
+            assertEquals(listOf<CalendarTarget>(CalendarTarget.PhoneCalendar(7)), sync.enabled)
+
+            sync.calendars = null
+            fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.PICK)
+            advanceUntilIdle()
+            assertEquals(SettingsEvent.ShowMessage(UiText.Resource(R.string.calendar_access_denied)), events.last())
+        }
+
+    @Test
+    fun `an ics export shares the file, says when the range is empty and shows errors`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val export = FakeIcsExport()
+            val fixture = createFixture(page = SettingsPage.SCHEDULE, icsExport = export)
+            val events = recordEvents(fixture)
+            advanceUntilIdle()
+
+            fixture.viewModel.onAction(SettingsViewModel.KEY_ICS_EXPORT)
+            assertEquals(listOf<SettingsEvent>(SettingsEvent.ChooseIcsRange), events)
+
+            fixture.viewModel.onIcsRange(ScheduleExportRange.Week)
+            advanceUntilIdle()
+            assertEquals(SettingsEvent.ShowMessage(UiText.Resource(R.string.ics_empty)), events.last())
+
+            val file = IcsFile("content://test/a.ics", "a.ics", 12)
+            export.result = AppResult.Success(file)
+            fixture.viewModel.onIcsRange(ScheduleExportRange.Semester)
+            advanceUntilIdle()
+            assertEquals(SettingsEvent.ShareIcs(file), events.last())
+
+            export.result = AppResult.Failure(AppError.Network)
+            fixture.viewModel.onIcsRange(ScheduleExportRange.TwoWeeks)
+            advanceUntilIdle()
+            assertEquals(SettingsEvent.ShowError(AppError.Network), events.last())
+            assertEquals(
+                listOf(ScheduleExportRange.Week, ScheduleExportRange.Semester, ScheduleExportRange.TwoWeeks),
+                export.ranges
+            )
+        }
+
+    @Test
+    fun `one ics export runs at a time and its row says so`() = runTest(mainDispatcherRule.dispatcher) {
+        val export = FakeIcsExport().apply { gate = CompletableDeferred() }
+        val fixture = createFixture(page = SettingsPage.SCHEDULE, icsExport = export)
+        val events = recordEvents(fixture)
+        advanceUntilIdle()
+
+        fixture.viewModel.onIcsRange(ScheduleExportRange.Week)
+        runCurrent()
+        val row = fixture.viewModel.action(SettingsViewModel.KEY_ICS_EXPORT)
+        assertFalse(row.enabled)
+        assertEquals(UiText.Resource(R.string.settings_ics_export_busy), row.value)
+        fixture.viewModel.onIcsRange(ScheduleExportRange.TwoWeeks)
+        fixture.viewModel.onAction(SettingsViewModel.KEY_ICS_EXPORT)
+        runCurrent()
+        assertEquals(listOf<ScheduleExportRange>(ScheduleExportRange.Week), export.ranges)
+        assertTrue(events.none { it == SettingsEvent.ChooseIcsRange })
+
+        export.gate!!.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(fixture.viewModel.action(SettingsViewModel.KEY_ICS_EXPORT).enabled)
+    }
+
+    @Test
+    fun `pages other than schedule do not read the calendar state`() = runTest(mainDispatcherRule.dispatcher) {
+        val sync = FakeCalendarSync(CalendarSyncState(enabled = true))
+        val fixture = createFixture(page = SettingsPage.RECORDBOOK, calendarSync = sync)
+        advanceUntilIdle()
+
+        assertTrue(fixture.viewModel.allItems().none { it.key.startsWith("calendar") || it.key == SettingsViewModel.KEY_ICS_EXPORT })
+    }
+
     private fun createFixture(
         local: LocalSettings = LocalSettings(),
         sharing: SharingSettingsState = SharingSettingsState.Disabled,
         localInitiallyAvailable: Boolean = true,
         page: SettingsPage = SettingsPage.ROOT,
         backgroundWork: FakeBackgroundWorkAccess = FakeBackgroundWorkAccess(),
-        tileAccess: FakeQuickSettingsTileAccess = FakeQuickSettingsTileAccess()
+        tileAccess: FakeQuickSettingsTileAccess = FakeQuickSettingsTileAccess(),
+        calendarSync: FakeCalendarSync = FakeCalendarSync(),
+        icsExport: FakeIcsExport = FakeIcsExport()
     ): Fixture {
         val tracking = FakeScheduleChangeTracking(enabled = local.scheduleChangesEnabled)
         val markTracking = FakeMarkTracking()
@@ -1584,10 +1796,15 @@ class SettingsViewModelTest {
             markTracking = markTracking,
             backgroundWork = backgroundWork,
             tileAccess = tileAccess,
+            calendarSync = calendarSync,
+            icsExport = icsExport,
             diagnostics = RecordingDiagnostics(),
             savedStateHandle = SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
         )
-        return Fixture(viewModel, repository, customServicesRepository, refresher, onboarding, tracking, markTracking, backgroundWork, tileAccess)
+        return Fixture(
+            viewModel, repository, customServicesRepository, refresher, onboarding, tracking, markTracking, backgroundWork,
+            tileAccess, calendarSync, icsExport
+        )
     }
 
     /** Collects every event from now on; the channel has one receiver, so a test uses either this or `events.first()`. */
@@ -1618,8 +1835,23 @@ class SettingsViewModelTest {
         val tracking: FakeScheduleChangeTracking,
         val markTracking: FakeMarkTracking,
         val backgroundWork: FakeBackgroundWorkAccess,
-        val tileAccess: FakeQuickSettingsTileAccess
+        val tileAccess: FakeQuickSettingsTileAccess,
+        val calendarSync: FakeCalendarSync,
+        val icsExport: FakeIcsExport
     )
+
+    /** Answers every range with [result]; [gate], when set, holds the answer until completed. */
+    private class FakeIcsExport : ScheduleIcsExport {
+        var result: AppResult<IcsFile?> = AppResult.Success(null)
+        var gate: CompletableDeferred<Unit>? = null
+        val ranges = mutableListOf<ScheduleExportRange>()
+
+        override suspend fun export(range: ScheduleExportRange): AppResult<IcsFile?> {
+            ranges += range
+            gate?.await()
+            return result
+        }
+    }
 
     /** Unrestricted by default, so the background work row stays out of the other cases. */
     private class FakeBackgroundWorkAccess(var unrestricted: Boolean = true) : BackgroundWorkAccess {

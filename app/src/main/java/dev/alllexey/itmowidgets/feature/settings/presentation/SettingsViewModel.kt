@@ -10,7 +10,16 @@ import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
+import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
+import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
+import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
+import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
+import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -47,6 +56,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
@@ -66,9 +76,17 @@ sealed interface SettingsEvent {
     data object ShowBackgroundWorkHint : SettingsEvent
     /** Asks the system to add the QR pass tile; the answer comes back through `onQrTileResult`. */
     data object RequestQrTile : SettingsEvent
+    /** Asks for the calendar permission when needed, then reports back through `onCalendarAccessGranted`. */
+    data class RequestCalendarAccess(val purpose: CalendarAccessPurpose) : SettingsEvent
+    data class ShowCalendarPicker(val calendars: List<WritableCalendar>, val selected: CalendarTarget?) : SettingsEvent
+    data object ChooseIcsRange : SettingsEvent
+    data class ShareIcs(val file: IcsFile) : SettingsEvent
     data class ShowMessage(val text: UiText) : SettingsEvent
     data class ShowError(val error: AppError) : SettingsEvent
 }
+
+/** What the calendar permission is asked for. */
+enum class CalendarAccessPurpose { ENABLE, PICK }
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -81,6 +99,8 @@ class SettingsViewModel @Inject constructor(
     private val markTracking: MarkTracking,
     private val backgroundWork: BackgroundWorkAccess,
     private val tileAccess: QuickSettingsTileAccess,
+    private val calendarSync: CalendarSync,
+    private val icsExport: ScheduleIcsExport,
     diagnostics: AppDiagnostics,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -109,6 +129,10 @@ class SettingsViewModel @Inject constructor(
     }
     private val diagnosticsCount = diagnostics.observe().map { it.size }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+    // Only the schedule page shows it; other pages do not wait for its file.
+    private val calendarState = if (page == SettingsPage.SCHEDULE) calendarSync.observeState()
+    else flowOf(CalendarSyncState())
+    private val icsExportBusy = MutableStateFlow(false)
     private val localSettings = repository.observeLocalSettings()
         .shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
 
@@ -141,7 +165,9 @@ class SettingsViewModel @Inject constructor(
             customSpoilerConfigured,
             customSpoilerBusy,
             diagnosticsCount,
-            backgroundWorkUnrestricted
+            backgroundWorkUnrestricted,
+            calendarState,
+            icsExportBusy
         ) { values ->
             @Suppress("UNCHECKED_CAST")
             buildSections(
@@ -151,7 +177,9 @@ class SettingsViewModel @Inject constructor(
                 hasCustomSpoiler = values[3] as Boolean,
                 imageBusy = values[4] as Boolean,
                 diagnosticsCount = values[5] as Int,
-                backgroundWorkRestricted = values[6] == false
+                backgroundWorkRestricted = values[6] == false,
+                calendar = values[7] as CalendarSyncState,
+                icsBusy = values[8] as Boolean
             )
         }
             .onEach {
@@ -245,6 +273,11 @@ class SettingsViewModel @Inject constructor(
                 }
                 if (checked) offerBackgroundWorkHint()
             }
+            KEY_CALENDAR_SYNC -> if (checked) {
+                eventChannel.trySend(SettingsEvent.RequestCalendarAccess(CalendarAccessPurpose.ENABLE))
+            } else {
+                updateLocalSetting { calendarSync.disable() }
+            }
             KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SCHEDULE_CHANGES, KEY_HOME_CARD_MARKS, KEY_HOME_CARD_SPORT,
             KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
                 val kind = HOME_CARDS.first { it.first == key }.second
@@ -326,6 +359,8 @@ class SettingsViewModel @Inject constructor(
             KEY_DIAGNOSTICS -> eventChannel.trySend(SettingsEvent.OpenDiagnostics)
             KEY_BACKGROUND_WORK -> eventChannel.trySend(SettingsEvent.OpenBackgroundWorkSettings)
             KEY_QR_TILE -> eventChannel.trySend(SettingsEvent.RequestQrTile)
+            KEY_CALENDAR_TARGET -> eventChannel.trySend(SettingsEvent.RequestCalendarAccess(CalendarAccessPurpose.PICK))
+            KEY_ICS_EXPORT -> if (!icsExportBusy.value) eventChannel.trySend(SettingsEvent.ChooseIcsRange)
             KEY_RESTART_ONBOARDING -> viewModelScope.launch {
                 // The stored flag is what the root gate reads; the overlay only has to get out of the way.
                 onboardingRepository.reset()
@@ -335,6 +370,55 @@ class SettingsViewModel @Inject constructor(
                 refreshPrivacySettings()
             }
         }
+    }
+
+    /** The calendar permission is there: turns synchronization on or lists the calendars to pick from. */
+    fun onCalendarAccessGranted(purpose: CalendarAccessPurpose) {
+        viewModelScope.launch {
+            val state = calendarSync.observeState().first()
+            when (purpose) {
+                CalendarAccessPurpose.ENABLE -> enableCalendarSync(state.target ?: CalendarTarget.AppCalendar)
+                CalendarAccessPurpose.PICK -> {
+                    val calendars = calendarSync.writableCalendars()
+                    if (calendars == null) showMessage(R.string.calendar_access_denied)
+                    else eventChannel.send(SettingsEvent.ShowCalendarPicker(calendars, state.target))
+                }
+            }
+        }
+    }
+
+    fun onCalendarPicked(target: CalendarTarget) {
+        viewModelScope.launch { enableCalendarSync(target) }
+    }
+
+    /** One `.ics` file at a time; a range without lessons says so instead of sharing an empty file. */
+    fun onIcsRange(range: ScheduleExportRange) {
+        if (icsExportBusy.value) return
+        icsExportBusy.value = true
+        viewModelScope.launch {
+            try {
+                when (val result = icsExport.export(range)) {
+                    is AppResult.Success -> result.value?.let { eventChannel.send(SettingsEvent.ShareIcs(it)) }
+                        ?: showMessage(R.string.ics_empty)
+                    is AppResult.Failure -> eventChannel.send(SettingsEvent.ShowError(result.error))
+                }
+            } finally {
+                icsExportBusy.value = false
+            }
+        }
+    }
+
+    private suspend fun enableCalendarSync(target: CalendarTarget) {
+        when (calendarSync.enable(target)) {
+            CalendarSyncResult.DONE -> Unit
+            CalendarSyncResult.NO_PERMISSION -> showMessage(R.string.calendar_access_denied)
+            CalendarSyncResult.CALENDAR_MISSING -> showMessage(R.string.calendar_missing)
+            CalendarSyncResult.FAILED -> eventChannel.send(SettingsEvent.ShowError(AppError.Unknown()))
+        }
+    }
+
+    private suspend fun showMessage(res: Int) {
+        eventChannel.send(SettingsEvent.ShowMessage(UiText.Resource(res)))
     }
 
     /** The system's answer to the add request: the row leaves once the tile is known to be in the quick settings. */
@@ -435,7 +519,9 @@ class SettingsViewModel @Inject constructor(
         hasCustomSpoiler: Boolean,
         imageBusy: Boolean,
         diagnosticsCount: Int,
-        backgroundWorkRestricted: Boolean
+        backgroundWorkRestricted: Boolean,
+        calendar: CalendarSyncState,
+        icsBusy: Boolean
     ): List<SettingSection> = when (page) {
         SettingsPage.ROOT -> listOf(
             SettingSection(
@@ -644,7 +730,8 @@ class SettingsViewModel @Inject constructor(
                     )
                 ),
                 footer = UiText.Resource(R.string.settings_schedule_footer)
-            )
+            ),
+            calendarSection(calendar, icsBusy)
         )
         SettingsPage.RECORDBOOK -> listOf(
             SettingSection(
@@ -814,6 +901,38 @@ class SettingsViewModel @Inject constructor(
         )
     }
 
+    /** The switch says why it turned itself off; the picked calendar shows while it is on. */
+    private fun calendarSection(calendar: CalendarSyncState, icsBusy: Boolean) = SettingSection(
+        title = null,
+        items = listOfNotNull(
+            SettingItem.Toggle(
+                key = KEY_CALENDAR_SYNC,
+                title = UiText.Resource(R.string.settings_calendar_sync_title),
+                description = UiText.Resource(
+                    when (calendar.problem) {
+                        CalendarSyncProblem.NO_PERMISSION -> R.string.settings_calendar_sync_no_permission
+                        CalendarSyncProblem.CALENDAR_MISSING -> R.string.settings_calendar_sync_calendar_missing
+                        null -> R.string.settings_calendar_sync_description
+                    }
+                ),
+                checked = calendar.enabled
+            ),
+            SettingItem.Action(
+                key = KEY_CALENDAR_TARGET,
+                title = UiText.Resource(R.string.settings_calendar_target_title),
+                value = calendar.calendarName?.let(UiText::Dynamic) ?: UiText.Resource(R.string.app_name),
+                trailingIconRes = R.drawable.ic_chevron_right
+            ).takeIf { calendar.enabled },
+            SettingItem.Action(
+                key = KEY_ICS_EXPORT,
+                title = UiText.Resource(R.string.settings_ics_export_title),
+                value = UiText.Resource(R.string.settings_ics_export_busy).takeIf { icsBusy },
+                trailingIconRes = R.drawable.ic_download,
+                enabled = !icsBusy
+            )
+        )
+    )
+
     /** The whole row is the button: it opens the system page, and the row leaves once Android lets the app work. */
     private fun backgroundWorkRow() = SettingItem.Action(
         key = KEY_BACKGROUND_WORK,
@@ -879,6 +998,9 @@ class SettingsViewModel @Inject constructor(
         const val KEY_BARS_MARKS = "bars_marks"
         const val KEY_SHEET_MARKS = "sheet_marks"
         const val KEY_BACKGROUND_WORK = "background_work"
+        const val KEY_CALENDAR_SYNC = "calendar_sync"
+        const val KEY_CALENDAR_TARGET = "calendar_target"
+        const val KEY_ICS_EXPORT = "ics_export"
         const val KEY_HOME_CARD_SPORT = "home_card_sport"
         const val KEY_HOME_CARD_FRIENDS = "home_card_friends"
 

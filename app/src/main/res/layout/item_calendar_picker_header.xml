@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- An account above its calendars in the calendar picker; not clickable. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:ellipsize="end"
+    android:maxLines="1"
+    android:paddingHorizontal="@dimen/design_spacing_section"
+    android:paddingTop="@dimen/design_spacing_group"
+    android:paddingBottom="@dimen/design_spacing_related"
+    android:textAppearance="?attr/textAppearanceLabelLarge"
+    android:textColor="?attr/colorPrimary" />
