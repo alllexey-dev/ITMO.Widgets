@@ -13,11 +13,15 @@ import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.AndroidPhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.StoredCalendarSync
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.TARGET_PHONE
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.toStored
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.SyncedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
@@ -78,7 +82,7 @@ class CalendarSyncProviderTest {
         days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40), flowTypeId = 5)), day(MONDAY.plusDays(1), lesson(3)))
         val repository = repository()
 
-        assertEquals(CalendarSyncResult.DONE, repository.enable(CalendarTarget.AppCalendar))
+        assertEquals(CalendarSyncResult.DONE, repository.enable())
         assertEquals(AppResult.Success(Unit), repository.sync())
         assertEquals(AppResult.Success(Unit), repository.sync())
         assertEquals(AppResult.Success(Unit), repository().sync())
@@ -137,99 +141,48 @@ class CalendarSyncProviderTest {
         assertEquals("2304, Кронверкский пр., 49", after.single().location)
     }
 
-    @Test
-    fun pickingAnotherCalendarDeletesTheAppCalendarAndTheNextSyncFillsTheNewOne() = runBlocking {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
-        val repository = enabled()
-        repository.sync()
-        val own = calendars.findOwn()!!
-        val other = createOtherCalendar()
-
-        assertEquals(CalendarSyncResult.DONE, repository.enable(CalendarTarget.PhoneCalendar(other)))
-        repository.sync()
-
-        assertNull(calendars.findOwn())
-        assertTrue(events(own).isEmpty())
-        assertEquals(listOf("lesson-1", "lesson-2"), events(other).map { it.uid.substringBefore('@') })
-        // The picker offers Google-account calendars only; this local stand-in is reached by id alone.
-        assertTrue(calendars.writable().none { it.id == other })
-    }
-
-    @Test
-    fun turningOffRemovesOnlyTheAppsEvents() = runBlocking {
-        days = listOf(day(MONDAY, lesson(1)))
-        val other = createOtherCalendar()
-        val foreign = insertForeignEvent(other)
-        val repository = repository()
-        assertEquals(CalendarSyncResult.DONE, repository.enable(CalendarTarget.PhoneCalendar(other)))
-        repository.sync()
-        assertEquals(2, events(other).size)
-
-        repository.disable()
-
-        assertEquals(listOf(foreign), events(other).map { it.id })
-        assertFalse(repository.isEnabled())
-    }
-
-    @Test
-    fun eventsWhoseIdsWereLostAreFoundByTheMarker() = runBlocking {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
-        val other = createOtherCalendar()
-        val foreign = insertForeignEvent(other)
-        val store = CalendarSyncFileStore(folder, Gson())
-        repository().apply {
-            assertEquals(CalendarSyncResult.DONE, enable(CalendarTarget.PhoneCalendar(other)))
-            sync()
-        }
-        assertEquals(3, events(other).size)
-        // The file forgets the ids, as on the phone where a switch-off left events behind.
-        store.write(store.read()!!.copy(events = emptyList()))
-
-        // A sync replaces the untracked copies instead of doubling them...
-        repository().sync()
-        assertEquals(3, events(other).size)
-        assertEquals(listOf("lesson-1", "lesson-2"), events(other).filter { it.id != foreign }.map { it.uid.substringBefore('@') })
-        store.write(store.read()!!.copy(events = emptyList()))
-
-        // ...and turning off sweeps them by the marker, leaving the user's own event.
-        repository().disable()
-        assertEquals(listOf(foreign), events(other).map { it.id })
-    }
-
     /**
-     * Google's semantics on a sync-adapter calendar: once an event has a `_SYNC_ID`, an app's delete only marks it
-     * deleted; when Android's guard undoes the deletions, the adapter writes the server's copies back as new rows
-     * without the local `CUSTOM_APP_*` columns. Those copies keep the description, and its tag finds them.
+     * An earlier build wrote into a Google calendar. Google's semantics on a sync-adapter calendar: once an event has a
+     * `_SYNC_ID`, an app's delete only marks it deleted; when Android's guard undoes the deletions, the adapter writes
+     * the server's copies back as new rows without the local `CUSTOM_APP_*` columns. The app never inserts there again,
+     * and the copies are found by the tag in their description.
      */
     @Test
-    fun eventsTheSyncAdapterWritesBackAfterTurningOffAreSweptByTheirDescription() = runBlocking {
+    fun anEarlierGoogleTargetIsLeftWithoutInsertingAndSweptByTheTag() = runBlocking {
         days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
         val other = createOtherCalendar()
         val foreign = insertForeignEvent(other)
+        val written = listOf(event("lesson-1", 10), event("lesson-2", 11)).map { SyncedEvent(calendars.insert(other, it), it) }
+        written.forEach { asAdapter(it.eventId, ContentValues().apply { put(Events._SYNC_ID, "server-${it.eventId}") }) }
+        val store = CalendarSyncFileStore(folder, Gson())
+        folder.mkdirs()
+        store.write(
+            StoredCalendarSync(
+                enabled = true, target = TARGET_PHONE, calendarId = other, calendarName = "Учёба",
+                events = written.map { it.toStored(other) }
+            )
+        )
         val repository = repository()
-        assertEquals(CalendarSyncResult.DONE, repository.enable(CalendarTarget.PhoneCalendar(other)))
-        repository.sync()
-        val uploaded = events(other).filter { it.id != foreign }
-        uploaded.forEach { asAdapter(it.id, ContentValues().apply { put(Events._SYNC_ID, "server-${it.id}") }) }
+        assertFalse(repository.isEnabled())
 
-        repository.disable()
+        assertEquals(AppResult.Success(Unit), repository.sync())
         assertEquals(listOf(foreign), events(other).map { it.id })
         assertEquals(2, deletedRows(other))
+        assertNull(calendars.findOwn())
 
         // The guard's undo: the deleted rows go and the server's copies come back as new rows.
         resolver.delete(syncAdapter(Events.CONTENT_URI, OTHER_ACCOUNT), "${Events.CALENDAR_ID} = ? AND ${Events.DELETED} = 1", arrayOf(other.toString()))
-        val restored = uploaded.map { event ->
+        val restored = written.map { synced ->
             ContentUris.parseId(resolver.insert(syncAdapter(Events.CONTENT_URI, OTHER_ACCOUNT), ContentValues().apply {
                 put(Events.CALENDAR_ID, other)
-                put(Events.TITLE, event.title)
-                put(Events.DTSTART, event.start)
-                put(Events.DTEND, event.end)
-                put(Events.EVENT_TIMEZONE, event.timeZone)
-                put(Events.DESCRIPTION, event.description)
-                put(Events._SYNC_ID, "server-${event.id}")
+                put(Events.TITLE, synced.event.title)
+                put(Events.DTSTART, synced.event.start.toEpochMilli())
+                put(Events.DTEND, synced.event.end.toEpochMilli())
+                put(Events.EVENT_TIMEZONE, "Europe/Moscow")
+                put(Events.DESCRIPTION, synced.event.taggedDescription)
+                put(Events._SYNC_ID, "server-${synced.eventId}")
             })!!)
         }
-        assertTrue(restored.none { it in uploaded.map(StoredEvent::id) })
         resolver.query(Events.CONTENT_URI, arrayOf(Events.CUSTOM_APP_PACKAGE), "${Events._ID} = ?", arrayOf(restored.first().toString()), null)!!
             .use { assertTrue(it.moveToFirst()); assertNull(it.getString(0)) }
         assertEquals(3, events(other).size)
@@ -238,6 +191,22 @@ class CalendarSyncProviderTest {
 
         assertEquals(listOf(foreign), events(other).map { it.id })
         assertTrue(repository().hasPendingCleanup())
+        assertNull(calendars.findOwn())
+    }
+
+    @Test
+    fun eventsWhoseIdsWereLostAreReplacedNotDoubled() = runBlocking {
+        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
+        enabled().sync()
+        val own = calendars.findOwn()!!
+        val store = CalendarSyncFileStore(folder, Gson())
+        // The file forgets the ids, as after a process death between an insert and its write.
+        store.write(store.read()!!.copy(events = emptyList()))
+
+        repository().sync()
+
+        assertEquals(listOf("lesson-1", "lesson-2"), events(own).map { it.uid.substringBefore('@') })
+        assertEquals(2, store.read()!!.events.size)
     }
 
     @Test
@@ -245,16 +214,16 @@ class CalendarSyncProviderTest {
         days = (0L until 14L).map { offset ->
             day(MONDAY.plusDays(offset), lesson(10 * offset + 1), lesson(10 * offset + 2, LocalTime.of(11, 40)), lesson(10 * offset + 3, LocalTime.of(13, 30)))
         }
-        val other = createOtherCalendar()
-        val repository = repository()
-        assertEquals(CalendarSyncResult.DONE, repository.enable(CalendarTarget.PhoneCalendar(other)))
+        val repository = enabled()
+        val own = calendars.findOwn()!!
 
         val sync = launch(Dispatchers.Default) { repository.sync() }
-        while (events(other).isEmpty()) delay(1)
+        while (events(own).isEmpty()) delay(1)
         repository.disable()
         sync.join()
 
-        assertTrue(events(other).isEmpty())
+        assertNull(calendars.findOwn())
+        assertTrue(events(own).isEmpty())
         assertFalse(repository.isEnabled())
         assertTrue(CalendarSyncFileStore(folder, Gson()).read()!!.events.isEmpty())
     }
@@ -283,7 +252,7 @@ class CalendarSyncProviderTest {
         assertNull(calendars.findOwn())
     }
 
-    private suspend fun enabled() = repository().also { assertEquals(CalendarSyncResult.DONE, it.enable(CalendarTarget.AppCalendar)) }
+    private suspend fun enabled() = repository().also { assertEquals(CalendarSyncResult.DONE, it.enable()) }
 
     private fun repository() = CalendarSyncRepositoryImpl(
         calendars,
@@ -315,6 +284,16 @@ class CalendarSyncProviderTest {
             put(Events.DTEND, Instant.parse("2030-09-09T16:00:00Z").toEpochMilli())
             put(Events.EVENT_TIMEZONE, "Europe/Moscow")
         })!!
+    )
+
+    /** A lesson of [MONDAY] at [hour] Moscow time, as an earlier build wrote it. */
+    private fun event(key: String, hour: Int) = CalendarEvent(
+        key = key,
+        title = "Физика",
+        start = MONDAY.atTime(hour, 0).atZone(Time.zoneId).toInstant(),
+        end = MONDAY.atTime(hour, 0).atZone(Time.zoneId).toInstant().plusSeconds(5400),
+        location = null,
+        description = "Лекция"
     )
 
     private fun asAdapter(eventId: Long, values: ContentValues) {

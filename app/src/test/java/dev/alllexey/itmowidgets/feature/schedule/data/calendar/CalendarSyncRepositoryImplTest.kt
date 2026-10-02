@@ -8,12 +8,12 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
-import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.core.testing.MutableClock
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.FakePhoneCalendars
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.SyncedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
@@ -61,13 +61,14 @@ class CalendarSyncRepositoryImplTest {
         days
     }
     private val store get() = CalendarSyncFileStore(folder, Gson())
+    private val own get() = calendars.ownId!!
 
     @Test
     fun `turning on without the permission creates nothing`() = runTest {
         calendars.access = false
         val repository = repository()
 
-        assertEquals(CalendarSyncResult.NO_PERMISSION, repository.enable(CalendarTarget.AppCalendar))
+        assertEquals(CalendarSyncResult.NO_PERMISSION, repository.enable())
         assertNull(calendars.ownId)
         assertFalse(repository.isEnabled())
     }
@@ -77,14 +78,14 @@ class CalendarSyncRepositoryImplTest {
         days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))), day(MONDAY.plusDays(28), lesson(3)))
         val repository = repository()
 
-        assertEquals(CalendarSyncResult.DONE, repository.enable(CalendarTarget.AppCalendar))
+        assertEquals(CalendarSyncResult.DONE, repository.enable())
         assertEquals(AppResult.Success(Unit), repository.sync())
 
-        val own = calendars.ownId!!
         assertEquals(listOf(MONDAY to MONDAY.plusDays(28)), requests)
         assertEquals(listOf("lesson-1", "lesson-2", "lesson-3"), calendars.eventsIn(own).map { it.key })
-        assertEquals(CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar, hasEvents = true), repository.observeState().first())
+        assertEquals(CalendarSyncState(enabled = true), repository.observeState().first())
         assertEquals("1506, Кронверкский проспект, 49, Санкт-Петербург", calendars.eventsIn(own).first().location)
+        assertTrue(calendars.eventsIn(GOOGLE).isEmpty())
     }
 
     @Test
@@ -145,89 +146,44 @@ class CalendarSyncRepositoryImplTest {
     }
 
     @Test
-    fun `picking another calendar deletes the app calendar and the next sync fills the new one`() = runTest {
+    fun `turning off deletes the app calendar in one operation`() = runTest {
         days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
         val repository = enabled()
         repository.sync()
-        val own = calendars.ownId!!
-
-        assertEquals(CalendarSyncResult.DONE, repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id)))
-
-        assertFalse(own in calendars.calendars)
-        assertTrue(calendars.events.isEmpty())
-        repository.sync()
-        assertEquals(listOf("lesson-1", "lesson-2"), calendars.eventsIn(GOOGLE.id).map { it.key })
-        assertEquals(
-            CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(GOOGLE.id), calendarName = "Учёба", calendarAccount = "student@gmail.com", hasEvents = true),
-            repository.observeState().first()
-        )
-        val inserts = calendars.inserts
-        repository.sync()
-        assertEquals(inserts, calendars.inserts)
-        assertEquals(2, calendars.events.size)
-    }
-
-    @Test
-    fun `a calendar that is gone cannot be picked`() = runTest {
-        val repository = repository()
-
-        assertEquals(CalendarSyncResult.CALENDAR_MISSING, repository.enable(CalendarTarget.PhoneCalendar(404)))
-        assertFalse(repository.isEnabled())
-    }
-
-    @Test
-    fun `turning off deletes only the app's events and its calendar`() = runTest {
-        days = listOf(day(MONDAY, lesson(1)))
-        val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
-        repository.sync()
-        val foreign = calendars.insertForeign(GOOGLE.id, calendars.eventsIn(GOOGLE.id).single().copy(key = "user", title = "Встреча"))
-
-        repository.disable()
-
-        assertEquals(listOf(foreign), calendars.events.keys.toList())
-        assertEquals(CalendarSyncState(), repository.observeState().first())
-        assertTrue(store.read()!!.events.isEmpty())
-    }
-
-    @Test
-    fun `turning the app calendar off deletes it`() = runTest {
-        val repository = enabled()
 
         repository.disable()
 
         assertNull(calendars.ownId)
-        assertTrue(calendars.calendars.keys == setOf(GOOGLE.id))
+        assertEquals(setOf(GOOGLE), calendars.calendars)
+        assertEquals(0, calendars.deletes)
+        assertTrue(calendars.events.isEmpty())
+        assertEquals(CalendarSyncState(), repository.observeState().first())
+        assertFalse(repository.hasPendingCleanup())
     }
 
     @Test
-    fun `a revoked permission turns sync off and the same calendar later adopts the events`() = runTest {
+    fun `a revoked permission turns sync off and turning on again adopts the app calendar`() = runTest {
         days = listOf(day(MONDAY, lesson(1)))
-        val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
+        val repository = enabled()
         repository.sync()
         calendars.access = false
 
         assertEquals(AppResult.Success(Unit), repository.sync())
 
-        assertEquals(
-            CalendarSyncState(target = CalendarTarget.PhoneCalendar(GOOGLE.id), calendarName = "Учёба", calendarAccount = "student@gmail.com", problem = CalendarSyncProblem.NO_PERMISSION, hasEvents = true),
-            repository.observeState().first()
-        )
+        assertEquals(CalendarSyncState(problem = CalendarSyncProblem.NO_PERMISSION), repository.observeState().first())
         calendars.access = true
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
+        repository.enable()
         repository.sync()
         assertEquals(1, calendars.events.size)
         assertEquals(1, calendars.inserts)
     }
 
     @Test
-    fun `a deleted calendar turns sync off and forgets the events`() = runTest {
+    fun `a deleted app calendar turns sync off and forgets the events`() = runTest {
         days = listOf(day(MONDAY, lesson(1)))
-        val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
+        val repository = enabled()
         repository.sync()
-        calendars.calendars.remove(GOOGLE.id)
+        calendars.deleteOwn(own)
 
         assertEquals(AppResult.Success(Unit), repository.sync())
 
@@ -264,8 +220,7 @@ class CalendarSyncRepositoryImplTest {
     @Test
     fun `turning off while a sync waits for My ITMO leaves no event behind`() = runTest {
         days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
-        val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
+        val repository = enabled()
         val answer = CompletableDeferred<Unit>()
         val asked = CompletableDeferred<Unit>()
         gate = { asked.complete(Unit); answer.await() }
@@ -278,114 +233,14 @@ class CalendarSyncRepositoryImplTest {
         disable.await()
 
         assertTrue(calendars.events.isEmpty())
+        assertNull(calendars.ownId)
         assertEquals(CalendarSyncState(), repository.observeState().first())
-        assertTrue(store.read()!!.events.isEmpty())
-    }
-
-    @Test
-    fun `a sync cancelled while writing keeps every inserted id, so turning off removes them all`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30)), lesson(3, start = LocalTime.of(15, 20))))
-        val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
-        lateinit var sync: Job
-        calendars.onInsert = { sync.cancel() }
-
-        sync = launch(Dispatchers.Default) { repository.sync() }
-        sync.join()
-        calendars.onInsert = {}
-
-        assertEquals(3, calendars.events.size)
-        assertEquals(calendars.events.keys.toList(), store.read()!!.events.map { it.eventId })
-        repository.disable()
-        assertTrue(calendars.events.isEmpty())
-    }
-
-    @Test
-    fun `every insert is written at once`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
-        val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
-        val written = mutableListOf<Int>()
-        calendars.onInsert = { written += (store.read()?.events?.size ?: 0) }
-
-        repository.sync()
-
-        // Each insert sees the ids of the inserts before it already in the file.
-        assertEquals(listOf(0, 1), written)
-    }
-
-    @Test
-    fun `a failed delete keeps its id for the next turn off`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
-        val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
-        repository.sync()
-        val stuck = calendars.events.keys.first()
-        calendars.failOnDelete += stuck
-
-        repository.disable()
-
-        assertEquals(listOf(stuck), calendars.events.keys.toList())
-        assertEquals(listOf(stuck), store.read()!!.events.map { it.eventId })
-        assertFalse(repository.isEnabled())
-        calendars.failOnDelete.clear()
-        repository.disable()
-        assertTrue(calendars.events.isEmpty())
-        assertTrue(store.read()!!.events.isEmpty())
-    }
-
-    @Test
-    fun `events whose ids were lost are found by the marker when turning off`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
-        repository().apply { enable(CalendarTarget.PhoneCalendar(GOOGLE.id)); sync() }
-        val foreign = calendars.insertForeign(GOOGLE.id, calendars.eventsIn(GOOGLE.id).first().copy(key = "user"))
-        // The file lost the ids, as on the phone where a switch-off forgot part of the events.
-        store.write(store.read()!!.copy(events = emptyList()))
-
-        repository().disable()
-
-        assertEquals(listOf(foreign), calendars.events.keys.toList())
-    }
-
-    @Test
-    fun `a sync deletes marked events it does not know before inserting, so nothing doubles`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
-        repository().apply { enable(CalendarTarget.PhoneCalendar(GOOGLE.id)); sync() }
-        val foreign = calendars.insertForeign(GOOGLE.id, calendars.eventsIn(GOOGLE.id).first().copy(key = "user"))
-        store.write(store.read()!!.copy(events = emptyList()))
-
-        repository().sync()
-
-        assertEquals(listOf("user", "lesson-1", "lesson-2"), calendars.eventsIn(GOOGLE.id).map { it.key })
-        assertTrue(foreign in calendars.events)
-        assertEquals(2, store.read()!!.events.size)
-    }
-
-    @Test
-    fun `ids left in a calendar the app moved away from are cleared by the next sync`() = runTest {
-        days = listOf(day(MONDAY, lesson(1)))
-        val other = WritableCalendar(8, "Личное", "student@gmail.com").also(calendars::add)
-        val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
-        repository.sync()
-        val stuck = calendars.events.keys.single()
-        calendars.failOnDelete += stuck
-
-        repository.enable(CalendarTarget.PhoneCalendar(other.id))
-        assertEquals(listOf(stuck), store.read()!!.events.map { it.eventId })
-        calendars.failOnDelete.clear()
-        repository.sync()
-
-        assertEquals(listOf("lesson-1"), calendars.eventsIn(other.id).map { it.key })
-        assertTrue(calendars.eventsIn(GOOGLE.id).isEmpty())
-        assertEquals(listOf(other.id), store.read()!!.events.map { it.calendarId })
     }
 
     @Test
     fun `turning off during the inserts of the first sync leaves nothing behind`() = runTest {
         days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30)), lesson(3, start = LocalTime.of(15, 20))))
-        val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
+        val repository = enabled()
         var disable: Deferred<Unit>? = null
         calendars.onInsert = {
             if (disable == null) disable = async(Dispatchers.Default) { repository.disable() }
@@ -400,55 +255,120 @@ class CalendarSyncRepositoryImplTest {
     }
 
     @Test
-    fun `events Google writes back after turning off are swept until the calendar stays clean`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
-        val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
-        repository.sync()
-        val written = calendars.eventsIn(GOOGLE.id)
-        val foreign = calendars.insertForeign(GOOGLE.id, written.first().copy(key = "user"))
+    fun `a sync cancelled while writing keeps every inserted id`() = runTest {
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30)), lesson(3, start = LocalTime.of(15, 20))))
+        val repository = enabled()
+        lateinit var sync: Job
+        calendars.onInsert = { sync.cancel() }
 
-        repository.disable()
-        assertEquals(listOf(foreign), calendars.events.keys.toList())
+        sync = launch(Dispatchers.Default) { repository.sync() }
+        sync.join()
+        calendars.onInsert = {}
+
+        assertEquals(3, calendars.events.size)
+        assertEquals(calendars.events.keys.toList(), store.read()!!.events.map { it.eventId })
+    }
+
+    @Test
+    fun `every insert is written at once`() = runTest {
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        val repository = enabled()
+        val written = mutableListOf<Int>()
+        calendars.onInsert = { written += (store.read()?.events?.size ?: 0) }
+
+        repository.sync()
+
+        // Each insert sees the ids of the inserts before it already in the file.
+        assertEquals(listOf(0, 1), written)
+    }
+
+    @Test
+    fun `a sync deletes tagged events it does not know before inserting, so nothing doubles`() = runTest {
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        enabled().sync()
+        val foreign = calendars.insertForeign(own, calendars.eventsIn(own).first().copy(key = "user"))
+        store.write(store.read()!!.copy(events = emptyList()))
+
+        repository().sync()
+
+        assertEquals(listOf("user", "lesson-1", "lesson-2"), calendars.eventsIn(own).map { it.key })
+        assertTrue(foreign in calendars.events)
+        assertEquals(2, store.read()!!.events.size)
+    }
+
+    @Test
+    fun `a Google calendar of an earlier build reads as off and the next run leaves it without inserting`() = runTest {
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        val tracked = googleState(enabled = true)
+        val foreign = calendars.insertForeign(GOOGLE, event("user"))
+        val repository = repository()
+
+        assertFalse(repository.isEnabled())
         assertTrue(repository.hasPendingCleanup())
+        assertEquals(AppResult.Success(Unit), repository.sync())
+
+        assertEquals(listOf(foreign), calendars.events.keys.toList())
+        assertTrue(tracked.none { it in calendars.events })
+        assertNull(calendars.ownId)
+        assertTrue(requests.isEmpty())
+        assertEquals(listOf(GOOGLE), store.read()!!.cleanups.orEmpty().map { it.calendarId })
+        assertEquals(CalendarSyncState(), repository.observeState().first())
+    }
+
+    @Test
+    fun `events Google writes back into the left calendar are swept until it stays clean`() = runTest {
+        googleState(enabled = true)
+        val repository = repository()
+        repository.sync()
 
         // Android's guard undid the deletes: the sync adapter writes the server's copies back as new rows.
-        written.forEach { calendars.writeBack(GOOGLE.id, it) }
-        assertEquals(AppResult.Success(Unit), repository.sync())
-        assertEquals(listOf(foreign), calendars.events.keys.toList())
+        calendars.writeBack(GOOGLE, event("lesson-1"))
+        calendars.writeBack(GOOGLE, event("lesson-2"))
+        repository.sync()
+        assertTrue(calendars.events.isEmpty())
         assertTrue(repository.hasPendingCleanup())
-        // Switched off, a run only sweeps and asks My ITMO nothing.
-        assertEquals(1, requests.size)
+        assertTrue(requests.isEmpty())
 
         clock.advance(Duration.ofDays(4))
         repository.sync()
         assertFalse(repository.hasPendingCleanup())
-        assertTrue(store.read()!!.cleanups.orEmpty().isEmpty())
     }
 
     @Test
-    fun `a left calendar picked again stops being swept and keeps the new events`() = runTest {
+    fun `turning on after an earlier Google calendar writes only into the app calendar`() = runTest {
         days = listOf(day(MONDAY, lesson(1)))
+        googleState(enabled = false)
         val repository = repository()
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
-        repository.sync()
-        repository.disable()
 
-        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
+        assertEquals(CalendarSyncResult.DONE, repository.enable())
         repository.sync()
 
-        assertFalse(repository.hasPendingCleanup())
-        assertEquals(listOf("lesson-1"), calendars.eventsIn(GOOGLE.id).map { it.key })
+        assertTrue(calendars.eventsIn(GOOGLE).isEmpty())
+        assertEquals(listOf("lesson-1"), calendars.eventsIn(own).map { it.key })
+        assertTrue(repository.hasPendingCleanup())
     }
 
     @Test
-    fun `a file of the previous build without calendar ids is cleaned up completely`() = runTest {
+    fun `a failed delete in a left calendar keeps its id for the next turn on or off`() = runTest {
+        val tracked = googleState(enabled = true)
+        calendars.failOnDelete += tracked.first()
+
+        repository().sync()
+        assertEquals(listOf(tracked.first()), store.read()!!.events.map { it.eventId })
+        calendars.failOnDelete.clear()
+        repository().disable()
+
+        assertTrue(calendars.events.isEmpty())
+        assertTrue(store.read()!!.events.isEmpty())
+    }
+
+    @Test
+    fun `a file of an earlier build without calendar ids is cleaned up completely`() = runTest {
         days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
-        repository().apply { enable(CalendarTarget.PhoneCalendar(GOOGLE.id)); sync() }
-        val ids = calendars.events.keys.toList()
+        val ids = listOf(calendars.insert(GOOGLE, event("lesson-1")), calendars.insert(GOOGLE, event("lesson-2")))
         folder.mkdirs()
         File(folder, "state.json").writeText(
-            """{"format":1,"enabled":true,"target":"phone","calendarId":${GOOGLE.id},"calendarName":"Учёба",""" +
+            """{"format":1,"enabled":true,"target":"phone","calendarId":$GOOGLE,"calendarName":"Учёба",""" +
                 """"events":[""" + ids.joinToString(",") { id ->
                     """{"key":"k$id","eventId":$id,"start":0,"end":1,"title":"Физика"}"""
                 } + "]}"
@@ -474,15 +394,6 @@ class CalendarSyncRepositoryImplTest {
     }
 
     @Test
-    fun `writable calendars leave the app's own out and are null without the permission`() = runTest {
-        val repository = enabled()
-
-        assertEquals(listOf(GOOGLE), repository.writableCalendars())
-        calendars.access = false
-        assertNull(repository.writableCalendars())
-    }
-
-    @Test
     fun `a corrupt file starts over switched off`() = runTest {
         folder.mkdirs()
         File(folder, "state.json").writeText("{broken")
@@ -491,7 +402,25 @@ class CalendarSyncRepositoryImplTest {
         assertFalse(File(folder, "state.json").exists())
     }
 
-    private suspend fun enabled() = repository().also { check(it.enable(CalendarTarget.AppCalendar) == CalendarSyncResult.DONE) }
+    /** The state an earlier build left after writing two lessons into a Google calendar; their ids. */
+    private fun googleState(enabled: Boolean): List<Long> {
+        val events = listOf(event("lesson-1"), event("lesson-2"))
+        val synced = events.map { SyncedEvent(calendars.insert(GOOGLE, it), it) }
+        store.write(
+            StoredCalendarSync(
+                enabled = enabled, target = TARGET_PHONE, calendarId = GOOGLE, calendarName = "Учёба",
+                events = synced.map { it.toStored(GOOGLE) }
+            )
+        )
+        return synced.map { it.eventId }
+    }
+
+    private fun event(key: String) = CalendarEvent(
+        key = key, title = "Физика", start = Instant.parse("2026-09-08T07:00:00Z"),
+        end = Instant.parse("2026-09-08T08:30:00Z"), location = null, description = null
+    )
+
+    private suspend fun enabled() = repository().also { check(it.enable() == CalendarSyncResult.DONE) }
 
     private fun repository() = CalendarSyncRepositoryImpl(calendars, source, store, ClockTime(clock), BUILDINGS)
 
@@ -514,7 +443,8 @@ class CalendarSyncRepositoryImplTest {
     private companion object {
         /** 2026-09-07 09:00 in Moscow is a Monday morning. */
         val MONDAY: LocalDate = LocalDate.of(2026, 9, 7)
-        val GOOGLE = WritableCalendar(7, "Учёба", "student@gmail.com")
+        /** The Google calendar an earlier build wrote to. */
+        const val GOOGLE = 7L
         val BUILDINGS = BuildingDirectory(
             listOf(
                 KnownBuilding(

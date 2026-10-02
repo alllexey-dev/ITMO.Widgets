@@ -440,31 +440,31 @@ Backend is not involved.
 
 ### Synchronization
 
-- `CalendarSyncRepositoryImpl` keeps the window today..today+28 in the one
-  calendar the user picked when turning synchronization on: a Google-account
-  calendar (`com.google`, access level contributor or higher; the picker
-  offers only these) or the app's own local calendar `ITMO.Widgets`
-  (`ACCOUNT_TYPE_LOCAL`, created and deleted through the sync-adapter URI,
-  colour `calendar_app`, owner access). The own calendar exists only on this
-  phone: calendar apps that read the phone's calendars (the Xiaomi or Yandex
-  calendar) show it, Google Calendar does not, since it shows only
-  Google-account calendars. A separate Google calendar reaches every device of
-  the account. `AndroidPhoneCalendars` is the only `CalendarContract` code.
-  Events are busy, have no reminders and carry the event time zone. The last
-  line of the description is the app's tag `ITMO.Widgets · <key>`
-  (`CalendarEvent.taggedDescription`): Google keeps the description on its
-  server, so the tag survives rows its sync adapter writes back. The local
-  columns `CUSTOM_APP_PACKAGE`, `CUSTOM_APP_URI` and `UID_2445` are set too,
-  but the adapter drops them from rows it writes back, so sweeps rely on the
-  tag. The `.ics` file has no tag; its UIDs name the occurrences.
-- The app touches only the events it inserted: their ids, the calendar of
-  each and the content they were given live in `filesDir/calendar_sync/state.json`
-  (format 1, with the switch, the target and the reason it turned itself
-  off), written atomically, excluded from backup and device transfer. A
-  restored device therefore starts with synchronization off. A corrupt file
-  is deleted and synchronization is off.
-- The state keeps the picked calendar's name and account for the settings
-  row.
+- `CalendarSyncRepositoryImpl` keeps the window today..today+28 in the app's
+  own local calendar `ITMO.Widgets` (`ACCOUNT_TYPE_LOCAL`, created and deleted
+  through the sync-adapter URI, colour `calendar_app`, owner access). There is
+  no calendar choice. The calendar exists only on this phone: calendar apps
+  that read the phone's calendars (Xiaomi, Samsung, Yandex) show it, Google
+  Calendar does not, since it shows only Google-account calendars; for Google
+  Calendar there is the `.ics` export.
+- Google-account calendars are never written (owner's decision of
+  2026-10-02): a delete there is final only once Google's sync adapter uploads
+  it, and Android's guard against too many deletions undoes bulk deletes, after
+  which the adapter writes the server's copies back as new rows. On the
+  owner's phone 37 of 38 events came back after turning off.
+- `AndroidPhoneCalendars` is the only `CalendarContract` code. Events are busy,
+  have no reminders and carry the event time zone. The last line of the
+  description is the app's tag `ITMO.Widgets · <key>`
+  (`CalendarEvent.taggedDescription`); `CUSTOM_APP_PACKAGE`, `CUSTOM_APP_URI`
+  and `UID_2445` are set too. Sweeps find the app's events by the tag, which
+  also survives rows Google's sync adapter writes back. The `.ics` file has no
+  tag; its UIDs name the occurrences.
+- The ids of the app's events, the calendar of each and the content they were
+  given live in `filesDir/calendar_sync/state.json` (format 1, with the
+  switch, the calendar and the reason it turned itself off), written
+  atomically, excluded from backup and device transfer. A restored device
+  therefore starts with synchronization off. A corrupt file is deleted and
+  synchronization is off.
 - `CalendarSyncPlanner.plan` (pure) compares the window with the stored
   events. Only occurrences that have not ended are touched: a new one is
   inserted, a changed one (title, time, location or description) is updated in
@@ -474,48 +474,39 @@ Backend is not involved.
   so repeated syncs add no duplicates. An event the user deleted is inserted
   again by its next change. Every insert is written to the file at once, so an
   event in the calendar never lacks its id.
-- Before planning, a sync deletes tagged events of its calendar in the window
-  that have not ended and whose ids the file lacks, then inserts them anew:
-  lost ids never double the lessons.
-- Picking another calendar deletes the app's events from the old one (the
-  app's own calendar goes as a whole) and the sync that follows fills the
-  window of the new one; past events are not carried over. Turning
-  synchronization off deletes the stored events, or the app's own calendar
-  with everything in it. Turning off first stores the switch as off (the stop
-  flag), so a sync queued behind it writes nothing, then deletes under the same
-  lock. Leaving a calendar also sweeps its tagged events from 180 days back to
-  400 days ahead, so events whose ids were lost go too, while the user's own
-  events stay.
-- A delete in a Google calendar is final only once the sync adapter uploads
-  it: until then the row is only marked deleted, and when Android's guard
-  against too many deletions undoes it, the adapter writes the server's copies
-  back as new rows with new ids. So a calendar the app leaves stays in the
-  file's `cleanups` and every run (the work stays on while one is pending, also
-  with the switch off, and then asks My ITMO nothing) sweeps it again by the
-  tag. A sweep that finds events starts its 3 days anew; a calendar clean for
-  3 days, deleted, or picked again is done. A delete drops its id only when it went
-  through; failed ones stay in the file, with their calendar, and the next
-  turn on, turn off or sync retries them. Turning on the app's calendar
-  recreates it unless the stored ids belong to it.
-- Leaving a Google calendar that holds the app's events (turning off or
-  picking another) first shows `Android может попросить подтвердить удаление
-  пар из календаря — выберите «Удалить элементы».` with `Отмена` and
-  `Продолжить`: Android's sync guard against too many deletions
-  (`Вы попытались удалить слишком много элементов`) holds the deletes back
-  until the user confirms them in its notification, otherwise it restores the
-  events. The app's own local calendar has no sync adapter and no note.
+- Before planning, a sync deletes tagged events of the calendar in the window
+  that have not ended and whose ids the file lacks (a process death between an
+  insert and its write), then inserts them anew: lost ids never double the
+  lessons.
+- Turning off first stores the switch as off (the stop flag), so a sync queued
+  behind it writes nothing, then deletes the app's calendar with all its
+  events in one operation, under the same lock. Turning on reuses the app's
+  calendar only when the stored ids belong to it, otherwise recreates it.
 - Before each sync: without the calendar permission synchronization turns
-  off with `NO_PERMISSION` and keeps the ids, so the same calendar picked
-  again later adopts the old events; a deleted or read-only calendar turns it
-  off with `CALENDAR_MISSING` and forgets them. Settings show the reason in the
+  off with `NO_PERMISSION` and keeps the ids, so turning on again adopts the
+  calendar with its events; a deleted calendar turns it off with
+  `CALENDAR_MISSING` and forgets them. Settings show the reason in the
   switch's line.
-- Every operation (turning on, off, picking, syncing, sign-out) runs behind
-  one mutex, so a switch-off waits for a running sync and then deletes all it
-  wrote. Only the request to My ITMO can be cancelled; calendar writes and the
-  ids they produce run to their end (`NonCancellable`) even when WorkManager
-  cancels the work. A sync whose calendar or session changed meanwhile writes
-  nothing. Sign-out and account change delete the app's
-  events (when the permission is there) and the file (`SessionDataCleaner`).
+- Every operation (turning on, off, syncing, sign-out) runs behind one mutex,
+  so a switch-off waits for a running sync and then deletes all it wrote. Only
+  the request to My ITMO can be cancelled; calendar writes and the ids they
+  produce run to their end (`NonCancellable`) even when WorkManager cancels
+  the work. A sync whose calendar or session changed meanwhile writes nothing.
+  Sign-out and account change delete the app's calendar (when the permission
+  is there) and the file (`SessionDataCleaner`).
+
+### Earlier builds that wrote to Google
+
+Builds of 2026-10-02 before the decision could write into a Google calendar.
+A state with that target (`target = phone`) reads as off. The next run, or
+turning on, deletes the app's tracked events there and never inserts there
+again; turning on uses the app's own calendar. That Google calendar then stays
+in the file's `cleanups`: every run (the work stays on while one is pending,
+also with the switch off, and then asks My ITMO nothing) sweeps it by the tag
+from 180 days back to 400 days ahead, because Google may write the deleted
+events back. A sweep that finds events starts its 3 days anew; a calendar
+clean for 3 days or deleted is done. A delete drops its id only when it went
+through; failed ones stay in the file with their calendar and are retried.
 
 ### Work
 
@@ -527,12 +518,13 @@ Backend is not involved.
   has no quiet hours, since it notifies nothing. Failures are retried through
   `outcomeOf` and `workResultOf` like the background checks.
 - The one-off work `calendar-sync-now` (`ExistingWorkPolicy.REPLACE`, network)
-  runs right after a calendar is picked (turning on is a pick) and after a successful
+  runs right after turning on and after a successful
   pull on the own schedule (`ScheduleViewModel` calls `requestSync()`, which
   does nothing while synchronization is off).
 - `syncWork()` runs on application start and after sign-in, `stopWork()`
-  before a session change; a run that turned synchronization off cancels the
-  work.
+  before a session change. The work stays while synchronization is on or a
+  Google calendar of an earlier build is still swept; otherwise a run cancels
+  it.
 
 ### `.ics` export
 
@@ -545,7 +537,10 @@ a UTF-8 character, escaped text, times in UTC (no `VTIMEZONE`), the same UIDs
 as synchronization, `TRANSP:OPAQUE`. The file is
 `cacheDir/ics/itmo-schedule-<start>-<end>.ics` (only the latest is kept),
 shared through the `FileProvider` `${applicationId}.files`. A range without
-lessons writes nothing and says `В эти дни пар нет`.
+lessons writes nothing and says `В эти дни пар нет`. This is the way into
+Google Calendar: the row's hint says the file can be imported on
+calendar.google.com, best into a separate calendar, which is easy to delete or
+replace with a fresh file.
 
 ### Tests
 
@@ -555,5 +550,7 @@ lessons writes nothing and says `В эти дни пар нет`.
 and `IcsFileExportTest` the data and the work; `SettingsViewModelTest` and
 `ScheduleViewModelTest` the rows and the sync after a pull. Instrumented:
 `CalendarSyncProviderTest` against the emulator's CalendarProvider (the local
-calendar, two syncs without duplicates, update, delete, moving to another
-calendar, turning off) and `SettingsNavigationTest` for the rows and dialogs.
+calendar, two syncs without duplicates, update, delete, lost ids, turning off
+during the first sync, leaving an earlier build's calendar that behaves like a
+Google one, with `_SYNC_ID` rows and copies the sync adapter writes back) and
+`SettingsNavigationTest` for the rows and dialogs.

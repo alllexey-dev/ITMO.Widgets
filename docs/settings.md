@@ -197,46 +197,36 @@ only among installed instances of that same format:
   value is successfully saved. Loading or observing the preference does not
   refresh widgets; a failed save preserves the previous value and does not refresh.
 - `Синхронизация с календарём` keeps the own schedule of today and the next
-  28 days in the phone's calendar ([calendar](features/schedule.md#calendar)).
-  Off by default; the state lives in `filesDir/calendar_sync/state.json`, not
-  in DataStore, so it is a device setting outside backups. It does not need
-  `Подключение к ITMO.Widgets` or `Изменения расписания`. The line under it is
-  `Пары на 4 недели вперёд.`, or `Выключена: нет доступа к календарю.` /
-  `Выключена: календарь удалён.` after it turned itself off.
-- Turning it on asks for `READ_CALENDAR` and `WRITE_CALENDAR` (only here and
-  in the calendar picker): when Android suggests an explanation, a dialog
-  `Доступ к календарю` comes first; refused, the switch stays off with
-  `Нет доступа к календарю`, and a refusal for good adds `Настройки` to the
-  snackbar, which opens the app's system page. Granted, the calendar picker
-  opens with nothing marked; synchronization starts only with a choice, and
-  cancelling the picker leaves the switch off.
-- The picker (`Календарь`): first the advice `Создайте отдельный календарь в
-  Google Календаре, например «Пары ИТМО», и выберите его — пары будут на всех
-  устройствах`, then the writable Google-account calendars under their
-  accounts, then the app's own `ITMO.Widgets` last with `Только на этом
-  телефоне, не виден в Google Календаре`. Without Google calendars only the
-  own one is listed. The own calendar is seen only by calendar apps that read
-  the phone's calendars (the Xiaomi or Yandex calendar), not by Google
-  Calendar.
-- `Календарь` (while on) shows the calendar in use, `Учёба, student@gmail.com`
-  or `ITMO.Widgets, на этом телефоне`, and opens the picker with it marked.
-  Picking another deletes the app's events from the old calendar and fills
-  the new one. Leaving a Google calendar with the app's events (turning off or
-  picking another) first says `Android может попросить подтвердить удаление
-  пар из календаря — выберите «Удалить элементы».` (`Отмена`, `Продолжить`).
-- `Выгрузить в .ics` (`ic_download`) offers `Неделя`, `2 недели`,
-  `До конца семестра` and `Свои даты`; while the file is written the row says
-  `Готовим файл…` and is disabled. `Файл готов` names the number of lessons
-  and offers `Отправить` (`ACTION_SEND`, `text/calendar`) and, when an app can
-  open it, `Открыть в календаре` (`ACTION_VIEW`). An empty range says
-  `В эти дни пар нет`.
+  28 days in the app's own calendar `ITMO.Widgets` on the phone
+  ([calendar](features/schedule.md#calendar)); there is no calendar choice and
+  Google-account calendars are never written. Off by default; the state lives
+  in `filesDir/calendar_sync/state.json`, not in DataStore, so it is a device
+  setting outside backups. It does not need `Подключение к ITMO.Widgets` or
+  `Изменения расписания`. The line under it is `Пары на 4 недели вперёд.`, or
+  `Выключена: нет доступа к календарю.` / `Выключена: календарь удалён.` after
+  it turned itself off.
+- Turning it on asks for `READ_CALENDAR` and `WRITE_CALENDAR` (only here):
+  when Android suggests an explanation, a dialog `Доступ к календарю` comes
+  first; refused, the switch stays off with `Нет доступа к календарю`, and a
+  refusal for good adds `Настройки` to the snackbar, which opens the app's
+  system page. Granted, it turns on into `ITMO.Widgets`. Turning it off
+  deletes that calendar with its events.
+- `Выгрузить в .ics` (`ic_download`) has the hint `Можно импортировать в Google
+  Календарь на calendar.google.com. Импортируйте в отдельный календарь — так
+  его легко удалить или заменить свежим файлом.` It offers `Неделя`,
+  `2 недели`, `До конца семестра` and `Свои даты`; while the file is written
+  the row says `Готовим файл…` and is disabled. `Файл готов` names the number
+  of lessons and offers `Отправить` (`ACTION_SEND`, `text/calendar`) and, when
+  an app can open it, `Открыть в календаре` (`ACTION_VIEW`). An empty range
+  says `В эти дни пар нет`.
 - The page is an offline settings category with three untitled groups: the
   schedule-changes switch with `Работа в фоне`, the auto-sign switch with a
   footer that explains the user-services requirement and that pending entries
   are not confirmed bookings, then the calendar group (`Синхронизация с
-  календарём`, `Календарь` while on, `Выгрузить в .ics`). An untitled group
-  after another one keeps the group gap (`design_spacing_group`) above its
-  card.
+  календарём`, `Выгрузить в .ics`) with the footer `ITMO.Widgets на этом
+  телефоне — виден в календарях Xiaomi, Samsung, Яндекс; не виден в Google
+  Календаре.` An untitled group after another one keeps the group gap
+  (`design_spacing_group`) above its card.
 
 ## Recordbook
 

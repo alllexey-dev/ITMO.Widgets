@@ -5,7 +5,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
@@ -25,9 +24,9 @@ class DefaultCalendarSyncTest {
 
     @Test
     fun `turning on starts the periodic work and syncs at once`() = runTest {
-        assertEquals(CalendarSyncResult.DONE, sync.enable(CalendarTarget.AppCalendar))
+        assertEquals(CalendarSyncResult.DONE, sync.enable())
 
-        assertEquals(listOf<CalendarTarget>(CalendarTarget.AppCalendar), repository.enabled)
+        assertEquals(1, repository.enables)
         assertEquals(1, scheduler.ensureCalls)
         assertEquals(1, scheduler.runOnceCalls)
     }
@@ -36,7 +35,7 @@ class DefaultCalendarSyncTest {
     fun `a refused turn on schedules nothing`() = runTest {
         repository.enableResult = CalendarSyncResult.NO_PERMISSION
 
-        assertEquals(CalendarSyncResult.NO_PERMISSION, sync.enable(CalendarTarget.AppCalendar))
+        assertEquals(CalendarSyncResult.NO_PERMISSION, sync.enable())
 
         assertEquals(0, scheduler.ensureCalls)
         assertEquals(0, scheduler.runOnceCalls)

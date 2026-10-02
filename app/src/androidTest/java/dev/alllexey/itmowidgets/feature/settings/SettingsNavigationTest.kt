@@ -21,9 +21,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
-import androidx.test.espresso.matcher.ViewMatchers.hasSibling
-import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
@@ -37,10 +34,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import androidx.lifecycle.ViewModelProvider
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
-import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
-import dev.alllexey.itmowidgets.feature.settings.presentation.CalendarAccessPurpose
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
@@ -293,12 +287,7 @@ class SettingsNavigationTest {
                 SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
                 val states = listOf(
                     "off" to CalendarSyncState(),
-                    "app" to CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar),
-                    "picked" to CalendarSyncState(
-                        enabled = true,
-                        target = CalendarTarget.PhoneCalendar(7),
-                        calendarName = "Учёба и пары по расписанию Университета ИТМО"
-                    ),
+                    "on" to CalendarSyncState(enabled = true),
                     "no-permission" to CalendarSyncState(problem = CalendarSyncProblem.NO_PERMISSION)
                 )
                 for ((name, state) in states) {
@@ -307,14 +296,9 @@ class SettingsNavigationTest {
                         openPage(scenario, SettingsPage.SCHEDULE)
                         scenario.onActivity { activity ->
                             val root = settingsRoot(activity)
-                            val titles = visibleTitles(root)
                             val syncTitle = activity.getString(R.string.settings_calendar_sync_title)
-                            val target = activity.getString(R.string.settings_calendar_target_title)
                             val export = activity.getString(R.string.settings_ics_export_title)
-                            assertEquals(
-                                listOfNotNull(syncTitle, target.takeIf { state.enabled }, export),
-                                titles.dropWhile { it != syncTitle }
-                            )
+                            assertEquals(listOf(syncTitle, export), visibleTitles(root).dropWhile { it != syncTitle })
                             val description = settingRow(root, syncTitle)!!.findViewById<TextView>(R.id.setting_description)
                             assertEquals(
                                 activity.getString(
@@ -323,7 +307,16 @@ class SettingsNavigationTest {
                                 ),
                                 description.text.toString()
                             )
-                            assertTrue(settingRow(root, export)!!.let { it.isClickable && it.isEnabled })
+                            assertEquals(state.enabled, calendarSwitch(activity).isChecked)
+                            val exportRow = settingRow(root, export)!!
+                            assertEquals(
+                                activity.getString(R.string.settings_ics_export_description),
+                                exportRow.findViewById<TextView>(R.id.setting_description).text.toString()
+                            )
+                            assertTrue(exportRow.isClickable && exportRow.isEnabled)
+                            val footers = root.descendants.filterIsInstance<TextView>()
+                                .filter { it.id == R.id.setting_section_footer && it.isShown }.map { it.text.toString() }.toList()
+                            assertEquals(activity.getString(R.string.settings_calendar_sync_footer), footers.last())
                             assertTrue(activity.offlineLoadingFrames.isEmpty())
                             ViewChecks.assertTextFits(root)
                             ViewChecks.assertTouchTargets(root.findViewById(R.id.sections_container), requireWidth = false)
@@ -332,44 +325,7 @@ class SettingsNavigationTest {
                     }
                 }
 
-                sync.state.value = CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar)
-                sync.calendars = listOf(
-                    WritableCalendar(7, "Учёба", "student@gmail.com"),
-                    WritableCalendar(8, "Личное", "student@gmail.com"),
-                    WritableCalendar(9, "Работа", "work@example.com")
-                )
-                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
-                    openPage(scenario, SettingsPage.SCHEDULE)
-                    onView(withText(R.string.settings_ics_export_title)).perform(click())
-                    settle()
-                    for (range in listOf(R.string.ics_range_week, R.string.ics_range_two_weeks, R.string.ics_range_semester, R.string.ics_range_custom)) {
-                        onView(withText(range)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    }
-                    Screenshots.capture("calendar-export-screenshots", "ics-ranges-${spec.name}") { settle() }
-                    onView(withText(R.string.common_cancel)).inRoot(isDialog()).perform(click())
-                    settle()
-
-                    // Reopened from the row: the advice first, Google calendars by account, the own one last and marked.
-                    scenario.onActivity { activity -> settingsViewModel(activity).onCalendarAccessGranted(CalendarAccessPurpose.PICK) }
-                    settle()
-                    for (text in listOf("student@gmail.com", "Учёба", "Личное", "work@example.com", "Работа", "ITMO.Widgets")) {
-                        onView(withText(text)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    }
-                    onView(withText(R.string.calendar_picker_advice)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    onView(withText(R.string.calendar_picker_own_caption)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    onView(allOf(withId(R.id.calendar_option_radio), isChecked())).inRoot(isDialog())
-                        .check(matches(hasSibling(hasDescendant(withText("ITMO.Widgets")))))
-                    Screenshots.capture("calendar-export-screenshots", "calendar-picker-reopened-${spec.name}") { settle() }
-                    onView(withText("Учёба")).inRoot(isDialog()).perform(click())
-                    settle()
-                    assertEquals(CalendarTarget.PhoneCalendar(7), sync.state.value.target)
-                    scenario.onActivity { activity ->
-                        val row = settingRow(settingsRoot(activity), activity.getString(R.string.settings_calendar_target_title))!!
-                        assertEquals("Учёба, student@gmail.com", row.findViewById<TextView>(R.id.setting_value).text.toString())
-                    }
-                }
-
-                // Turning on opens the picker with nothing marked; cancelling leaves the switch off, a choice turns it on.
+                // Turning on with the permission goes straight to the app's calendar; no picker, no note on turning off.
                 val instrumentation = InstrumentationRegistry.getInstrumentation()
                 listOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR).forEach {
                     instrumentation.uiAutomation.grantRuntimePermission(instrumentation.targetContext.packageName, it)
@@ -379,71 +335,25 @@ class SettingsNavigationTest {
                     openPage(scenario, SettingsPage.SCHEDULE)
                     onView(withText(R.string.settings_calendar_sync_title)).perform(click())
                     settle()
-                    onView(withText(R.string.calendar_picker_advice)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    onView(allOf(withId(R.id.calendar_option_radio), isChecked())).inRoot(isDialog()).check(doesNotExist())
-                    Screenshots.capture("calendar-export-screenshots", "calendar-picker-enable-${spec.name}") { settle() }
-                    onView(withText(R.string.common_cancel)).inRoot(isDialog()).perform(click())
-                    settle()
-                    assertFalse(sync.state.value.enabled)
-                    scenario.onActivity { activity -> assertFalse(calendarSwitch(activity).isChecked) }
-
-                    onView(withText(R.string.settings_calendar_sync_title)).perform(click())
-                    settle()
-                    onView(withText("ITMO.Widgets")).inRoot(isDialog()).perform(click())
-                    settle()
-                    assertEquals(CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar), sync.state.value)
-                    scenario.onActivity { activity ->
-                        assertTrue(calendarSwitch(activity).isChecked)
-                        val row = settingRow(settingsRoot(activity), activity.getString(R.string.settings_calendar_target_title))!!
-                        assertEquals(
-                            activity.getString(R.string.settings_calendar_target_own),
-                            row.findViewById<TextView>(R.id.setting_value).text.toString()
-                        )
-                    }
-                }
-
-                // Leaving a Google calendar with events: the note about Android's confirmation comes first.
-                sync.state.value = CalendarSyncState(
-                    enabled = true, target = CalendarTarget.PhoneCalendar(7), calendarName = "Учёба",
-                    calendarAccount = "student@gmail.com", hasEvents = true
-                )
-                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
-                    openPage(scenario, SettingsPage.SCHEDULE)
-                    onView(withText(R.string.settings_calendar_sync_title)).perform(click())
-                    settle()
-                    onView(withText(R.string.calendar_removal_notice)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    Screenshots.capture("calendar-export-screenshots", "calendar-removal-notice-${spec.name}") { settle() }
-                    onView(withText(R.string.common_cancel)).inRoot(isDialog()).perform(click())
-                    settle()
                     assertTrue(sync.state.value.enabled)
                     scenario.onActivity { activity -> assertTrue(calendarSwitch(activity).isChecked) }
                     onView(withText(R.string.settings_calendar_sync_title)).perform(click())
                     settle()
-                    onView(withText(R.string.calendar_access_continue)).inRoot(isDialog()).perform(click())
-                    settle()
                     assertFalse(sync.state.value.enabled)
-                }
 
-                // Without Google calendars the list is the own calendar with its caption.
-                sync.state.value = CalendarSyncState()
-                sync.calendars = emptyList()
-                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
-                    openPage(scenario, SettingsPage.SCHEDULE)
-                    onView(withText(R.string.settings_calendar_sync_title)).perform(click())
+                    onView(withText(R.string.settings_ics_export_title)).perform(click())
                     settle()
-                    onView(withText("ITMO.Widgets")).inRoot(isDialog()).check(matches(isDisplayed()))
-                    onView(withText(R.string.calendar_picker_own_caption)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    onView(withText("student@gmail.com")).check(doesNotExist())
-                    Screenshots.capture("calendar-export-screenshots", "calendar-picker-no-google-${spec.name}") { settle() }
+                    for (range in listOf(R.string.ics_range_week, R.string.ics_range_two_weeks, R.string.ics_range_semester, R.string.ics_range_custom)) {
+                        onView(withText(range)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    }
+                    Screenshots.capture("calendar-export-screenshots", "ics-ranges-${spec.name}") { settle() }
                     onView(withText(R.string.common_cancel)).inRoot(isDialog()).perform(click())
                     settle()
-                    assertFalse(sync.state.value.enabled)
                 }
             }
         } finally {
             SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
             sync.state.value = CalendarSyncState()
-            sync.calendars = emptyList()
         }
     }
 

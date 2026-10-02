@@ -9,26 +9,24 @@ publication or deployment.
 ### 2026-10-02
 
 - `Синхронизация с календарём` on the `Расписание` settings page keeps the
-  own My ITMO schedule of today and the next 28 days in the phone's calendar.
-  Turning it on opens the calendar picker first: Google-account calendars
-  under their accounts after the advice to make a separate one, and last the
-  app's own local calendar `ITMO.Widgets`, which only calendar apps reading the
-  phone's calendars (the Xiaomi or Yandex calendar) show, not Google Calendar.
-  Cancelling leaves the switch off; the `Календарь` row shows the calendar and
-  its account. Every lesson of the answer goes as it is, sport and room
-  bookings included; new lessons are added, changed ones updated, vanished
-  ones removed, past events stay, repeated syncs add no duplicates. It runs
-  every 2 hours and right after picking a calendar or a pull on
-  the own schedule; turning it off removes the app's events, also those whose
-  ids were lost (found by the tag `ITMO.Widgets · <lesson>` on the last line
-  of the description), and a note warns that Android may ask to confirm
-  deleting them from a Google calendar. Events Google's sync writes back after
-  an undone deletion are swept again for 3 days. A revoked
-  permission or a deleted calendar turns it off with the reason under the
-  switch. The calendar permission is asked only there.
+  own My ITMO schedule of today and the next 28 days in the app's own calendar
+  `ITMO.Widgets` on the phone, which calendar apps reading the phone's
+  calendars (Xiaomi, Samsung, Yandex) show and Google Calendar does not. Every
+  lesson of the answer goes as it is, sport and room bookings included; new
+  lessons are added, changed ones updated, vanished ones removed, past events
+  stay, repeated syncs add no duplicates. It runs every 2 hours and right
+  after turning on or a pull on the own schedule; turning it off deletes the
+  calendar. A revoked permission or a deleted calendar turns it off with the
+  reason under the switch. The calendar permission is asked only there.
+- Google-account calendars are not written: Google brought back events the
+  app deleted in bulk (Android's guard against too many deletions). A Google
+  calendar picked in an earlier development build is left: the app's events
+  there are deleted and swept again by the tag `ITMO.Widgets · <lesson>` in
+  their description for 3 days, and synchronization is off until turned on.
 - `Выгрузить в .ics` on the same page writes a week, two weeks, the rest of the
   semester or chosen dates to an RFC 5545 file with stable UIDs and offers
-  `Отправить` and `Открыть в календаре`.
+  `Отправить` and `Открыть в календаре`; its hint suggests importing it into a
+  separate calendar in Google Calendar on calendar.google.com.
 - Core, Backend and MyItmoApi are unchanged for the calendar.
 - The «QR-пропуск» quick-settings tile opens the QR pass above home; it is
   active with a session, and on a locked device it asks to unlock first. On

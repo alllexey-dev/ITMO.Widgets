@@ -5,7 +5,6 @@ import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.SyncedEvent
 import java.io.File
@@ -25,10 +24,14 @@ internal const val TARGET_PHONE = "phone"
 internal data class StoredCalendarSync(
     val format: Int = FORMAT,
     val enabled: Boolean = false,
-    /** [TARGET_APP] or [TARGET_PHONE]; kept after synchronization turned itself off for lack of permission. */
+    /**
+     * [TARGET_APP]; [TARGET_PHONE] only in files of earlier builds that wrote to a Google calendar, which the next
+     * operation turns off and cleans up.
+     */
     val target: String? = null,
     /** The calendar the [events] are in. */
     val calendarId: Long? = null,
+    /** Written by earlier builds for a picked calendar; no longer used. */
     val calendarName: String? = null,
     val calendarAccount: String? = null,
     val problem: String? = null,
@@ -80,19 +83,14 @@ class CalendarSyncFileStore internal constructor(private val directory: File, pr
     internal fun clear() { check(!directory.exists() || directory.deleteRecursively()) }
 }
 
-internal fun StoredCalendarSync.toModel() = CalendarSyncState(
-    enabled = enabled,
-    target = when (target) {
-        null -> null
-        TARGET_APP -> CalendarTarget.AppCalendar
-        TARGET_PHONE -> CalendarTarget.PhoneCalendar(checkNotNull(calendarId))
-        else -> error("Unknown calendar target $target")
-    },
-    calendarName = calendarName.takeIf { target == TARGET_PHONE },
-    calendarAccount = calendarAccount.takeIf { target == TARGET_PHONE },
-    problem = problem?.let(CalendarSyncProblem::valueOf),
-    hasEvents = calendarId != null && events.any { calendarOf(it) == calendarId }
-)
+/** A Google calendar picked by an earlier build reads as off: the app no longer writes there. */
+internal fun StoredCalendarSync.toModel(): CalendarSyncState {
+    check(target == null || target == TARGET_APP || target == TARGET_PHONE) { "Unknown calendar target $target" }
+    return CalendarSyncState(
+        enabled = enabled && target != TARGET_PHONE,
+        problem = problem?.let(CalendarSyncProblem::valueOf)
+    )
+}
 
 internal val StoredCalendarSync.syncedEvents: List<SyncedEvent> get() = events.map { it.toModel() }
 

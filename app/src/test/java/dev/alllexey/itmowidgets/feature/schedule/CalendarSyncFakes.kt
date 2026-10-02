@@ -3,8 +3,6 @@ package dev.alllexey.itmowidgets.feature.schedule
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
-import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncScheduler
@@ -18,7 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class FakePhoneCalendars : PhoneCalendars {
     var access = true
     /** Ids of calendars that exist and accept events; the own one is added by [createOwn]. */
-    val calendars = linkedMapOf<Long, WritableCalendar>()
+    val calendars = linkedSetOf<Long>()
     var ownId: Long? = null
     val events = linkedMapOf<Long, Pair<Long, CalendarEvent>>()
     var inserts = 0
@@ -35,8 +33,9 @@ class FakePhoneCalendars : PhoneCalendars {
     private var insertCalls = 0
     private var nextId = 100L
 
-    fun add(calendar: WritableCalendar) {
-        calendars[calendar.id] = calendar
+    /** Another calendar of the phone, as the Google calendar an earlier build wrote to. */
+    fun add(calendarId: Long) {
+        calendars += calendarId
     }
 
     /** An event of the user in [calendarId], without the app's marker. */
@@ -59,15 +58,13 @@ class FakePhoneCalendars : PhoneCalendars {
 
     override fun hasAccess() = access
 
-    override fun writable(): List<WritableCalendar> = checked { calendars.values.filter { it.id != ownId } }
-
-    override fun find(id: Long): WritableCalendar? = checked { calendars[id] }
+    override fun exists(id: Long): Boolean = checked { id in calendars }
 
     override fun findOwn(): Long? = checked { ownId?.takeIf { it in calendars } }
 
     override fun createOwn(): Long = checked {
         val id = nextId++
-        calendars[id] = WritableCalendar(id, "ITMO.Widgets", "ITMO.Widgets")
+        calendars += id
         ownId = id
         id
     }
@@ -141,7 +138,7 @@ class FakeCalendarSyncRepository(enabled: Boolean = false) : CalendarSyncReposit
     var syncResult: AppResult<Unit> = AppResult.Success(Unit)
     var onSync: () -> Unit = {}
     var syncs = 0
-    val enabled = mutableListOf<CalendarTarget>()
+    var enables = 0
     var disables = 0
 
     override fun observeState(): Flow<CalendarSyncState> = state
@@ -152,9 +149,9 @@ class FakeCalendarSyncRepository(enabled: Boolean = false) : CalendarSyncReposit
 
     override suspend fun hasPendingCleanup() = pendingCleanup
 
-    override suspend fun enable(target: CalendarTarget): CalendarSyncResult {
-        enabled += target
-        if (enableResult == CalendarSyncResult.DONE) state.value = CalendarSyncState(enabled = true, target = target)
+    override suspend fun enable(): CalendarSyncResult {
+        enables++
+        if (enableResult == CalendarSyncResult.DONE) state.value = CalendarSyncState(enabled = true)
         return enableResult
     }
 
@@ -162,8 +159,6 @@ class FakeCalendarSyncRepository(enabled: Boolean = false) : CalendarSyncReposit
         disables++
         state.value = CalendarSyncState()
     }
-
-    override suspend fun writableCalendars(): List<WritableCalendar>? = emptyList()
 
     override suspend fun sync(): AppResult<Unit> {
         syncs++

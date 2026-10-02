@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -23,11 +22,10 @@ class CalendarSyncFileStoreTest {
     fun `the written state reads back and no temporary file is left`() {
         val state = StoredCalendarSync(
             enabled = true,
-            target = TARGET_PHONE,
+            target = TARGET_APP,
             calendarId = 7,
-            calendarName = "Учёба",
-            calendarAccount = "student@gmail.com",
-            events = listOf(StoredEvent("lesson-1", 42, 7, 1_000, 2_000, "Физика", "1506", "Лекция"))
+            events = listOf(StoredEvent("lesson-1", 42, 7, 1_000, 2_000, "Физика", "1506", "Лекция")),
+            cleanups = listOf(StoredCleanup(11, 5_000))
         )
 
         store.write(state)
@@ -35,7 +33,7 @@ class CalendarSyncFileStoreTest {
         assertEquals(state, store.read())
         assertFalse(File(directory, "state.json.tmp").exists())
         assertEquals(
-            CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(7), calendarName = "Учёба", calendarAccount = "student@gmail.com", hasEvents = true),
+            CalendarSyncState(enabled = true),
             state.toModel()
         )
         assertEquals("lesson-1", state.syncedEvents.single().event.key)
@@ -45,14 +43,15 @@ class CalendarSyncFileStoreTest {
     }
 
     @Test
-    fun `the app calendar has no name and a problem survives the write`() {
-        val state = StoredCalendarSync(target = TARGET_APP, calendarId = 3, calendarName = "ITMO.Widgets", problem = "NO_PERMISSION")
+    fun `a problem survives the write and a Google calendar of an earlier build reads as off`() {
+        val state = StoredCalendarSync(target = TARGET_APP, calendarId = 3, problem = "NO_PERMISSION")
 
         store.write(state)
 
+        assertEquals(CalendarSyncState(problem = CalendarSyncProblem.NO_PERMISSION), store.read()!!.toModel())
         assertEquals(
-            CalendarSyncState(target = CalendarTarget.AppCalendar, problem = CalendarSyncProblem.NO_PERMISSION),
-            store.read()!!.toModel()
+            CalendarSyncState(),
+            StoredCalendarSync(enabled = true, target = TARGET_PHONE, calendarId = 11, calendarName = "Учёба").toModel()
         )
     }
 

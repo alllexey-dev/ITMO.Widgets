@@ -14,12 +14,10 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
-import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -77,21 +75,12 @@ sealed interface SettingsEvent {
     /** Asks the system to add the QR pass tile; the answer comes back through `onQrTileResult`. */
     data object RequestQrTile : SettingsEvent
     /** Asks for the calendar permission when needed, then reports back through `onCalendarAccessGranted`. */
-    data class RequestCalendarAccess(val purpose: CalendarAccessPurpose) : SettingsEvent
-    data class ShowCalendarPicker(val calendars: List<WritableCalendar>, val selected: CalendarTarget?) : SettingsEvent
-    /**
-     * Turning off ([next] null) or moving to [next] deletes the app's events from a Google calendar; Android's sync
-     * guard may ask the user to confirm that, so the screen says so first.
-     */
-    data class ConfirmCalendarRemoval(val next: CalendarTarget?) : SettingsEvent
+    data object RequestCalendarAccess : SettingsEvent
     data object ChooseIcsRange : SettingsEvent
     data class ShareIcs(val file: IcsFile) : SettingsEvent
     data class ShowMessage(val text: UiText) : SettingsEvent
     data class ShowError(val error: AppError) : SettingsEvent
 }
-
-/** What the calendar permission is asked for. */
-enum class CalendarAccessPurpose { ENABLE, PICK }
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -279,12 +268,9 @@ class SettingsViewModel @Inject constructor(
                 if (checked) offerBackgroundWorkHint()
             }
             KEY_CALENDAR_SYNC -> if (checked) {
-                eventChannel.trySend(SettingsEvent.RequestCalendarAccess(CalendarAccessPurpose.ENABLE))
+                eventChannel.trySend(SettingsEvent.RequestCalendarAccess)
             } else {
-                viewModelScope.launch {
-                    if (removesFromGoogle(next = null)) eventChannel.send(SettingsEvent.ConfirmCalendarRemoval(null))
-                    else onCalendarRemovalConfirmed(null)
-                }
+                updateLocalSetting { calendarSync.disable() }
             }
             KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SCHEDULE_CHANGES, KEY_HOME_CARD_MARKS, KEY_HOME_CARD_SPORT,
             KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
@@ -367,7 +353,6 @@ class SettingsViewModel @Inject constructor(
             KEY_DIAGNOSTICS -> eventChannel.trySend(SettingsEvent.OpenDiagnostics)
             KEY_BACKGROUND_WORK -> eventChannel.trySend(SettingsEvent.OpenBackgroundWorkSettings)
             KEY_QR_TILE -> eventChannel.trySend(SettingsEvent.RequestQrTile)
-            KEY_CALENDAR_TARGET -> eventChannel.trySend(SettingsEvent.RequestCalendarAccess(CalendarAccessPurpose.PICK))
             KEY_ICS_EXPORT -> if (!icsExportBusy.value) eventChannel.trySend(SettingsEvent.ChooseIcsRange)
             KEY_RESTART_ONBOARDING -> viewModelScope.launch {
                 // The stored flag is what the root gate reads; the overlay only has to get out of the way.
@@ -380,37 +365,15 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    /**
-     * The calendar permission is there: the picker comes first, also when turning on, since Google Calendar does not
-     * show the app's own local calendar. Turning on marks nothing; synchronization starts only with a choice.
-     */
-    fun onCalendarAccessGranted(purpose: CalendarAccessPurpose) {
+    /** The calendar permission is there: synchronization turns on into the app's own calendar. */
+    fun onCalendarAccessGranted() {
         viewModelScope.launch {
-            val state = calendarSync.observeState().first()
-            val calendars = calendarSync.writableCalendars()
-            val selected = state.target.takeIf { purpose == CalendarAccessPurpose.PICK && state.enabled }
-            if (calendars == null) showMessage(R.string.calendar_access_denied)
-            else eventChannel.send(SettingsEvent.ShowCalendarPicker(calendars, selected))
+            when (calendarSync.enable()) {
+                CalendarSyncResult.DONE -> Unit
+                CalendarSyncResult.NO_PERMISSION -> showMessage(R.string.calendar_access_denied)
+                CalendarSyncResult.FAILED -> eventChannel.send(SettingsEvent.ShowError(AppError.Unknown()))
+            }
         }
-    }
-
-    fun onCalendarPicked(target: CalendarTarget) {
-        viewModelScope.launch {
-            if (removesFromGoogle(next = target)) eventChannel.send(SettingsEvent.ConfirmCalendarRemoval(target))
-            else enableCalendarSync(target)
-        }
-    }
-
-    /** The user read the note about Android's confirmation: turn off ([next] null) or move to [next]. */
-    fun onCalendarRemovalConfirmed(next: CalendarTarget?) {
-        if (next == null) updateLocalSetting { calendarSync.disable() }
-        else viewModelScope.launch { enableCalendarSync(next) }
-    }
-
-    /** Deleting from a Google calendar may trip Android's guard against too many deletions; local calendars do not. */
-    private suspend fun removesFromGoogle(next: CalendarTarget?): Boolean {
-        val state = calendarSync.observeState().first()
-        return state.enabled && state.hasEvents && state.target is CalendarTarget.PhoneCalendar && next != state.target
     }
 
     /** One `.ics` file at a time; a range without lessons says so instead of sharing an empty file. */
@@ -427,15 +390,6 @@ class SettingsViewModel @Inject constructor(
             } finally {
                 icsExportBusy.value = false
             }
-        }
-    }
-
-    private suspend fun enableCalendarSync(target: CalendarTarget) {
-        when (calendarSync.enable(target)) {
-            CalendarSyncResult.DONE -> Unit
-            CalendarSyncResult.NO_PERMISSION -> showMessage(R.string.calendar_access_denied)
-            CalendarSyncResult.CALENDAR_MISSING -> showMessage(R.string.calendar_missing)
-            CalendarSyncResult.FAILED -> eventChannel.send(SettingsEvent.ShowError(AppError.Unknown()))
         }
     }
 
@@ -923,10 +877,10 @@ class SettingsViewModel @Inject constructor(
         )
     }
 
-    /** The switch says why it turned itself off; the picked calendar shows while it is on. */
+    /** The switch says why it turned itself off; the footer says where the lessons go and where they do not show. */
     private fun calendarSection(calendar: CalendarSyncState, icsBusy: Boolean) = SettingSection(
         title = null,
-        items = listOfNotNull(
+        items = listOf(
             SettingItem.Toggle(
                 key = KEY_CALENDAR_SYNC,
                 title = UiText.Resource(R.string.settings_calendar_sync_title),
@@ -940,31 +894,16 @@ class SettingsViewModel @Inject constructor(
                 checked = calendar.enabled
             ),
             SettingItem.Action(
-                key = KEY_CALENDAR_TARGET,
-                title = UiText.Resource(R.string.settings_calendar_target_title),
-                value = calendarValue(calendar),
-                trailingIconRes = R.drawable.ic_chevron_right
-            ).takeIf { calendar.enabled },
-            SettingItem.Action(
                 key = KEY_ICS_EXPORT,
                 title = UiText.Resource(R.string.settings_ics_export_title),
+                description = UiText.Resource(R.string.settings_ics_export_description),
                 value = UiText.Resource(R.string.settings_ics_export_busy).takeIf { icsBusy },
                 trailingIconRes = R.drawable.ic_download,
                 enabled = !icsBusy
             )
-        )
+        ),
+        footer = UiText.Resource(R.string.settings_calendar_sync_footer)
     )
-
-    /** «Учёба, student@gmail.com» for a picked calendar, «ITMO.Widgets, на этом телефоне» for the app's own. */
-    private fun calendarValue(calendar: CalendarSyncState): UiText {
-        val name = calendar.calendarName
-        val account = calendar.calendarAccount
-        return when {
-            calendar.target == CalendarTarget.AppCalendar || name == null -> UiText.Resource(R.string.settings_calendar_target_own)
-            account.isNullOrBlank() -> UiText.Dynamic(name)
-            else -> UiText.Resource(R.string.settings_calendar_target_value, listOf(name, account))
-        }
-    }
 
     /** The whole row is the button: it opens the system page, and the row leaves once Android lets the app work. */
     private fun backgroundWorkRow() = SettingItem.Action(
@@ -1032,7 +971,6 @@ class SettingsViewModel @Inject constructor(
         const val KEY_SHEET_MARKS = "sheet_marks"
         const val KEY_BACKGROUND_WORK = "background_work"
         const val KEY_CALENDAR_SYNC = "calendar_sync"
-        const val KEY_CALENDAR_TARGET = "calendar_target"
         const val KEY_ICS_EXPORT = "ics_export"
         const val KEY_HOME_CARD_SPORT = "home_card_sport"
         const val KEY_HOME_CARD_FRIENDS = "home_card_friends"

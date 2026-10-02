@@ -11,7 +11,6 @@ import android.provider.CalendarContract.Events
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.MarkedEvent
@@ -35,16 +34,9 @@ class AndroidPhoneCalendars @Inject constructor(
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
 
-    /** Only Google accounts: their calendars reach Google Calendar and every device of the account. */
-    override fun writable(): List<WritableCalendar> = query(
-        "${Calendars.CALENDAR_ACCESS_LEVEL} >= ? AND ${Calendars.ACCOUNT_TYPE} = ?",
-        arrayOf(Calendars.CAL_ACCESS_CONTRIBUTOR.toString(), GOOGLE_ACCOUNT_TYPE)
-    )
-
-    override fun find(id: Long): WritableCalendar? = query(
-        "${Calendars._ID} = ? AND ${Calendars.CALENDAR_ACCESS_LEVEL} >= ?",
-        arrayOf(id.toString(), Calendars.CAL_ACCESS_CONTRIBUTOR.toString())
-    ).firstOrNull()
+    override fun exists(id: Long): Boolean = resolver.query(
+        ContentUris.withAppendedId(Calendars.CONTENT_URI, id), arrayOf(Calendars._ID), null, null, null
+    )?.use { it.count > 0 } ?: false
 
     override fun findOwn(): Long? = resolver.query(
         Calendars.CONTENT_URI,
@@ -133,20 +125,6 @@ class AndroidPhoneCalendars @Inject constructor(
         }
     }.orEmpty()
 
-    private fun query(selection: String, arguments: Array<String>): List<WritableCalendar> = resolver.query(
-        Calendars.CONTENT_URI,
-        arrayOf(Calendars._ID, Calendars.CALENDAR_DISPLAY_NAME, Calendars.ACCOUNT_NAME),
-        selection,
-        arguments,
-        "${Calendars.ACCOUNT_NAME}, ${Calendars.CALENDAR_DISPLAY_NAME}"
-    )?.use { cursor ->
-        buildList {
-            while (cursor.moveToNext()) {
-                add(WritableCalendar(cursor.getLong(0), cursor.getString(1).orEmpty(), cursor.getString(2).orEmpty()))
-            }
-        }
-    }.orEmpty()
-
     private fun syncAdapter(uri: Uri): Uri = uri.buildUpon()
         .appendQueryParameter(android.provider.CalendarContract.CALLER_IS_SYNCADAPTER, "true")
         .appendQueryParameter(Calendars.ACCOUNT_NAME, ACCOUNT_NAME)
@@ -158,6 +136,5 @@ class AndroidPhoneCalendars @Inject constructor(
         const val ACCOUNT_NAME = "ITMO.Widgets"
         const val ACCOUNT_TYPE = android.provider.CalendarContract.ACCOUNT_TYPE_LOCAL
         const val OWN_CALENDAR_NAME = "itmo_widgets_schedule"
-        const val GOOGLE_ACCOUNT_TYPE = "com.google"
     }
 }

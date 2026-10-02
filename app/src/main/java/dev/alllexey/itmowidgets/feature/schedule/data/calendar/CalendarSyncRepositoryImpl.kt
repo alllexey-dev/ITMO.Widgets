@@ -7,8 +7,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
-import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
@@ -39,9 +37,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
- * The own schedule of today..today+28 in the phone's calendar. The app touches only its own events: the ids in
- * [CalendarSyncFileStore] and, for ids that were lost, events whose description ends with the app's tag
- * ([CalendarEvent.taggedDescription]); the calendar it created itself is its own entirely.
+ * The own schedule of today..today+28 in the app's own local calendar «ITMO.Widgets», which the app owns entirely.
+ * Google-account calendars are never written: Google writes events back that the app deletes in bulk. Earlier builds
+ * could write to one; such a state is turned off and that calendar is cleaned up by the tag sweep below. Outside its
+ * own calendar the app touches only its own events: the ids in [CalendarSyncFileStore] and events whose description
+ * ends with the app's tag ([CalendarEvent.taggedDescription]).
  *
  * Every operation runs behind one mutex. Calendar writes and the ids they produce are not cancellable: a cancelled
  * work or a quick switch-off never leaves an inserted event untracked. Every insert is written to the file at once;
@@ -70,31 +70,25 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         emitAll(state.filterNotNull().map { it.toModel() })
     }
 
-    override suspend fun isEnabled(): Boolean = (state.value ?: mutex.withLock { loaded() }).enabled
+    override suspend fun isEnabled(): Boolean = (state.value ?: mutex.withLock { loaded() }).toModel().enabled
 
-    override suspend fun hasPendingCleanup(): Boolean =
-        (state.value ?: mutex.withLock { loaded() }).cleanups.orEmpty().isNotEmpty()
+    /** A Google calendar of an earlier build counts: the next run turns it off and cleans it up. */
+    override suspend fun hasPendingCleanup(): Boolean = (state.value ?: mutex.withLock { loaded() })
+        .let { it.cleanups.orEmpty().isNotEmpty() || it.target == TARGET_PHONE }
 
-    override suspend fun enable(target: CalendarTarget): CalendarSyncResult = mutex.withLock {
+    override suspend fun enable(): CalendarSyncResult = mutex.withLock {
         writing {
             guarded {
                 if (!calendars.hasAccess()) return@guarded CalendarSyncResult.NO_PERMISSION
                 val stored = loaded()
-                val picked = when (target) {
-                    CalendarTarget.AppCalendar -> null
-                    is CalendarTarget.PhoneCalendar ->
-                        calendars.find(target.id) ?: return@guarded CalendarSyncResult.CALENDAR_MISSING
-                }
-                val calendarId = picked?.id ?: ownCalendar(stored)
-                // Events elsewhere go; the window is written into the new calendar by the sync that follows.
+                val calendarId = ownCalendar(stored)
+                // Events elsewhere (a Google calendar of an earlier build) go; the sync that follows fills the window.
                 val (remaining, left) = removeOurs(stored, keep = calendarId)
                 persist(
                     StoredCalendarSync(
                         enabled = true,
-                        target = if (target is CalendarTarget.AppCalendar) TARGET_APP else TARGET_PHONE,
+                        target = TARGET_APP,
                         calendarId = calendarId,
-                        calendarName = picked?.name,
-                        calendarAccount = picked?.account,
                         events = remaining,
                         cleanups = withCleanups(stored, left).filter { it.calendarId != calendarId }
                     )
@@ -110,12 +104,12 @@ class CalendarSyncRepositoryImpl @Inject constructor(
                 // The stop flag first: a sync queued behind this lock finds synchronization off and writes nothing.
                 val stored = loaded().copy(enabled = false, problem = null).also { persist(it) }
                 if (guarded { calendars.hasAccess() } != true) {
-                    // Nothing could be removed: the ids stay, so the same calendar picked later adopts the events.
+                    // Nothing could be removed: the ids stay for the next turn on or off.
                     return@writing
                 }
                 val (remaining, left) = removeOurs(stored, keep = null)
-                // Ids whose delete failed stay and are retried by the next turn on or off; left calendars are swept
-                // again until Google's sync can no longer bring the events back.
+                // The app's calendar goes in one operation. Ids whose delete failed stay and are retried by the next
+                // turn on or off; a Google calendar of an earlier build is swept again until it stays clean.
                 persist(
                     StoredCalendarSync(
                         calendarId = stored.calendarId.takeIf { remaining.isNotEmpty() },
@@ -124,14 +118,6 @@ class CalendarSyncRepositoryImpl @Inject constructor(
                     )
                 )
             }
-        }
-    }
-
-    override suspend fun writableCalendars(): List<WritableCalendar>? = withContext(Dispatchers.IO) {
-        try {
-            if (calendars.hasAccess()) calendars.writable() else null
-        } catch (_: SecurityException) {
-            null
         }
     }
 
@@ -161,6 +147,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
     private suspend fun syncOnce(): AppResult<Unit> {
         val started = generation.get()
         val swept = writing { sweepLeftCalendars() }
+        writing { leaveGoogleCalendar() }
         val calendarId = writing { usableCalendar() }
             ?: return if (swept) AppResult.Success(Unit) else AppResult.Failure(AppError.Unknown())
         val today = time.today()
@@ -175,6 +162,27 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * A Google calendar picked by an earlier build: synchronization turns off, the app's events there are deleted and
+     * the calendar is swept again later. Nothing is inserted there any more; turning on uses the app's own calendar.
+     */
+    private suspend fun leaveGoogleCalendar() {
+        val stored = loaded()
+        if (stored.target != TARGET_PHONE) return
+        if (guarded { calendars.hasAccess() } != true) {
+            persist(stored.copy(enabled = false, target = null))
+            return
+        }
+        val (remaining, left) = removeOurs(stored, keep = null)
+        persist(
+            StoredCalendarSync(
+                calendarId = stored.calendarId.takeIf { remaining.isNotEmpty() },
+                events = remaining,
+                cleanups = withCleanups(stored, left)
+            )
+        )
+    }
+
     /** The calendar to sync into, or null when off; turns synchronization off when it cannot reach it. */
     private suspend fun usableCalendar(): Long? {
         val stored = loaded()
@@ -183,13 +191,13 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         val problem = guarded {
             when {
                 !calendars.hasAccess() -> CalendarSyncProblem.NO_PERMISSION
-                calendars.find(calendarId) == null -> CalendarSyncProblem.CALENDAR_MISSING
+                !calendars.exists(calendarId) -> CalendarSyncProblem.CALENDAR_MISSING
                 else -> null
             }
         } ?: return calendarId
         persist(
             when (problem) {
-                // The events are still there; the same calendar picked again adopts them.
+                // The events are still there; turning on again adopts the app's calendar with them.
                 CalendarSyncProblem.NO_PERMISSION -> stored.copy(enabled = false, problem = problem.name)
                 // Its events went with it; ids left in other calendars stay for the next clean-up.
                 CalendarSyncProblem.CALENDAR_MISSING -> StoredCalendarSync(
@@ -305,7 +313,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         var failed = false
         val next = pending.mapNotNull { cleanup ->
             val inUse = stored.enabled && stored.calendarId == cleanup.calendarId
-            if (inUse || guardedNow { calendars.find(cleanup.calendarId) } == null) return@mapNotNull null
+            if (inUse || guardedNow { calendars.exists(cleanup.calendarId) } != true) return@mapNotNull null
             when (val found = sweep(cleanup.calendarId)) {
                 null -> cleanup.also { failed = true }
                 0 -> cleanup.takeIf { now.toEpochMilli() < it.until }

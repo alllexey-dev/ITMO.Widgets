@@ -5,67 +5,19 @@ import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.BaseAdapter
-import android.widget.RadioButton
-import android.widget.TextView
 import androidx.core.net.toUri
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
-import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
 /** The tag of the date range picker, so a recreated settings page listens to it again. */
 internal const val ICS_DATES_TAG = "ics_dates"
-
-/**
- * The advice to make a separate Google calendar first, then the Google-account calendars under their accounts, then
- * the app's own calendar last with its caption: Google Calendar does not show local calendars. Nothing is marked when
- * turning on ([selected] null); the calendar in use is marked when reopening. Cancelling calls [onCancel].
- */
-internal fun Fragment.showCalendarPicker(
-    calendars: List<WritableCalendar>,
-    selected: CalendarTarget?,
-    onPick: (CalendarTarget) -> Unit,
-    onCancel: () -> Unit
-) {
-    val rows = buildList {
-        add(PickerRow.Hint(getString(R.string.calendar_picker_advice)))
-        calendars.groupBy(WritableCalendar::account).forEach { (account, inAccount) ->
-            add(PickerRow.Header(account))
-            inAccount.forEach { add(PickerRow.Option(CalendarTarget.PhoneCalendar(it.id), it.name)) }
-        }
-        add(
-            PickerRow.Option(
-                CalendarTarget.AppCalendar,
-                getString(R.string.app_name),
-                getString(R.string.calendar_picker_own_caption)
-            )
-        )
-    }
-    val adapter = PickerAdapter(rows, selected)
-    MaterialAlertDialogBuilder(requireContext())
-        .setTitle(R.string.settings_calendar_target_title)
-        .setAdapter(adapter) { dialog, position ->
-            (rows[position] as? PickerRow.Option)?.let { option ->
-                dialog.dismiss()
-                if (option.target != selected) onPick(option.target)
-            }
-        }
-        .setNegativeButton(R.string.common_cancel) { _, _ -> onCancel() }
-        .setOnCancelListener { onCancel() }
-        .show()
-}
 
 /** The four ranges; «Свои даты» opens the date range picker instead of answering at once. */
 internal fun Fragment.showIcsRanges(onRange: (ScheduleExportRange) -> Unit, onCustom: () -> Unit) {
@@ -150,47 +102,3 @@ private fun Fragment.startSafely(intent: Intent) {
 private fun utcDate(millis: Long): LocalDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
 
 private const val ICS_TYPE = "text/calendar"
-
-private sealed interface PickerRow {
-    data class Header(val text: String) : PickerRow
-    data class Option(val target: CalendarTarget, val title: String, val caption: String? = null) : PickerRow
-    data class Hint(val text: String) : PickerRow
-}
-
-private class PickerAdapter(private val rows: List<PickerRow>, private val selected: CalendarTarget?) : BaseAdapter() {
-    override fun getCount() = rows.size
-    override fun getItem(position: Int) = rows[position]
-    override fun getItemId(position: Int) = position.toLong()
-    override fun getViewTypeCount() = 3
-    override fun areAllItemsEnabled() = false
-    override fun isEnabled(position: Int) = rows[position] is PickerRow.Option
-
-    override fun getItemViewType(position: Int) = when (rows[position]) {
-        is PickerRow.Header -> 0
-        is PickerRow.Option -> 1
-        is PickerRow.Hint -> 2
-    }
-
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        val row = rows[position]
-        val layout = when (row) {
-            is PickerRow.Header -> R.layout.item_calendar_picker_header
-            is PickerRow.Option -> R.layout.item_calendar_picker_option
-            is PickerRow.Hint -> R.layout.item_calendar_picker_hint
-        }
-        val view = convertView ?: LayoutInflater.from(parent.context).inflate(layout, parent, false)
-        when (row) {
-            is PickerRow.Header -> (view as TextView).text = row.text
-            is PickerRow.Hint -> (view as TextView).text = row.text
-            is PickerRow.Option -> {
-                view.findViewById<TextView>(R.id.calendar_option_title).text = row.title
-                view.findViewById<TextView>(R.id.calendar_option_caption).apply {
-                    text = row.caption
-                    isVisible = row.caption != null
-                }
-                view.findViewById<RadioButton>(R.id.calendar_option_radio).isChecked = row.target == selected
-            }
-        }
-        return view
-    }
-}

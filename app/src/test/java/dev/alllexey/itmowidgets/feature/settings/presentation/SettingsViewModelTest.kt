@@ -13,11 +13,9 @@ import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
-import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
@@ -1568,13 +1566,13 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `schedule page ends with the calendar group`() = runTest(mainDispatcherRule.dispatcher) {
+    fun `schedule page ends with the calendar group and its footer`() = runTest(mainDispatcherRule.dispatcher) {
         val fixture = createFixture(page = SettingsPage.SCHEDULE)
         advanceUntilIdle()
 
         val calendar = fixture.viewModel.sections.value.last()
         assertEquals(null, calendar.title)
-        assertEquals(null, calendar.footer)
+        assertEquals(UiText.Resource(R.string.settings_calendar_sync_footer), calendar.footer)
         assertEquals(listOf(SettingsViewModel.KEY_CALENDAR_SYNC, SettingsViewModel.KEY_ICS_EXPORT), calendar.items.map { it.key })
         val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC)
         assertEquals(UiText.Resource(R.string.settings_calendar_sync_title), toggle.title)
@@ -1582,30 +1580,17 @@ class SettingsViewModelTest {
         assertFalse(toggle.checked)
         val export = fixture.viewModel.action(SettingsViewModel.KEY_ICS_EXPORT)
         assertEquals(UiText.Resource(R.string.settings_ics_export_title), export.title)
+        assertEquals(UiText.Resource(R.string.settings_ics_export_description), export.description)
         assertEquals(R.drawable.ic_download, export.trailingIconRes)
         assertEquals(null, export.value)
         assertTrue(export.enabled)
-    }
 
-    @Test
-    fun `while synced the calendar row names the calendar in use`() = runTest(mainDispatcherRule.dispatcher) {
-        val sync = FakeCalendarSync(CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar))
-        val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
+        fixture.calendarSync.state.value = CalendarSyncState(enabled = true)
         advanceUntilIdle()
-
         assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
-        val row = fixture.viewModel.action(SettingsViewModel.KEY_CALENDAR_TARGET)
-        assertEquals(UiText.Resource(R.string.settings_calendar_target_title), row.title)
-        assertEquals(UiText.Resource(R.string.settings_calendar_target_own), row.value)
-        assertEquals(R.drawable.ic_chevron_right, row.trailingIconRes)
-
-        sync.state.value = CalendarSyncState(
-            enabled = true, target = CalendarTarget.PhoneCalendar(7), calendarName = "Учёба", calendarAccount = "student@gmail.com"
-        )
-        advanceUntilIdle()
         assertEquals(
-            UiText.Resource(R.string.settings_calendar_target_value, listOf("Учёба", "student@gmail.com")),
-            fixture.viewModel.action(SettingsViewModel.KEY_CALENDAR_TARGET).value
+            listOf(SettingsViewModel.KEY_CALENDAR_SYNC, SettingsViewModel.KEY_ICS_EXPORT),
+            fixture.viewModel.sections.value.last().items.map { it.key }
         )
     }
 
@@ -1619,7 +1604,6 @@ class SettingsViewModelTest {
             UiText.Resource(R.string.settings_calendar_sync_no_permission),
             fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).description
         )
-        assertTrue(fixture.viewModel.allItems().none { it.key == SettingsViewModel.KEY_CALENDAR_TARGET })
         sync.state.value = CalendarSyncState(problem = CalendarSyncProblem.CALENDAR_MISSING)
         advanceUntilIdle()
         assertEquals(
@@ -1629,85 +1613,28 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `turning sync on asks for the permission, then the picker with nothing marked, and enables only the choice`() =
+    fun `turning sync on asks for the permission, then turns on the app calendar, and off turns it off`() =
         runTest(mainDispatcherRule.dispatcher) {
-            val google = WritableCalendar(7, "Учёба", "student@gmail.com")
-            val sync = FakeCalendarSync(
-                CalendarSyncState(target = CalendarTarget.PhoneCalendar(7), problem = CalendarSyncProblem.NO_PERMISSION)
-            ).apply { calendars = listOf(google) }
+            val sync = FakeCalendarSync()
             val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
             val events = recordEvents(fixture)
             advanceUntilIdle()
 
             fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, true)
             advanceUntilIdle()
-            assertEquals(listOf(SettingsEvent.RequestCalendarAccess(CalendarAccessPurpose.ENABLE)), events)
+            assertEquals(listOf<SettingsEvent>(SettingsEvent.RequestCalendarAccess), events)
+            assertEquals(0, sync.enables)
 
-            fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.ENABLE)
+            fixture.viewModel.onCalendarAccessGranted()
             advanceUntilIdle()
-            assertEquals(SettingsEvent.ShowCalendarPicker(listOf(google), null), events.last())
-            // Nothing is enabled until a calendar is picked; a cancelled picker leaves the switch off.
-            assertTrue(sync.enabled.isEmpty())
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
-
-            fixture.viewModel.onCalendarPicked(CalendarTarget.AppCalendar)
-            advanceUntilIdle()
-            assertEquals(listOf<CalendarTarget>(CalendarTarget.AppCalendar), sync.enabled)
+            assertEquals(1, sync.enables)
             assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
 
             fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, false)
             advanceUntilIdle()
             assertEquals(1, sync.disables)
+            assertEquals(1, events.size)
         }
-
-    @Test
-    fun `leaving a Google calendar with events warns about Android's confirmation first`() =
-        runTest(mainDispatcherRule.dispatcher) {
-            val google = CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(7), hasEvents = true)
-            val sync = FakeCalendarSync(google)
-            val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
-            val events = recordEvents(fixture)
-            advanceUntilIdle()
-
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, false)
-            advanceUntilIdle()
-            assertEquals(listOf<SettingsEvent>(SettingsEvent.ConfirmCalendarRemoval(null)), events)
-            assertEquals(0, sync.disables)
-            fixture.viewModel.onCalendarRemovalConfirmed(null)
-            advanceUntilIdle()
-            assertEquals(1, sync.disables)
-
-            sync.state.value = google
-            fixture.viewModel.onCalendarPicked(CalendarTarget.AppCalendar)
-            advanceUntilIdle()
-            assertEquals(SettingsEvent.ConfirmCalendarRemoval(CalendarTarget.AppCalendar), events.last())
-            assertTrue(sync.enabled.isEmpty())
-            fixture.viewModel.onCalendarRemovalConfirmed(CalendarTarget.AppCalendar)
-            advanceUntilIdle()
-            assertEquals(listOf<CalendarTarget>(CalendarTarget.AppCalendar), sync.enabled)
-        }
-
-    @Test
-    fun `the app calendar or an empty Google one goes without the warning`() = runTest(mainDispatcherRule.dispatcher) {
-        for (state in listOf(
-            CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar, hasEvents = true),
-            CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(7), hasEvents = false)
-        )) {
-            val sync = FakeCalendarSync(state)
-            val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
-            val events = recordEvents(fixture)
-            advanceUntilIdle()
-
-            fixture.viewModel.onCalendarPicked(CalendarTarget.PhoneCalendar(8))
-            advanceUntilIdle()
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, false)
-            advanceUntilIdle()
-
-            assertTrue(events.none { it is SettingsEvent.ConfirmCalendarRemoval })
-            assertEquals(listOf<CalendarTarget>(CalendarTarget.PhoneCalendar(8)), sync.enabled)
-            assertEquals(1, sync.disables)
-        }
-    }
 
     @Test
     fun `a refused enable leaves the switch off with a message`() = runTest(mainDispatcherRule.dispatcher) {
@@ -1718,47 +1645,15 @@ class SettingsViewModelTest {
 
         for ((result, expected) in listOf(
             CalendarSyncResult.NO_PERMISSION to SettingsEvent.ShowMessage(UiText.Resource(R.string.calendar_access_denied)),
-            CalendarSyncResult.CALENDAR_MISSING to SettingsEvent.ShowMessage(UiText.Resource(R.string.calendar_missing)),
             CalendarSyncResult.FAILED to SettingsEvent.ShowError(AppError.Unknown())
         )) {
             sync.enableResult = result
-            fixture.viewModel.onCalendarPicked(CalendarTarget.PhoneCalendar(7))
+            fixture.viewModel.onCalendarAccessGranted()
             advanceUntilIdle()
             assertEquals(expected, events.last())
             assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
         }
     }
-
-    @Test
-    fun `the calendar row lists the calendars after the permission and moves sync to the picked one`() =
-        runTest(mainDispatcherRule.dispatcher) {
-            val google = WritableCalendar(7, "Учёба", "student@gmail.com")
-            val sync = FakeCalendarSync(CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar))
-                .apply { calendars = listOf(google) }
-            val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
-            val events = recordEvents(fixture)
-            advanceUntilIdle()
-
-            fixture.viewModel.onAction(SettingsViewModel.KEY_CALENDAR_TARGET)
-            fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.PICK)
-            advanceUntilIdle()
-            assertEquals(
-                listOf(
-                    SettingsEvent.RequestCalendarAccess(CalendarAccessPurpose.PICK),
-                    SettingsEvent.ShowCalendarPicker(listOf(google), CalendarTarget.AppCalendar)
-                ),
-                events
-            )
-
-            fixture.viewModel.onCalendarPicked(CalendarTarget.PhoneCalendar(7))
-            advanceUntilIdle()
-            assertEquals(listOf<CalendarTarget>(CalendarTarget.PhoneCalendar(7)), sync.enabled)
-
-            sync.calendars = null
-            fixture.viewModel.onCalendarAccessGranted(CalendarAccessPurpose.PICK)
-            advanceUntilIdle()
-            assertEquals(SettingsEvent.ShowMessage(UiText.Resource(R.string.calendar_access_denied)), events.last())
-        }
 
     @Test
     fun `an ics export shares the file, says when the range is empty and shows errors`() =

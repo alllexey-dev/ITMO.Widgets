@@ -3,8 +3,6 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.calendar
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
-import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.time.Instant
 import java.time.LocalDate
@@ -17,11 +15,8 @@ import kotlinx.coroutines.flow.Flow
 interface PhoneCalendars {
     fun hasAccess(): Boolean
 
-    /** Google-account calendars with access level contributor or higher; the picker offers only these. */
-    fun writable(): List<WritableCalendar>
-
-    /** The writable calendar [id], the app's own included; null when it is gone or read-only. */
-    fun find(id: Long): WritableCalendar?
+    /** Whether calendar [id] still exists; the app's own one, or one a previous build wrote to. */
+    fun exists(id: Long): Boolean
 
     /** The app's own local calendar, if it exists. */
     fun findOwn(): Long?
@@ -31,7 +26,7 @@ interface PhoneCalendars {
     /** Deletes the app's own calendar [id] with every event in it; any other calendar is left alone. */
     fun deleteOwn(id: Long)
 
-    /** Inserts [event] with the app's marker: its package and the occurrence key, and the ICS UID. */
+    /** Inserts [event] with the app's tag in its description and the local markers. */
     fun insert(calendarId: Long, event: CalendarEvent): Long
 
     /** False when the event no longer exists. */
@@ -40,8 +35,8 @@ interface PhoneCalendars {
     fun delete(eventId: Long)
 
     /**
-     * Live events of [calendarId] starting in [from]..[to] that carry the app's marker, whether or not their ids are
-     * stored: the sweep that finds events whose id was lost.
+     * Live events of [calendarId] starting in [from]..[to] that carry the app's tag or marker, whether or not their ids
+     * are stored: the sweep that finds events whose id was lost or that Google's sync wrote back.
      */
     fun marked(calendarId: Long, from: Instant, to: Instant): List<MarkedEvent>
 }
@@ -64,11 +59,9 @@ interface CalendarSyncRepository {
     /** A calendar the app left is still swept for events that came back; the work stays until it is clean. */
     suspend fun hasPendingCleanup(): Boolean
 
-    suspend fun enable(target: CalendarTarget): CalendarSyncResult
+    suspend fun enable(): CalendarSyncResult
 
     suspend fun disable()
-
-    suspend fun writableCalendars(): List<WritableCalendar>?
 
     /**
      * Sweeps calendars the app left, then brings the window today..today+28 in line with My ITMO. Success also when

@@ -4,8 +4,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
-import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.outcomeOf
@@ -28,8 +26,8 @@ class DefaultCalendarSync @Inject constructor(
 
     override fun observeState(): Flow<CalendarSyncState> = repository.observeState()
 
-    override suspend fun enable(target: CalendarTarget): CalendarSyncResult =
-        repository.enable(target).also { result ->
+    override suspend fun enable(): CalendarSyncResult =
+        repository.enable().also { result ->
             if (result == CalendarSyncResult.DONE) {
                 syncWork()
                 if (sessionTokens.hasRefreshToken()) scheduler.runOnce()
@@ -42,8 +40,6 @@ class DefaultCalendarSync @Inject constructor(
         repository.disable()
         syncWork()
     }
-
-    override suspend fun writableCalendars(): List<WritableCalendar>? = repository.writableCalendars()
 
     override suspend fun syncWork() {
         if (sessionTokens.hasRefreshToken() && needsWork()) scheduler.ensurePeriodic()

@@ -60,7 +60,7 @@ core/           cross-cutting; knows nothing about features
   schedule/     schedule preferences, widget-refresh, SubjectLessonsGateway and TeacherLessonsGateway
                 (TeacherLessons.kt) contracts; ScheduleChange with LessonSlot and LessonOccurrence (shared
                 with the home card) and ScheduleChangeTracking (the background check's switch and work);
-                CalendarSync with CalendarTarget and WritableCalendar (calendar synchronization for settings),
+                CalendarSync (synchronization with the app's own local calendar, for settings),
                 ScheduleIcsExport with ScheduleExportRange and IcsFile (the `.ics` export)
   services/     CustomServicesRepository — the Backend opt-in
   settings/     WidgetAppearanceRepository and CustomSpoilerRepository — widget appearance

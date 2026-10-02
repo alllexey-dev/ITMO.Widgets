@@ -42,7 +42,6 @@ import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
 import dev.alllexey.itmowidgets.databinding.FragmentSettingsBinding
-import dev.alllexey.itmowidgets.feature.settings.presentation.CalendarAccessPurpose
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
@@ -95,15 +94,15 @@ class SettingsFragment : Fragment() {
             )
         }
 
-    /** What the calendar permission dialog on screen was asked for; survives recreation. */
-    private var pendingCalendarAccess: CalendarAccessPurpose? = null
+    /** The calendar permission dialog is on screen for turning sync on; survives recreation. */
+    private var pendingCalendarAccess = false
 
     private val calendarPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-            val purpose = pendingCalendarAccess ?: return@registerForActivityResult
-            pendingCalendarAccess = null
+            if (!pendingCalendarAccess) return@registerForActivityResult
+            pendingCalendarAccess = false
             if (results.isNotEmpty() && results.values.all { it }) {
-                viewModel.onCalendarAccessGranted(purpose)
+                viewModel.onCalendarAccessGranted()
                 return@registerForActivityResult
             }
             restoreRenderedValues()
@@ -116,8 +115,7 @@ class SettingsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        pendingCalendarAccess = savedInstanceState?.getString(PENDING_CALENDAR_ACCESS)
-            ?.let(CalendarAccessPurpose::valueOf)
+        pendingCalendarAccess = savedInstanceState?.getBoolean(PENDING_CALENDAR_ACCESS) ?: false
         enterTransition = if (arguments?.getBoolean(ScreenTransitionHost.ARG_OVERLAY_ROOT) == true) null
         else SettingsLevelMotion.transition(forward = true)
         exitTransition = SettingsLevelMotion.transition(forward = true)
@@ -221,18 +219,7 @@ class SettingsFragment : Fragment() {
                     SettingsEvent.RequestQrTile -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         requireActivity().requestAddQrTile(viewModel::onQrTileResult)
                     }
-                    is SettingsEvent.RequestCalendarAccess -> requestCalendarAccess(event.purpose)
-                    is SettingsEvent.ShowCalendarPicker ->
-                        // Cancelled while turning on, the switch goes back off.
-                        showCalendarPicker(event.calendars, event.selected, viewModel::onCalendarPicked, ::restoreRenderedValues)
-                    is SettingsEvent.ConfirmCalendarRemoval -> MaterialAlertDialogBuilder(requireContext())
-                        .setMessage(R.string.calendar_removal_notice)
-                        .setNegativeButton(R.string.common_cancel) { _, _ -> restoreRenderedValues() }
-                        .setPositiveButton(R.string.calendar_access_continue) { _, _ ->
-                            viewModel.onCalendarRemovalConfirmed(event.next)
-                        }
-                        .setOnCancelListener { restoreRenderedValues() }
-                        .show()
+                    SettingsEvent.RequestCalendarAccess -> requestCalendarAccess()
                     SettingsEvent.ChooseIcsRange -> showIcsRanges(viewModel::onIcsRange) {
                         showIcsDatePicker(viewModel::onIcsRange)
                     }
@@ -317,7 +304,7 @@ class SettingsFragment : Fragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putBundle(PREVIEW_STATE, widgetPreview?.saveState() ?: previewState)
-        outState.putString(PENDING_CALENDAR_ACCESS, pendingCalendarAccess?.name)
+        outState.putBoolean(PENDING_CALENDAR_ACCESS, pendingCalendarAccess)
         super.onSaveInstanceState(outState)
     }
 
@@ -391,17 +378,17 @@ class SettingsFragment : Fragment() {
     }
 
     /** Granted: straight on. Otherwise a short explanation first when Android suggests one, then the system dialog. */
-    private fun requestCalendarAccess(purpose: CalendarAccessPurpose) {
+    private fun requestCalendarAccess() {
         val context = requireContext()
         val granted = CALENDAR_PERMISSIONS.all {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }
         if (granted) {
-            viewModel.onCalendarAccessGranted(purpose)
+            viewModel.onCalendarAccessGranted()
             return
         }
         val ask = {
-            pendingCalendarAccess = purpose
+            pendingCalendarAccess = true
             calendarPermissionLauncher.launch(CALENDAR_PERMISSIONS)
         }
         if (!shouldShowRequestPermissionRationale(android.Manifest.permission.WRITE_CALENDAR)) {
