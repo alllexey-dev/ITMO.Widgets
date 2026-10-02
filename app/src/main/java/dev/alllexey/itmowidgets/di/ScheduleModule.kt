@@ -16,6 +16,9 @@ import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.AndroidPhoneCalendars
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.DefaultScheduleChangeTracking
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleChangesHomeCardSource
@@ -28,6 +31,9 @@ import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleReposit
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
@@ -154,5 +160,28 @@ abstract class ScheduleModule {
     @Singleton
     abstract fun bindScheduleWidgetSnapshotCleaner(
         impl: ScheduleWidgetSnapshotStoreImpl
+    ): SessionDataCleaner
+
+    @Binds
+    abstract fun bindPhoneCalendars(
+        impl: AndroidPhoneCalendars
+    ): PhoneCalendars
+
+    @Binds
+    abstract fun bindOwnScheduleSource(
+        impl: MyItmoOwnScheduleSource
+    ): OwnScheduleSource
+
+    @Binds
+    @Singleton
+    abstract fun bindCalendarSyncRepository(
+        impl: CalendarSyncRepositoryImpl
+    ): CalendarSyncRepository
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindCalendarSyncSessionDataCleaner(
+        impl: CalendarSyncRepositoryImpl
     ): SessionDataCleaner
 }

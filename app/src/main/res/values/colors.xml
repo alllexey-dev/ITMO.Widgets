@@ -11,6 +11,9 @@
     <color name="lesson_type_free">#7A7A7A</color>
     <color name="lesson_type_default">#FF5C5C5C</color>
 
+    <!-- The app's own calendar «ITMO.Widgets» in the phone's calendar apps; the blue of the launcher icon. -->
+    <color name="calendar_app">#4984E2</color>
+
     <color name="recordbook_passed">#286B39</color>
 
     <color name="sport_score_attendance">#345BD1</color>
