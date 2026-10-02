@@ -32,7 +32,9 @@ data class SportCommonDetailsArgs(
     val available: Int?,
     val limit: Int?,
     val mapAddress: String?,
-    val registrationStatus: SportRegistrationStatus
+    val registrationStatus: SportRegistrationStatus,
+    /** For a predicted lesson, the catalog lesson it repeats; a shared link names the prediction by it. */
+    val prototypeLessonId: Long? = null
 ) : Serializable
 
 data class SportQueueEntryArgs(
@@ -92,9 +94,17 @@ fun SportCommon.toDetailsArgs(): SportCommonDetailsArgs {
         available = lesson?.available,
         limit = lesson?.limit,
         mapAddress = extractBuildingAddress(),
-        registrationStatus = SportRegistrationStatus.from(signed, signEntry)
+        registrationStatus = SportRegistrationStatus.from(signed, signEntry),
+        prototypeLessonId = prototypeLessonId()
     )
 }
+
+/** A predicted lesson keeps its prototype's id; a predicted booking carries it negated. */
+private fun SportCommon.prototypeLessonId(): Long? = when {
+    isLessonReal -> null
+    this is SportLesson -> lessonId
+    else -> -lessonId
+}?.takeIf { it > 0 }
 
 private fun SportQueueEntry.toDetailsArgs(): SportQueueEntryArgs {
     return SportQueueEntryArgs(

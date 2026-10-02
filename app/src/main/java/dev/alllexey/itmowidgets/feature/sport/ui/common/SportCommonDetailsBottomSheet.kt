@@ -18,6 +18,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.core.os.bundleOf
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -25,6 +26,7 @@ import dev.alllexey.itmowidgets.core.ui.ConditionTone
 import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
 import dev.alllexey.itmowidgets.core.ui.alignRailIcon
 import dev.alllexey.itmowidgets.core.ui.bind
+import dev.alllexey.itmowidgets.core.ui.shareText
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportCommonDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportBookingFriendStatusBinding
@@ -53,6 +55,8 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
 
     @Inject lateinit var timeProvider: AcademicTimeProvider
 
+    @Inject lateinit var shareLinks: ShareLinkFactory
+
     private val item: SportCommonDetailsArgs by lazy {
         requireNotNull(requireArguments().serializable(ARG_COMMON, SportCommonDetailsArgs::class.java))
     }
@@ -80,6 +84,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         bindAction()
         toolbar.setNavigationOnClickListener { dismiss() }
         val timing = SportSessionTiming(OffsetDateTime.parse(item.start), OffsetDateTime.parse(item.end), timeProvider)
+        bindShare(timing)
         val teacherIsu = UserScreenArgs.profileIsu(item.teacherIsu.toLong())
         header.bind(
             DetailsHeaderContent(
@@ -126,6 +131,31 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
                 RESULT_LESSON_ID to item.lessonId, RESULT_ACTION to action.name
             ))
             dismiss()
+        }
+    }
+
+    /** Upcoming catalog lessons, bookings and predictions can be shared; a predicted one by its prototype. */
+    private fun bindShare(timing: SportSessionTiming) = with(binding.toolbar) {
+        val link = shareLink() ?: return@with
+        inflateMenu(R.menu.sport_details)
+        menu.findItem(R.id.action_share).isVisible = true
+        setOnMenuItemClickListener { menuItem ->
+            if (menuItem.itemId != R.id.action_share) return@setOnMenuItemClickListener false
+            shareText(
+                getString(R.string.share_sport_title),
+                getString(R.string.share_sport_text, item.sectionName, timing.shareDateText(), link)
+            )
+            true
+        }
+    }
+
+    private fun shareLink(): String? {
+        if (!OffsetDateTime.parse(item.end).isAfter(timeProvider.now())) return null
+        val prototypeLessonId = item.prototypeLessonId
+        return when {
+            item.isReal && item.lessonId > 0 -> shareLinks.sportLesson(item.lessonId)
+            !item.isReal && prototypeLessonId != null -> shareLinks.predictedSportLesson(prototypeLessonId)
+            else -> null
         }
     }
 

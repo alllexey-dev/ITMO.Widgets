@@ -64,6 +64,19 @@
 
             </LinearLayout>
 
+            <ImageButton
+                android:id="@+id/profile_share_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/share_action"
+                android:padding="12dp"
+                android:src="@drawable/ic_share"
+                android:visibility="gone"
+                app:tint="?attr/colorOnSurface"
+                tools:visibility="visible" />
+
         </LinearLayout>
 
         <TextView

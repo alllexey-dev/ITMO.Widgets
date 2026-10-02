@@ -1072,4 +1072,9 @@
     <string name="app_link_unavailable_text">Ссылка повреждена. Попросите отправить её ещё раз.</string>
     <string name="sport_link_unavailable_title">Занятие недоступно</string>
     <string name="sport_link_unavailable_text">Занятие уже прошло или его нет в расписании на ближайшие три недели.</string>
+    <string name="share_action">Поделиться</string>
+    <string name="share_profile_title">Профиль в ITMO.Widgets</string>
+    <string name="share_profile_text">%1$s в ITMO.Widgets: %2$s</string>
+    <string name="share_sport_title">Занятие по спорту в ITMO.Widgets</string>
+    <string name="share_sport_text">%1$s, %2$s — ITMO.Widgets: %3$s</string>
 </resources>

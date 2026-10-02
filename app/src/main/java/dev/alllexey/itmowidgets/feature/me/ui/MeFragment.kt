@@ -19,6 +19,8 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
+import dev.alllexey.itmowidgets.core.ui.shareText
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openWebLogin
@@ -27,6 +29,7 @@ import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MeFragment : Fragment() {
@@ -35,6 +38,8 @@ class MeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: MeViewModel by viewModels()
+
+    @Inject lateinit var shareLinks: ShareLinkFactory
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -73,6 +78,7 @@ class MeFragment : Fragment() {
         binding.settingsRow.setOnClickListener { openScreen(AppScreen.SETTINGS) }
         binding.debugToolsRow.setOnClickListener { openScreen(AppScreen.DEBUG_TOOLS) }
         binding.signOutRow.setOnClickListener { showSignOutConfirmation() }
+        binding.profileShareButton.setOnClickListener { shareOwnProfile() }
         binding.githubButton.setOnClickListener { openLink(R.string.project_github_url) }
         // The native client handles tg:// itself; the web page is only a fallback.
         binding.telegramButton.setOnClickListener {
@@ -98,6 +104,16 @@ class MeFragment : Fragment() {
 
     private fun render(state: MeUiState) {
         MeRenderer.render(binding, state)
+    }
+
+    /** Shares the name and ISU the profile card shows. */
+    private fun shareOwnProfile() {
+        val state = viewModel.uiState.value
+        val isu = (state.user?.isu ?: state.backendUser?.isu)?.takeIf { it > 0 } ?: return
+        shareText(
+            getString(R.string.share_profile_title),
+            getString(R.string.share_profile_text, binding.profileName.text, shareLinks.profile(isu))
+        )
     }
 
     private fun openLink(vararg urlResources: Int) {

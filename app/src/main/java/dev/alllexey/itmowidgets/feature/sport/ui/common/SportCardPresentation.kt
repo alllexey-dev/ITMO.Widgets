@@ -42,6 +42,10 @@ fun SportSessionTiming.weekdayText(context: Context): String = when {
 
 fun SportSessionTiming.fullDateText(): String = fullDateText(start.toLocalDate())
 
+/** «вторник, 8 сентября, 18:30–20:00»: absolute, because the recipient reads it on another day. */
+fun SportSessionTiming.shareDateText(): String =
+    "${start.format(DateTimeFormatter.ofPattern("EEEE, d MMMM", RUSSIAN_LOCALE))}, ${timeText()}"
+
 fun SportRegistrationStatus.label(context: Context): String = context.getString(when (this) {
     SportRegistrationStatus.SIGNED -> R.string.sport_status_signed
     SportRegistrationStatus.AUTO_SIGNED -> R.string.sport_status_auto_sign_success

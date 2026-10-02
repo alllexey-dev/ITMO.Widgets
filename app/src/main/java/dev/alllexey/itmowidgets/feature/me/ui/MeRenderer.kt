@@ -27,6 +27,7 @@ object MeRenderer {
         val isu = user?.isu ?: backendUser?.isu
         binding.profileMeta.isVisible = isu != null
         binding.profileMeta.text = isu?.let { context.getString(R.string.me_isu, it) }
+        binding.profileShareButton.isVisible = isu != null && isu > 0
 
         val enabled = state.friends != MeFriendsSummary.Disabled
         binding.friendsRow.isVisible = enabled

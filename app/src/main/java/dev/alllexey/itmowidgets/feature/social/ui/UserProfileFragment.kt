@@ -18,6 +18,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -29,6 +30,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openReviewReport
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.openLink
+import dev.alllexey.itmowidgets.core.ui.shareText
 import dev.alllexey.itmowidgets.core.ui.userDisplayName
 import dev.alllexey.itmowidgets.databinding.FragmentUserProfileBinding
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileEvent
@@ -36,6 +38,7 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class UserProfileFragment : Fragment() {
@@ -46,6 +49,8 @@ class UserProfileFragment : Fragment() {
     private var renderRevision = 0L
 
     private val viewModel: UserProfileViewModel by viewModels()
+
+    @Inject lateinit var shareLinks: ShareLinkFactory
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,6 +64,7 @@ class UserProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.backButton.setOnClickListener { closeScreen() }
         binding.stateAction.setOnClickListener { viewModel.retry() }
+        binding.shareButton.setOnClickListener { shareProfile() }
         adapter = UserProfileAdapter(ProfileActions(
             onPrimary = viewModel::onPrimaryAction,
             onSecondary = viewModel::onSecondaryAction,
@@ -97,6 +103,8 @@ class UserProfileFragment : Fragment() {
 
     private fun render(state: UserProfileUiState) {
         val revision = ++renderRevision
+        // Only a page is worth sharing; a missing or failed profile has nothing to show the recipient.
+        binding.shareButton.isVisible = state is UserProfileUiState.Content
         when (state) {
             UserProfileUiState.Loading -> with(binding) {
                 loading.isVisible = true
@@ -138,6 +146,12 @@ class UserProfileFragment : Fragment() {
             UserScreenArgs.ISU to content.isu,
             UserScreenArgs.NAME to requireContext().userDisplayName(content.name, content.isu)
         ))
+    }
+
+    private fun shareProfile() {
+        val content = viewModel.uiState.value as? UserProfileUiState.Content ?: return
+        val name = requireContext().userDisplayName(content.name, content.isu)
+        shareText(getString(R.string.share_profile_title), getString(R.string.share_profile_text, name, shareLinks.profile(content.isu)))
     }
 
     /** The number goes to the clipboard; Android 13 and newer confirm a copy themselves. */
