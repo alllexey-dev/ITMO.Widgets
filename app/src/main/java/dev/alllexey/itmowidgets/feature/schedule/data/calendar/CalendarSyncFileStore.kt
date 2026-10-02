@@ -38,6 +38,8 @@ internal data class StoredCalendarSync(
 internal data class StoredEvent(
     val key: String,
     val eventId: Long,
+    /** The calendar the event is in; null in files written before it was stored: the state's calendar. */
+    val calendarId: Long? = null,
     val start: Long,
     val end: Long,
     val title: String,
@@ -83,10 +85,14 @@ internal fun StoredCalendarSync.toModel() = CalendarSyncState(
     },
     calendarName = calendarName.takeIf { target == TARGET_PHONE },
     calendarAccount = calendarAccount.takeIf { target == TARGET_PHONE },
-    problem = problem?.let(CalendarSyncProblem::valueOf)
+    problem = problem?.let(CalendarSyncProblem::valueOf),
+    hasEvents = calendarId != null && events.any { calendarOf(it) == calendarId }
 )
 
 internal val StoredCalendarSync.syncedEvents: List<SyncedEvent> get() = events.map { it.toModel() }
+
+/** The calendar [event] is in. */
+internal fun StoredCalendarSync.calendarOf(event: StoredEvent): Long? = event.calendarId ?: calendarId
 
 internal fun StoredEvent.toModel() = SyncedEvent(
     eventId = eventId,
@@ -100,9 +106,10 @@ internal fun StoredEvent.toModel() = SyncedEvent(
     )
 )
 
-internal fun SyncedEvent.toStored() = StoredEvent(
+internal fun SyncedEvent.toStored(calendarId: Long?) = StoredEvent(
     key = event.key,
     eventId = eventId,
+    calendarId = calendarId,
     start = event.start.toEpochMilli(),
     end = event.end.toEpochMilli(),
     title = event.title,

@@ -8,7 +8,9 @@ import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncScheduler
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.MarkedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
+import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -24,11 +26,25 @@ class FakePhoneCalendars : PhoneCalendars {
     var deletes = 0
     /** The insert call with this number (1-based, counting failed ones) throws, as a provider failing midway. */
     var failOnInsert: Int? = null
+    /** Event ids whose delete throws. */
+    val failOnDelete = mutableSetOf<Long>()
+    /** Runs inside every insert, after the event is in; a test cancels the caller here. */
+    var onInsert: () -> Unit = {}
+    /** Events without the app's marker, as the user's own. */
+    val unmarked = mutableSetOf<Long>()
     private var insertCalls = 0
     private var nextId = 100L
 
     fun add(calendar: WritableCalendar) {
         calendars[calendar.id] = calendar
+    }
+
+    /** An event of the user in [calendarId], without the app's marker. */
+    fun insertForeign(calendarId: Long, event: CalendarEvent): Long {
+        val id = nextId++
+        events[id] = calendarId to event
+        unmarked += id
+        return id
     }
 
     fun eventsIn(calendarId: Long): List<CalendarEvent> =
@@ -63,6 +79,7 @@ class FakePhoneCalendars : PhoneCalendars {
         inserts++
         val id = nextId++
         events[id] = calendarId to event
+        onInsert()
         id
     }
 
@@ -74,9 +91,16 @@ class FakePhoneCalendars : PhoneCalendars {
     }
 
     override fun delete(eventId: Long) = checked {
+        if (eventId in failOnDelete) throw IllegalStateException("The provider failed")
         deletes++
         events.remove(eventId)
         Unit
+    }
+
+    override fun marked(calendarId: Long, from: Instant, to: Instant): List<MarkedEvent> = checked {
+        events.filter { (id, value) ->
+            id !in unmarked && value.first == calendarId && value.second.start >= from && value.second.start < to
+        }.map { (id, value) -> MarkedEvent(id, value.second.key, value.second.end) }
     }
 
     private fun <T> checked(block: () -> T): T {

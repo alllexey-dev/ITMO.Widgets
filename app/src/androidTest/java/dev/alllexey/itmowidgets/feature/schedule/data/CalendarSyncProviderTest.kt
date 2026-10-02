@@ -104,6 +104,14 @@ class CalendarSyncProviderTest {
         assertEquals(Events.AVAILABILITY_BUSY, first.availability)
         assertEquals("lesson-1@widgets.alllexey.dev", first.uid)
         assertEquals(0, first.hasAlarm)
+        resolver.query(
+            ContentUris.withAppendedId(Events.CONTENT_URI, first.id),
+            arrayOf(Events.CUSTOM_APP_PACKAGE, Events.CUSTOM_APP_URI), null, null, null
+        )!!.use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals(context.packageName, cursor.getString(0))
+            assertEquals("lesson-1", cursor.getString(1))
+        }
         resolver.query(CalendarContract.Reminders.CONTENT_URI, arrayOf(CalendarContract.Reminders._ID),
             "${CalendarContract.Reminders.EVENT_ID} = ?", arrayOf(first.id.toString()), null)!!.use { assertEquals(0, it.count) }
     }
@@ -127,7 +135,7 @@ class CalendarSyncProviderTest {
     }
 
     @Test
-    fun pickingAnotherCalendarMovesTheEventsAndDeletesTheAppCalendar() = runBlocking {
+    fun pickingAnotherCalendarDeletesTheAppCalendarAndTheNextSyncFillsTheNewOne() = runBlocking {
         days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
         val repository = enabled()
         repository.sync()
@@ -158,6 +166,31 @@ class CalendarSyncProviderTest {
 
         assertEquals(listOf(foreign), events(other).map { it.id })
         assertFalse(repository.isEnabled())
+    }
+
+    @Test
+    fun eventsWhoseIdsWereLostAreFoundByTheMarker() = runBlocking {
+        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
+        val other = createOtherCalendar()
+        val foreign = insertForeignEvent(other)
+        val store = CalendarSyncFileStore(folder, Gson())
+        repository().apply {
+            assertEquals(CalendarSyncResult.DONE, enable(CalendarTarget.PhoneCalendar(other)))
+            sync()
+        }
+        assertEquals(3, events(other).size)
+        // The file forgets the ids, as on the phone where a switch-off left events behind.
+        store.write(store.read()!!.copy(events = emptyList()))
+
+        // A sync replaces the untracked copies instead of doubling them...
+        repository().sync()
+        assertEquals(3, events(other).size)
+        assertEquals(listOf("lesson-1", "lesson-2"), events(other).filter { it.id != foreign }.map { it.uid.substringBefore('@') })
+        store.write(store.read()!!.copy(events = emptyList()))
+
+        // ...and turning off sweeps them by the marker, leaving the user's own event.
+        repository().disable()
+        assertEquals(listOf(foreign), events(other).map { it.id })
     }
 
     @Test

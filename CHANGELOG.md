@@ -19,7 +19,9 @@ publication or deployment.
   bookings included; new lessons are added, changed ones updated, vanished
   ones removed, past events stay, repeated syncs add no duplicates. It runs
   every 2 hours and right after picking a calendar or a pull on
-  the own schedule; turning it off removes the app's events. A revoked
+  the own schedule; turning it off removes the app's events, also those whose
+  ids were lost (found by the app's package marker), and a note warns that
+  Android may ask to confirm deleting them from a Google calendar. A revoked
   permission or a deleted calendar turns it off with the reason under the
   switch. The calendar permission is asked only there.
 - `Выгрузить в .ics` on the same page writes a week, two weeks, the rest of the

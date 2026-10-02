@@ -32,7 +32,9 @@ data class CalendarSyncState(
     /** The account of the picked calendar; null for the app's own calendar. */
     val calendarAccount: String? = null,
     /** Why synchronization turned itself off; cleared when the user turns it on or off. */
-    val problem: CalendarSyncProblem? = null
+    val problem: CalendarSyncProblem? = null,
+    /** The calendar in use holds events of the app, which turning off or picking another calendar deletes. */
+    val hasEvents: Boolean = false
 )
 
 /** Synchronization of the own schedule with the phone's calendar; implemented by the schedule feature. */

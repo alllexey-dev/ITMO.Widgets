@@ -27,7 +27,7 @@ class CalendarSyncFileStoreTest {
             calendarId = 7,
             calendarName = "Учёба",
             calendarAccount = "student@gmail.com",
-            events = listOf(StoredEvent("lesson-1", 42, 1_000, 2_000, "Физика", "1506", "Лекция"))
+            events = listOf(StoredEvent("lesson-1", 42, 7, 1_000, 2_000, "Физика", "1506", "Лекция"))
         )
 
         store.write(state)
@@ -35,11 +35,13 @@ class CalendarSyncFileStoreTest {
         assertEquals(state, store.read())
         assertFalse(File(directory, "state.json.tmp").exists())
         assertEquals(
-            CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(7), calendarName = "Учёба", calendarAccount = "student@gmail.com"),
+            CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(7), calendarName = "Учёба", calendarAccount = "student@gmail.com", hasEvents = true),
             state.toModel()
         )
         assertEquals("lesson-1", state.syncedEvents.single().event.key)
-        assertEquals(state.events, state.syncedEvents.map { it.toStored() })
+        assertEquals(7L, state.calendarOf(state.events.single()))
+        assertEquals(7L, state.copy(events = listOf(state.events.single().copy(calendarId = null))).calendarOf(state.events.single().copy(calendarId = null)))
+        assertEquals(state.events, state.syncedEvents.map { it.toStored(7) })
     }
 
     @Test

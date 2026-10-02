@@ -14,7 +14,9 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.MarkedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
+import java.time.Instant
 import javax.inject.Inject
 
 /**
@@ -79,10 +81,7 @@ class AndroidPhoneCalendars @Inject constructor(
     }
 
     override fun insert(calendarId: Long, event: CalendarEvent): Long {
-        val values = values(event).apply {
-            put(Events.CALENDAR_ID, calendarId)
-            put(Events.UID_2445, event.uid)
-        }
+        val values = values(event).apply { put(Events.CALENDAR_ID, calendarId) }
         val uri = checkNotNull(resolver.insert(Events.CONTENT_URI, values)) { "The event was not inserted" }
         return ContentUris.parseId(uri)
     }
@@ -108,7 +107,30 @@ class AndroidPhoneCalendars @Inject constructor(
         put(Events.DESCRIPTION, event.description.orEmpty())
         put(Events.AVAILABILITY, Events.AVAILABILITY_BUSY)
         put(Events.HAS_ALARM, 0)
+        // The marker: the Google sync adapter may rewrite UID_2445, so the package and key are the reliable part.
+        put(Events.UID_2445, event.uid)
+        put(Events.CUSTOM_APP_PACKAGE, context.packageName)
+        put(Events.CUSTOM_APP_URI, event.key)
     }
+
+    override fun marked(calendarId: Long, from: Instant, to: Instant): List<MarkedEvent> = resolver.query(
+        Events.CONTENT_URI,
+        arrayOf(Events._ID, Events.CUSTOM_APP_URI, Events.DTEND, Events.UID_2445),
+        "${Events.CALENDAR_ID} = ? AND ${Events.DELETED} = 0 AND ${Events.DTSTART} >= ? AND ${Events.DTSTART} < ? AND " +
+            "(${Events.CUSTOM_APP_PACKAGE} = ? OR ${Events.UID_2445} LIKE ?)",
+        arrayOf(
+            calendarId.toString(), from.toEpochMilli().toString(), to.toEpochMilli().toString(), context.packageName,
+            "%@${CalendarEvent.UID_DOMAIN}"
+        ),
+        null
+    )?.use { cursor ->
+        buildList {
+            while (cursor.moveToNext()) {
+                val key = cursor.getString(1) ?: cursor.getString(3)?.substringBefore('@')
+                add(MarkedEvent(cursor.getLong(0), key, Instant.ofEpochMilli(cursor.getLong(2))))
+            }
+        }
+    }.orEmpty()
 
     private fun query(selection: String, arguments: Array<String>): List<WritableCalendar> = resolver.query(
         Calendars.CONTENT_URI,

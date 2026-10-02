@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
 import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
+import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
@@ -30,13 +31,23 @@ interface PhoneCalendars {
     /** Deletes the app's own calendar [id] with every event in it; any other calendar is left alone. */
     fun deleteOwn(id: Long)
 
+    /** Inserts [event] with the app's marker: its package and the occurrence key, and the ICS UID. */
     fun insert(calendarId: Long, event: CalendarEvent): Long
 
     /** False when the event no longer exists. */
     fun update(eventId: Long, event: CalendarEvent): Boolean
 
     fun delete(eventId: Long)
+
+    /**
+     * Live events of [calendarId] starting in [from]..[to] that carry the app's marker, whether or not their ids are
+     * stored: the sweep that finds events whose id was lost.
+     */
+    fun marked(calendarId: Long, from: Instant, to: Instant): List<MarkedEvent>
 }
+
+/** An event of the phone's calendar with the app's marker. */
+data class MarkedEvent(val eventId: Long, val key: String?, val end: Instant)
 
 /** The own personal schedule straight from My ITMO, without the schedule cache and without Backend. */
 fun interface OwnScheduleSource {

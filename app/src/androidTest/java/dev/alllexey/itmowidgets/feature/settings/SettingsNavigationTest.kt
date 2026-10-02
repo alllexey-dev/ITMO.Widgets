@@ -402,6 +402,28 @@ class SettingsNavigationTest {
                     }
                 }
 
+                // Leaving a Google calendar with events: the note about Android's confirmation comes first.
+                sync.state.value = CalendarSyncState(
+                    enabled = true, target = CalendarTarget.PhoneCalendar(7), calendarName = "Учёба",
+                    calendarAccount = "student@gmail.com", hasEvents = true
+                )
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    openPage(scenario, SettingsPage.SCHEDULE)
+                    onView(withText(R.string.settings_calendar_sync_title)).perform(click())
+                    settle()
+                    onView(withText(R.string.calendar_removal_notice)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    Screenshots.capture("calendar-export-screenshots", "calendar-removal-notice-${spec.name}") { settle() }
+                    onView(withText(R.string.common_cancel)).inRoot(isDialog()).perform(click())
+                    settle()
+                    assertTrue(sync.state.value.enabled)
+                    scenario.onActivity { activity -> assertTrue(calendarSwitch(activity).isChecked) }
+                    onView(withText(R.string.settings_calendar_sync_title)).perform(click())
+                    settle()
+                    onView(withText(R.string.calendar_access_continue)).inRoot(isDialog()).perform(click())
+                    settle()
+                    assertFalse(sync.state.value.enabled)
+                }
+
                 // Without Google calendars the list is the own calendar with its caption.
                 sync.state.value = CalendarSyncState()
                 sync.calendars = emptyList()

@@ -1661,6 +1661,55 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `leaving a Google calendar with events warns about Android's confirmation first`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val google = CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(7), hasEvents = true)
+            val sync = FakeCalendarSync(google)
+            val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
+            val events = recordEvents(fixture)
+            advanceUntilIdle()
+
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, false)
+            advanceUntilIdle()
+            assertEquals(listOf<SettingsEvent>(SettingsEvent.ConfirmCalendarRemoval(null)), events)
+            assertEquals(0, sync.disables)
+            fixture.viewModel.onCalendarRemovalConfirmed(null)
+            advanceUntilIdle()
+            assertEquals(1, sync.disables)
+
+            sync.state.value = google
+            fixture.viewModel.onCalendarPicked(CalendarTarget.AppCalendar)
+            advanceUntilIdle()
+            assertEquals(SettingsEvent.ConfirmCalendarRemoval(CalendarTarget.AppCalendar), events.last())
+            assertTrue(sync.enabled.isEmpty())
+            fixture.viewModel.onCalendarRemovalConfirmed(CalendarTarget.AppCalendar)
+            advanceUntilIdle()
+            assertEquals(listOf<CalendarTarget>(CalendarTarget.AppCalendar), sync.enabled)
+        }
+
+    @Test
+    fun `the app calendar or an empty Google one goes without the warning`() = runTest(mainDispatcherRule.dispatcher) {
+        for (state in listOf(
+            CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar, hasEvents = true),
+            CalendarSyncState(enabled = true, target = CalendarTarget.PhoneCalendar(7), hasEvents = false)
+        )) {
+            val sync = FakeCalendarSync(state)
+            val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)
+            val events = recordEvents(fixture)
+            advanceUntilIdle()
+
+            fixture.viewModel.onCalendarPicked(CalendarTarget.PhoneCalendar(8))
+            advanceUntilIdle()
+            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, false)
+            advanceUntilIdle()
+
+            assertTrue(events.none { it is SettingsEvent.ConfirmCalendarRemoval })
+            assertEquals(listOf<CalendarTarget>(CalendarTarget.PhoneCalendar(8)), sync.enabled)
+            assertEquals(1, sync.disables)
+        }
+    }
+
+    @Test
     fun `a refused enable leaves the switch off with a message`() = runTest(mainDispatcherRule.dispatcher) {
         val sync = FakeCalendarSync()
         val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = sync)

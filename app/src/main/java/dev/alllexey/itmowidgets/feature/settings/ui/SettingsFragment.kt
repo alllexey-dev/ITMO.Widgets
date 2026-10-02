@@ -225,6 +225,14 @@ class SettingsFragment : Fragment() {
                     is SettingsEvent.ShowCalendarPicker ->
                         // Cancelled while turning on, the switch goes back off.
                         showCalendarPicker(event.calendars, event.selected, viewModel::onCalendarPicked, ::restoreRenderedValues)
+                    is SettingsEvent.ConfirmCalendarRemoval -> MaterialAlertDialogBuilder(requireContext())
+                        .setMessage(R.string.calendar_removal_notice)
+                        .setNegativeButton(R.string.common_cancel) { _, _ -> restoreRenderedValues() }
+                        .setPositiveButton(R.string.calendar_access_continue) { _, _ ->
+                            viewModel.onCalendarRemovalConfirmed(event.next)
+                        }
+                        .setOnCancelListener { restoreRenderedValues() }
+                        .show()
                     SettingsEvent.ChooseIcsRange -> showIcsRanges(viewModel::onIcsRange) {
                         showIcsDatePicker(viewModel::onIcsRange)
                     }

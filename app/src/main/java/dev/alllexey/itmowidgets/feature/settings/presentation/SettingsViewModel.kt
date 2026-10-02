@@ -79,6 +79,11 @@ sealed interface SettingsEvent {
     /** Asks for the calendar permission when needed, then reports back through `onCalendarAccessGranted`. */
     data class RequestCalendarAccess(val purpose: CalendarAccessPurpose) : SettingsEvent
     data class ShowCalendarPicker(val calendars: List<WritableCalendar>, val selected: CalendarTarget?) : SettingsEvent
+    /**
+     * Turning off ([next] null) or moving to [next] deletes the app's events from a Google calendar; Android's sync
+     * guard may ask the user to confirm that, so the screen says so first.
+     */
+    data class ConfirmCalendarRemoval(val next: CalendarTarget?) : SettingsEvent
     data object ChooseIcsRange : SettingsEvent
     data class ShareIcs(val file: IcsFile) : SettingsEvent
     data class ShowMessage(val text: UiText) : SettingsEvent
@@ -276,7 +281,10 @@ class SettingsViewModel @Inject constructor(
             KEY_CALENDAR_SYNC -> if (checked) {
                 eventChannel.trySend(SettingsEvent.RequestCalendarAccess(CalendarAccessPurpose.ENABLE))
             } else {
-                updateLocalSetting { calendarSync.disable() }
+                viewModelScope.launch {
+                    if (removesFromGoogle(next = null)) eventChannel.send(SettingsEvent.ConfirmCalendarRemoval(null))
+                    else onCalendarRemovalConfirmed(null)
+                }
             }
             KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SCHEDULE_CHANGES, KEY_HOME_CARD_MARKS, KEY_HOME_CARD_SPORT,
             KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
@@ -387,7 +395,22 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun onCalendarPicked(target: CalendarTarget) {
-        viewModelScope.launch { enableCalendarSync(target) }
+        viewModelScope.launch {
+            if (removesFromGoogle(next = target)) eventChannel.send(SettingsEvent.ConfirmCalendarRemoval(target))
+            else enableCalendarSync(target)
+        }
+    }
+
+    /** The user read the note about Android's confirmation: turn off ([next] null) or move to [next]. */
+    fun onCalendarRemovalConfirmed(next: CalendarTarget?) {
+        if (next == null) updateLocalSetting { calendarSync.disable() }
+        else viewModelScope.launch { enableCalendarSync(next) }
+    }
+
+    /** Deleting from a Google calendar may trip Android's guard against too many deletions; local calendars do not. */
+    private suspend fun removesFromGoogle(next: CalendarTarget?): Boolean {
+        val state = calendarSync.observeState().first()
+        return state.enabled && state.hasEvents && state.target is CalendarTarget.PhoneCalendar && next != state.target
     }
 
     /** One `.ics` file at a time; a range without lessons says so instead of sharing an empty file. */

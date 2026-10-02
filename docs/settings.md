@@ -220,7 +220,10 @@ only among installed instances of that same format:
   Calendar.
 - `Календарь` (while on) shows the calendar in use, `Учёба, student@gmail.com`
   or `ITMO.Widgets, на этом телефоне`, and opens the picker with it marked.
-  Picking another moves the app's events there.
+  Picking another deletes the app's events from the old calendar and fills
+  the new one. Leaving a Google calendar with the app's events (turning off or
+  picking another) first says `Android может попросить подтвердить удаление
+  пар из календаря — выберите «Удалить элементы».` (`Отмена`, `Продолжить`).
 - `Выгрузить в .ics` (`ic_download`) offers `Неделя`, `2 недели`,
   `До конца семестра` and `Свои даты`; while the file is written the row says
   `Готовим файл…` and is disabled. `Файл готов` names the number of lessons
