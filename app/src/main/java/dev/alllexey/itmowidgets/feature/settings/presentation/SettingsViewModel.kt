@@ -14,10 +14,7 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
-import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
-import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -76,8 +73,8 @@ sealed interface SettingsEvent {
     data object RequestQrTile : SettingsEvent
     /** Asks for the calendar permission when needed, then reports back through `onCalendarAccessGranted`. */
     data object RequestCalendarAccess : SettingsEvent
-    data object ChooseIcsRange : SettingsEvent
-    data class ShareIcs(val file: IcsFile) : SettingsEvent
+    /** The «Выгрузить в .ics» sheet. */
+    data object OpenIcsExport : SettingsEvent
     data class ShowMessage(val text: UiText) : SettingsEvent
     data class ShowError(val error: AppError) : SettingsEvent
 }
@@ -94,7 +91,6 @@ class SettingsViewModel @Inject constructor(
     private val backgroundWork: BackgroundWorkAccess,
     private val tileAccess: QuickSettingsTileAccess,
     private val calendarSync: CalendarSync,
-    private val icsExport: ScheduleIcsExport,
     diagnostics: AppDiagnostics,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -126,7 +122,6 @@ class SettingsViewModel @Inject constructor(
     // Only the schedule page shows it; other pages do not wait for its file.
     private val calendarState = if (page == SettingsPage.SCHEDULE) calendarSync.observeState()
     else flowOf(CalendarSyncState())
-    private val icsExportBusy = MutableStateFlow(false)
     private val localSettings = repository.observeLocalSettings()
         .shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
 
@@ -160,8 +155,7 @@ class SettingsViewModel @Inject constructor(
             customSpoilerBusy,
             diagnosticsCount,
             backgroundWorkUnrestricted,
-            calendarState,
-            icsExportBusy
+            calendarState
         ) { values ->
             @Suppress("UNCHECKED_CAST")
             buildSections(
@@ -172,8 +166,7 @@ class SettingsViewModel @Inject constructor(
                 imageBusy = values[4] as Boolean,
                 diagnosticsCount = values[5] as Int,
                 backgroundWorkRestricted = values[6] == false,
-                calendar = values[7] as CalendarSyncState,
-                icsBusy = values[8] as Boolean
+                calendar = values[7] as CalendarSyncState
             )
         }
             .onEach {
@@ -353,7 +346,7 @@ class SettingsViewModel @Inject constructor(
             KEY_DIAGNOSTICS -> eventChannel.trySend(SettingsEvent.OpenDiagnostics)
             KEY_BACKGROUND_WORK -> eventChannel.trySend(SettingsEvent.OpenBackgroundWorkSettings)
             KEY_QR_TILE -> eventChannel.trySend(SettingsEvent.RequestQrTile)
-            KEY_ICS_EXPORT -> if (!icsExportBusy.value) eventChannel.trySend(SettingsEvent.ChooseIcsRange)
+            KEY_ICS_EXPORT -> eventChannel.trySend(SettingsEvent.OpenIcsExport)
             KEY_RESTART_ONBOARDING -> viewModelScope.launch {
                 // The stored flag is what the root gate reads; the overlay only has to get out of the way.
                 onboardingRepository.reset()
@@ -372,23 +365,6 @@ class SettingsViewModel @Inject constructor(
                 CalendarSyncResult.DONE -> Unit
                 CalendarSyncResult.NO_PERMISSION -> showMessage(R.string.calendar_access_denied)
                 CalendarSyncResult.FAILED -> eventChannel.send(SettingsEvent.ShowError(AppError.Unknown()))
-            }
-        }
-    }
-
-    /** One `.ics` file at a time; a range without lessons says so instead of sharing an empty file. */
-    fun onIcsRange(range: ScheduleExportRange) {
-        if (icsExportBusy.value) return
-        icsExportBusy.value = true
-        viewModelScope.launch {
-            try {
-                when (val result = icsExport.export(range)) {
-                    is AppResult.Success -> result.value?.let { eventChannel.send(SettingsEvent.ShareIcs(it)) }
-                        ?: showMessage(R.string.ics_empty)
-                    is AppResult.Failure -> eventChannel.send(SettingsEvent.ShowError(result.error))
-                }
-            } finally {
-                icsExportBusy.value = false
             }
         }
     }
@@ -496,8 +472,7 @@ class SettingsViewModel @Inject constructor(
         imageBusy: Boolean,
         diagnosticsCount: Int,
         backgroundWorkRestricted: Boolean,
-        calendar: CalendarSyncState,
-        icsBusy: Boolean
+        calendar: CalendarSyncState
     ): List<SettingSection> = when (page) {
         SettingsPage.ROOT -> listOf(
             SettingSection(
@@ -707,7 +682,7 @@ class SettingsViewModel @Inject constructor(
                 ),
                 footer = UiText.Resource(R.string.settings_schedule_footer)
             ),
-            calendarSection(calendar, icsBusy)
+            calendarSection(calendar)
         )
         SettingsPage.RECORDBOOK -> listOf(
             SettingSection(
@@ -878,7 +853,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     /** The switch says where the lessons go, or why it turned itself off. */
-    private fun calendarSection(calendar: CalendarSyncState, icsBusy: Boolean) = SettingSection(
+    private fun calendarSection(calendar: CalendarSyncState) = SettingSection(
         title = null,
         items = listOf(
             SettingItem.Toggle(
@@ -897,9 +872,7 @@ class SettingsViewModel @Inject constructor(
                 key = KEY_ICS_EXPORT,
                 title = UiText.Resource(R.string.settings_ics_export_title),
                 description = UiText.Resource(R.string.settings_ics_export_description),
-                value = UiText.Resource(R.string.settings_ics_export_busy).takeIf { icsBusy },
-                trailingIconRes = R.drawable.ic_download,
-                enabled = !icsBusy
+                trailingIconRes = R.drawable.ic_download
             )
         )
     )

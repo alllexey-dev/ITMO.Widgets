@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/design_spacing_group">
+
+    <View
+        android:id="@+id/drag_handle"
+        style="@style/Widget.ItmoWidgets.SheetHandle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/design_screen_margin"
+        android:layout_marginTop="@dimen/design_spacing_group"
+        android:accessibilityHeading="true"
+        android:text="@string/settings_ics_export_title"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
+        android:textColor="?attr/colorOnSurface"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/drag_handle"
+        tools:targetApi="p" />
+
+    <TextView
+        android:id="@+id/subtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/design_screen_margin"
+        android:text="@string/ics_sheet_subtitle"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title" />
+
+    <!-- The choice, loading, the file and failures share one bounded area, so a state change does not move the sheet. -->
+    <FrameLayout
+        android:id="@+id/content"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/design_spacing_group"
+        android:minHeight="@dimen/ics_export_content_min_height"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/subtitle">
+
+        <LinearLayout
+            android:id="@+id/ranges"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/design_screen_margin"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <include
+                android:id="@+id/range_week"
+                layout="@layout/item_ics_range" />
+
+            <include
+                android:id="@+id/range_two_weeks"
+                layout="@layout/item_ics_range" />
+
+            <include
+                android:id="@+id/range_semester"
+                layout="@layout/item_ics_range" />
+
+            <include
+                android:id="@+id/range_custom"
+                layout="@layout/item_ics_range" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/preparing"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminate="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/design_spacing_content"
+                android:text="@string/ics_preparing"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ready"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/design_screen_margin"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="@dimen/design_state_inline_icon"
+                android:layout_height="@dimen/design_state_inline_icon"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_event_note"
+                app:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:id="@+id/ready_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/design_spacing_content"
+                android:accessibilityHeading="true"
+                android:text="@string/ics_ready_title"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorOnSurface"
+                tools:targetApi="p" />
+
+            <TextView
+                android:id="@+id/ready_summary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/design_spacing_related"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="23 пары, 5–11 октября" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/send"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/design_spacing_section"
+                android:minHeight="@dimen/design_touch_target"
+                android:text="@string/ics_send" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/open"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/design_spacing_compact"
+                android:minHeight="@dimen/design_touch_target"
+                android:text="@string/ics_open" />
+
+            <TextView
+                android:id="@+id/ready_hint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/design_spacing_content"
+                android:gravity="center"
+                android:text="@string/ics_ready_hint"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+        <include
+            android:id="@+id/state"
+            layout="@layout/item_content_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

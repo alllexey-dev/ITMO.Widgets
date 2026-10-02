@@ -23,10 +23,13 @@ publication or deployment.
   calendar picked in an earlier development build is left: the app's events
   there are deleted and swept again by the tag `ITMO.Widgets · <lesson>` in
   their description for 3 days, and synchronization is off until turned on.
-- `Выгрузить в .ics` on the same page writes a week, two weeks, the rest of the
-  semester or chosen dates to an RFC 5545 file with stable UIDs and offers
-  `Отправить` and `Открыть в календаре`; its hint suggests importing it into a
-  separate calendar in Google Calendar on calendar.google.com.
+- `Выгрузить в .ics` on the same page opens a sheet: a week, two weeks, the
+  rest of the semester or chosen dates, each with its days; then the file
+  (an RFC 5545 calendar with stable UIDs) with `Отправить`, `Открыть в
+  календаре` and the advice to import it into a separate calendar; an empty
+  range and a failure stay in the same sheet. The calendar permission is
+  explained in a short Material dialog with `Разрешить` or, after a refusal for
+  good, `Открыть настройки`.
 - Core, Backend and MyItmoApi are unchanged for the calendar.
 - The «QR-пропуск» quick-settings tile opens the QR pass above home; it is
   active with a session, and on a locked device it asks to unlock first. On

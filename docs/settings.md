@@ -205,20 +205,16 @@ only among installed instances of that same format:
   `Изменения расписания`. The line under it is `Пары на 4 недели вперёд в системном календаре телефона.`, or
   `Выключена: нет доступа к календарю.` / `Выключена: календарь удалён.` after
   it turned itself off.
-- Turning it on asks for `READ_CALENDAR` and `WRITE_CALENDAR` (only here):
-  when Android suggests an explanation, a dialog `Доступ к календарю` comes
-  first; refused, the switch stays off with `Нет доступа к календарю`, and a
-  refusal for good adds `Настройки` to the snackbar, which opens the app's
-  system page. Granted, it turns on into `ITMO.Widgets`. Turning it off
+- Turning it on asks for `READ_CALENDAR` and `WRITE_CALENDAR` (only here).
+  When Android suggests an explanation, the Material 3 dialog with a centred
+  `ic_calendar_add` comes first: `Доступ к календарю`, `Чтобы записывать пары
+  в календарь телефона.`, `Не сейчас` and `Разрешить`. A plain refusal leaves
+  the switch off with the snackbar `Нет доступа к календарю`; a refusal for
+  good shows the same dialog with `Открыть настройки` (the app's system
+  page). Granted, it turns on into `ITMO.Widgets`. Turning it off
   deletes that calendar with its events.
-- `Выгрузить в .ics` (`ic_download`) has the hint `Можно импортировать в Google
-  Календарь на calendar.google.com. Импортируйте в отдельный календарь — так
-  его легко удалить или заменить свежим файлом.` It offers `Неделя`,
-  `2 недели`, `До конца семестра` and `Свои даты`; while the file is written
-  the row says `Готовим файл…` and is disabled. `Файл готов` names the number
-  of lessons and offers `Отправить` (`ACTION_SEND`, `text/calendar`) and, when
-  an app can open it, `Открыть в календаре` (`ACTION_VIEW`). An empty range
-  says `В эти дни пар нет`.
+- `Выгрузить в .ics` (`ic_download`, `Файл с парами за выбранный период`)
+  opens the export sheet ([`.ics` export](features/schedule.md#ics-export)).
 - The page is an offline settings category with three untitled groups: the
   schedule-changes switch with `Работа в фоне`, the auto-sign switch with a
   footer that explains the user-services requirement and that pending entries

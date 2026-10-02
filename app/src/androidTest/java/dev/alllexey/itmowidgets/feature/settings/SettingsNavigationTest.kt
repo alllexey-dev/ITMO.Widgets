@@ -37,7 +37,13 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
+import dev.alllexey.itmowidgets.feature.settings.ui.IcsExportBottomSheet
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
+import dev.alllexey.itmowidgets.feature.settings.ui.showCalendarAccessDialog
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.IcsFile
+import kotlinx.coroutines.CompletableDeferred
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
@@ -338,19 +344,106 @@ class SettingsNavigationTest {
                     settle()
                     assertFalse(sync.state.value.enabled)
 
-                    onView(withText(R.string.settings_ics_export_title)).perform(click())
-                    settle()
-                    for (range in listOf(R.string.ics_range_week, R.string.ics_range_two_weeks, R.string.ics_range_semester, R.string.ics_range_custom)) {
-                        onView(withText(range)).inRoot(isDialog()).check(matches(isDisplayed()))
-                    }
-                    Screenshots.capture("calendar-export-screenshots", "ics-ranges-${spec.name}") { settle() }
-                    onView(withText(R.string.common_cancel)).inRoot(isDialog()).perform(click())
-                    settle()
                 }
             }
         } finally {
             SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
             sync.state.value = CalendarSyncState()
+        }
+    }
+
+    @Test
+    fun icsExportSheetShowsEveryStateInOneArea() {
+        val export = SettingsNavigationTestActivity.icsExport
+        val specs = (Appearances.default + Appearances.all.first { it.dark && it.colorSeed == null && it.fontScale == 1f }).distinct()
+        val file = IcsFile("content://dev.alllexey.itmowidgets.files/ics/itmo-schedule.ics", "itmo-schedule.ics", 23)
+        try {
+            for (spec in specs) {
+                SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
+                export.result = AppResult.Success(file)
+                export.gate = CompletableDeferred()
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    openPage(scenario, SettingsPage.SCHEDULE)
+                    onView(withText(R.string.settings_ics_export_title)).perform(click())
+                    settle()
+                    for (text in listOf("Неделя", "2–8 октября", "2 недели", "2–15 октября", "До конца семестра", "до 31 января", "Свои даты", "Выбрать в календаре")) {
+                        onView(withText(text)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    }
+                    var areaHeight = 0
+                    scenario.onActivity { activity ->
+                        val sheet = icsSheet(activity)
+                        val area = sheet.requireView().findViewById<View>(R.id.content)
+                        areaHeight = area.height
+                        ViewChecks.assertTextFits(sheet.requireView() as ViewGroup)
+                        ViewChecks.assertTouchTargets(sheet.requireView().findViewById(R.id.ranges), requireWidth = false)
+                    }
+                    Screenshots.capture("calendar-export-screenshots", "ics-sheet-choose-${spec.name}") { settle() }
+
+                    onView(withText("Неделя")).inRoot(isDialog()).perform(click())
+                    settle()
+                    onView(withText(R.string.ics_preparing)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    scenario.onActivity { activity ->
+                        assertEquals(areaHeight, icsSheet(activity).requireView().findViewById<View>(R.id.content).height)
+                    }
+                    Screenshots.capture("calendar-export-screenshots", "ics-sheet-preparing-${spec.name}") { settle() }
+
+                    export.gate!!.complete(Unit)
+                    settle()
+                    onView(withText("23 пары, 2–8 октября")).inRoot(isDialog()).check(matches(isDisplayed()))
+                    onView(withText(R.string.ics_send)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    onView(withText(R.string.ics_ready_hint)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    scenario.onActivity { activity ->
+                        val sheet = icsSheet(activity)
+                        assertEquals(areaHeight, sheet.requireView().findViewById<View>(R.id.content).height)
+                        ViewChecks.assertTextFits(sheet.requireView() as ViewGroup)
+                    }
+                    Screenshots.capture("calendar-export-screenshots", "ics-sheet-ready-${spec.name}") { settle() }
+                }
+
+                export.gate = null
+                export.result = AppResult.Success(null)
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    openPage(scenario, SettingsPage.SCHEDULE)
+                    onView(withText(R.string.settings_ics_export_title)).perform(click())
+                    settle()
+                    onView(withText("2 недели")).inRoot(isDialog()).perform(click())
+                    settle()
+                    onView(withText(R.string.ics_empty)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    Screenshots.capture("calendar-export-screenshots", "ics-sheet-empty-${spec.name}") { settle() }
+                    onView(withText(R.string.ics_pick_other)).inRoot(isDialog()).perform(click())
+                    settle()
+                    onView(withText("Неделя")).inRoot(isDialog()).check(matches(isDisplayed()))
+
+                    export.result = AppResult.Failure(AppError.Network)
+                    onView(withText("Неделя")).inRoot(isDialog()).perform(click())
+                    settle()
+                    onView(withText(R.string.common_error_network)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    Screenshots.capture("calendar-export-screenshots", "ics-sheet-error-${spec.name}") { settle() }
+                    export.result = AppResult.Success(file)
+                    onView(withText(R.string.common_retry)).inRoot(isDialog()).perform(click())
+                    settle()
+                    onView(withText(R.string.ics_send)).inRoot(isDialog()).check(matches(isDisplayed()))
+                }
+
+                // The permission dialog, as asked and after a refusal for good.
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    openPage(scenario, SettingsPage.SCHEDULE)
+                    for (locked in listOf(false, true)) {
+                        scenario.onActivity { activity -> settingsFragment(activity).showCalendarAccessDialog(locked, {}, {}) }
+                        settle()
+                        onView(withText(R.string.calendar_access_rationale)).inRoot(isDialog()).check(matches(isDisplayed()))
+                        val action = if (locked) R.string.calendar_access_open_settings else R.string.calendar_access_allow
+                        onView(withText(action)).inRoot(isDialog()).check(matches(isDisplayed()))
+                        Screenshots.capture("calendar-export-screenshots", "calendar-access-${if (locked) "locked" else "ask"}-${spec.name}") { settle() }
+                        onView(withText(R.string.calendar_access_later)).inRoot(isDialog()).perform(click())
+                        settle()
+                    }
+                }
+            }
+        } finally {
+            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            export.gate = null
+            export.result = AppResult.Success(null)
         }
     }
 
@@ -477,6 +570,12 @@ class SettingsNavigationTest {
         scenario.onActivity { it.openScreen(AppScreen.SETTINGS, Bundle().apply { putString(SettingsPage.ARGUMENT, page.name) }) }
         settle()
     }
+
+    private fun settingsFragment(activity: SettingsNavigationTestActivity): SettingsFragment =
+        activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment as SettingsFragment
+
+    private fun icsSheet(activity: SettingsNavigationTestActivity): IcsExportBottomSheet =
+        settingsFragment(activity).childFragmentManager.findFragmentByTag(IcsExportBottomSheet.TAG) as IcsExportBottomSheet
 
     private fun calendarSwitch(activity: SettingsNavigationTestActivity): android.widget.CompoundButton =
         settingRow(settingsRoot(activity), activity.getString(R.string.settings_calendar_sync_title))!!

@@ -77,7 +77,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
 import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
-import dev.alllexey.itmowidgets.core.debug.NoIcsExport
 
 @RunWith(AndroidJUnit4::class)
 class WidgetPreviewTest {
@@ -337,7 +336,7 @@ class WidgetPreviewTest {
                         override suspend fun reset() = Unit
                     },
                     object : WidgetRefreshRequester { override fun refreshAll() = Unit },
-                    AppVersion(activity.getString(R.string.app_version)), WidgetPreviewScheduleChangeTracking, WidgetPreviewMarkTracking, WidgetPreviewBackgroundWork, WidgetPreviewQuickSettingsTile, MemoryCalendarSync(), NoIcsExport, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
+                    AppVersion(activity.getString(R.string.app_version)), WidgetPreviewScheduleChangeTracking, WidgetPreviewMarkTracking, WidgetPreviewBackgroundWork, WidgetPreviewQuickSettingsTile, MemoryCalendarSync(), NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
                 ) as T
             })[SettingsViewModel::class.java]
             activity.findViewById<TextView>(R.id.settings_title).text = page.title.resolve(activity)

@@ -537,10 +537,30 @@ a UTF-8 character, escaped text, times in UTC (no `VTIMEZONE`), the same UIDs
 as synchronization, `TRANSP:OPAQUE`. The file is
 `cacheDir/ics/itmo-schedule-<start>-<end>.ics` (only the latest is kept),
 shared through the `FileProvider` `${applicationId}.files`. A range without
-lessons writes nothing and says `В эти дни пар нет`. This is the way into
-Google Calendar: the row's hint says the file can be imported on
-calendar.google.com, best into a separate calendar, which is easy to delete or
-replace with a fresh file.
+lessons writes nothing. This is the way into Google Calendar.
+
+`IcsExportBottomSheet` (`feature/settings/ui`, `res/layout/sheet_ics_export.xml`)
+is the whole flow: the title `Выгрузить в .ics`, the subtitle `Своё расписание
+из My ITMO` and one area of at least 288 dp that every state shares, so the
+sheet does not jump. `IcsExportViewModel` holds the state:
+
+- Choose: the four ranges as one connected group (`item_ics_range.xml`,
+  `colorSurfaceContainerHigh`, 56 dp rows, the whole row is the target), each
+  with its days on the second line from today (`2–8 октября`, `до 31 января`,
+  `Выбрать в календаре`; `IcsDateLabels`: one day, a month, two months, two
+  years). `Свои даты` opens the `MaterialDatePicker` and comes back with its
+  range.
+- Preparing: a progress indicator and `Готовим файл…`.
+- Ready: `Файл готов`, `23 пары, 2–8 октября`, the filled `Отправить`
+  (`ACTION_SEND`, `text/calendar`), the tonal `Открыть в календаре` only when
+  an app opens `.ics` files (`ACTION_VIEW`), and the hint `Импортируйте в
+  отдельный календарь — так его легко удалить или заменить свежим файлом`.
+- Empty: `В этом периоде пар нет` with `Выбрать другой период`.
+- Failed: the error's message with `Повторить`.
+
+The chosen range and the written file live in the `SavedStateHandle`:
+recreation shows the same state, and after a process death the file is
+written again; the date picker is listened to again by its tag.
 
 ### Tests
 
@@ -548,9 +568,12 @@ replace with a fresh file.
 `ScheduleExportRangeTest` cover the domain; `CalendarSyncFileStoreTest`,
 `CalendarSyncRepositoryImplTest` (fake calendars), `DefaultCalendarSyncTest`
 and `IcsFileExportTest` the data and the work; `SettingsViewModelTest` and
-`ScheduleViewModelTest` the rows and the sync after a pull. Instrumented:
+`ScheduleViewModelTest` the rows and the sync after a pull, `IcsExportViewModelTest`
+the sheet's states, saved state and date labels. Instrumented:
 `CalendarSyncProviderTest` against the emulator's CalendarProvider (the local
 calendar, two syncs without duplicates, update, delete, lost ids, turning off
 during the first sync, leaving an earlier build's calendar that behaves like a
 Google one, with `_SYNC_ID` rows and copies the sync adapter writes back) and
-`SettingsNavigationTest` for the rows and dialogs.
+`SettingsNavigationTest` for the rows, every state of the `.ics` sheet (in a
+light and a dark appearance, with the area height kept) and the permission
+dialog.

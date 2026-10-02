@@ -13,9 +13,6 @@ import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.schedule.IcsFile
-import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
-import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
@@ -1582,7 +1579,6 @@ class SettingsViewModelTest {
         assertEquals(UiText.Resource(R.string.settings_ics_export_title), export.title)
         assertEquals(UiText.Resource(R.string.settings_ics_export_description), export.description)
         assertEquals(R.drawable.ic_download, export.trailingIconRes)
-        assertEquals(null, export.value)
         assertTrue(export.enabled)
 
         fixture.calendarSync.state.value = CalendarSyncState(enabled = true)
@@ -1656,57 +1652,14 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `an ics export shares the file, says when the range is empty and shows errors`() =
-        runTest(mainDispatcherRule.dispatcher) {
-            val export = FakeIcsExport()
-            val fixture = createFixture(page = SettingsPage.SCHEDULE, icsExport = export)
-            val events = recordEvents(fixture)
-            advanceUntilIdle()
-
-            fixture.viewModel.onAction(SettingsViewModel.KEY_ICS_EXPORT)
-            assertEquals(listOf<SettingsEvent>(SettingsEvent.ChooseIcsRange), events)
-
-            fixture.viewModel.onIcsRange(ScheduleExportRange.Week)
-            advanceUntilIdle()
-            assertEquals(SettingsEvent.ShowMessage(UiText.Resource(R.string.ics_empty)), events.last())
-
-            val file = IcsFile("content://test/a.ics", "a.ics", 12)
-            export.result = AppResult.Success(file)
-            fixture.viewModel.onIcsRange(ScheduleExportRange.Semester)
-            advanceUntilIdle()
-            assertEquals(SettingsEvent.ShareIcs(file), events.last())
-
-            export.result = AppResult.Failure(AppError.Network)
-            fixture.viewModel.onIcsRange(ScheduleExportRange.TwoWeeks)
-            advanceUntilIdle()
-            assertEquals(SettingsEvent.ShowError(AppError.Network), events.last())
-            assertEquals(
-                listOf(ScheduleExportRange.Week, ScheduleExportRange.Semester, ScheduleExportRange.TwoWeeks),
-                export.ranges
-            )
-        }
-
-    @Test
-    fun `one ics export runs at a time and its row says so`() = runTest(mainDispatcherRule.dispatcher) {
-        val export = FakeIcsExport().apply { gate = CompletableDeferred() }
-        val fixture = createFixture(page = SettingsPage.SCHEDULE, icsExport = export)
+    fun `the ics row opens the export sheet`() = runTest(mainDispatcherRule.dispatcher) {
+        val fixture = createFixture(page = SettingsPage.SCHEDULE)
         val events = recordEvents(fixture)
         advanceUntilIdle()
 
-        fixture.viewModel.onIcsRange(ScheduleExportRange.Week)
-        runCurrent()
-        val row = fixture.viewModel.action(SettingsViewModel.KEY_ICS_EXPORT)
-        assertFalse(row.enabled)
-        assertEquals(UiText.Resource(R.string.settings_ics_export_busy), row.value)
-        fixture.viewModel.onIcsRange(ScheduleExportRange.TwoWeeks)
         fixture.viewModel.onAction(SettingsViewModel.KEY_ICS_EXPORT)
-        runCurrent()
-        assertEquals(listOf<ScheduleExportRange>(ScheduleExportRange.Week), export.ranges)
-        assertTrue(events.none { it == SettingsEvent.ChooseIcsRange })
 
-        export.gate!!.complete(Unit)
-        advanceUntilIdle()
-        assertTrue(fixture.viewModel.action(SettingsViewModel.KEY_ICS_EXPORT).enabled)
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenIcsExport), events)
     }
 
     @Test
@@ -1725,8 +1678,7 @@ class SettingsViewModelTest {
         page: SettingsPage = SettingsPage.ROOT,
         backgroundWork: FakeBackgroundWorkAccess = FakeBackgroundWorkAccess(),
         tileAccess: FakeQuickSettingsTileAccess = FakeQuickSettingsTileAccess(),
-        calendarSync: FakeCalendarSync = FakeCalendarSync(),
-        icsExport: FakeIcsExport = FakeIcsExport()
+        calendarSync: FakeCalendarSync = FakeCalendarSync()
     ): Fixture {
         val tracking = FakeScheduleChangeTracking(enabled = local.scheduleChangesEnabled)
         val markTracking = FakeMarkTracking()
@@ -1749,13 +1701,12 @@ class SettingsViewModelTest {
             backgroundWork = backgroundWork,
             tileAccess = tileAccess,
             calendarSync = calendarSync,
-            icsExport = icsExport,
             diagnostics = RecordingDiagnostics(),
             savedStateHandle = SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
         )
         return Fixture(
             viewModel, repository, customServicesRepository, refresher, onboarding, tracking, markTracking, backgroundWork,
-            tileAccess, calendarSync, icsExport
+            tileAccess, calendarSync
         )
     }
 
@@ -1788,22 +1739,9 @@ class SettingsViewModelTest {
         val markTracking: FakeMarkTracking,
         val backgroundWork: FakeBackgroundWorkAccess,
         val tileAccess: FakeQuickSettingsTileAccess,
-        val calendarSync: FakeCalendarSync,
-        val icsExport: FakeIcsExport
+        val calendarSync: FakeCalendarSync
     )
 
-    /** Answers every range with [result]; [gate], when set, holds the answer until completed. */
-    private class FakeIcsExport : ScheduleIcsExport {
-        var result: AppResult<IcsFile?> = AppResult.Success(null)
-        var gate: CompletableDeferred<Unit>? = null
-        val ranges = mutableListOf<ScheduleExportRange>()
-
-        override suspend fun export(range: ScheduleExportRange): AppResult<IcsFile?> {
-            ranges += range
-            gate?.await()
-            return result
-        }
-    }
 
     /** Unrestricted by default, so the background work row stays out of the other cases. */
     private class FakeBackgroundWorkAccess(var unrestricted: Boolean = true) : BackgroundWorkAccess {

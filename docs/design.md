@@ -344,6 +344,11 @@ settings, and restore them if a separate test explicitly changes them.
   caption `bodySmall`, value `titleSmall` at the end, `ic_check` in
   `colorPrimary` and `selected` for the current total; the whole row is the
   target), `feature/recordbook/ui/sheets/SheetScoresBottomSheet.kt`.
+- The `.ics` sheet: `res/layout/sheet_ics_export.xml` (handle, title,
+  subtitle, one area of at least 288 dp for the ranges, loading, the file,
+  an empty range and failures) with `res/layout/item_ics_range.xml` (a
+  connected-group row: title `bodyLarge`, days `bodySmall`, chevron),
+  `feature/settings/ui/IcsExportBottomSheet.kt`.
 - Link sheets: `feature/resources/ui/SubjectLinksBottomSheet.kt` (connected
   groups per category), `LinkEditorBottomSheet.kt`, `LinkActionsBottomSheet.kt`,
   `res/layout/item_subject_link.xml`.

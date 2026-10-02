@@ -107,10 +107,11 @@ class SettingsFragment : Fragment() {
             }
             restoreRenderedValues()
             // A refusal without a dialog means the permission is locked; only the app's system page can undo that.
-            val locked = !shouldShowRequestPermissionRationale(android.Manifest.permission.WRITE_CALENDAR)
-            val snackbar = Snackbar.make(binding.root, R.string.calendar_access_denied, Snackbar.LENGTH_LONG)
-            if (locked) snackbar.setAction(R.string.calendar_access_settings) { openAppSettings() }
-            snackbar.show()
+            if (!shouldShowRequestPermissionRationale(android.Manifest.permission.WRITE_CALENDAR)) {
+                showCalendarAccessDialog(locked = true, onAllow = {}, onCancel = ::restoreRenderedValues)
+            } else {
+                Snackbar.make(binding.root, R.string.calendar_access_denied, Snackbar.LENGTH_SHORT).show()
+            }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -178,7 +179,6 @@ class SettingsFragment : Fragment() {
         if (viewModel.page == SettingsPage.QR_WIDGET) {
             observeCustomSpoiler()
         }
-        listenToIcsDatePicker(viewModel::onIcsRange)
 
         viewModel.sections
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
@@ -220,10 +220,9 @@ class SettingsFragment : Fragment() {
                         requireActivity().requestAddQrTile(viewModel::onQrTileResult)
                     }
                     SettingsEvent.RequestCalendarAccess -> requestCalendarAccess()
-                    SettingsEvent.ChooseIcsRange -> showIcsRanges(viewModel::onIcsRange) {
-                        showIcsDatePicker(viewModel::onIcsRange)
+                    SettingsEvent.OpenIcsExport -> if (childFragmentManager.findFragmentByTag(IcsExportBottomSheet.TAG) == null) {
+                        IcsExportBottomSheet().show(childFragmentManager, IcsExportBottomSheet.TAG)
                     }
-                    is SettingsEvent.ShareIcs -> showIcsReady(event.file)
                     is SettingsEvent.ShowMessage -> {
                         // A switch the user flipped stays as the state says when the action did not go through.
                         restoreRenderedValues()
@@ -395,13 +394,7 @@ class SettingsFragment : Fragment() {
             ask()
             return
         }
-        MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.calendar_access_title)
-            .setMessage(R.string.calendar_access_rationale)
-            .setNegativeButton(R.string.common_cancel) { _, _ -> restoreRenderedValues() }
-            .setPositiveButton(R.string.calendar_access_continue) { _, _ -> ask() }
-            .setOnCancelListener { restoreRenderedValues() }
-            .show()
+        showCalendarAccessDialog(locked = false, onAllow = ask, onCancel = ::restoreRenderedValues)
     }
 
     private fun requestNotifications() {

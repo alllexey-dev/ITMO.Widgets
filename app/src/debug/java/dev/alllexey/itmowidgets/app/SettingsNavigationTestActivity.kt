@@ -92,6 +92,7 @@ import dev.alllexey.itmowidgets.feature.home.presentation.HomeViewModel
 import dev.alllexey.itmowidgets.feature.home.ui.HomeFragment
 import dev.alllexey.itmowidgets.feature.settings.domain.*
 import dev.alllexey.itmowidgets.feature.settings.presentation.*
+import dev.alllexey.itmowidgets.feature.settings.ui.IcsExportBottomSheet
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -101,7 +102,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import kotlinx.coroutines.flow.onStart
 import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
 import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
-import dev.alllexey.itmowidgets.core.debug.NoIcsExport
+import dev.alllexey.itmowidgets.core.debug.MemoryIcsExport
 
 /** Actual settings/NavHost lifecycle, backed only by in-memory settings and no credentials. */
 @AndroidEntryPoint
@@ -149,6 +150,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         val qrTileAdded = MutableStateFlow(false)
         /** Calendar synchronization of the schedule page; tests set its state and calendars directly. */
         val calendarSync = MemoryCalendarSync()
+        /** The `.ics` export of the sheet; tests set its answer and hold it with a gate. */
+        val icsExport = MemoryIcsExport()
+        /** The sheet's today: Friday 2 October 2026. */
+        val icsToday: java.time.LocalDate = java.time.LocalDate.of(2026, 10, 2)
         /** Social fixtures for the profile tab, public profiles and the friend picker. */
         /** The opt-in as the profile tab sees it; settings keep their own always-on fixture. */
         @Volatile var profileServicesEnabled = true
@@ -279,12 +284,20 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
                     })[OnboardingViewModel::class.java]
                     return
                 }
+                if (f is IcsExportBottomSheet) {
+                    ViewModelProvider(f, object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            IcsExportViewModel(icsExport, IcsTime, SavedStateHandle()) as T
+                    })[IcsExportViewModel::class.java]
+                    return
+                }
                 if (f !is SettingsFragment) return
                 val page = SettingsPage.fromArgument(f.arguments?.getString(SettingsPage.ARGUMENT))
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, MemoryMarkTracking, MemoryBackgroundWork, MemoryQuickSettingsTile, calendarSync, NoIcsExport, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
+                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, MemoryMarkTracking, MemoryBackgroundWork, MemoryQuickSettingsTile, calendarSync, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
                         CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(customSpoiler)
                         else -> error("Unexpected ViewModel")
                     } as T
@@ -512,6 +525,13 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     object MemoryBackgroundWork : BackgroundWorkAccess {
         @Volatile var unrestricted = false
         override fun isUnrestricted() = unrestricted
+    }
+
+    /** The `.ics` sheet's academic time, fixed at [icsToday] 09:00 in Moscow. */
+    private object IcsTime : dev.alllexey.itmowidgets.core.time.AcademicTimeProvider {
+        override val zoneId: java.time.ZoneId = java.time.ZoneId.of("Europe/Moscow")
+        override fun today(): java.time.LocalDate = icsToday
+        override fun now(): java.time.OffsetDateTime = icsToday.atTime(9, 0).atZone(zoneId).toOffsetDateTime()
     }
 
     private object Services : CustomServicesRepository {

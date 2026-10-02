@@ -5,38 +5,22 @@ import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
-import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-/** The tag of the date range picker, so a recreated settings page listens to it again. */
+/** The tag of the date range picker, so a recreated sheet listens to it again. */
 internal const val ICS_DATES_TAG = "ics_dates"
 
-/** The four ranges; «Свои даты» opens the date range picker instead of answering at once. */
-internal fun Fragment.showIcsRanges(onRange: (ScheduleExportRange) -> Unit, onCustom: () -> Unit) {
-    val ranges = listOf(
-        R.string.ics_range_week to ScheduleExportRange.Week,
-        R.string.ics_range_two_weeks to ScheduleExportRange.TwoWeeks,
-        R.string.ics_range_semester to ScheduleExportRange.Semester,
-        R.string.ics_range_custom to null
-    )
-    MaterialAlertDialogBuilder(requireContext())
-        .setTitle(R.string.settings_ics_export_title)
-        .setItems(ranges.map { getString(it.first) }.toTypedArray()) { _, index ->
-            ranges[index].second?.let(onRange) ?: onCustom()
-        }
-        .setNegativeButton(R.string.common_cancel, null)
-        .show()
-}
-
-internal fun Fragment.showIcsDatePicker(onRange: (ScheduleExportRange) -> Unit) {
+internal fun Fragment.showIcsDatePicker(onRange: (LocalDate, LocalDate) -> Unit) {
     MaterialDatePicker.Builder.dateRangePicker()
         .setTitleText(R.string.ics_range_custom)
         .build()
@@ -46,36 +30,60 @@ internal fun Fragment.showIcsDatePicker(onRange: (ScheduleExportRange) -> Unit) 
 
 /** Listens again to a date range picker restored after recreation. */
 @Suppress("UNCHECKED_CAST")
-internal fun Fragment.listenToIcsDatePicker(onRange: (ScheduleExportRange) -> Unit) {
+internal fun Fragment.listenToIcsDatePicker(onRange: (LocalDate, LocalDate) -> Unit) {
     (childFragmentManager.findFragmentByTag(ICS_DATES_TAG) as? MaterialDatePicker<androidx.core.util.Pair<Long, Long>>)
         ?.answerTo(onRange)
 }
 
 /** The picker answers in UTC midnights of the chosen days. */
-private fun MaterialDatePicker<androidx.core.util.Pair<Long, Long>>.answerTo(onRange: (ScheduleExportRange) -> Unit) {
+private fun MaterialDatePicker<androidx.core.util.Pair<Long, Long>>.answerTo(onRange: (LocalDate, LocalDate) -> Unit) {
     clearOnPositiveButtonClickListeners()
     addOnPositiveButtonClickListener { selection ->
         val start = selection.first ?: return@addOnPositiveButtonClickListener
         val end = selection.second ?: start
-        onRange(ScheduleExportRange.Custom(utcDate(start), utcDate(end)))
+        onRange(utcDate(start), utcDate(end))
     }
 }
 
-/** «Отправить» shares the file; «Открыть в календаре» appears only when an app on the phone opens `.ics` files. */
-internal fun Fragment.showIcsReady(file: IcsFile) {
-    val context = requireContext()
+/** Sends the file through the system share sheet as `text/calendar`. */
+internal fun Fragment.shareIcs(file: IcsFile) {
     val uri = file.uri.toUri()
-    val view = Intent(Intent.ACTION_VIEW)
-        .setDataAndType(uri, ICS_TYPE)
-        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    val builder = MaterialAlertDialogBuilder(context)
-        .setTitle(R.string.ics_ready_title)
-        .setMessage(resources.getQuantityString(R.plurals.schedule_lesson_count, file.lessons, file.lessons))
-        .setPositiveButton(R.string.ics_send) { _, _ -> startSafely(Intent.createChooser(sendIntent(uri, file.name), null)) }
-    if (view.resolveActivity(context.packageManager) != null) {
-        builder.setNeutralButton(R.string.ics_open) { _, _ -> startSafely(view) }
+    startSafely(Intent.createChooser(sendIntent(uri, file.name), null))
+}
+
+/** An app on the phone opens `.ics` files: only then is «Открыть в календаре» shown. */
+internal fun Fragment.canOpenIcs(file: IcsFile): Boolean =
+    viewIntent(file.uri.toUri()).resolveActivity(requireContext().packageManager) != null
+
+internal fun Fragment.openIcs(file: IcsFile) {
+    startSafely(viewIntent(file.uri.toUri()))
+}
+
+/**
+ * Why the app asks for the calendar: «Разрешить» asks Android, or, after a refusal for good ([locked]), «Открыть
+ * настройки» opens the app's system page. «Не сейчас» and dismissing call [onCancel].
+ */
+internal fun Fragment.showCalendarAccessDialog(locked: Boolean, onAllow: () -> Unit, onCancel: () -> Unit) {
+    val context = requireContext()
+    // The Material 3 hero-icon dialog: the icon above a centred title, in the secondary colour.
+    val icon = checkNotNull(AppCompatResources.getDrawable(context, R.drawable.ic_calendar_add)).mutate().apply {
+        setTint(MaterialColors.getColor(context, com.google.android.material.R.attr.colorSecondary, 0))
     }
-    builder.show()
+    MaterialAlertDialogBuilder(context, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog_Centered)
+        .setIcon(icon)
+        .setTitle(R.string.calendar_access_title)
+        .setMessage(R.string.calendar_access_rationale)
+        .setNegativeButton(R.string.calendar_access_later) { _, _ -> onCancel() }
+        .setPositiveButton(if (locked) R.string.calendar_access_open_settings else R.string.calendar_access_allow) { _, _ ->
+            if (locked) {
+                onCancel()
+                openAppSettings()
+            } else {
+                onAllow()
+            }
+        }
+        .setOnCancelListener { onCancel() }
+        .show()
 }
 
 /** The app's page in Android settings, where a permission refused for good can be given. */
@@ -100,5 +108,9 @@ private fun Fragment.startSafely(intent: Intent) {
 }
 
 private fun utcDate(millis: Long): LocalDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+
+private fun viewIntent(uri: Uri) = Intent(Intent.ACTION_VIEW)
+    .setDataAndType(uri, ICS_TYPE)
+    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
 private const val ICS_TYPE = "text/calendar"
