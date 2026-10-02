@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportOccupancy
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
 import dev.alllexey.itmowidgets.feature.sport.ui.common.fullDateText
+import dev.alllexey.itmowidgets.feature.sport.ui.common.shareDateText
 import dev.alllexey.itmowidgets.feature.sport.ui.common.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.ui.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
@@ -119,5 +120,24 @@ class SportSessionPresentationTest {
         assertNotNull(args.kind)
         assertTrue(args.isReal)
         assertEquals(SportRegistrationStatus.SIGNED, args.registrationStatus)
+    }
+
+    @Test fun `predicted lessons and bookings carry their prototype for a shared link, real ones none`() {
+        assertNull(SportCardFixtures.lesson(7).toDetailsArgs().prototypeLessonId)
+        assertNull(SportCardFixtures.booking(7).toDetailsArgs().prototypeLessonId)
+        assertEquals(7L, SportCardFixtures.lesson(7).copy(isLessonReal = false).toDetailsArgs().prototypeLessonId)
+        assertEquals(7L, SportCardFixtures.booking(-7).copy(isLessonReal = false).toDetailsArgs().prototypeLessonId)
+        // Debug templates have negative ids and are never shared.
+        assertNull(SportCardFixtures.lesson(-7).copy(isLessonReal = false).toDetailsArgs().prototypeLessonId)
+    }
+
+    @Test fun `shared date names the weekday and the date, never today or tomorrow`() {
+        val lesson = SportCardFixtures.lesson()
+        val time = object : AcademicTimeProvider {
+            override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
+            override fun today(): LocalDate = lesson.start.toLocalDate()
+            override fun now(): OffsetDateTime = lesson.start.minusHours(1)
+        }
+        assertEquals("вторник, 8 сентября, 18:30–20:00", SportSessionTiming(lesson.start, lesson.end, time).shareDateText())
     }
 }

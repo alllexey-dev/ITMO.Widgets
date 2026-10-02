@@ -14,6 +14,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.CircularProgressIndicator
@@ -368,6 +369,41 @@ class SportCardsVisualTest {
         }
     }
 
+    @Test fun shareActionForUpcomingLessonsBookingsAndPredictions() {
+        preview(SportCardsPreviewActivity.Appearance()) { scenario ->
+            val lesson = SportCardFixtures.lesson().copy(sectionName = SectionName(LONG_SECTION))
+            val past = lesson.copy(start = lesson.start.minusDays(2), end = lesson.end.minusDays(2))
+            val cases = listOf<Pair<SportCommon, Boolean>>(
+                lesson to true,
+                SportCardFixtures.booking() to true,
+                lesson.copy(isLessonReal = false) to true,
+                SportCardFixtures.booking(-1).copy(isLessonReal = false, signed = false) to true,
+                past to false,
+                lesson.copy(lessonId = -5) to false
+            )
+            cases.forEachIndexed { index, (item, shared) ->
+                scenario.onActivity { it.showDetails(item) }
+                settle()
+                scenario.onActivity {
+                    val details = sheet(it)
+                    val toolbar = details.requireView().findViewById<MaterialToolbar>(R.id.toolbar)
+                    val share = toolbar.menu.findItem(R.id.action_share)
+                    assertEquals("case $index", shared, share?.isVisible == true)
+                    if (shared) {
+                        assertEquals(it.getString(R.string.share_action), share!!.title.toString())
+                        val title = toolbar.descendants().filterIsInstance<TextView>()
+                            .single { view -> view.text == it.getString(R.string.sport_details_title) }
+                        assertTrue("The title keeps its full width beside the action", title.width >= title.paint.measureText(title.text.toString()))
+                    }
+                    assertTouchTargets(details.dialog!!.window!!.decorView)
+                }
+                if (index == 0) screenshot("details-share")
+                scenario.onActivity { sheet(it).dismiss() }
+                settle()
+            }
+        }
+    }
+
     @Test fun predictionDetailsKeepLocationWithoutHistoricalFootnote() {
         Appearances.default.forEachIndexed { index, spec ->
             preview(spec.toSportCards()) { scenario ->
@@ -447,6 +483,10 @@ class SportCardsVisualTest {
                 }
             }
         }
+    }
+
+    private companion object {
+        const val LONG_SECTION = "Фитнес (функциональная тренировка с элементами кроссфита и растяжкой)"
     }
 
     private fun friends() = listOf(

@@ -212,6 +212,47 @@ class UserProfileVisualTest {
         }
     }
 
+    @Test fun shareButtonOnlyWithAPage() {
+        val spec = Appearances.light
+        listOf<Pair<String, () -> Unit>>(
+            "other" to { UserProfilePreviewActivity.person = AppResult.Success(teacher()) },
+            "self" to {
+                friendFixture()
+                UserProfilePreviewActivity.selfIsu = ISU
+            }
+        ).forEach { (name, configure) ->
+            preview(spec, configure) { scenario ->
+                content(scenario)
+                scenario.onActivity { assertShareButton(it, shown = true) }
+                frame(scenario, "share-$name-${spec.name}")
+            }
+        }
+        preview(spec, {
+            UserProfilePreviewActivity.person = AppResult.Success(teacher())
+            UserProfilePreviewActivity.personDelayMs = 60_000
+        }) { scenario ->
+            loading(scenario)
+            scenario.onActivity { assertShareButton(it, shown = false) }
+        }
+        preview(spec, { UserProfilePreviewActivity.person = AppResult.Failure(AppError.Network) }) { scenario ->
+            state(scenario, "Не удалось загрузить")
+            scenario.onActivity { assertShareButton(it, shown = false) }
+        }
+        preview(spec) { scenario ->
+            state(scenario, "Профиль не найден")
+            scenario.onActivity { assertShareButton(it, shown = false) }
+        }
+    }
+
+    private fun assertShareButton(activity: UserProfilePreviewActivity, shown: Boolean) {
+        val share = activity.findViewById<View>(R.id.share_button)
+        assertEquals(shown, share.isShown)
+        if (!shown) return
+        val target = 48 * activity.resources.displayMetrics.density - 1
+        assertTrue("Share ${share.width}x${share.height}", share.width >= target && share.height >= target)
+        assertEquals("Поделиться", share.contentDescription)
+    }
+
     @Test fun disabledBackendPublishesOnlyOneIdentityPage() = appearances { spec ->
         preview(spec, {
             UserProfilePreviewActivity.person = AppResult.Success(teacher())
