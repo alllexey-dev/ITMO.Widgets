@@ -16,6 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
+import dev.alllexey.itmowidgets.core.navigation.ScheduleTodayRequest
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
@@ -605,6 +606,65 @@ class ScheduleFragmentLifecycleTest {
                 assertEquals(20, activity.dayTop(LocalDate.of(2026, 9, 7)))
             }
         }
+
+    @Test
+    fun todayRequestScrollsBackToTodayOnce() = withSchedule { scenario ->
+        scenario.onActivity { (it.recycler().layoutManager as LinearLayoutManager).scrollToPosition(29) }
+        eventually(scenario) {
+            assertEquals(29, (it.recycler().layoutManager as LinearLayoutManager).findLastVisibleItemPosition())
+        }
+        requestToday(scenario)
+        awaitToday(scenario)
+        val anchor = scrollToMiddle(scenario)
+        // A data update without a new request keeps the reader where they scrolled.
+        ScheduleLifecycleTestActivity.days.value = sampleDays(31)
+        eventually(scenario) { assertEquals(31, it.recycler().adapter!!.itemCount) }
+        awaitAnchor(scenario, anchor)
+    }
+
+    @Test
+    fun todayRequestBeforeTheViewExistsIsDeliveredOnStart() = withSchedule { scenario ->
+        scrollToMiddle(scenario)
+        scenario.moveToState(Lifecycle.State.CREATED)
+        requestToday(scenario)
+        scenario.moveToState(Lifecycle.State.RESUMED)
+        awaitToday(scenario)
+    }
+
+    @Test
+    fun todayRequestReturnsFromAFriendToTheOwnSchedule() = withSchedule { scenario ->
+        scrollToMiddle(scenario)
+        ScheduleLifecycleTestActivity.friendDays.value = sampleDays(30).drop(3)
+        selectFriend(scenario)
+        eventually(scenario) { activity ->
+            val state = activity.viewModel().uiState.value
+            assertEquals(FRIEND_ISU, (state as? ScheduleUiState.Content)?.selectedUser?.isu)
+            assertEquals(27, activity.recycler().adapter!!.itemCount)
+        }
+        requestToday(scenario)
+        eventually(scenario) { activity ->
+            val state = activity.viewModel().uiState.value
+            assertTrue(state is ScheduleUiState.Content)
+            assertNull(state.selectedUser)
+            assertEquals(30, activity.recycler().adapter!!.itemCount)
+        }
+        awaitToday(scenario)
+    }
+
+    private fun requestToday(scenario: ActivityScenario<ScheduleLifecycleTestActivity>) {
+        scenario.onActivity { it.supportFragmentManager.setFragmentResult(ScheduleTodayRequest.KEY, Bundle.EMPTY) }
+    }
+
+    /** Today with the peek of the previous day a fresh screen has. */
+    private fun awaitToday(scenario: ActivityScenario<ScheduleLifecycleTestActivity>) {
+        eventually(scenario) { activity ->
+            val recycler = activity.recycler()
+            assertTrue("The schedule must be visible", recycler.isShown)
+            assertFalse(recycler.hasPendingAdapterUpdates())
+            assertFalse(recycler.isLayoutRequested)
+            assertEquals(20, activity.dayTop(LocalDate.of(2026, 9, 7)))
+        }
+    }
 
     private fun selectFriend(scenario: ActivityScenario<ScheduleLifecycleTestActivity>) {
         scenario.onActivity { activity ->

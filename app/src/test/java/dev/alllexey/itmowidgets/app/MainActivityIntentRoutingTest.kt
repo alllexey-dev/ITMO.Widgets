@@ -66,4 +66,44 @@ class MainActivityIntentRoutingTest {
         assertNull(MainActivityIntentRouting.parse("unknown", 123456))
         assertNull(MainActivityIntentRouting.parse(null))
     }
+
+    @Test fun `the QR pass and today shortcuts open their roots and name their shortcut`() {
+        val qr = MainActivityIntentRouting.parse(MainActivity.ACTION_OPEN_QR_PASS)
+        assertEquals(MainActivityRoute(R.id.navigation_home, screen = AppScreen.QR_PASS), qr)
+        assertEquals("qr_pass", qr!!.shortcutId())
+        val today = MainActivityIntentRouting.parse(MainActivity.ACTION_OPEN_TODAY)
+        assertEquals(MainActivityRoute(R.id.navigation_schedule, today = true), today)
+        assertEquals("today", today!!.shortcutId())
+    }
+
+    @Test fun `an intent replayed from Recents opens no route`() {
+        listOf(
+            MainActivity.ACTION_OPEN_SCHEDULE,
+            MainActivity.ACTION_OPEN_SPORT,
+            MainActivity.ACTION_OPEN_SCHEDULE_CHANGES,
+            MainActivity.ACTION_OPEN_USER_PROFILE,
+            MainActivity.ACTION_OPEN_RECORDBOOK,
+            MainActivity.ACTION_OPEN_RECORDBOOK_SUBJECT,
+            MainActivity.ACTION_OPEN_BARS_LOGIN,
+            MainActivity.ACTION_OPEN_QR_PASS,
+            MainActivity.ACTION_OPEN_TODAY
+        ).forEach { action ->
+            assertNull(action, MainActivityIntentRouting.parse(action, 123456, SUBJECT, launchedFromHistory = true))
+        }
+    }
+
+    @Test fun `earlier routes keep their reading place and report no shortcut`() {
+        listOf(
+            MainActivityIntentRouting.parse(MainActivity.ACTION_OPEN_SCHEDULE),
+            MainActivityIntentRouting.parse(MainActivity.ACTION_OPEN_SPORT),
+            MainActivityIntentRouting.parse(MainActivity.ACTION_OPEN_SCHEDULE_CHANGES),
+            MainActivityIntentRouting.parse(MainActivity.ACTION_OPEN_USER_PROFILE, 123456),
+            MainActivityIntentRouting.parse(MainActivity.ACTION_OPEN_RECORDBOOK),
+            MainActivityIntentRouting.parse(MainActivity.ACTION_OPEN_RECORDBOOK_SUBJECT, subject = SUBJECT),
+            MainActivityIntentRouting.parse(MainActivity.ACTION_OPEN_BARS_LOGIN)
+        ).forEach { route ->
+            assertFalse(route!!.today)
+            assertNull(route.shortcutId())
+        }
+    }
 }

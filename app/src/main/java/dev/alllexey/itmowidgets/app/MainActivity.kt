@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -18,6 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.core.navigation.ScheduleTodayRequest
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
@@ -72,21 +74,12 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private val onboardingGate: OnboardingGateViewModel by viewModels()
     private lateinit var binding: ActivityMainBinding
     private lateinit var navigation: MainNavigationCoordinator
-    private var pendingRootDestination: Int? = null
-    private var pendingUserIsu: Int? = null
-    private var pendingScreen: AppScreen? = null
-    private var pendingSubject: RecordbookSubjectArgs? = null
-    private var pendingBarsLogin = false
+    private val routes = MainRouteQueue()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState != null) {
-            pendingRootDestination = savedInstanceState.getInt(PENDING_ROOT).takeIf { it != 0 }
-            pendingUserIsu = savedInstanceState.getInt(PENDING_USER).takeIf { it > 0 }
-            pendingScreen = savedInstanceState.getString(PENDING_SCREEN)
-                ?.let { name -> AppScreen.entries.firstOrNull { it.name == name } }
-            pendingSubject = RecordbookSubjectArgs.from(savedInstanceState.getBundle(PENDING_SUBJECT))
-            pendingBarsLogin = savedInstanceState.getBoolean(PENDING_BARS_LOGIN)
+            restoreRoute(savedInstanceState)
         } else {
             acceptIntent(intent)
         }
@@ -271,12 +264,28 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt(PENDING_ROOT, pendingRootDestination ?: 0)
-        outState.putInt(PENDING_USER, pendingUserIsu ?: 0)
-        outState.putString(PENDING_SCREEN, pendingScreen?.name)
-        outState.putBundle(PENDING_SUBJECT, pendingSubject?.toBundle())
-        outState.putBoolean(PENDING_BARS_LOGIN, pendingBarsLogin)
+        val route = routes.pending
+        outState.putInt(PENDING_ROOT, route?.rootDestination ?: 0)
+        outState.putInt(PENDING_USER, route?.userIsu ?: 0)
+        outState.putString(PENDING_SCREEN, route?.screen?.name)
+        outState.putBundle(PENDING_SUBJECT, route?.subject?.toBundle())
+        outState.putBoolean(PENDING_BARS_LOGIN, route?.barsLogin ?: false)
+        outState.putBoolean(PENDING_TODAY, route?.today ?: false)
         super.onSaveInstanceState(outState)
+    }
+
+    private fun restoreRoute(state: Bundle) {
+        val root = state.getInt(PENDING_ROOT).takeIf { it != 0 } ?: return
+        routes.offer(
+            MainActivityRoute(
+                rootDestination = root,
+                userIsu = state.getInt(PENDING_USER).takeIf { it > 0 },
+                screen = state.getString(PENDING_SCREEN)?.let { name -> AppScreen.entries.firstOrNull { it.name == name } },
+                subject = RecordbookSubjectArgs.from(state.getBundle(PENDING_SUBJECT)),
+                barsLogin = state.getBoolean(PENDING_BARS_LOGIN),
+                today = state.getBoolean(PENDING_TODAY)
+            )
+        )
     }
 
     private fun renderSession(state: SessionState) {
@@ -334,28 +343,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
                     )
                 }
                 if (!onboarding) {
-                    pendingRootDestination?.let { destination ->
-                        if (navigation.selectRoot(destination)) {
-                            pendingRootDestination = null
-                            val userIsu = pendingUserIsu
-                            pendingUserIsu = null
-                            val screen = pendingScreen
-                            pendingScreen = null
-                            val subject = pendingSubject
-                            pendingSubject = null
-                            val barsLogin = pendingBarsLogin
-                            pendingBarsLogin = false
-                            // The subject page cannot open without its arguments; the recordbook root stays then.
-                            screen?.takeIf { it != AppScreen.RECORDBOOK_SUBJECT || subject != null }
-                                ?.let { navigation.openScreen(it, subject?.toBundle()) }
-                            if (userIsu != null) {
-                                navigation.openScreen(AppScreen.USER_PROFILE, Bundle().apply {
-                                    putInt(UserScreenArgs.ISU, userIsu)
-                                })
-                            }
-                            if (barsLogin) startActivity(Intent(this, BarsLoginActivity::class.java))
-                        }
-                    }
+                    routes.take(ready = true, navigation::selectRoot)?.let(::applyRoute)
                     // A signed-in session is what the update check needs; it runs once per process.
                     updateGate.checkForUpdate()
                 }
@@ -365,6 +353,19 @@ class MainActivity : AppCompatActivity(), AppNavigator {
                 revealResolvedGraph()
             }
         }
+    }
+
+    /** Runs once the route's root is selected. */
+    private fun applyRoute(route: MainActivityRoute) {
+        // The subject page cannot open without its arguments; the recordbook root stays then.
+        route.screen?.takeIf { it != AppScreen.RECORDBOOK_SUBJECT || route.subject != null }
+            ?.let { navigation.openScreen(it, route.subject?.toBundle()) }
+        route.userIsu?.let { isu ->
+            navigation.openScreen(AppScreen.USER_PROFILE, Bundle().apply { putInt(UserScreenArgs.ISU, isu) })
+        }
+        if (route.barsLogin) startActivity(Intent(this, BarsLoginActivity::class.java))
+        if (route.today) supportFragmentManager.setFragmentResult(ScheduleTodayRequest.KEY, Bundle.EMPTY)
+        route.shortcutId()?.let { ShortcutManagerCompat.reportShortcutUsed(this, it) }
     }
 
     private fun revealResolvedGraph() {
@@ -377,13 +378,10 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         val route = MainActivityIntentRouting.parse(
             intent.action,
             intent.getIntExtra(UserScreenArgs.ISU, 0),
-            RecordbookSubjectArgs.from(intent.extras)
+            RecordbookSubjectArgs.from(intent.extras),
+            launchedFromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0
         ) ?: return
-        pendingRootDestination = route.rootDestination
-        pendingUserIsu = route.userIsu
-        pendingScreen = route.screen
-        pendingSubject = route.subject
-        pendingBarsLogin = route.barsLogin
+        routes.offer(route)
     }
 
     companion object {
@@ -396,10 +394,13 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         const val ACTION_OPEN_RECORDBOOK = "dev.alllexey.itmowidgets.action.OPEN_RECORDBOOK"
         const val ACTION_OPEN_RECORDBOOK_SUBJECT = "dev.alllexey.itmowidgets.action.OPEN_RECORDBOOK_SUBJECT"
         const val ACTION_OPEN_BARS_LOGIN = "dev.alllexey.itmowidgets.action.OPEN_BARS_LOGIN"
+        const val ACTION_OPEN_QR_PASS = "dev.alllexey.itmowidgets.action.OPEN_QR_PASS"
+        const val ACTION_OPEN_TODAY = "dev.alllexey.itmowidgets.action.OPEN_TODAY"
         private const val PENDING_USER = "pending_user_isu"
         private const val PENDING_ROOT = "pending_root_destination"
         private const val PENDING_SCREEN = "pending_screen"
         private const val PENDING_SUBJECT = "pending_subject"
         private const val PENDING_BARS_LOGIN = "pending_bars_login"
+        private const val PENDING_TODAY = "pending_today"
     }
 }

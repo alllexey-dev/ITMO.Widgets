@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomS
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
+import dev.alllexey.itmowidgets.core.navigation.ScheduleTodayRequest
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -207,6 +208,13 @@ class ScheduleFragment : Fragment() {
         binding.scheduleStateAction.setOnClickListener {
             viewModel.loadInitialSchedule(forceRefresh = true)
         }
+
+        if (userIsu == null) {
+            requireActivity().supportFragmentManager.setFragmentResultListener(
+                ScheduleTodayRequest.KEY,
+                viewLifecycleOwner
+            ) { _, _ -> showToday() }
+        }
     }
 
     private fun setupObservers() {
@@ -294,6 +302,22 @@ class ScheduleFragment : Fragment() {
         viewModel.setSelectedUser(user)
         swipe.isRefreshing = true
         viewModel.loadInitialSchedule()
+    }
+
+    /** The «Сегодня» shortcut: the own schedule on today's day, whatever was read before. */
+    private fun showToday() {
+        pendingDayAnchor = null
+        listState = null
+        hasScrolledToToday = false
+        if (viewModel.uiState.value.selectedUser != null) {
+            anchorUserIsu = null
+            viewModel.setSelectedUser(null)
+            swipe.isRefreshing = true
+            // renderSchedule scrolls to today once the own schedule arrives.
+            viewModel.loadInitialSchedule()
+        } else {
+            (viewModel.uiState.value as? ScheduleUiState.Content)?.let { tryScrollToToday(it.displayDays) }
+        }
     }
 
     // endregion
