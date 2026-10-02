@@ -1,8 +1,16 @@
 package dev.alllexey.itmowidgets.feature.schedule
 
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
+import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
 import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncScheduler
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /** The phone's calendars in memory: [events] per calendar id; [access] off makes every call throw. */
 class FakePhoneCalendars : PhoneCalendars {
@@ -74,5 +82,57 @@ class FakePhoneCalendars : PhoneCalendars {
     private fun <T> checked(block: () -> T): T {
         if (!access) throw SecurityException("No calendar permission")
         return block()
+    }
+}
+
+class FakeCalendarSyncScheduler : CalendarSyncScheduler {
+    var ensureCalls = 0
+    var runOnceCalls = 0
+    var cancelCalls = 0
+
+    override fun ensurePeriodic() {
+        ensureCalls++
+    }
+
+    override fun runOnce() {
+        runOnceCalls++
+    }
+
+    override fun cancel() {
+        cancelCalls++
+    }
+}
+
+/** The state in [state]; [enableResult] answers every enable, [syncResult] every sync after [onSync]. */
+class FakeCalendarSyncRepository(enabled: Boolean = false) : CalendarSyncRepository {
+    val state = MutableStateFlow(CalendarSyncState(enabled = enabled))
+    var enableResult = CalendarSyncResult.DONE
+    var syncResult: AppResult<Unit> = AppResult.Success(Unit)
+    var onSync: () -> Unit = {}
+    var syncs = 0
+    val enabled = mutableListOf<CalendarTarget>()
+    var disables = 0
+
+    override fun observeState(): Flow<CalendarSyncState> = state
+
+    override suspend fun isEnabled() = state.value.enabled
+
+    override suspend fun enable(target: CalendarTarget): CalendarSyncResult {
+        enabled += target
+        if (enableResult == CalendarSyncResult.DONE) state.value = CalendarSyncState(enabled = true, target = target)
+        return enableResult
+    }
+
+    override suspend fun disable() {
+        disables++
+        state.value = CalendarSyncState()
+    }
+
+    override suspend fun writableCalendars(): List<WritableCalendar>? = emptyList()
+
+    override suspend fun sync(): AppResult<Unit> {
+        syncs++
+        onSync()
+        return syncResult
     }
 }

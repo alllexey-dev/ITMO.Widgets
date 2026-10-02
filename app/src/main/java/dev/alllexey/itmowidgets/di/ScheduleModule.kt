@@ -5,6 +5,7 @@ import dagger.Module
 import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
@@ -18,6 +19,7 @@ import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.AndroidPhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.DefaultScheduleChangeTracking
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
@@ -32,6 +34,7 @@ import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnaps
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncScheduler
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
@@ -39,6 +42,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesR
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.work.AndroidScheduleChangeNotifier
+import dev.alllexey.itmowidgets.feature.schedule.work.WorkManagerCalendarSyncScheduler
 import dev.alllexey.itmowidgets.feature.schedule.work.WorkManagerScheduleChangesScheduler
 import javax.inject.Singleton
 
@@ -184,4 +188,15 @@ abstract class ScheduleModule {
     abstract fun bindCalendarSyncSessionDataCleaner(
         impl: CalendarSyncRepositoryImpl
     ): SessionDataCleaner
+
+    @Binds
+    abstract fun bindCalendarSyncScheduler(
+        impl: WorkManagerCalendarSyncScheduler
+    ): CalendarSyncScheduler
+
+    @Binds
+    @Singleton
+    abstract fun bindCalendarSync(
+        impl: DefaultCalendarSync
+    ): CalendarSync
 }

@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
+import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
@@ -29,7 +30,8 @@ class AndroidSessionLifecycleEffects @Inject constructor(
     private val qrWidgetImages: QrWidgetImages,
     private val notifier: AppNotifier,
     private val scheduleChangeTracking: ScheduleChangeTracking,
-    private val markTracking: MarkTracking
+    private val markTracking: MarkTracking,
+    private val calendarSync: CalendarSync
 ) : SessionLifecycleEffects {
 
     override suspend fun prepareForSessionChange() {
@@ -39,11 +41,13 @@ class AndroidSessionLifecycleEffects @Inject constructor(
         ScheduleWidgetWork.cancelAll(context)
         scheduleChangeTracking.stopWork()
         markTracking.stopWork()
+        calendarSync.stopWork()
     }
 
     override suspend fun onSignedIn() {
         scheduleChangeTracking.syncWork()
         markTracking.syncWork()
+        calendarSync.syncWork()
         if (QrCodeWidgetProvider.widgetIds(context).isNotEmpty()) {
             QrWidgetWork.enqueueUpdate(context, force = true)
         }
