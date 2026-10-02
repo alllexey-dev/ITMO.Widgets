@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
@@ -25,12 +27,16 @@ import javax.inject.Singleton
 @Singleton
 class PersonRepositoryImpl @Inject constructor(
     private val myItmoApi: MyItmoApi,
+    private val demo: DemoMode,
 ) : PersonRepository, SessionDataCleaner {
     private val cache = ConcurrentHashMap<Int, Person>()
 
     override fun cachedPerson(isu: Int): Person? = cache[isu]
 
-    override suspend fun person(isu: Int): AppResult<Person> = try {
+    override suspend fun person(isu: Int): AppResult<Person> = if (demo.isActive()) {
+        DemoSocial.person(isu)?.let { person -> AppResult.Success(person.also { cache[isu] = it }) }
+            ?: AppResult.Failure(AppError.NotFound)
+    } else try {
         withContext(Dispatchers.IO) {
             val response = myItmoApi.getPersonality(isu).execute()
             if (response.isMissingPerson()) return@withContext AppResult.Failure(AppError.NotFound)

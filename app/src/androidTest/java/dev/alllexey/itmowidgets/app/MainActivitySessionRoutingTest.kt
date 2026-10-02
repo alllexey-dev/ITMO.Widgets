@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.testing.TestSession
 import dev.alllexey.itmowidgets.testing.TestUi
+import dev.alllexey.itmowidgets.testing.ViewChecks
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -51,6 +52,30 @@ class MainActivitySessionRoutingTest {
             onView(withText(R.string.auth_title))
                 .inRoot(withDecorView(`is`(decorView)))
                 .check(doesNotExist())
+        }
+    }
+
+    @Test
+    fun signInSaysTheAppIsUnofficial() {
+        TestSession.signOut()
+
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            lateinit var decorView: View
+            scenario.onActivity { activity -> decorView = activity.window.decorView }
+
+            eventually {
+                onView(withId(R.id.auth_unofficial_notice))
+                    .inRoot(withDecorView(`is`(decorView)))
+                    .check(matches(isDisplayed()))
+                    .check(matches(withText(R.string.app_unofficial_notice)))
+            }
+            scenario.onActivity { activity ->
+                val content = activity.findViewById<View>(R.id.auth_content)
+                val notice = activity.findViewById<View>(R.id.auth_unofficial_notice)
+                val signIn = activity.findViewById<View>(R.id.itmo_id_login_button)
+                assertTrue("The notice sits under the sign-in buttons", notice.top > signIn.bottom)
+                ViewChecks.assertTextFits(content)
+            }
         }
     }
 

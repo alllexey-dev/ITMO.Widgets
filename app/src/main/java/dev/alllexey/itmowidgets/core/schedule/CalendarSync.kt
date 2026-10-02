@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 enum class CalendarSyncProblem { NO_PERMISSION, CALENDAR_MISSING }
 
 /** How turning synchronization on ended. */
-enum class CalendarSyncResult { DONE, NO_PERMISSION, FAILED }
+enum class CalendarSyncResult { DONE, NO_PERMISSION, FAILED, DEMO_UNAVAILABLE }
 
 data class CalendarSyncState(
     val enabled: Boolean = false,

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.session
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.RegisterDeviceRequest
 import dev.alllexey.itmowidgets.core.model.UnregisterDeviceRequest
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
@@ -20,11 +21,12 @@ class DefaultBackendDeviceSession(
     private val utilityStorage: UtilityStorage,
     private val widgetsApi: ItmoWidgetsApi,
     private val deviceName: String,
-    private val currentUser: CurrentUserProvider
+    private val currentUser: CurrentUserProvider,
+    private val demo: DemoMode
 ) : BackendDeviceSession {
 
     override suspend fun registerCurrentDevice() {
-        if (!settings.getCustomServicesEnabled()) return
+        if (demo.isActive() || !settings.getCustomServicesEnabled()) return
         val ownerIsu = currentUser.getCurrentUser()?.isu?.takeIf { it > 0 } ?: return
         val fcmToken = utilityStorage.getFirebaseToken()?.trim()?.takeIf(String::isNotEmpty)
             ?: return
@@ -42,7 +44,7 @@ class DefaultBackendDeviceSession(
     }
 
     override suspend fun unregisterCurrentDevice() {
-        if (!settings.getCustomServicesEnabled()) return
+        if (demo.isActive() || !settings.getCustomServicesEnabled()) return
         val fcmToken = utilityStorage.getFirebaseToken()?.trim()?.takeIf(String::isNotEmpty)
             ?: return
 

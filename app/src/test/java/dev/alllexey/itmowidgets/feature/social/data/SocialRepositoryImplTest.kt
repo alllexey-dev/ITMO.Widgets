@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserCapabilities
@@ -47,7 +48,7 @@ class SocialRepositoryImplTest {
             outgoing = listOf(profile(3, CoreRelationshipState.OUTGOING))
             me = user(9)
         }
-        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo())
 
         repository.refresh()
 
@@ -65,7 +66,7 @@ class SocialRepositoryImplTest {
             userFriends = listOf(profile(7, CoreRelationshipState.NONE))
             actionResult = { isu -> profile(isu, CoreRelationshipState.OUTGOING) }
         }
-        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo())
         assertNull(repository.cachedProfile(1))
         assertNull(repository.cachedUserFriends(1))
 
@@ -92,7 +93,7 @@ class SocialRepositoryImplTest {
     @Test
     fun `disabled services skip the backend entirely`() = runTest {
         val api = FakeApi()
-        val repository = SocialRepositoryImpl(services(enabled = false), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = false), api.instance, backgroundScope, noDemo())
 
         repository.refresh()
 
@@ -111,7 +112,7 @@ class SocialRepositoryImplTest {
             meFailure = IOException("offline")
             outgoingFailure = IOException("offline")
         }
-        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo())
 
         repository.refresh()
 
@@ -126,7 +127,7 @@ class SocialRepositoryImplTest {
             incoming = listOf(profile(2, CoreRelationshipState.INCOMING), profile(4, CoreRelationshipState.INCOMING))
             actionResult = { isu -> profile(isu, CoreRelationshipState.FRIENDS) }
         }
-        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo())
         repository.refresh()
 
         val result = repository.acceptRequest(2)
@@ -142,7 +143,7 @@ class SocialRepositoryImplTest {
         val api = FakeApi().apply {
             friends = listOf(profile(1, CoreRelationshipState.FRIENDS))
         }
-        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo())
         repository.refresh()
 
         api.actionResult = { isu -> profile(isu, CoreRelationshipState.OUTGOING) }
@@ -164,7 +165,7 @@ class SocialRepositoryImplTest {
             incoming = listOf(profile(2, CoreRelationshipState.INCOMING))
             actionFailure = IOException("offline")
         }
-        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo())
         repository.refresh()
 
         assertEquals(AppResult.Failure(AppError.Network), repository.rejectRequest(2))
@@ -177,7 +178,7 @@ class SocialRepositoryImplTest {
         val api = FakeApi().apply {
             lookupResult = { isus -> isus.map { profile(it, CoreRelationshipState.NONE) } }
         }
-        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo())
         val isus = (1..60).toList() + 1
 
         val result = repository.lookup(isus)
@@ -190,7 +191,7 @@ class SocialRepositoryImplTest {
     @Test
     fun `clearing session data forgets everything loaded`() = runTest {
         val api = FakeApi().apply { friends = listOf(profile(1, CoreRelationshipState.FRIENDS)); me = user(9) }
-        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo())
         repository.refresh()
 
         repository.clearSessionData()
@@ -204,7 +205,7 @@ class SocialRepositoryImplTest {
     @Test
     fun `target friends retain viewer capabilities and never overwrite own friends cache`() = runTest {
         val api = FakeApi().apply { friends = listOf(profile(1, CoreRelationshipState.FRIENDS)) }
-        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo())
         repository.refresh()
         api.userFriends = listOf(profile(2, CoreRelationshipState.NONE).copy(user = user(2).copy(
             capabilities = UserCapabilities(false, false, true)
@@ -223,7 +224,7 @@ class SocialRepositoryImplTest {
     fun `opting out clears every backend cache and reconnecting does not restore it`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         repository.populateCaches()
         runCurrent()
         repository.assertCachesAvailable()
@@ -241,7 +242,7 @@ class SocialRepositoryImplTest {
     fun `refresh clears backend caches even when the opt-out collector has not run`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         repository.populateCaches()
         runCurrent()
         val calls = api.calls
@@ -260,7 +261,7 @@ class SocialRepositoryImplTest {
     fun `a gated request clears backend caches even when the opt-out collector has not run`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         repository.populateCaches()
         runCurrent()
         val calls = api.calls
@@ -279,7 +280,7 @@ class SocialRepositoryImplTest {
     fun `pending profile and target friends cannot restore caches after opting out`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         repository.populateCaches()
         val gate = ResponseGate(expectedCalls = 2)
         api.beforeResponse = { gate.await() }
@@ -300,7 +301,7 @@ class SocialRepositoryImplTest {
     fun `pre-disconnect responses cannot replace fresh profile and friends after reconnect`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         repository.populateCaches()
         val gate = ResponseGate(expectedCalls = 2)
         api.beforeResponse = { gate.await() }
@@ -332,7 +333,7 @@ class SocialRepositoryImplTest {
     fun `pending refresh cannot restore lists or own profile after opting out`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         repository.populateCaches()
         val gate = ResponseGate(expectedCalls = 4)
         api.beforeResponse = { gate.await() }
@@ -351,7 +352,7 @@ class SocialRepositoryImplTest {
     fun `pre-disconnect refresh cannot replace fresh lists or own profile after reconnect`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         repository.populateCaches()
         val gate = ResponseGate(expectedCalls = 4)
         api.beforeResponse = { gate.await() }
@@ -380,7 +381,7 @@ class SocialRepositoryImplTest {
     fun `pending relationship action cannot restore a profile after opting out`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         repository.populateCaches()
         api.actionResult = { isu -> profile(isu, CoreRelationshipState.OUTGOING) }
         val gate = ResponseGate()
@@ -400,7 +401,7 @@ class SocialRepositoryImplTest {
     fun `pre-disconnect relationship action cannot mutate fresh lists after reconnect`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         repository.populateCaches()
         api.actionResult = { isu -> profile(isu, CoreRelationshipState.OUTGOING) }
         val gate = ResponseGate()
@@ -426,7 +427,7 @@ class SocialRepositoryImplTest {
     @Test
     fun `clearing a session invalidates pending reads refresh and relationship actions`() = runTest {
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo())
         repository.populateCaches()
         val gate = ResponseGate(expectedCalls = 7)
         api.beforeResponse = { gate.await() }
@@ -456,7 +457,7 @@ class SocialRepositoryImplTest {
         val gate = CompletableDeferred<Unit>()
         services.readGate = { gate.await() }
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         val request = async(start = CoroutineStart.UNDISPATCHED) { repository.profile(5) }
         runCurrent()
         assertEquals(0, api.calls)
@@ -472,7 +473,7 @@ class SocialRepositoryImplTest {
     fun `a suspended enabled read cannot start a request after disconnect and reconnect`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         runCurrent()
         val gate = CompletableDeferred<Unit>()
         services.readGate = { gate.await() }
@@ -493,7 +494,7 @@ class SocialRepositoryImplTest {
     fun `a suspended disabled read cannot clear fresh data after reconnect`() = runTest {
         val services = services(enabled = false)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         runCurrent()
         val gate = CompletableDeferred<Unit>()
         services.readGate = { gate.await() }
@@ -516,7 +517,7 @@ class SocialRepositoryImplTest {
     fun `clearing a session invalidates a suspended opt-in read before it reaches the backend`() = runTest {
         val services = services(enabled = true)
         val api = populatedApi()
-        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope)
+        val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         runCurrent()
         val gate = CompletableDeferred<Unit>()
         services.readGate = { gate.await() }

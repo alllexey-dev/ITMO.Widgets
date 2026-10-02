@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -16,10 +19,15 @@ import javax.inject.Inject
 
 class UserSportRepositoryImpl @Inject constructor(
     private val customServices: CustomServicesRepository,
-    private val widgetsApi: ItmoWidgetsApi
+    private val widgetsApi: ItmoWidgetsApi,
+    private val time: AcademicTimeProvider,
+    private val demo: DemoMode
 ) : UserSportRepository {
 
     override suspend fun getUserBookings(isu: Int): AppResult<UserSportBookings> {
+        if (demo.isActive()) {
+            return DemoSport.userBookings(isu, time)?.let { AppResult.Success(it) } ?: AppResult.Failure(AppError.Forbidden)
+        }
         if (!customServices.isEnabled()) return AppResult.Failure(AppError.CustomServicesDisabled)
         return try {
             val response = withContext(Dispatchers.IO) { widgetsApi.userSportBookings(isu).data }

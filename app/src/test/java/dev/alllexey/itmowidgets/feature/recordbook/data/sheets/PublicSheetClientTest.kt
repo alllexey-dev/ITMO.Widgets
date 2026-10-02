@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.di.NetworkModule
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFixtures
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
@@ -25,7 +26,7 @@ class PublicSheetClientTest {
 
     @Before fun start() {
         server.start()
-        client = PublicSheetClient(NetworkModule.providePublicWebClient(), server.url("/"))
+        client = PublicSheetClient(NetworkModule.providePublicWebClient(), server.url("/"), noDemo())
     }
 
     @After fun stop() = server.shutdown()

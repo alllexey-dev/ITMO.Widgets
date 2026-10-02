@@ -15,6 +15,9 @@ sealed interface AppError {
     /** Requested data lives on the project backend, which the user has not opted into. */
     data object CustomServicesDisabled : AppError
 
+    /** A write, or a page outside the app, that the demo session does not offer. */
+    data object DemoUnavailable : AppError
+
     data class Unknown(val cause: Throwable? = null) : AppError
 }
 

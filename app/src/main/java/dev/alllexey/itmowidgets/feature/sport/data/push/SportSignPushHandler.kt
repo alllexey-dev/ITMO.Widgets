@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.push
 
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import com.google.gson.JsonElement
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
@@ -37,12 +38,13 @@ class SportSignPushHandler(
     private val widgets: ScheduleWidgetRefreshRequester,
     private val notifier: AppNotifier,
     private val clock: Clock,
-    private val diagnostics: AppDiagnostics
+    private val diagnostics: AppDiagnostics,
+    private val demo: DemoMode
 ) : FcmPayloadHandler {
     override val type = if (auto) SportAutoSignLessonsPayload.TYPE else SportFreeSignLessonsPayload.TYPE
 
     override suspend fun handle(payload: JsonElement) {
-        if (!actions.areCommunityServicesEnabled()) return
+        if (demo.isActive() || !actions.areCommunityServicesEnabled()) return
         val lessons = payload.asJsonObject["sportLessons"]?.takeIf { it.isJsonArray }?.asJsonArray ?: return
         val seen = mutableSetOf<Long>()
         for (element in lessons.take(100)) {
@@ -110,10 +112,11 @@ class SportSignPushHandler(
         private val widgets: ScheduleWidgetRefreshRequester,
         private val notifier: AppNotifier,
         @param:WallClock private val clock: Clock,
-        private val diagnostics: AppDiagnostics
+        private val diagnostics: AppDiagnostics,
+        private val demo: DemoMode
     ) {
         fun create(auto: Boolean): FcmPayloadHandler =
-            SportSignPushHandler(auto, gson, actions, api, bookings, pending, widgets, notifier, clock, diagnostics)
+            SportSignPushHandler(auto, gson, actions, api, bookings, pending, widgets, notifier, clock, diagnostics, demo)
     }
 
     companion object {

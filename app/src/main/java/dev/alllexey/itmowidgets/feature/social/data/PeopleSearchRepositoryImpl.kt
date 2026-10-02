@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import api.myitmo.model.personality.PersonalityMin
 import dev.alllexey.itmowidgets.core.network.requireResult
 import dev.alllexey.itmowidgets.core.network.toAppError
@@ -20,12 +22,17 @@ import javax.inject.Inject
  */
 class PeopleSearchRepositoryImpl @Inject constructor(
     private val myItmoApi: MyItmoApi,
-    private val social: SocialRepository
+    private val social: SocialRepository,
+    private val demo: DemoMode
 ) : PeopleSearchRepository {
 
     override suspend fun search(query: String, offset: Int): AppResult<PeopleSearchPage> {
         val normalized = query.trim()
         if (normalized.isEmpty()) return AppResult.Success(PeopleSearchPage.EMPTY)
+        if (demo.isActive()) {
+            val found = DemoSocial.search(normalized)
+            return AppResult.Success(PeopleSearchPage(found.drop(offset), found.size, null))
+        }
 
         val page = try {
             withContext(Dispatchers.IO) {

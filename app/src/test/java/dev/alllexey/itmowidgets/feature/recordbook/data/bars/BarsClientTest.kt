@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import api.bars.Bars
+import dev.alllexey.itmowidgets.core.testing.noDemo
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import api.bars.BarsConfiguration
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -64,7 +66,7 @@ class BarsClientTest {
         server.dispatcher = fake
         server.start()
         val bars = Bars(configuration()).apply { storage = this@BarsClientTest.storage }
-        client = BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener)
+        client = BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener, noDemo())
     }
     @After fun stop() = server.shutdown()
 
@@ -80,7 +82,17 @@ class BarsClientTest {
             chain.proceed(chain.request())
         }.build()
         val bars = Bars(configuration(), offline).apply { storage = this@BarsClientTest.storage }
-        return BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener)
+        return BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener, noDemo())
+    }
+
+    @Test fun `the demo session has no BARS and asks nothing`() = runTest {
+        val bars = Bars(configuration()).apply { storage = this@BarsClientTest.storage }
+        val demo = BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener, FakeDemoMode(active = true))
+
+        assertEquals(AppResult.Failure(AppError.DemoUnavailable), demo.account { execute { bars.api.getDisciplines(true) } })
+        assertEquals(AppResult.Failure(AppError.DemoUnavailable), demo.login("synthetic-code"))
+        assertEquals(0, server.requestCount)
+        assertEquals(0, silentLogin.requests)
     }
 
     @Test fun `token file is account-bound and cleared`() {

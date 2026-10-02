@@ -10,10 +10,13 @@ import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.text.UiText
 import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 data class AuthUiState(
@@ -24,6 +27,10 @@ data class AuthUiState(
     val error: UiText? = null
 )
 
+sealed interface AuthEvent {
+    data object DemoStarted : AuthEvent
+}
+
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val sessionRepository: SessionRepository
@@ -33,6 +40,10 @@ class AuthViewModel @Inject constructor(
         AuthUiState().withSessionState(sessionRepository.state.value)
     )
     val uiState: StateFlow<AuthUiState> = mutableUiState.asStateFlow()
+
+    private val demoTaps = DemoEntryTaps()
+    private val mutableEvents = Channel<AuthEvent>(Channel.BUFFERED)
+    val events: Flow<AuthEvent> = mutableEvents.receiveAsFlow()
 
     init {
         viewModelScope.launch {
@@ -55,6 +66,18 @@ class AuthViewModel @Inject constructor(
                 manualLoginInProgress = false,
                 error = (result as? AppResult.Failure)?.error?.toAuthText()
             )
+        }
+    }
+
+    /** [atMillis] is a monotonic time of the tap on the logo. */
+    fun onLogoTap(atMillis: Long) {
+        if (!demoTaps.tap(atMillis)) return
+        val state = mutableUiState.value
+        if (state.manualLoginInProgress || state.sessionTransitionInProgress) return
+        viewModelScope.launch {
+            // The confirmation goes first: the demo session replaces this screen.
+            mutableEvents.send(AuthEvent.DemoStarted)
+            sessionRepository.startDemo()
         }
     }
 

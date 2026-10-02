@@ -28,6 +28,13 @@ Development happens on `master`, which builds as `2.2-SNAPSHOT` (version code
 5); the latest release is `2.1.1`. A release APK is signed with
 `app-keystore.jks` (alias `key0`, the same certificate as 2.0.1) through the
 ignored `keystore.properties`; the checklist is in `vibe/release-2.1.md`.
+From 2.2 the app builds in two variants with that one key and `applicationId`:
+`github` (`./gradlew :app:assembleGithubRelease`,
+`app/build/outputs/apk/github/release/app-github-release.apk`, «Обновить» opens
+GitHub releases) and `play` (`./gradlew :app:bundlePlayRelease`,
+`app/build/outputs/bundle/playRelease/app-play-release.aab`, updates through
+Google Play In-App Updates). Without `keystore.properties` both build unsigned.
+`scripts/check-play-policy.sh` must pass before an upload.
 
 ## Version compatibility
 

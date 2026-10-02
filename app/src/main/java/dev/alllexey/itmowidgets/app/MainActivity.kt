@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -44,8 +45,10 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.sport.ui.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.ui.common.toDetailsArgs
+import dev.alllexey.itmowidgets.feature.update.ui.InstallStateWatcher
 import dev.alllexey.itmowidgets.feature.update.ui.toScreenArguments
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.dataOrNull
 import java.time.LocalDate
@@ -68,6 +71,11 @@ class MainActivity : AppCompatActivity(), AppNavigator {
 
     @Inject
     lateinit var timeProvider: AcademicTimeProvider
+
+    /** Google Play's flexible update; the GitHub build never reports. */
+    @Inject
+    lateinit var installState: InstallStateWatcher
+    private var updateDownloaded: Snackbar? = null
 
     /** Shared with the sport tab, so a cancellation from the feed or the schedule goes the same way. */
     private val sportMy: SportMyViewModel by viewModels()
@@ -108,6 +116,8 @@ class MainActivity : AppCompatActivity(), AppNavigator {
             )
         }
 
+        binding.demoBannerSignIn.setOnClickListener { lifecycleScope.launch { sessionRepository.signOut() } }
+
         lifecycleScope.launch { sessionRepository.initialize() }
         sessionRepository.state
             .flowWithLifecycle(lifecycle)
@@ -128,8 +138,21 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     override fun openScreen(screen: AppScreen, arguments: Bundle?) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
         // The first-run flow owns the whole window; overlays would appear over a hidden container.
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
+        if (screen == AppScreen.MY_ITMO_WEB && refusedInDemo()) return
         navigation.openScreen(screen, arguments)
+    }
+
+    private val demoSession: Boolean get() = (sessionRepository.state.value as? SessionState.SignedIn)?.demo == true
+
+    /** The demo session skips the first-run flow without marking it passed. */
+    private fun onboardingPassed(): Boolean = demoSession || onboardingGate.state.value == OnboardingGate.Passed
+
+    /** My ITMO in the browser and the web sign-in need a real account. */
+    private fun refusedInDemo(): Boolean {
+        if (!demoSession) return false
+        Toast.makeText(this, R.string.error_demo_unavailable, Toast.LENGTH_SHORT).show()
+        return true
     }
 
     override fun dismissOverlays() {
@@ -138,56 +161,57 @@ class MainActivity : AppCompatActivity(), AppNavigator {
 
     override fun openRoot(root: AppRoot) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
         navigation.openRoot(root)
     }
 
     override fun openSubjectLinks(args: SubjectLinksArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
         navigation.openSubjectLinks(args)
     }
 
     override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
         navigation.openLinkEditor(args, linkId)
     }
 
     override fun openLinkActions(args: SubjectLinksArgs, linkId: String) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
         navigation.openLinkActions(args, linkId)
     }
 
     override fun openSheetScores(args: SheetScoresArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
         navigation.openSheetScores(args)
     }
 
     override fun openReviewEditor(args: TeacherReviewArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
         navigation.openReviewEditor(args)
     }
 
     override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
         navigation.openReviewReport(args, reviewId)
     }
 
     override fun openWebLogin() {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
+        if (refusedInDemo()) return
         navigation.openWebLogin()
     }
 
     /** A sport lesson in the schedule is a booking: it gets the sport sheet with `Отменить`. */
     override fun openLessonDetails(args: LessonDetailsArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
         if (args.typeId != SPORT_TYPE_ID) {
             navigation.openLessonDetails(args)
             return
@@ -201,7 +225,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     /** The sport tab's sheet when the sport data knows the queue; the schedule's own sheet otherwise. */
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
-        if (onboardingGate.state.value != OnboardingGate.Passed) return
+        if (!onboardingPassed()) return
         lifecycleScope.launch {
             val item = findSportBooking(args.lessonId)
             if (item != null) navigation.openSportDetails(item) else navigation.openPendingSportDetails(args)
@@ -259,6 +283,25 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         renderSession(sessionRepository.state.value)
     }
 
+    override fun onResume() {
+        super.onResume()
+        installState.start(::offerRestart)
+    }
+
+    override fun onPause() {
+        installState.stop()
+        super.onPause()
+    }
+
+    private fun offerRestart() {
+        if (updateDownloaded?.isShownOrQueued == true) return
+        val snackbar = Snackbar.make(binding.root, R.string.update_downloaded, Snackbar.LENGTH_INDEFINITE)
+            .setAction(R.string.update_restart) { installState.completeUpdate() }
+        if (binding.bottomNavView.isVisible) snackbar.anchorView = binding.bottomNavView
+        snackbar.show()
+        updateDownloaded = snackbar
+    }
+
     override fun onResumeFragments() {
         super.onResumeFragments()
         // An intent can arrive after onSaveInstanceState. Apply it only once transactions are safe.
@@ -299,6 +342,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private fun renderSession(state: SessionState) {
         if (supportFragmentManager.isStateSaved) return
         val controller = navigation.rootHost.navController
+        binding.demoBanner.isVisible = (state as? SessionState.SignedIn)?.demo == true
         when (state) {
             SessionState.Initializing -> {
                 binding.bottomNavView.isVisible = false
@@ -321,7 +365,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
 
             is SessionState.SignedIn -> {
                 val gate = onboardingGate.state.value
-                if (gate == OnboardingGate.Unknown) {
+                if (!state.demo && gate == OnboardingGate.Unknown) {
                     // The stored flag decides the start destination; do not guess it for one frame.
                     binding.bottomNavView.isVisible = false
                     binding.navHostFragment.isVisible = false
@@ -329,7 +373,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
                     binding.sessionProgress.isVisible = true
                     return
                 }
-                val onboarding = gate == OnboardingGate.Required
+                val onboarding = !state.demo && gate == OnboardingGate.Required
                 val current = controller.currentDestination?.id
                 if (current == null || current == R.id.auth) {
                     controller.graph = controller.navInflater.inflate(R.navigation.main_nav_graph).apply {
@@ -356,7 +400,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
                 if (!onboarding) {
                     routes.take(ready = true, navigation::selectRoot)?.let(::applyRoute)
                     // A signed-in session is what the update check needs; it runs once per process.
-                    updateGate.checkForUpdate()
+                    if (!state.demo) updateGate.checkForUpdate()
                 }
                 // Contextual navigation covers this surface instead of resizing it.
                 binding.bottomNavView.isVisible = !onboarding

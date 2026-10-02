@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
@@ -10,6 +11,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.WallClock
+import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.DetectedChange
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigests
@@ -51,6 +53,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     private val time: AcademicTimeProvider,
     @param:WallClock private val clock: Clock,
     private val notifier: AppNotifier,
+    private val demo: DemoMode,
 ) : ScheduleChangesRepository, SessionDataCleaner {
 
     private val checks = Mutex()
@@ -62,11 +65,16 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     private val state = MutableStateFlow<StoredScheduleChanges?>(null)
 
     override fun observeChanges(): Flow<List<ScheduleChange>> = flow {
+        if (demo.isActive()) {
+            emit(DemoSchedule.changes(time.today(), clock.instant()))
+            return@flow
+        }
         lock.withLock { loaded() }
         emitAll(state.filterNotNull().map { stored -> visible(stored.changes) })
     }
 
     override suspend fun check(): AppResult<ScheduleCheckResult> = checks.withLock {
+        if (demo.isActive()) return@withLock AppResult.Success(ScheduleCheckResult.Compared(0))
         val started = generation.get()
         val epoch = snapshotEpoch.get()
         val today = time.today()

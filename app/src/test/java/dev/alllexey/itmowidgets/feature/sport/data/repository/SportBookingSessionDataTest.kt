@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
@@ -186,7 +188,7 @@ class SportBookingSessionDataTest {
             flowOf(CustomDataState.Disabled)
         } as SportDataRepository
 
-        val repository = SportBookingRepositoryImpl(settings, sportData, myItmo.api, widgetsApi)
+        val repository = SportBookingRepositoryImpl(settings, sportData, myItmo.api, widgetsApi, FixedAcademicTime(), noDemo())
     }
 
     private class InMemoryPreferencesDataStore : DataStore<Preferences> {

@@ -16,4 +16,7 @@ interface CustomServicesRepository {
     suspend fun isEnabled(): Boolean
 
     suspend fun setEnabled(enabled: Boolean)
+
+    /** False in the demo session: the opt-in stays on there and [setEnabled] changes nothing. */
+    suspend fun isChangeable(): Boolean = true
 }

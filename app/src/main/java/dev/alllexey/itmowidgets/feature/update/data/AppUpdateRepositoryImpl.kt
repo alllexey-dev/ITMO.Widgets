@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.update.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
@@ -29,10 +30,13 @@ class AppUpdateRepositoryImpl @Inject constructor(
     private val utilityStorage: UtilityStorage,
     private val installedVersion: AppVersionName,
     @param:WallClock private val clock: Clock,
-    private val diagnostics: AppDiagnostics
+    private val diagnostics: AppDiagnostics,
+    private val demo: DemoMode
 ) : AppUpdateRepository {
 
+    /** The demo session never offers an update: it asks nothing from Backend. */
     override suspend fun loadUpdate(): AppUpdate? {
+        if (demo.isActive()) return null
         if (!customServices.isEnabled()) return null
         val info = fetchVersionInfo() ?: return null
         val latest = AppVersionName(info.latestVersion)

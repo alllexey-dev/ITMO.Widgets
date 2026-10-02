@@ -1,6 +1,10 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.demo.DemoPeople
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.reviews.SummaryLevel
@@ -35,7 +39,20 @@ class TeacherLevelsRepositoryImplTest {
     private val services = FakeServices(true)
     private val api = FakeApi()
 
-    private fun repository() = TeacherLevelsRepositoryImpl(services, api.instance, TeacherLevelsFileStore(directory, Gson()), clock)
+    @Test
+    fun `the demo knows the tones of its teachers without Backend`() = runTest {
+        services.enabled.value = false
+        val teachers = setOf(DemoPeople.ALGORITHMS_TEACHER.isu, DemoPeople.ENGLISH_TEACHER.isu)
+
+        val levels = repository(FakeDemoMode(active = true)).levels(teachers)
+
+        assertEquals(mapOf(DemoPeople.ALGORITHMS_TEACHER.isu to TeacherLevel.VERY_POSITIVE), levels)
+        assertTrue(api.requests.isEmpty())
+        assertFalse(directory.exists())
+    }
+
+    private fun repository(demo: DemoMode = noDemo()) =
+        TeacherLevelsRepositoryImpl(services, api.instance, TeacherLevelsFileStore(directory, Gson()), clock, demo)
 
     @Test
     fun `a disabled opt-in answers nothing without a request and erases the file`() = runTest {

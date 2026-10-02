@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.network.requireResult
@@ -33,7 +36,9 @@ class SportBookingRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
     private val sportDataRepository: SportDataRepository,
     private val myItmoApi: MyItmoApi,
-    private val widgetsApi: ItmoWidgetsApi
+    private val widgetsApi: ItmoWidgetsApi,
+    private val time: AcademicTimeProvider,
+    private val demo: DemoMode
 ) : SportBookingRepository, SessionDataCleaner {
 
     private val bookingsFlow = MutableSharedFlow<DataState<List<SportBooking>>>(replay = 1)
@@ -93,6 +98,12 @@ class SportBookingRepositoryImpl @Inject constructor(
 
     override suspend fun refreshSportBookings() {
         val generation = sessionMutex.withLock { sessionGeneration }
+        if (demo.isActive()) {
+            sessionMutex.withLock {
+                if (generation == sessionGeneration) bookingsFlow.emit(DataState.Success(DemoSport.bookings(time)))
+            }
+            return
+        }
         try {
             val result = withContext(Dispatchers.IO) {
                 val response = myItmoApi.chosenSportSections.execute()

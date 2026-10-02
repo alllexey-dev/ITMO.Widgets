@@ -11,6 +11,8 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
+import dev.alllexey.itmowidgets.feature.update.ui.ActivityReleasePageOpener
+import dev.alllexey.itmowidgets.feature.update.ui.ReleasePageOpener
 import javax.inject.Singleton
 
 @Module
@@ -20,6 +22,9 @@ abstract class UpdateModule {
     @Binds
     @Singleton
     abstract fun bindAppUpdateRepository(impl: AppUpdateRepositoryImpl): AppUpdateRepository
+
+    @Binds
+    abstract fun bindReleasePageOpener(opener: ActivityReleasePageOpener): ReleasePageOpener
 
     companion object {
 

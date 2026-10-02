@@ -13,7 +13,8 @@ sealed interface SessionState {
 
     data object ReauthenticationRequired : SessionState
 
-    data class SignedIn(val user: CurrentUser?) : SessionState
+    /** [demo] is the hidden demo session: no tokens, fictional data, nothing reaches the network. */
+    data class SignedIn(val user: CurrentUser?, val demo: Boolean = false) : SessionState
 }
 
 interface SessionRepository {
@@ -25,6 +26,9 @@ interface SessionRepository {
     suspend fun completeItmoIdLogin(tokenResponseJson: String): AppResult<Unit>
 
     suspend fun signInWithRefreshToken(refreshToken: String): AppResult<Unit>
+
+    /** Replaces any session with the demo one; it lasts until [signOut]. */
+    suspend fun startDemo()
 
     suspend fun signOut()
 }

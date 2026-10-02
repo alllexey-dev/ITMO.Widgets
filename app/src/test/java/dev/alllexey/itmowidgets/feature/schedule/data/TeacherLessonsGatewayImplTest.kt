@@ -1,6 +1,10 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.demo.DemoStudy
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
@@ -207,7 +211,19 @@ class TeacherLessonsGatewayImplTest {
         error("Only ${requests.size} of $count weeks were asked")
     }
 
-    private fun gateway() = TeacherLessonsGatewayImpl(api, TeacherWeeksFileStore(folder, Gson()), FixedTime(TODAY))
+    @Test
+    fun `the demo names the teacher's subjects from its own week`() = runTest {
+        val teacher = DemoStudy.ALGORITHMS.teacher.isu
+
+        val lessons = gateway(FakeDemoMode(active = true)).taughtBy(teacher).toList()
+
+        val answer = (lessons.single() as AppResult.Success).value
+        assertEquals(listOf(DemoStudy.ALGORITHMS.name), answer.subjects)
+        assertTrue(answer.flowIds.isNotEmpty())
+        assertTrue(requests.isEmpty())
+    }
+
+    private fun gateway(demo: DemoMode = noDemo()) = TeacherLessonsGatewayImpl(api, TeacherWeeksFileStore(folder, Gson()), FixedTime(TODAY), demo)
 
     private fun day(date: String, vararg lessons: String) =
         """{"day_number":1,"week_number":1,"date":"$date","lessons":[${lessons.joinToString(",")}]}"""

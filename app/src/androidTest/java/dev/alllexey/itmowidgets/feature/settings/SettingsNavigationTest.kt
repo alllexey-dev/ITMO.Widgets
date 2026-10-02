@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.feature.settings
 
 import android.Manifest
+import android.app.Activity
+import android.app.Instrumentation
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
@@ -29,6 +32,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.transition.MaterialSharedAxis
+import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import androidx.lifecycle.ViewModelProvider
@@ -54,6 +58,7 @@ import org.hamcrest.Matchers.allOf
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.concurrent.CopyOnWriteArrayList
 
 @RunWith(AndroidJUnit4::class)
 class SettingsNavigationTest {
@@ -522,6 +527,75 @@ class SettingsNavigationTest {
             SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
             SettingsNavigationTestActivity.MemoryQuickSettingsTile.canRequest = false
             SettingsNavigationTestActivity.qrTileAdded.value = false
+        }
+    }
+
+    @Test
+    fun accountDeletionAndPrivacyRowsOpenTheSite() {
+        val specs = (Appearances.default + Appearances.all.first { it.fontScale > 1f }).distinct()
+        val links = BrowserLinks()
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.addMonitor(links)
+        try {
+            for (spec in specs) {
+                SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    openPage(scenario, SettingsPage.SERVICES)
+                    scenario.onActivity { activity ->
+                        val root = settingsRoot(activity)
+                        assertEquals(spec.fontScale, root.resources.configuration.fontScale, 0.001f)
+                        val title = activity.getString(R.string.settings_delete_account_title)
+                        assertEquals(title, visibleTitles(root).last())
+                        val row = checkNotNull(settingRow(root, title))
+                        assertEquals(
+                            activity.getString(R.string.settings_delete_account_description),
+                            row.findViewById<TextView>(R.id.setting_description).text.toString()
+                        )
+                        assertTrue(row.findViewById<View>(R.id.setting_chevron).isShown)
+                        assertTrue(row.isClickable && row.isEnabled)
+                        ViewChecks.assertTextFits(root)
+                        ViewChecks.assertTouchTargets(root.findViewById(R.id.sections_container), requireWidth = false)
+                    }
+                    Screenshots.capture("settings-screenshots", "settings-services-delete-${spec.name}") { settle() }
+                    links.opened.clear()
+                    onView(withText(R.string.settings_delete_account_title)).perform(click())
+                    settle()
+                    assertEquals(listOf(BuildConfig.WIDGETS_BASE_URL + "/delete-account"), links.opened.map { it.dataString })
+
+                    openPage(scenario, SettingsPage.MAINTENANCE)
+                    scenario.onActivity { activity ->
+                        val root = settingsRoot(activity)
+                        assertEquals(
+                            listOf(activity.getString(R.string.settings_privacy_policy_title), activity.getString(R.string.settings_version_title)),
+                            visibleTitles(root).takeLast(2)
+                        )
+                        val footer = root.findViewById<ViewGroup>(R.id.sections_container).descendants
+                            .filterIsInstance<TextView>().single { it.id == R.id.setting_section_footer }
+                        assertTrue(footer.isShown)
+                        assertEquals(activity.getString(R.string.app_unofficial_notice), footer.text.toString())
+                        ViewChecks.assertTextFits(root)
+                    }
+                    Screenshots.capture("settings-screenshots", "settings-maintenance-privacy-${spec.name}") { settle() }
+                    links.opened.clear()
+                    onView(withText(R.string.settings_privacy_policy_title)).perform(click())
+                    settle()
+                    assertEquals(listOf(BuildConfig.WIDGETS_BASE_URL + "/privacy.html"), links.opened.map { it.dataString })
+                }
+            }
+        } finally {
+            instrumentation.removeMonitor(links)
+            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+        }
+    }
+
+    /** Catches every link sent to a browser and opens nothing. */
+    private class BrowserLinks : Instrumentation.ActivityMonitor() {
+        val opened = CopyOnWriteArrayList<Intent>()
+
+        override fun onStartActivity(intent: Intent): Instrumentation.ActivityResult? {
+            if (intent.action != Intent.ACTION_VIEW) return null
+            opened += intent
+            return Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null)
         }
     }
 

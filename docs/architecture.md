@@ -329,13 +329,28 @@ Fragment with a nullable binding clears it in `onDestroyView()`; no direct
 Core library wire types from `core.model.reviews`, `core.model.resources`,
 `core.model.social` and `core.model.fcm` cannot be imported by `ui` or
 `presentation`; data mappers alias those imports when names overlap with local
-models. Session-cleaning `*RepositoryImpl` classes must be `@Singleton`.
+models. Session-cleaning `*RepositoryImpl` classes must be `@Singleton`. The debug
+override stores, the debug refresh-token controller and the debug tools screen
+check `BuildConfig.DEBUG` themselves; no production source names the GitHub
+releases page, which only the `github` variant's `BuildConfig.DOWNLOAD_URL`
+holds. The suite filters agent worktrees by the project path, so it also runs
+inside one.
 `DesignCardResourcesTest` pins the card style family from
 [`design.md`](design.md). Add a rule when a new invariant is agreed instead of
 relying on review.
 
 ## Testing conventions
 
+- The app has two distribution variants (`flavorDimensions` `distribution`):
+  `github` and `play`, with the same `applicationId` and key. Every task name
+  carries the variant: `testGithubDebugUnitTest`, `testPlayDebugUnitTest`,
+  `lintGithubDebug`, `connectedGithubDebugAndroidTest`; the debug APK is
+  `app/build/outputs/apk/github/debug/app-github-debug.apk`. Variant-only code
+  lives in `app/src/{github,play}`, its tests in `app/src/testGithub` and
+  `app/src/androidTestPlay` (Play's `FakeAppUpdateManager` needs real
+  `PendingIntent`s, so the Play update tests run on a device).
+  `scripts/check-play-policy.sh` checks the release manifests, `targetSdk`, the
+  16 KB alignment and that the `play` bundle carries no GitHub update link.
 - JVM unit tests are the default; `unitTests.isReturnDefaultValues = true` lets
   code that logs through `android.util.Log` run.
 - ViewModels are created inside the test body after `MainDispatcherRule` is

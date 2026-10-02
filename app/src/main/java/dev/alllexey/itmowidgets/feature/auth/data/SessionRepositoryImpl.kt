@@ -5,6 +5,8 @@ import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import api.myitmo.MyItmo
 import api.myitmo.model.other.TokenResponse
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
@@ -16,6 +18,7 @@ import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
+import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +40,9 @@ class SessionRepositoryImpl @Inject constructor(
     private val backendIdentitySync: BackendIdentitySync,
     private val backendDeviceSession: BackendDeviceSession,
     private val fcmTokenSync: FcmTokenSync,
-    private val diagnostics: AppDiagnostics
+    private val diagnostics: AppDiagnostics,
+    private val settings: AppSettingsStorage,
+    private val demo: DemoMode
 ) : SessionRepository {
 
     private val mutableState = MutableStateFlow<SessionState>(SessionState.Initializing)
@@ -46,6 +51,10 @@ class SessionRepositoryImpl @Inject constructor(
     override suspend fun initialize() {
         if (mutableState.value !is SessionState.Initializing) return
 
+        if (demo.isActive()) {
+            mutableState.value = DEMO_SESSION
+            return
+        }
         if (!tokenStore.hasRefreshToken()) {
             mutableState.value = SessionState.SignedOut
             return
@@ -99,11 +108,28 @@ class SessionRepositoryImpl @Inject constructor(
         return replaceSession(tokens)
     }
 
+    override suspend fun startDemo() {
+        if (mutableState.value == DEMO_SESSION) return
+        withContext(NonCancellable) {
+            runCatching { lifecycleEffects.prepareForSessionChange() }
+            clearSessionDataIgnoringFailures()
+            // An expired session must not stay behind the demo: widgets would keep refreshing it.
+            withContext(Dispatchers.IO) { tokenStore.clearTokens() }
+            settings.setDemoActive(true)
+            // No Backend identity, FCM token, device or background work: the demo stays on the device.
+            mutableState.value = DEMO_SESSION
+        }
+    }
+
     override suspend fun signOut() {
         if (
             mutableState.value is SessionState.SigningOut ||
             mutableState.value is SessionState.SignedOut
         ) {
+            return
+        }
+        if ((mutableState.value as? SessionState.SignedIn)?.demo == true) {
+            signOutOfDemo()
             return
         }
 
@@ -120,10 +146,21 @@ class SessionRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun signOutOfDemo() {
+        mutableState.value = SessionState.SigningOut
+        withContext(NonCancellable) {
+            clearSessionDataIgnoringFailures()
+            runCatching { settings.setDemoActive(false) }
+            runCatching { lifecycleEffects.onSignedOut() }
+            mutableState.value = SessionState.SignedOut
+        }
+    }
+
     private suspend fun replaceSession(tokens: SessionTokens): AppResult<Unit> {
         return try {
             lifecycleEffects.prepareForSessionChange()
             clearSessionData()
+            settings.setDemoActive(false)
             withContext(Dispatchers.IO) { tokenStore.replaceWithTokens(tokens) }
             mutableState.value = SessionState.SignedIn(currentUserProvider.getCurrentUser())
             runCatching { lifecycleEffects.onSignedIn() }
@@ -158,5 +195,6 @@ class SessionRepositoryImpl @Inject constructor(
 
     private companion object {
         const val MAX_TOKEN_RESPONSE_LENGTH = 32 * 1024
+        val DEMO_SESSION = SessionState.SignedIn(DemoPeople.ME, demo = true)
     }
 }

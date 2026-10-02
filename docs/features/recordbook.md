@@ -728,10 +728,10 @@ sheet is opened; names and ISUs are made up.
 ## Verification
 
 ```bash
-./gradlew :app:testDebugUnitTest
-./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.RecordbookVisualTest,dev.alllexey.itmowidgets.feature.recordbook.RecordbookBarsVisualTest
-./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.SheetScoresVisualTest
-./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.work.MarksWorkTest,dev.alllexey.itmowidgets.feature.recordbook.MarksNotificationTest
+./gradlew :app:testGithubDebugUnitTest
+./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.RecordbookVisualTest,dev.alllexey.itmowidgets.feature.recordbook.RecordbookBarsVisualTest
+./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.SheetScoresVisualTest
+./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.recordbook.work.MarksWorkTest,dev.alllexey.itmowidgets.feature.recordbook.MarksNotificationTest
 ```
 
 Unit tests cover the Retrofit paths through an in-memory interceptor, nullable

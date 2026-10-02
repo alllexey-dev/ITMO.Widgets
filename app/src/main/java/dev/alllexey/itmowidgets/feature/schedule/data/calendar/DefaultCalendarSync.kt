@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.outcomeOf
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncScheduler
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -21,13 +22,14 @@ import kotlinx.coroutines.flow.Flow
 class DefaultCalendarSync @Inject constructor(
     private val repository: CalendarSyncRepository,
     private val scheduler: CalendarSyncScheduler,
-    private val sessionTokens: SessionTokenStore
+    private val sessionTokens: SessionTokenStore,
+    private val demo: DemoMode
 ) : CalendarSync {
 
     override fun observeState(): Flow<CalendarSyncState> = repository.observeState()
 
     override suspend fun enable(): CalendarSyncResult =
-        repository.enable().also { result ->
+        if (demo.isActive()) CalendarSyncResult.DEMO_UNAVAILABLE else repository.enable().also { result ->
             if (result == CalendarSyncResult.DONE) {
                 syncWork()
                 if (sessionTokens.hasRefreshToken()) scheduler.runOnce()

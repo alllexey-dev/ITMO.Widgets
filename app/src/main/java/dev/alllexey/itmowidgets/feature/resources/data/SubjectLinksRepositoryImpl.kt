@@ -1,6 +1,11 @@
 package dev.alllexey.itmowidgets.feature.resources.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.feature.resources.data.demo.DemoSubjectLinks
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.resources.ModerationReportRequest
 import dev.alllexey.itmowidgets.core.model.resources.PinSubjectLinkRequest
@@ -61,6 +66,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     private val api: ItmoWidgetsApi,
     private val services: CustomServicesRepository,
     @param:WallClock private val clock: Clock,
+    private val demo: DemoMode,
 ) : SubjectLinksRepository, SessionDataCleaner {
     private val state = MutableStateFlow<StoredLinks?>(null)
     private val loadError = MutableStateFlow<AppError?>(null)
@@ -74,8 +80,18 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     private val activeRequests = ConcurrentHashMap.newKeySet<Job>()
     @Volatile private var clearing = false
     @Volatile private var enabled: Boolean? = null
+    @Volatile private var demoActive = false
 
-    override fun observe(scope: ResourceScope): Flow<SubjectLinksState> = combine(
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observe(scope: ResourceScope): Flow<SubjectLinksState> = demo.observeActive().flatMapLatest { active ->
+        demoActive = active
+        if (active) flowOf(SubjectLinksState.Content(demoSnapshot(scope))) else observeStored(scope)
+    }
+
+    private fun demoSnapshot(scope: ResourceScope) =
+        DemoSubjectLinks.snapshot(scope, OffsetDateTime.ofInstant(clock.instant(), clock.zone))
+
+    private fun observeStored(scope: ResourceScope): Flow<SubjectLinksState> = combine(
         state, services.observeEnabled().onEach { enabled = it }, loadError, scopeErrors, refreshing,
     ) { data, on, failure, errors, active ->
         val error = errors[scope.key]
@@ -85,12 +101,13 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     }.distinctUntilChanged().onStart { attempt { load(epoch.get()) } }
 
     override fun peek(scope: ResourceScope): SubjectLinksSnapshot? {
+        if (demoActive) return demoSnapshot(scope)
         val data = state.value ?: return null
         val on = enabled ?: return null
         return snapshot(data, scope, on, failed = scope.key in scopeErrors.value)
     }
 
-    override suspend fun refresh(scope: ResourceScope): AppResult<Unit> = attempt {
+    override suspend fun refresh(scope: ResourceScope): AppResult<Unit> = if (demo.isActive()) AppResult.Success(Unit) else attempt {
         val generation = epoch.get()
         load(generation)
         if (!isEnabled()) return@attempt
@@ -118,7 +135,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         title: String?,
         visibility: LinkVisibility,
         flowId: Long?,
-    ): AppResult<SubjectLink> = attempt {
+    ): AppResult<SubjectLink> = if (demo.isActive()) AppResult.Failure(AppError.DemoUnavailable) else attempt {
         val generation = epoch.get()
         load(generation)
         val request = saveRequest(scope, id, category, url, title, visibility, flowId)
@@ -139,7 +156,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun delete(scope: ResourceScope, id: String): AppResult<Unit> = attempt {
+    override suspend fun delete(scope: ResourceScope, id: String): AppResult<Unit> = if (demo.isActive()) DEMO_REFUSAL else attempt {
         val generation = epoch.get()
         load(generation)
         if (id in current().local) {
@@ -152,7 +169,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun pin(scope: ResourceScope, id: String?): AppResult<Unit> = attempt {
+    override suspend fun pin(scope: ResourceScope, id: String?): AppResult<Unit> = if (demo.isActive()) DEMO_REFUSAL else attempt {
         val generation = epoch.get()
         load(generation)
         if (!isEnabled()) {
@@ -174,11 +191,12 @@ class SubjectLinksRepositoryImpl @Inject constructor(
 
     override suspend fun vote(scope: ResourceScope, id: String, value: Int): AppResult<Unit> {
         require(value in -1..1)
+        if (demo.isActive()) return DEMO_REFUSAL
         return linkAction(scope) { api.voteSubjectLink(UUID.fromString(id), ResourceVoteRequest(value)) }
     }
 
     override suspend fun report(scope: ResourceScope, id: String, reason: ResourceReportReason, comment: String?): AppResult<Unit> =
-        linkAction(scope) {
+        if (demo.isActive()) DEMO_REFUSAL else linkAction(scope) {
             api.reportSubjectLink(UUID.fromString(id), ModerationReportRequest(reason.toWire(), comment?.trim()?.takeIf { it.isNotEmpty() }))
         }
 
@@ -187,7 +205,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     }) { rows, on, now -> if (!on) emptyList() else rows.filter { it.expiresAt?.toInstant()?.isAfter(now) != false } }
         .distinctUntilChanged()
 
-    override suspend fun refreshRestrictions(): AppResult<Unit> = attempt {
+    override suspend fun refreshRestrictions(): AppResult<Unit> = if (demo.isActive()) AppResult.Success(Unit) else attempt {
         val generation = epoch.get()
         if (!isEnabled()) {
             restrictions.value = emptyList()
@@ -432,5 +450,6 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         const val MAX_TITLE_LENGTH = 120
         const val RESTRICTION_TICK_MILLIS = 60_000L
         val PERIOD_KEY = Regex("[0-9]{4}-[12]")
+        val DEMO_REFUSAL = AppResult.Failure(AppError.DemoUnavailable)
     }
 }

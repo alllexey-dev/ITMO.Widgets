@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.update.data
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
@@ -99,7 +100,8 @@ class AppUpdateRepositoryImplTest {
                 utilityStorage = storage,
                 installedVersion = AppVersionName(INSTALLED_VERSION),
                 clock = Clock.fixed(now, ZoneOffset.UTC),
-                diagnostics = RecordingDiagnostics()
+                diagnostics = RecordingDiagnostics(),
+                demo = noDemo()
             )
         )
     }

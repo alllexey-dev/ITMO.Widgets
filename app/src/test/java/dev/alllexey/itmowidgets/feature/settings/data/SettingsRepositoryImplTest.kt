@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
@@ -338,7 +339,7 @@ class SettingsRepositoryImplTest {
         return Fixture(
             storage = storage,
             api = fakeApi,
-            repository = SettingsRepositoryImpl(storage, fakeApi.instance)
+            repository = SettingsRepositoryImpl(storage, fakeApi.instance, noDemo())
         )
     }
 

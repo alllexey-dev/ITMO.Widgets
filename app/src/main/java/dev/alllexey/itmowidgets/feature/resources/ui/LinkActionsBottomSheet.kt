@@ -121,7 +121,8 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
         actionDelete.setOnClickListener { confirmDelete(link) }
         actionReport.isVisible = !link.isMine && state.canReport && !link.reportedByMe
         actionReport.setOnClickListener { report(link) }
-        val author = link.author.takeIf { !link.isMine }
+        // A deleted account's shared links move to a placeholder author with a negative ISU and no profile.
+        val author = link.author?.takeIf { !link.isMine && it.isu > 0 }
         actionAuthor.isVisible = author != null
         author?.let { person ->
             actionAuthor.text = getString(R.string.links_author, person.name)

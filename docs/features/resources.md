@@ -204,8 +204,8 @@ Strict verification of flow membership is deferred, see
 ## Verification
 
 ```bash
-./gradlew :app:testDebugUnitTest
-./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.resources.SubjectLinksVisualTest
+./gradlew :app:testGithubDebugUnitTest
+./gradlew :app:connectedGithubDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.alllexey.itmowidgets.feature.resources.SubjectLinksVisualTest
 ```
 
 JVM tests cover the order of the short list, ranking ties and the count of the rest (`SubjectLinkChipsTest`),

@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
+import kotlinx.coroutines.flow.update
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -67,6 +70,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     private val notifier: AppNotifier,
     private val currentUser: CurrentUserProvider,
     private val sheets: SheetScoresRepository,
+    private val demo: DemoMode,
 ) : MarkTrackingRepository, SessionDataCleaner {
 
     private val checks = Mutex()
@@ -76,7 +80,14 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     /** The file's state, read once; null until the first reader. */
     private val state = MutableStateFlow<StoredMarks?>(null)
 
+    /** The demo session's news the user has read, in memory only. */
+    private val demoRead = MutableStateFlow<Set<String>>(emptySet())
+
     override fun observeNews(): Flow<List<MarkNews>> = flow {
+        if (demo.isActive()) {
+            emitAll(demoRead.map { read -> DemoRecordbook.news(time.today(), clock.instant()).filterNot { it.id in read } })
+            return@flow
+        }
         lock.withLock { loaded() }
         emitAll(state.filterNotNull().map { stored -> MarkNewsRules.pruned(stored.news.map { it.toModel() }, clock.instant()) })
     }
@@ -199,7 +210,9 @@ class MarkTrackingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun target(news: MarkNews, withBars: Boolean): MarkSubjectTarget? = lock.withLock {
+    override suspend fun target(news: MarkNews, withBars: Boolean): MarkSubjectTarget? = if (demo.isActive()) {
+        DemoRecordbook.target(news, time.today())
+    } else lock.withLock {
         val stored = loaded()
         MarkNewsRules.target(news, stored.myItmo?.toModel(), stored.bars?.toModel(), withBars)
     }
@@ -210,6 +223,10 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun markRead(half: StudyHalf, nameKey: String) {
+        if (demo.isActive()) {
+            demoRead.update { it + MarkNews.idOf(half, nameKey) }
+            return
+        }
         val id = MarkNews.idOf(half, nameKey)
         var readLast = false
         update { stored ->
@@ -221,6 +238,10 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun markAllRead() {
+        if (demo.isActive()) {
+            demoRead.update { read -> read + DemoRecordbook.news(time.today(), clock.instant()).map { it.id } }
+            return
+        }
         update { stored -> stored.copy(news = emptyList()) }
         notifier.cancel(AppNotificationChannels.MARKS, MarkDigests.DIGEST_ID)
     }
@@ -236,6 +257,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun clearSessionData() {
+        demoRead.value = emptySet()
         generation.incrementAndGet()
         lock.withLock {
             withContext(Dispatchers.IO) { store.clear() }

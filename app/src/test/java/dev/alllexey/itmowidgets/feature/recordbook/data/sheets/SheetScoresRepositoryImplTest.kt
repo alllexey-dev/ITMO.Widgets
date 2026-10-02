@@ -1,6 +1,10 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -94,8 +98,24 @@ class SheetScoresRepositoryImplTest {
         server.shutdown()
     }
 
-    private fun repository() = SheetScoresRepositoryImpl(
-        PublicSheetClient(NetworkModule.providePublicWebClient(), server.url("/")), store, users, clock,
+    @Test
+    fun `the demo shows its connected total and downloads nothing`() = runTest {
+        val repository = repository(FakeDemoMode(active = true))
+
+        val scores = repository.observe().first()
+        val inspection = repository.inspect(url)
+
+        assertEquals("64", scores.single().value)
+        assertEquals(SheetInspection.Failed(SheetStatus.NETWORK), inspection)
+        repository.disconnect(scope)
+        assertEquals(SheetCheck(emptyList(), emptyList()), repository.check(StudyHalf(2026, 1)))
+        assertTrue(requests.isEmpty())
+        assertFalse(directory.exists())
+    }
+
+    private fun repository(demo: DemoMode = noDemo()) = SheetScoresRepositoryImpl(
+        PublicSheetClient(NetworkModule.providePublicWebClient(), server.url("/"), demo), store, users, clock,
+        FixedAcademicTime(), demo,
     )
 
     private fun html(name: String) = MockResponse().setHeader("Content-Type", "text/html; charset=utf-8").setBody(SheetFixtures.text(name))

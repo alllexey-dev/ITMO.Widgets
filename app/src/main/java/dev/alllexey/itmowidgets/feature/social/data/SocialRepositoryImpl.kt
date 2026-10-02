@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.social.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
@@ -16,6 +17,7 @@ import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.social.SocialState
+import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import dev.alllexey.itmowidgets.core.model.social.UserProfile as CoreUserProfile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +37,8 @@ import javax.inject.Singleton
 class SocialRepositoryImpl @Inject constructor(
     private val customServices: CustomServicesRepository,
     private val widgetsApi: ItmoWidgetsApi,
-    @param:ApplicationScope private val scope: CoroutineScope
+    @param:ApplicationScope private val scope: CoroutineScope,
+    private val demo: DemoMode
 ) : SocialRepository, SessionDataCleaner {
 
     private val friends = MutableStateFlow<SocialState<List<UserProfile>>>(SocialState.Loading)
@@ -82,6 +85,14 @@ class SocialRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refresh() {
+        if (demo.isActive()) {
+            synchronized(cacheLock) {
+                friends.value = SocialState.Content(DemoSocial.friends())
+                requests.value = SocialState.Content(DemoSocial.requests())
+                currentUser.value = DemoSocial.me
+            }
+            return
+        }
         val generation = beginRequest() ?: return
 
         coroutineScope {
@@ -101,18 +112,19 @@ class SocialRepositoryImpl @Inject constructor(
     }
 
     override suspend fun userFriends(isu: Int): AppResult<List<UserProfile>> =
-        gated(onSuccess = { userFriendsCache[isu] = it }) { generation ->
+        if (demo.isActive()) demoAnswer(DemoSocial.userFriends(isu)) { userFriendsCache[isu] = it } else gated(onSuccess = { userFriendsCache[isu] = it }) { generation ->
             call(generation) { widgetsApi.userFriends(isu) }.map { list -> list.map(CoreUserProfile::toModel) }
         }
 
     override suspend fun profile(isu: Int): AppResult<UserProfile> =
-        gated(onSuccess = { profiles[isu] = it }) { generation ->
+        if (demo.isActive()) demoAnswer(DemoSocial.profile(isu)) { profiles[isu] = it } else gated(onSuccess = { profiles[isu] = it }) { generation ->
             call(generation) { widgetsApi.userProfile(isu) }.map(CoreUserProfile::toModel)
         }
 
     override suspend fun lookup(isus: List<Int>): AppResult<List<UserProfile>> {
         val distinct = isus.distinct()
         if (distinct.isEmpty()) return AppResult.Success(emptyList())
+        if (demo.isActive()) return AppResult.Success(DemoSocial.lookup(distinct))
         return gated { generation ->
             val found = mutableListOf<UserProfile>()
             for (chunk in distinct.chunked(LOOKUP_CHUNK)) {
@@ -144,7 +156,7 @@ class SocialRepositoryImpl @Inject constructor(
     }
 
     private suspend fun act(request: suspend () -> ApiResponse<CoreUserProfile>): AppResult<UserProfile> =
-        gated(onSuccess = ::applyRelationship) { generation ->
+        if (demo.isActive()) AppResult.Failure(AppError.DemoUnavailable) else gated(onSuccess = ::applyRelationship) { generation ->
             call(generation, request).map(CoreUserProfile::toModel)
         }
 
@@ -162,6 +174,13 @@ class SocialRepositoryImpl @Inject constructor(
                     .withIf(profile, profile.relationship == RelationshipState.OUTGOING)
             )
         }
+    }
+
+    /** A demo answer: a person outside the demo set is unknown to Backend. */
+    private fun <T> demoAnswer(value: T?, onSuccess: (T) -> Unit): AppResult<T> {
+        if (value == null) return AppResult.Failure(AppError.NotFound)
+        synchronized(cacheLock) { onSuccess(value) }
+        return AppResult.Success(value)
     }
 
     private suspend fun <T> gated(

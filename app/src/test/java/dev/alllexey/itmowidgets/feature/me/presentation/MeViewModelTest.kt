@@ -161,6 +161,8 @@ class MeViewModelTest {
         override suspend fun signInWithRefreshToken(refreshToken: String): AppResult<Unit> =
             AppResult.Success(Unit)
 
+        override suspend fun startDemo() = Unit
+
         override suspend fun signOut() {
             signOutRequests += 1
             mutableState.value = SessionState.SignedOut

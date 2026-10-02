@@ -8,6 +8,10 @@
     <!-- Asked only when calendar synchronization is turned on or a calendar is picked. -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <!-- WorkManager's foreground service: no worker calls setForeground, and Play asks to declare any FGS. -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:node="remove" />
     <!-- «Открыть в календаре» for an exported .ics shows only when an app can open it. -->
     <queries>
         <intent>
@@ -154,6 +158,10 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            tools:node="remove" />
 
         <service
             android:name=".feature.schedule.ui.widget.ScheduleWidgetRemoteViewsService"

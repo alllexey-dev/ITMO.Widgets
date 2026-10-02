@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
@@ -11,6 +12,7 @@ import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.feature.schedule.FakeCalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeCalendarSyncScheduler
 import kotlinx.coroutines.test.runTest
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -20,7 +22,7 @@ class DefaultCalendarSyncTest {
     private val tokens = Tokens()
     private val scheduler = FakeCalendarSyncScheduler()
     private val repository = FakeCalendarSyncRepository()
-    private val sync = DefaultCalendarSync(repository, scheduler, tokens)
+    private val sync = DefaultCalendarSync(repository, scheduler, tokens, noDemo())
 
     @Test
     fun `turning on starts the periodic work and syncs at once`() = runTest {
@@ -29,6 +31,16 @@ class DefaultCalendarSyncTest {
         assertEquals(1, repository.enables)
         assertEquals(1, scheduler.ensureCalls)
         assertEquals(1, scheduler.runOnceCalls)
+    }
+
+    @Test
+    fun `the demo cannot turn synchronization on`() = runTest {
+        val demo = DefaultCalendarSync(repository, scheduler, tokens, FakeDemoMode(active = true))
+
+        assertEquals(CalendarSyncResult.DEMO_UNAVAILABLE, demo.enable())
+
+        assertEquals(0, repository.enables)
+        assertEquals(0, scheduler.ensureCalls)
     }
 
     @Test
@@ -69,7 +81,7 @@ class DefaultCalendarSyncTest {
     fun `the work follows both the session and the switch`() = runTest {
         for ((signedIn, enabled) in listOf(true to true, true to false, false to true, false to false)) {
             val scheduler = FakeCalendarSyncScheduler()
-            val sync = DefaultCalendarSync(FakeCalendarSyncRepository(enabled), scheduler, Tokens(signedIn))
+            val sync = DefaultCalendarSync(FakeCalendarSyncRepository(enabled), scheduler, Tokens(signedIn), noDemo())
 
             sync.syncWork()
             sync.requestSync()

@@ -29,8 +29,6 @@
         <item quantity="many">ещё %1$d пар</item>
         <item quantity="other">ещё %1$d пары</item>
     </plurals>
-    <string name="refresh_token_help_url">https://github.com/alllexey-dev/ITMO.Widgets?tab=readme-ov-file#использование</string>
-    <string name="latest_release_url">https://github.com/alllexey-dev/ITMO.Widgets/releases/latest</string>
     <string name="title_me">Профиль</string>
     <string name="title_recordbook">Зачётка</string>
     <string name="title_home">Главная</string>
@@ -63,6 +61,8 @@
     <string name="app_update_later">Напомнить позже</string>
     <string name="app_update_skip">Пропустить версию</string>
     <string name="app_update_open_failed">Не удалось открыть страницу с релизом</string>
+    <string name="update_downloaded">Обновление загружено</string>
+    <string name="update_restart">Перезапустить</string>
 
     <string name="sport_score_title">Баллы за семестр</string>
     <string name="sport_score_attendance">за посещение</string>
@@ -231,6 +231,10 @@
     <string name="debug_sport_lesson_action_disabled">Занятие тестовое — на сервер ничего не ушло</string>
 
     <string name="common_error_services_disabled">Чтобы смотреть расписание друзей, подключитесь к ITMO.Widgets</string>
+    <string name="error_demo_unavailable">Недоступно в демо</string>
+    <string name="demo_entered">Демо-режим</string>
+    <string name="demo_banner_text">Демо-режим · вымышленные данные</string>
+    <string name="demo_banner_sign_in">Войти</string>
 
     <string name="me_group_app">Приложение</string>
     <string name="me_unknown_user">Профиль не загрузился</string>
@@ -253,6 +257,8 @@
     <string name="settings_notifications_blocked">Запрещены в Android</string>
     <string name="settings_notifications_checking">Проверяем разрешение…</string>
     <string name="settings_services_footer">Нужно для друзей и автозаписи на спорт. Расписание, зачётка и QR работают и без подключения.</string>
+    <string name="settings_delete_account_title">Удалить аккаунт ITMO.Widgets</string>
+    <string name="settings_delete_account_description">Как удалить данные с сервера ITMO.Widgets</string>
     <string name="settings_privacy_footer">Имя, группу и ИСУ видят все пользователи приложения.</string>
     <string name="settings_qr_custom_image_selected">Своё изображение</string>
     <string name="settings_qr_custom_image_default">Стандартное</string>
@@ -317,6 +323,8 @@
     <string name="settings_schedule_changes_description">Уведомлять о переносах и отменах пар.</string>
     <string name="settings_schedule_changes_notifications_off">Уведомления выключены.</string>
     <string name="settings_version_title">Версия</string>
+    <string name="settings_privacy_policy_title">Политика конфиденциальности</string>
+    <string name="app_unofficial_notice">Неофициальное приложение. Не связано с Университетом ИТМО.</string>
     <string name="settings_diagnostics_title">Журнал ошибок</string>
     <string name="settings_diagnostics_count">Записей: %1$d</string>
     <string name="diagnostics_title">Журнал ошибок</string>

@@ -27,6 +27,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
@@ -36,6 +37,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.dismissOverlays
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.ui.SettingsLevelMotion
 import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.openLink
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
@@ -223,6 +225,7 @@ class SettingsFragment : Fragment() {
                     SettingsEvent.OpenIcsExport -> if (childFragmentManager.findFragmentByTag(IcsExportBottomSheet.TAG) == null) {
                         IcsExportBottomSheet().show(childFragmentManager, IcsExportBottomSheet.TAG)
                     }
+                    is SettingsEvent.OpenWebPage -> openLink(BuildConfig.WIDGETS_BASE_URL + event.path, binding.root)
                     is SettingsEvent.ShowMessage -> {
                         // A switch the user flipped stays as the state says when the action did not go through.
                         restoreRenderedValues()

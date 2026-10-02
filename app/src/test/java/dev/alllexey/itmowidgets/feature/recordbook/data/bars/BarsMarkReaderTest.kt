@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import api.bars.Bars
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import api.bars.BarsConfiguration
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.session.CurrentUser
@@ -59,7 +60,7 @@ class BarsMarkReaderTest {
             override fun getHost() = server.hostName
             override fun getRestUrl() = server.url("/backend/rest/").toString()
         }).apply { storage = this@BarsMarkReaderTest.storage }
-        reader = BarsMarkReader(BarsClient(bars, storage, owner, silentLogin, backgroundLogin, CountingBarsSessionListener()))
+        reader = BarsMarkReader(BarsClient(bars, storage, owner, silentLogin, backgroundLogin, CountingBarsSessionListener(), noDemo()))
     }
 
     @After fun stop() = server.shutdown()

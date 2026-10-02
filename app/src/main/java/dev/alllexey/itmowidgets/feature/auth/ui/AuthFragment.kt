@@ -2,10 +2,14 @@ package dev.alllexey.itmowidgets.feature.auth.ui
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
+import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.core.widget.ImageViewCompat
@@ -18,6 +22,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.DialogAuthRefreshTokenBinding
 import dev.alllexey.itmowidgets.databinding.FragmentAuthBinding
+import dev.alllexey.itmowidgets.feature.auth.presentation.AuthEvent
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthUiState
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthViewModel
 import dev.alllexey.itmowidgets.core.ui.resolve
@@ -60,11 +65,31 @@ class AuthFragment : Fragment() {
         binding.refreshTokenLoginButton.setOnClickListener {
             showRefreshTokenDialog()
         }
+        // The hidden demo entry; the logo stays decorative for accessibility services.
+        binding.authLogo.setOnClickListener { viewModel.onLogoTap(SystemClock.uptimeMillis()) }
 
         viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
+        viewModel.events
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .onEach(::onEvent)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    private fun onEvent(event: AuthEvent) {
+        when (event) {
+            AuthEvent.DemoStarted -> {
+                val confirm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    HapticFeedbackConstants.CONFIRM
+                } else {
+                    HapticFeedbackConstants.VIRTUAL_KEY
+                }
+                _binding?.root?.performHapticFeedback(confirm)
+                Toast.makeText(requireContext().applicationContext, R.string.demo_entered, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun onDestroyView() {

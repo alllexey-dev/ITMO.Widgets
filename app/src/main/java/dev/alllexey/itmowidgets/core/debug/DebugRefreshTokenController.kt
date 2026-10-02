@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.debug
 
 import api.myitmo.MyItmo
 import dev.alllexey.itmowidgets.BuildConfig
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -21,7 +22,8 @@ interface DebugRefreshTokenController {
 class DefaultDebugRefreshTokenController(
     private val tokenStore: SessionTokenStore,
     private val myItmo: MyItmo,
-    private val dataCleaners: Set<SessionDataCleaner>
+    private val dataCleaners: Set<SessionDataCleaner>,
+    private val demo: DemoMode
 ) : DebugRefreshTokenController {
 
     override fun hasRefreshToken(): Boolean {
@@ -34,6 +36,7 @@ class DefaultDebugRefreshTokenController(
         if (!BuildConfig.DEBUG) {
             return@withContext AppResult.Failure(AppError.Forbidden)
         }
+        if (demo.isActive()) return@withContext AppResult.Failure(AppError.DemoUnavailable)
 
         val normalizedToken = refreshToken.trim()
         if (normalizedToken.isEmpty()) {

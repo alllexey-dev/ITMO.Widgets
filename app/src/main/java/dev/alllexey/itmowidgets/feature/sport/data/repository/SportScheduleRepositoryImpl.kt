@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.DataState
@@ -37,7 +39,8 @@ class SportScheduleRepositoryImpl @Inject constructor(
     sportDataRepository: SportDataRepository,
     private val myItmoApi: MyItmoApi,
     private val timeProvider: AcademicTimeProvider,
-    private val sportLessonTemplateProvider: SportLessonTemplateProvider
+    private val sportLessonTemplateProvider: SportLessonTemplateProvider,
+    private val demo: DemoMode
 ) : SportScheduleRepository {
 
     private val scheduleFlow = MutableSharedFlow<DataState<Map<LocalDate, List<SportLesson>>>>(replay = 1)
@@ -161,6 +164,10 @@ class SportScheduleRepositoryImpl @Inject constructor(
     override fun observeSportTimeSlots() = timeSlotsFlow
 
     override suspend fun refreshSportSchedule() {
+        if (demo.isActive()) {
+            scheduleFlow.emit(DataState.Success(DemoSport.schedule(timeProvider)))
+            return
+        }
         sportLessonTemplateProvider.getSchedule()?.let { templates ->
             scheduleFlow.emit(DataState.Success(templates))
             return
@@ -197,6 +204,10 @@ class SportScheduleRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshSportFilters() {
+        if (demo.isActive()) {
+            filtersFlow.emit(DataState.Success(DemoSport.filters()))
+            return
+        }
         try {
             val result = withContext(Dispatchers.IO) {
                 val response = myItmoApi
@@ -220,6 +231,10 @@ class SportScheduleRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshSportTimeSlots() {
+        if (demo.isActive()) {
+            timeSlotsFlow.emit(DataState.Success(DemoSport.timeSlots()))
+            return
+        }
         try {
             val result = withContext(Dispatchers.IO) {
                 val response = myItmoApi

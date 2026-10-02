@@ -644,6 +644,8 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
             error("Authentication is unavailable in this fixture")
         override suspend fun signInWithRefreshToken(refreshToken: String): AppResult<Unit> =
             error("Authentication is unavailable in this fixture")
+        override suspend fun startDemo() = Unit
+
         override suspend fun signOut() = error("Sign-out is unavailable in this fixture")
     }
 }

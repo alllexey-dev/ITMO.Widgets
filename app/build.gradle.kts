@@ -66,6 +66,26 @@ android {
             )
         }
     }
+    // One applicationId and one key: an install of either variant updates the other.
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("github") {
+            dimension = "distribution"
+            buildConfigField(
+                "String",
+                "DOWNLOAD_URL",
+                "\"https://github.com/alllexey-dev/ITMO.Widgets/releases/latest\""
+            )
+        }
+        create("play") {
+            dimension = "distribution"
+            buildConfigField(
+                "String",
+                "DOWNLOAD_URL",
+                "\"https://play.google.com/store/apps/details?id=dev.alllexey.itmowidgets\""
+            )
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -107,6 +127,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.jsoup)
     implementation(libs.hilt.android)
+    "playImplementation"(libs.play.app.update.ktx)
     kapt(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.konsist)

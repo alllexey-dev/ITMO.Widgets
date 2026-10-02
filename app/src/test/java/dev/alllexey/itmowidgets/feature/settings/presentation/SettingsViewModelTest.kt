@@ -343,7 +343,9 @@ class SettingsViewModelTest {
                     SettingsViewModel.KEY_REFRESH_WIDGETS,
                     SettingsViewModel.KEY_RESTART_ONBOARDING,
                     SettingsViewModel.KEY_DIAGNOSTICS,
-                    SettingsViewModel.KEY_VERSION
+                    SettingsViewModel.KEY_VERSION,
+                    SettingsViewModel.KEY_DELETE_ACCOUNT,
+                    SettingsViewModel.KEY_PRIVACY_POLICY
                 ),
                 items.map(SettingItem::key).toSet()
             )
@@ -684,6 +686,56 @@ class SettingsViewModelTest {
             assertEquals(1, fixture.onboardingRepository.resetCount)
             assertFalse(fixture.onboardingRepository.completed.value)
             assertEquals(SettingsEvent.CloseOverlays, fixture.viewModel.events.first())
+        }
+
+    @Test
+    fun `account deletion follows the switch whether the connection is on or off`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            for (enabled in listOf(false, true)) {
+                val fixture = createFixture(page = SettingsPage.SERVICES, local = LocalSettings(customServicesEnabled = enabled))
+                advanceUntilIdle()
+
+                assertEquals(
+                    listOf(SettingsViewModel.KEY_CUSTOM_SERVICES, SettingsViewModel.KEY_DELETE_ACCOUNT),
+                    fixture.viewModel.allItems().map { it.key }
+                )
+                val delete = fixture.viewModel.action(SettingsViewModel.KEY_DELETE_ACCOUNT)
+                assertEquals(UiText.Resource(R.string.settings_delete_account_title), delete.title)
+                assertEquals(UiText.Resource(R.string.settings_delete_account_description), delete.description)
+                assertTrue(delete.enabled)
+                // The switch keeps its own footer; the deletion row is a group of its own below it.
+                assertEquals(
+                    UiText.Resource(R.string.settings_services_footer),
+                    fixture.viewModel.sections.value.first().footer
+                )
+
+                fixture.viewModel.onAction(SettingsViewModel.KEY_DELETE_ACCOUNT)
+                assertEquals(SettingsEvent.OpenWebPage("/delete-account"), fixture.viewModel.events.first())
+            }
+        }
+
+    @Test
+    fun `maintenance links the privacy policy before the version and says the app is unofficial`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val fixture = createFixture(page = SettingsPage.MAINTENANCE)
+            advanceUntilIdle()
+
+            val keys = fixture.viewModel.allItems().map { it.key }
+            assertEquals(
+                listOf(SettingsViewModel.KEY_PRIVACY_POLICY, SettingsViewModel.KEY_VERSION),
+                keys.takeLast(2)
+            )
+            assertEquals(
+                UiText.Resource(R.string.settings_privacy_policy_title),
+                fixture.viewModel.action(SettingsViewModel.KEY_PRIVACY_POLICY).title
+            )
+            assertEquals(
+                UiText.Resource(R.string.app_unofficial_notice),
+                fixture.viewModel.sections.value.single().footer
+            )
+
+            fixture.viewModel.onAction(SettingsViewModel.KEY_PRIVACY_POLICY)
+            assertEquals(SettingsEvent.OpenWebPage("/privacy.html"), fixture.viewModel.events.first())
         }
 
     @Test

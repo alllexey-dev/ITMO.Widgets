@@ -75,6 +75,8 @@ sealed interface SettingsEvent {
     data object RequestCalendarAccess : SettingsEvent
     /** The «Выгрузить в .ics» sheet. */
     data object OpenIcsExport : SettingsEvent
+    /** A page of the ITMO.Widgets site, [path] relative to its base address. */
+    data class OpenWebPage(val path: String) : SettingsEvent
     data class ShowMessage(val text: UiText) : SettingsEvent
     data class ShowError(val error: AppError) : SettingsEvent
 }
@@ -347,6 +349,8 @@ class SettingsViewModel @Inject constructor(
             KEY_BACKGROUND_WORK -> eventChannel.trySend(SettingsEvent.OpenBackgroundWorkSettings)
             KEY_QR_TILE -> eventChannel.trySend(SettingsEvent.RequestQrTile)
             KEY_ICS_EXPORT -> eventChannel.trySend(SettingsEvent.OpenIcsExport)
+            KEY_DELETE_ACCOUNT -> eventChannel.trySend(SettingsEvent.OpenWebPage(DELETE_ACCOUNT_PATH))
+            KEY_PRIVACY_POLICY -> eventChannel.trySend(SettingsEvent.OpenWebPage(PRIVACY_POLICY_PATH))
             KEY_RESTART_ONBOARDING -> viewModelScope.launch {
                 // The stored flag is what the root gate reads; the overlay only has to get out of the way.
                 onboardingRepository.reset()
@@ -365,6 +369,7 @@ class SettingsViewModel @Inject constructor(
                 CalendarSyncResult.DONE -> Unit
                 CalendarSyncResult.NO_PERMISSION -> showMessage(R.string.calendar_access_denied)
                 CalendarSyncResult.FAILED -> eventChannel.send(SettingsEvent.ShowError(AppError.Unknown()))
+                CalendarSyncResult.DEMO_UNAVAILABLE -> eventChannel.send(SettingsEvent.ShowError(AppError.DemoUnavailable))
             }
         }
     }
@@ -419,6 +424,10 @@ class SettingsViewModel @Inject constructor(
 
     private fun updateCustomServices(enabled: Boolean) {
         viewModelScope.launch {
+            if (!customServicesRepository.isChangeable()) {
+                eventChannel.send(SettingsEvent.ShowError(AppError.DemoUnavailable))
+                return@launch
+            }
             try {
                 customServicesRepository.setEnabled(enabled)
                 widgetRefreshRequester.refreshAll()
@@ -537,6 +546,18 @@ class SettingsViewModel @Inject constructor(
                     )
                 ),
                 footer = UiText.Resource(R.string.settings_services_footer)
+            ),
+            // Shown with the switch off too: an account may remain from an earlier connection.
+            SettingSection(
+                title = null,
+                items = listOf(
+                    SettingItem.Action(
+                        key = KEY_DELETE_ACCOUNT,
+                        title = UiText.Resource(R.string.settings_delete_account_title),
+                        description = UiText.Resource(R.string.settings_delete_account_description),
+                        trailingIconRes = R.drawable.ic_open_in_new
+                    )
+                )
             )
         )
         SettingsPage.PRIVACY -> if (local.customServicesEnabled && sharing == SharingSettingsState.Loading) {
@@ -755,12 +776,18 @@ class SettingsViewModel @Inject constructor(
                         value = UiText.Resource(R.string.settings_diagnostics_count, listOf(diagnosticsCount)),
                         trailingIconRes = R.drawable.ic_chevron_right
                     ),
+                    SettingItem.Action(
+                        key = KEY_PRIVACY_POLICY,
+                        title = UiText.Resource(R.string.settings_privacy_policy_title),
+                        trailingIconRes = R.drawable.ic_open_in_new
+                    ),
                     SettingItem.Info(
                         key = KEY_VERSION,
                         title = UiText.Resource(R.string.settings_version_title),
                         value = UiText.Dynamic(appVersion.name)
                     )
-                )
+                ),
+                footer = UiText.Resource(R.string.app_unofficial_notice)
             )
         )
     }
@@ -979,6 +1006,10 @@ class SettingsViewModel @Inject constructor(
         const val KEY_RESTART_ONBOARDING = "restart_onboarding"
         const val KEY_VERSION = "app_version"
         const val KEY_DIAGNOSTICS = "diagnostics"
+        const val KEY_DELETE_ACCOUNT = "delete_account"
+        const val KEY_PRIVACY_POLICY = "privacy_policy"
+        const val DELETE_ACCOUNT_PATH = "/delete-account"
+        const val PRIVACY_POLICY_PATH = "/privacy.html"
     }
 }
 

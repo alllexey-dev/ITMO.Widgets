@@ -1,6 +1,10 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 
 import kotlinx.coroutines.test.runCurrent
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.demo.DemoStudy
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetChange
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.SheetsCheck
@@ -444,7 +448,22 @@ class MarkTrackingRepositoryImplTest {
 
         assertEquals(SheetsCheck(MarkCheckResult.Compared(0), listOf(AppError.Network)), repository().checkSheets())
     }
-    private fun repository() = MarkTrackingRepositoryImpl(recordbook, bars, store, ClockTime(clock), clock, notifier, users, sheets)
+    @Test
+    fun `the demo has two subjects with news until they are read`() = runTest {
+        val repository = repository(FakeDemoMode(active = true))
+
+        val news = repository.observeNews().first()
+        assertEquals(listOf(DemoStudy.DATABASES.name, DemoStudy.DISCRETE.name), news.map { it.name })
+        assertEquals(DemoStudy.DATABASES.id * 10 + 3, repository.target(news.first(), withBars = false)?.entryId)
+
+        repository.markAllRead()
+
+        assertTrue(repository.observeNews().first().isEmpty())
+        assertFalse(folder.exists())
+    }
+
+    private fun repository(demo: DemoMode = noDemo()) =
+        MarkTrackingRepositoryImpl(recordbook, bars, store, ClockTime(clock), clock, notifier, users, sheets, demo)
 
     private fun barsAnswer(answer: BarsMarkRead) {
         bars.answers.clear()

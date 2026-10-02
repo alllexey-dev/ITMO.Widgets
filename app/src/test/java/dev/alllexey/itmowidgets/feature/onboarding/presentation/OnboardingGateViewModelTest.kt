@@ -116,6 +116,8 @@ class OnboardingGateViewModelTest {
             error("Authentication is unavailable in this fixture")
         override suspend fun signInWithRefreshToken(refreshToken: String): AppResult<Unit> =
             error("Authentication is unavailable in this fixture")
+        override suspend fun startDemo() = Unit
+
         override suspend fun signOut() = Unit
     }
 

@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.feature.auth.data
 
 import api.myitmo.MyItmo
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.demo.DemoPeople
+import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
@@ -13,6 +15,8 @@ import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
+import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import java.io.IOException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -127,6 +131,61 @@ class SessionRepositoryImplTest {
         assertTrue(fixture.tokenStore.cleared)
     }
 
+    @Test
+    fun `starts the demo without tokens, Backend or background work`() = runTest {
+        val fixture = fixture(hasRefreshToken = false)
+
+        fixture.repository.startDemo()
+
+        assertEquals(SessionState.SignedIn(DemoPeople.ME, demo = true), fixture.repository.state.value)
+        assertEquals(1, fixture.cleaner.requests)
+        assertEquals(listOf("prepare"), fixture.effects.events)
+        assertEquals(0, fixture.identitySync.requests)
+        assertEquals(0, fixture.tokenSync.requests)
+        assertEquals(0, fixture.deviceSession.registerRequests)
+        assertEquals(0, fixture.deviceSession.unregisterRequests)
+        assertTrue(fixture.settings.getDemoActive())
+        assertFalse(fixture.tokenStore.hasRefreshToken())
+    }
+
+    @Test
+    fun `initializes as the demo without checking a token`() = runTest {
+        val fixture = fixture(hasRefreshToken = true, refreshTokenExpired = true)
+        fixture.settings.setDemoActive(true)
+
+        fixture.repository.initialize()
+
+        assertEquals(SessionState.SignedIn(DemoPeople.ME, demo = true), fixture.repository.state.value)
+        assertEquals(0, fixture.identitySync.requests)
+        assertEquals(0, fixture.deviceSession.registerRequests)
+    }
+
+    @Test
+    fun `signing out of the demo keeps the device registration alone`() = runTest {
+        val order = mutableListOf<String>()
+        val fixture = fixture(hasRefreshToken = false, order = order)
+        fixture.repository.startDemo()
+        order.clear()
+
+        fixture.repository.signOut()
+
+        assertEquals(listOf("clean", "signed-out"), order)
+        assertEquals(0, fixture.deviceSession.unregisterRequests)
+        assertFalse(fixture.settings.getDemoActive())
+        assertEquals(SessionState.SignedOut, fixture.repository.state.value)
+    }
+
+    @Test
+    fun `a real sign-in ends a leftover demo flag`() = runTest {
+        val fixture = fixture(hasRefreshToken = false)
+        fixture.settings.setDemoActive(true)
+
+        fixture.repository.signInWithRefreshToken("candidate-token")
+
+        assertFalse(fixture.settings.getDemoActive())
+        assertEquals(false, (fixture.repository.state.value as SessionState.SignedIn).demo)
+    }
+
     private fun fixture(
         hasRefreshToken: Boolean,
         refreshTokenExpired: Boolean = false,
@@ -141,6 +200,8 @@ class SessionRepositoryImplTest {
         val identitySync = FakeIdentitySync()
         val deviceSession = FakeDeviceSession(order, unregisterError)
         val authenticator = FakeAuthenticator(authError)
+        val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+        val tokenSync = FakeTokenSync()
         val repository = SessionRepositoryImpl(
             tokenStore = tokenStore,
             myItmo = FakeMyItmo(refreshTokenExpired),
@@ -152,9 +213,11 @@ class SessionRepositoryImplTest {
             dataCleaners = setOf(cleaner),
             lifecycleEffects = effects,
             backendIdentitySync = identitySync,
-            fcmTokenSync = dev.alllexey.itmowidgets.core.notification.FcmTokenSync { },
+            fcmTokenSync = tokenSync,
             backendDeviceSession = deviceSession,
-            diagnostics = RecordingDiagnostics()
+            diagnostics = RecordingDiagnostics(),
+            settings = settings,
+            demo = DataStoreDemoMode(settings)
         )
         return Fixture(
             repository,
@@ -163,7 +226,9 @@ class SessionRepositoryImplTest {
             effects,
             identitySync,
             deviceSession,
-            authenticator
+            authenticator,
+            settings,
+            tokenSync
         )
     }
 
@@ -174,8 +239,18 @@ class SessionRepositoryImplTest {
         val effects: FakeEffects,
         val identitySync: FakeIdentitySync,
         val deviceSession: FakeDeviceSession,
-        val authenticator: FakeAuthenticator
+        val authenticator: FakeAuthenticator,
+        val settings: AppSettingsStorage,
+        val tokenSync: FakeTokenSync
     )
+
+    private class FakeTokenSync : FcmTokenSync {
+        var requests = 0
+
+        override suspend fun sync() {
+            requests += 1
+        }
+    }
 
     private class FakeTokenStore(
         hasRefreshToken: Boolean,
@@ -276,7 +351,10 @@ class SessionRepositoryImplTest {
             registerRequests += 1
         }
 
+        var unregisterRequests = 0
+
         override suspend fun unregisterCurrentDevice() {
+            unregisterRequests += 1
             order += "unregister"
             unregisterError?.let { throw it }
         }

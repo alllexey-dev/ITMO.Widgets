@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.reviews.data.demo.DemoReviews
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.resources.ModerationReportRequest
@@ -35,6 +38,8 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
     private val customServices: CustomServicesRepository,
     private val widgetsApi: ItmoWidgetsApi,
     @param:ApplicationScope private val scope: CoroutineScope,
+    private val time: AcademicTimeProvider,
+    private val demo: DemoMode,
 ) : TeacherReviewsRepository, SessionDataCleaner {
     private val cache = ConcurrentHashMap<Int, TeacherReviews>()
     private val updates = MutableSharedFlow<TeacherReviews>(extraBufferCapacity = 8)
@@ -55,6 +60,11 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun reviews(isu: Int): AppResult<TeacherReviews> {
+        if (demo.isActive()) {
+            val reviews = DemoReviews.reviews(isu, time.today())
+            synchronized(cacheLock) { cache[isu] = reviews }
+            return AppResult.Success(reviews)
+        }
         val generation = beginRequest() ?: return AppResult.Failure(AppError.CustomServicesDisabled)
         val result = call(generation) { widgetsApi.teacherReviews(isu) }
         return synchronized(cacheLock) {
@@ -123,6 +133,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
 
     /** The answer lands in the cache and in [updates] only while the generation it was sent in is current. */
     private suspend fun mutate(block: suspend () -> ApiResponse<TeacherReviewsResponse>): AppResult<TeacherReviews> {
+        if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         val generation = beginRequest() ?: return AppResult.Failure(AppError.CustomServicesDisabled)
         val result = call(generation, block)
         return synchronized(cacheLock) {

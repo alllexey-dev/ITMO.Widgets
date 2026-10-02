@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.result.AppError
 import api.myitmo.utils.ApiException
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.model.ApiResponse
@@ -19,11 +21,13 @@ import javax.inject.Inject
 class SportActionRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
     private val myItmoApi: MyItmoApi,
-    private val widgetsApi: ItmoWidgetsApi
+    private val widgetsApi: ItmoWidgetsApi,
+    private val demo: DemoMode
 ) : SportActionRepository {
 
+    /** The demo session shows the queues, so their buttons are there; pressing them is refused. */
     override suspend fun areCommunityServicesEnabled(): Boolean {
-        return settings.getCustomServicesEnabled()
+        return demo.isActive() || settings.getCustomServicesEnabled()
     }
 
     override suspend fun signIn(lessonId: Long): AppResult<Unit> {
@@ -90,6 +94,7 @@ class SportActionRepositoryImpl @Inject constructor(
     }
 
     private suspend fun runAction(action: suspend () -> Unit): AppResult<Unit> {
+        if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         return try {
             action()
             AppResult.Success(Unit)

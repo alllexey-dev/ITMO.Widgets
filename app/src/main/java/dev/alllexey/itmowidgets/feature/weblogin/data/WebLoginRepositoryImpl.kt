@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.weblogin.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -18,6 +19,7 @@ import dev.alllexey.itmowidgets.core.model.WebLoginPreview as WirePreview
 class WebLoginRepositoryImpl @Inject constructor(
     private val customServices: CustomServicesRepository,
     private val widgetsApi: ItmoWidgetsApi,
+    private val demo: DemoMode,
 ) : WebLoginRepository {
 
     override suspend fun preview(code: String): AppResult<WebLoginPreview> = call { widgetsApi.webLoginPreview(code) }
@@ -36,6 +38,7 @@ class WebLoginRepositoryImpl @Inject constructor(
 
     /** Null data is a valid answer only for calls without a body, like the approval. */
     private suspend fun <T> call(request: suspend () -> ApiResponse<T>): AppResult<T?> {
+        if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         if (!customServices.isEnabled()) return AppResult.Failure(AppError.CustomServicesDisabled)
         return try {
             val response = withContext(Dispatchers.IO) { request() }

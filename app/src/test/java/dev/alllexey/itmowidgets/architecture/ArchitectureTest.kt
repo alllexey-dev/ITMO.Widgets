@@ -1,14 +1,18 @@
 package dev.alllexey.itmowidgets.architecture
 
 import com.lemonappdev.konsist.api.Konsist
+import com.lemonappdev.konsist.api.declaration.KoParameterDeclaration
 import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
+import java.io.File
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ArchitectureTest {
 
-    // Agent worktrees under .claude/ are separate checkouts, not this app's sources.
-    private val productionFiles = Konsist.scopeFromProduction().files.filterNot { "/.claude/" in it.path }
+    // Agent worktrees under .claude/ are separate checkouts, not this app's sources. The project path, not the
+    // absolute one: inside such a worktree the absolute path of every file contains /.claude/.
+    private val productionFiles = Konsist.scopeFromProduction().files.filterNot { "/.claude/" in it.projectPath }
     private val productionClasses = productionFiles.flatMap { it.classes() }
 
     @Test
@@ -181,7 +185,72 @@ class ArchitectureTest {
             }
     }
 
+    @Test
+    fun `network clients are gated by demo mode`() {
+        val gated = productionClasses.filter { declaration ->
+            declaration.packagee?.name != NETWORK_PACKAGE &&
+                declaration.constructors.any { constructor -> constructor.parameters.any(::isNetworkClient) }
+        }
+        // A rule that matches nothing proves nothing.
+        org.junit.Assert.assertTrue("Only ${gated.size} classes take a network client", gated.size > MIN_GATED_CLASSES)
+        gated.assertTrue { declaration ->
+            declaration.constructors
+                .filter { constructor -> constructor.parameters.any(::isNetworkClient) }
+                .all { constructor -> constructor.parameters.any { it.type.name == DEMO_MODE } }
+        }
+    }
+
+    private fun isNetworkClient(parameter: KoParameterDeclaration): Boolean =
+        parameter.type.name in networkClients ||
+            (parameter.type.name == OK_HTTP_CLIENT && parameter.hasAnnotationWithName(PUBLIC_WEB_CLIENT))
+
+    @Test
+    fun `debug code is gated`() {
+        // Where debug state is stored or the debug tools are entered, the code checks BuildConfig.DEBUG itself,
+        // so a release build neither opens them nor reads an override; the rest only delegates to those places.
+        val gates = productionClasses.filter { declaration ->
+            val packageName = declaration.packagee?.name.orEmpty()
+            val inDebug = packageName.startsWith(CORE_DEBUG_PACKAGE) || packageName.startsWith(FEATURE_DEBUG_PACKAGE)
+            declaration.name == "FileAcademicTimeOverrideStore" ||
+                inDebug && (
+                    declaration.name.startsWith("File") ||
+                        declaration.name.endsWith("Fragment") ||
+                        // It replaces the real session's refresh token.
+                        declaration.name.endsWith("RefreshTokenController")
+                    )
+        }
+        assertEquals(
+            setOf(
+                "FileAcademicTimeOverrideStore",
+                "FileSportScoreOverrideStore",
+                "FileSportLessonTemplateStore",
+                "DefaultDebugRefreshTokenController",
+                "DebugToolsFragment"
+            ),
+            gates.map { it.name }.toSet()
+        )
+        gates.assertTrue { "BuildConfig.DEBUG" in it.text }
+        productionClasses
+            .filter { it.name == "MeFragment" }
+            .assertTrue { "debugToolsRow.isVisible = BuildConfig.DEBUG" in it.text }
+    }
+
+    @Test
+    fun `distribution variants take the download address from BuildConfig`() {
+        val variantFiles = productionFiles.filter { it.sourceSetName == "github" || it.sourceSetName == "play" }
+        assertEquals(setOf("github", "play"), variantFiles.map { it.sourceSetName }.toSet())
+        // The GitHub releases page is BuildConfig.DOWNLOAD_URL of the github variant only; the play variant
+        // must not offer it (Play allows updates only through Play).
+        productionFiles.assertFalse { file ->
+            "latest_release_url" in file.text || GITHUB_RELEASES in file.text
+        }
+        org.junit.Assert.assertFalse(GITHUB_RELEASES in File("src/main/res/values/strings.xml").readText())
+    }
+
     private companion object {
+        const val CORE_DEBUG_PACKAGE = "dev.alllexey.itmowidgets.core.debug"
+        const val FEATURE_DEBUG_PACKAGE = "dev.alllexey.itmowidgets.feature.debug"
+        const val GITHUB_RELEASES = "github.com/alllexey-dev/ITMO.Widgets/releases"
         const val FEATURE_PACKAGE_PREFIX =
             "dev.alllexey.itmowidgets.feature."
         const val CORE_PACKAGE_PREFIX =
@@ -196,6 +265,16 @@ class ArchitectureTest {
             "dev.alllexey.itmowidgets.data"
         const val LEGACY_DOMAIN_PACKAGE =
             "dev.alllexey.itmowidgets.domain"
+        /** Builds the clients themselves; every user of a client is gated instead. */
+        const val NETWORK_PACKAGE =
+            "dev.alllexey.itmowidgets.core.network"
+        const val DEMO_MODE = "DemoMode"
+        const val OK_HTTP_CLIENT = "OkHttpClient"
+        const val PUBLIC_WEB_CLIENT = "PublicWebClient"
+        const val MIN_GATED_CLASSES = 20
+
+        /** My ITMO, BARS and Backend clients; the public web client is matched by its qualifier. */
+        val networkClients = setOf("ItmoWidgetsApi", "MyItmo", "MyItmoApi", "Bars")
 
         val forbiddenDomainImports = listOf(
             "android.",

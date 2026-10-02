@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.app
 
+import dev.alllexey.itmowidgets.core.demo.DemoPeople
+import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
@@ -45,7 +47,7 @@ data class HomeFixture(
         fun lesson(pairId: Long, start: String, end: String, subject: String, typeId: Int = 1, room: String? = "1506") =
             LessonDetailsArgs(
                 pairId = pairId, date = DATE.toString(), subjectName = subject, typeId = typeId, format = "Очный",
-                start = start, end = end, teacherFio = "Преподаватель Тестовый", teacherIsu = 300001, room = room,
+                start = start, end = end, teacherFio = DemoPeople.MATH_TEACHER.name, teacherIsu = 300001, room = room,
                 building = "Кронверкский проспект, 49", buildingId = 13, mainBuildingId = 13, note = null,
                 zoomUrl = null, zoomPassword = null, zoomInfo = null
             )
@@ -54,7 +56,7 @@ data class HomeFixture(
             queueId = id, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100 + id, sectionName = "Плавание",
             start = OffsetDateTime.of(DATE, java.time.LocalTime.of(hour, 0), java.time.ZoneOffset.ofHours(3)),
             end = OffsetDateTime.of(DATE, java.time.LocalTime.of(hour + 1, 30), java.time.ZoneOffset.ofHours(3)),
-            teacherFio = "Тренер Тестовый", roomName = "Бассейн", isPrediction = prediction
+            teacherFio = DemoPeople.SWIMMING_COACH.name, roomName = "Бассейн", isPrediction = prediction
         )
 
         fun pending(id: Long = 1, hour: Int = 12, prediction: Boolean = false) = booking(id, hour, prediction).let {
@@ -99,11 +101,11 @@ data class HomeFixture(
         private fun changeSlot(date: LocalDate) = LessonSlot(
             pairId = 1, date = date, start = LocalTime.of(10, 0), end = LocalTime.of(11, 30), room = "1506",
             building = "Кронверкский проспект, 49", formatId = 1, format = "Очный", teacherIsu = 300001,
-            teacherName = "Преподаватель Тестовый"
+            teacherName = DemoPeople.MATH_TEACHER.name
         )
 
-        /** Three synthetic unread subjects, newest first. */
-        fun marksSample() = HomeCard.Marks(listOf("Тестовый предмет 1", "Тестовый предмет 2", "Тестовый предмет 3"))
+        /** Three unread subjects of the demo set, newest first. */
+        fun marksSample() = HomeCard.Marks(listOf(DemoStudy.DATABASES.name, DemoStudy.DISCRETE.name, DemoStudy.ALGORITHMS.name))
 
         fun defaultCards() = listOf(
             HomeCard.Hint(HomeHint.WIDGETS),

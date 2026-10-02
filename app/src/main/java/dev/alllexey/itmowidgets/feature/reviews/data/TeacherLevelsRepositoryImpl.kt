@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.feature.reviews.data.demo.DemoReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -27,11 +29,12 @@ class TeacherLevelsRepositoryImpl @Inject constructor(
     private val widgetsApi: ItmoWidgetsApi,
     private val store: TeacherLevelsFileStore,
     @param:WallClock private val clock: Clock,
+    private val demo: DemoMode,
 ) : TeacherLevelsRepository, SessionDataCleaner {
     private val lock = Mutex()
     private val generation = AtomicLong()
 
-    override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> = lock.withLock {
+    override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> = if (demo.isActive()) DemoReviews.levels(isus) else lock.withLock {
         withContext(Dispatchers.IO) {
             val started = generation.get()
             if (!customServices.isEnabled()) {

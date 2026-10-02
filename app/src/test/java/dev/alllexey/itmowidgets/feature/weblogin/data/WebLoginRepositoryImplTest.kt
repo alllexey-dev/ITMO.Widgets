@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.weblogin.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -28,7 +29,7 @@ class WebLoginRepositoryImplTest {
 
     @Test fun `preview and approval go to Backend with the code and the challenge`() = runTest {
         val api = FakeApi().apply { preview = ApiResponse.success(WirePreview(challenge, " Chrome ", createdAt, expiresAt)) }
-        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance)
+        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo())
 
         assertEquals(AppResult.Success(WebLoginPreview(challenge, "Chrome", createdAt, expiresAt)), repository.preview("ABCD2345"))
         assertEquals(AppResult.Success(Unit), repository.approve(challenge))
@@ -38,14 +39,14 @@ class WebLoginRepositoryImplTest {
     @Test fun `a blank user agent reads as none`() = runTest {
         val api = FakeApi().apply { preview = ApiResponse.success(WirePreview(challenge, "  ", createdAt, expiresAt)) }
 
-        val result = WebLoginRepositoryImpl(services(enabled = true), api.instance).preview("ABCD2345")
+        val result = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo()).preview("ABCD2345")
 
         assertEquals(null, (result as AppResult.Success).value.userAgent)
     }
 
     @Test fun `without the connection nothing reaches Backend`() = runTest {
         val api = FakeApi()
-        val repository = WebLoginRepositoryImpl(services(enabled = false), api.instance)
+        val repository = WebLoginRepositoryImpl(services(enabled = false), api.instance, noDemo())
 
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.preview("ABCD2345"))
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.approve(challenge))
@@ -55,7 +56,7 @@ class WebLoginRepositoryImplTest {
     @Test fun `an unknown used or expired code is not found`() = runTest {
         val notFound = HttpException(Response.error<Unit>(404, """{"success":false,"error":{"code":"not_found"}}""".toResponseBody()))
         val api = FakeApi().apply { failure = notFound }
-        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance)
+        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo())
 
         assertEquals(AppResult.Failure(AppError.NotFound), repository.preview("ABCD2345"))
         assertEquals(AppResult.Failure(AppError.NotFound), repository.approve(challenge))
@@ -63,7 +64,7 @@ class WebLoginRepositoryImplTest {
 
     @Test fun `network failures and error bodies are typed`() = runTest {
         val api = FakeApi().apply { failure = IOException("offline") }
-        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance)
+        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo())
         assertEquals(AppResult.Failure(AppError.Network), repository.preview("ABCD2345"))
 
         api.failure = null

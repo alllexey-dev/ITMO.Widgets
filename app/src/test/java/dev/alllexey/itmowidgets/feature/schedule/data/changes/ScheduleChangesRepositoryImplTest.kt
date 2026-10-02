@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
@@ -313,7 +316,21 @@ class ScheduleChangesRepositoryImplTest {
         return repository
     }
 
-    private fun repository() = ScheduleChangesRepositoryImpl(api, store, ClockTime(clock), clock, notifier)
+    @Test
+    fun `the demo shows its changes and checks without My ITMO`() = runTest {
+        val repository = repository(FakeDemoMode(active = true))
+
+        val changes = repository.observeChanges().first()
+        val check = repository.check()
+
+        assertEquals(2, changes.size)
+        assertTrue(changes.all { it.subjectName.isNotBlank() })
+        assertTrue(check is AppResult.Success)
+        assertTrue(requests.isEmpty())
+        assertFalse(file.exists())
+    }
+
+    private fun repository(demo: DemoMode = noDemo()) = ScheduleChangesRepositoryImpl(api, store, ClockTime(clock), clock, notifier, demo)
 
     private fun awaitRequests(count: Int) {
         repeat(WAIT_SECONDS.toInt() * 100) { if (requests.size >= count) return; Thread.sleep(10) }

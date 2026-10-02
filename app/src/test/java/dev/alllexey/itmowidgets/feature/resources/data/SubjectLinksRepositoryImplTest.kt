@@ -1,6 +1,11 @@
 package dev.alllexey.itmowidgets.feature.resources.data
 
 import api.myitmo.MyItmo
+import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.demo.DemoStudy
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
 import dev.alllexey.itmowidgets.core.model.ApiResponse
@@ -212,8 +217,28 @@ class SubjectLinksRepositoryImplTest {
         assertTrue(repository.content(scope).shared.isEmpty())
     }
 
-    private fun repo(folder: File, api: FakeApi, services: Services) =
-        SubjectLinksRepositoryImpl(SubjectLinksFileStore(folder, gson), api.instance, services, clock)
+    @Test fun `the demo shows its links and refuses every change without Backend`() = runTest {
+        val api = FakeApi()
+        val repository = repo(temporary.newFolder(), api, Services(false), FakeDemoMode(active = true))
+        val algorithms = ResourceScope(DemoStudy.ALGORITHMS.id, DemoStudy.ALGORITHMS.name, "2026-1")
+        val refused = AppResult.Failure(AppError.DemoUnavailable)
+
+        val snapshot = repository.content(algorithms)
+
+        assertTrue(snapshot.shared.isNotEmpty())
+        assertTrue(snapshot.mine.isNotEmpty())
+        assertEquals(snapshot.shared.first { it.category == LinkCategory.SCORES }.id, snapshot.pinnedId)
+        assertTrue(repository.refresh(algorithms) is AppResult.Success)
+        assertEquals(refused, repository.save(algorithms, id, LinkCategory.TASKS, url, null, LinkVisibility.PRIVATE, null))
+        assertEquals(refused, repository.vote(algorithms, snapshot.shared.first().id, 1))
+        assertEquals(refused, repository.report(algorithms, snapshot.shared.first().id, ResourceReportReason.SPAM, null))
+        assertEquals(refused, repository.pin(algorithms, null))
+        assertEquals(refused, repository.delete(algorithms, snapshot.mine.first().id))
+        assertTrue(api.calls.isEmpty())
+    }
+
+    private fun repo(folder: File, api: FakeApi, services: Services, demo: DemoMode = noDemo()) =
+        SubjectLinksRepositoryImpl(SubjectLinksFileStore(folder, gson), api.instance, services, clock, demo)
 
     private suspend fun SubjectLinksRepositoryImpl.content(scope: ResourceScope): SubjectLinksSnapshot =
         (observe(scope).first() as SubjectLinksState.Content).snapshot

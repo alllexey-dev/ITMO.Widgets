@@ -1,12 +1,14 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.StudyWeeks
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
@@ -32,6 +34,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
     private val api: MyItmoApi,
     private val store: TeacherWeeksFileStore,
     private val time: AcademicTimeProvider,
+    private val demo: DemoMode,
 ) : TeacherLessonsGateway, SessionDataCleaner {
 
     private val cacheLock = Mutex()
@@ -41,6 +44,14 @@ class TeacherLessonsGatewayImpl @Inject constructor(
 
     override fun taughtBy(teacherIsu: Int): Flow<AppResult<TeacherLessons>> = channelFlow {
         val today = time.today()
+        if (demo.isActive()) {
+            val lessons = DemoSchedule.ownDays(today.minusDays(6), today, today)
+                .sortedByDescending { it.date }
+                .flatMap { it.lessons }
+                .filter { it.flowTypeId == ACADEMIC_FLOW && it.teacherIsu == teacherIsu.toLong() }
+            send(AppResult.Success(TeacherLessons(lessons.mapTo(linkedSetOf()) { it.flowId }, lessons.map { it.subjectName }.distinct())))
+            return@channelFlow
+        }
         val started = generation.get()
         val weeks = StudyWeeks.sampled(today)
         val past = weeks.filter { it.endInclusive < today }.mapTo(hashSetOf()) { it.start }

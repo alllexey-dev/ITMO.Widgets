@@ -86,8 +86,11 @@ Run commands from the repository they belong to. Every affected repository must
 build and test before a cross-repository change is called done.
 
 ```bash
-# Android (JDK 17+)
-./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+# Android (JDK 17+): both distribution variants, github (APK) and play (AAB)
+./gradlew :app:testGithubDebugUnitTest :app:testPlayDebugUnitTest :app:lintGithubDebug :app:lintPlayDebug \
+  :app:assembleGithubDebug :app:assemblePlayDebug
+# Before a Play upload: manifests, targetSdk, 16 KB alignment, no GitHub update link in play
+scripts/check-play-policy.sh
 ```
 
 ```bash

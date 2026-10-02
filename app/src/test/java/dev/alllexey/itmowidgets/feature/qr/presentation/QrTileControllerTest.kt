@@ -83,6 +83,8 @@ class QrTileControllerTest {
         override suspend fun signInWithRefreshToken(refreshToken: String): AppResult<Unit> =
             AppResult.Success(Unit)
 
+        override suspend fun startDemo() = Unit
+
         override suspend fun signOut() {
             mutableState.value = SessionState.SignedOut
         }

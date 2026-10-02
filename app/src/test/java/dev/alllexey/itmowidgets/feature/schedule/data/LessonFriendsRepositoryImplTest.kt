@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.GroupData
 import dev.alllexey.itmowidgets.core.model.UserCapabilities
@@ -29,7 +30,7 @@ class LessonFriendsRepositoryImplTest {
     @Test
     fun `without the opt-in nothing is requested`() = runTest {
         val api = FakeApi()
-        val repository = LessonFriendsRepositoryImpl(services(enabled = false), api.instance)
+        val repository = LessonFriendsRepositoryImpl(services(enabled = false), api.instance, noDemo())
 
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.friendsOnLesson(42, date))
         assertEquals(0, api.calls)
@@ -46,7 +47,7 @@ class LessonFriendsRepositoryImplTest {
                 ))
             }
         }
-        val repository = LessonFriendsRepositoryImpl(services(enabled = true), api.instance)
+        val repository = LessonFriendsRepositoryImpl(services(enabled = true), api.instance, noDemo())
 
         val friends = (repository.friendsOnLesson(42, date) as AppResult.Success).value
 
@@ -61,10 +62,10 @@ class LessonFriendsRepositoryImplTest {
     @Test
     fun `transport failures and empty envelopes are errors, not empty lists`() = runTest {
         val failing = FakeApi().apply { result = { _, _ -> throw IOException("offline") } }
-        assertEquals(AppResult.Failure(AppError.Network), LessonFriendsRepositoryImpl(services(true), failing.instance).friendsOnLesson(42, date))
+        assertEquals(AppResult.Failure(AppError.Network), LessonFriendsRepositoryImpl(services(true), failing.instance, noDemo()).friendsOnLesson(42, date))
 
         val empty = FakeApi().apply { result = { _, _ -> ApiResponse(success = true, data = null, error = null) } }
-        val result = LessonFriendsRepositoryImpl(services(true), empty.instance).friendsOnLesson(42, date)
+        val result = LessonFriendsRepositoryImpl(services(true), empty.instance, noDemo()).friendsOnLesson(42, date)
         assertEquals(true, result is AppResult.Failure)
     }
 

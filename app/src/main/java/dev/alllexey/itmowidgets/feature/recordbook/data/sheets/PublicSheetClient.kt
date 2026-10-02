@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
 import dev.alllexey.itmowidgets.core.network.PublicWebClient
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.CsvGrid
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetGrid
@@ -42,9 +43,14 @@ sealed interface SheetFetch<out T> {
  * Downloads public Google Sheets without any account: a tab as CSV, then as the HTML view when the export is
  * forbidden, and the list of tabs from the HTML view. Addresses and bodies never reach the log or an exception.
  */
-class PublicSheetClient internal constructor(private val client: OkHttpClient, private val base: HttpUrl) {
+class PublicSheetClient internal constructor(
+    private val client: OkHttpClient,
+    private val base: HttpUrl,
+    private val demo: DemoMode
+) {
 
-    @Inject constructor(@PublicWebClient client: OkHttpClient) : this(client, "https://docs.google.com/".toHttpUrl())
+    @Inject constructor(@PublicWebClient client: OkHttpClient, demo: DemoMode) :
+        this(client, "https://docs.google.com/".toHttpUrl(), demo)
 
     suspend fun tabs(spreadsheetId: String): SheetFetch<List<SheetTab>> =
         exchange(sheetUrl(spreadsheetId).addPathSegment("htmlview").build()) { response ->
@@ -86,7 +92,9 @@ class PublicSheetClient internal constructor(private val client: OkHttpClient, p
         base.newBuilder().addPathSegment("spreadsheets").addPathSegment("d").addPathSegment(spreadsheetId)
 
     /** Runs one request on the IO dispatcher; cancelling the coroutine cancels the call. */
-    private suspend fun <T> exchange(url: HttpUrl, handle: (Response) -> SheetFetch<T>): SheetFetch<T> = coroutineScope {
+    private suspend fun <T> exchange(url: HttpUrl, handle: (Response) -> SheetFetch<T>): SheetFetch<T> = if (demo.isActive()) {
+        SheetFetch.Failed(AppError.DemoUnavailable)
+    } else coroutineScope {
         val call = client.newCall(Request.Builder().url(url).get().build())
         val finished = AtomicBoolean(false)
         val watcher = launch(start = CoroutineStart.UNDISPATCHED) {

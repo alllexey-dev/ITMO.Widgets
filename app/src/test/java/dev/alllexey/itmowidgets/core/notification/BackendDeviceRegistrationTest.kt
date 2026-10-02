@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.notification
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
@@ -60,7 +61,7 @@ class BackendDeviceRegistrationTest {
             arrayOf(ItmoWidgetsApi::class.java)) { _, method, _ -> calls += method.name; response } as ItmoWidgetsApi
         val device = DefaultBackendDeviceSession(settings, utility, api, "Synthetic device", object : CurrentUserProvider {
             override suspend fun getCurrentUser() = owner?.let { CurrentUser(it, "Synthetic user", null) }
-        })
+        }, noDemo())
         suspend fun prepare() {
             settings.setCustomServicesEnabled(true)
             utility.setFirebaseToken("synthetic-token")

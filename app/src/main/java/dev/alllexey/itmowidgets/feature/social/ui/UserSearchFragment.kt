@@ -14,6 +14,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
@@ -133,7 +134,7 @@ class UserSearchFragment : Fragment() {
                 Snackbar.LENGTH_LONG
             ).show()
             is UserSearchEvent.Invite -> {
-                val text = getString(R.string.user_search_invite_text, getString(R.string.latest_release_url))
+                val text = getString(R.string.user_search_invite_text, BuildConfig.DOWNLOAD_URL)
                 val intent = Intent(Intent.ACTION_SEND)
                     .setType("text/plain")
                     .putExtra(Intent.EXTRA_TEXT, text)

@@ -1,11 +1,9 @@
 package dev.alllexey.itmowidgets.feature.update.ui
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -18,12 +16,14 @@ import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.databinding.FragmentAppUpdateBinding
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateUiState
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 /** Offers the release the backend reports as newer than this build. */
 @AndroidEntryPoint
 class AppUpdateFragment : Fragment() {
+    @Inject lateinit var updateAction: UpdateAction
     private var _binding: FragmentAppUpdateBinding? = null
     private val binding get() = _binding!!
     private val viewModel: AppUpdateViewModel by viewModels()
@@ -35,7 +35,7 @@ class AppUpdateFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         render(viewModel.uiState)
-        binding.updateButton.setOnClickListener { openLatestRelease() }
+        binding.updateButton.setOnClickListener { startUpdate() }
         binding.laterButton.setOnClickListener { closeScreen() }
         binding.closeButton.setOnClickListener { closeScreen() }
         binding.skipButton.setOnClickListener { viewModel.skipVersion() }
@@ -67,10 +67,9 @@ class AppUpdateFragment : Fragment() {
         binding.skipButton.isVisible = !state.unsupported
     }
 
-    private fun openLatestRelease() {
-        val release = Intent(Intent.ACTION_VIEW, getString(R.string.latest_release_url).toUri())
-        runCatching { startActivity(release) }.onFailure {
-            Snackbar.make(binding.root, R.string.app_update_open_failed, Snackbar.LENGTH_LONG).show()
+    private fun startUpdate() {
+        updateAction.start(requireActivity(), viewModel.uiState.unsupported) {
+            _binding?.let { Snackbar.make(it.root, R.string.app_update_open_failed, Snackbar.LENGTH_LONG).show() }
         }
     }
 }

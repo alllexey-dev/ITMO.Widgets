@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.debug
 
 import api.myitmo.MyItmo
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import api.myitmo.model.other.TokenResponse
 import api.myitmo.utils.TokenRefreshException
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -23,7 +24,8 @@ class DefaultDebugRefreshTokenControllerTest {
         val controller = DefaultDebugRefreshTokenController(
             tokenStore = tokenStore,
             myItmo = myItmo,
-            dataCleaners = setOf(cleaner)
+            dataCleaners = setOf(cleaner),
+            demo = noDemo()
         )
 
         val result = controller.replaceRefreshToken("  test-refresh-token  ")
@@ -41,7 +43,8 @@ class DefaultDebugRefreshTokenControllerTest {
         val controller = DefaultDebugRefreshTokenController(
             tokenStore = tokenStore,
             myItmo = FakeMyItmo(rejectToken = true),
-            dataCleaners = setOf(cleaner)
+            dataCleaners = setOf(cleaner),
+            demo = noDemo()
         )
 
         val result = controller.replaceRefreshToken("rejected-token")

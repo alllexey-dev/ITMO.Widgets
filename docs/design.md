@@ -268,7 +268,7 @@ full checks on:
   (the profile and social suites use `files/` instead of `cache/`).
 
 ```bash
-ANDROID_SERIAL=emulator-5554 ./gradlew :app:connectedDebugAndroidTest \
+ANDROID_SERIAL=emulator-5554 ./gradlew :app:connectedGithubDebugAndroidTest \
   -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true \
   -Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full \
   -Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true

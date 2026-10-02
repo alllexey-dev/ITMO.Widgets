@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import api.bars.Bars
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import api.bars.BarsApi
 import api.bars.model.Term
 import api.bars.model.User
@@ -36,7 +37,8 @@ class BarsClient @Inject constructor(
     private val currentUser: CurrentUserProvider,
     silentLogin: BarsSilentLogin,
     backgroundLogin: BarsBackgroundLogin,
-    private val listener: BarsSessionListener
+    private val listener: BarsSessionListener,
+    private val demo: DemoMode
 ) {
     private val mutex = Mutex()
 
@@ -137,7 +139,9 @@ class BarsClient @Inject constructor(
         }
     }
 
+    /** Every BARS request starts here; the demo session has no BARS account. */
     private suspend fun owner(): Int {
+        if (demo.isActive()) fail(AppError.DemoUnavailable)
         val owner = currentUser.getCurrentUser()?.isu ?: fail(AppError.Unauthorized)
         storage.owner = owner
         return owner

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.UserPrivacySettings
@@ -32,7 +33,8 @@ import kotlinx.coroutines.withContext
 
 class SettingsRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
-    private val widgetsApi: ItmoWidgetsApi
+    private val widgetsApi: ItmoWidgetsApi,
+    private val demo: DemoMode
 ) : SettingsRepository {
 
     private val sharingState =
@@ -123,6 +125,10 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun refreshSharingSettings() {
         sharingMutex.withLock {
+            if (demo.isActive()) {
+                sharingState.value = SharingSettingsState.Content(SharingSettings())
+                return
+            }
             if (!settings.getCustomServicesEnabled()) {
                 sharingState.value = SharingSettingsState.Disabled
                 return
@@ -225,6 +231,7 @@ class SettingsRepositoryImpl @Inject constructor(
     private suspend fun updateSharingSettings(
         transform: (SharingSettings) -> SharingSettings
     ): AppResult<Unit> = sharingMutex.withLock {
+        if (demo.isActive()) return@withLock AppResult.Failure(AppError.DemoUnavailable)
         if (!settings.getCustomServicesEnabled()) {
             sharingState.value = SharingSettingsState.Disabled
             return@withLock AppResult.Failure(AppError.CustomServicesDisabled)

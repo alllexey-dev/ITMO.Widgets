@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.di
 import android.content.Context
 import api.myitmo.MyItmo
 import dagger.Module
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -76,12 +77,14 @@ object DebugModule {
     fun provideDebugRefreshTokenController(
         tokenStore: SessionTokenStore,
         myItmo: MyItmo,
-        dataCleaners: Set<@JvmSuppressWildcards SessionDataCleaner>
+        dataCleaners: Set<@JvmSuppressWildcards SessionDataCleaner>,
+        demo: DemoMode
     ): DebugRefreshTokenController {
         return DefaultDebugRefreshTokenController(
             tokenStore = tokenStore,
             myItmo = myItmo,
-            dataCleaners = dataCleaners
+            dataCleaners = dataCleaners,
+            demo = demo
         )
     }
 

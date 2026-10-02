@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.push
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.R
@@ -120,7 +121,7 @@ class SportSignPushHandlerTest {
             ApiResponse.success("OK")
         }
         private val handler = SportSignPushHandler(auto, gson,
-            SportActionRepositoryImpl(settings, myItmo.api, api), api,
+            SportActionRepositoryImpl(settings, myItmo.api, api, noDemo()), api,
             proxy<SportBookingRepository> { method, _ ->
                 check(method == "refreshSportBookings")
                 bookingsRefresh++; Unit
@@ -135,7 +136,7 @@ class SportSignPushHandlerTest {
                 }
                 override fun cancel(channel: String, id: Int) = Unit
                 override fun clear() = Unit
-            }, Clock.fixed(Instant.parse("2026-09-15T10:00:00Z"), ZoneOffset.UTC), RecordingDiagnostics())
+            }, Clock.fixed(Instant.parse("2026-09-15T10:00:00Z"), ZoneOffset.UTC), RecordingDiagnostics(), noDemo())
 
         suspend fun run(vararg lessons: String, enabled: Boolean = true) {
             settings.setCustomServicesEnabled(enabled)

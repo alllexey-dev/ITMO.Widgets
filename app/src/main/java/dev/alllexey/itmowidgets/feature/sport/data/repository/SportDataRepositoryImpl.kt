@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.network.toAppError
@@ -36,7 +39,9 @@ class SportDataRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
     private val myItmoApi: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi,
-    private val scoreRepository: SportScoreRepositoryImpl
+    private val scoreRepository: SportScoreRepositoryImpl,
+    private val time: AcademicTimeProvider,
+    private val demo: DemoMode
 ) : SportDataRepository, SessionDataCleaner {
 
     private val queueSessionMutex = Mutex()
@@ -74,6 +79,10 @@ class SportDataRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshSportAttempts() {
+        if (demo.isActive()) {
+            attemptsFlow.emit(DataState.Success(DemoSport.attempts()))
+            return
+        }
         try {
             val result = withContext(Dispatchers.IO) {
                 val response = myItmoApi.sportAttempts.execute()
@@ -94,6 +103,10 @@ class SportDataRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshSportAutoSignLimits() {
+        if (demo.isActive()) {
+            autoSignLimitsFlow.emit(CustomDataState.Success(DemoSport.autoSignLimits(time)))
+            return
+        }
         if (!settings.getCustomServicesEnabled()) {
             autoSignLimitsFlow.emit(CustomDataState.Disabled)
             return
@@ -119,6 +132,10 @@ class SportDataRepositoryImpl @Inject constructor(
 
     override suspend fun refreshSportQueueEntries() {
         val generation = queueSessionMutex.withLock { queueSessionGeneration }
+        if (demo.isActive()) {
+            emitQueueState(generation, CustomDataState.Success(DemoSport.queueEntries(time)))
+            return
+        }
         if (!settings.getCustomServicesEnabled()) {
             emitQueueState(generation, CustomDataState.Disabled)
             return
@@ -164,6 +181,10 @@ class SportDataRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshSportQueues() {
+        if (demo.isActive()) {
+            queuesFlow.emit(CustomDataState.Success(DemoSport.queues(time)))
+            return
+        }
         if (!settings.getCustomServicesEnabled()) {
             queuesFlow.emit(CustomDataState.Disabled)
             return
@@ -199,6 +220,10 @@ class SportDataRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshFriendsBookings() {
+        if (demo.isActive()) {
+            friendsBookingsFlow.emit(CustomDataState.Success(DemoSport.friendsBookings(time)))
+            return
+        }
         if (!settings.getCustomServicesEnabled()) {
             friendsBookingsFlow.emit(CustomDataState.Disabled)
             return

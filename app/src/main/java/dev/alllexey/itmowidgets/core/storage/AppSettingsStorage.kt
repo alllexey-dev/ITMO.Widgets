@@ -276,6 +276,16 @@ class AppSettingsStorage(
         }
     }
 
+    /** The hidden demo session; survives process death so the session comes back as demo. */
+    suspend fun getDemoActive(): Boolean = read()[DEMO_ACTIVE] ?: false
+
+    fun observeDemoActive(): Flow<Boolean> =
+        preferences.map { it[DEMO_ACTIVE] ?: false }.distinctUntilChanged()
+
+    suspend fun setDemoActive(active: Boolean) {
+        write(DEMO_ACTIVE, active)
+    }
+
     private suspend fun read(): Preferences = preferences.first()
 
     private suspend fun <T> write(key: Preferences.Key<T>, value: T) {
@@ -322,5 +332,6 @@ class AppSettingsStorage(
         private val QR_TILE_ADDED = booleanPreferencesKey("qr_tile_added")
         private val HOME_DISMISSED_HINTS = stringSetPreferencesKey("home_dismissed_hints")
         private val HOME_HIDDEN_CARDS = stringSetPreferencesKey("home_hidden_cards")
+        private val DEMO_ACTIVE = booleanPreferencesKey("demo_active")
     }
 }

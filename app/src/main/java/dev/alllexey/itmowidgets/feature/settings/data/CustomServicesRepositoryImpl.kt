@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
@@ -9,24 +10,32 @@ import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 class CustomServicesRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
     private val identitySync: BackendIdentitySync,
     private val tokenSync: FcmTokenSync,
     private val devices: BackendDeviceSession,
-    private val diagnostics: AppDiagnostics
+    private val diagnostics: AppDiagnostics,
+    private val demo: DemoMode
 ) : CustomServicesRepository {
 
+    /** The demo session reads as connected, so the social screens show its data; the stored choice is kept. */
     override fun observeEnabled(): Flow<Boolean> {
-        return settings.observeCustomServicesEnabled()
+        return combine(demo.observeActive(), settings.observeCustomServicesEnabled()) { demo, enabled -> demo || enabled }
+            .distinctUntilChanged()
     }
 
     override suspend fun isEnabled(): Boolean {
-        return settings.getCustomServicesEnabled()
+        return demo.isActive() || settings.getCustomServicesEnabled()
     }
 
+    override suspend fun isChangeable(): Boolean = !demo.isActive()
+
     override suspend fun setEnabled(enabled: Boolean) {
+        if (demo.isActive()) return
         if (!enabled) bestEffort { devices.unregisterCurrentDevice() }
         settings.setCustomServicesEnabled(enabled)
         if (enabled) {

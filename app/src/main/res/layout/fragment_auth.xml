@@ -33,6 +33,7 @@
                 android:layout_width="88dp"
                 android:layout_height="88dp"
                 android:contentDescription="@null"
+                android:importantForAccessibility="no"
                 android:src="@drawable/auth_logo"
                 app:tint="@null" />
 
@@ -130,6 +131,16 @@
                 android:layout_marginTop="24dp"
                 android:gravity="center"
                 android:text="@string/auth_official_page_notice"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:id="@+id/auth_unofficial_notice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="@string/app_unofficial_notice"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant" />
 

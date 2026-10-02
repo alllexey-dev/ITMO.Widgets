@@ -1,6 +1,10 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data
 
 import api.myitmo.MyItmo
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import api.myitmo.model.recordbook.ControlEntry
 import api.myitmo.model.recordbook.RecordBookEntry
 import api.myitmo.model.recordbook.RecordBookTeacher
@@ -25,13 +29,17 @@ import kotlinx.coroutines.withContext
 /** One instance per process: the memory cache is what the study screens render first. */
 @Singleton
 class RecordbookRepositoryImpl @Inject constructor(
-    private val myItmo: MyItmo
+    private val myItmo: MyItmo,
+    private val time: AcademicTimeProvider,
+    private val demo: DemoMode
 ) : RecordbookRepository, SessionDataCleaner {
 
     private val api by lazy { myItmo.api }
     private val cache = RecordbookMemoryCache()
 
-    override suspend fun getPrograms(): AppResult<List<RecordbookProgram>> = request(
+    override suspend fun getPrograms(): AppResult<List<RecordbookProgram>> = if (demo.isActive()) {
+        AppResult.Success(DemoRecordbook.programs(time.today()))
+    } else request(
         call = { api.getSpecializations() },
         transform = { programs -> programs.map { it.toModel() } }
     ).also { result -> if (result is AppResult.Success) cache.programs = result.value }
@@ -39,12 +47,17 @@ class RecordbookRepositoryImpl @Inject constructor(
     override suspend fun getSubjects(
         programId: Long,
         semester: Int
-    ): AppResult<List<RecordbookSubject>> = request(
+    ): AppResult<List<RecordbookSubject>> = if (demo.isActive()) {
+        DemoRecordbook.subjects(programId, semester, time.today(), time.zoneId)?.let { AppResult.Success(it) }
+            ?: AppResult.Failure(AppError.NotFound)
+    } else request(
         call = { api.getRecordBook(programId, semester) },
         transform = { subjects -> subjects.map { it.toModel() } }
     ).also { result -> if (result is AppResult.Success) cache.subjects[programId to semester] = result.value }
 
-    override suspend fun getControls(entryId: Long): AppResult<List<RecordbookControl>> = request(
+    override suspend fun getControls(entryId: Long): AppResult<List<RecordbookControl>> = if (demo.isActive()) {
+        AppResult.Success(DemoRecordbook.controls(entryId, time.now()).orEmpty())
+    } else request(
         call = { api.getControlEntries(entryId) },
         transform = { controls -> controls.map { it.toModel() } }
     ).also { result -> if (result is AppResult.Success) cache.controls[entryId] = result.value }

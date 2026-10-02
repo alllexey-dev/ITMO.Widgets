@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
 import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -55,6 +58,8 @@ class SheetScoresRepositoryImpl @Inject constructor(
     private val store: SheetScoresFileStore,
     private val currentUser: CurrentUserProvider,
     @param:WallClock private val clock: Clock,
+    private val time: AcademicTimeProvider,
+    private val demo: DemoMode,
 ) : SheetScoresRepository, SessionDataCleaner {
 
     private val lock = Mutex()
@@ -63,11 +68,16 @@ class SheetScoresRepositoryImpl @Inject constructor(
     private val state = MutableStateFlow<List<SheetScore>?>(null)
 
     override fun observe(): Flow<List<SheetScore>> = flow {
+        if (demo.isActive()) {
+            emit(DemoRecordbook.sheetScores(time.today(), clock.instant()))
+            return@flow
+        }
         lock.withLock { loaded() }
         emitAll(state.filterNotNull())
     }
 
     override suspend fun refresh(scope: ResourceScope) {
+        if (demo.isActive()) return
         val started = generation.get()
         val score = lock.withLock { loaded().firstOrNull { it.scope.key == scope.key } } ?: return
         val (reading, _) = read(score)
@@ -100,6 +110,7 @@ class SheetScoresRepositoryImpl @Inject constructor(
 
     override suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell): AppResult<Unit> {
         require(row.tab == total.tab)
+        if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         return lock.withLock {
             val now = clock.instant()
             val score = connection(scope, url, row, total, connectedAt = now)
@@ -109,6 +120,7 @@ class SheetScoresRepositoryImpl @Inject constructor(
 
     override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell): AppResult<Unit> {
         require(row.tab == total.tab)
+        if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         return lock.withLock {
             val current = loaded()
             val previous = current.firstOrNull { it.scope.key == scope.key }
@@ -119,10 +131,12 @@ class SheetScoresRepositoryImpl @Inject constructor(
     }
 
     override suspend fun disconnect(scope: ResourceScope) {
+        if (demo.isActive()) return
         lock.withLock { persistOrKeep(loaded().filterNot { it.scope.key == scope.key }) }
     }
 
     override suspend fun check(half: StudyHalf): SheetCheck {
+        if (demo.isActive()) return SheetCheck(emptyList(), emptyList())
         val started = generation.get()
         val scores = lock.withLock { loaded().filter { it.scope.periodKey == half.periodKey } }
         val changes = mutableListOf<SheetChange>()
