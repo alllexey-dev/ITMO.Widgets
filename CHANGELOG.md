@@ -11,7 +11,7 @@ publication or deployment.
 - `Синхронизация с календарём` on the `Расписание` settings page keeps the
   own My ITMO schedule of today and the next 28 days in the app's own calendar
   `ITMO.Widgets` on the phone, which calendar apps reading the phone's
-  calendars (Xiaomi, Samsung, Yandex) show and Google Calendar does not. Every
+  calendars (Xiaomi, Samsung) show and Google and Yandex Calendar do not. Every
   lesson of the answer goes as it is, sport and room bookings included; new
   lessons are added, changed ones updated, vanished ones removed, past events
   stay, repeated syncs add no duplicates. It runs every 2 hours and right

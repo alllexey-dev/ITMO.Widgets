@@ -444,9 +444,9 @@ Backend is not involved.
   own local calendar `ITMO.Widgets` (`ACCOUNT_TYPE_LOCAL`, created and deleted
   through the sync-adapter URI, colour `calendar_app`, owner access). There is
   no calendar choice. The calendar exists only on this phone: calendar apps
-  that read the phone's calendars (Xiaomi, Samsung, Yandex) show it, Google
-  Calendar does not, since it shows only Google-account calendars; for Google
-  Calendar there is the `.ics` export.
+  that read the phone's calendars (Xiaomi, Samsung) show it; Google and Yandex
+  Calendar do not, since they show only their own accounts' calendars; for
+  Google Calendar there is the `.ics` export.
 - Google-account calendars are never written (owner's decision of
   2026-10-02): a delete there is final only once Google's sync adapter uploads
   it, and Android's guard against too many deletions undoes bulk deletes, after

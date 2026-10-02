@@ -1045,7 +1045,7 @@
     <string name="settings_calendar_sync_no_permission">Выключена: нет доступа к календарю.</string>
     <string name="settings_calendar_sync_calendar_missing">Выключена: календарь удалён.</string>
     <string name="settings_ics_export_title">Выгрузить в .ics</string>
-    <string name="settings_calendar_sync_footer">ITMO.Widgets на этом телефоне — виден в календарях Xiaomi, Samsung, Яндекс; не виден в Google Календаре.</string>
+    <string name="settings_calendar_sync_footer">ITMO.Widgets на этом телефоне — виден в календарях Xiaomi и Samsung; не виден в Google и Яндекс Календаре.</string>
     <string name="settings_ics_export_description">Можно импортировать в Google Календарь на calendar.google.com. Импортируйте в отдельный календарь — так его легко удалить или заменить свежим файлом.</string>
     <string name="settings_ics_export_busy">Готовим файл…</string>
     <string name="calendar_access_title">Доступ к календарю</string>

@@ -224,8 +224,8 @@ only among installed instances of that same format:
   footer that explains the user-services requirement and that pending entries
   are not confirmed bookings, then the calendar group (`Синхронизация с
   календарём`, `Выгрузить в .ics`) with the footer `ITMO.Widgets на этом
-  телефоне — виден в календарях Xiaomi, Samsung, Яндекс; не виден в Google
-  Календаре.` An untitled group after another one keeps the group gap
+  телефоне — виден в календарях Xiaomi и Samsung; не виден в Google и
+  Яндекс Календаре.` An untitled group after another one keeps the group gap
   (`design_spacing_group`) above its card.
 
 ## Recordbook
