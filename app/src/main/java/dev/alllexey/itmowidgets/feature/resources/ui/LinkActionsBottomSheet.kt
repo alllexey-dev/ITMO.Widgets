@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
 import dev.alllexey.itmowidgets.core.ui.navigation.openSheetScores
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.displayTitle
 import dev.alllexey.itmowidgets.core.ui.resolve
@@ -40,7 +41,7 @@ import dev.alllexey.itmowidgets.core.ui.expandToContent
 
 /**
  * What can be done with one link. Own: open, pin, edit, delete, with the review state and the reason
- * of a rejection. A Google Sheet of any author also offers «Мои баллы», the own total from it. Others': the vote arrows, open, pin, report. Actions that need the server are
+ * of a rejection. A Google Sheet of any author also offers «Мои баллы», the own total from it. Others': the vote pill, open, the author's profile, pin, report. Actions that need the server are
  * absent without it. A vote keeps the sheet open; every other action closes it on success.
  */
 @AndroidEntryPoint
@@ -120,6 +121,15 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
         actionDelete.setOnClickListener { confirmDelete(link) }
         actionReport.isVisible = !link.isMine && state.canReport && !link.reportedByMe
         actionReport.setOnClickListener { report(link) }
+        val author = link.author.takeIf { !link.isMine }
+        actionAuthor.isVisible = author != null
+        author?.let { person ->
+            actionAuthor.text = getString(R.string.links_author, person.name)
+            actionAuthor.setOnClickListener {
+                dismiss()
+                openUserProfile(person.isu)
+            }
+        }
     }
 
     /** Others' links vote as in the list and the score follows the repository; an own private link has no score. */

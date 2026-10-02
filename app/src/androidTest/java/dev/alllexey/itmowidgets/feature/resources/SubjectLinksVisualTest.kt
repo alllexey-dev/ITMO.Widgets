@@ -180,6 +180,9 @@ class SubjectLinksVisualTest {
                     assertTrue(sheet.findViewById<View>(R.id.vote_up).isShown && sheet.findViewById<View>(R.id.vote_down).isShown)
                     // The vote sits at the top, before the first action.
                     assertTrue(sheet.findViewById<View>(R.id.vote_down).bottomOnScreen() <= sheet.findViewById<View>(R.id.action_open).topOnScreen())
+                    // Another student's link names its author in a row of its own.
+                    assertEquals("Автор: ${AUTHOR.name}", sheet.findViewById<TextView>(R.id.action_author).text.toString())
+                    assertTrue(sheet.findViewById<View>(R.id.action_author).isShown)
                     assertTextFits(sheet)
                     assertTouchTargets(sheet)
                 }
@@ -247,6 +250,7 @@ class SubjectLinksVisualTest {
             settle()
             scenario.onActivity { activity ->
                 assertEquals(View.GONE, actions(activity).findViewById<View>(R.id.vote_pill).visibility)
+                assertEquals(View.GONE, actions(activity).findViewById<View>(R.id.action_author).visibility)
             }
         }
     }

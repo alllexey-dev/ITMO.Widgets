@@ -81,6 +81,15 @@
             android:text="@string/links_open"
             app:drawableStartCompat="@drawable/ic_open_in_new" />
 
+        <!-- Another student's link names who added it; the row opens their profile. -->
+        <TextView
+            android:id="@+id/action_author"
+            style="@style/Widget.ItmoWidgets.SheetAction"
+            android:visibility="gone"
+            app:drawableStartCompat="@drawable/ic_person_rounded"
+            tools:text="Автор: Иван Иванов"
+            tools:visibility="visible" />
+
         <TextView
             android:id="@+id/action_copy"
             style="@style/Widget.ItmoWidgets.SheetAction"

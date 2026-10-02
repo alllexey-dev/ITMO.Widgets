@@ -8,6 +8,10 @@ publication or deployment.
 
 ### 2026-10-02
 
+- The link actions sheet names the author of another student's link («Автор: …»);
+  the row opens their profile.
+- A link's second line says who sees it (`Все` or the flow) for others' links too,
+  instead of the author's group.
 - The link actions sheet votes with the same pill as the lists, at the end of its title;
   the vertical arrow column, whose arrows had come to overlap the score, is gone.
 - Connected groups and the AI summary card moved to the quieter

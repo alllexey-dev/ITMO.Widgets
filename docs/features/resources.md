@@ -111,8 +111,8 @@ per tag and nothing once the state is saved.
   `colorSurfaceContainerLow`. Within a category own and others' links are
   ranked together by `SubjectLinkRanking` and share one row style
   (`item_subject_link.xml` without the category symbol): the title or host and
-  a line with the host when titled, the visibility of an own link or the
-  author's group of another's, the study year of a past link, `закреплена` and
+  a line with the host when titled, who sees the link (`Все` or the flow, for
+  own and others' links alike; the author is in the actions sheet), the study year of a past link, `закреплена` and
   the owner's review state (`на проверке`, `отклонена`, `скрыта`), joined by
   commas. An own link has the `моя` badge; others' links have the vote pill
   `▲ N ▼` (a negative score in the error colour, the own vote in
@@ -142,7 +142,8 @@ per tag and nothing once the state is saved.
   follows the repository and a vote keeps the sheet open. The arrows are
   hidden under a `VOTE` restriction and without the connection. An own shared
   link shows its score without arrows, an own private one none. Then
-  `Открыть`; `Скопировать ссылку` (the address to the clipboard; below Android 13
+  `Открыть`; for another student's link `Автор: <name>`, which opens their profile
+  (`openUserProfile`); `Скопировать ссылку` (the address to the clipboard; below Android 13
   a toast `Ссылка скопирована`, the system shows its own above); `Мои баллы`
   for a Google Sheet address of any author
   (`GoogleSheetUrl.parse`), which closes the sheet and opens the recordbook's

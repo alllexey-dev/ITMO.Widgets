@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -64,13 +63,13 @@ internal fun SubjectLinksUiState.linkRows(): List<LinkRow> {
 }
 
 /**
- * The second line: the site when the title hides it, who sees an own link or the author's group of
- * another's one, the study year of a past link, the pin, and the review state only the owner sees.
+ * The second line: the site when the title hides it, who sees the link (own and others' alike; the author
+ * is named in the link's actions), the study year of a past link, the pin, and the review state only the
+ * owner sees.
  */
 internal fun Context.linkMeta(link: SubjectLink, pinned: Boolean, previous: Boolean): String = listOfNotNull(
     link.host().takeIf { link.title != null },
-    if (link.isMine) link.visibility.label(link.audienceLabel).resolve(this)
-    else link.author?.primaryGroup()?.name ?: link.audienceLabel,
+    link.visibility.label(link.audienceLabel).resolve(this),
     link.scope.periodKey.studyYear().takeIf { previous },
     getString(R.string.links_pinned).takeIf { pinned },
     link.status.badge()?.resolve(this)?.takeIf { link.isMine },
