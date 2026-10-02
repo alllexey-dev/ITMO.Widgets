@@ -13,7 +13,7 @@
 
         <View style="@style/Widget.ItmoWidgets.SheetHandle" />
 
-        <!-- Others' links vote here as in the list; an own shared link shows its score. -->
+        <!-- Others' links vote with the same pill as in the list; an own shared link shows its score. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -22,19 +22,11 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <include
-                android:id="@+id/vote_column"
-                layout="@layout/view_link_votes"
-                android:layout_width="@dimen/design_touch_target"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/design_spacing_compact" />
-
             <LinearLayout
                 android:id="@+id/heading"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/design_screen_margin"
-                android:layout_marginEnd="@dimen/design_screen_margin"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -53,9 +45,17 @@
                     android:layout_marginTop="@dimen/design_spacing_related"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textColor="?attr/colorOnSurfaceVariant"
-                    tools:text="docs.google.com · Все · отклонена" />
+                    tools:text="docs.google.com, отклонена" />
 
             </LinearLayout>
+
+            <!-- The pill's 16 dp inset plus this margin keep it on the screen margin. -->
+            <include
+                android:id="@+id/vote_pill"
+                layout="@layout/view_link_vote_pill"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/design_touch_target"
+                android:layout_marginEnd="@dimen/design_spacing_related" />
 
         </LinearLayout>
 

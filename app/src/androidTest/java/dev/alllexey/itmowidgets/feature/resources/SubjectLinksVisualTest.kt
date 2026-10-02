@@ -169,7 +169,7 @@ class SubjectLinksVisualTest {
                 fun assertScore(score: Int, vote: Int) = TestUi.eventually(idleBetween = true) {
                     scenario.onActivity { activity ->
                         val sheet = actions(activity)
-                        assertEquals(score.toString(), sheet.findViewById<TextView>(R.id.score).text.toString())
+                        assertEquals(score.toString().replace('-', '−'), sheet.findViewById<TextView>(R.id.score).text.toString())
                         assertEquals(vote > 0, sheet.findViewById<View>(R.id.vote_up).isSelected)
                         assertEquals(vote < 0, sheet.findViewById<View>(R.id.vote_down).isSelected)
                     }
@@ -246,7 +246,7 @@ class SubjectLinksVisualTest {
         withPreview(Appearances.light.toSubjectLinks(), SubjectLinksPreviewActivity.SCREEN_ACTIONS, linkId = "own-other") { scenario, _ ->
             settle()
             scenario.onActivity { activity ->
-                assertEquals(View.GONE, actions(activity).findViewById<View>(R.id.vote_column).visibility)
+                assertEquals(View.GONE, actions(activity).findViewById<View>(R.id.vote_pill).visibility)
             }
         }
     }

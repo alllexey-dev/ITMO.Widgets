@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
 import dev.alllexey.itmowidgets.core.ui.navigation.openSheetScores
+import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.displayTitle
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.SheetLinkActionsBinding
@@ -124,10 +125,10 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
     /** Others' links vote as in the list and the score follows the repository; an own private link has no score. */
     private fun bindVotes(link: SubjectLink, canVote: Boolean) = with(binding) {
         val visible = !link.isMine || link.visibility != LinkVisibility.PRIVATE
-        voteColumn.root.isVisible = visible
-        if (visible) voteColumn.bind(link, canVote) { up -> if (!pending) viewModel.vote(link.id, up) }
+        votePill.root.isVisible = visible
+        if (visible) votePill.bind(link, canVote = !link.isMine && canVote) { up -> if (!pending) viewModel.vote(link.id, up) }
         heading.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            marginStart = resources.getDimensionPixelSize(if (visible) R.dimen.design_spacing_compact else R.dimen.design_screen_margin)
+            marginEnd = if (visible) 0 else resources.getDimensionPixelSize(R.dimen.design_screen_margin)
         }
     }
 

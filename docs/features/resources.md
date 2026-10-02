@@ -137,8 +137,8 @@ per tag and nothing once the state is saved.
   line saying sharing needs the connection. The new link's UUID survives
   process death, so a retried save reaches the same link.
 - `LinkActionsBottomSheet` (long press): another student's link starts with
-  vote arrows around the score (`view_link_votes.xml`, `LinkVotes.kt`; tapping
-  the current arrow takes the vote back); the score
+  the same vote pill as the list at the end of its title (`view_link_vote_pill.xml`,
+  `ViewLinkVotePillBinding.bind`; tapping the current arrow takes the vote back); the score
   follows the repository and a vote keeps the sheet open. The arrows are
   hidden under a `VOTE` restriction and without the connection. An own shared
   link shows its score without arrows, an own private one none. Then
