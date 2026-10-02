@@ -719,6 +719,7 @@
     <string name="qr_pass_refresh">Обновить QR-код</string>
     <string name="qr_pass_empty_title">QR-код пока недоступен</string>
     <string name="qr_pass_empty_description">Попробуйте обновить пропуск через My ITMO</string>
+    <string name="qr_tile_label">QR-пропуск</string>
     <string name="shortcut_qr_short">QR-пропуск</string>
     <string name="shortcut_qr_long">Открыть QR-пропуск</string>
     <string name="shortcut_today_short">Сегодня</string>

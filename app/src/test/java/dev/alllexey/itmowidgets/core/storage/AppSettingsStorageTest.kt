@@ -246,6 +246,13 @@ class AppSettingsStorageTest {
         assertTrue(storage.observeBackgroundWorkHintShown().first())
     }
 
+    @Test
+    fun `the QR tile is not added until written`() = runTest {
+        val storage = createStorage()
+
+        assertFalse(storage.observeQrTileAdded().first())
+    }
+
     private fun kotlinx.coroutines.test.TestScope.createStorage(
         file: File = temporaryFolder.newFile("settings.preferences_pb").apply { delete() },
         scope: CoroutineScope = backgroundScope

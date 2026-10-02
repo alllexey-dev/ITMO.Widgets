@@ -11,9 +11,11 @@ import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSource
 import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
 import dev.alllexey.itmowidgets.feature.qr.data.repository.QrAppearancePreferencesImpl
+import dev.alllexey.itmowidgets.feature.qr.data.repository.QrTilePreferencesImpl
 import dev.alllexey.itmowidgets.feature.qr.data.QrWidgetStateStoreImpl
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
+import dev.alllexey.itmowidgets.feature.qr.domain.QrTilePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCache
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCacheImpl
@@ -54,6 +56,11 @@ abstract class QrModule {
     abstract fun bindQrAppearancePreferences(
         impl: QrAppearancePreferencesImpl
     ): QrAppearancePreferences
+
+    @Binds
+    abstract fun bindQrTilePreferences(
+        impl: QrTilePreferencesImpl
+    ): QrTilePreferences
 
     @Binds
     @Singleton
