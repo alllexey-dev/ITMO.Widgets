@@ -1,8 +1,15 @@
 package dev.alllexey.itmowidgets.app
 
 import android.graphics.Rect
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.os.SystemClock
+import android.view.MotionEvent
 import android.view.View
+import android.widget.ScrollView
+import androidx.fragment.app.DialogFragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -10,6 +17,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.testing.Screenshots
@@ -175,6 +183,155 @@ class MainNavigationTest {
         }
     }
 
+    @Test
+    fun everyRootKeepsItsStateAcrossSwitchesAndRecreation() {
+        SettingsNavigationTestActivity.homeFixture = HomeFixture()
+        ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+            settle()
+            scenario.onActivity { (it.feed().layoutManager as LinearLayoutManager).scrollToPositionWithOffset(3, -24) }
+            settle()
+            var feedAnchor = 0 to 0
+            scenario.onActivity {
+                feedAnchor = it.feedAnchor()
+                assertTrue("The feed must be scrolled away from its top", feedAnchor != 0 to 0)
+            }
+            scenario.onActivity { assertTrue(it.navigation.selectRoot(R.id.navigation_schedule)) }
+            settle()
+            scenario.onActivity { it.blankScroll().scrollTo(0, BLANK_SCROLL) }
+            settle()
+
+            fun assertKept() {
+                for (destination in listOf(
+                    R.id.navigation_home, R.id.navigation_schedule, R.id.navigation_me,
+                    R.id.navigation_home, R.id.navigation_schedule
+                )) {
+                    scenario.onActivity { assertTrue(it.navigation.selectRoot(destination)) }
+                    settle()
+                    scenario.onActivity {
+                        val controller = it.host.navController
+                        assertEquals(destination, controller.currentDestination?.id)
+                        val previous = controller.previousBackStackEntry?.destination?.id
+                        assertTrue("The stack grew: $previous", previous == null || previous == R.id.navigation_home)
+                        when (destination) {
+                            R.id.navigation_home -> assertEquals(feedAnchor, it.feedAnchor())
+                            R.id.navigation_schedule -> assertEquals(BLANK_SCROLL, it.blankScroll().scrollY)
+                        }
+                    }
+                }
+            }
+
+            assertKept()
+            scenario.recreate()
+            settle()
+            scenario.onActivity { assertEquals(BLANK_SCROLL, it.blankScroll().scrollY) }
+            assertKept()
+        }
+    }
+
+    @Test
+    fun reselectingTheBarItemPopsTheRootsDialog() {
+        ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+            scenario.onActivity { assertTrue(it.navigation.selectRoot(R.id.navigation_schedule)) }
+            settle()
+            scenario.onActivity {
+                it.blankScroll().scrollTo(0, BLANK_SCROLL)
+                it.host.navController.navigate(R.id.friend_selector)
+            }
+            settle()
+            scenario.onActivity {
+                assertEquals(R.id.friend_selector, it.host.navController.currentDestination?.id)
+                it.binding.bottomNavView.selectedItemId = R.id.navigation_schedule
+            }
+            settle()
+            scenario.onActivity {
+                assertEquals(R.id.navigation_schedule, it.host.navController.currentDestination?.id)
+                assertTrue(it.host.childFragmentManager.fragments.none { fragment -> fragment is DialogFragment })
+                assertEquals(BLANK_SCROLL, it.blankScroll().scrollY)
+            }
+        }
+    }
+
+    @Test
+    fun everyFullScreenDestinationCoversTheBar() {
+        val screens = listOf(
+            AppScreen.SETTINGS to null,
+            AppScreen.QR_PASS to null,
+            AppScreen.USER_PROFILE to Bundle().apply { putInt(UserScreenArgs.ISU, 100001) },
+            AppScreen.MY_ITMO_WEB to null
+        )
+        ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+            for ((screen, arguments) in screens) {
+                scenario.onActivity { it.openScreen(screen, arguments) }
+                settle()
+                scenario.onActivity {
+                    val overlay = checkNotNull(it.navigation.overlayHost) { "$screen did not open" }
+                    assertTrue(screen.name, windowBounds(it.binding.overlayContainer).contains(windowBounds(it.binding.bottomNavView)))
+                    assertTrue(screen.name, it.binding.overlayContainer.z > it.binding.bottomNavView.z)
+                    val root = overlay.requireView()
+                    assertTrue(screen.name, root.isClickable)
+                    assertEquals(screen.name, 255, (root.background as ColorDrawable).alpha)
+                    assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS, it.binding.bottomNavView.importantForAccessibility)
+
+                    // A tap where the bar is drawn lands on the overlay.
+                    val bar = windowBounds(it.binding.bottomNavView)
+                    val time = SystemClock.uptimeMillis()
+                    listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP).forEach { action ->
+                        val event = MotionEvent.obtain(time, time, action, bar.exactCenterX(), bar.exactCenterY(), 0)
+                        it.dispatchTouchEvent(event)
+                        event.recycle()
+                    }
+                }
+                settle()
+                scenario.onActivity {
+                    assertEquals(screen.name, R.id.navigation_home, it.host.navController.currentDestination?.id)
+                    assertEquals(screen.name, R.id.navigation_home, it.binding.bottomNavView.selectedItemId)
+                }
+                // The tap may have opened something inside the overlay; Back leaves it level by level.
+                repeat(3) {
+                    scenario.onActivity { if (it.navigation.overlayHost != null) it.onBackPressedDispatcher.onBackPressed() }
+                    settle()
+                }
+                scenario.onActivity {
+                    assertNull(screen.name, it.navigation.overlayHost)
+                    assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_AUTO, it.binding.bottomNavView.importantForAccessibility)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun backFromAnotherRootReturnsHome() {
+        ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+            scenario.onActivity { assertTrue(it.navigation.selectRoot(R.id.navigation_schedule)) }
+            settle()
+            scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+            settle()
+            scenario.onActivity {
+                assertEquals(R.id.navigation_home, it.host.navController.currentDestination?.id)
+                assertNull(it.host.navController.previousBackStackEntry)
+            }
+        }
+    }
+
+    private fun SettingsNavigationTestActivity.feed(): RecyclerView =
+        host.childFragmentManager.primaryNavigationFragment!!.requireView().findViewById(R.id.home_feed)
+
+    /** The first visible card of the feed and its offset from the top of the list. */
+    private fun SettingsNavigationTestActivity.feedAnchor(): Pair<Int, Int> {
+        val feed = feed()
+        val layout = feed.layoutManager as LinearLayoutManager
+        val position = layout.findFirstVisibleItemPosition()
+        return position to (layout.findViewByPosition(position)!!.top - feed.paddingTop)
+    }
+
+    private fun SettingsNavigationTestActivity.blankScroll(): ScrollView =
+        host.childFragmentManager.primaryNavigationFragment!!.requireView().findViewById(R.id.blank_tab_scroll)
+
+    private fun windowBounds(view: View): Rect {
+        val location = IntArray(2).also(view::getLocationInWindow)
+        return Rect(location[0], location[1], location[0] + view.width, location[1] + view.height)
+    }
+
     /** Called from the main thread inside `onActivity`. */
     private fun capture(activity: SettingsNavigationTestActivity, name: String) {
         val config = activity.resources.configuration
@@ -184,4 +341,8 @@ class MainNavigationTest {
     private fun bounds(view: View) = Rect(view.left, view.top, view.right, view.bottom)
 
     private fun settle() = TestUi.settle(500)
+
+    private companion object {
+        const val BLANK_SCROLL = 600
+    }
 }

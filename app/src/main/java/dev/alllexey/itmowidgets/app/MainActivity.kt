@@ -328,6 +328,9 @@ class MainActivity : AppCompatActivity(), AppNavigator {
                         setStartDestination(if (onboarding) R.id.onboarding else R.id.navigation_home)
                     }
                 } else if (!onboarding && current == R.id.onboarding) {
+                    // NavigationUI keeps every tab's state through popUpTo the graph's start, and onboarding leaves
+                    // the stack now: without this, tabs would pile up until the Activity is recreated.
+                    controller.graph.setStartDestination(R.id.navigation_home)
                     controller.navigate(
                         R.id.navigation_home,
                         null,
