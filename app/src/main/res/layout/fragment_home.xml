@@ -20,7 +20,7 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:paddingTop="@dimen/design_spacing_compact"
-                android:paddingBottom="152dp"
+                android:paddingBottom="@dimen/design_fab_stack_clearance"
                 android:visibility="gone"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
@@ -29,7 +29,7 @@
                 style="@style/Widget.ItmoWidgets.ContentState"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingBottom="152dp"
+                android:paddingBottom="@dimen/design_fab_stack_clearance"
                 android:visibility="gone">
 
                 <ImageView

@@ -40,7 +40,10 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/title" />
 
-    <!-- The choice, loading, the file and failures share one bounded area, so a state change does not move the sheet. -->
+    <!--
+        The choice, loading, the file and failures share one bounded area, so a state change does not move the sheet:
+        the hidden states stay invisible, and the area is as tall as the tallest of them.
+    -->
     <FrameLayout
         android:id="@+id/content"
         android:layout_width="0dp"
@@ -57,7 +60,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/design_screen_margin"
             android:orientation="vertical"
-            android:visibility="gone"
+            android:visibility="invisible"
             tools:visibility="visible">
 
             <include
@@ -85,7 +88,7 @@
             android:layout_gravity="center"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:visibility="invisible">
 
             <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:layout_width="wrap_content"
@@ -110,7 +113,7 @@
             android:gravity="center_horizontal"
             android:orientation="vertical"
             android:paddingHorizontal="@dimen/design_screen_margin"
-            android:visibility="gone"
+            android:visibility="invisible"
             tools:visibility="visible">
 
             <ImageView
@@ -177,7 +180,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:visibility="gone" />
+            android:visibility="invisible" />
 
     </FrameLayout>
 

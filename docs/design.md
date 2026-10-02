@@ -219,7 +219,9 @@ the geometry.
   by its time in `colorPrimary`, a filled badge and a thin progress line under
   the row, never by a filled row. Pull-to-refresh keeps the
   cards; one snackbar reports a partial failure. The `Мой ИТМО` FAB stays at the
-  bottom end and the list reserves space under it.
+  bottom end and the list reserves space under it: a list under a stack of FABs
+  (home, schedule) ends with `design_fab_stack_clearance` of bottom padding and
+  `clipToPadding="false"`, so its last item scrolls clear of them.
 
 ## Shared components
 
@@ -356,7 +358,9 @@ settings, and restore them if a separate test explicitly changes them.
 - Person profile: `res/layout/fragment_user_profile.xml`,
   `feature/social/ui/UserProfileAdapter.kt`: the hero `res/layout/item_profile_header.xml`
   (`Card.Hero`: avatar, name, one short line, the ISU number with a copy symbol
-  in a 48 dp target, the friendship badge or status and buttons), fact sections
+  in a 48 dp target, the friendship badge or status and buttons in
+  `core/ui/ButtonRow`, side by side or stacked at full width when the labels do
+  not fit, as `Принять заявку` and `Отклонить` at 1.3 on 320 dp), fact sections
   `res/layout/item_profile_facts.xml` with rows `item_profile_fact.xml`, the
   `ITMO.Widgets` group `res/layout/item_profile_sharing.xml` with rows
   `item_profile_entry.xml`, and the reviews heading `res/layout/item_profile_section.xml`.

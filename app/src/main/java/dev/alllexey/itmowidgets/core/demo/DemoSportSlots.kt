@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.demo
 
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 /** A weekly free-attendance sport lesson of the demo catalog. */
@@ -71,6 +72,27 @@ object DemoSportSlots {
             .filter { it.dayOfWeek == ANNA_WEEKLY.day }
             .toList()
 
+    /**
+     * Fitness lessons added to [now]'s day when the weekly template has nothing left there: the sign page opens on
+     * today, and late in the evening or on a Sunday the demo would open on an empty day. They start on the first
+     * ten-minute mark at least [EXTRA_LEAD_MINUTES] ahead, the last possible start being 23:50, and may end after
+     * midnight.
+     */
+    fun extraSlots(now: LocalDateTime): List<DemoSportSlot> {
+        val earliest = now.plusMinutes(EXTRA_LEAD_MINUTES)
+        if (ALL.any { it.day == now.dayOfWeek && now.toLocalDate().atTime(it.start).isAfter(earliest) }) return emptyList()
+        val elapsed = now.toLocalTime().toSecondOfDay() / SECONDS_IN_MINUTE + EXTRA_LEAD_MINUTES.toInt()
+        val first = minOf((elapsed + STEP_MINUTES - 1) / STEP_MINUTES * STEP_MINUTES, LAST_EXTRA_START)
+        return listOf(first, first + LESSON_MINUTES + BREAK_MINUTES)
+            .filter { it <= LAST_EXTRA_START }
+            .mapIndexed { offset, start ->
+                slot(
+                    EXTRA_INDEX + offset, now.dayOfWeek, start / MINUTES_IN_HOUR, start % MINUTES_IN_HOUR,
+                    "Общая физическая подготовка", DemoPeople.FITNESS_COACH, KRONVA_HALL, 20
+                )
+            }
+    }
+
     private fun slot(
         index: Int,
         day: DayOfWeek,
@@ -82,9 +104,17 @@ object DemoSportSlots {
         limit: Int
     ): DemoSportSlot {
         val start = LocalTime.of(hour, minute)
-        return DemoSportSlot(index, day, start, start.plusMinutes(90), section, coach, room, limit)
+        return DemoSportSlot(index, day, start, start.plusMinutes(LESSON_MINUTES.toLong()), section, coach, room, limit)
     }
 
     private const val BOOKED_DAYS_BACK = 28L
     private const val BOOKED_DAYS_AHEAD = 13L
+    private const val LESSON_MINUTES = 90
+    private const val BREAK_MINUTES = 10
+    private const val EXTRA_LEAD_MINUTES = 10L
+    private const val STEP_MINUTES = 10
+    private const val LAST_EXTRA_START = 23 * 60 + 50
+    private const val EXTRA_INDEX = 12
+    private const val MINUTES_IN_HOUR = 60
+    private const val SECONDS_IN_MINUTE = 60
 }

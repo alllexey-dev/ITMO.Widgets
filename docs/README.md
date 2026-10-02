@@ -6,8 +6,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 
 ## Product
 
-- [Releases](product/releases.md) — release sequence, minimum compatible Core
-  and Backend, deferred features.
+- [Releases](product/releases.md) — release sequence, the `github` and `play`
+  distribution variants, minimum compatible Core and Backend.
 - [Roadmap](product/roadmap.md) — staged delivery plan for v2.1 and v2.2 with
   progress.
 
@@ -37,9 +37,12 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 - [Notifications](features/notifications.md) — FCM receiver, token sync,
   handlers, the local schedule-changes and marks notifications.
 - [Widgets](features/widgets.md) — schedule and QR widgets and their previews.
-- [Update offer](features/update.md) — version check and reminder policy.
+- [Update offer](features/update.md) — version check, reminder policy and
+  «Обновить» in the `github` and `play` variants.
 - [Web sign-in](features/web-login.md) — approving a browser's sign-in to the
   web version with a QR or a typed code.
+- [Demo session](features/demo.md) — the hidden entry, the gate in the
+  repositories, what works and what is refused, the fictional data set.
 
 ## Decisions
 
@@ -60,6 +63,7 @@ editing an old one when a decision changes.
 - [0012 BARS is renewed in the background by replaying ITMO.ID with cookies](decisions/0012-bars-background-renewal.md)
 - [0013 Schedule changes are detected on the device](decisions/0013-schedule-changes-on-device.md)
 - [0014 Own totals from public Google Sheets are read on the device](decisions/0014-sheet-scores-on-device.md)
+- [0015 A hidden demo session gated in the repositories](decisions/0015-demo-mode.md)
 
 ## Sibling repositories
 

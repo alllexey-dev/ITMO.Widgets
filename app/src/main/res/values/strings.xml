@@ -661,7 +661,7 @@
     <string name="notification_channel_schedule_changes">Изменения расписания</string>
     <string name="notification_channel_marks">Оценки</string>
     <string name="marks_new_title">Новые оценки</string>
-    <string name="marks_subjects_more">%1$s и ещё %2$d</string>
+    <string name="marks_subjects_more">%1$s и ещё\u00A0%2$d</string>
     <string name="marks_bars_login_title">Войдите в БАРС</string>
     <string name="marks_bars_login_text">Без входа оценки БАРС не проверяются.</string>
     <string name="settings_home_card_marks_title">Новые оценки</string>

@@ -129,7 +129,7 @@ class SportSignStateFactory @Inject constructor(
                     date = date,
                     dayOfWeek = date.dayOfWeek.getDisplayName(
                         TextStyle.SHORT,
-                        Locale.getDefault()
+                        RUSSIAN
                     ),
                     dayOfMonth = date.dayOfMonth.toString(),
                     hasLessons = date in datesWithLessons,
@@ -142,10 +142,10 @@ class SportSignStateFactory @Inject constructor(
         val selectedWeekIndex = weekOffset.coerceIn(0, MAX_WEEKS_FORWARD)
         val displayedWeek = calendarWeeks[selectedWeekIndex]
         val currentMonthName = displayedWeek[3].date.month
-            .getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
+            .getDisplayName(TextStyle.FULL_STANDALONE, RUSSIAN)
             .replaceFirstChar { character ->
                 if (character.isLowerCase()) {
-                    character.titlecase(Locale.getDefault())
+                    character.titlecase(RUSSIAN)
                 } else {
                     character.toString()
                 }
@@ -185,3 +185,6 @@ class SportSignStateFactory @Inject constructor(
         )
     }
 }
+
+/** The app speaks Russian only: the calendar must not follow an English system locale. */
+private val RUSSIAN: Locale = Locale.forLanguageTag("ru")

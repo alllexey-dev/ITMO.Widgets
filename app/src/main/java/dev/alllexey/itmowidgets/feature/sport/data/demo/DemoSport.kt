@@ -39,13 +39,18 @@ import java.time.OffsetDateTime
  */
 object DemoSport {
 
-    /** The catalog of today and the next 13 days, as My ITMO lists free-attendance lessons. */
+    /**
+     * The catalog of today and the next 13 days, as My ITMO lists free-attendance lessons; today always has a lesson
+     * still to sign up for ([DemoSportSlots.extraSlots]).
+     */
     fun schedule(time: AcademicTimeProvider): Map<LocalDate, List<SportLesson>> {
         val today = time.today()
         val booked = DemoSportSlots.annaBookedDates(today)
         val queued = queuedSwimming(time)
+        val extra = DemoSportSlots.extraSlots(time.now().toLocalDateTime())
         return (0 until CATALOG_DAYS).map(today::plusDays).associateWith { date ->
-            DemoSportSlots.ALL.filter { it.day == date.dayOfWeek }.map { slot ->
+            val slots = DemoSportSlots.ALL.filter { it.day == date.dayOfWeek } + if (date == today) extra else emptyList()
+            slots.map { slot ->
                 val signed = slot == DemoSportSlots.ANNA_WEEKLY && date in booked
                 val available = if (slot == queued.slot && date == queued.date) 0 else availableSeats(slot, date)
                 slot.toLesson(date, time, signed, available)
@@ -209,7 +214,7 @@ object DemoSport {
             isLessonReal = true,
             lessonId = lessonId(date),
             start = start,
-            end = date.at(end, time),
+            end = (if (end.isAfter(this.start)) date else date.plusDays(1)).at(end, time),
             sectionId = sectionId(this),
             sectionName = SectionName(section),
             sectionLevel = 1,

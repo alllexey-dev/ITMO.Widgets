@@ -146,8 +146,9 @@ class DesignComponentsVisualTest {
             screenshot("home-$index")
             scenario.onActivity {
                 assertContentBounds(home)
-                assertFalse(home.descendants().any { it is SwipeRefreshLayout })
-                assertFalse(home.descendants().any { it.isClickable })
+                // The feed refreshes by a pull; besides that only the quick actions are targets, not the empty state.
+                assertEquals(1, home.descendants().count { it is SwipeRefreshLayout })
+                assertEquals(setOf(R.id.web_fab, R.id.qr_fab), home.descendants().filter { it.isClickable }.map { it.id }.toSet())
             }
         } }
     }

@@ -65,7 +65,9 @@ Cross-repository change order: privacy boundary → Backend + tests → Core + t
   features never import each other. See `docs/architecture.md`.
 - Everything that reaches Backend is gated on the custom-services opt-in inside
   the repository layer.
-- Synthetic debug data stays behind `BuildConfig.DEBUG` and never reaches Backend.
+- Synthetic data lives in debug fixtures and the demo session (`DemoMode`); it
+  never reaches Backend. Every class that takes a network client checks
+  `DemoMode` before the call; the Konsist suite enforces it.
 - User-visible text lives in string resources and is Russian.
 - Every meaningful UI change is verified on an emulator in light and dark theme,
   one dynamic palette, font scale 1.0 and 1.3, with long names and every state.

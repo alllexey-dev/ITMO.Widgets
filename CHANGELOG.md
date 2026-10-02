@@ -6,8 +6,56 @@ publication or deployment.
 
 ## 2.2 — development
 
+### 2026-10-03
+
+- Pre-release visual pass (full matrix on emulator-5554) fixes: the home and
+  schedule lists end with `design_fab_stack_clearance` so the last item
+  scrolls clear of the FABs on short screens; `Принять заявку` and `Отклонить`
+  stack instead of breaking inside a word (`ButtonRow`); a wrapped review
+  author, source or `Анонимный отзыв` no longer overlaps the review text or
+  runs past its row; the `.ics` sheet keeps one height at font scale 1.3;
+  long lesson titles, teacher names, schedule change lines, summary scale
+  names, the profile name and the sport points card labels hyphenate instead
+  of breaking mid-word; `и ещё N`
+  in the marks digest keeps the number with its words.
+- Demo: the sport sign page always has a lesson to sign up for today, also
+  late in the evening and on Sundays.
+
 ### 2026-10-02
 
+- A hidden demo session for the Google Play review: five quick taps on the
+  sign-in logo open the app as the fictional student «Анна Смирнова» with one
+  consistent set of schedule, sport, recordbook, friends, links and reviews
+  (`core/demo`, each feature's `data/demo`). No tokens, nothing reaches the
+  network, no device registration, background work or update offer; writes
+  and outside pages answer `Недоступно в демо`. The banner `Демо-режим ·
+  вымышленные данные` with `Войти` sits above the bottom bar; the session
+  survives process death until sign-out. Landing screenshots
+  (`SiteScreenshotCapture`) and the debug home fixture read the same set.
+- Every class that takes a My ITMO, BARS, Backend or public web client checks
+  the demo gate before the call; the Konsist rule `network clients are gated by
+  demo mode` enforces it, `debug code is gated` pins the `BuildConfig.DEBUG`
+  checks of the debug stores and screens. The Konsist suite filters agent
+  worktrees by the project path, so it no longer passes vacuously inside one.
+- `Удалить аккаунт ITMO.Widgets` on the `Подключение к ITMO.Widgets` page
+  (also with the switch off) opens `/delete-account` on the site; deletion is
+  a request handled by hand with Backend's runbook. `Политика
+  конфиденциальности` in `Обслуживание` opens `/privacy.html`; that group and
+  the sign-in screen say `Неофициальное приложение. Не связано с
+  Университетом ИТМО.`
+- A shared link whose author deleted the account no longer offers the
+  author's profile.
+- Two distribution variants with one `applicationId` and key: `github` (APK,
+  «Обновить» opens the latest GitHub release) and `play` (AAB, Google Play
+  In-App Updates: flexible in the background with the `Обновление загружено` /
+  `Перезапустить` snackbar, immediate below the minimum version, otherwise the
+  Play card). `BuildConfig.DOWNLOAD_URL` replaces `latest_release_url`, also in
+  the people-search invite. Gradle tasks now carry the variant
+  (`testGithubDebugUnitTest`, `assembleGithubRelease`, `bundlePlayRelease`).
+- WorkManager's unused foreground service and `FOREGROUND_SERVICE` are removed
+  from the manifest. `scripts/check-play-policy.sh` checks the release
+  manifests, `targetSdk` 36, 16 KB alignment and that the `play` bundle has no
+  GitHub update link.
 - Shared links open in the app: `https://widgets.alllexey.dev/u/{isu}` the
   person profile above the profile tab, `/sport/{lessonId}` the lesson card on
   `Запись` with its day selected, `/sport/p/{prototypeLessonId}` a predicted

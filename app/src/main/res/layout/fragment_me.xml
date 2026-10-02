@@ -39,6 +39,8 @@
                     android:id="@+id/profile_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:breakStrategy="high_quality"
+                    android:hyphenationFrequency="normal"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
                     tools:text="Иванов Иван Иванович" />
 

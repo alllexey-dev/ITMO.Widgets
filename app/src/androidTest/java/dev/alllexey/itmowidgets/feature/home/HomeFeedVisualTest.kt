@@ -172,7 +172,7 @@ class HomeFeedVisualTest {
                     val card = activity.marksCard()
                     assertEquals("5", card.findViewById<TextView>(R.id.marks_count).text.toString())
                     assertEquals(
-                        "Тестовый предмет 1, Тестовый предмет 2, Тестовый предмет 3 и ещё 2",
+                        "Тестовый предмет 1, Тестовый предмет 2, Тестовый предмет 3 и ещё\u00A02",
                         card.findViewById<TextView>(R.id.marks_subjects).text.toString()
                     )
                     assertTextFits(card)

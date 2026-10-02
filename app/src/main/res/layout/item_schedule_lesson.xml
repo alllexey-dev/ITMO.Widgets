@@ -88,6 +88,8 @@
             android:letterSpacing="0.01"
             android:textColor="?attr/colorOnSurface"
             android:lineSpacingExtra="2dp"
+            android:breakStrategy="high_quality"
+            android:hyphenationFrequency="normal"
             tools:text="Математический анализ (продвинутый уровень)" />
 
         <!-- Type -->

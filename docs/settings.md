@@ -8,7 +8,7 @@ listed here is not a setting. Screens are built declaratively; see the
 
 The settings root is a compact catalogue, not a scrolling list of every switch:
 
-- `Сервисы и доступ`: user services, privacy, and the Android notifications action.
+- `Доступ`: `Подключение к ITMO.Widgets` (with account deletion), `Друзья и приватность`, and the Android notifications action.
 - `Виджеты`: `Компактное расписание`, `Полное расписание` and the QR widget.
 - `Приложение`: home screen, schedule, recordbook (`Зачётка`), sport, and
   maintenance.
@@ -45,6 +45,13 @@ Future v2.2 categories appear only when their functionality is delivered.
   by default and requires explicit consent. Without it subject links stay
   private on the device; turning it on uploads them as private links on the
   next refresh of a subject (see [resources](features/resources.md)).
+- `Удалить аккаунт ITMO.Widgets` (`Как удалить данные с сервера ITMO.Widgets`,
+  `ic_open_in_new`) is an action row in its own untitled group under the
+  switch on the `Подключение к ITMO.Widgets` page. It is shown with the switch
+  off too, since an account may remain from an earlier connection, and opens
+  `<WIDGETS_BASE_URL>/delete-account` in the browser. Deletion itself is a
+  request handled by hand (Backend `docs/ops/account-deletion.md`); the app has
+  no deletion screen.
 - `Уведомления` shows the current Android notification-permission state and opens
   the system application settings when permission is missing.
 - `Выйти` remains an account action in the profile and requires confirmation.
@@ -352,7 +359,11 @@ system `geo:` intent and lets Android resolve the installed mapping application.
   graph to the first-run flow with an empty back stack. Nothing else is reset:
   the opt-in, pinned widgets and preferences stay as they are. See
   [features/onboarding.md](features/onboarding.md).
+- `Политика конфиденциальности` (`ic_open_in_new`) opens
+  `<WIDGETS_BASE_URL>/privacy.html` in the browser.
 - `Версия` displays the application version.
+- The group's footer is `Неофициальное приложение. Не связано с Университетом
+  ИТМО.`; the sign-in screen shows the same line under its buttons.
 
 ## Debug-only controls
 

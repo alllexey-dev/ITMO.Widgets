@@ -75,7 +75,10 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- Links keep a 48 dp target; the line below tucks into its padding. -->
+            <!--
+                Links keep a 48 dp target; the line below tucks into its padding. The anonymous text pads the same
+                12 dp, so a wrapped line at a large font scale does not rise into the review text.
+            -->
             <FrameLayout
                 android:id="@+id/origin"
                 android:layout_width="wrap_content"
@@ -115,6 +118,8 @@
                     android:layout_gravity="center_vertical"
                     android:gravity="center_vertical"
                     android:minHeight="@dimen/design_touch_target"
+                    android:paddingTop="@dimen/design_spacing_content"
+                    android:paddingBottom="@dimen/design_spacing_content"
                     android:text="@string/teacher_review_anonymous"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textColor="?attr/colorOnSurfaceVariant"

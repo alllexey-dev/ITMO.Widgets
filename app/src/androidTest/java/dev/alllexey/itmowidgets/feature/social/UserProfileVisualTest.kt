@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social
 
 import android.content.res.Configuration
+import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -181,9 +182,11 @@ class UserProfileVisualTest {
                 scenario.onActivity { activity ->
                     val status = activity.findViewById<TextView>(R.id.relationship_status)
                     assertEquals(expected.first, status.text?.toString()?.takeIf { status.isShown })
-                    val buttons = listOf(R.id.primary_action, R.id.secondary_action).map { activity.findViewById<TextView>(it) }
-                        .filter { it.isShown }.map { it.text.toString() }
-                    assertEquals(relationship.name, expected.second, buttons)
+                    val shown = listOf(R.id.primary_action, R.id.secondary_action).map { activity.findViewById<TextView>(it) }
+                        .filter { it.isShown }
+                    assertEquals(relationship.name, expected.second, shown.map { it.text.toString() })
+                    // Two labels that do not fit side by side stack instead of breaking inside a word.
+                    shown.forEach { assertEquals(it.text.toString(), 1, it.lineCount) }
                     assertFalse(activity.findViewById<View>(R.id.badge).isShown)
                     assertFalse(activity.findViewById<View>(R.id.remove_friend).isShown)
                     // Closed entries keep their surface, say why and are no targets.
@@ -495,6 +498,10 @@ class UserProfileVisualTest {
                     assertTrue(id, who.isShown)
                     assertTrue(id, row.findViewById<View>(R.id.meta).screenTop() < row.findViewById<View>(R.id.text).screenTop())
                     assertTrue(id, who.screenTop() > row.findViewById<View>(R.id.text).screenTop())
+                    // Its first line stays under the review text even when it wraps at a large font scale.
+                    val text = row.findViewById<View>(R.id.text)
+                    val firstLine = Rect().also { (who as TextView).getLineBounds(0, it) }
+                    assertTrue(id, who.screenTop() + firstLine.top >= text.screenTop() + text.height)
                     val verification = listOf(R.id.verified, R.id.unverified).map { row.findViewById<View>(it) }.singleOrNull { it.isShown }
                     if (verification != null) {
                         assertTrue(id, verification.screenTop() > who.screenTop())
@@ -1371,6 +1378,11 @@ class UserProfileVisualTest {
             if (copy != null) {
                 assertEquals(copy.sourceTitle ?: "Reviews", source.text.toString())
                 assertTrue(source.height >= 48 * source.resources.displayMetrics.density - 1)
+            }
+            // Who wrote it stays inside the row, however many lines a long name or source takes.
+            listOf(author, source, row.findViewById<TextView>(R.id.anonymous)).filter { it.isShown }.forEach { origin ->
+                val lastLine = Rect().also { origin.getLineBounds(origin.lineCount - 1, it) }
+                assertTrue(origin.text.toString(), origin.screenTop() + lastLine.bottom <= row.screenTop() + row.height)
             }
             assertEquals(canReport && community != null && !community.reportedByMe, row.findViewById<View>(R.id.more).isShown)
             assertEquals(canVote, row.findViewById<View>(R.id.vote_up).isShown)

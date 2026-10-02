@@ -15,6 +15,7 @@ import org.junit.Test
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.util.Locale
 
 class SportSignStateFactoryTest {
 
@@ -79,6 +80,26 @@ class SportSignStateFactoryTest {
         assertTrue(state.hasActiveFilters)
         assertTrue(SectionName("Плавание") in state.availableSports)
         assertTrue(SectionName("Йога") in state.availableSports)
+    }
+
+    @Test
+    fun `calendar names are Russian whatever the system locale`() {
+        val systemLocale = Locale.getDefault()
+        Locale.setDefault(Locale.US)
+        try {
+            val state = factory.create(
+                lessons = emptyList(),
+                catalog = catalog,
+                timeSlots = timeSlots,
+                userFilters = SportSignFilters(selectedDate = timeProvider.today()),
+                hasPartialError = false
+            )
+
+            assertEquals("Июль", state.currentMonthName)
+            assertEquals("ср", state.displayedWeek.single { it.date == timeProvider.today() }.dayOfWeek)
+        } finally {
+            Locale.setDefault(systemLocale)
+        }
     }
 
     @Test

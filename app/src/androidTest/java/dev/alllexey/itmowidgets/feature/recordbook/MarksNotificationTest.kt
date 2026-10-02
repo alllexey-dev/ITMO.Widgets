@@ -74,7 +74,7 @@ class MarksNotificationTest {
     fun fiveSubjectsNameThreeAndCountTheRest() {
         notifier.showDigest(MarkDigest(names(5), single = null), target = null)
 
-        assertEquals("Тестовый предмет 1, Тестовый предмет 2, Тестовый предмет 3 и ещё 2", eventually(DIGEST).text())
+        assertEquals("Тестовый предмет 1, Тестовый предмет 2, Тестовый предмет 3 и ещё\u00A02", eventually(DIGEST).text())
     }
 
     @Test

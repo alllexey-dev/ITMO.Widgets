@@ -86,6 +86,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:breakStrategy="high_quality"
+                        android:hyphenationFrequency="normal"
                         android:text="@string/sport_score_title"
                         android:textAppearance="?attr/textAppearanceTitleMedium"
                         android:textColor="?attr/colorOnSurface"
@@ -190,6 +192,8 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="8dp"
+                                android:breakStrategy="high_quality"
+                                android:hyphenationFrequency="normal"
                                 android:text="@string/sport_score_attendance"
                                 android:textAppearance="?attr/textAppearanceBodyMedium"
                                 android:textColor="?attr/colorOnSurfaceVariant" />
@@ -224,6 +228,8 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="8dp"
+                                android:breakStrategy="high_quality"
+                                android:hyphenationFrequency="normal"
                                 android:text="@string/sport_score_bonus"
                                 android:textAppearance="?attr/textAppearanceBodyMedium"
                                 android:textColor="?attr/colorOnSurfaceVariant" />

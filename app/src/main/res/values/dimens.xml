@@ -10,6 +10,11 @@
     <dimen name="design_card_padding">16dp</dimen>
     <dimen name="design_summary_padding">20dp</dimen>
     <dimen name="design_touch_target">48dp</dimen>
+    <!--
+        Bottom padding of a list under a stack of two FABs (16 dp margin, 56 dp, a gap of up to 16 dp, 56 dp) with
+        room to spare, so its last item scrolls clear of them.
+    -->
+    <dimen name="design_fab_stack_clearance">152dp</dimen>
 
     <dimen name="design_card_radius_day">16dp</dimen>
     <dimen name="design_card_radius_content">20dp</dimen>

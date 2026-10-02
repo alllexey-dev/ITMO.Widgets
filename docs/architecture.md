@@ -29,6 +29,8 @@ app/            Application, MainActivity, navigation coordinator, notifier, wid
 core/           cross-cutting; knows nothing about features
   debug/        BuildConfig.DEBUG fixtures (provider / controller / store); BarsSessionProbe, the debug
                 probe of the BARS cookie renewal
+  demo/         DemoMode (the gate of the demo session), DemoCurrentUserProvider and the shared fictional
+                set: DemoPeople, DemoStudy, DemoSportSlots ([demo session](features/demo.md))
   diagnostics/  AppDiagnostics journal, sanitizer, crash handler
   location/     BuildingDirectory (res/raw/itmo_buildings.json), MapDestination geo URIs
   ui/           LessonTypes and LocationTitles shared by schedule and recordbook rows;
@@ -90,7 +92,11 @@ feature/<name>/ ui | presentation | domain | data
 
 Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
 `recordbook`, `resources`, `reviews`, `schedule`, `settings`, `social`, `sport`, `update`,
-`weblogin`, `widget`. A feature does not need all four layers. `qr`,
+`weblogin`, `widget`. A feature does not need all four layers. The features
+that read the network keep their fictional data for the demo session in
+`data/demo` (`DemoSchedule`, `DemoSport`, `DemoRecordbook`, `DemoSocial`,
+`DemoReviews`, `DemoSubjectLinks`, `DemoQr`); `auth` owns `DataStoreDemoMode`
+and the hidden entry `DemoEntryTaps`. `qr`,
 `schedule` and `recordbook` also have `work` for their WorkManager workers,
 schedulers and entry points: the widget updates; in `schedule/work` the
 schedule change check (`ScheduleChangesWorker`,
@@ -166,8 +172,9 @@ the UI renders `AppError.messageRes()`. `presentation` never references
 `Throwable` or `.message`. *Enforced.* `AppError.CustomServicesDisabled` makes a
 refusal caused by the opt-in read as an instruction, not a generic error;
 `AppError.Restricted` is a Backend `restricted` answer (a moderation
-restriction). A Backend error body is decoded once (`backendErrorCode`); server
-messages are never shown as UI text.
+restriction); `AppError.DemoUnavailable` is a write or an outside page the demo
+session does not offer (`Недоступно в демо`). A Backend error body is decoded
+once (`backendErrorCode`); server messages are never shown as UI text.
 
 ### Threading
 
@@ -180,7 +187,7 @@ thread until it suspends.
 
 | Data | Store |
 |---|---|
-| Settings, flags, one-off values | DataStore (`AppSettingsStorage`, `UtilityStorage`) |
+| Settings, flags, one-off values | DataStore (`AppSettingsStorage`, `UtilityStorage`); `demo_active` marks the demo session |
 | ITMO.ID tokens, BARS session | Encrypted files via Android Keystore |
 | Schedule and QR caches | Files under `cacheDir`, observed through flows |
 | Device-only subject links and the last links answer per subject period | `filesDir/subject_links/cache.json`, atomic writes, excluded from backup and device transfer |
@@ -210,12 +217,36 @@ local generations invalidate late publications after opt-out or session clear.
 - `BackendIdentitySync` publishes the ID token to Backend on sign-in and opt-in;
   `BackendDeviceSession` registers the FCM token, remembering the registered
   token and owner.
+- The demo session is `SessionState.SignedIn(user, demo = true)`, started by
+  `SessionRepository.startDemo()` and kept in `demo_active`. It has no tokens;
+  `DemoCurrentUserProvider` answers the fictional user, and identity sync,
+  device registration, FCM and background work never run for it
+  ([demo session](features/demo.md)).
 
 ### The two-backend seam
 
 MyItmoApi and Core's `ItmoWidgetsApi` are touched only inside `data`. A
 repository may combine both. Every call to Backend passes the custom-services
-gate inside the repository, so no data source can bypass it.
+gate inside the repository, so no data source can bypass it. Before that, every
+class holding a network client (`ItmoWidgetsApi`, `MyItmo`, `MyItmoApi`, `Bars`,
+the `@PublicWebClient` `OkHttpClient`) checks `DemoMode` where it calls the
+network: the demo session reads the feature's `data/demo` and refuses writes
+with `AppError.DemoUnavailable`. *Enforced* for the constructor parameter; the
+demo gate tests cover the behaviour.
+
+### Distribution variants
+
+The flavor dimension `distribution` has `github` and `play`, with one
+`applicationId` and one signing key, so either install updates the other.
+Each sets `BuildConfig.DOWNLOAD_URL`: the latest GitHub release or the Google
+Play card; the invite text of people search shares it. Only «Обновить» of the
+[update offer](features/update.md) differs: `feature/update/ui/UpdateAction`
+(`start(activity, unsupported, onFailed)`) and `InstallStateWatcher` are bound
+by `di/UpdateActionModule` in `app/src/github` (`GithubUpdateAction` opens
+`DOWNLOAD_URL` through `ReleasePageOpener`; the watcher never reports) and in
+`app/src/play` (`PlayUpdateAction` and `PlayInstallStateWatcher` on Play In-App
+Updates, `com.google.android.play:app-update-ktx`, a `playImplementation`
+dependency). Nothing else lives in the variant source sets.
 
 ### Time
 
@@ -329,12 +360,15 @@ Fragment with a nullable binding clears it in `onDestroyView()`; no direct
 Core library wire types from `core.model.reviews`, `core.model.resources`,
 `core.model.social` and `core.model.fcm` cannot be imported by `ui` or
 `presentation`; data mappers alias those imports when names overlap with local
-models. Session-cleaning `*RepositoryImpl` classes must be `@Singleton`. The debug
+models. Session-cleaning `*RepositoryImpl` classes must be `@Singleton`. Every
+class outside `core/network` whose constructor takes a network client also
+takes `DemoMode` (`network clients are gated by demo mode`). The debug
 override stores, the debug refresh-token controller and the debug tools screen
-check `BuildConfig.DEBUG` themselves; no production source names the GitHub
-releases page, which only the `github` variant's `BuildConfig.DOWNLOAD_URL`
-holds. The suite filters agent worktrees by the project path, so it also runs
-inside one.
+check `BuildConfig.DEBUG` themselves (`debug code is gated`); no production
+source names the GitHub releases page, which only the `github` variant's
+`BuildConfig.DOWNLOAD_URL` holds (`distribution variants take the download
+address from BuildConfig`). The suite filters agent worktrees by the project
+path, so it also runs inside one.
 `DesignCardResourcesTest` pins the card style family from
 [`design.md`](design.md). Add a rule when a new invariant is agreed instead of
 relying on review.
@@ -392,4 +426,5 @@ Structural debt, in priority order:
 4. Errors surface as `AppError`.
 5. New persistence follows the DataStore/file rules and user-scoped caches
    implement `SessionDataCleaner`.
-6. Anything reaching Backend passes the custom-services gate.
+6. Anything reaching Backend passes the custom-services gate; anything reaching
+   the network passes the demo gate.

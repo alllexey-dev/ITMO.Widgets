@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
@@ -64,10 +65,12 @@ class IcsExportBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun render(state: IcsExportUiState) = with(binding) {
-        ranges.isVisible = state is IcsExportUiState.Choose
-        preparing.isVisible = state == IcsExportUiState.Preparing
-        ready.isVisible = state is IcsExportUiState.Ready
-        this.state.root.isVisible = state == IcsExportUiState.Empty || state is IcsExportUiState.Failed
+        // Invisible, not gone: the area keeps the tallest state's height, which at a large font scale is the
+        // list of ranges rather than the minimum height.
+        ranges.isInvisible = state !is IcsExportUiState.Choose
+        preparing.isInvisible = state != IcsExportUiState.Preparing
+        ready.isInvisible = state !is IcsExportUiState.Ready
+        this.state.root.isInvisible = state != IcsExportUiState.Empty && state !is IcsExportUiState.Failed
         when (state) {
             is IcsExportUiState.Choose -> rangeRows().zip(state.options).forEach { (row, option) -> bind(row, option) }
             IcsExportUiState.Preparing -> Unit

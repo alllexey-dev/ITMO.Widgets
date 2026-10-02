@@ -112,7 +112,7 @@
             android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingTop="8dp"
-            android:paddingBottom="8dp"
+            android:paddingBottom="@dimen/design_fab_stack_clearance"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -19,6 +19,7 @@ import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.core.testing.unreachableMyItmo
 import dev.alllexey.itmowidgets.feature.qr.data.demo.DemoQr
 import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSourceImpl
+import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
@@ -48,6 +49,11 @@ class DemoNetworkGateTest {
     fun `the pass is a code no turnstile accepts`() = runTest {
         assertEquals(DemoQr.HEX, QrCodeRemoteDataSourceImpl(unreachableMyItmo(), demo).getQrHex())
         assertTrue(DemoQr.HEX.startsWith("DEMO"))
+    }
+
+    @Test
+    fun `the demo pass fits the code the pass screen draws`() {
+        assertEquals(1, QrCodeGenerator().generate(DemoQr.HEX).version)
     }
 
     @Test

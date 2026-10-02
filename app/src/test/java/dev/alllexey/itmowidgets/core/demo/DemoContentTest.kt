@@ -104,6 +104,32 @@ class DemoContentTest {
     }
 
     @Test
+    fun `today always has a sport lesson to sign up for`() {
+        val moments = listOf(
+            LocalDateTime.of(2026, 10, 7, 12, 0),
+            LocalDateTime.of(2026, 10, 7, 21, 45),
+            LocalDateTime.of(2026, 10, 10, 23, 30),
+            LocalDateTime.of(2026, 10, 11, 0, 5),
+            LocalDateTime.of(2026, 10, 11, 12, 0)
+        )
+        moments.map(::FixedAcademicTime).forEach { time ->
+            val now = time.now()
+            val today = DemoSport.schedule(time).getValue(time.today())
+
+            assertTrue("Nothing to sign up for at $now", today.any { it.start.isAfter(now) && it.canSignIn && it.available > 0 })
+            assertTrue(today.all { it.start.toLocalDate() == time.today() && it.end.isAfter(it.start) })
+            assertEquals(today.size, today.map { it.lessonId }.toSet().size)
+        }
+    }
+
+    @Test
+    fun `the template's own lessons need no extra ones`() {
+        val wednesdayNoon = FixedAcademicTime(LocalDateTime.of(LocalDate.of(2026, 10, 7), LocalTime.NOON))
+
+        assertTrue(DemoSportSlots.extraSlots(wednesdayNoon.now().toLocalDateTime()).isEmpty())
+    }
+
+    @Test
     fun `every place is a known ITMO building`() = clocks.forEach { time ->
         val today = time.today()
         val lessons = DemoSchedule.ownDays(today.minusDays(7), today.plusDays(7), today).flatMap { it.lessons } +

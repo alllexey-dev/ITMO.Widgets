@@ -126,7 +126,8 @@
             tools:text="Хочет добавить вас"
             tools:visibility="visible" />
 
-        <LinearLayout
+        <!-- Side by side; stacked when «Принять заявку» and «Отклонить» do not fit in one row. -->
+        <dev.alllexey.itmowidgets.core.ui.ButtonRow
             android:id="@+id/actions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -155,7 +156,7 @@
                 tools:text="Отклонить"
                 tools:visibility="visible" />
 
-        </LinearLayout>
+        </dev.alllexey.itmowidgets.core.ui.ButtonRow>
 
     </LinearLayout>
 

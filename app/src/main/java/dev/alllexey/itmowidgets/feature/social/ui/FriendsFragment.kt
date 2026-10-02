@@ -115,7 +115,11 @@ class FriendsFragment : Fragment() {
         val requestsTab = tabs.getTabAt(1)
         if (requestsTab != null) {
             if (state.incomingCount > 0) {
-                requestsTab.orCreateBadge.number = state.incomingCount
+                requestsTab.orCreateBadge.apply {
+                    number = state.incomingCount
+                    // The default offset pulls the badge over the last letter of «Заявки».
+                    horizontalOffsetWithText = 0
+                }
             } else {
                 requestsTab.removeBadge()
             }
