@@ -8,6 +8,20 @@ publication or deployment.
 
 ### 2026-10-02
 
+- `Синхронизация с календарём` on the `Расписание` settings page keeps the
+  own My ITMO schedule of today and the next 28 days in the phone's calendar:
+  the app's own local calendar `ITMO.Widgets` or any writable calendar picked
+  in `Календарь`. Every lesson of the answer goes as it is, sport and room
+  bookings included; new lessons are added, changed ones updated, vanished
+  ones removed, past events stay, repeated syncs add no duplicates. It runs
+  every 2 hours and right after turning on, picking a calendar or a pull on
+  the own schedule; turning it off removes the app's events. A revoked
+  permission or a deleted calendar turns it off with the reason under the
+  switch. The calendar permission is asked only there.
+- `Выгрузить в .ics` on the same page writes a week, two weeks, the rest of the
+  semester or chosen dates to an RFC 5545 file with stable UIDs and offers
+  `Отправить` and `Открыть в календаре`.
+- Core, Backend and MyItmoApi are unchanged for the calendar.
 - The «QR-пропуск» quick-settings tile opens the QR pass above home; it is
   active with a session, and on a locked device it asks to unlock first. On
   Android 13+ the `Виджет QR-кода` settings page offers `Добавить в шторку`

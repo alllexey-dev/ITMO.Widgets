@@ -59,7 +59,9 @@ core/           cross-cutting; knows nothing about features
   result/       AppError, AppResult
   schedule/     schedule preferences, widget-refresh, SubjectLessonsGateway and TeacherLessonsGateway
                 (TeacherLessons.kt) contracts; ScheduleChange with LessonSlot and LessonOccurrence (shared
-                with the home card) and ScheduleChangeTracking (the background check's switch and work)
+                with the home card) and ScheduleChangeTracking (the background check's switch and work);
+                CalendarSync with CalendarTarget and WritableCalendar (calendar synchronization for settings),
+                ScheduleIcsExport with ScheduleExportRange and IcsFile (the `.ics` export)
   services/     CustomServicesRepository — the Backend opt-in
   settings/     WidgetAppearanceRepository and CustomSpoilerRepository — widget appearance
                 for screens outside settings (the first-run flow)
@@ -88,7 +90,10 @@ Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
 `schedule` and `recordbook` also have `work` for their WorkManager workers,
 schedulers and entry points: the widget updates; in `schedule/work` the
 schedule change check (`ScheduleChangesWorker`,
-`WorkManagerScheduleChangesScheduler`, `AndroidScheduleChangeNotifier`); in
+`WorkManagerScheduleChangesScheduler`, `AndroidScheduleChangeNotifier`) and calendar synchronization
+(`CalendarSyncWorker`, `WorkManagerCalendarSyncScheduler`; the rest of it is
+in `domain/calendar` and `data/calendar`, see
+[calendar](features/schedule.md#calendar)); in
 `recordbook/work` the mark check (`MarksWorker`, `WorkManagerMarksScheduler`,
 `AndroidMarksNotifier`), which also reads the connected sheets, and the debug
 probe of the BARS cookie renewal (`BarsCookieProbeWorker`,
@@ -180,6 +185,8 @@ thread until it suspends.
 | The last snapshot of the own schedule for the change check and the changes of the last 30 days | `filesDir/schedule_changes/state.json`, one atomic write for both, excluded from backup and device transfer |
 | The last My ITMO and BARS mark snapshots of the current half-year and the unread subjects (30 days, at most 100) | `filesDir/marks/state.json`, bound to the owner's ISU, one atomic write for all, excluded from backup and device transfer |
 | Connections to public Google Sheets with the last own total of each subject period | `filesDir/sheet_scores/state.json`, format 1, bound to the owner's ISU, atomic writes, excluded from backup and device transfer |
+| Calendar synchronization: the switch, the calendar and the ids and content of the app's events in it | `filesDir/calendar_sync/state.json`, format 1, atomic writes, excluded from backup and device transfer |
+| The latest exported `.ics` file | `cacheDir/ics/`, shared only through the `FileProvider` `${applicationId}.files` (`res/xml/file_paths.xml`) |
 
 `SharedPreferences` is banned. *Enforced.* Anything caching user-scoped data
 implements `SessionDataCleaner`; sign-out and account change invoke every
@@ -222,7 +229,7 @@ registers its own in its module).
 
 Workers are built by WorkManager and take their dependencies through an
 `@EntryPoint` (`QrWidgetEntryPoint`, `ScheduleWidgetEntryPoint`,
-`ScheduleChangesEntryPoint`, `MarksEntryPoint`, `BarsCookieProbeEntryPoint`,
+`ScheduleChangesEntryPoint`, `CalendarSyncEntryPoint`, `MarksEntryPoint`, `BarsCookieProbeEntryPoint`,
 the FCM workers in `core/notification/FcmWork.kt`),
 not `@HiltWorker`: `androidx.hilt`'s processor cannot read Kotlin 2.0 metadata
 under kapt, and an entry point needs no custom `WorkManager` configuration.

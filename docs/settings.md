@@ -196,12 +196,37 @@ only among installed instances of that same format:
   user's schedule. An explicit toggle refreshes installed widgets only after the
   value is successfully saved. Loading or observing the preference does not
   refresh widgets; a failed save preserves the previous value and does not refresh.
-- The page is an offline settings category with two untitled groups: the
-  schedule-changes switch with `Работа в фоне`, then the auto-sign switch with a
-  footer that explains
-  the user-services requirement and that pending entries are not confirmed
-  bookings. An untitled group after another one keeps the group gap
-  (`design_spacing_group`) above its card.
+- `Синхронизация с календарём` keeps the own schedule of today and the next
+  28 days in the phone's calendar ([calendar](features/schedule.md#calendar)).
+  Off by default; the state lives in `filesDir/calendar_sync/state.json`, not
+  in DataStore, so it is a device setting outside backups. It does not need
+  `Подключение к ITMO.Widgets` or `Изменения расписания`. The line under it is
+  `Пары на 4 недели вперёд.`, or `Выключена: нет доступа к календарю.` /
+  `Выключена: календарь удалён.` after it turned itself off.
+- Turning it on asks for `READ_CALENDAR` and `WRITE_CALENDAR` (only here and
+  in the calendar picker): granted, it goes on; when Android suggests an
+  explanation, a dialog `Доступ к календарю` comes first; refused, the switch
+  stays off with `Нет доступа к календарю`, and a refusal for good adds
+  `Настройки` to the snackbar, which opens the app's system page. It turns on
+  into the last calendar, or the app's own `ITMO.Widgets`.
+- `Календарь` (while on) shows the calendar in use and opens the picker:
+  `На этом телефоне` with `ITMO.Widgets`, then the writable calendars under
+  their accounts, then `Чтобы пары были на всех устройствах, создайте
+  отдельный календарь в Google Календаре и выберите его.` Picking moves the
+  app's events there.
+- `Выгрузить в .ics` (`ic_download`) offers `Неделя`, `2 недели`,
+  `До конца семестра` and `Свои даты`; while the file is written the row says
+  `Готовим файл…` and is disabled. `Файл готов` names the number of lessons
+  and offers `Отправить` (`ACTION_SEND`, `text/calendar`) and, when an app can
+  open it, `Открыть в календаре` (`ACTION_VIEW`). An empty range says
+  `В эти дни пар нет`.
+- The page is an offline settings category with three untitled groups: the
+  schedule-changes switch with `Работа в фоне`, the auto-sign switch with a
+  footer that explains the user-services requirement and that pending entries
+  are not confirmed bookings, then the calendar group (`Синхронизация с
+  календарём`, `Календарь` while on, `Выгрузить в .ics`). An untitled group
+  after another one keeps the group gap (`design_spacing_group`) above its
+  card.
 
 ## Recordbook
 
@@ -344,5 +369,5 @@ behavior.
 
 ## Deferred beyond v2.1
 
-Calendar synchronization, community resources and
-teacher-review settings belong to v2.2.
+Community resources and teacher-review settings belong to v2.2; calendar
+synchronization is on the `Расписание` page.

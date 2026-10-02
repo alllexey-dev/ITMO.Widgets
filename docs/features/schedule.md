@@ -3,7 +3,8 @@
 `feature/schedule` shows the own academic schedule from MyITMO, a friend's
 schedule chosen through the picker, and optional pending sport rows. It also
 checks the own schedule for changes in the background
-([schedule changes](#schedule-changes)).
+([schedule changes](#schedule-changes)) and puts it into the phone's calendar
+or a `.ics` file ([calendar](#calendar)).
 
 ## Data
 
@@ -411,3 +412,107 @@ app's `WorkManager` through the debug `ScheduleChangesTestEntryPoint`),
 `LessonDetailsVisualTest` (marks and the block through
 `ScheduleLifecycleTestActivity.changes`). They use synthetic `pairId`s and
 dates and restore the WorkManager state they found.
+
+## Calendar
+
+The own personal schedule goes to the phone's calendar in two ways, both on
+the `Расписание` settings page ([settings](../settings.md#schedule)): a kept
+synchronization and a one-off `.ics` file. The schedule screen has no top-bar
+menu, so it offers neither; lessons and subjects have no calendar actions.
+Backend is not involved.
+
+### Events
+
+- `OwnScheduleSource` (`MyItmoOwnScheduleSource`) asks
+  `MyItmoApi.getPersonalSchedule` itself in pieces of at most 31 days, one
+  after another, like the change check: no schedule cache, no upload to
+  Backend.
+- `CalendarEvents.from` (`domain/calendar`) turns every lesson of the answer
+  into a `CalendarEvent`, as My ITMO sends it: academic lessons, sport and
+  room bookings alike. The key is `lesson-<pairId>`; a lesson without a
+  positive id is `lesson-<date>-<minute of start>-<flowId>-<subjectId>`. A
+  repeated key is kept once, at its first slot.
+- Title: the subject. Start and end: the date and times in `Europe/Moscow`
+  (`AcademicTimeProvider.zoneId`). Location: the room and the street address of
+  a known building (`BuildingDirectory`), otherwise the building as My ITMO
+  spells it. Description: the lesson type, the teacher and the flow, one per
+  line. The UID is `<key>@widgets.alllexey.dev`.
+
+### Synchronization
+
+- `CalendarSyncRepositoryImpl` keeps the window today..today+28 in one
+  calendar: the app's own local calendar `ITMO.Widgets` (`ACCOUNT_TYPE_LOCAL`,
+  created and deleted through the sync-adapter URI, colour `calendar_app`,
+  visible, owner access) or a calendar the user picked among those with access
+  level contributor or higher. `AndroidPhoneCalendars` is the only
+  `CalendarContract` code. Events are busy, have no reminders, carry the
+  event time zone and `UID_2445`.
+- The app touches only the events it inserted: their ids, the calendar and
+  the content they were given live in `filesDir/calendar_sync/state.json`
+  (format 1, with the switch, the target and the reason it turned itself
+  off), written atomically, excluded from backup and device transfer. A
+  restored device therefore starts with synchronization off. A corrupt file
+  is deleted and synchronization is off.
+- `CalendarSyncPlanner.plan` (pure) compares the window with the stored
+  events. Only occurrences that have not ended are touched: a new one is
+  inserted, a changed one (title, time, location or description) is updated in
+  place, one that vanished from the window is deleted. A past event stays as
+  it was; nothing outside the window is deleted; an event that ended more than
+  180 days ago is forgotten (it stays in the calendar). A key is inserted once,
+  so repeated syncs add no duplicates. An event the user deleted is inserted
+  again by its next change. The ids reached are written even when the provider
+  fails midway.
+- Picking another calendar moves every stored event (insert there, delete
+  here); leaving the app's own calendar deletes it. Turning synchronization
+  off deletes the stored events, or the app's own calendar with everything in
+  it. Turning on the app's calendar recreates it unless the stored ids belong
+  to it, so no stray event stays.
+- Before each sync: without the calendar permission synchronization turns
+  off with `NO_PERMISSION` and keeps the ids, so the same calendar picked
+  again later adopts the old events; a deleted or read-only calendar turns it
+  off with `CALENDAR_MISSING` and forgets them. Settings show the reason in the
+  switch's line.
+- My ITMO is asked outside the state lock; a sync whose calendar changed
+  meanwhile writes nothing. Sign-out and account change delete the app's
+  events (when the permission is there) and the file (`SessionDataCleaner`).
+
+### Work
+
+- `DefaultCalendarSync` (`core/schedule/CalendarSync`) owns the switch and the
+  work. `CalendarSyncWorker` runs the unique periodic work `calendar-sync`
+  every 2 hours with `NetworkType.CONNECTED`, backoff from 15 minutes,
+  `ExistingPeriodicWorkPolicy.UPDATE`, tag `calendar-sync`, through
+  `CalendarSyncEntryPoint`. It does not depend on `Изменения расписания` and
+  has no quiet hours, since it notifies nothing. Failures are retried through
+  `outcomeOf` and `workResultOf` like the background checks.
+- The one-off work `calendar-sync-now` (`ExistingWorkPolicy.REPLACE`, network)
+  runs right after turning on or picking a calendar and after a successful
+  pull on the own schedule (`ScheduleViewModel` calls `requestSync()`, which
+  does nothing while synchronization is off).
+- `syncWork()` runs on application start and after sign-in, `stopWork()`
+  before a session change; a run that turned synchronization off cancels the
+  work.
+
+### `.ics` export
+
+`IcsFileExport` (`core/schedule/ScheduleIcsExport`) reads the range of a
+`ScheduleExportRange`: `Неделя` (today and 6 days), `2 недели` (today and 13
+days), `До конца семестра` (to 31 January from August to January, to 31 July
+from February to July) or `Свои даты` (a `MaterialDatePicker` range).
+`IcsWriter` writes RFC 5545: CRLF, lines folded at 75 octets without splitting
+a UTF-8 character, escaped text, times in UTC (no `VTIMEZONE`), the same UIDs
+as synchronization, `TRANSP:OPAQUE`. The file is
+`cacheDir/ics/itmo-schedule-<start>-<end>.ics` (only the latest is kept),
+shared through the `FileProvider` `${applicationId}.files`. A range without
+lessons writes nothing and says `В эти дни пар нет`.
+
+### Tests
+
+`CalendarEventsTest`, `CalendarSyncPlannerTest`, `IcsWriterTest` and
+`ScheduleExportRangeTest` cover the domain; `CalendarSyncFileStoreTest`,
+`CalendarSyncRepositoryImplTest` (fake calendars), `DefaultCalendarSyncTest`
+and `IcsFileExportTest` the data and the work; `SettingsViewModelTest` and
+`ScheduleViewModelTest` the rows and the sync after a pull. Instrumented:
+`CalendarSyncProviderTest` against the emulator's CalendarProvider (the local
+calendar, two syncs without duplicates, update, delete, moving to another
+calendar, turning off) and `SettingsNavigationTest` for the rows and dialogs.

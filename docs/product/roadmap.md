@@ -172,6 +172,22 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   switch `Оценки из таблиц` (decision
   [0014](../decisions/0014-sheet-scores-on-device.md)). Connections live in
   `filesDir/sheet_scores/state.json`. Not released to production.
+- Stages 39–40: implemented on 2026-10-02 through
+  `vibe/calendar-export-plan.md` (Android 2.2-SNAPSHOT only; Core, Backend and
+  MyItmoApi unchanged), with these corrections to the stage texts: the export
+  lives on the `Расписание` settings page, not on the schedule root, which has
+  no top-bar menu; it is two things: `Синхронизация с календарём`, a rolling
+  window today..today+28 kept in the phone's calendar through
+  `CalendarContract` (the app's own local calendar `ITMO.Widgets` by default or
+  any writable calendar the user picks) and refreshed every 2 hours, and a
+  one-off `Выгрузить в .ics` for a week, two weeks, the rest of the semester or
+  chosen dates. The personal My ITMO schedule goes out as it is, sport and room
+  bookings included, one event per `pair_id`. Mappings live in
+  `filesDir/calendar_sync/state.json` instead of a `CalendarEventMappingEntity`
+  (the pattern of decision 0013); the code is `CalendarSyncRepositoryImpl`,
+  `AndroidPhoneCalendars` and `IcsFileExport` instead of `CalendarExporter`, and
+  there is no `ScheduleExportBottomSheet`. Event descriptions carry no deep
+  links. Not released to production.
 
 ## Plan Structure
 
