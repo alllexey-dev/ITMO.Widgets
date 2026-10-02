@@ -94,7 +94,7 @@ of a teacher with fewer reviews is simply `null`, and until Backend builds a new
 summary the previous one is shown with its own count, which may differ from
 `Отзывы · N`.
 
-The card (`item_teacher_summary.xml`, `Widget.ItmoWidgets.Card.Content.Tonal`)
+The card (`item_teacher_summary.xml`, `Widget.ItmoWidgets.Card.Content.Tonal`, `colorSurfaceContainerLow`)
 comes first in the section, right under the heading and before the own review,
 with the usual 8 dp gap after it. Its texts are plain, with links switched off.
 From top to bottom:
@@ -169,9 +169,9 @@ review too), or `Отзывы` without reviews; `Написать` is a text but
 `ic_edit` at its end. The own review is a group of its own with all four
 corners rounded; the others' reviews follow 16 dp below as one connected group
 ([design](../design.md#connected-groups)); the AI summary card stands 8 dp
-above the first of them. Every row ends with the same bottom edge: a footer
-brings its 48 dp row, a row that ends with its text or a rejection reason gets
-16 dp of padding.
+above the first of them. The rows sit on `colorSurfaceContainerLow`. Nothing
+ends flush with a row's edge: a footer row keeps 12 dp under it, a row that
+ends with its text or a rejection reason 16 dp.
 
 The own review (`item_own_teacher_review.xml`):
 
@@ -181,25 +181,25 @@ The own review (`item_own_teacher_review.xml`):
   (confirmed by `Удалить отзыв?`; afterwards `Написать` returns);
 - `<subject>, анонимно` or `, с вашим именем`;
 - `Причина: <note>` in `colorError` for a rejected review;
-- the full text and, once published, a footer with `Вёл у вас` or a muted
-  `Не подтверждён` and the read-only score in the vote pill.
+- the full text and, once published, the footer of the others' reviews: `Вёл
+  у вас` or a muted `Не подтверждён` on the left, the read-only score in the
+  vote pill on the right.
 
 Every other review is a row in three zones (`item_teacher_review.xml`):
 
 - the caption `<subject>, <date>` in at most two lines with `⋮` at the end;
 - the full text, never truncated;
-- the footer (`ReviewFooterLayout`): who wrote it at the start, a named
-  author as a link, `Фамилия И. О.` (`labelLarge`, initials joined by a
-  no-break space, the full name as content description), which opens that
-  person's profile; a copy's source as a muted link with `ic_open_in_new`
-  (`Reviews` or the source title such as `Google-форма`, TalkBack
-  `Источник: Reviews, <source>`), which opens it; otherwise `Анонимный отзыв`.
-  Then the `Вёл у автора` pill (`view_review_verified.xml` with
-  `ic_check_small`) or a muted `Не подтверждён`, and the vote pill `▲ N ▼`
-  (`view_link_vote_pill.xml`, `core/ui` `bindVotes`) flush at the end. The
-  source wraps inside the room left of the votes; the verification follows it
-  on the same line when it fits, otherwise on a line of its own below; the
-  votes stay centred on the first line.
+- the footer: on the left who wrote it in `bodyMedium`, a named author as a
+  link in `colorPrimary`, `Фамилия И. О.` (initials joined by a no-break space,
+  the full name as content description), which opens that person's profile; a
+  copy's source as a muted link with `ic_open_in_new` (`Reviews` or the source
+  title such as `Google-форма`, TalkBack `Источник: Reviews, <source>`), which
+  opens it; otherwise a muted `Анонимный отзыв`. Under it the verification in
+  `bodySmall` without a chip: `Вёл у автора` with a 16 dp `ic_check` in
+  `colorPrimary`, or `Не подтверждён` in `colorOnSurfaceVariant`. The links
+  keep 48 dp targets; the line under them tucks into their padding. On the
+  right the vote pill `▲ N ▼` (`view_link_vote_pill.xml`, `core/ui`
+  `bindVotes`), centred on the left column.
 
 Votes show arrows only with `canVote`; the score turns to the accent once the
 viewer voted, and without arrows a zero score is left out. While the profile is open

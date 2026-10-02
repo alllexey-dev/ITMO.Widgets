@@ -65,7 +65,7 @@ The grid is 4 dp. Compactness never shrinks the touch target.
 |---|---|---|
 | `Card.Content` | 20 dp radius, no stroke | Subject, control, user rows |
 | `Card.Content.Outlined` | 20 dp radius, 1 dp `colorOutlineVariant` | Sport lesson and booking cards, debug cards |
-| `Card.Content.Tonal` | 20 dp radius, no stroke, `colorSurfaceContainerHigh` | The AI summary of a teacher's reviews above the reviews |
+| `Card.Content.Tonal` | 20 dp radius, no stroke, `colorSurfaceContainerLow` | The AI summary of a teacher's reviews above the reviews |
 | `Card.CompactSummary` / `Card.Summary` | 20 / 24 dp radius | Recordbook summary; PE sport card |
 | `Card.Hero` | 28 dp radius, no stroke, `colorSurfaceContainer` | The subject result and the person on a profile, above the page's connected groups |
 | `Card.SettingsGroup` | 20 dp radius, no stroke, inner dividers | One card per settings or profile group, never per row |
@@ -80,7 +80,9 @@ background:
 - The heading (`item_section_heading.xml`): `titleSmall` in `colorPrimary`,
   16 dp in from the group's edge, 24 dp above (16 dp in a sheet, 8 dp for the
   first one), 8 dp below; `accessibilityHeading`.
-- The rows: one surface, `colorSurfaceContainerHigh`, 2 dp apart
+- The rows: one surface, `colorSurfaceContainerLow` (the surface of schedule
+  days; `colorSurfaceContainerHigh` inside a sheet, which is itself
+  `colorSurfaceContainerLow`), 2 dp apart
   (`design_group_gap`); the first and the last row round 20 dp outside
   (`design_group_radius_outer`), every corner between rows is 4 dp
   (`design_group_radius_inner`). `core/ui/ConnectedGroup.kt`
@@ -349,11 +351,12 @@ settings, and restore them if a separate test explicitly changes them.
   `item_profile_entry.xml`, and the reviews heading `res/layout/item_profile_section.xml`.
 - Teacher reviews: the own review as a group of its own, the others as one
   connected group, `res/layout/item_teacher_review.xml` (`subject, date` with
-  `⋮`; the full text; a footer in `feature/social/ui/ReviewFooterLayout.kt`:
-  who wrote it, a named author or the source as a link, otherwise
-  `Анонимный отзыв`, then the verification pill `view_review_verified.xml` or a
-  muted `Не подтверждён`, and the vote pill `view_link_vote_pill.xml` flush at
-  the end on the first line), `res/layout/item_own_teacher_review.xml` (`мой`,
+  `⋮`; the full text; a footer: on the left who wrote it in `bodyMedium`, a
+  named author or the source as a link, otherwise `Анонимный отзыв`, and under
+  it the verification in `bodySmall`, `Вёл у автора` with a 16 dp `ic_check` in
+  `colorPrimary` or a muted `Не подтверждён`; on the right the vote pill
+  `view_link_vote_pill.xml` centred on that column; 12 dp under the footer,
+  16 dp under a row that ends with its text), `res/layout/item_own_teacher_review.xml` (`мой`,
   a status pill as a 12 % wash of its tone: content-based palettes make
   `…Container` colours too dark for the tone as text), bound in `feature/social/ui/ReviewViews.kt`.
 - AI summary: `res/layout/item_teacher_summary.xml` (`Card.Content.Tonal`, a

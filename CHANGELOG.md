@@ -8,6 +8,13 @@ publication or deployment.
 
 ### 2026-10-02
 
+- Connected groups and the AI summary card moved to the quieter
+  `colorSurfaceContainerLow` of schedule days; the hero cards keep
+  `colorSurfaceContainer` and groups inside the links sheet stay on
+  `colorSurfaceContainerHigh`.
+- A review's footer stacks who wrote it over its verification («✓ Вёл у
+  автора» or «Не подтверждён» as small text, no chip) with the votes centred
+  beside; nothing ends flush with a row's edge.
 - Who wrote a review (the author, the source link or `Анонимный отзыв`) moved
   from its top into its footer, before the verification and left of the votes;
   the top line is the caption with `⋮`. The own review is a group of its own
