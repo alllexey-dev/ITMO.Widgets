@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.feature.schedule.FakeCalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeCalendarSyncScheduler
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DefaultCalendarSyncTest {
@@ -45,8 +46,24 @@ class DefaultCalendarSyncTest {
     fun `turning off stops the work and removes the events`() = runTest {
         sync.disable()
 
-        assertEquals(1, scheduler.cancelCalls)
+        assertEquals(0, scheduler.ensureCalls)
         assertEquals(1, repository.disables)
+        assertTrue(scheduler.cancelCalls >= 1)
+    }
+
+    @Test
+    fun `a calendar still to sweep keeps the work after turning off and runs it`() = runTest {
+        repository.pendingCleanup = true
+
+        sync.disable()
+        assertEquals(1, scheduler.ensureCalls)
+        assertEquals(CheckOutcome.DONE, sync.run())
+        assertEquals(1, repository.syncs)
+
+        repository.onSync = { repository.pendingCleanup = false }
+        sync.run()
+        assertEquals(CheckOutcome.SKIPPED, sync.run())
+        assertEquals(2, repository.syncs)
     }
 
     @Test

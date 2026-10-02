@@ -32,8 +32,13 @@ internal data class StoredCalendarSync(
     val calendarName: String? = null,
     val calendarAccount: String? = null,
     val problem: String? = null,
-    val events: List<StoredEvent> = emptyList()
+    val events: List<StoredEvent> = emptyList(),
+    /** Calendars the app left, swept again for events Google's sync writes back; null in older files. */
+    val cleanups: List<StoredCleanup>? = null
 )
+
+/** A calendar to sweep for the app's events until [until] (epoch millis) has passed with nothing found. */
+internal data class StoredCleanup(val calendarId: Long, val until: Long)
 
 internal data class StoredEvent(
     val key: String,

@@ -61,6 +61,9 @@ interface CalendarSyncRepository {
 
     suspend fun isEnabled(): Boolean
 
+    /** A calendar the app left is still swept for events that came back; the work stays until it is clean. */
+    suspend fun hasPendingCleanup(): Boolean
+
     suspend fun enable(target: CalendarTarget): CalendarSyncResult
 
     suspend fun disable()
@@ -68,8 +71,9 @@ interface CalendarSyncRepository {
     suspend fun writableCalendars(): List<WritableCalendar>?
 
     /**
-     * Brings the window today..today+28 in line with My ITMO. Success also when synchronization is off or turned
-     * itself off because the permission or the calendar is gone; a failure only when My ITMO or the provider failed.
+     * Sweeps calendars the app left, then brings the window today..today+28 in line with My ITMO. Success also when
+     * synchronization is off or turned itself off because the permission or the calendar is gone; a failure only when
+     * My ITMO or the provider failed.
      */
     suspend fun sync(): AppResult<Unit>
 }

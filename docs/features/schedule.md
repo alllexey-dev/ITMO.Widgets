@@ -450,10 +450,13 @@ Backend is not involved.
   calendar) show it, Google Calendar does not, since it shows only
   Google-account calendars. A separate Google calendar reaches every device of
   the account. `AndroidPhoneCalendars` is the only `CalendarContract` code.
-  Events are busy, have no reminders and carry the event time zone and the
-  app's marker: `CUSTOM_APP_PACKAGE` (the app's package), `CUSTOM_APP_URI`
-  (the occurrence key) and `UID_2445` (the ICS UID). The Google sync adapter
-  may rewrite `UID_2445`, so the package is what the sweeps rely on.
+  Events are busy, have no reminders and carry the event time zone. The last
+  line of the description is the app's tag `ITMO.Widgets · <key>`
+  (`CalendarEvent.taggedDescription`): Google keeps the description on its
+  server, so the tag survives rows its sync adapter writes back. The local
+  columns `CUSTOM_APP_PACKAGE`, `CUSTOM_APP_URI` and `UID_2445` are set too,
+  but the adapter drops them from rows it writes back, so sweeps rely on the
+  tag. The `.ics` file has no tag; its UIDs name the occurrences.
 - The app touches only the events it inserted: their ids, the calendar of
   each and the content they were given live in `filesDir/calendar_sync/state.json`
   (format 1, with the switch, the target and the reason it turned itself
@@ -471,16 +474,26 @@ Backend is not involved.
   so repeated syncs add no duplicates. An event the user deleted is inserted
   again by its next change. Every insert is written to the file at once, so an
   event in the calendar never lacks its id.
-- Before planning, a sync deletes marked events of its calendar in the window
+- Before planning, a sync deletes tagged events of its calendar in the window
   that have not ended and whose ids the file lacks, then inserts them anew:
   lost ids never double the lessons.
 - Picking another calendar deletes the app's events from the old one (the
   app's own calendar goes as a whole) and the sync that follows fills the
   window of the new one; past events are not carried over. Turning
   synchronization off deletes the stored events, or the app's own calendar
-  with everything in it. Leaving a calendar also sweeps its marked events from
-  180 days back to 400 days ahead, so events whose ids were lost go too, while
-  the user's own events stay. A delete drops its id only when it went
+  with everything in it. Turning off first stores the switch as off (the stop
+  flag), so a sync queued behind it writes nothing, then deletes under the same
+  lock. Leaving a calendar also sweeps its tagged events from 180 days back to
+  400 days ahead, so events whose ids were lost go too, while the user's own
+  events stay.
+- A delete in a Google calendar is final only once the sync adapter uploads
+  it: until then the row is only marked deleted, and when Android's guard
+  against too many deletions undoes it, the adapter writes the server's copies
+  back as new rows with new ids. So a calendar the app leaves stays in the
+  file's `cleanups` and every run (the work stays on while one is pending, also
+  with the switch off, and then asks My ITMO nothing) sweeps it again by the
+  tag. A sweep that finds events starts its 3 days anew; a calendar clean for
+  3 days, deleted, or picked again is done. A delete drops its id only when it went
   through; failed ones stay in the file, with their calendar, and the next
   turn on, turn off or sync retries them. Turning on the app's calendar
   recreates it unless the stored ids belong to it.

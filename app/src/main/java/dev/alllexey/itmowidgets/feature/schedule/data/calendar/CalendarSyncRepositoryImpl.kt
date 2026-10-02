@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
 import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvents
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncPlanner
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
@@ -39,12 +40,17 @@ import kotlinx.coroutines.withContext
 
 /**
  * The own schedule of today..today+28 in the phone's calendar. The app touches only its own events: the ids in
- * [CalendarSyncFileStore] and, for ids that were lost, events carrying its marker (package and occurrence key); the
- * calendar it created itself is its own entirely.
+ * [CalendarSyncFileStore] and, for ids that were lost, events whose description ends with the app's tag
+ * ([CalendarEvent.taggedDescription]); the calendar it created itself is its own entirely.
  *
  * Every operation runs behind one mutex. Calendar writes and the ids they produce are not cancellable: a cancelled
  * work or a quick switch-off never leaves an inserted event untracked. Every insert is written to the file at once;
  * a delete drops its id only when it went through.
+ *
+ * A delete in a Google calendar is final only once Google's sync adapter uploads it. Android's guard against too many
+ * deletions can undo it, and the adapter then writes the server's copies back as new rows, with new ids and without
+ * the provider's local `CUSTOM_APP_*` columns. A calendar the app leaves is therefore swept again by its tag on later
+ * runs ([StoredCleanup]) until it stays clean for [CLEANUP_PERIOD].
  */
 @Singleton
 class CalendarSyncRepositoryImpl @Inject constructor(
@@ -66,6 +72,9 @@ class CalendarSyncRepositoryImpl @Inject constructor(
 
     override suspend fun isEnabled(): Boolean = (state.value ?: mutex.withLock { loaded() }).enabled
 
+    override suspend fun hasPendingCleanup(): Boolean =
+        (state.value ?: mutex.withLock { loaded() }).cleanups.orEmpty().isNotEmpty()
+
     override suspend fun enable(target: CalendarTarget): CalendarSyncResult = mutex.withLock {
         writing {
             guarded {
@@ -78,7 +87,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
                 }
                 val calendarId = picked?.id ?: ownCalendar(stored)
                 // Events elsewhere go; the window is written into the new calendar by the sync that follows.
-                val remaining = removeOurs(stored, keep = calendarId)
+                val (remaining, left) = removeOurs(stored, keep = calendarId)
                 persist(
                     StoredCalendarSync(
                         enabled = true,
@@ -86,7 +95,8 @@ class CalendarSyncRepositoryImpl @Inject constructor(
                         calendarId = calendarId,
                         calendarName = picked?.name,
                         calendarAccount = picked?.account,
-                        events = remaining
+                        events = remaining,
+                        cleanups = withCleanups(stored, left).filter { it.calendarId != calendarId }
                     )
                 )
                 CalendarSyncResult.DONE
@@ -97,15 +107,22 @@ class CalendarSyncRepositoryImpl @Inject constructor(
     override suspend fun disable() {
         mutex.withLock {
             writing {
-                val stored = loaded()
+                // The stop flag first: a sync queued behind this lock finds synchronization off and writes nothing.
+                val stored = loaded().copy(enabled = false, problem = null).also { persist(it) }
                 if (guarded { calendars.hasAccess() } != true) {
                     // Nothing could be removed: the ids stay, so the same calendar picked later adopts the events.
-                    persist(stored.copy(enabled = false, problem = null))
                     return@writing
                 }
-                val remaining = removeOurs(stored, keep = null)
-                // Ids whose delete failed stay and are retried by the next turn on or off.
-                persist(StoredCalendarSync(calendarId = stored.calendarId.takeIf { remaining.isNotEmpty() }, events = remaining))
+                val (remaining, left) = removeOurs(stored, keep = null)
+                // Ids whose delete failed stay and are retried by the next turn on or off; left calendars are swept
+                // again until Google's sync can no longer bring the events back.
+                persist(
+                    StoredCalendarSync(
+                        calendarId = stored.calendarId.takeIf { remaining.isNotEmpty() },
+                        events = remaining,
+                        cleanups = withCleanups(stored, left)
+                    )
+                )
             }
         }
     }
@@ -143,7 +160,9 @@ class CalendarSyncRepositoryImpl @Inject constructor(
     /** Holds [mutex]. Only the request to My ITMO can be cancelled; what follows runs to its end. */
     private suspend fun syncOnce(): AppResult<Unit> {
         val started = generation.get()
-        val calendarId = writing { usableCalendar() } ?: return AppResult.Success(Unit)
+        val swept = writing { sweepLeftCalendars() }
+        val calendarId = writing { usableCalendar() }
+            ?: return if (swept) AppResult.Success(Unit) else AppResult.Failure(AppError.Unknown())
         val today = time.today()
         val days = schedule.read(today, today.plusDays(WINDOW_DAYS))
         return writing {
@@ -175,7 +194,8 @@ class CalendarSyncRepositoryImpl @Inject constructor(
                 // Its events went with it; ids left in other calendars stay for the next clean-up.
                 CalendarSyncProblem.CALENDAR_MISSING -> StoredCalendarSync(
                     problem = problem.name,
-                    events = stored.events.filter { stored.calendarOf(it) != calendarId }
+                    events = stored.events.filter { stored.calendarOf(it) != calendarId },
+                    cleanups = stored.cleanups
                 )
             }
         )
@@ -194,7 +214,8 @@ class CalendarSyncRepositoryImpl @Inject constructor(
     ): AppResult<Unit> {
         val zone = time.zoneId
         val now = time.now().toInstant()
-        var stored = start.copy(events = removeOurs(start, keep = calendarId))
+        val (kept, left) = removeOurs(start, keep = calendarId)
+        var stored = start.copy(events = kept, cleanups = withCleanups(start, left))
         persist(stored)
         val window = today.atStartOfDay(zone).toInstant()..<today.plusDays(WINDOW_DAYS + 1).atStartOfDay(zone).toInstant()
         val tracked = stored.events.mapTo(mutableSetOf()) { it.eventId }
@@ -237,7 +258,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
      * calendars that the ids missed. The app's own calendar goes as a whole. Returns the entries still there:
      * those in [keep] and those whose delete failed.
      */
-    private fun removeOurs(stored: StoredCalendarSync, keep: Long?): List<StoredEvent> {
+    private fun removeOurs(stored: StoredCalendarSync, keep: Long?): Pair<List<StoredEvent>, List<Long>> {
         val leaving = stored.events.filter { stored.calendarOf(it) != keep }
         val calendarIds = (leaving.mapNotNull { stored.calendarOf(it) } + listOfNotNull(stored.calendarId))
             .filter { it != keep }
@@ -251,13 +272,48 @@ class CalendarSyncRepositoryImpl @Inject constructor(
                 return@forEach
             }
             inCalendar.forEach { event -> if (guardedNow { calendars.delete(event.eventId) } == null) failed += event }
-            val from = time.now().toInstant().minus(SWEEP_BACK)
-            guardedNow {
-                calendars.marked(calendarId, from, from.plus(SWEEP_BACK).plus(SWEEP_AHEAD))
-                    .forEach { calendars.delete(it.eventId) }
+            sweep(calendarId)
+        }
+        return stored.events.filter { stored.calendarOf(it) == keep } + failed to calendarIds.filter { it != own }
+    }
+
+    /** Deletes every live tagged event of [calendarId] in the sweep range; the number found, or null on failure. */
+    private fun sweep(calendarId: Long): Int? = guardedNow {
+        val from = time.now().toInstant().minus(SWEEP_BACK)
+        calendars.marked(calendarId, from, from.plus(SWEEP_BACK).plus(SWEEP_AHEAD))
+            .onEach { calendars.delete(it.eventId) }
+            .size
+    }
+
+    /** [stored]'s pending sweeps plus [left], each due for [CLEANUP_PERIOD] from now. */
+    private fun withCleanups(stored: StoredCalendarSync, left: List<Long>): List<StoredCleanup> {
+        val until = time.now().toInstant().plus(CLEANUP_PERIOD).toEpochMilli()
+        val pending = stored.cleanups.orEmpty().filter { it.calendarId !in left }
+        return pending + left.map { StoredCleanup(it, until) }
+    }
+
+    /**
+     * Sweeps the calendars the app left. One is done when it is gone, became the calendar in use again (the sync's own
+     * orphan sweep covers it), or stayed clean past its period; one where events came back starts its period anew.
+     * False when a sweep failed.
+     */
+    private suspend fun sweepLeftCalendars(): Boolean {
+        val stored = loaded()
+        val pending = stored.cleanups.orEmpty()
+        if (pending.isEmpty() || guarded { calendars.hasAccess() } != true) return true
+        val now = time.now().toInstant()
+        var failed = false
+        val next = pending.mapNotNull { cleanup ->
+            val inUse = stored.enabled && stored.calendarId == cleanup.calendarId
+            if (inUse || guardedNow { calendars.find(cleanup.calendarId) } == null) return@mapNotNull null
+            when (val found = sweep(cleanup.calendarId)) {
+                null -> cleanup.also { failed = true }
+                0 -> cleanup.takeIf { now.toEpochMilli() < it.until }
+                else -> cleanup.copy(until = now.plus(CLEANUP_PERIOD).toEpochMilli())
             }
         }
-        return stored.events.filter { stored.calendarOf(it) == keep } + failed
+        if (next != pending) persist(stored.copy(cleanups = next))
+        return !failed
     }
 
     /** The app's own calendar; one the stored ids do not belong to is recreated, so no stray event stays in it. */
@@ -309,5 +365,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         /** The sweep of a calendar the app leaves covers what a sync could have written and kept. */
         val SWEEP_BACK: Duration = CalendarSyncPlanner.RETENTION
         val SWEEP_AHEAD: Duration = Duration.ofDays(400)
+        /** How long a left calendar must stay clean; Google's sync writes undone deletions back within it. */
+        val CLEANUP_PERIOD: Duration = Duration.ofDays(3)
     }
 }

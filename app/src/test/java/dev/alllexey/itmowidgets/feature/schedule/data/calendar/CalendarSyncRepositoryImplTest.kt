@@ -28,6 +28,7 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -378,6 +379,84 @@ class CalendarSyncRepositoryImplTest {
         assertEquals(listOf("lesson-1"), calendars.eventsIn(other.id).map { it.key })
         assertTrue(calendars.eventsIn(GOOGLE.id).isEmpty())
         assertEquals(listOf(other.id), store.read()!!.events.map { it.calendarId })
+    }
+
+    @Test
+    fun `turning off during the inserts of the first sync leaves nothing behind`() = runTest {
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30)), lesson(3, start = LocalTime.of(15, 20))))
+        val repository = repository()
+        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
+        var disable: Deferred<Unit>? = null
+        calendars.onInsert = {
+            if (disable == null) disable = async(Dispatchers.Default) { repository.disable() }
+        }
+
+        repository.sync()
+        disable!!.await()
+
+        assertTrue(calendars.events.isEmpty())
+        assertFalse(repository.isEnabled())
+        assertTrue(store.read()!!.events.isEmpty())
+    }
+
+    @Test
+    fun `events Google writes back after turning off are swept until the calendar stays clean`() = runTest {
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        val repository = repository()
+        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
+        repository.sync()
+        val written = calendars.eventsIn(GOOGLE.id)
+        val foreign = calendars.insertForeign(GOOGLE.id, written.first().copy(key = "user"))
+
+        repository.disable()
+        assertEquals(listOf(foreign), calendars.events.keys.toList())
+        assertTrue(repository.hasPendingCleanup())
+
+        // Android's guard undid the deletes: the sync adapter writes the server's copies back as new rows.
+        written.forEach { calendars.writeBack(GOOGLE.id, it) }
+        assertEquals(AppResult.Success(Unit), repository.sync())
+        assertEquals(listOf(foreign), calendars.events.keys.toList())
+        assertTrue(repository.hasPendingCleanup())
+        // Switched off, a run only sweeps and asks My ITMO nothing.
+        assertEquals(1, requests.size)
+
+        clock.advance(Duration.ofDays(4))
+        repository.sync()
+        assertFalse(repository.hasPendingCleanup())
+        assertTrue(store.read()!!.cleanups.orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `a left calendar picked again stops being swept and keeps the new events`() = runTest {
+        days = listOf(day(MONDAY, lesson(1)))
+        val repository = repository()
+        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
+        repository.sync()
+        repository.disable()
+
+        repository.enable(CalendarTarget.PhoneCalendar(GOOGLE.id))
+        repository.sync()
+
+        assertFalse(repository.hasPendingCleanup())
+        assertEquals(listOf("lesson-1"), calendars.eventsIn(GOOGLE.id).map { it.key })
+    }
+
+    @Test
+    fun `a file of the previous build without calendar ids is cleaned up completely`() = runTest {
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        repository().apply { enable(CalendarTarget.PhoneCalendar(GOOGLE.id)); sync() }
+        val ids = calendars.events.keys.toList()
+        folder.mkdirs()
+        File(folder, "state.json").writeText(
+            """{"format":1,"enabled":true,"target":"phone","calendarId":${GOOGLE.id},"calendarName":"Учёба",""" +
+                """"events":[""" + ids.joinToString(",") { id ->
+                    """{"key":"k$id","eventId":$id,"start":0,"end":1,"title":"Физика"}"""
+                } + "]}"
+        )
+
+        repository().disable()
+
+        assertTrue(calendars.events.isEmpty())
     }
 
     @Test

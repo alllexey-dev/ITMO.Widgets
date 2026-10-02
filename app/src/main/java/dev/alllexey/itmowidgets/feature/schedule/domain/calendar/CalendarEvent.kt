@@ -18,8 +18,21 @@ data class CalendarEvent(
     /** The RFC 5545 UID of the occurrence; also stored in the provider's `UID_2445`. */
     val uid: String get() = "$key@$UID_DOMAIN"
 
+    /**
+     * The description as the phone's calendar keeps it: the last line names the occurrence. Google stores the
+     * description on its server, so the line survives an event the sync adapter writes back, unlike the provider's
+     * local `CUSTOM_APP_*` columns.
+     */
+    val taggedDescription: String get() = listOfNotNull(description, "$TAG_PREFIX$key").joinToString("\n")
+
     companion object {
         const val UID_DOMAIN = "widgets.alllexey.dev"
+        const val TAG_PREFIX = "ITMO.Widgets · "
+
+        /** The occurrence key of a description written by [taggedDescription], or null for any other text. */
+        fun keyOfDescription(description: String?): String? =
+            description?.substringAfterLast('\n')?.takeIf { it.startsWith(TAG_PREFIX) }?.removePrefix(TAG_PREFIX)
+                ?.takeIf { it.startsWith("lesson-") }
     }
 }
 

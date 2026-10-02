@@ -83,6 +83,17 @@ class CalendarEventsTest {
         assertEquals("Лекция", nothing.description)
     }
 
+    @Test
+    fun `the calendar description ends with a tag that names the occurrence`() {
+        val event = CalendarEvents.from(listOf(day(MONDAY, lesson(1))), MOSCOW) { null }.single()
+
+        assertEquals("Лекция\nТестовый преподаватель\nФИЗ ПИИКТ 3.2\nITMO.Widgets · lesson-1", event.taggedDescription)
+        assertEquals("ITMO.Widgets · lesson-1", event.copy(description = null).taggedDescription)
+        assertEquals("lesson-1", CalendarEvent.keyOfDescription(event.taggedDescription))
+        assertNull(CalendarEvent.keyOfDescription("Лекция\nITMO.Widgets · что-то"))
+        assertNull(CalendarEvent.keyOfDescription(null))
+    }
+
     private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.value, 1, date, null, lessons.toList())
 
     private fun lesson(

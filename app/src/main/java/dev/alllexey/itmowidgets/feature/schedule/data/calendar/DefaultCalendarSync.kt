@@ -36,29 +36,33 @@ class DefaultCalendarSync @Inject constructor(
             }
         }
 
+    /** Stops a running sync, deletes the app's events and keeps the work while left calendars are swept again. */
     override suspend fun disable() {
         scheduler.cancel()
         repository.disable()
+        syncWork()
     }
 
     override suspend fun writableCalendars(): List<WritableCalendar>? = repository.writableCalendars()
 
     override suspend fun syncWork() {
-        if (sessionTokens.hasRefreshToken() && repository.isEnabled()) scheduler.ensurePeriodic()
+        if (sessionTokens.hasRefreshToken() && needsWork()) scheduler.ensurePeriodic()
         else scheduler.cancel()
     }
 
     override fun stopWork() = scheduler.cancel()
 
+    private suspend fun needsWork() = repository.isEnabled() || repository.hasPendingCleanup()
+
     override suspend fun requestSync() {
         if (sessionTokens.hasRefreshToken() && repository.isEnabled()) scheduler.runOnce()
     }
 
-    /** One background run; when synchronization turned itself off, its work goes too. */
+    /** One background run: sweeps left calendars and syncs; with nothing left to do, the work goes. */
     suspend fun run(): CheckOutcome {
-        if (!sessionTokens.hasRefreshToken() || !repository.isEnabled()) return CheckOutcome.SKIPPED
+        if (!sessionTokens.hasRefreshToken() || !needsWork()) return CheckOutcome.SKIPPED
         val result = repository.sync()
-        if (!repository.isEnabled()) scheduler.cancel()
+        if (!needsWork()) scheduler.cancel()
         return outcomeOf(listOfNotNull((result as? AppResult.Failure)?.error))
     }
 }

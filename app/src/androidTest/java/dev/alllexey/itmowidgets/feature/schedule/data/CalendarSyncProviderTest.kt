@@ -29,6 +29,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -100,7 +103,7 @@ class CalendarSyncProviderTest {
         assertEquals(Instant.parse("2030-09-09T08:30:00Z").toEpochMilli(), first.end)
         assertEquals("Europe/Moscow", first.timeZone)
         assertEquals("1506, Кронверкский пр., 49", first.location)
-        assertEquals("Лекция\nТестовый преподаватель\nФИЗ ПИИКТ 3.2", first.description)
+        assertEquals("Лекция\nТестовый преподаватель\nФИЗ ПИИКТ 3.2\nITMO.Widgets · lesson-1", first.description)
         assertEquals(Events.AVAILABILITY_BUSY, first.availability)
         assertEquals("lesson-1@widgets.alllexey.dev", first.uid)
         assertEquals(0, first.hasAlarm)
@@ -193,6 +196,69 @@ class CalendarSyncProviderTest {
         assertEquals(listOf(foreign), events(other).map { it.id })
     }
 
+    /**
+     * Google's semantics on a sync-adapter calendar: once an event has a `_SYNC_ID`, an app's delete only marks it
+     * deleted; when Android's guard undoes the deletions, the adapter writes the server's copies back as new rows
+     * without the local `CUSTOM_APP_*` columns. Those copies keep the description, and its tag finds them.
+     */
+    @Test
+    fun eventsTheSyncAdapterWritesBackAfterTurningOffAreSweptByTheirDescription() = runBlocking {
+        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
+        val other = createOtherCalendar()
+        val foreign = insertForeignEvent(other)
+        val repository = repository()
+        assertEquals(CalendarSyncResult.DONE, repository.enable(CalendarTarget.PhoneCalendar(other)))
+        repository.sync()
+        val uploaded = events(other).filter { it.id != foreign }
+        uploaded.forEach { asAdapter(it.id, ContentValues().apply { put(Events._SYNC_ID, "server-${it.id}") }) }
+
+        repository.disable()
+        assertEquals(listOf(foreign), events(other).map { it.id })
+        assertEquals(2, deletedRows(other))
+
+        // The guard's undo: the deleted rows go and the server's copies come back as new rows.
+        resolver.delete(syncAdapter(Events.CONTENT_URI, OTHER_ACCOUNT), "${Events.CALENDAR_ID} = ? AND ${Events.DELETED} = 1", arrayOf(other.toString()))
+        val restored = uploaded.map { event ->
+            ContentUris.parseId(resolver.insert(syncAdapter(Events.CONTENT_URI, OTHER_ACCOUNT), ContentValues().apply {
+                put(Events.CALENDAR_ID, other)
+                put(Events.TITLE, event.title)
+                put(Events.DTSTART, event.start)
+                put(Events.DTEND, event.end)
+                put(Events.EVENT_TIMEZONE, event.timeZone)
+                put(Events.DESCRIPTION, event.description)
+                put(Events._SYNC_ID, "server-${event.id}")
+            })!!)
+        }
+        assertTrue(restored.none { it in uploaded.map(StoredEvent::id) })
+        resolver.query(Events.CONTENT_URI, arrayOf(Events.CUSTOM_APP_PACKAGE), "${Events._ID} = ?", arrayOf(restored.first().toString()), null)!!
+            .use { assertTrue(it.moveToFirst()); assertNull(it.getString(0)) }
+        assertEquals(3, events(other).size)
+
+        assertEquals(AppResult.Success(Unit), repository().sync())
+
+        assertEquals(listOf(foreign), events(other).map { it.id })
+        assertTrue(repository().hasPendingCleanup())
+    }
+
+    @Test
+    fun turningOffWhileTheFirstSyncInsertsLeavesNoLessonBehind() = runBlocking {
+        days = (0L until 14L).map { offset ->
+            day(MONDAY.plusDays(offset), lesson(10 * offset + 1), lesson(10 * offset + 2, LocalTime.of(11, 40)), lesson(10 * offset + 3, LocalTime.of(13, 30)))
+        }
+        val other = createOtherCalendar()
+        val repository = repository()
+        assertEquals(CalendarSyncResult.DONE, repository.enable(CalendarTarget.PhoneCalendar(other)))
+
+        val sync = launch(Dispatchers.Default) { repository.sync() }
+        while (events(other).isEmpty()) delay(1)
+        repository.disable()
+        sync.join()
+
+        assertTrue(events(other).isEmpty())
+        assertFalse(repository.isEnabled())
+        assertTrue(CalendarSyncFileStore(folder, Gson()).read()!!.events.isEmpty())
+    }
+
     @Test
     fun turningOffTheAppCalendarDeletesIt() = runBlocking {
         days = listOf(day(MONDAY, lesson(1)))
@@ -250,6 +316,15 @@ class CalendarSyncProviderTest {
             put(Events.EVENT_TIMEZONE, "Europe/Moscow")
         })!!
     )
+
+    private fun asAdapter(eventId: Long, values: ContentValues) {
+        resolver.update(syncAdapter(ContentUris.withAppendedId(Events.CONTENT_URI, eventId), OTHER_ACCOUNT), values, null, null)
+    }
+
+    private fun deletedRows(calendarId: Long): Int = resolver.query(
+        Events.CONTENT_URI, arrayOf(Events._ID), "${Events.CALENDAR_ID} = ? AND ${Events.DELETED} = 1",
+        arrayOf(calendarId.toString()), null
+    )!!.use { it.count }
 
     private fun events(calendarId: Long): List<StoredEvent> = resolver.query(
         Events.CONTENT_URI,

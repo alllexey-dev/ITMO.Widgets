@@ -47,6 +47,13 @@ class FakePhoneCalendars : PhoneCalendars {
         return id
     }
 
+    /** Google's sync adapter writing back a deleted event of the app: a new row with the same content and tag. */
+    fun writeBack(calendarId: Long, event: CalendarEvent): Long {
+        val id = nextId++
+        events[id] = calendarId to event
+        return id
+    }
+
     fun eventsIn(calendarId: Long): List<CalendarEvent> =
         events.values.filter { it.first == calendarId }.map { it.second }
 
@@ -140,6 +147,10 @@ class FakeCalendarSyncRepository(enabled: Boolean = false) : CalendarSyncReposit
     override fun observeState(): Flow<CalendarSyncState> = state
 
     override suspend fun isEnabled() = state.value.enabled
+
+    var pendingCleanup = false
+
+    override suspend fun hasPendingCleanup() = pendingCleanup
 
     override suspend fun enable(target: CalendarTarget): CalendarSyncResult {
         enabled += target
