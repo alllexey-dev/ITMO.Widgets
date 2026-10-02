@@ -25,6 +25,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.SportLessonRequest
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -91,9 +92,11 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         childFragmentManager.setFragmentResultListener(SportCommonDetailsBottomSheet.ACTION_REQUEST, viewLifecycleOwner) { _, result ->
-            val current = lessonsAdapter.currentList.firstOrNull {
-                it.lesson.lessonId == result.getLong(SportCommonDetailsBottomSheet.RESULT_LESSON_ID)
-            } ?: return@setFragmentResultListener
+            val lessonId = result.getLong(SportCommonDetailsBottomSheet.RESULT_LESSON_ID)
+            // A lesson opened from a link may be hidden by the filters; its card still acts on it.
+            val current = lessonsAdapter.currentList.firstOrNull { it.lesson.lessonId == lessonId }
+                ?: viewModel.linkedLesson(lessonId)?.let { SportLessonItem(it, isBusy = isBusy(lessonId)) }
+                ?: return@setFragmentResultListener
             if (current.isBusy) return@setFragmentResultListener
             val action = current.lesson.bookingConditions().evaluate(timeProvider.now()).action
             if (action.name != result.getString(SportCommonDetailsBottomSheet.RESULT_ACTION)) {
@@ -107,6 +110,12 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
                 SportBookingAction.CANCEL_AUTO -> onUnAutoSignClick(current.lesson)
                 SportBookingAction.NONE -> Unit
             }
+        }
+        parentFragmentManager.setFragmentResultListener(SportLessonRequest.KEY, viewLifecycleOwner) { _, result ->
+            viewModel.openSharedLesson(
+                result.getLong(SportLessonRequest.LESSON_ID),
+                result.getBoolean(SportLessonRequest.PREDICTED)
+            )
         }
         setupRecyclerView()
         binding.swipeRefreshLayout.applyAppRefreshColors()
@@ -198,6 +207,8 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
                     is SportSignEvent.ShowAutoSignConfirmDialog -> showConfirmDialog(event)
                     is SportSignEvent.ShowAutoSignDeleteDialog -> showDeleteDialog(event)
                     is SportSignEvent.ShowInfoDialog -> showInfoDialog(event)
+                    is SportSignEvent.OpenLessonDetails -> onLessonClick(event.lesson)
+                    SportSignEvent.ShowLinkUnavailable -> showLinkUnavailable()
                 }
             }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
@@ -407,11 +418,21 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
             .show()
     }
 
+    private fun showLinkUnavailable() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.sport_link_unavailable_title)
+            .setMessage(R.string.sport_link_unavailable_text)
+            .setPositiveButton(R.string.common_got_it, null)
+            .show()
+    }
+
     override fun onLessonClick(lesson: SportLesson) {
-        SportCommonDetailsBottomSheet.newInstance(lesson, actionsEnabled = true,
-            busy = lessonsAdapter.currentList.any { it.lesson.lessonId == lesson.lessonId && it.isBusy })
+        SportCommonDetailsBottomSheet.newInstance(lesson, actionsEnabled = true, busy = isBusy(lesson.lessonId))
             .show(childFragmentManager, SportCommonDetailsBottomSheet.TAG)
     }
+
+    private fun isBusy(lessonId: Long): Boolean =
+        (viewModel.uiState.value as? SportSignUiState.Content)?.busyLessonIds?.contains(lessonId) == true
 
     private fun handleTemplateAction(lesson: SportLesson): Boolean {
         if (lesson.lessonId >= 0) return false

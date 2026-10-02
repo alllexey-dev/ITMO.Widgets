@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.SportLessonRequest
 import dev.alllexey.itmowidgets.databinding.FragmentSportBinding
 
 @AndroidEntryPoint
@@ -47,6 +48,14 @@ class SportFragment : Fragment() {
                 else -> null
             }
         }.attach()
+        // A shared lesson opens on the sign page; the page itself finds it in the catalog.
+        requireActivity().supportFragmentManager.setFragmentResultListener(
+            SportLessonRequest.KEY,
+            viewLifecycleOwner
+        ) { key, result ->
+            binding.sportViewPager.setCurrentItem(SIGN_PAGE, false)
+            childFragmentManager.setFragmentResult(key, result)
+        }
     }
 
     fun changeView(index: Int) {
@@ -60,4 +69,7 @@ class SportFragment : Fragment() {
 
     // endregion
 
+    private companion object {
+        const val SIGN_PAGE = 1
+    }
 }

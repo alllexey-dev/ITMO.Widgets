@@ -82,6 +82,12 @@ sealed interface SportSignEvent {
         val title: UiText? = null,
         val message: UiText
     ) : SportSignEvent
+
+    /** A shared lesson was found: its card opens as if it had been tapped. */
+    data class OpenLessonDetails(val lesson: SportLesson) : SportSignEvent
+
+    /** A shared lesson has passed or is not in the catalog. */
+    data object ShowLinkUnavailable : SportSignEvent
 }
 
 data class CalendarDay(

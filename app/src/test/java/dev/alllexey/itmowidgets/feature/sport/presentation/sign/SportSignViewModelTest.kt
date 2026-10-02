@@ -36,7 +36,7 @@ class SportSignViewModelTest {
 
     private fun TestScope.viewModel() = SportSignViewModel(
         schedule, data, SportSignFilterController(time), SportSignStateFactory(time),
-        bookingDelegate(FakeSportBookingRepository(), schedule, data, this), FakeSportSignPreferences
+        bookingDelegate(FakeSportBookingRepository(), schedule, data, this), FakeSportSignPreferences, time
     )
 
     private suspend fun emitSnapshot() {

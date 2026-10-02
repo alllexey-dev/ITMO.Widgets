@@ -354,6 +354,7 @@
     <string name="common_cancel">Отмена</string>
     <string name="common_done">Готово</string>
     <string name="common_ok">Хорошо</string>
+    <string name="common_got_it">Понятно</string>
     <string name="common_partial_load_error">Часть данных не загрузилась</string>
     <string name="sport_sign_success">Записали</string>
     <string name="sport_unsign_success">Запись отменена</string>
@@ -1067,4 +1068,8 @@
     <string name="ics_ready_summary">%1$s, %2$s</string>
     <string name="ics_ready_hint">Импортируйте в отдельный календарь — так его легко удалить или заменить свежим файлом</string>
     <string name="ics_pick_other">Выбрать другой период</string>
+    <string name="app_link_unavailable_title">Ссылка не открывается</string>
+    <string name="app_link_unavailable_text">Ссылка повреждена. Попросите отправить её ещё раз.</string>
+    <string name="sport_link_unavailable_title">Занятие недоступно</string>
+    <string name="sport_link_unavailable_text">Занятие уже прошло или его нет в расписании на ближайшие три недели.</string>
 </resources>

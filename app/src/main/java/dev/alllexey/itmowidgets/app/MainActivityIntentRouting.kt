@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.app
 
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.AppLink
+import dev.alllexey.itmowidgets.core.navigation.AppLinks
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 
@@ -9,6 +11,8 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
  *
  * [screen] opens above [rootDestination] once the root is selected, with [subject] as its arguments when it is the
  * subject page; [barsLogin] then starts the BARS sign-in above everything. [today] opens the schedule on today's day.
+ * [sportLessonId] asks the sign page to show that lesson, the prototype of a predicted one when
+ * [sportLessonPredicted]; [linkUnavailable] explains a damaged link above home.
  */
 data class MainActivityRoute(
     val rootDestination: Int,
@@ -16,7 +20,10 @@ data class MainActivityRoute(
     val screen: AppScreen? = null,
     val subject: RecordbookSubjectArgs? = null,
     val barsLogin: Boolean = false,
-    val today: Boolean = false
+    val today: Boolean = false,
+    val sportLessonId: Long? = null,
+    val sportLessonPredicted: Boolean = false,
+    val linkUnavailable: Boolean = false
 )
 
 /** The static shortcut this route was started from, reported to the launcher once the route runs. */
@@ -27,13 +34,18 @@ fun MainActivityRoute.shortcutId(): String? = when {
 }
 
 object MainActivityIntentRouting {
-    /** An intent replayed from Recents ([launchedFromHistory]) already ran its route and opens the app as it was. */
+    /**
+     * An intent replayed from Recents ([launchedFromHistory]) already ran its route and opens the app as it was.
+     * A `VIEW` intent carries an app [link]; links that are not the app's open nothing.
+     */
     fun parse(
         action: String?,
         isu: Int? = null,
         subject: RecordbookSubjectArgs? = null,
-        launchedFromHistory: Boolean = false
+        launchedFromHistory: Boolean = false,
+        link: String? = null
     ): MainActivityRoute? = if (launchedFromHistory) null else when (action) {
+        ACTION_VIEW -> linkRoute(AppLinks.parse(link))
         MainActivity.ACTION_OPEN_SCHEDULE -> MainActivityRoute(R.id.navigation_schedule)
         MainActivity.ACTION_OPEN_SPORT -> MainActivityRoute(R.id.navigation_sport)
         MainActivity.ACTION_OPEN_SCHEDULE_CHANGES ->
@@ -49,4 +61,19 @@ object MainActivityIntentRouting {
         MainActivity.ACTION_OPEN_TODAY -> MainActivityRoute(R.id.navigation_schedule, today = true)
         else -> null
     }
+
+    private fun linkRoute(link: AppLink?): MainActivityRoute? = when (link) {
+        is AppLink.Profile -> MainActivityRoute(R.id.navigation_me, userIsu = link.isu)
+        is AppLink.SportLesson -> MainActivityRoute(R.id.navigation_sport, sportLessonId = link.lessonId)
+        is AppLink.PredictedSportLesson -> MainActivityRoute(
+            R.id.navigation_sport,
+            sportLessonId = link.prototypeLessonId,
+            sportLessonPredicted = true
+        )
+        AppLink.Malformed -> MainActivityRoute(R.id.navigation_home, linkUnavailable = true)
+        null -> null
+    }
+
+    /** `Intent.ACTION_VIEW`, spelled out so the parser stays a plain JVM function. */
+    private const val ACTION_VIEW = "android.intent.action.VIEW"
 }

@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.core.util.errorOrNull
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
@@ -14,6 +15,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
+import dev.alllexey.itmowidgets.feature.sport.domain.model.findLinked
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
@@ -27,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -44,7 +47,8 @@ class SportSignViewModel @Inject constructor(
     private val filterController: SportSignFilterController,
     private val stateFactory: SportSignStateFactory,
     private val bookingDelegate: SportBookingDelegate,
-    private val preferencesRepository: SportSignPreferencesRepository
+    private val preferencesRepository: SportSignPreferencesRepository,
+    private val timeProvider: AcademicTimeProvider
 ) : ViewModel() {
 
     private val mutableUiState = MutableStateFlow<SportSignUiState>(SportSignUiState.Loading)
@@ -70,6 +74,10 @@ class SportSignViewModel @Inject constructor(
     private var autoSignJob: Job? = null
     private var autoSignCommandJob: Job? = null
     private var lastContent: SportSignUiState.Content? = null
+    /** Every merged lesson of the last catalog answer, before filters. */
+    private var catalogLessons: List<SportLesson> = emptyList()
+    /** The id and reality of the lesson a link opened; filters may hide it while its card is open. */
+    private var linkedLessonKey: Pair<Long, Boolean>? = null
 
     init {
         observeData()
@@ -117,6 +125,38 @@ class SportSignViewModel @Inject constructor(
     }
 
     fun selectDate(date: LocalDate) = filterController.selectDate(date)
+
+    /**
+     * Opens the card of a lesson from a shared link, once the merged catalog answers for the first time.
+     *
+     * Filters are ignored: the lesson's day is selected and its card opens. A lesson that has ended or is not in the
+     * catalog is unavailable; with [predicted] the id names the prototype, see [findLinked].
+     */
+    fun openSharedLesson(lessonId: Long, predicted: Boolean = false) {
+        viewModelScope.launch {
+            val state = sportScheduleRepository.observeSportSchedule()
+                .first { it.dataOrNull() != null || it.errorOrNull() != null }
+            val lessons = state.dataOrNull()
+            if (lessons == null) {
+                state.errorOrNull()?.let { eventChannel.send(SportSignEvent.ShowError(it)) }
+                return@launch
+            }
+            val lesson = lessons.findLinked(lessonId, predicted)?.takeIf { it.end > timeProvider.now() }
+            if (lesson == null) {
+                eventChannel.send(SportSignEvent.ShowLinkUnavailable)
+                return@launch
+            }
+            linkedLessonKey = lesson.lessonId to lesson.isLessonReal
+            selectDate(lesson.start.toLocalDate())
+            eventChannel.send(SportSignEvent.OpenLessonDetails(lesson))
+        }
+    }
+
+    /** The current state of the lesson a link opened, also when filters hide it from the list. */
+    fun linkedLesson(lessonId: Long): SportLesson? {
+        val (id, real) = linkedLessonKey?.takeIf { it.first == lessonId } ?: return null
+        return catalogLessons.firstOrNull { it.lessonId == id && it.isLessonReal == real }
+    }
 
     fun resetFilters() = filterController.reset()
 
@@ -226,6 +266,7 @@ class SportSignViewModel @Inject constructor(
                 val filters = filtersState?.dataOrNull()
                 val timeSlots = timeSlotsState?.dataOrNull()
                 val lessons = scheduleState?.dataOrNull()
+                lessons?.let { catalogLessons = it }
                 val errors = listOfNotNull(
                     filtersState?.errorOrNull(),
                     timeSlotsState?.errorOrNull(),

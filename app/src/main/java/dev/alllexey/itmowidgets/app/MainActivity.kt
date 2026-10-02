@@ -6,6 +6,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -20,6 +21,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.ScheduleTodayRequest
+import dev.alllexey.itmowidgets.core.navigation.SportLessonRequest
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
@@ -271,6 +273,9 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         outState.putBundle(PENDING_SUBJECT, route?.subject?.toBundle())
         outState.putBoolean(PENDING_BARS_LOGIN, route?.barsLogin ?: false)
         outState.putBoolean(PENDING_TODAY, route?.today ?: false)
+        outState.putLong(PENDING_SPORT_LESSON, route?.sportLessonId ?: 0L)
+        outState.putBoolean(PENDING_SPORT_PREDICTED, route?.sportLessonPredicted ?: false)
+        outState.putBoolean(PENDING_LINK_UNAVAILABLE, route?.linkUnavailable ?: false)
         super.onSaveInstanceState(outState)
     }
 
@@ -283,7 +288,10 @@ class MainActivity : AppCompatActivity(), AppNavigator {
                 screen = state.getString(PENDING_SCREEN)?.let { name -> AppScreen.entries.firstOrNull { it.name == name } },
                 subject = RecordbookSubjectArgs.from(state.getBundle(PENDING_SUBJECT)),
                 barsLogin = state.getBoolean(PENDING_BARS_LOGIN),
-                today = state.getBoolean(PENDING_TODAY)
+                today = state.getBoolean(PENDING_TODAY),
+                sportLessonId = state.getLong(PENDING_SPORT_LESSON).takeIf { it > 0 },
+                sportLessonPredicted = state.getBoolean(PENDING_SPORT_PREDICTED),
+                linkUnavailable = state.getBoolean(PENDING_LINK_UNAVAILABLE)
             )
         )
     }
@@ -368,6 +376,19 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         }
         if (route.barsLogin) startActivity(Intent(this, BarsLoginActivity::class.java))
         if (route.today) supportFragmentManager.setFragmentResult(ScheduleTodayRequest.KEY, Bundle.EMPTY)
+        route.sportLessonId?.let { lessonId ->
+            supportFragmentManager.setFragmentResult(
+                SportLessonRequest.KEY,
+                bundleOf(SportLessonRequest.LESSON_ID to lessonId, SportLessonRequest.PREDICTED to route.sportLessonPredicted)
+            )
+        }
+        if (route.linkUnavailable) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.app_link_unavailable_title)
+                .setMessage(R.string.app_link_unavailable_text)
+                .setPositiveButton(R.string.common_got_it, null)
+                .show()
+        }
         route.shortcutId()?.let { ShortcutManagerCompat.reportShortcutUsed(this, it) }
     }
 
@@ -382,7 +403,8 @@ class MainActivity : AppCompatActivity(), AppNavigator {
             intent.action,
             intent.getIntExtra(UserScreenArgs.ISU, 0),
             RecordbookSubjectArgs.from(intent.extras),
-            launchedFromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0
+            launchedFromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0,
+            link = intent.dataString
         ) ?: return
         routes.offer(route)
     }
@@ -405,5 +427,8 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         private const val PENDING_SUBJECT = "pending_subject"
         private const val PENDING_BARS_LOGIN = "pending_bars_login"
         private const val PENDING_TODAY = "pending_today"
+        private const val PENDING_SPORT_LESSON = "pending_sport_lesson"
+        private const val PENDING_SPORT_PREDICTED = "pending_sport_predicted"
+        private const val PENDING_LINK_UNAVAILABLE = "pending_link_unavailable"
     }
 }

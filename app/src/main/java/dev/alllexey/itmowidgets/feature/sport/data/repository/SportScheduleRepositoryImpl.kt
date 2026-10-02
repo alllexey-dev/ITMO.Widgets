@@ -18,6 +18,9 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus.Companion.notifiableStatuses
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
+import dev.alllexey.itmowidgets.feature.sport.domain.model.predictedEnd
+import dev.alllexey.itmowidgets.feature.sport.domain.model.predictedStart
+import dev.alllexey.itmowidgets.feature.sport.domain.model.repeats
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import kotlinx.coroutines.Dispatchers
@@ -106,14 +109,7 @@ class SportScheduleRepositoryImpl @Inject constructor(
         val futureLessons = realLessons
             // map prototypes to already present lessons by key parameters
             .map { prototype ->
-                prototype to realLessonsByStart[prototype.start.plusDays(14)]?.firstOrNull {
-                    it.sectionId == prototype.sectionId
-                            && it.teacherIsu == prototype.teacherIsu
-                            && it.sectionLevel == prototype.sectionLevel
-                            && it.lessonLevel == prototype.lessonLevel
-                            && it.typeId == prototype.typeId
-                            && it.timeSlotId == prototype.timeSlotId
-                }
+                prototype to realLessonsByStart[prototype.predictedStart()]?.firstOrNull { it.repeats(prototype) }
             }
             .mapNotNull { (prototype, real) ->
                 val autoSignEntry =
@@ -136,8 +132,8 @@ class SportScheduleRepositoryImpl @Inject constructor(
                             UnavailableReason.LessonInPast, UnavailableReason.TimeConflict) }
                     prototype.copy(
                         isLessonReal = false,
-                        start = prototype.start.plusDays(14),
-                        end = prototype.end.plusDays(14),
+                        start = prototype.predictedStart(),
+                        end = prototype.predictedEnd(),
                         signEntry = autoSignEntry,
                         signQueue = autoSignQueues[prototype.lessonId],
                         friendsBookings = friendsAutoSignBookings[prototype.lessonId].orEmpty(),
