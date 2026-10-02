@@ -69,10 +69,11 @@ class AndroidPhoneCalendars @Inject constructor(
     }
 
     override fun deleteOwn(id: Long) {
+        // The provider refuses a selection on an id URI, so the id goes into the selection with the account.
         resolver.delete(
-            syncAdapter(ContentUris.withAppendedId(Calendars.CONTENT_URI, id)),
-            "${Calendars.ACCOUNT_TYPE} = ? AND ${Calendars.ACCOUNT_NAME} = ?",
-            arrayOf(ACCOUNT_TYPE, ACCOUNT_NAME)
+            syncAdapter(Calendars.CONTENT_URI),
+            "${Calendars._ID} = ? AND ${Calendars.ACCOUNT_TYPE} = ? AND ${Calendars.ACCOUNT_NAME} = ?",
+            arrayOf(id.toString(), ACCOUNT_TYPE, ACCOUNT_NAME)
         )
     }
 
@@ -86,7 +87,12 @@ class AndroidPhoneCalendars @Inject constructor(
     }
 
     override fun update(eventId: Long, event: CalendarEvent): Boolean =
-        resolver.update(ContentUris.withAppendedId(Events.CONTENT_URI, eventId), values(event), "${Events.DELETED} = 0", null) > 0
+        resolver.update(
+            Events.CONTENT_URI,
+            values(event),
+            "${Events._ID} = ? AND ${Events.DELETED} = 0",
+            arrayOf(eventId.toString())
+        ) > 0
 
     override fun delete(eventId: Long) {
         resolver.delete(ContentUris.withAppendedId(Events.CONTENT_URI, eventId), null, null)

@@ -32,7 +32,12 @@ import com.google.android.material.transition.MaterialSharedAxis
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import androidx.lifecycle.ViewModelProvider
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
+import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
+import dev.alllexey.itmowidgets.core.schedule.CalendarTarget
+import dev.alllexey.itmowidgets.core.schedule.WritableCalendar
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
+import dev.alllexey.itmowidgets.feature.settings.presentation.CalendarAccessPurpose
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
@@ -139,7 +144,7 @@ class SettingsNavigationTest {
             settle()
             scenario.onActivity { assertTrue(it.offlineLoadingFrames.isEmpty()) }
         }
-        // The schedule page again, at font 1.3 as well: both switches arrive together and fit.
+        // The schedule page again, at font 1.3 as well: all three switches arrive together and fit.
         val specs = (Appearances.default + Appearances.all.first { it.fontScale > 1f }).distinct()
         // The background work row has its own test; here Android lets the app work, so the pages show only switches.
         SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = true
@@ -158,21 +163,24 @@ class SettingsNavigationTest {
                         assertEquals(View.GONE, root.findViewById<View>(R.id.settings_progress).visibility)
                         val switches = root.findViewById<ViewGroup>(R.id.sections_container).descendants
                             .filter { it.id == R.id.setting_switch && it.isShown }.toList()
-                        assertEquals(2, switches.size)
+                        assertEquals(3, switches.size)
                         val titles = root.descendants.filterIsInstance<TextView>()
                             .filter { it.id == R.id.setting_title && it.isShown }.map { it.text.toString() }.toList()
                         assertEquals(
                             listOf(
                                 activity.getString(R.string.settings_schedule_changes_title),
-                                activity.getString(R.string.settings_schedule_sport_auto_sign_title)
+                                activity.getString(R.string.settings_schedule_sport_auto_sign_title),
+                                activity.getString(R.string.settings_calendar_sync_title),
+                                activity.getString(R.string.settings_ics_export_title)
                             ),
                             titles
                         )
                         val cards = root.findViewById<ViewGroup>(R.id.sections_container).children
                             .filterIsInstance<MaterialCardView>().toList()
-                        assertEquals(2, cards.size)
+                        assertEquals(3, cards.size)
                         val gap = root.resources.getDimensionPixelSize(R.dimen.design_spacing_group)
                         assertTrue("Untitled sections keep the group gap", cards[1].top - cards[0].bottom >= gap)
+                        assertTrue("The calendar group keeps the gap under the footer", cards[2].top - cards[1].bottom >= gap)
                         assertTrue(activity.offlineLoadingFrames.isEmpty())
                         ViewChecks.assertTextFits(root)
                         ViewChecks.assertTouchTargets(root.findViewById(R.id.sections_container), requireWidth = false)
@@ -271,6 +279,95 @@ class SettingsNavigationTest {
             SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
             SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = false
             SettingsNavigationTestActivity.MemoryMarkTracking.bars.value = null
+        }
+    }
+
+    @Test
+    fun calendarRowsFitInEveryStateAndOpenTheirDialogs() {
+        val sync = SettingsNavigationTestActivity.calendarSync
+        try {
+            for (spec in Appearances.default) {
+                SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
+                val states = listOf(
+                    "off" to CalendarSyncState(),
+                    "app" to CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar),
+                    "picked" to CalendarSyncState(
+                        enabled = true,
+                        target = CalendarTarget.PhoneCalendar(7),
+                        calendarName = "Учёба и пары по расписанию Университета ИТМО"
+                    ),
+                    "no-permission" to CalendarSyncState(problem = CalendarSyncProblem.NO_PERMISSION)
+                )
+                for ((name, state) in states) {
+                    sync.state.value = state
+                    ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                        openPage(scenario, SettingsPage.SCHEDULE)
+                        scenario.onActivity { activity ->
+                            val root = settingsRoot(activity)
+                            val titles = visibleTitles(root)
+                            val syncTitle = activity.getString(R.string.settings_calendar_sync_title)
+                            val target = activity.getString(R.string.settings_calendar_target_title)
+                            val export = activity.getString(R.string.settings_ics_export_title)
+                            assertEquals(
+                                listOfNotNull(syncTitle, target.takeIf { state.enabled }, export),
+                                titles.dropWhile { it != syncTitle }
+                            )
+                            val description = settingRow(root, syncTitle)!!.findViewById<TextView>(R.id.setting_description)
+                            assertEquals(
+                                activity.getString(
+                                    if (state.problem == null) R.string.settings_calendar_sync_description
+                                    else R.string.settings_calendar_sync_no_permission
+                                ),
+                                description.text.toString()
+                            )
+                            assertTrue(settingRow(root, export)!!.let { it.isClickable && it.isEnabled })
+                            assertTrue(activity.offlineLoadingFrames.isEmpty())
+                            ViewChecks.assertTextFits(root)
+                            ViewChecks.assertTouchTargets(root.findViewById(R.id.sections_container), requireWidth = false)
+                        }
+                        Screenshots.capture("calendar-export-screenshots", "settings-calendar-$name-${spec.name}") { settle() }
+                    }
+                }
+
+                sync.state.value = CalendarSyncState(enabled = true, target = CalendarTarget.AppCalendar)
+                sync.calendars = listOf(
+                    WritableCalendar(7, "Учёба", "student@gmail.com"),
+                    WritableCalendar(8, "Личное", "student@gmail.com"),
+                    WritableCalendar(9, "Работа", "work@example.com")
+                )
+                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
+                    openPage(scenario, SettingsPage.SCHEDULE)
+                    onView(withText(R.string.settings_ics_export_title)).perform(click())
+                    settle()
+                    for (range in listOf(R.string.ics_range_week, R.string.ics_range_two_weeks, R.string.ics_range_semester, R.string.ics_range_custom)) {
+                        onView(withText(range)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    }
+                    Screenshots.capture("calendar-export-screenshots", "ics-ranges-${spec.name}") { settle() }
+                    onView(withText(R.string.common_cancel)).inRoot(isDialog()).perform(click())
+                    settle()
+
+                    // The permission is the fragment's business; the list follows it.
+                    scenario.onActivity { activity -> settingsViewModel(activity).onCalendarAccessGranted(CalendarAccessPurpose.PICK) }
+                    settle()
+                    for (text in listOf("student@gmail.com", "Учёба", "Личное", "work@example.com", "Работа")) {
+                        onView(withText(text)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    }
+                    onView(withText(R.string.calendar_picker_this_phone)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    onView(withText(R.string.calendar_picker_hint)).inRoot(isDialog()).check(matches(isDisplayed()))
+                    Screenshots.capture("calendar-export-screenshots", "calendar-picker-${spec.name}") { settle() }
+                    onView(withText("Учёба")).inRoot(isDialog()).perform(click())
+                    settle()
+                    assertEquals(CalendarTarget.PhoneCalendar(7), sync.state.value.target)
+                    scenario.onActivity { activity ->
+                        val row = settingRow(settingsRoot(activity), activity.getString(R.string.settings_calendar_target_title))!!
+                        assertEquals("Учёба", row.findViewById<TextView>(R.id.setting_value).text.toString())
+                    }
+                }
+            }
+        } finally {
+            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            sync.state.value = CalendarSyncState()
+            sync.calendars = emptyList()
         }
     }
 
