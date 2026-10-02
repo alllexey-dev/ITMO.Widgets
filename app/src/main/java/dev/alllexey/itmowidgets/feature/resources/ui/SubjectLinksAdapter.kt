@@ -122,7 +122,8 @@ internal class SubjectLinksAdapter(
             val trailing = if (link.isMine) LinkRowTrailing.Own
                 else LinkRowTrailing.Votes(link, row.canVote) { up -> onVote(link, up) }
             bind(icon = null, title = link.displayTitle(), caption = root.context.linkMeta(link, row.pinned, row.previous), trailing = trailing)
-            root.bindGroupPosition(row.position)
+            // The sheet itself is colorSurfaceContainerLow, so its groups take a stronger surface than the page's.
+            root.bindGroupPosition(row.position, com.google.android.material.R.attr.colorSurfaceContainerHigh)
             root.setOnClickListener { onOpen(link) }
             root.setOnLongClickListener { onActions(link); true }
             describeActions()

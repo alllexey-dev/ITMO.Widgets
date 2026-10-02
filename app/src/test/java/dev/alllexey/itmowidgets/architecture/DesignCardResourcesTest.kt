@@ -50,8 +50,8 @@ class DesignCardResourcesTest {
             )
         }
         assertEquals("?attr/colorOutlineVariant", property(cardStyle("Content.Outlined"), "strokeColor"))
-        // The AI summary is told apart from reviews by a slightly stronger surface, never by an outline.
-        assertEquals("?attr/colorSurfaceContainerHigh", property(cardStyle("Content.Tonal"), "cardBackgroundColor"))
+        // The AI summary sits on the quiet surface of the reviews' groups, never told apart by an outline.
+        assertEquals("?attr/colorSurfaceContainerLow", property(cardStyle("Content.Tonal"), "cardBackgroundColor"))
         assertEquals("20dp", property(cardStyle("Content.Tonal"), "cardCornerRadius"))
         assertEquals("0dp", property(cardStyle("Content.Tonal"), "strokeWidth"))
         assertEquals("0dp", property(cardStyle("Content.Tonal"), "cardElevation"))

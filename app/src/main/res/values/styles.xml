@@ -13,9 +13,9 @@
         <item name="strokeWidth">@dimen/design_card_stroke</item>
     </style>
 
-    <!-- A generated summary above reviews: the same shape on a slightly stronger surface, no outline. -->
+    <!-- A generated summary above reviews: the quiet card surface of schedule days and connected groups, no outline. -->
     <style name="Widget.ItmoWidgets.Card.Content.Tonal" parent="Widget.ItmoWidgets.Card.Content">
-        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHigh</item>
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerLow</item>
     </style>
 
     <!-- The compact recordbook summary keeps its slightly stronger neutral surface and 20 dp shape. -->

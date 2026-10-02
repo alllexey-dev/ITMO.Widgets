@@ -36,7 +36,7 @@ enum class GroupPosition {
  */
 fun View.bindGroupPosition(
     position: GroupPosition,
-    @AttrRes surface: Int = com.google.android.material.R.attr.colorSurfaceContainerHigh,
+    @AttrRes surface: Int = com.google.android.material.R.attr.colorSurfaceContainerLow,
     spaceBefore: Int = 0,
 ) {
     val outer = resources.getDimension(R.dimen.design_group_radius_outer)

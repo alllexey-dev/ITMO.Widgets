@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- A light accent wash behind «Вёл у автора»: readable with colorPrimary text in every palette, including
-     content-based ones whose primary container is as dark as the accent itself. -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:alpha="0.12" android:color="?attr/colorPrimary" />
-</selector>
