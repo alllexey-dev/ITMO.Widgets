@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Files other apps may read through the app's FileProvider: only the latest exported .ics. -->
+<paths>
+    <cache-path
+        name="ics"
+        path="ics/" />
+</paths>
