@@ -4,7 +4,7 @@ Reference documents in `docs/` describe the current state; this file records
 what changed and when. Unreleased entries describe local development, not a
 publication or deployment.
 
-## 2.2 — development
+## 2.2 — 2026-10-03
 
 ### 2026-10-03
 

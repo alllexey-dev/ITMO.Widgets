@@ -26,8 +26,8 @@
 Achievements, messaging, posts, followers and free-window discovery are outside
 the roadmap. Do not add them opportunistically.
 
-Development happens on `master`, which builds as `2.2-SNAPSHOT` (version code
-5); the latest release is `2.1.1`. The release checklist of 2.2 is
+Development happens on `master`; the latest release is `2.2` (version code
+6). The release checklist of 2.2 is
 `vibe/release-2.2.md` (local only).
 
 ## Distribution
@@ -69,7 +69,7 @@ the minimum Core and Backend it needs.
 
 | Android | Core | Backend | MyItmoApi | Notes |
 |---|---|---|---|---|
-| 2.2-SNAPSHOT (development) | 1.7.0-SNAPSHOT (Maven Local), including `teacherReviews` with `reviews`/`mine`/`summary` and `saveMyTeacherReview`, `deleteMyTeacherReview`, `voteTeacherReview`, `reportTeacherReview`, `teacherSummaryLevels` | 1.7.0-SNAPSHOT, PostgreSQL through V10: V8 (`V8__service_credentials.sql`, copies the My ITMO service credentials; `my_itmo_storage` stays until a separate migration of the next release), V9 (`V9__teacher_reviews.sql`) and V10 (`V10__teacher_summaries.sql`, AI summaries and the `GEMINI_API_KEY` row) | 1.8.1 | Subject links need V4 and the links API; person-profile reviews need `GET`/`PUT`/`DELETE /api/teachers/{isu}/reviews[/mine]`, `PUT /api/reviews/{id}/vote` and `POST /api/reviews/{id}/report` over V9; the AI summary needs `summary` in the reviews response and the tone dots `GET /api/teachers/summary-levels` over V10. A Backend before this snapshot answers with `external`, which this build does not read. MyItmoApi 1.8.2-SNAPSHOT (Maven Local) adds `BarsAuthHelper.requestCodeWithCookies` for the background BARS renewal of the mark check; releasing 2.2 needs MyItmoApi 1.8.2 in Maven Central. Local development, not a published release; deployment is recorded separately. |
+| 2.2 | 1.7.0 (Maven Central), including `teacherReviews` with `reviews`/`mine`/`summary` and `saveMyTeacherReview`, `deleteMyTeacherReview`, `voteTeacherReview`, `reportTeacherReview`, `teacherSummaryLevels` | 1.7.0, PostgreSQL through V10: V4 (subject links), V5 (web sessions and admin), V6, V7 (external teacher reviews), V8 (`V8__service_credentials.sql`; `my_itmo_storage` stays until a separate migration of the next release), V9 (`V9__teacher_reviews.sql`) and V10 (`V10__teacher_summaries.sql`, AI summaries and the `GEMINI_API_KEY` row) | 1.8.2 (through Core and directly; `BarsAuthHelper.requestCodeWithCookies` for the background BARS renewal of the mark check) | Released on GitHub (`github` variant); Google Play follows. Backend 1.7.0 has run on production since 2026-10-03 and stays compatible with 2.1.1. |
 | 2.1.1 | 1.2.0 | 1.2.1 (`770293b`, current groups in every profile response) | 1.8.1 | Client-only release; works against Backend 1.2.0 as well, then lesson friends may show an older group. |
 | 2.1 | 1.2.0 (Maven Central, tag `1.2.0`) | 1.2.0, commit `a70cab1` or later | 1.8.1 (Maven Central, tag `1.8.1`) | Backend 1.2.0 requires the PostgreSQL cutover; 2.0.x clients are rejected by it and are told to update through `GET /api/app/version`. |
 | 2.0.x (legacy) | 1.1.x | 1.1.6 | 1.6.0 | MariaDB backend, reciprocal friend requests, boolean privacy. |

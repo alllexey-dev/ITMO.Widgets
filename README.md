@@ -153,6 +153,12 @@
 
 [MIT](LICENSE). Приложение не связано с Университетом ИТМО.
 
-<p align="center">
-  <a href="https://starchart.cc/alllexey-dev/ITMO.Widgets"><img src="https://starchart.cc/alllexey-dev/ITMO.Widgets.svg?variant=adaptive" alt="Stargazers over time" width="600" /></a>
-</p>
+## Star History
+
+<a href="https://www.star-history.com/?repos=alllexey-dev%2Fitmo.widgets&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=alllexey-dev/itmo.widgets&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=alllexey-dev/itmo.widgets&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=alllexey-dev/itmo.widgets&type=date&legend=top-left" />
+ </picture>
+</a>
