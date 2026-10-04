@@ -23,6 +23,7 @@ googleGmsGoogleServices = "4.4.4"
 firebaseMessaging = "25.0.1"
 navigation = "2.9.5"
 hilt = "2.57.2"
+ksp = "2.3.12"
 konsist = "0.17.3"
 coroutines = "1.9.0"
 codeScanner = "16.1.0"
@@ -82,3 +83,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
