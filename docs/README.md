@@ -34,6 +34,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
   build slots, emulators, admission and the pull rule.
 - [Ownership](process/ownership.md) — hot-file writers per wave, hand-ins,
   the module `AGENTS.md` shape, rules for writing docs.
+- [Integration](process/integration.md) — how lane PRs reach `v2.3/next` and
+  how `v2.3/next` reaches the default branches.
 
 ## Features
 
