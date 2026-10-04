@@ -11,7 +11,7 @@ import dev.alllexey.itmowidgets.core.model.social.UserLookupRequest
 import dev.alllexey.itmowidgets.core.model.social.UserLookupResponse
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.model.social.RelationshipState as CoreRelationshipState
@@ -25,8 +25,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
@@ -229,11 +227,11 @@ class SocialRepositoryImplTest {
         runCurrent()
         repository.assertCachesAvailable()
 
-        services.enabled.value = false
+        services.optedIn.value = false
         runCurrent()
 
         repository.assertDisabled()
-        services.enabled.value = true
+        services.optedIn.value = true
         runCurrent()
         repository.assertDisabled()
     }
@@ -247,9 +245,9 @@ class SocialRepositoryImplTest {
         runCurrent()
         val calls = api.calls
 
-        services.enabled.value = false
+        services.optedIn.value = false
         repository.refresh()
-        services.enabled.value = true
+        services.optedIn.value = true
         runCurrent()
         repository.lookup(listOf(99))
 
@@ -266,9 +264,9 @@ class SocialRepositoryImplTest {
         runCurrent()
         val calls = api.calls
 
-        services.enabled.value = false
+        services.optedIn.value = false
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.profile(7))
-        services.enabled.value = true
+        services.optedIn.value = true
         runCurrent()
         repository.lookup(listOf(99))
 
@@ -288,7 +286,7 @@ class SocialRepositoryImplTest {
         val friends = async { repository.userFriends(1) }
         gate.entered.await()
 
-        services.enabled.value = false
+        services.optedIn.value = false
         runCurrent()
         gate.open()
 
@@ -308,9 +306,9 @@ class SocialRepositoryImplTest {
         val oldProfile = async { repository.profile(5) }
         val oldFriends = async { repository.userFriends(1) }
         gate.entered.await()
-        services.enabled.value = false
+        services.optedIn.value = false
         runCurrent()
-        services.enabled.value = true
+        services.optedIn.value = true
         runCurrent()
         repository.assertDisabled()
 
@@ -340,7 +338,7 @@ class SocialRepositoryImplTest {
         val refresh = launch { repository.refresh() }
         gate.entered.await()
 
-        services.enabled.value = false
+        services.optedIn.value = false
         runCurrent()
         gate.open()
         refresh.join()
@@ -358,9 +356,9 @@ class SocialRepositoryImplTest {
         api.beforeResponse = { gate.await() }
         val oldRefresh = launch { repository.refresh() }
         gate.entered.await()
-        services.enabled.value = false
+        services.optedIn.value = false
         runCurrent()
-        services.enabled.value = true
+        services.optedIn.value = true
         runCurrent()
         repository.assertDisabled()
 
@@ -389,7 +387,7 @@ class SocialRepositoryImplTest {
         val action = async { repository.sendRequest(5) }
         gate.entered.await()
 
-        services.enabled.value = false
+        services.optedIn.value = false
         runCurrent()
         gate.open()
 
@@ -408,9 +406,9 @@ class SocialRepositoryImplTest {
         api.beforeResponse = { gate.await() }
         val action = async { repository.sendRequest(5) }
         gate.entered.await()
-        services.enabled.value = false
+        services.optedIn.value = false
         runCurrent()
-        services.enabled.value = true
+        services.optedIn.value = true
         runCurrent()
         repository.assertDisabled()
 
@@ -455,7 +453,7 @@ class SocialRepositoryImplTest {
     fun `initial enabled observation does not invalidate a matching suspended gate read`() = runTest {
         val services = services(enabled = true)
         val gate = CompletableDeferred<Unit>()
-        services.readGate = { gate.await() }
+        services.beforeAnswer = { gate.await() }
         val api = populatedApi()
         val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         val request = async(start = CoroutineStart.UNDISPATCHED) { repository.profile(5) }
@@ -476,12 +474,12 @@ class SocialRepositoryImplTest {
         val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         runCurrent()
         val gate = CompletableDeferred<Unit>()
-        services.readGate = { gate.await() }
+        services.beforeAnswer = { gate.await() }
         val request = async(start = CoroutineStart.UNDISPATCHED) { repository.profile(5) }
 
-        services.enabled.value = false
+        services.optedIn.value = false
         runCurrent()
-        services.enabled.value = true
+        services.optedIn.value = true
         runCurrent()
         gate.complete(Unit)
 
@@ -497,11 +495,11 @@ class SocialRepositoryImplTest {
         val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         runCurrent()
         val gate = CompletableDeferred<Unit>()
-        services.readGate = { gate.await() }
+        services.beforeAnswer = { gate.await() }
         val request = async(start = CoroutineStart.UNDISPATCHED) { repository.profile(5) }
-        services.enabled.value = true
+        services.optedIn.value = true
         runCurrent()
-        services.readGate = null
+        services.beforeAnswer = null
         repository.populateCaches()
 
         gate.complete(Unit)
@@ -520,7 +518,7 @@ class SocialRepositoryImplTest {
         val repository = SocialRepositoryImpl(services, api.instance, backgroundScope, noDemo())
         runCurrent()
         val gate = CompletableDeferred<Unit>()
-        services.readGate = { gate.await() }
+        services.beforeAnswer = { gate.await() }
         val request = async(start = CoroutineStart.UNDISPATCHED) { repository.profile(5) }
 
         repository.clearSessionData()
@@ -575,20 +573,8 @@ class SocialRepositoryImplTest {
         return requests.incoming.map(UserProfile::isu) to requests.outgoing.map(UserProfile::isu)
     }
 
-    private fun services(enabled: Boolean) = FakeServices(enabled)
+    private fun services(enabled: Boolean) = FakeBackendGate(enabled)
 
-    private class FakeServices(enabled: Boolean) : CustomServicesRepository {
-        val enabled = MutableStateFlow(enabled)
-        var readGate: (suspend () -> Unit)? = null
-
-        override fun observeEnabled(): Flow<Boolean> = enabled
-        override suspend fun isEnabled(): Boolean {
-            val on = enabled.value
-            readGate?.invoke()
-            return on
-        }
-        override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
-    }
 
     private class ResponseGate(private val expectedCalls: Int = 1) {
         val entered = CompletableDeferred<Unit>()

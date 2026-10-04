@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -10,7 +11,6 @@ import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.reviews.SummaryLevel
 import dev.alllexey.itmowidgets.core.model.reviews.TeacherSummaryLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import java.io.File
 import java.io.IOException
 import java.lang.reflect.Proxy
@@ -20,8 +20,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.concurrent.CopyOnWriteArrayList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -36,12 +34,12 @@ class TeacherLevelsRepositoryImplTest {
     private val directory get() = File(temporary.root, "teacher_levels")
     private val file get() = File(directory, "levels.json")
     private val clock = MutableClock(Instant.parse("2026-09-29T10:00:00Z"))
-    private val services = FakeServices(true)
+    private val services = FakeBackendGate(optedIn = true)
     private val api = FakeApi()
 
     @Test
     fun `the demo knows the tones of its teachers without Backend`() = runTest {
-        services.enabled.value = false
+        services.optedIn.value = false
         val teachers = setOf(DemoPeople.ALGORITHMS_TEACHER.isu, DemoPeople.ENGLISH_TEACHER.isu)
 
         val levels = repository(FakeDemoMode(active = true)).levels(teachers)
@@ -61,7 +59,7 @@ class TeacherLevelsRepositoryImplTest {
         repository.levels(setOf(100001))
         assertTrue(file.exists())
 
-        services.enabled.value = false
+        services.optedIn.value = false
 
         assertEquals(emptyMap<Int, TeacherLevel>(), repository.levels(setOf(100001)))
         assertEquals(1, api.requests.size)
@@ -170,7 +168,7 @@ class TeacherLevelsRepositoryImplTest {
     @Test
     fun `an answer arriving after the opt-in was disabled is not written`() = runTest {
         api.levels[100001] = SummaryLevel.POSITIVE
-        api.beforeResponse = { services.enabled.value = false }
+        api.beforeResponse = { services.optedIn.value = false }
 
         assertEquals(emptyMap<Int, TeacherLevel>(), repository().levels(setOf(100001)))
         assertFalse(file.exists())
@@ -181,13 +179,6 @@ class TeacherLevelsRepositoryImplTest {
         override fun getZone(): ZoneId = ZoneOffset.UTC
         override fun withZone(zone: ZoneId): Clock = this
         override fun instant(): Instant = now
-    }
-
-    private class FakeServices(enabled: Boolean) : CustomServicesRepository {
-        val enabled = MutableStateFlow(enabled)
-        override fun observeEnabled(): Flow<Boolean> = enabled
-        override suspend fun isEnabled(): Boolean = enabled.value
-        override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
     }
 
     private class FakeApi {

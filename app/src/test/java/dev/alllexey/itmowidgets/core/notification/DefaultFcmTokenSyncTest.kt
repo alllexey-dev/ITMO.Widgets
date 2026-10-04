@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.core.notification
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.*
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
@@ -12,6 +13,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import java.io.IOException
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 
 class DefaultFcmTokenSyncTest {
     @Test fun `new token is saved and registered once while a successful unchanged token is skipped`() = runTest {
@@ -45,6 +47,15 @@ class DefaultFcmTokenSyncTest {
         assertEquals(1, fixture.registrations)
     }
 
+    @Test fun `the demo session only saves the token`() = runTest {
+        val fixture = Fixture()
+        fixture.settings.setCustomServicesEnabled(true)
+        fixture.demo.active.value = true
+        fixture.sync.sync()
+        assertEquals("synthetic-token", fixture.utility.getFirebaseToken())
+        assertEquals(0, fixture.registrations)
+    }
+
     @Test fun `registration failure retains token and retries without needing token rotation`() = runTest {
         val fixture = Fixture()
         fixture.settings.setCustomServicesEnabled(true)
@@ -60,12 +71,13 @@ class DefaultFcmTokenSyncTest {
     private class Fixture {
         val utility = UtilityStorage(MemoryPreferences(), "test")
         val settings = AppSettingsStorage(MemoryPreferences())
+        val demo = FakeDemoMode()
         var token = "synthetic-token"
         var signedIn = true
         var ownerIsu = 123456
         var registrations = 0
         var failRegistration = false
-        val sync = DefaultFcmTokenSync(FirebaseTokenProvider { token }, utility, settings,
+        val sync = DefaultFcmTokenSync(FirebaseTokenProvider { token }, utility, DefaultBackendGate(settings, demo),
             object : SessionTokenStore {
                 override fun hasRefreshToken() = signedIn
                 override fun getIdToken(): String? = null

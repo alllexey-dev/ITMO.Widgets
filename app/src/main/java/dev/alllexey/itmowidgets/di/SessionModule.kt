@@ -13,6 +13,8 @@ import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.demo.DemoCurrentUserProvider
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.services.BackendGate
+import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
@@ -22,7 +24,6 @@ import dev.alllexey.itmowidgets.core.session.IdTokenCurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.app.AndroidSessionLifecycleEffects
 import dev.alllexey.itmowidgets.feature.auth.data.DataStoreDemoMode
@@ -39,14 +40,14 @@ object SessionModule {
     @Singleton
     fun provideBackendIdentitySync(
         @ApplicationContext context: Context,
-        settings: AppSettingsStorage,
+        gate: BackendGate,
         myItmo: MyItmo,
         widgetsApi: ItmoWidgetsApi,
         diagnostics: AppDiagnostics,
         demo: DemoMode
     ): BackendIdentitySync = DefaultBackendIdentitySync(
         context = context,
-        settings = settings,
+        gate = gate,
         myItmo = myItmo,
         widgetsApi = widgetsApi,
         diagnostics = diagnostics,
@@ -70,14 +71,18 @@ object SessionModule {
 
     @Provides
     @Singleton
+    fun provideBackendGate(impl: DefaultBackendGate): BackendGate = impl
+
+    @Provides
+    @Singleton
     fun provideBackendDeviceSession(
-        settings: AppSettingsStorage,
+        gate: BackendGate,
         utilityStorage: UtilityStorage,
         currentUser: CurrentUserProvider,
         widgetsApi: ItmoWidgetsApi,
         demo: DemoMode
     ): BackendDeviceSession = DefaultBackendDeviceSession(
-        settings = settings,
+        gate = gate,
         utilityStorage = utilityStorage,
         currentUser = currentUser,
         widgetsApi = widgetsApi,

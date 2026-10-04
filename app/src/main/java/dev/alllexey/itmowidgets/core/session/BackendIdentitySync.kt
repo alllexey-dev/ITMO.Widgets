@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.model.IdTokenRequest
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -23,7 +23,7 @@ interface BackendIdentitySync {
 
 class DefaultBackendIdentitySync(
     private val context: Context,
-    private val settings: AppSettingsStorage,
+    private val gate: BackendGate,
     private val myItmo: MyItmo,
     private val widgetsApi: ItmoWidgetsApi,
     private val diagnostics: AppDiagnostics,
@@ -31,7 +31,7 @@ class DefaultBackendIdentitySync(
 ) : BackendIdentitySync {
 
     override suspend fun sync(scheduleRetry: Boolean): Boolean {
-        if (demo.isActive() || !settings.getCustomServicesEnabled()) return true
+        if (demo.isActive() || !gate.mayCallBackend()) return true
 
         return try {
             withContext(Dispatchers.IO) {

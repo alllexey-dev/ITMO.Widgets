@@ -6,17 +6,13 @@ import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoSportSlots
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSourceImpl
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -28,11 +24,13 @@ class ScheduleDemoGateTest {
     private val time = FixedAcademicTime()
     private val myItmo = unreachable<MyItmoApi>()
     private val backend = unreachable<ItmoWidgetsApi>()
+    // The stored opt-in is on: the demo alone must keep every request local.
+    private val gate = FakeBackendGate(optedIn = true, demo)
     private val week = time.today().minusDays(time.today().dayOfWeek.value - 1L).let { it..it.plusDays(6) }
 
     @Test
     fun `the own week has lessons, the volleyball and no Sunday classes`() = runTest {
-        val remote = ScheduleRemoteDataSourceImpl(AppSettingsStorage(InMemoryPreferencesDataStore()), myItmo, backend, time, demo)
+        val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, time, demo)
 
         val days = remote.getSchedule(null, week.start, week.endInclusive)
 
@@ -44,8 +42,8 @@ class ScheduleDemoGateTest {
 
     @Test
     fun `a friend's schedule and friends on a lesson come from the demo set`() = runTest {
-        val remote = ScheduleRemoteDataSourceImpl(AppSettingsStorage(InMemoryPreferencesDataStore()), myItmo, backend, time, demo)
-        val friends = LessonFriendsRepositoryImpl(Disabled, backend, demo)
+        val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, time, demo)
+        val friends = LessonFriendsRepositoryImpl(gate, backend, demo)
 
         val ivan = remote.getSchedule(DemoPeople.IVAN.isu, week.start, week.endInclusive)
         val lecture = ivan.first { day -> day.lessons.any { it.typeId.raw == 1 } }.let { day -> day.date to day.lessons.first { it.typeId.raw == 1 } }
@@ -63,11 +61,5 @@ class ScheduleDemoGateTest {
 
         assertEquals(41, days.size)
         assertTrue(days.sumOf { it.lessons.size } > 20)
-    }
-
-    private object Disabled : CustomServicesRepository {
-        override fun observeEnabled(): Flow<Boolean> = flowOf(false)
-        override suspend fun isEnabled() = false
-        override suspend fun setEnabled(enabled: Boolean) = Unit
     }
 }

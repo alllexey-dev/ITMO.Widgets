@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import java.util.UUID
@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 import dev.alllexey.itmowidgets.core.model.WebLoginPreview as WirePreview
 
 class WebLoginRepositoryImpl @Inject constructor(
-    private val customServices: CustomServicesRepository,
+    private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     private val demo: DemoMode,
 ) : WebLoginRepository {
@@ -39,7 +39,7 @@ class WebLoginRepositoryImpl @Inject constructor(
     /** Null data is a valid answer only for calls without a body, like the approval. */
     private suspend fun <T> call(request: suspend () -> ApiResponse<T>): AppResult<T?> {
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
-        if (!customServices.isEnabled()) return AppResult.Failure(AppError.CustomServicesDisabled)
+        if (!backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
         return try {
             val response = withContext(Dispatchers.IO) { request() }
             if (response.success) AppResult.Success(response.data) else AppResult.Failure(backendError(response.error?.code))

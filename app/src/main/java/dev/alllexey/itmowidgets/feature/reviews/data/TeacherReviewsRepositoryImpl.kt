@@ -18,7 +18,7 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewLimits
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -35,7 +35,7 @@ import kotlinx.coroutines.withContext
 
 @Singleton
 class TeacherReviewsRepositoryImpl @Inject constructor(
-    private val customServices: CustomServicesRepository,
+    private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     @param:ApplicationScope private val scope: CoroutineScope,
     private val time: AcademicTimeProvider,
@@ -49,7 +49,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
 
     init {
         scope.launch {
-            customServices.observeEnabled().collect { on ->
+            backend.observeConnected().collect { on ->
                 synchronized(cacheLock) { updateEnabled(on) }
             }
         }
@@ -106,7 +106,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
 
     private suspend fun beginRequest(): Long? {
         val (generation, wasEnabled) = synchronized(cacheLock) { cacheGeneration to enabled }
-        val on = customServices.isEnabled()
+        val on = backend.mayCallBackend()
         return synchronized(cacheLock) {
             // An older opt-in read must neither revive cleared data nor clear a newer connection.
             if (generation != cacheGeneration || (enabled != wasEnabled && on != enabled)) {

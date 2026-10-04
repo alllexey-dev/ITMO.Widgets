@@ -7,7 +7,7 @@ import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.network.requireResult
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.util.MergedDataState
@@ -33,7 +33,7 @@ import retrofit2.HttpException
 
 @Singleton
 class SportBookingRepositoryImpl @Inject constructor(
-    private val settings: AppSettingsStorage,
+    private val backend: BackendGate,
     private val sportDataRepository: SportDataRepository,
     private val myItmoApi: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi,
@@ -113,7 +113,7 @@ class SportBookingRepositoryImpl @Inject constructor(
 
             if (sessionMutex.withLock { generation != sessionGeneration }) return
 
-            if (settings.getCustomServicesEnabled()) {
+            if (backend.mayCallBackend()) {
                 try {
                     withContext(Dispatchers.IO) {
                         widgetsApi.syncSportLessons(result.map { it.lessonId })

@@ -7,14 +7,14 @@ import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import kotlinx.coroutines.CancellationException
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 class CustomServicesRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
+    private val gate: BackendGate,
     private val identitySync: BackendIdentitySync,
     private val tokenSync: FcmTokenSync,
     private val devices: BackendDeviceSession,
@@ -23,14 +23,9 @@ class CustomServicesRepositoryImpl @Inject constructor(
 ) : CustomServicesRepository {
 
     /** The demo session reads as connected, so the social screens show its data; the stored choice is kept. */
-    override fun observeEnabled(): Flow<Boolean> {
-        return combine(demo.observeActive(), settings.observeCustomServicesEnabled()) { demo, enabled -> demo || enabled }
-            .distinctUntilChanged()
-    }
+    override fun observeEnabled(): Flow<Boolean> = gate.observeConnected()
 
-    override suspend fun isEnabled(): Boolean {
-        return demo.isActive() || settings.getCustomServicesEnabled()
-    }
+    override suspend fun isEnabled(): Boolean = gate.isConnected()
 
     override suspend fun isChangeable(): Boolean = !demo.isActive()
 

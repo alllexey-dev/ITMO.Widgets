@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.data.push
 
 import androidx.datastore.core.DataStore
-import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.R
@@ -10,8 +9,10 @@ import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.notification.*
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
+import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
@@ -98,8 +99,19 @@ class SportSignPushHandlerTest {
         assertEquals(0, fixture.bookingsRefresh)
     }
 
+    @Test fun `the demo session neither books nor reaches Backend even with the opt-in`() = runTest {
+        val fixture = Fixture(true)
+        fixture.demo.active.value = true
+        fixture.run()
+        assertEquals(0, fixture.signCalls)
+        assertTrue(fixture.queue.isEmpty())
+        assertEquals(0, fixture.bookingsRefresh)
+    }
+
     private class Fixture(auto: Boolean) {
         val settings = AppSettingsStorage(MemoryPreferences())
+        val demo = FakeDemoMode()
+        private val gate = DefaultBackendGate(settings, demo)
         val queue = mutableListOf<String>()
         val notifications = mutableListOf<AppNotification>()
         var response = """{"error_code":0,"result":[42]}"""
@@ -121,7 +133,7 @@ class SportSignPushHandlerTest {
             ApiResponse.success("OK")
         }
         private val handler = SportSignPushHandler(auto, gson,
-            SportActionRepositoryImpl(settings, myItmo.api, api, noDemo()), api,
+            SportActionRepositoryImpl(gate, myItmo.api, api, demo), api,
             proxy<SportBookingRepository> { method, _ ->
                 check(method == "refreshSportBookings")
                 bookingsRefresh++; Unit
@@ -136,7 +148,7 @@ class SportSignPushHandlerTest {
                 }
                 override fun cancel(channel: String, id: Int) = Unit
                 override fun clear() = Unit
-            }, Clock.fixed(Instant.parse("2026-09-15T10:00:00Z"), ZoneOffset.UTC), RecordingDiagnostics(), noDemo())
+            }, Clock.fixed(Instant.parse("2026-09-15T10:00:00Z"), ZoneOffset.UTC), RecordingDiagnostics(), gate, demo)
 
         suspend fun run(vararg lessons: String, enabled: Boolean = true) {
             settings.setCustomServicesEnabled(enabled)

@@ -4,7 +4,7 @@ import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.LessonSyncRequest
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.ScheduleUtil
 import dev.alllexey.itmowidgets.core.utils.toDto
@@ -20,7 +20,7 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 class ScheduleRemoteDataSourceImpl @Inject constructor(
-    private val settings: AppSettingsStorage,
+    private val backend: BackendGate,
     private val api: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi,
     private val time: AcademicTimeProvider,
@@ -51,7 +51,7 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
 
             val days = response.body()?.data ?: return@withContext emptyList()
 
-            if (settings.getCustomServicesEnabled()) {
+            if (backend.mayCallBackend()) {
                 try {
                     widgetsApi.syncLessons(
                         LessonSyncRequest(

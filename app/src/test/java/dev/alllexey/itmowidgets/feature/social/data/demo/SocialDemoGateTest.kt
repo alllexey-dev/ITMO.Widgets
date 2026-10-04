@@ -6,16 +6,14 @@ import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.SocialState
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -26,10 +24,12 @@ import org.junit.Test
 class SocialDemoGateTest {
     private val demo = FakeDemoMode(active = true)
     private val backend = unreachable<ItmoWidgetsApi>()
+    // Without the stored opt-in the demo still reads as connected.
+    private val gate = FakeBackendGate(optedIn = false, demo)
 
     @Test
     fun `friends, requests and profiles come from the demo set and actions are refused`() = runTest {
-        val social = SocialRepositoryImpl(Connected, backend, backgroundScope, demo)
+        val social = SocialRepositoryImpl(gate, backend, backgroundScope, demo)
 
         social.refresh()
 
@@ -47,7 +47,7 @@ class SocialDemoGateTest {
 
     @Test
     fun `people and the directory search come from the demo set`() = runTest {
-        val social = SocialRepositoryImpl(Connected, backend, backgroundScope, demo)
+        val social = SocialRepositoryImpl(gate, backend, backgroundScope, demo)
         val persons = PersonRepositoryImpl(unreachable<MyItmoApi>(), demo)
         val search = PeopleSearchRepositoryImpl(unreachable<MyItmoApi>(), social, demo)
 
@@ -61,12 +61,5 @@ class SocialDemoGateTest {
         assertTrue(found.results.any { it.isu == DemoPeople.IVAN.isu && it.registered != null })
         assertTrue(found.results.any { it.isu == DemoPeople.SWIMMING_COACH.isu && it.registered == null })
         assertNull(found.nextOffset)
-    }
-
-    /** What the demo session's opt-in reads as. */
-    private object Connected : CustomServicesRepository {
-        override fun observeEnabled(): Flow<Boolean> = flowOf(true)
-        override suspend fun isEnabled() = true
-        override suspend fun setEnabled(enabled: Boolean) = Unit
     }
 }

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
+import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
@@ -20,6 +21,7 @@ class CustomServicesRepositoryImplTest {
     private val calls = mutableListOf<String>()
     private val repository = CustomServicesRepositoryImpl(
         settings = settings,
+        gate = DefaultBackendGate(settings, demo),
         identitySync = object : BackendIdentitySync {
             override suspend fun sync(scheduleRetry: Boolean): Boolean = true.also { calls += "identity" }
         },

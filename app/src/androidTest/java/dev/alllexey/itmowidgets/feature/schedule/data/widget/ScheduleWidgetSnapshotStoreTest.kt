@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
@@ -20,6 +22,7 @@ import java.time.ZoneId
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -109,7 +112,7 @@ class ScheduleWidgetSnapshotStoreTest {
         }
     }
 
-    private fun store(context: Context) = ScheduleWidgetSnapshotStoreImpl(Gson(), context, settings, time, tokens)
+    private fun store(context: Context) = ScheduleWidgetSnapshotStoreImpl(Gson(), context, settings, DefaultBackendGate(settings, NoDemo), time, tokens)
 
     private suspend fun enable() {
         settings.setScheduleSportAutoSignEnabled(true)
@@ -146,6 +149,11 @@ class ScheduleWidgetSnapshotStoreTest {
         override fun replaceWithRefreshToken(refreshToken: String) = Unit
         override fun replaceWithTokens(tokens: SessionTokens) = Unit
         override fun clearTokens() { signedIn = false }
+    }
+
+    private object NoDemo : DemoMode {
+        override suspend fun isActive() = false
+        override fun observeActive() = flowOf(false)
     }
 
     private class Time : AcademicTimeProvider {

@@ -24,7 +24,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.WallClock
 import java.net.URI
@@ -64,7 +64,7 @@ import dev.alllexey.itmowidgets.core.model.resources.SubjectLink as WireLink
 class SubjectLinksRepositoryImpl @Inject constructor(
     private val storage: SubjectLinksFileStore,
     private val api: ItmoWidgetsApi,
-    private val services: CustomServicesRepository,
+    private val backend: BackendGate,
     @param:WallClock private val clock: Clock,
     private val demo: DemoMode,
 ) : SubjectLinksRepository, SessionDataCleaner {
@@ -92,7 +92,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         DemoSubjectLinks.snapshot(scope, OffsetDateTime.ofInstant(clock.instant(), clock.zone))
 
     private fun observeStored(scope: ResourceScope): Flow<SubjectLinksState> = combine(
-        state, services.observeEnabled().onEach { enabled = it }, loadError, scopeErrors, refreshing,
+        state, backend.observeConnected().onEach { enabled = it }, loadError, scopeErrors, refreshing,
     ) { data, on, failure, errors, active ->
         val error = errors[scope.key]
         val snapshot = data?.let { snapshot(it, scope, on, failed = error != null) }
@@ -200,7 +200,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
             api.reportSubjectLink(UUID.fromString(id), ModerationReportRequest(reason.toWire(), comment?.trim()?.takeIf { it.isNotEmpty() }))
         }
 
-    override fun observeRestrictions(): Flow<List<UserRestriction>> = combine(restrictions, services.observeEnabled(), flow {
+    override fun observeRestrictions(): Flow<List<UserRestriction>> = combine(restrictions, backend.observeConnected(), flow {
         while (true) { emit(clock.instant()); delay(RESTRICTION_TICK_MILLIS) }
     }) { rows, on, now -> if (!on) emptyList() else rows.filter { it.expiresAt?.toInstant()?.isAfter(now) != false } }
         .distinctUntilChanged()
@@ -333,7 +333,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun isEnabled(): Boolean = services.isEnabled().also { enabled = it }
+    private suspend fun isEnabled(): Boolean = backend.mayCallBackend().also { enabled = it }
 
     private suspend fun requireEnabled(generation: Long) {
         checkSession(generation)

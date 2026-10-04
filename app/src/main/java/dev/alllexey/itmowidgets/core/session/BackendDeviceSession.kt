@@ -4,7 +4,7 @@ import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.RegisterDeviceRequest
 import dev.alllexey.itmowidgets.core.model.UnregisterDeviceRequest
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,7 +17,7 @@ interface BackendDeviceSession {
 }
 
 class DefaultBackendDeviceSession(
-    private val settings: AppSettingsStorage,
+    private val gate: BackendGate,
     private val utilityStorage: UtilityStorage,
     private val widgetsApi: ItmoWidgetsApi,
     private val deviceName: String,
@@ -26,7 +26,7 @@ class DefaultBackendDeviceSession(
 ) : BackendDeviceSession {
 
     override suspend fun registerCurrentDevice() {
-        if (demo.isActive() || !settings.getCustomServicesEnabled()) return
+        if (demo.isActive() || !gate.mayCallBackend()) return
         val ownerIsu = currentUser.getCurrentUser()?.isu?.takeIf { it > 0 } ?: return
         val fcmToken = utilityStorage.getFirebaseToken()?.trim()?.takeIf(String::isNotEmpty)
             ?: return
@@ -44,7 +44,7 @@ class DefaultBackendDeviceSession(
     }
 
     override suspend fun unregisterCurrentDevice() {
-        if (demo.isActive() || !settings.getCustomServicesEnabled()) return
+        if (demo.isActive() || !gate.mayCallBackend()) return
         val fcmToken = utilityStorage.getFirebaseToken()?.trim()?.takeIf(String::isNotEmpty)
             ?: return
 

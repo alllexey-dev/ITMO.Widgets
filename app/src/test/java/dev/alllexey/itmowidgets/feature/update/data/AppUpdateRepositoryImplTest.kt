@@ -1,13 +1,13 @@
 package dev.alllexey.itmowidgets.feature.update.data
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.AppVersionInfo
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import java.io.IOException
@@ -96,7 +96,7 @@ class AppUpdateRepositoryImplTest {
             api = api,
             repository = AppUpdateRepositoryImpl(
                 widgetsApi = api.instance,
-                customServices = FakeCustomServicesRepository(customServicesEnabled),
+                backend = FakeBackendGate(customServicesEnabled),
                 utilityStorage = storage,
                 installedVersion = AppVersionName(INSTALLED_VERSION),
                 clock = Clock.fixed(now, ZoneOffset.UTC),
@@ -116,14 +116,6 @@ class AppUpdateRepositoryImplTest {
         val api: FakeItmoWidgetsApi,
         val repository: AppUpdateRepositoryImpl
     )
-
-    private class FakeCustomServicesRepository(private val enabled: Boolean) : CustomServicesRepository {
-        override fun observeEnabled(): Flow<Boolean> = MutableStateFlow(enabled).asStateFlow()
-
-        override suspend fun isEnabled(): Boolean = enabled
-
-        override suspend fun setEnabled(enabled: Boolean) = Unit
-    }
 
     private class InMemoryPreferencesDataStore : DataStore<Preferences> {
         private val state = MutableStateFlow<Preferences>(emptyPreferences())

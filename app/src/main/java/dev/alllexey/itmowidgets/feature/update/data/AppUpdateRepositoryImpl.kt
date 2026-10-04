@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.feature.update.data
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
@@ -26,7 +26,7 @@ import kotlinx.coroutines.withContext
  */
 class AppUpdateRepositoryImpl @Inject constructor(
     private val widgetsApi: ItmoWidgetsApi,
-    private val customServices: CustomServicesRepository,
+    private val backend: BackendGate,
     private val utilityStorage: UtilityStorage,
     private val installedVersion: AppVersionName,
     @param:WallClock private val clock: Clock,
@@ -37,7 +37,7 @@ class AppUpdateRepositoryImpl @Inject constructor(
     /** The demo session never offers an update: it asks nothing from Backend. */
     override suspend fun loadUpdate(): AppUpdate? {
         if (demo.isActive()) return null
-        if (!customServices.isEnabled()) return null
+        if (!backend.mayCallBackend()) return null
         val info = fetchVersionInfo() ?: return null
         val latest = AppVersionName(info.latestVersion)
         if (latest <= installedVersion) return null

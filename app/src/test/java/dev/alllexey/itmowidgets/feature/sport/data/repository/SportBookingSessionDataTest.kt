@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import dev.alllexey.itmowidgets.core.util.CustomDataState
@@ -152,6 +153,18 @@ class SportBookingSessionDataTest {
         assertEquals(1, fixture.syncCalls.get())
     }
 
+    @Test
+    fun `bookings reach Backend only with the opt-in`() = runTest {
+        val fixture = fixture()
+
+        fixture.repository.refreshSportBookings()
+        assertEquals(0, fixture.syncCalls.get())
+
+        fixture.settings.setCustomServicesEnabled(true)
+        fixture.repository.refreshSportBookings()
+        assertEquals(1, fixture.syncCalls.get())
+    }
+
     private fun fixture() = Fixture()
 
     private fun emptyBookings(): DataState<List<SportBooking>> = DataState.Success(emptyList())
@@ -188,7 +201,7 @@ class SportBookingSessionDataTest {
             flowOf(CustomDataState.Disabled)
         } as SportDataRepository
 
-        val repository = SportBookingRepositoryImpl(settings, sportData, myItmo.api, widgetsApi, FixedAcademicTime(), noDemo())
+        val repository = SportBookingRepositoryImpl(DefaultBackendGate(settings, noDemo()), sportData, myItmo.api, widgetsApi, FixedAcademicTime(), noDemo())
     }
 
     private class InMemoryPreferencesDataStore : DataStore<Preferences> {

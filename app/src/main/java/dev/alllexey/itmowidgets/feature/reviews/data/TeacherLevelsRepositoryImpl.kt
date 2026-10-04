@@ -5,7 +5,7 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.reviews.data.demo.DemoReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.WallClock
 import java.time.Clock
@@ -25,7 +25,7 @@ import kotlinx.coroutines.withContext
  */
 @Singleton
 class TeacherLevelsRepositoryImpl @Inject constructor(
-    private val customServices: CustomServicesRepository,
+    private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     private val store: TeacherLevelsFileStore,
     @param:WallClock private val clock: Clock,
@@ -37,7 +37,7 @@ class TeacherLevelsRepositoryImpl @Inject constructor(
     override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> = if (demo.isActive()) DemoReviews.levels(isus) else lock.withLock {
         withContext(Dispatchers.IO) {
             val started = generation.get()
-            if (!customServices.isEnabled()) {
+            if (!backend.mayCallBackend()) {
                 store.clear()
                 return@withContext emptyMap()
             }
@@ -55,7 +55,7 @@ class TeacherLevelsRepositoryImpl @Inject constructor(
             val entries = if (fetched == null) fresh else fresh + fetched
             if (fetched != null && missing.isNotEmpty()) {
                 // A sign-out or a disabled opt-in during the request must not bring the answer back.
-                if (started != generation.get() || !customServices.isEnabled()) return@withContext emptyMap()
+                if (started != generation.get() || !backend.mayCallBackend()) return@withContext emptyMap()
                 store.write(entries)
             }
             wanted.mapNotNull { isu -> entries[isu]?.level?.let { isu to TeacherLevel.valueOf(it) } }.toMap()

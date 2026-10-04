@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.DataState
@@ -36,7 +36,7 @@ import javax.inject.Singleton
 @Singleton
 class SportDataRepositoryImpl @Inject constructor(
     private val friendRepository: FriendRepository,
-    private val settings: AppSettingsStorage,
+    private val backend: BackendGate,
     private val myItmoApi: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi,
     private val scoreRepository: SportScoreRepositoryImpl,
@@ -107,7 +107,7 @@ class SportDataRepositoryImpl @Inject constructor(
             autoSignLimitsFlow.emit(CustomDataState.Success(DemoSport.autoSignLimits(time)))
             return
         }
-        if (!settings.getCustomServicesEnabled()) {
+        if (!backend.mayCallBackend()) {
             autoSignLimitsFlow.emit(CustomDataState.Disabled)
             return
         }
@@ -136,7 +136,7 @@ class SportDataRepositoryImpl @Inject constructor(
             emitQueueState(generation, CustomDataState.Success(DemoSport.queueEntries(time)))
             return
         }
-        if (!settings.getCustomServicesEnabled()) {
+        if (!backend.mayCallBackend()) {
             emitQueueState(generation, CustomDataState.Disabled)
             return
         }
@@ -185,7 +185,7 @@ class SportDataRepositoryImpl @Inject constructor(
             queuesFlow.emit(CustomDataState.Success(DemoSport.queues(time)))
             return
         }
-        if (!settings.getCustomServicesEnabled()) {
+        if (!backend.mayCallBackend()) {
             queuesFlow.emit(CustomDataState.Disabled)
             return
         }
@@ -224,7 +224,7 @@ class SportDataRepositoryImpl @Inject constructor(
             friendsBookingsFlow.emit(CustomDataState.Success(DemoSport.friendsBookings(time)))
             return
         }
-        if (!settings.getCustomServicesEnabled()) {
+        if (!backend.mayCallBackend()) {
             friendsBookingsFlow.emit(CustomDataState.Disabled)
             return
         }

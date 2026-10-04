@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.widget
 
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
@@ -21,6 +22,7 @@ import kotlinx.coroutines.coroutineScope
 class ScheduleWidgetDataProvider @Inject constructor(
     private val repository: ScheduleRepository,
     private val settings: AppSettingsStorage,
+    private val backend: BackendGate,
     private val timeProvider: AcademicTimeProvider,
     private val selector: ScheduleWidgetSelector,
     private val pendingBookings: PendingSportBookingsRepository,
@@ -79,7 +81,7 @@ class ScheduleWidgetDataProvider @Inject constructor(
     }
 
     private suspend fun pendingEnabled(): Boolean =
-        settings.getScheduleSportAutoSignEnabled() && settings.getCustomServicesEnabled()
+        settings.getScheduleSportAutoSignEnabled() && backend.isOptedIn()
 
     private fun signedOut(preferences: ScheduleWidgetPreferences) = ScheduleWidgetLoadResult.Available(
         ScheduleWidgetSelection(

@@ -10,11 +10,9 @@ import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.core.testing.unreachableMyItmo
 import dev.alllexey.itmowidgets.core.util.CustomDataState
@@ -41,11 +39,12 @@ import org.junit.Test
 class SportDemoGateTest {
     private val demo = FakeDemoMode(active = true)
     private val time = FixedAcademicTime()
-    private val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+    // The stored opt-in is on: the demo alone must keep every request local.
+    private val backend = FakeBackendGate(optedIn = true, demo)
     private val myItmoApi = unreachable<MyItmoApi>()
     private val widgetsApi = unreachable<ItmoWidgetsApi>()
     private val score = SportScoreRepositoryImpl(unreachableMyItmo(), NoOverride, time, demo)
-    private val data = SportDataRepositoryImpl(NoFriends, settings, myItmoApi, widgetsApi, score, time, demo)
+    private val data = SportDataRepositoryImpl(NoFriends, backend, myItmoApi, widgetsApi, score, time, demo)
 
     @Test
     fun `the catalog merges the demo queues and friends without a request`() = runTest {
@@ -66,7 +65,7 @@ class SportDemoGateTest {
 
     @Test
     fun `own bookings, points and limits come from the demo set`() = runTest {
-        val bookings = SportBookingRepositoryImpl(settings, data, myItmoApi, widgetsApi, time, demo)
+        val bookings = SportBookingRepositoryImpl(backend, data, myItmoApi, widgetsApi, time, demo)
 
         bookings.refreshSportBookings()
         data.refreshSportScore()
@@ -86,7 +85,7 @@ class SportDemoGateTest {
 
     @Test
     fun `sign-ups and queues are refused`() = runTest {
-        val actions = SportActionRepositoryImpl(settings, myItmoApi, widgetsApi, demo)
+        val actions = SportActionRepositoryImpl(backend, myItmoApi, widgetsApi, demo)
         val refused = AppResult.Failure(AppError.DemoUnavailable)
 
         assertTrue(actions.areCommunityServicesEnabled())
@@ -100,7 +99,7 @@ class SportDemoGateTest {
 
     @Test
     fun `a friend's sport comes from the demo set`() = runTest {
-        val users = UserSportRepositoryImpl(Disabled, widgetsApi, time, demo)
+        val users = UserSportRepositoryImpl(backend, widgetsApi, time, demo)
 
         val polina = (users.getUserBookings(DemoPeople.POLINA.isu) as AppResult.Success).value
         val stranger = users.getUserBookings(DemoPeople.ME_ISU + 5000)
@@ -122,11 +121,5 @@ class SportDemoGateTest {
 
     private object NoTemplates : SportLessonTemplateProvider {
         override fun getSchedule() = null
-    }
-
-    private object Disabled : CustomServicesRepository {
-        override fun observeEnabled(): Flow<Boolean> = flowOf(false)
-        override suspend fun isEnabled() = false
-        override suspend fun setEnabled(enabled: Boolean) = Unit
     }
 }

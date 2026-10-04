@@ -10,7 +10,7 @@ import dev.alllexey.itmowidgets.core.model.SportAutoSignRequest
 import dev.alllexey.itmowidgets.core.model.SportFreeSignRequest
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +19,7 @@ import retrofit2.HttpException
 import javax.inject.Inject
 
 class SportActionRepositoryImpl @Inject constructor(
-    private val settings: AppSettingsStorage,
+    private val backend: BackendGate,
     private val myItmoApi: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi,
     private val demo: DemoMode
@@ -27,7 +27,7 @@ class SportActionRepositoryImpl @Inject constructor(
 
     /** The demo session shows the queues, so their buttons are there; pressing them is refused. */
     override suspend fun areCommunityServicesEnabled(): Boolean {
-        return demo.isActive() || settings.getCustomServicesEnabled()
+        return backend.isConnected()
     }
 
     override suspend fun signIn(lessonId: Long): AppResult<Unit> {
@@ -63,34 +63,40 @@ class SportActionRepositoryImpl @Inject constructor(
         lessonId: Long,
         forceSign: Boolean
     ): AppResult<Unit> {
-        return runAction {
+        return runBackendAction {
             widgetsApi.createSportFreeSignEntry(
                 SportFreeSignRequest(
                     lessonId = lessonId,
                     forceSign = forceSign
                 )
-            ).requireSuccess()
+            )
         }
     }
 
     override suspend fun cancelFreeSignEntry(entryId: Long): AppResult<Unit> {
-        return runAction {
-            widgetsApi.cancelSportFreeSignEntry(entryId).requireSuccess()
+        return runBackendAction {
+            widgetsApi.cancelSportFreeSignEntry(entryId)
         }
     }
 
     override suspend fun createAutoSignEntry(prototypeLessonId: Long): AppResult<Unit> {
-        return runAction {
+        return runBackendAction {
             widgetsApi.createSportAutoSignEntry(
                 SportAutoSignRequest(prototypeLessonId = prototypeLessonId)
-            ).requireSuccess()
+            )
         }
     }
 
     override suspend fun cancelAutoSignEntry(entryId: Long): AppResult<Unit> {
-        return runAction {
-            widgetsApi.cancelSportAutoSignEntry(entryId).requireSuccess()
+        return runBackendAction {
+            widgetsApi.cancelSportAutoSignEntry(entryId)
         }
+    }
+
+    /** The queues live on Backend: outside the demo, which refuses them itself, the opt-in must allow the call. */
+    private suspend fun runBackendAction(request: suspend () -> ApiResponse<*>): AppResult<Unit> {
+        if (!demo.isActive() && !backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
+        return runAction { request().requireSuccess() }
     }
 
     private suspend fun runAction(action: suspend () -> Unit): AppResult<Unit> {
