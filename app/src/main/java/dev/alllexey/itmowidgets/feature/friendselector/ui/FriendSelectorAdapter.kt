@@ -70,7 +70,7 @@ class FriendSelectorAdapter(
             binding.root.alpha = if (canViewSchedule) 1f else 0.72f
 
             binding.trailingIcon.setImageResource(
-                if (canViewSchedule) R.drawable.ic_check_rounded else R.drawable.ic_lock
+                if (canViewSchedule) R.drawable.ic_check else R.drawable.ic_lock
             )
             binding.trailingIcon.imageTintList = ColorStateList.valueOf(
                 if (canViewSchedule) context.color.onSecondaryContainer else context.color.onSurfaceVariant

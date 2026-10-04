@@ -30,7 +30,7 @@ class UserFriendsRenderer(
                 val disabled = state.error == AppError.CustomServicesDisabled
                 val hidden = state.error == AppError.Forbidden
                 showState(
-                    if (hidden || disabled) R.drawable.ic_lock else R.drawable.ic_error_rounded,
+                    if (hidden || disabled) R.drawable.ic_lock else R.drawable.ic_error,
                     when {
                         hidden -> R.string.user_friends_hidden_title
                         disabled -> R.string.friends_disabled_title

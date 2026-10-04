@@ -84,7 +84,7 @@ class IcsExportBottomSheet : BottomSheetDialogFragment() {
             IcsExportUiState.Empty -> showState(R.drawable.ic_event_note, getString(R.string.ics_empty), R.string.ics_pick_other) {
                 viewModel.chooseAnother()
             }
-            is IcsExportUiState.Failed -> showState(R.drawable.ic_error_rounded, getString(state.error.messageRes()), R.string.common_retry) {
+            is IcsExportUiState.Failed -> showState(R.drawable.ic_error, getString(state.error.messageRes()), R.string.common_retry) {
                 viewModel.retry()
             }
         }

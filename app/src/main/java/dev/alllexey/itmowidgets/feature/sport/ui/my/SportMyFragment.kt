@@ -238,7 +238,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
         recycler.isVisible = false
         binding.pointsCard.isVisible = false
         binding.emptyStateLayout.isVisible = true
-        binding.stateIcon.setImageResource(R.drawable.ic_error_rounded)
+        binding.stateIcon.setImageResource(R.drawable.ic_error)
         binding.stateTitle.setText(R.string.common_load_error_title)
         binding.stateDescription.setText(state.error.messageRes())
         binding.buttonGoToSchedule.isVisible = false
@@ -277,7 +277,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
         val enough = need == 0
         if (enough) {
             binding.scoreStatusCard.setCardBackgroundColor(color.primaryContainer)
-            binding.scoreStatusIcon.setImageResource(R.drawable.ic_check_rounded)
+            binding.scoreStatusIcon.setImageResource(R.drawable.ic_check)
             binding.scoreStatusIcon.imageTintList = ColorStateList.valueOf(color.onPrimaryContainer)
             binding.scoreStatusText.setText(R.string.sport_score_passed_status)
             binding.scoreStatusText.setTextColor(color.onPrimaryContainer)

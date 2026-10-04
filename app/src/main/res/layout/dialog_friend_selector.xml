@@ -188,7 +188,7 @@
         android:layout_marginBottom="@dimen/design_spacing_content"
         android:minHeight="56dp"
         android:text="@string/friend_picker_apply_my"
-        app:icon="@drawable/ic_check_rounded"
+        app:icon="@drawable/ic_check"
         app:iconGravity="textStart"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

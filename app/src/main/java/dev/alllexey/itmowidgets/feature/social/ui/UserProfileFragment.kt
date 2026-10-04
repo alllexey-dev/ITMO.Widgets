@@ -133,7 +133,7 @@ class UserProfileFragment : Fragment() {
 
     private fun renderError(error: AppError) = with(binding) {
         val notFound = error == AppError.NotFound
-        stateIcon.setImageResource(if (notFound) R.drawable.ic_person else R.drawable.ic_error_rounded)
+        stateIcon.setImageResource(if (notFound) R.drawable.ic_person else R.drawable.ic_error)
         stateTitle.setText(if (notFound) R.string.user_profile_not_found_title else R.string.common_load_error_title)
         stateDescription.isVisible = !notFound
         stateDescription.text = if (notFound) null else getString(error.messageRes())

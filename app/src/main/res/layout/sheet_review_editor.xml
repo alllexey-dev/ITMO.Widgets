@@ -56,7 +56,7 @@
                 android:layout_height="@dimen/design_touch_target"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/review_editor_close"
-                android:src="@drawable/ic_close_rounded"
+                android:src="@drawable/ic_close"
                 app:tint="?attr/colorOnSurfaceVariant" />
 
         </LinearLayout>

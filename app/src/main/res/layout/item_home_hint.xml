@@ -73,7 +73,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/home_hint_dismiss"
                 android:padding="@dimen/design_spacing_content"
-                android:src="@drawable/ic_close_rounded"
+                android:src="@drawable/ic_close"
                 app:tint="?attr/colorOnSurfaceVariant" />
 
         </LinearLayout>

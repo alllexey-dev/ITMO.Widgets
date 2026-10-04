@@ -116,7 +116,7 @@
                                 android:layout_width="18dp"
                                 android:layout_height="18dp"
                                 android:contentDescription="@null"
-                                android:src="@drawable/ic_check_rounded"
+                                android:src="@drawable/ic_check"
                                 app:tint="?attr/colorOnPrimaryContainer" />
 
                             <TextView

@@ -401,7 +401,7 @@
                         android:layout_height="24dp"
                         android:layout_marginEnd="16dp"
                         android:contentDescription="@null"
-                        android:src="@drawable/ic_outline_code_blocks"
+                        android:src="@drawable/ic_code_blocks"
                         app:tint="?attr/colorOnSurfaceVariant" />
 
                     <TextView
@@ -435,7 +435,7 @@
                 style="@style/Widget.ItmoWidgets.ProjectLink"
                 android:contentDescription="@string/me_github_accessibility"
                 android:text="@string/me_github"
-                app:icon="@drawable/ic_github" />
+                app:icon="@drawable/ic_brand_github" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/telegram_button"
@@ -443,7 +443,7 @@
                 android:layout_marginStart="8dp"
                 android:contentDescription="@string/me_telegram_accessibility"
                 android:text="@string/me_telegram"
-                app:icon="@drawable/ic_telegram" />
+                app:icon="@drawable/ic_brand_telegram" />
 
         </LinearLayout>
 

@@ -223,14 +223,14 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         if (!item.signed && availability != null) {
             when {
                 availability.manual -> conditionCard(ConditionTone.ALLOWED, R.string.sport_booking_allowed,
-                    icon = R.drawable.ic_check_rounded)
+                    icon = R.drawable.ic_check)
                 availability.mayWait -> conditionCard(ConditionTone.WAITING,
                     if (item.isReal) R.string.sport_booking_wait else R.string.sport_prediction_waiting,
                     getString(if (item.isReal) R.string.sport_booking_wait_place else R.string.sport_prediction_hint),
-                    prerequisites, R.drawable.ic_schedule_rounded)
+                    prerequisites, R.drawable.ic_schedule)
                 availability.restrictions.any { it.kind == SportBookingObstacle.STARTED } ->
                     conditionCard(ConditionTone.BLOCKED, R.string.sport_rule_started,
-                        icon = R.drawable.ic_error_rounded)
+                        icon = R.drawable.ic_error)
                 availability.restrictions.isNotEmpty() -> {
                     val unknown = availability.restrictions.all { it.kind == SportBookingObstacle.UNKNOWN }
                     val reasons = availability.restrictions.map { restriction ->
@@ -240,22 +240,22 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
                         if (unknown) R.string.sport_booking_uncertain else R.string.sport_booking_no_bypass,
                         reasons.takeUnless { unknown },
                         if (unknown) null else getString(R.string.sport_booking_no_bypass_hint),
-                        R.drawable.ic_error_rounded)
+                        R.drawable.ic_error)
                 }
             }
         }
         if (availability?.mayWait == true && item.isReal && !item.signed &&
             !timeProvider.now().isBefore(OffsetDateTime.parse(item.start).minusHours(1))) {
             conditionCard(ConditionTone.WARNING, R.string.sport_booking_late_auto,
-                getString(R.string.sport_booking_late_auto_hint), icon = R.drawable.ic_schedule_rounded)
+                getString(R.string.sport_booking_late_auto_hint), icon = R.drawable.ic_schedule)
         }
         if (item.intersectsSchedule) conditionCard(ConditionTone.WARNING, R.string.sport_booking_warning,
-            getString(R.string.sport_booking_warning_hint), icon = R.drawable.ic_error_rounded)
+            getString(R.string.sport_booking_warning_hint), icon = R.drawable.ic_error)
         if (!item.isReal && availability?.mayWait != true) {
             conditionCard(ConditionTone.WAITING, R.string.sport_prediction_matching,
                 getString(R.string.sport_prediction_hint),
                 if (availability?.restrictions?.isNotEmpty() == true) getString(R.string.sport_booking_prediction_rules) else null,
-                R.drawable.ic_schedule_rounded)
+                R.drawable.ic_schedule)
         }
     }
 

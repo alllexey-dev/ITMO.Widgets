@@ -70,9 +70,9 @@ fun bindSportStatus(status: SportRegistrationStatus, text: TextView, label: Stri
     text.text = label
     text.setTextColor(accent)
     val iconRes = when (status) {
-        SportRegistrationStatus.SIGNED, SportRegistrationStatus.AUTO_SIGNED -> R.drawable.ic_check_rounded
-        SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED -> R.drawable.ic_schedule_rounded
-        SportRegistrationStatus.FAILED, SportRegistrationStatus.EXPIRED -> R.drawable.ic_error_rounded
+        SportRegistrationStatus.SIGNED, SportRegistrationStatus.AUTO_SIGNED -> R.drawable.ic_check
+        SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED -> R.drawable.ic_schedule
+        SportRegistrationStatus.FAILED, SportRegistrationStatus.EXPIRED -> R.drawable.ic_error
         else -> R.drawable.ic_info
     }
     val icon = ContextCompat.getDrawable(text.context, iconRes)?.mutate()

@@ -49,11 +49,11 @@ fun ViewDetailsHeaderBinding.bind(content: DetailsHeaderContent, onTeacher: (() 
     duration.isVisible = minutes != null
     duration.text = minutes?.let { root.context.getString(R.string.sport_duration, it) }
     alignRailIcon(timeIcon, date)
-    teacherFact.bindFact(R.string.sport_details_teacher, content.teacher.orEmpty(), R.drawable.ic_person_rounded)
+    teacherFact.bindFact(R.string.sport_details_teacher, content.teacher.orEmpty(), R.drawable.ic_person)
     teacherFact.bindAction(onTeacher)
     bindTeacherLevel(null, reserve = false)
     flowFact.bindFact(R.string.schedule_lesson_details_flow, content.flow.orEmpty(), R.drawable.ic_group)
-    locationFact.bindFact(R.string.sport_details_location, content.location.orEmpty(), R.drawable.ic_location_on_rounded)
+    locationFact.bindFact(R.string.sport_details_location, content.location.orEmpty(), R.drawable.ic_location_on)
     mapButton.isVisible = content.mapAvailable
     mapButton.setOnClickListener { onMap() }
     placeCard.isVisible = teacherFact.root.isVisible || flowFact.root.isVisible || locationFact.root.isVisible ||

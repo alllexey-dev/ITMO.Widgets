@@ -588,7 +588,7 @@ and `ui/sheets`; `feature/resources` only offers the action.
   is 2–8 words. The workbook lives only in the view model, never in
   the saved state; after process death the sheet is downloaded again.
 - States share one bounded area of the sheet (288 dp): loading, the choices,
-  and failures with `ic_error_rounded` and their text (`Нет связи` with a tonal
+  and failures with `ic_error` and their text (`Нет связи` with a tonal
   `Повторить`, `Таблица закрыта`, `Таблица слишком большая`,
   `Строка не найдена`). A failed write keeps the choice and shows a snackbar.
 

@@ -53,7 +53,7 @@ class SheetScoresBottomSheet : BottomSheetDialogFragment() {
         binding.subject.text = viewModel.scope.subjectName
         binding.options.adapter = adapter
         binding.searchInput.doAfterTextChanged { showRows() }
-        binding.state.stateIcon.setImageResource(R.drawable.ic_error_rounded)
+        binding.state.stateIcon.setImageResource(R.drawable.ic_error)
         binding.state.stateDescription.isVisible = false
         binding.state.stateAction.setText(R.string.common_retry)
         binding.state.stateAction.setOnClickListener { viewModel.retry() }

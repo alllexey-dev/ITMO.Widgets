@@ -32,7 +32,7 @@
             android:layout_marginTop="@dimen/design_spacing_group"
             android:hint="@string/links_url_hint"
             app:endIconContentDescription="@string/links_url_clear"
-            app:endIconDrawable="@drawable/ic_close_rounded"
+            app:endIconDrawable="@drawable/ic_close"
             app:endIconMode="custom">
 
             <com.google.android.material.textfield.TextInputEditText

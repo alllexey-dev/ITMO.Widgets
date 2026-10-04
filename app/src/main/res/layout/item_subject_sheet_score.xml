@@ -81,7 +81,7 @@
         android:layout_height="@dimen/design_touch_target"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/sheet_scores_actions"
-        android:src="@drawable/ic_more_vert_rounded"
+        android:src="@drawable/ic_more_vert"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="?attr/colorOnSurfaceVariant" />

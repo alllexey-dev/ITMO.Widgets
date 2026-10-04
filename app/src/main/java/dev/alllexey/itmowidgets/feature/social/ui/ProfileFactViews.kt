@@ -36,7 +36,7 @@ private fun ItemProfileFactBinding.bindFact(fact: ProfileFact) {
     val context = root.context
     val (icon, category) = when (fact.kind) {
         ProfileFactKind.POSITION -> R.drawable.ic_work to R.string.person_fact_position
-        ProfileFactKind.ROOM -> R.drawable.ic_location_on_rounded to R.string.person_fact_room
+        ProfileFactKind.ROOM -> R.drawable.ic_location_on to R.string.person_fact_room
         ProfileFactKind.EDUCATION -> R.drawable.ic_school to R.string.person_fact_education
     }
     factIcon.setImageResource(icon)
