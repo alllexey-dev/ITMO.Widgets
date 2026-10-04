@@ -5,13 +5,13 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.social.SocialState
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -88,15 +88,15 @@ class MeViewModel @Inject constructor(
     }
 
     private fun summarize(
-        friends: SocialState<List<UserProfile>>,
-        requests: SocialState<FriendRequests>
+        friends: LoadState<List<UserProfile>>,
+        requests: LoadState<FriendRequests>
     ): MeFriendsSummary = when {
-        friends == SocialState.Disabled -> MeFriendsSummary.Disabled
-        friends is SocialState.Content -> MeFriendsSummary.Content(
+        friends == LoadState.Disabled -> MeFriendsSummary.Disabled
+        friends is LoadState.Content -> MeFriendsSummary.Content(
             friends = friends.value.size,
-            incomingRequests = (requests as? SocialState.Content)?.value?.incoming?.size ?: 0
+            incomingRequests = (requests as? LoadState.Content)?.value?.incoming?.size ?: 0
         )
-        friends is SocialState.Error -> MeFriendsSummary.Error
+        friends is LoadState.Error -> MeFriendsSummary.Error
         else -> MeFriendsSummary.Loading
     }
 }

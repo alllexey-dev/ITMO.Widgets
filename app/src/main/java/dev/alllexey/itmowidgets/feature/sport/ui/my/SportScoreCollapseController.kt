@@ -11,8 +11,8 @@ import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
-import dev.alllexey.itmowidgets.core.util.color
 import kotlin.math.roundToInt
+import dev.alllexey.itmowidgets.core.ui.color
 
 /**
  * Collapses the sport score card into a compact bar while the bookings list scrolls under it.

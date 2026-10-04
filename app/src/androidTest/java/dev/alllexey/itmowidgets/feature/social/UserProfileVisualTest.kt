@@ -46,10 +46,10 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
 import dev.alllexey.itmowidgets.core.ui.GroupPosition
 import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.tone
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.shortPersonName
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition

@@ -13,9 +13,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.util.color
-import dev.alllexey.itmowidgets.core.util.dp
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.ui.color
+import dev.alllexey.itmowidgets.core.ui.dp
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import java.time.format.DateTimeFormatter
 import java.util.Locale

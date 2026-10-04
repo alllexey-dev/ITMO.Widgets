@@ -4,9 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.core.util.MergedDataState
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
@@ -34,7 +33,7 @@ class UserSportViewModelTest {
 
     @Test
     fun `confirmed lessons resolve against the catalog without the merged schedule`() = runTest(mainDispatcherRule.dispatcher) {
-        val schedule = CatalogSportScheduleRepository(catalog = DataState.Success(listOf(lesson(10), lesson(11))))
+        val schedule = CatalogSportScheduleRepository(catalog = AppResult.Success(listOf(lesson(10), lesson(11))))
         val bookings = FakeUserSportRepository(AppResult.Success(UserSportBookings(
             confirmedLessonIds = listOf(11),
             pending = listOf(pending(12), pending(11))
@@ -52,7 +51,7 @@ class UserSportViewModelTest {
 
     @Test
     fun `a failed catalog still shows pending entries`() = runTest(mainDispatcherRule.dispatcher) {
-        val schedule = CatalogSportScheduleRepository(catalog = DataState.Error(AppError.Network))
+        val schedule = CatalogSportScheduleRepository(catalog = AppResult.Failure(AppError.Network))
         val bookings = FakeUserSportRepository(AppResult.Success(UserSportBookings(
             confirmedLessonIds = listOf(11),
             pending = listOf(pending(12))
@@ -66,7 +65,7 @@ class UserSportViewModelTest {
 
     @Test
     fun `backend refusal is surfaced as an error`() = runTest(mainDispatcherRule.dispatcher) {
-        val schedule = CatalogSportScheduleRepository(catalog = DataState.Success(emptyList()))
+        val schedule = CatalogSportScheduleRepository(catalog = AppResult.Success(emptyList()))
         val viewModel = UserSportViewModel(handle(5), FakeUserSportRepository(AppResult.Failure(AppError.Forbidden)), schedule)
         advanceUntilIdle()
 
@@ -132,23 +131,23 @@ class UserSportViewModelTest {
     }
 
     /** The merged schedule never emits here, exactly like a process whose sport tab was never opened. */
-    private class CatalogSportScheduleRepository(private val catalog: DataState<List<SportLesson>>) : SportScheduleRepository {
+    private class CatalogSportScheduleRepository(private val catalog: AppResult<List<SportLesson>>) : SportScheduleRepository {
         var refreshCount = 0
 
-        override fun observeSportSchedule(): Flow<MergedDataState<List<SportLesson>>> = MutableSharedFlow()
+        override fun observeSportSchedule(): Flow<LoadState<List<SportLesson>>> = MutableSharedFlow()
 
         override suspend fun refreshSportSchedule() {
             refreshCount += 1
         }
 
-        override fun observeSportCatalog(): Flow<DataState<List<SportLesson>>> = flowOf(catalog)
+        override fun observeSportCatalog(): Flow<AppResult<List<SportLesson>>> = flowOf(catalog)
 
-        override fun observeSportFilters(): Flow<DataState<SportFilterCatalog>> =
-            flowOf(DataState.Success(SportFilterCatalog(emptyList(), emptyList(), emptyList(), emptyList())))
+        override fun observeSportFilters(): Flow<AppResult<SportFilterCatalog>> =
+            flowOf(AppResult.Success(SportFilterCatalog(emptyList(), emptyList(), emptyList(), emptyList())))
 
         override suspend fun refreshSportFilters() = Unit
 
-        override fun observeSportTimeSlots(): Flow<DataState<List<SportTimeSlot>>> = flowOf(DataState.Success(emptyList()))
+        override fun observeSportTimeSlots(): Flow<AppResult<List<SportTimeSlot>>> = flowOf(AppResult.Success(emptyList()))
 
         override suspend fun refreshSportTimeSlots() = Unit
     }

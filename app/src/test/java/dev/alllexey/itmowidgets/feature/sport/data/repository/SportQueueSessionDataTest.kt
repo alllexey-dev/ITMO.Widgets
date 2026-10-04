@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
@@ -9,7 +11,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
-import dev.alllexey.itmowidgets.core.friend.FriendListState
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.QueueEntryStatus
@@ -19,8 +20,6 @@ import dev.alllexey.itmowidgets.core.model.SportLessonDto
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
-import dev.alllexey.itmowidgets.core.util.CustomDataState
-import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import java.io.IOException
 import java.lang.reflect.Proxy
@@ -58,13 +57,13 @@ class SportQueueSessionDataTest {
         val states = collectStates(fixture.repository)
 
         fixture.repository.refreshSportQueueEntries()
-        assertEquals(listOf(1L), states.single().dataOrNull()?.map { it.id })
+        assertEquals(listOf(1L), states.single().valueOrNull()?.map { it.id })
 
         fixture.repository.clearSessionData()
 
         assertEquals(2, states.size)
-        assertEquals(CustomDataState.Disabled, states.last())
-        assertEquals(CustomDataState.Disabled, fixture.repository.observeSportQueueEntries().first())
+        assertEquals(LoadState.Disabled, states.last())
+        assertEquals(LoadState.Disabled, fixture.repository.observeSportQueueEntries().first())
     }
 
     @Test
@@ -79,8 +78,8 @@ class SportQueueSessionDataTest {
         response.result.complete(ApiResponse.success(listOf(autoSignEntry(1))))
         refresh.join()
 
-        assertEquals(listOf(CustomDataState.Disabled), states)
-        assertEquals(CustomDataState.Disabled, fixture.repository.observeSportQueueEntries().first())
+        assertEquals(listOf(LoadState.Disabled), states)
+        assertEquals(LoadState.Disabled, fixture.repository.observeSportQueueEntries().first())
     }
 
     @Test
@@ -95,8 +94,8 @@ class SportQueueSessionDataTest {
         response.result.completeExceptionally(IOException("Old session request failed"))
         refresh.join()
 
-        assertEquals(listOf(CustomDataState.Disabled), states)
-        assertEquals(CustomDataState.Disabled, fixture.repository.observeSportQueueEntries().first())
+        assertEquals(listOf(LoadState.Disabled), states)
+        assertEquals(LoadState.Disabled, fixture.repository.observeSportQueueEntries().first())
     }
 
     @Test
@@ -110,15 +109,15 @@ class SportQueueSessionDataTest {
         fixture.repository.clearSessionData()
         fixture.api.autoSignResponse = { ApiResponse.success(listOf(autoSignEntry(2))) }
         fixture.repository.refreshSportQueueEntries()
-        assertEquals(listOf(2L), fixture.repository.observeSportQueueEntries().first().dataOrNull()?.map { it.id })
+        assertEquals(listOf(2L), fixture.repository.observeSportQueueEntries().first().valueOrNull()?.map { it.id })
 
         oldResponse.result.complete(ApiResponse.success(listOf(autoSignEntry(1))))
         oldRefresh.join()
 
         assertEquals(2, states.size)
-        assertEquals(CustomDataState.Disabled, states.first())
-        assertEquals(listOf(2L), states.last().dataOrNull()?.map { it.id })
-        assertEquals(listOf(2L), fixture.repository.observeSportQueueEntries().first().dataOrNull()?.map { it.id })
+        assertEquals(LoadState.Disabled, states.first())
+        assertEquals(listOf(2L), states.last().valueOrNull()?.map { it.id })
+        assertEquals(listOf(2L), fixture.repository.observeSportQueueEntries().first().valueOrNull()?.map { it.id })
         assertEquals(2, fixture.api.autoSignCalls.get())
         assertEquals(2, fixture.api.freeSignCalls.get())
     }
@@ -127,20 +126,20 @@ class SportQueueSessionDataTest {
     fun `disabled services replace previous success without requesting either queue endpoint`() = runTest {
         val fixture = createFixture()
         fixture.repository.refreshSportQueueEntries()
-        assertEquals(listOf(1L), fixture.repository.observeSportQueueEntries().first().dataOrNull()?.map { it.id })
+        assertEquals(listOf(1L), fixture.repository.observeSportQueueEntries().first().valueOrNull()?.map { it.id })
         fixture.settings.setCustomServicesEnabled(false)
 
         fixture.repository.refreshSportQueueEntries()
 
-        assertEquals(CustomDataState.Disabled, fixture.repository.observeSportQueueEntries().first())
+        assertEquals(LoadState.Disabled, fixture.repository.observeSportQueueEntries().first())
         assertEquals(1, fixture.api.freeSignCalls.get())
         assertEquals(1, fixture.api.autoSignCalls.get())
     }
 
     private fun TestScope.collectStates(
         repository: SportDataRepositoryImpl
-    ): MutableList<CustomDataState<List<SportQueueEntry>>> {
-        val states = mutableListOf<CustomDataState<List<SportQueueEntry>>>()
+    ): MutableList<LoadState<List<SportQueueEntry>>> {
+        val states = mutableListOf<LoadState<List<SportQueueEntry>>>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             repository.observeSportQueueEntries().toList(states)
         }
@@ -153,7 +152,7 @@ class SportQueueSessionDataTest {
         val api = QueueApi()
         val myItmo = myItmoStub { error("Queue refresh must not request MyITMO") }
         val friends = object : FriendRepository {
-            override fun observeFriendList(): Flow<FriendListState> = error("Friend list is unrelated to personal queues")
+            override fun observeFriendList(): Flow<LoadState<List<UserSummary>>> = error("Friend list is unrelated to personal queues")
             override fun observeCurrentUser(): Flow<UserSummary?> = error("Current user is unrelated to personal queues")
             override suspend fun refreshFriendList() = error("Personal queue refresh must not refresh friends")
             override val currentFriends: List<UserSummary>? = null

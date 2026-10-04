@@ -21,7 +21,7 @@ import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
-import dev.alllexey.itmowidgets.core.util.safeEnumOf
+import dev.alllexey.itmowidgets.core.storage.safeEnumOf
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository

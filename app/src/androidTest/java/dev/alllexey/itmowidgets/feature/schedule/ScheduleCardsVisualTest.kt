@@ -22,7 +22,7 @@ import androidx.test.runner.lifecycle.Stage
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.color
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson

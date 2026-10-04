@@ -8,9 +8,9 @@ import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
-import dev.alllexey.itmowidgets.core.util.color
 import kotlin.math.ceil
 import kotlin.math.roundToInt
+import dev.alllexey.itmowidgets.core.ui.color
 
 /**
  * A 0–100 bar with the grade thresholds as ticks and their labels under them.

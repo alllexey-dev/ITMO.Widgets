@@ -9,7 +9,6 @@ import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
-import dev.alllexey.itmowidgets.core.util.safeEnumOf
 import kotlinx.coroutines.flow.Flow
 
 /** The schedule widgets' display settings, one set per format. */

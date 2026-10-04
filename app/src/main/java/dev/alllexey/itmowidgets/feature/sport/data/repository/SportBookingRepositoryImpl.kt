@@ -3,6 +3,10 @@ package dev.alllexey.itmowidgets.feature.sport.data.repository
 import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.result.errorOrNull
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
@@ -10,10 +14,6 @@ import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.network.requireResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.core.util.MergedDataState
-import dev.alllexey.itmowidgets.core.util.dataOrNull
-import dev.alllexey.itmowidgets.core.util.errorOrNull
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toBooking
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toBookings
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
@@ -42,7 +42,7 @@ class SportBookingRepositoryImpl @Inject constructor(
     private val dispatchers: AppDispatchers
 ) : SportBookingRepository, SessionDataCleaner {
 
-    private val bookingsFlow = MutableSharedFlow<DataState<List<SportBooking>>>(replay = 1)
+    private val bookingsFlow = MutableSharedFlow<AppResult<List<SportBooking>>>(replay = 1)
     private val sessionMutex = Mutex()
     private var sessionGeneration = 0L
 
@@ -53,7 +53,7 @@ class SportBookingRepositoryImpl @Inject constructor(
     ) { bookings, queueState, friendsState ->
 
         bookings.errorOrNull()?.let {
-            return@combine MergedDataState.Error(it)
+            return@combine LoadState.Error(it)
         }
 
         val errors = listOfNotNull(
@@ -61,14 +61,14 @@ class SportBookingRepositoryImpl @Inject constructor(
             friendsState.errorOrNull()
         )
 
-        val queueEntries = queueState.dataOrNull().orEmpty()
-        val friendsBookings = friendsState.dataOrNull().orEmpty()
+        val queueEntries = queueState.valueOrNull().orEmpty()
+        val friendsBookings = friendsState.valueOrNull().orEmpty()
         val friendsBookingsByLesson = friendsBookings.groupBy {
             if (it.entry is SportAutoSignEntry) it.entry.realLesson?.id ?: -it.entry.targetLesson.id
             else it.entry?.targetLesson?.id ?: it.lessonId
         }
 
-        val bookingsByLesson = bookings.dataOrNull().orEmpty()
+        val bookingsByLesson = bookings.valueOrNull().orEmpty()
             .associateBy { it.lessonId }.toMutableMap()
 
         queueEntries.forEach { entry ->
@@ -90,7 +90,7 @@ class SportBookingRepositoryImpl @Inject constructor(
         }
 
         val data = bookingsByLesson.values.sortedBy { it.start }
-        MergedDataState.of(data, errors.firstOrNull())
+        LoadState.Content(data, errors.firstOrNull())
     }
 
     override fun observeSportBookings() = combined
@@ -101,7 +101,7 @@ class SportBookingRepositoryImpl @Inject constructor(
         val generation = sessionMutex.withLock { sessionGeneration }
         if (demo.isActive()) {
             sessionMutex.withLock {
-                if (generation == sessionGeneration) bookingsFlow.emit(DataState.Success(DemoSport.bookings(time)))
+                if (generation == sessionGeneration) bookingsFlow.emit(AppResult.Success(DemoSport.bookings(time)))
             }
             return
         }
@@ -127,20 +127,20 @@ class SportBookingRepositoryImpl @Inject constructor(
             }
 
             sessionMutex.withLock {
-                if (generation == sessionGeneration) bookingsFlow.emit(DataState.Success(result))
+                if (generation == sessionGeneration) bookingsFlow.emit(AppResult.Success(result))
             }
 
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
             sessionMutex.withLock {
-                if (generation == sessionGeneration) bookingsFlow.emit(DataState.Error(error.toAppError()))
+                if (generation == sessionGeneration) bookingsFlow.emit(AppResult.Failure(error.toAppError()))
             }
         }
     }
 
     override suspend fun clearSessionData() = sessionMutex.withLock {
         sessionGeneration++
-        bookingsFlow.emit(DataState.Success(emptyList()))
+        bookingsFlow.emit(AppResult.Success(emptyList()))
     }
 }

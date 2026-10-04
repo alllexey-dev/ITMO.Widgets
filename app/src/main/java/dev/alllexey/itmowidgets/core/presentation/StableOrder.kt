@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.core.util
+package dev.alllexey.itmowidgets.core.presentation
 
 /**
  * Keeps a ranked list in the order the viewer first saw while a screen is open: a vote changes a score but must not

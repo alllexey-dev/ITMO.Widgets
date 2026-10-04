@@ -7,9 +7,9 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.text.UiText
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -115,17 +115,17 @@ class FriendsViewModel @Inject constructor(
     }
 
     private fun toUiState(
-        friends: SocialState<List<UserProfile>>,
-        requests: SocialState<FriendRequests>,
+        friends: LoadState<List<UserProfile>>,
+        requests: LoadState<FriendRequests>,
         tab: FriendsTab,
         refreshing: Boolean,
         busy: Set<Int>
     ): FriendsUiState {
-        if (friends == SocialState.Disabled || requests == SocialState.Disabled) return FriendsUiState.Disabled
-        val friendList = (friends as? SocialState.Content)?.value
-        val requestList = (requests as? SocialState.Content)?.value
+        if (friends == LoadState.Disabled || requests == LoadState.Disabled) return FriendsUiState.Disabled
+        val friendList = (friends as? LoadState.Content)?.value
+        val requestList = (requests as? LoadState.Content)?.value
         if (friendList == null || requestList == null) {
-            val error = (friends as? SocialState.Error)?.error ?: (requests as? SocialState.Error)?.error
+            val error = (friends as? LoadState.Error)?.error ?: (requests as? LoadState.Error)?.error
             // Keep showing progress while a refresh may still replace an error.
             return if (error != null && !refreshing) FriendsUiState.Error(error) else FriendsUiState.Loading
         }

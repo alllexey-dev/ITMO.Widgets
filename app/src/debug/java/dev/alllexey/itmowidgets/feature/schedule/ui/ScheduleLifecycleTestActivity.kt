@@ -26,7 +26,6 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
@@ -166,7 +165,7 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator by NoOpA
         @Volatile var clearOutcome: suspend () -> Unit = {}
         @Volatile var restrictToRequestedRange = false
         @Volatile var showPendingSport = MutableStateFlow(false)
-        @Volatile var pendingSport = MutableStateFlow<DataState<List<PendingSportBooking>>>(DataState.Success(emptyList()))
+        @Volatile var pendingSport = MutableStateFlow<AppResult<List<PendingSportBooking>>>(AppResult.Success(emptyList()))
         @Volatile var refreshPendingOutcome: suspend () -> Unit = {}
         /** Tests put changes here and set it back to an empty list afterwards. */
         val changes = MutableStateFlow<List<ScheduleChange>>(emptyList())

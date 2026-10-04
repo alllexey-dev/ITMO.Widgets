@@ -7,16 +7,16 @@ import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.social.SocialState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /** In-memory social backend: actions mutate the lists the way the real repository does. */
 internal class FakeSocialRepository : SocialRepository {
-    val friends = MutableStateFlow<SocialState<List<UserProfile>>>(SocialState.Loading)
-    val requests = MutableStateFlow<SocialState<FriendRequests>>(SocialState.Loading)
+    val friends = MutableStateFlow<LoadState<List<UserProfile>>>(LoadState.Loading)
+    val requests = MutableStateFlow<LoadState<FriendRequests>>(LoadState.Loading)
     val currentUser = MutableStateFlow<UserSummary?>(null)
     val actions = mutableListOf<String>()
     var userFriendsResult: AppResult<List<UserProfile>> = AppResult.Success(emptyList())
@@ -30,10 +30,10 @@ internal class FakeSocialRepository : SocialRepository {
     var profileGate: (suspend () -> Unit)? = null
     var profileError: AppError? = null
 
-    override fun observeFriends(): Flow<SocialState<List<UserProfile>>> = friends
-    override fun observeRequests(): Flow<SocialState<FriendRequests>> = requests
+    override fun observeFriends(): Flow<LoadState<List<UserProfile>>> = friends
+    override fun observeRequests(): Flow<LoadState<FriendRequests>> = requests
     override fun observeCurrentUser(): Flow<UserSummary?> = currentUser
-    override val currentFriends: List<UserProfile>? get() = (friends.value as? SocialState.Content)?.value
+    override val currentFriends: List<UserProfile>? get() = (friends.value as? LoadState.Content)?.value
 
     override suspend fun refresh() {
         refreshes += 1
@@ -82,8 +82,8 @@ internal class FakeSocialRepository : SocialRepository {
         return AppResult.Success(profile)
     }
 
-    private fun <T> SocialState<T>.update(transform: (T) -> T): SocialState<T> =
-        if (this is SocialState.Content) SocialState.Content(transform(value)) else this
+    private fun <T> LoadState<T>.update(transform: (T) -> T): LoadState<T> =
+        if (this is LoadState.Content) LoadState.Content(transform(value)) else this
 }
 
 internal fun profile(isu: Int, relationship: RelationshipState = RelationshipState.NONE) = UserProfile(

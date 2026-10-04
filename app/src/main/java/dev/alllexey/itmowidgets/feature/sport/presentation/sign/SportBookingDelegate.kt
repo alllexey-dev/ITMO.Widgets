@@ -3,10 +3,10 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.errorOrNull
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
-import dev.alllexey.itmowidgets.core.util.dataOrNull
-import dev.alllexey.itmowidgets.core.util.errorOrNull
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
@@ -111,8 +111,8 @@ class SportBookingDelegate @Inject constructor(
 
         val limitsState = sportDataRepository.observeSportAutoSignLimits().first()
         val entriesState = sportDataRepository.observeSportQueueEntries().first()
-        val limits = limitsState.dataOrNull()
-        val entries = entriesState.dataOrNull()
+        val limits = limitsState.valueOrNull()
+        val entries = entriesState.valueOrNull()
 
         return if (limits != null && entries != null) {
             AppResult.Success(AutoSignAvailability(limits, entries))

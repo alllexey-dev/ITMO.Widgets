@@ -5,13 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.presentation.StableOrder
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkRanking
-import dev.alllexey.itmowidgets.core.util.StableOrder
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState

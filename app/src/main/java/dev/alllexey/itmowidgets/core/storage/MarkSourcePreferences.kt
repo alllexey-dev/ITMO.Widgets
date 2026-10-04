@@ -6,7 +6,6 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
-import dev.alllexey.itmowidgets.core.util.safeEnumOf
 import kotlinx.coroutines.flow.Flow
 
 /** Which mark sources the background check reads, and the BARS sign-in prompt. Settings of the device. */

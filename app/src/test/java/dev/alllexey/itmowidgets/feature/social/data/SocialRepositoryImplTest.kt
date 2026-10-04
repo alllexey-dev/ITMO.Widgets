@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
@@ -15,7 +16,6 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.social.FriendRequests
-import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.model.social.RelationshipState as CoreRelationshipState
 import dev.alllexey.itmowidgets.core.model.social.UserProfile as CoreUserProfile
 import java.io.IOException
@@ -104,8 +104,8 @@ class SocialRepositoryImplTest {
 
         repository.refresh()
 
-        assertEquals(SocialState.Disabled, repository.observeFriends().first())
-        assertEquals(SocialState.Disabled, repository.observeRequests().first())
+        assertEquals(LoadState.Disabled, repository.observeFriends().first())
+        assertEquals(LoadState.Disabled, repository.observeRequests().first())
         assertEquals(0, api.calls)
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.userFriends(1))
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.profile(1))
@@ -125,7 +125,7 @@ class SocialRepositoryImplTest {
 
         assertEquals(listOf(1), repository.friendIsus())
         assertNull(repository.observeCurrentUser().first())
-        assertEquals(SocialState.Error(AppError.Network), repository.observeRequests().first())
+        assertEquals(LoadState.Error(AppError.Network), repository.observeRequests().first())
     }
 
     @Test
@@ -203,8 +203,8 @@ class SocialRepositoryImplTest {
 
         repository.clearSessionData()
 
-        assertEquals(SocialState.Loading, repository.observeFriends().first())
-        assertEquals(SocialState.Loading, repository.observeRequests().first())
+        assertEquals(LoadState.Loading, repository.observeFriends().first())
+        assertEquals(LoadState.Loading, repository.observeRequests().first())
         assertNull(repository.observeCurrentUser().first())
         assertNull(repository.currentFriends)
     }
@@ -332,8 +332,8 @@ class SocialRepositoryImplTest {
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), oldFriends.await())
         assertEquals(RelationshipState.FRIENDS, repository.cachedProfile(5)?.relationship)
         assertEquals(listOf(8), repository.cachedUserFriends(1)?.map(UserProfile::isu))
-        assertEquals(SocialState.Disabled, repository.observeFriends().first())
-        assertEquals(SocialState.Disabled, repository.observeRequests().first())
+        assertEquals(LoadState.Disabled, repository.observeFriends().first())
+        assertEquals(LoadState.Disabled, repository.observeRequests().first())
     }
 
     @Test
@@ -452,8 +452,8 @@ class SocialRepositoryImplTest {
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), action.await())
         refresh.join()
         repository.assertCachesEmpty()
-        assertEquals(SocialState.Loading, repository.observeFriends().first())
-        assertEquals(SocialState.Loading, repository.observeRequests().first())
+        assertEquals(LoadState.Loading, repository.observeFriends().first())
+        assertEquals(LoadState.Loading, repository.observeRequests().first())
         assertNull(repository.observeCurrentUser().first())
         assertNull(repository.currentFriends)
     }
@@ -568,17 +568,17 @@ class SocialRepositoryImplTest {
 
     private suspend fun SocialRepositoryImpl.assertDisabled() {
         assertCachesEmpty()
-        assertEquals(SocialState.Disabled, observeFriends().first())
-        assertEquals(SocialState.Disabled, observeRequests().first())
+        assertEquals(LoadState.Disabled, observeFriends().first())
+        assertEquals(LoadState.Disabled, observeRequests().first())
         assertNull(observeCurrentUser().first())
         assertNull(currentFriends)
     }
 
     private suspend fun SocialRepositoryImpl.friendIsus(): List<Int> =
-        (observeFriends().first() as SocialState.Content).value.map(UserProfile::isu)
+        (observeFriends().first() as LoadState.Content).value.map(UserProfile::isu)
 
     private suspend fun SocialRepositoryImpl.requestIsus(): Pair<List<Int>, List<Int>> {
-        val requests = (observeRequests().first() as SocialState.Content<FriendRequests>).value
+        val requests = (observeRequests().first() as LoadState.Content<FriendRequests>).value
         return requests.incoming.map(UserProfile::isu) to requests.outgoing.map(UserProfile::isu)
     }
 

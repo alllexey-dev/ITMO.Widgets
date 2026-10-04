@@ -13,3 +13,7 @@ inline fun <T> appResultOf(mapError: (Exception) -> AppError, block: () -> T): A
 } catch (failure: Exception) {
     AppResult.Failure(mapError(failure))
 }
+
+fun <T> AppResult<T>.valueOrNull(): T? = (this as? AppResult.Success)?.value
+
+fun AppResult<*>.errorOrNull(): AppError? = (this as? AppResult.Failure)?.error

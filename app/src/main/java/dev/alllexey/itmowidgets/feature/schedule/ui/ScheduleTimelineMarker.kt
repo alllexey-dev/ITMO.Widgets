@@ -4,8 +4,8 @@ import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.widget.ImageView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.util.color
-import dev.alllexey.itmowidgets.core.util.dp
+import dev.alllexey.itmowidgets.core.ui.color
+import dev.alllexey.itmowidgets.core.ui.dp
 
 enum class ScheduleTimelineMarker {
     COMPLETED, CURRENT, NEXT, UPCOMING, AUTO_SIGN

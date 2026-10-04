@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.util.color
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookSectionBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookSubjectBinding
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookSummaryBinding

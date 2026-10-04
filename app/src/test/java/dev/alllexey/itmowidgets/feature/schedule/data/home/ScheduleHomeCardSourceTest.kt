@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.testing.FakePendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.home.HomeScheduleSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
@@ -44,7 +43,7 @@ class ScheduleHomeCardSourceTest {
 
     @Test
     fun `pending sport rows follow the schedule preference`() = runTest {
-        pending.values.value = DataState.Success(listOf(booking()))
+        pending.values.value = AppResult.Success(listOf(booking()))
 
         assertEquals(0, (source.observe().first().single() as HomeCard.Schedule).rows.size)
 

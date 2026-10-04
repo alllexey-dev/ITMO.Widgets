@@ -7,9 +7,9 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.ConditionTone
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.fullDateText
 import dev.alllexey.itmowidgets.core.ui.timeRangeText
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemSportFriendsBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus

@@ -25,7 +25,6 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
@@ -430,7 +429,7 @@ class LessonDetailsVisualTest {
         ScheduleLifecycleTestActivity.clearOutcome = {}
         ScheduleLifecycleTestActivity.restrictToRequestedRange = false
         ScheduleLifecycleTestActivity.showPendingSport = MutableStateFlow(false)
-        ScheduleLifecycleTestActivity.pendingSport = MutableStateFlow(DataState.Success(emptyList()))
+        ScheduleLifecycleTestActivity.pendingSport = MutableStateFlow(AppResult.Success(emptyList()))
         ScheduleLifecycleTestActivity.refreshPendingOutcome = {}
         ActivityScenario.launch(ScheduleLifecycleTestActivity::class.java).use { scenario ->
             TestUi.eventually { scenario.onActivity { assertNotNull(it.recycler().adapter?.itemCount?.takeIf { count -> count > 0 }) } }

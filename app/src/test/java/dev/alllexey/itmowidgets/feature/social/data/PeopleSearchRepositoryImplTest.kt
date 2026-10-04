@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 import dev.alllexey.itmowidgets.core.model.RelationshipState
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.model.UserGroup
@@ -12,7 +13,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -111,8 +111,8 @@ class PeopleSearchRepositoryImplTest {
             })
         }
 
-        override fun observeFriends(): Flow<SocialState<List<UserProfile>>> = flowOf(SocialState.Loading)
-        override fun observeRequests(): Flow<SocialState<FriendRequests>> = flowOf(SocialState.Loading)
+        override fun observeFriends(): Flow<LoadState<List<UserProfile>>> = flowOf(LoadState.Loading)
+        override fun observeRequests(): Flow<LoadState<FriendRequests>> = flowOf(LoadState.Loading)
         override fun observeCurrentUser(): Flow<UserSummary?> = flowOf(null)
         override val currentFriends: List<UserProfile>? = null
         override suspend fun refresh() = Unit

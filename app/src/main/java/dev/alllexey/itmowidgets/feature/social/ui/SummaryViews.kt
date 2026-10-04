@@ -16,8 +16,8 @@ import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
 import dev.alllexey.itmowidgets.core.reviews.SummaryTag
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
 import dev.alllexey.itmowidgets.core.ui.bindLevel
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.tone
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemSummaryTagChipBinding
 import dev.alllexey.itmowidgets.databinding.ItemTeacherSummaryBinding
 import dev.alllexey.itmowidgets.databinding.ViewSummaryPointBinding

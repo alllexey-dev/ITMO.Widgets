@@ -3,11 +3,11 @@ package dev.alllexey.itmowidgets.feature.schedule.data.home
 import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.home.HomeScheduleSelector
 import javax.inject.Inject
@@ -52,7 +52,7 @@ class ScheduleHomeCardSource @Inject constructor(
 
     private fun pendingRows(): Flow<List<PendingSportBooking>> =
         preferences.observeSportAutoSignEnabled().flatMapLatest { enabled ->
-            if (enabled) pending.observePendingBookings().map { it.dataOrNull().orEmpty() }
+            if (enabled) pending.observePendingBookings().map { it.valueOrNull().orEmpty() }
             else flowOf(emptyList())
         }
 

@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.core.util
+package dev.alllexey.itmowidgets.core.schedule
 
 import java.time.LocalDate
 

@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
-import dev.alllexey.itmowidgets.core.util.safeEnumOf
+import dev.alllexey.itmowidgets.core.storage.safeEnumOf
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
 import java.io.IOException

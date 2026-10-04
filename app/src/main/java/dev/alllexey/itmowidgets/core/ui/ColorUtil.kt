@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.core.util
+package dev.alllexey.itmowidgets.core.ui
 
 import android.content.Context
 import android.graphics.Color

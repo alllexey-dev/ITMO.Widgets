@@ -7,10 +7,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.presentation.StableOrder
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
-import dev.alllexey.itmowidgets.core.util.StableOrder
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.social.SocialRepository

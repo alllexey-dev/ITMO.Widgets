@@ -2,21 +2,9 @@ package dev.alllexey.itmowidgets.core.social
 
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
-import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import kotlinx.coroutines.flow.Flow
-
-/** A cached backend collection: unknown until the first refresh, then content or a typed failure. */
-sealed interface SocialState<out T> {
-    data object Loading : SocialState<Nothing>
-
-    /** Custom services are switched off, so nothing was requested. */
-    data object Disabled : SocialState<Nothing>
-
-    data class Content<T>(val value: T) : SocialState<T>
-
-    data class Error(val error: AppError) : SocialState<Nothing>
-}
 
 data class FriendRequests(
     val incoming: List<UserProfile>,
@@ -36,11 +24,11 @@ data class FriendRequests(
  */
 interface SocialRepository {
 
-    /** Remains [SocialState.Disabled] after opting out until the next [refresh]. */
-    fun observeFriends(): Flow<SocialState<List<UserProfile>>>
+    /** Remains [LoadState.Disabled] after opting out until the next [refresh]. */
+    fun observeFriends(): Flow<LoadState<List<UserProfile>>>
 
-    /** Remains [SocialState.Disabled] after opting out until the next [refresh]. */
-    fun observeRequests(): Flow<SocialState<FriendRequests>>
+    /** Remains [LoadState.Disabled] after opting out until the next [refresh]. */
+    fun observeRequests(): Flow<LoadState<FriendRequests>>
 
     /** The signed-in user as Backend sees it, or `null` while unknown. */
     fun observeCurrentUser(): Flow<UserSummary?>

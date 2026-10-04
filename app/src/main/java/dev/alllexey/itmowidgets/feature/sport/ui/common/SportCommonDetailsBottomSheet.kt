@@ -20,6 +20,7 @@ import androidx.core.os.bundleOf
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.ConditionTone
@@ -27,7 +28,6 @@ import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
 import dev.alllexey.itmowidgets.core.ui.alignRailIcon
 import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.shareText
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportCommonDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportBookingFriendStatusBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportHistoryFactBinding

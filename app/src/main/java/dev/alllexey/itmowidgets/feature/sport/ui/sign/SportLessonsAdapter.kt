@@ -11,8 +11,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.ThemeColors
-import dev.alllexey.itmowidgets.core.util.color
+import dev.alllexey.itmowidgets.core.ui.ThemeColors
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.databinding.ItemSportLessonBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction

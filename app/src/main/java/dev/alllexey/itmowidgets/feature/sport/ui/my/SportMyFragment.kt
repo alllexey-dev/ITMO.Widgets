@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.sport.ui.my
 import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.os.Bundle
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.feature.sport.ui.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.ui.common.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
@@ -28,7 +29,6 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.CircularProgressBar
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentSportMyBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore

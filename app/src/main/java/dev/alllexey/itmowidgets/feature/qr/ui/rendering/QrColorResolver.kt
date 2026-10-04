@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.feature.qr.ui.rendering
 import android.graphics.Color
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dev.alllexey.itmowidgets.core.util.color
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import javax.inject.Inject
 

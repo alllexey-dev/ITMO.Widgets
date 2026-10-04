@@ -24,8 +24,8 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentMyItmoWebBinding
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 

@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
@@ -13,8 +15,6 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
-import dev.alllexey.itmowidgets.core.util.CustomDataState
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import java.lang.reflect.Proxy
@@ -53,8 +53,8 @@ class SportBookingSessionDataTest {
         val fixture = fixture()
         fixture.repository.refreshSportBookings()
         val content = fixture.repository.observeConfirmedSportBookings().first()
-        assertEquals(listOf(42L), (content as DataState.Success).data.map { it.lessonId })
-        val observed = mutableListOf<DataState<List<SportBooking>>>()
+        assertEquals(listOf(42L), (content as AppResult.Success).value.map { it.lessonId })
+        val observed = mutableListOf<AppResult<List<SportBooking>>>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             fixture.repository.observeConfirmedSportBookings().toList(observed)
         }
@@ -95,7 +95,7 @@ class SportBookingSessionDataTest {
         fixture.repository.refreshSportBookings()
 
         assertEquals(
-            DataState.Error(AppError.Forbidden),
+            AppResult.Failure(AppError.Forbidden),
             fixture.repository.observeConfirmedSportBookings().first()
         )
     }
@@ -109,7 +109,7 @@ class SportBookingSessionDataTest {
         fixture.repository.refreshSportBookings()
 
         assertEquals(
-            DataState.Error(AppError.Unauthorized),
+            AppResult.Failure(AppError.Unauthorized),
             fixture.repository.observeConfirmedSportBookings().first()
         )
     }
@@ -120,7 +120,7 @@ class SportBookingSessionDataTest {
             responseBody = { """{"error_code":0,"result":null}""" }
         }
         fixture.repository.refreshSportBookings()
-        assertTrue(fixture.repository.observeConfirmedSportBookings().first() is DataState.Error)
+        assertTrue(fixture.repository.observeConfirmedSportBookings().first() is AppResult.Failure)
 
         fixture.responseBody = { EMPTY_RESULT }
         fixture.repository.refreshSportBookings()
@@ -138,7 +138,7 @@ class SportBookingSessionDataTest {
                 runBlocking { release.await() }
             }
         }
-        val observed = mutableListOf<DataState<List<SportBooking>>>()
+        val observed = mutableListOf<AppResult<List<SportBooking>>>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             fixture.repository.observeConfirmedSportBookings().toList(observed)
         }
@@ -157,8 +157,8 @@ class SportBookingSessionDataTest {
 
         fixture.responseBody = { BOOKINGS }
         fixture.repository.refreshSportBookings()
-        val refreshed = fixture.repository.observeConfirmedSportBookings().first() as DataState.Success
-        assertEquals(listOf(42L), refreshed.data.map { it.lessonId })
+        val refreshed = fixture.repository.observeConfirmedSportBookings().first() as AppResult.Success
+        assertEquals(listOf(42L), refreshed.value.map { it.lessonId })
         assertEquals(1, fixture.syncCalls.get())
     }
 
@@ -176,7 +176,7 @@ class SportBookingSessionDataTest {
 
     private fun fixture() = Fixture()
 
-    private fun emptyBookings(): DataState<List<SportBooking>> = DataState.Success(emptyList())
+    private fun emptyBookings(): AppResult<List<SportBooking>> = AppResult.Success(emptyList())
 
     private inner class Fixture {
         val settings = ServicesOptInPreferences(InMemoryPreferencesDataStore())
@@ -207,7 +207,7 @@ class SportBookingSessionDataTest {
             check(method.name in setOf("observeSportQueueEntries", "observeFriendsBookings")) {
                 "Unexpected sport-data call: ${method.name}"
             }
-            flowOf(CustomDataState.Disabled)
+            flowOf(LoadState.Disabled)
         } as SportDataRepository
 
         val repository = SportBookingRepositoryImpl(DefaultBackendGate(settings, noDemo()), sportData, myItmo.api, widgetsApi, FixedAcademicTime(), noDemo(), dispatchers)

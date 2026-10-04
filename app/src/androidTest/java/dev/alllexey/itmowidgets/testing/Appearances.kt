@@ -4,7 +4,7 @@ import android.content.res.Configuration
 import android.view.View
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
-import dev.alllexey.itmowidgets.core.util.color
+import dev.alllexey.itmowidgets.core.ui.color
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 

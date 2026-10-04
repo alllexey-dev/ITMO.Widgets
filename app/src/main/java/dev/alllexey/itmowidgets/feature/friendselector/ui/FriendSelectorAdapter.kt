@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.ui.bindSelectionAccessibility
-import dev.alllexey.itmowidgets.core.util.color
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.databinding.ItemFriendSelectorBinding
 import dev.alllexey.itmowidgets.core.ui.userDisplayName
 

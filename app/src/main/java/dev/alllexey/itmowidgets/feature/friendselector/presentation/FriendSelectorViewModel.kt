@@ -3,11 +3,12 @@ package dev.alllexey.itmowidgets.feature.friendselector.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.alllexey.itmowidgets.core.friend.FriendListState
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import kotlinx.coroutines.FlowPreview
@@ -163,30 +164,30 @@ class FriendSelectorViewModel @Inject constructor(
     }
 
     private suspend fun toUiState(
-        state: FriendListState,
+        state: LoadState<List<UserSummary>>,
         currentUser: UserSummary?,
         isRefreshing: Boolean,
         scope: FriendSelectorScope,
         people: PeopleResults
     ): FriendSelectorUiState {
-        val friends = (state as? FriendListState.Content)?.friends
+        val friends = state.valueOrNull()
         // Keep an existing list on screen while reloading; otherwise show progress.
         if (isRefreshing && friends.isNullOrEmpty()) {
             return FriendSelectorUiState.Loading
         }
 
         return when (state) {
-            FriendListState.Loading -> FriendSelectorUiState.Loading
-            FriendListState.Disabled -> FriendSelectorUiState.Disabled
-            is FriendListState.Content -> {
-                if (state.friends.isEmpty() && scope == FriendSelectorScope.FRIENDS) {
+            LoadState.Loading -> FriendSelectorUiState.Loading
+            LoadState.Disabled -> FriendSelectorUiState.Disabled
+            is LoadState.Content -> {
+                if (state.value.isEmpty() && scope == FriendSelectorScope.FRIENDS) {
                     FriendSelectorUiState.Empty
                 } else {
-                    val friendsByIsu = state.friends.associateBy(UserSummary::isu)
+                    val friendsByIsu = state.value.associateBy(UserSummary::isu)
                     val recentFriends = history.getRecentIsu()
                         .mapNotNull(friendsByIsu::get)
                     FriendSelectorUiState.Content(
-                        friends = state.friends,
+                        friends = state.value,
                         recentFriends = recentFriends,
                         currentUser = currentUser,
                         scope = scope,
@@ -194,7 +195,7 @@ class FriendSelectorViewModel @Inject constructor(
                     )
                 }
             }
-            is FriendListState.Error -> FriendSelectorUiState.Error(state.error)
+            is LoadState.Error -> FriendSelectorUiState.Error(state.error)
         }
     }
 

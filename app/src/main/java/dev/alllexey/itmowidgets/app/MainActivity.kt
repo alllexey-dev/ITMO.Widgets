@@ -28,6 +28,7 @@ import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
@@ -50,7 +51,6 @@ import dev.alllexey.itmowidgets.feature.update.ui.toScreenArguments
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.dataOrNull
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.flow.first
@@ -240,7 +240,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private suspend fun sportBookingsSnapshot(): List<SportBooking>? {
         sportMy.ensureDataLoaded()
         val state = withTimeoutOrNull(BOOKINGS_WAIT_MILLIS) { sportBookings.observeSportBookings().first() }
-        return state?.dataOrNull()
+        return state?.valueOrNull()
     }
 
     private suspend fun findSportBooking(lessonId: Long): SportBooking? =

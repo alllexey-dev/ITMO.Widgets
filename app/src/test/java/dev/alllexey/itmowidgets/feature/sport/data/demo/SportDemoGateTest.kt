@@ -5,20 +5,18 @@ import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoSportSlots
-import dev.alllexey.itmowidgets.core.friend.FriendListState
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.core.testing.unreachableMyItmo
-import dev.alllexey.itmowidgets.core.util.CustomDataState
-import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
@@ -62,7 +60,7 @@ class SportDemoGateTest {
         data.refreshSportQueueEntries()
         data.refreshSportQueues()
         data.refreshFriendsBookings()
-        val lessons = schedule.observeSportSchedule().first().dataOrNull().orEmpty()
+        val lessons = schedule.observeSportSchedule().first().valueOrNull().orEmpty()
 
         assertTrue(lessons.any { it.signed && it.sectionName.raw == DemoSportSlots.ANNA_WEEKLY.section })
         assertTrue(lessons.any { it.isLessonReal && it.available == 0 && it.signEntry is SportFreeSignEntry })
@@ -80,12 +78,12 @@ class SportDemoGateTest {
         data.refreshSportAttempts()
         data.refreshSportAutoSignLimits()
 
-        val confirmed = (bookings.observeConfirmedSportBookings().first() as DataState.Success).data
+        val confirmed = (bookings.observeConfirmedSportBookings().first() as AppResult.Success).value
         assertTrue(confirmed.isNotEmpty() && confirmed.all { it.signed })
-        val points = (data.observeSportScore().first() as DataState.Success).data
+        val points = (data.observeSportScore().first() as AppResult.Success).value
         assertTrue(points.total in 1 until 100)
-        assertTrue(data.observeSportAttempts().first() is DataState.Success)
-        assertTrue(data.observeSportAutoSignLimits().first() is CustomDataState.Success)
+        assertTrue(data.observeSportAttempts().first() is AppResult.Success)
+        assertTrue(data.observeSportAutoSignLimits().first() is LoadState.Content)
         val periods = (score.getScorePeriods() as AppResult.Success).value
         assertEquals(1, periods.count { it.current })
         assertEquals(points.summary, (score.getScoreSummary(periods.first { it.current }.id) as AppResult.Success).value)
@@ -117,7 +115,7 @@ class SportDemoGateTest {
     }
 
     private object NoFriends : FriendRepository {
-        override fun observeFriendList(): Flow<FriendListState> = flowOf(FriendListState.Disabled)
+        override fun observeFriendList(): Flow<LoadState<List<UserSummary>>> = flowOf(LoadState.Disabled)
         override fun observeCurrentUser(): Flow<UserSummary?> = flowOf(null)
         override suspend fun refreshFriendList() = Unit
         override val currentFriends: List<UserSummary>? = null

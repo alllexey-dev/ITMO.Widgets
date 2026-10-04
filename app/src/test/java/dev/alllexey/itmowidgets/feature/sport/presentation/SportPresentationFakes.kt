@@ -1,11 +1,9 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation
 
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
-import dev.alllexey.itmowidgets.core.util.CustomDataState
-import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.core.util.MergedDataState
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
@@ -32,13 +30,13 @@ import kotlinx.coroutines.flow.flowOf
 
 /** Repositories whose refreshes can be held open, so a refresh is observable mid-flight. */
 internal class FakeSportBookingRepository : SportBookingRepository {
-    val confirmed = MutableSharedFlow<DataState<List<SportBooking>>>(replay = 1)
-    val merged = MutableSharedFlow<MergedDataState<List<SportBooking>>>(replay = 1)
+    val confirmed = MutableSharedFlow<AppResult<List<SportBooking>>>(replay = 1)
+    val merged = MutableSharedFlow<LoadState<List<SportBooking>>>(replay = 1)
     var gate: CompletableDeferred<Unit> = CompletableDeferred(Unit)
     var refreshCount = 0
 
-    override fun observeConfirmedSportBookings(): Flow<DataState<List<SportBooking>>> = confirmed
-    override fun observeSportBookings(): Flow<MergedDataState<List<SportBooking>>> = merged
+    override fun observeConfirmedSportBookings(): Flow<AppResult<List<SportBooking>>> = confirmed
+    override fun observeSportBookings(): Flow<LoadState<List<SportBooking>>> = merged
     override suspend fun refreshSportBookings() {
         refreshCount += 1
         gate.await()
@@ -46,47 +44,47 @@ internal class FakeSportBookingRepository : SportBookingRepository {
 }
 
 internal class FakeSportDataRepository : SportDataRepository {
-    val score = MutableSharedFlow<DataState<SportScore>>(replay = 1)
-    val attempts = MutableSharedFlow<DataState<SportAttempts>>(replay = 1)
+    val score = MutableSharedFlow<AppResult<SportScore>>(replay = 1)
+    val attempts = MutableSharedFlow<AppResult<SportAttempts>>(replay = 1)
     var gate: CompletableDeferred<Unit> = CompletableDeferred(Unit)
     var limitsRefreshCount = 0
     var entriesRefreshCount = 0
 
-    override fun observeSportScore(): Flow<DataState<SportScore>> = score
+    override fun observeSportScore(): Flow<AppResult<SportScore>> = score
     override suspend fun refreshSportScore() = gate.await()
-    override fun observeSportAttempts(): Flow<DataState<SportAttempts>> = attempts
+    override fun observeSportAttempts(): Flow<AppResult<SportAttempts>> = attempts
     override suspend fun refreshSportAttempts() = gate.await()
-    override fun observeSportAutoSignLimits(): Flow<CustomDataState<SportAutoSignLimits>> =
-        flowOf(CustomDataState.Success(SportAutoSignLimits(3, 2, OffsetDateTime.parse("2026-08-01T00:00:00+03:00"))))
+    override fun observeSportAutoSignLimits(): Flow<LoadState<SportAutoSignLimits>> =
+        flowOf(LoadState.Content(SportAutoSignLimits(3, 2, OffsetDateTime.parse("2026-08-01T00:00:00+03:00"))))
     override suspend fun refreshSportAutoSignLimits() {
         limitsRefreshCount += 1
     }
-    override fun observeSportQueueEntries(): Flow<CustomDataState<List<SportQueueEntry>>> = flowOf(CustomDataState.Success(emptyList()))
+    override fun observeSportQueueEntries(): Flow<LoadState<List<SportQueueEntry>>> = flowOf(LoadState.Content(emptyList()))
     override suspend fun refreshSportQueueEntries() {
         entriesRefreshCount += 1
     }
-    override fun observeSportQueues(): Flow<CustomDataState<List<SportQueue>>> = flowOf(CustomDataState.Success(emptyList()))
+    override fun observeSportQueues(): Flow<LoadState<List<SportQueue>>> = flowOf(LoadState.Content(emptyList()))
     override suspend fun refreshSportQueues() = Unit
-    override fun observeFriendsBookings(): Flow<CustomDataState<List<FriendSportBooking>>> = flowOf(CustomDataState.Success(emptyList()))
+    override fun observeFriendsBookings(): Flow<LoadState<List<FriendSportBooking>>> = flowOf(LoadState.Content(emptyList()))
     override suspend fun refreshFriendsBookings() = Unit
 }
 
 internal class FakeSportScheduleRepository : SportScheduleRepository {
-    val schedule = MutableSharedFlow<MergedDataState<List<SportLesson>>>(replay = 1)
-    val filters = MutableSharedFlow<DataState<SportFilterCatalog>>(replay = 1)
-    val timeSlots = MutableSharedFlow<DataState<List<SportTimeSlot>>>(replay = 1)
+    val schedule = MutableSharedFlow<LoadState<List<SportLesson>>>(replay = 1)
+    val filters = MutableSharedFlow<AppResult<SportFilterCatalog>>(replay = 1)
+    val timeSlots = MutableSharedFlow<AppResult<List<SportTimeSlot>>>(replay = 1)
     var gate: CompletableDeferred<Unit> = CompletableDeferred(Unit)
     var scheduleRefreshCount = 0
 
-    override fun observeSportSchedule(): Flow<MergedDataState<List<SportLesson>>> = schedule
+    override fun observeSportSchedule(): Flow<LoadState<List<SportLesson>>> = schedule
     override suspend fun refreshSportSchedule() {
         scheduleRefreshCount += 1
         gate.await()
     }
-    override fun observeSportCatalog(): Flow<DataState<List<SportLesson>>> = flowOf(DataState.Success(emptyList()))
-    override fun observeSportFilters(): Flow<DataState<SportFilterCatalog>> = filters
+    override fun observeSportCatalog(): Flow<AppResult<List<SportLesson>>> = flowOf(AppResult.Success(emptyList()))
+    override fun observeSportFilters(): Flow<AppResult<SportFilterCatalog>> = filters
     override suspend fun refreshSportFilters() = Unit
-    override fun observeSportTimeSlots(): Flow<DataState<List<SportTimeSlot>>> = timeSlots
+    override fun observeSportTimeSlots(): Flow<AppResult<List<SportTimeSlot>>> = timeSlots
     override suspend fun refreshSportTimeSlots() = Unit
 }
 
