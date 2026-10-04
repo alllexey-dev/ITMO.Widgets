@@ -29,7 +29,7 @@ feature data move; T14 (shell files → L17); T15 (theme files, about ¼ day).
 | MyItmoApi pin file | L04 creates → L01 bumps |
 | `styles.xml`, `themes.xml`, `AndroidManifest.xml`, `ItmoWidgetsApplication.kt`, `scripts/strings-frozen-keys.txt` | L05 |
 | `strings_<file>.xml` | The lane of the module `scripts/strings-owners.py --where <id or path>` names |
-| `ArchitectureTest.kt` | L05 (one line) → L06 |
+| Konsist suite: `ArchitectureScope.kt` and `*RulesTest.kt` in the architecture test package | L05 (one line) → L06 |
 | `MainActivity.kt`, `core/navigation/`, debug hosts | L06 |
 | `di/` | L07 |
 | Navigation graphs | L17 |
