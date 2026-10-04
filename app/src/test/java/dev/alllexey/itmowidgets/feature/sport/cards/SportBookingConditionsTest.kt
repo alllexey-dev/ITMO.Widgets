@@ -38,7 +38,7 @@ class SportBookingConditionsTest {
                 listOf(true, false).forEach { real ->
                     val result = lesson.copy(isLessonReal = real, available = 0, canSignIn = false,
                         unavailableReasons = reasons).bookingConditions().evaluate(now)
-                    assertEquals(reason.shortDescription, SportBookingAction.NONE, result.action)
+                    assertEquals(reason::class.simpleName, SportBookingAction.NONE, result.action)
                     assertFalse(result.manual)
                     assertFalse(result.mayWait)
                     assertEquals(1, result.restrictions.size)

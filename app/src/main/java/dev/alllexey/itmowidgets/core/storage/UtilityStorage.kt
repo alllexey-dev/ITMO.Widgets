@@ -39,12 +39,6 @@ class UtilityStorage(
 
     suspend fun getFirebaseToken(): String? = read()[FIREBASE_TOKEN]
 
-    suspend fun getLastUpdateTimestamp(): Long =
-        read()[LAST_UPDATE_TIMESTAMP] ?: 0L
-
-    suspend fun getLessonWidgetStyleChanged(): Boolean =
-        read()[LESSON_WIDGET_STYLE_CHANGED] ?: true
-
     suspend fun getVersionNotificationTimestamp(): Long =
         read()[VERSION_NOTIFICATION_TIMESTAMP] ?: 0L
 
@@ -62,14 +56,6 @@ class UtilityStorage(
 
     suspend fun setFirebaseToken(token: String?) {
         updateNullable(FIREBASE_TOKEN, token)
-    }
-
-    suspend fun setLastUpdateTimestamp(timestamp: Long) {
-        write(LAST_UPDATE_TIMESTAMP, timestamp)
-    }
-
-    suspend fun setLessonWidgetStyleChanged(changed: Boolean) {
-        write(LESSON_WIDGET_STYLE_CHANGED, changed)
     }
 
     suspend fun setSkippedVersion(version: String) {

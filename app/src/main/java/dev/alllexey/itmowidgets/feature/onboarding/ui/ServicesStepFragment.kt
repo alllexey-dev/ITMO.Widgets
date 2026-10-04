@@ -15,6 +15,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.ProjectLinks
 import dev.alllexey.itmowidgets.databinding.FragmentOnboardingServicesBinding
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingUiState
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
@@ -73,9 +74,7 @@ class ServicesStepFragment : Fragment() {
 
     private fun openSourceCode() {
         try {
-            startActivity(
-                Intent(Intent.ACTION_VIEW, getString(R.string.onboarding_services_source_url).toUri())
-            )
+            startActivity(Intent(Intent.ACTION_VIEW, ProjectLinks.SERVICES_SOURCE_URL.toUri()))
         } catch (_: ActivityNotFoundException) {
             Snackbar.make(binding.root, R.string.link_open_failed, Snackbar.LENGTH_LONG).show()
         }

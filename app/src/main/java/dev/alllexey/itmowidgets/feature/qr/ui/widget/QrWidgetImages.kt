@@ -24,9 +24,6 @@ class QrWidgetImages @Inject constructor(
 
     suspend fun placeholder(): Bitmap = toolkit.generateEmptyQrBitmap().forWidget()
 
-    /** Readable against [placeholder]; the widget has no theme of its own. */
-    suspend fun messageColor(): Int = toolkit.colorResolver.getQrColors().second
-
     private fun Bitmap.forWidget(): Bitmap {
         if (width == WIDGET_SIZE_PX && height == WIDGET_SIZE_PX) return this
         return scale(WIDGET_SIZE_PX, WIDGET_SIZE_PX)

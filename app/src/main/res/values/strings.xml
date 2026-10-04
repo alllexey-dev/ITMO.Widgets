@@ -14,7 +14,6 @@
     <string name="schedule_widget_open_app_hint">Нажмите, чтобы открыть расписание</string>
     <string name="schedule_widget_status_now">Сейчас</string>
     <string name="schedule_widget_status_next">Далее</string>
-    <string name="schedule_widget_last_lesson">последняя пара на сегодня</string>
     <string name="schedule_widget_last_lesson_compact">последняя</string>
     <string name="schedule_widget_more_lessons_compact">ещё %1$d</string>
     <string name="schedule_widget_supporting_text">%1$s · %2$s</string>
@@ -23,22 +22,14 @@
     <string name="schedule_widget_day_header">%1$s · %2$s</string>
     <string name="schedule_widget_end_today">На сегодня всё</string>
     <string name="schedule_widget_end_tomorrow">На завтра всё</string>
-    <plurals name="schedule_widget_more_lessons">
-        <item quantity="one">ещё %1$d пара</item>
-        <item quantity="few">ещё %1$d пары</item>
-        <item quantity="many">ещё %1$d пар</item>
-        <item quantity="other">ещё %1$d пары</item>
-    </plurals>
     <string name="title_me">Профиль</string>
     <string name="title_recordbook">Зачётка</string>
     <string name="title_home">Главная</string>
     <string name="title_qr">Пропуск</string>
     <string name="title_schedule">Расписание</string>
     <string name="title_sport">Спорт</string>
-    <string name="title_settings">Настройки</string>
     <string name="title_sport_my">Мой спорт</string>
     <string name="title_sport_sign">Запись</string>
-    <string name="title_sport_notifications">Уведомления</string>
 
     <string name="common_retry">Повторить</string>
     <string name="common_reset">Сбросить</string>
@@ -75,7 +66,7 @@
         <item quantity="one">Ещё %1$d балл</item>
         <item quantity="few">Ещё %1$d балла</item>
         <item quantity="many">Ещё %1$d баллов</item>
-        <item quantity="other">Ещё %1$d баллов</item>
+        <item quantity="other">Ещё %1$d балла</item>
     </plurals>
     <string name="sport_bookings_empty_title">Записей пока нет</string>
     <string name="sport_bookings_empty_description">Занятия можно выбрать в расписании спорта.</string>
@@ -115,8 +106,8 @@
     <string name="schedule_friends_action">Расписание друзей</string>
     <string name="schedule_empty_title">Пар нет</string>
     <string name="schedule_empty_description">На этот период расписание пустое.</string>
+    <string name="schedule_day_empty">В этот день нет пар</string>
     <string name="schedule_scroll_to_top">Прокрутить к началу</string>
-    <string name="schedule_date_format">%1$d %2$s</string>
     <string name="schedule_no_lessons">Нет пар</string>
     <string name="schedule_lesson_type_lecture">Лекция</string>
     <string name="schedule_lesson_type_lab">Лабораторная</string>
@@ -178,13 +169,11 @@
     <string name="schedule_change_value_none">—</string>
 
     <string name="friend_picker_title">Чьё расписание?</string>
-    <string name="friend_picker_subtitle">Выберите друга — расписание откроется вместо вашего</string>
     <string name="friend_picker_recent">Недавние</string>
     <string name="friend_picker_search_hint">Имя, ИСУ или группа</string>
     <string name="friend_picker_my_schedule_short">Моё</string>
     <string name="friend_picker_apply_my">Показать моё расписание</string>
     <string name="friend_picker_apply_friend">Показать расписание: %1$s</string>
-    <string name="friend_picker_schedule_open">Расписание открыто</string>
     <string name="friend_picker_schedule_hidden">Расписание скрыто</string>
     <string name="friend_picker_empty_title">Ничего не нашлось</string>
     <string name="friend_picker_disabled">Нет подключения к ITMO.Widgets</string>
@@ -239,7 +228,6 @@
     <string name="me_group_app">Приложение</string>
     <string name="me_unknown_user">Профиль не загрузился</string>
     <string name="me_isu">ИСУ %1$d</string>
-    <string name="me_group_account">Аккаунт</string>
     <string name="me_sign_out">Выйти</string>
     <string name="me_sign_out_confirm_title">Выйти из аккаунта?</string>
     <string name="me_sign_out_confirm_message">С устройства удалятся данные аккаунта и содержимое виджетов. Настройки приложения останутся.</string>
@@ -269,7 +257,6 @@
     <string name="settings_custom_services_consent_message">Сервер один раз проверит токен ITMO.ID, чтобы убедиться, что это вы. Токен не сохраняется.</string>
     <string name="settings_custom_services_enable">Подключиться</string>
     <string name="settings_notifications_title">Уведомления</string>
-    <string name="settings_group_privacy">Друзья и приватность</string>
     <string name="settings_schedule_sharing_title">Кто видит моё расписание</string>
     <string name="settings_sport_sharing_title">Кто видит мой спорт</string>
     <string name="settings_privacy_all">Все</string>
@@ -309,7 +296,6 @@
     <string name="settings_group_sport">Спорт</string>
     <string name="settings_sport_teacher_filter_title">Показывать фильтр по преподавателю</string>
     <string name="settings_sport_time_filter_title">Показывать фильтр по времени</string>
-    <string name="settings_group_about">О приложении</string>
     <string name="settings_group_schedule">Расписание</string>
     <string name="settings_group_home">Главный экран</string>
     <string name="settings_home_card_schedule_title">Расписание на сегодня</string>
@@ -368,6 +354,7 @@
     <string name="sport_unsign_success">Запись отменена</string>
     <string name="sport_community_services_disabled">Нет подключения к ITMO.Widgets. Подключиться можно в настройках.</string>
     <string name="sport_auto_sign_title">Автозапись</string>
+    <string name="sport_free_sign_switch">Записать даже если до начала занятия остался всего час</string>
     <string name="sport_auto_sign_existing_entry">Автозапись на это занятие уже есть. Место в очереди: %1$d из %2$d</string>
     <string name="sport_auto_sign_free_description">Можно встать в очередь.\n\nПриложение попробует записать вас, когда освободится место.</string>
     <string name="sport_auto_sign_future_description">Можно встать в очередь.\n\nПриложение попробует записать вас, когда на занятие откроется запись.</string>
@@ -386,8 +373,6 @@
     <string name="sport_cancel_booking_question">Отменить запись на это занятие?</string>
     <string name="sport_cancel_booking_action">Отменить запись</string>
     <string name="sport_lesson_sign_out">Отписаться</string>
-    <string name="sport_auto_sign_position">Автозапись (%1$d / %2$d)</string>
-    <string name="sport_auto_sign_queue_size">Автозапись (%1$d)</string>
     <string name="sport_lesson_unavailable">Недоступно</string>
 
 
@@ -575,9 +560,6 @@
     <string name="me_telegram">Telegram</string>
     <string name="me_telegram_accessibility">Открыть канал @itmowidgets в Telegram</string>
     <string name="link_open_failed">Нет приложения, чтобы открыть ссылку</string>
-    <string name="project_github_url" translatable="false">https://github.com/alllexey-dev/ITMO.Widgets</string>
-    <string name="project_telegram_url" translatable="false">https://t.me/itmowidgets</string>
-    <string name="project_telegram_deeplink" translatable="false">tg://resolve?domain=itmowidgets</string>
     <string name="me_group_format">%1$s • %2$d курс • %3$s</string>
 
     <!-- Friends screen -->
@@ -655,7 +637,6 @@
     <string name="friend_picker_people_idle_description">Показываем только пользователей ITMO.Widgets</string>
     <string name="friend_picker_people_empty_title">Никого не нашли</string>
     <string name="friend_picker_people_empty_description">Среди пользователей ITMO.Widgets нет таких</string>
-    <string name="friend_picker_open_profile">Открыть профиль</string>
     <string name="notification_channel_sport">Спорт: автозапись</string>
     <string name="notification_channel_friends">Друзья</string>
     <string name="notification_channel_schedule_changes">Изменения расписания</string>
@@ -702,10 +683,10 @@
     <string name="background_work_allow">Разрешить</string>
     <string name="background_work_later">Не сейчас</string>
     <plurals name="schedule_changes_notification_title">
-        <item quantity="one">Расписание изменилось: %d пара</item>
-        <item quantity="few">Расписание изменилось: %d пары</item>
-        <item quantity="many">Расписание изменилось: %d пар</item>
-        <item quantity="other">Расписание изменилось: %d пары</item>
+        <item quantity="one">Расписание изменилось: %1$d пара</item>
+        <item quantity="few">Расписание изменилось: %1$d пары</item>
+        <item quantity="many">Расписание изменилось: %1$d пар</item>
+        <item quantity="other">Расписание изменилось: %1$d пары</item>
     </plurals>
     <string name="notification_sport_success">Вы записаны на спорт</string>
     <string name="notification_sport_failure">Не удалось записать на спорт</string>
@@ -815,7 +796,6 @@
     <string name="onboarding_services_stored_device">Токен уведомлений этого устройства</string>
     <string name="onboarding_services_stored_footer">Токен ITMO.ID сервер проверяет и не сохраняет. Всё удаляется вместе с аккаунтом.</string>
     <string name="onboarding_services_source_link">Код сервера</string>
-    <string name="onboarding_services_source_url" translatable="false">https://github.com/alllexey-dev/itmo-widgets-backend</string>
 
     <string name="onboarding_notifications_title">Уведомления</string>
     <string name="onboarding_notifications_subtitle">Заявки в друзья и результат автозаписи на спорт.</string>
@@ -923,19 +903,19 @@
     <string name="web_login_browser_unknown">Браузер</string>
     <string name="web_login_browser_on_platform">%1$s на %2$s</string>
     <string name="web_login_browser_yandex">Яндекс Браузер</string>
-    <string name="web_login_browser_edge" translatable="false">Edge</string>
-    <string name="web_login_browser_opera" translatable="false">Opera</string>
-    <string name="web_login_browser_samsung" translatable="false">Samsung Internet</string>
-    <string name="web_login_browser_firefox" translatable="false">Firefox</string>
-    <string name="web_login_browser_chrome" translatable="false">Chrome</string>
-    <string name="web_login_browser_safari" translatable="false">Safari</string>
-    <string name="web_login_platform_windows" translatable="false">Windows</string>
-    <string name="web_login_platform_macos" translatable="false">macOS</string>
-    <string name="web_login_platform_linux" translatable="false">Linux</string>
-    <string name="web_login_platform_chrome_os" translatable="false">ChromeOS</string>
-    <string name="web_login_platform_android" translatable="false">Android</string>
-    <string name="web_login_platform_ios" translatable="false">iOS</string>
-    <string name="web_login_platform_ipados" translatable="false">iPadOS</string>
+    <string name="web_login_browser_edge">Edge</string>
+    <string name="web_login_browser_opera">Opera</string>
+    <string name="web_login_browser_samsung">Samsung Internet</string>
+    <string name="web_login_browser_firefox">Firefox</string>
+    <string name="web_login_browser_chrome">Chrome</string>
+    <string name="web_login_browser_safari">Safari</string>
+    <string name="web_login_platform_windows">Windows</string>
+    <string name="web_login_platform_macos">macOS</string>
+    <string name="web_login_platform_linux">Linux</string>
+    <string name="web_login_platform_chrome_os">ChromeOS</string>
+    <string name="web_login_platform_android">Android</string>
+    <string name="web_login_platform_ios">iOS</string>
+    <string name="web_login_platform_ipados">iPadOS</string>
     <string name="person_course">%1$d курс</string>
     <string name="person_fact_position">Должность</string>
     <string name="person_fact_room">Аудитория</string>
