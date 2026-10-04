@@ -1,0 +1,39 @@
+<resources>
+    <string name="debug_schedule_changes_check">Проверить изменения расписания</string>
+    <string name="debug_bars_session_probe">Проверить продление БАРС</string>
+    <string name="debug_marks_check">Проверить оценки</string>
+    <string name="debug_academic_time_title">Тестовое академическое время</string>
+    <string name="debug_academic_time_description">Подменяет дату только для расписания и спорта. Авторизация, кэш и QR живут по системному времени.</string>
+    <string name="debug_academic_time_system">Системная дата</string>
+    <string name="debug_academic_time_value">Тестовая дата: %1$s</string>
+    <string name="debug_academic_time_select">Выбрать дату</string>
+    <string name="debug_academic_time_reset">Сбросить</string>
+
+    <string name="debug_sport_score_title">Тестовые спортивные баллы</string>
+    <string name="debug_sport_score_description">Подменяет баллы за посещения и бонусы на экране «Мой спорт».</string>
+    <string name="debug_sport_score_server">Данные сервера</string>
+    <string name="debug_sport_score_value">Тестовые баллы: %1$d за посещения + %2$d бонусных</string>
+    <string name="debug_sport_score_configure">Настроить</string>
+    <string name="debug_sport_score_dialog_title">Подменить спортивные баллы</string>
+    <string name="debug_sport_score_attendance_hint">Баллы за посещения</string>
+    <string name="debug_sport_score_bonus_hint">Бонусные баллы</string>
+    <string name="debug_sport_score_invalid_value">Нужно целое число от 0 до 9999</string>
+    <string name="debug_sport_lessons_title">Шаблонные занятия спорта</string>
+    <string name="debug_sport_lessons_description">Подменяет расписание спорта тестовыми занятиями на ближайшие дни.</string>
+    <string name="debug_custom_services_title">Подключение к ITMO.Widgets</string>
+    <string name="debug_custom_services_description">Подключает друзей, расписание друзей и автозапись на спорт через сервер приложения. Токен My ITMO уходит на сервер только для проверки личности и там не сохраняется. Пока только в debug-сборке.</string>
+
+    <string name="debug_refresh_token_title">Тестовый вход по Refresh token</string>
+    <string name="debug_refresh_token_description">Сохраняет токен в защищённом хранилище, проверяет его через My ITMO и чистит пользовательские кэши. Только в debug-сборке.</string>
+    <string name="debug_refresh_token_configured">Refresh token настроен</string>
+    <string name="debug_refresh_token_not_configured">Refresh token не настроен</string>
+    <string name="debug_refresh_token_add">Добавить</string>
+    <string name="debug_refresh_token_replace">Заменить</string>
+    <string name="debug_refresh_token_checking">Проверяем…</string>
+    <string name="debug_refresh_token_dialog_title">Ввести Refresh token</string>
+    <string name="debug_refresh_token_hint">Refresh token</string>
+    <string name="debug_refresh_token_save">Проверить и сохранить</string>
+    <string name="debug_refresh_token_required">Вставьте Refresh token</string>
+    <string name="debug_refresh_token_updated">Токен проверен и сохранён</string>
+    <string name="debug_refresh_token_failed">Токен не подошёл: %1$s</string>
+</resources>

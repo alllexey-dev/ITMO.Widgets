@@ -1,0 +1,42 @@
+<resources>
+    <!-- First-run flow -->
+    <string name="onboarding_skip">Пропустить</string>
+    <string name="onboarding_next">Далее</string>
+    <string name="onboarding_done">Готово</string>
+    <string name="onboarding_step_progress">Шаг %1$d из %2$d</string>
+
+    <string name="onboarding_compact_widget_title">Компактный виджет расписания</string>
+    <string name="onboarding_full_widget_title">Полный виджет расписания</string>
+    <string name="onboarding_qr_widget_title">Виджет QR-пропуска</string>
+    <string name="onboarding_widget_add">Добавить на главный экран</string>
+    <string name="onboarding_widget_added">Добавлен на главный экран</string>
+    <string name="onboarding_spoiler_image_replace">Выбрать другое</string>
+    <string name="onboarding_spoiler_image_reset">Вернуть стандартное</string>
+    <string name="onboarding_widget_manual_hint">Этот лаунчер не даёт добавить виджет отсюда. Добавьте его через меню виджетов на главном экране.</string>
+
+    <string name="onboarding_services_title">Подключение к ITMO.Widgets</string>
+    <string name="onboarding_services_subtitle">Друзья, автозапись на спорт и уведомления работают через сервер проекта.</string>
+    <string name="onboarding_services_toggle_title">Подключиться</string>
+    <string name="onboarding_services_toggle_description">Расписание, зачётка и QR работают и без подключения.</string>
+    <string name="onboarding_services_privacy_default">Расписание и спорт по умолчанию видят только друзья. Меняется в настройках.</string>
+    <string name="onboarding_services_gives_title">Что даёт</string>
+    <string name="onboarding_services_feature_friends">Друзья и их расписание</string>
+    <string name="onboarding_services_feature_sport">Автозапись на спорт</string>
+    <string name="onboarding_services_feature_notifications">Уведомления о заявках и записях</string>
+    <string name="onboarding_services_stored_title">Что хранит сервер</string>
+    <string name="onboarding_services_stored_identity">ИСУ, имя и фото из ITMO.ID</string>
+    <string name="onboarding_services_stored_group">Учебная группа</string>
+    <string name="onboarding_services_stored_schedule">Расписание на ближайшие недели — чтобы его видели друзья</string>
+    <string name="onboarding_services_stored_sport">Записи и очереди на спорт</string>
+    <string name="onboarding_services_stored_device">Токен уведомлений этого устройства</string>
+    <string name="onboarding_services_stored_footer">Токен ITMO.ID сервер проверяет и не сохраняет. Всё удаляется вместе с аккаунтом.</string>
+    <string name="onboarding_services_source_link">Код сервера</string>
+
+    <string name="onboarding_notifications_title">Уведомления</string>
+    <string name="onboarding_notifications_subtitle">Заявки в друзья и результат автозаписи на спорт.</string>
+    <string name="onboarding_notifications_on">Разрешены</string>
+    <string name="onboarding_notifications_off">Выключены</string>
+    <string name="onboarding_notifications_allow">Разрешить</string>
+    <string name="onboarding_notifications_open_settings">Открыть настройки</string>
+    <string name="onboarding_notifications_configure">Настроить в Android</string>
+</resources>

@@ -1,0 +1,29 @@
+<resources>
+    <string name="me_unknown_user">Профиль не загрузился</string>
+    <string name="me_isu">ИСУ %1$d</string>
+    <string name="me_sign_out">Выйти</string>
+    <string name="me_sign_out_confirm_title">Выйти из аккаунта?</string>
+    <string name="me_sign_out_confirm_message">С устройства удалятся данные аккаунта и содержимое виджетов. Настройки приложения останутся.</string>
+
+    <!-- Me: social and profile rows -->
+    <string name="me_group_social">Друзья</string>
+    <string name="me_friends_title">Друзья</string>
+    <string name="me_friends_count">%1$d</string>
+    <string name="me_friends_none">Пока никого</string>
+    <string name="me_friends_loading">Загружаем…</string>
+    <string name="me_friends_error">Не загрузились</string>
+    <string name="me_requests_badge">%1$d</string>
+    <string name="me_requests_badge_accessibility">Входящих заявок: %1$d</string>
+    <string name="me_find_people_title">Найти людей</string>
+    <string name="me_find_people_description">По имени в My ITMO</string>
+    <string name="me_services_disabled_title">Нет подключения к ITMO.Widgets</string>
+    <string name="me_services_disabled_description">Друзья, заявки и приватность появятся после подключения</string>
+    <string name="me_privacy_title">Приватность</string>
+    <string name="me_privacy_description">Кто видит расписание, спорт и друзей</string>
+    <string name="me_github">GitHub</string>
+    <string name="me_github_accessibility">Открыть проект на GitHub</string>
+    <string name="me_telegram">Telegram</string>
+    <string name="me_telegram_accessibility">Открыть канал @itmowidgets в Telegram</string>
+    <string name="me_group_format">%1$s • %2$d курс • %3$s</string>
+    <string name="me_web_login_title">Вход на сайт</string>
+</resources>

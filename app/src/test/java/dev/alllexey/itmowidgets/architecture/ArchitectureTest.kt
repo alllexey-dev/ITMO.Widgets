@@ -244,7 +244,7 @@ class ArchitectureTest {
         productionFiles.assertFalse { file ->
             "latest_release_url" in file.text || GITHUB_RELEASES in file.text
         }
-        org.junit.Assert.assertFalse(GITHUB_RELEASES in File("src/main/res/values/strings.xml").readText())
+        org.junit.Assert.assertFalse(File("src/main/res/values").listFiles { file -> file.name.matches(Regex("strings.*\\.xml")) }!!.any { GITHUB_RELEASES in it.readText() })
     }
 
     private companion object {
