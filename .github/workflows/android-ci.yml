@@ -1,0 +1,60 @@
+# Every PR into and every push to `v2.3/next` and `master`: scripts/verify.sh quick.
+# `verify-quick` is the required check of the ruleset, `integrate merge` and `promote`; never rename it.
+# Only always-running jobs live here: scheduled and advisory jobs go to android-nightly.yml,
+# because a skipped job still leaves a `skipped` check run on the SHA.
+name: android-ci
+
+on:
+  pull_request:
+    branches: [v2.3/next, master]
+  push:
+    branches: [v2.3/next, master]
+  workflow_dispatch:
+
+# Per ref; only PR runs are cancelled, so every pushed `v2.3/next` SHA keeps its own result for `promote`.
+concurrency:
+  group: android-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  verify-quick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # JDK for the Gradle client; the daemon JDK (JetBrains 21) is provisioned from
+      # gradle/gradle-daemon-jvm.properties.
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Basic (MIT) cache provider; only `v2.3/next` writes the cache, everything else reads it.
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+          cache-read-only: ${{ github.ref != 'refs/heads/v2.3/next' }}
+
+      # No secrets: google-services.json is tracked, release stays unsigned, Core and MyItmoApi
+      # come from Maven Central. scripts/check-docs.sh runs first inside verify.sh once it exists.
+      - name: verify.sh quick
+        env:
+          CI: "true"
+        run: scripts/verify.sh quick
+
+      - name: Upload test and lint reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: verify-quick-reports
+          path: |
+            */build/reports/
+            */build/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
