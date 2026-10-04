@@ -1,14 +1,11 @@
 package dev.alllexey.itmowidgets.feature.onboarding.ui
 
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -23,6 +20,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
 import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
+import dev.alllexey.itmowidgets.core.ui.permission.notificationPermissionIsRuntime
+import dev.alllexey.itmowidgets.core.ui.permission.openAppNotificationSettings
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
 import dev.alllexey.itmowidgets.databinding.FragmentOnboardingBinding
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingEvent
@@ -50,7 +50,7 @@ class OnboardingFragment : Fragment() {
     private var backCallback: OnBackPressedCallback? = null
 
     private val notificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        registerForActivityResult(RequestNotificationPermission()) { granted ->
             viewModel.onNotificationPermission(granted)
         }
 
@@ -153,7 +153,7 @@ class OnboardingFragment : Fragment() {
         when (event) {
             is OnboardingEvent.RequestPinWidget -> pinRequester.request(event.kind.providerClassName)
             OnboardingEvent.RequestNotificationPermission -> requestNotificationPermission()
-            OnboardingEvent.OpenNotificationSettings -> openNotificationSettings()
+            OnboardingEvent.OpenNotificationSettings -> requireContext().openAppNotificationSettings()
             OnboardingEvent.SpoilerImageFailed -> Snackbar.make(
                 binding.root,
                 R.string.settings_qr_custom_image_failed,
@@ -168,18 +168,11 @@ class OnboardingFragment : Fragment() {
     }
 
     private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            openNotificationSettings()
+        if (!notificationPermissionIsRuntime(Build.VERSION.SDK_INT)) {
+            requireContext().openAppNotificationSettings()
             return
         }
-        notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-    }
-
-    private fun openNotificationSettings() {
-        startActivity(
-            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                .putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
-        )
+        notificationPermissionLauncher.launch(Unit)
     }
 }
 

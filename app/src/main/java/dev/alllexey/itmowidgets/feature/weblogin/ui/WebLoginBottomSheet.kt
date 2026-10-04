@@ -14,8 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.color.MaterialColors
-import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
-import com.google.android.material.progressindicator.IndeterminateDrawable
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -23,6 +21,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.expandToContent
 import dev.alllexey.itmowidgets.core.ui.resolve
+import dev.alllexey.itmowidgets.core.ui.showProgress
+import dev.alllexey.itmowidgets.core.ui.showsProgress
 import dev.alllexey.itmowidgets.databinding.SheetWebLoginBinding
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginUiState
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
@@ -83,13 +83,13 @@ class WebLoginBottomSheet : BottomSheetDialogFragment() {
             code.isEnabled = checking == null
             scanButton.isEnabled = checking == null
             continueButton.isEnabled = input?.canSubmit == true
-            continueButton.showProgress(checking != null)
+            continueButton.showBusy(checking != null)
 
             if (confirm != null) {
                 browser.text = confirm.browser.resolve(requireContext())
                 requestedAt.text = confirm.requestedAt.resolve(requireContext())
                 approveButton.isEnabled = !confirm.approving
-                approveButton.showProgress(confirm.approving)
+                approveButton.showBusy(confirm.approving)
                 cancelButton.isEnabled = !confirm.approving
             }
 
@@ -117,15 +117,10 @@ class WebLoginBottomSheet : BottomSheetDialogFragment() {
         resultButton.setOnClickListener { onClick() }
     }
 
-    /** In-button progress keeps the button's size; the label stays for the screen reader. */
-    private fun MaterialButton.showProgress(show: Boolean) {
-        if (show == (icon is IndeterminateDrawable<*>)) return
-        icon = if (show) {
-            val spec = CircularProgressIndicatorSpec(context, null, 0,
-                com.google.android.material.R.style.Widget_Material3_CircularProgressIndicator_ExtraSmall)
-            spec.indicatorColors = intArrayOf(MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface))
-            IndeterminateDrawable.createCircularDrawable(context, spec)
-        } else null
+    /** Renders run on every keystroke; a running indicator is left alone so it does not restart. */
+    private fun MaterialButton.showBusy(show: Boolean) {
+        if (show == showsProgress) return
+        showProgress(show, MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface))
     }
 
     /**

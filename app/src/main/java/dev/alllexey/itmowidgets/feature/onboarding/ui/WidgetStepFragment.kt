@@ -1,12 +1,9 @@
 package dev.alllexey.itmowidgets.feature.onboarding.ui
 
-import android.content.ActivityNotFoundException
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -21,8 +18,8 @@ import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
-import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
+import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerImagePicker
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
 import dev.alllexey.itmowidgets.databinding.FragmentOnboardingWidgetBinding
@@ -68,18 +65,13 @@ class WidgetStepFragment : Fragment() {
     private var drawnSpoilerRevision: Int? = null
     private var preview: WidgetPreview? = null
 
-    private val cropImageLauncher = registerForActivityResult(SpoilerCropContract()) { result ->
+    private val spoilerImagePicker = SpoilerImagePicker(this) { result ->
         when (result) {
             is SpoilerCropResult.Image -> viewModel.saveSpoilerImage(result.uri.toString())
             SpoilerCropResult.Failed -> showImageError()
             SpoilerCropResult.Cancelled -> Unit
         }
     }
-
-    private val imagePickerLauncher =
-        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            if (uri != null) cropImageLauncher.launch(uri)
-        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -155,7 +147,7 @@ class WidgetStepFragment : Fragment() {
         val state = viewModel.state.value
         if (state.spoilerBusy) return
         if (state.customSpoiler != true) {
-            pickSpoilerImage()
+            spoilerImagePicker.launch()
             return
         }
         MaterialAlertDialogBuilder(requireContext())
@@ -166,21 +158,11 @@ class WidgetStepFragment : Fragment() {
                     getString(R.string.onboarding_spoiler_image_reset)
                 )
             ) { dialog, index ->
-                if (index == 0) pickSpoilerImage() else viewModel.resetSpoilerImage()
+                if (index == 0) spoilerImagePicker.launch() else viewModel.resetSpoilerImage()
                 dialog.dismiss()
             }
             .setNegativeButton(R.string.common_cancel, null)
             .show()
-    }
-
-    private fun pickSpoilerImage() {
-        try {
-            imagePickerLauncher.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-            )
-        } catch (_: ActivityNotFoundException) {
-            showImageError()
-        }
     }
 
     private fun showImageError() {

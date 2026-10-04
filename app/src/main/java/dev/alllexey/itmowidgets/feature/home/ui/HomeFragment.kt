@@ -1,15 +1,9 @@
 package dev.alllexey.itmowidgets.feature.home.ui
 
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -33,6 +27,9 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openPendingSportDetails
 import dev.alllexey.itmowidgets.core.ui.navigation.openRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
+import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
+import dev.alllexey.itmowidgets.core.ui.permission.openNotificationSettingsIfLocked
+import dev.alllexey.itmowidgets.core.ui.permission.requestNotifications
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
 import dev.alllexey.itmowidgets.databinding.FragmentHomeBinding
 import dev.alllexey.itmowidgets.feature.home.presentation.HomeEvent
@@ -63,11 +60,8 @@ class HomeFragment : Fragment() {
     lateinit var timeProvider: AcademicTimeProvider
 
     private val notificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            // A denial without a dialog means the permission is locked; only the system page can undo that.
-            if (!granted && !shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)) {
-                openNotificationSettings()
-            }
+        registerForActivityResult(RequestNotificationPermission()) { granted ->
+            requireActivity().openNotificationSettingsIfLocked(granted)
             viewModel.onScreenResumed()
         }
 
@@ -207,25 +201,9 @@ class HomeFragment : Fragment() {
     private fun actOnHint(hint: HomeHint) {
         when (hint) {
             HomeHint.WIDGETS -> pinRequester?.request(WidgetProviders.SINGLE_LESSON)
-            HomeHint.NOTIFICATIONS -> requestNotifications()
+            HomeHint.NOTIFICATIONS -> requireContext().requestNotifications(notificationPermissionLauncher)
             HomeHint.SERVICES -> openScreen(AppScreen.SETTINGS, bundleOf(SettingsScreenArgs.PAGE to SERVICES_PAGE))
         }
-    }
-
-    /** The permission dialog when it can still appear; otherwise the app's notification page. */
-    private fun requestNotifications() {
-        val permissionGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS) ==
-            PackageManager.PERMISSION_GRANTED
-        if (permissionGranted) openNotificationSettings()
-        else notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-    }
-
-    private fun openNotificationSettings() {
-        startActivity(
-            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                .putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
-        )
     }
 
     // endregion

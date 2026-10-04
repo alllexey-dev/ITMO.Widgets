@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.feature.resources.ui
 
-import android.content.ClipDescription
-import android.content.ClipboardManager
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -25,6 +23,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
+import dev.alllexey.itmowidgets.core.ui.clipboardText
 import dev.alllexey.itmowidgets.core.ui.lessonTypeNameRes
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.util.HttpsNavigationPolicy
@@ -185,12 +184,7 @@ class LinkEditorBottomSheet : BottomSheetDialogFragment() {
 
     private fun pasteClipboardLink() {
         if (viewModel.uiState.value.url.isNotEmpty()) return
-        val clipboard = requireContext().getSystemService(ClipboardManager::class.java) ?: return
-        val description = clipboard.primaryClipDescription ?: return
-        if (!description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) &&
-            !description.hasMimeType(ClipDescription.MIMETYPE_TEXT_URILIST)) return
-        val text = clipboard.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)
-            ?.coerceToText(requireContext())?.toString()?.trim() ?: return
+        val text = requireContext().clipboardText()?.trim() ?: return
         if (text.any(Char::isWhitespace) || !HttpsNavigationPolicy.isNavigable(text)) return
         viewModel.onUrlChanged(text)
     }

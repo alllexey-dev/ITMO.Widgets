@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.sign
 
 import android.content.res.ColorStateList
-import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,8 +9,6 @@ import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
-import com.google.android.material.progressindicator.IndeterminateDrawable
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.ThemeColors
@@ -24,6 +21,7 @@ import dev.alllexey.itmowidgets.feature.sport.ui.common.titleRes
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportOccupancy
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
 import dev.alllexey.itmowidgets.core.ui.ConditionTone
+import dev.alllexey.itmowidgets.core.ui.showProgress
 import dev.alllexey.itmowidgets.feature.sport.ui.common.occupancyTone
 import dev.alllexey.itmowidgets.feature.sport.ui.common.bind
 import dev.alllexey.itmowidgets.feature.sport.ui.common.timeText
@@ -180,26 +178,12 @@ class SportLessonsAdapter(val listener: SportSignActionsListener, private val ti
                 signUpButton.strokeWidth = resourcesDensityPixel()
                 signUpButton.strokeColor = ColorStateList.valueOf(accent)
                 signUpButton.setTextColor(accent)
-                signUpButton.icon = if (isBusy) busyIndicator(accent) else null
+                signUpButton.showProgress(isBusy, accent)
                 signUpButton.setOnClickListener(if (isBusy) null else View.OnClickListener { onClick() })
             }
         }
 
         private fun resourcesDensityPixel(): Int = itemView.resources.displayMetrics.density.toInt().coerceAtLeast(1)
-
-        /** Material's own indeterminate drawable, tinted like the button label. */
-        private fun busyIndicator(accent: Int): Drawable {
-            val context = itemView.context
-            val spec = CircularProgressIndicatorSpec(
-                context,
-                null,
-                0,
-                com.google.android.material.R.style
-                    .Widget_Material3_CircularProgressIndicator_ExtraSmall
-            )
-            spec.indicatorColors = intArrayOf(accent)
-            return IndeterminateDrawable.createCircularDrawable(context, spec)
-        }
 
         val color: ThemeColors get() = binding.root.context.color
 

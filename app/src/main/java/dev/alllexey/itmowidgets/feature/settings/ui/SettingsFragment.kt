@@ -1,15 +1,11 @@
 package dev.alllexey.itmowidgets.feature.settings.ui
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -38,9 +34,13 @@ import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.ui.SettingsLevelMotion
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.openLink
+import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
+import dev.alllexey.itmowidgets.core.ui.permission.openAppNotificationSettings
+import dev.alllexey.itmowidgets.core.ui.permission.openNotificationSettingsIfLocked
+import dev.alllexey.itmowidgets.core.ui.permission.requestNotifications
 import dev.alllexey.itmowidgets.core.ui.resolve
-import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
+import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerImagePicker
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
 import dev.alllexey.itmowidgets.databinding.FragmentSettingsBinding
@@ -73,7 +73,7 @@ class SettingsFragment : Fragment() {
 
     private var renderer: SettingsRenderer? = null
 
-    private val cropImageLauncher = registerForActivityResult(SpoilerCropContract()) { result ->
+    private val spoilerImagePicker = SpoilerImagePicker(this) { result ->
         when (result) {
             is SpoilerCropResult.Image -> spoilerViewModel.saveImage(result.uri.toString())
             SpoilerCropResult.Failed -> showImageError()
@@ -81,16 +81,9 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) cropImageLauncher.launch(uri)
-    }
-
     private val notificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            // A denial without a dialog means the permission is locked; only the system page can undo that.
-            if (!granted && !shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)) {
-                openNotificationSettings()
-            }
+        registerForActivityResult(RequestNotificationPermission()) { granted ->
+            requireActivity().openNotificationSettingsIfLocked(granted)
             viewModel.onNotificationPermissionChanged(
                 NotificationManagerCompat.from(requireContext()).areNotificationsEnabled()
             )
@@ -209,8 +202,9 @@ class SettingsFragment : Fragment() {
                         R.string.settings_refresh_widgets_started,
                         Snackbar.LENGTH_SHORT
                     ).show()
-                    SettingsEvent.OpenNotificationSettings -> openNotificationSettings()
-                    SettingsEvent.RequestNotificationPermission -> requestNotifications()
+                    SettingsEvent.OpenNotificationSettings -> requireContext().openAppNotificationSettings()
+                    SettingsEvent.RequestNotificationPermission ->
+                        requireContext().requestNotifications(notificationPermissionLauncher)
                     SettingsEvent.ChooseCustomSpoiler -> chooseCustomSpoiler()
                     SettingsEvent.ResetCustomSpoiler -> spoilerViewModel.resetImage()
                     SettingsEvent.OpenDiagnostics -> openScreen(AppScreen.DIAGNOSTICS)
@@ -368,11 +362,7 @@ class SettingsFragment : Fragment() {
 
     private fun chooseCustomSpoiler() {
         if (spoilerViewModel.state.value.busy) return
-        try {
-            imagePickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-        } catch (_: ActivityNotFoundException) {
-            showImageError()
-        }
+        spoilerImagePicker.launch()
     }
 
     private fun showImageError() {
@@ -398,21 +388,6 @@ class SettingsFragment : Fragment() {
             return
         }
         showCalendarAccessDialog(locked = false, onAllow = ask, onCancel = ::restoreRenderedValues)
-    }
-
-    private fun requestNotifications() {
-        val permissionGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS) ==
-            PackageManager.PERMISSION_GRANTED
-        if (permissionGranted) openNotificationSettings()
-        else notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-    }
-
-    private fun openNotificationSettings() {
-        startActivity(
-            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                .putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
-        )
     }
 
     private companion object {
