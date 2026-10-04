@@ -37,7 +37,7 @@ Navigation rows have a minimum 48 dp touch target and expand for large text.
 Settings use quiet surface-container cards without a stroke or elevation. The
 profile uses the same compact surfaces, with a settings entry and a separate,
 confirmed sign-out action. Privacy is available only inside settings.
-Future v2.2 categories appear only when their functionality is delivered.
+A category appears only when its functionality is delivered.
 
 ## Account and services
 
@@ -89,7 +89,9 @@ do not incur an additional delay. Disabling services takes effect immediately.
   capabilities, never from the viewer's own settings.
 - Block-management controls remain planned until the corresponding Backend
   feature is implemented.
-- Public-review visibility is not shown until reviews ship in v2.2.
+- There is no review-visibility setting: the author of a teacher review
+  chooses `Анонимно` per review in the editor
+  ([teacher reviews](features/reviews.md#editor)).
 
 ## Schedule widgets
 
@@ -275,7 +277,8 @@ leaves a backgrounded app without network.
   with `ic_open_in_new`; the whole row is the button) sits on the `Расписание`
   and `Зачётка` pages while that page's check is on and
   `PowerManager.isIgnoringBatteryOptimizations` is false
-  (`BackgroundWorkAccess`). The state is read when the page is created and on
+  (`BackgroundWorkAccess` in `feature/settings/domain`, implemented by
+  `AndroidBackgroundWorkAccess` in `data`). The state is read when the page is created and on
   every return, and once more a second after the return because HyperOS saves
   the choice only after its page has gone, so the row leaves by itself once the
   user has lifted the limit.
@@ -374,8 +377,3 @@ scores, sport lesson templates, development-service diagnostics,
 read-only probe of the BARS cookie renewal that only writes its outcome to
 logcat. These controls never appear in release builds and never change release
 behavior.
-
-## Deferred beyond v2.1
-
-Community resources and teacher-review settings belong to v2.2; calendar
-synchronization is on the `Расписание` page.

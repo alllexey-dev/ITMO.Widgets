@@ -21,114 +21,65 @@ and fail the build when broken. Feature-specific behaviour lives in
 
 ## Package structure
 
-Paths are relative to `app/src/main/java/dev/alllexey/itmowidgets/`.
+Paths are relative to `app/src/main/java/dev/alllexey/itmowidgets/`. The list
+names each package's purpose; the classes of a single feature are listed in
+that feature's document.
 
 ```text
-app/            Application, MainActivity, navigation coordinator, notifier, widget coordinator,
-                MainRouteQueue (the pending widget, notification, tile or shortcut route), AppShortcuts
-core/           cross-cutting; knows nothing about features
-  debug/        BuildConfig.DEBUG fixtures (provider / controller / store); BarsSessionProbe, the debug
-                probe of the BARS cookie renewal
-  demo/         DemoMode (the gate of the demo session), DemoCurrentUserProvider and the shared fictional
-                set: DemoPeople, DemoStudy, DemoSportSlots ([demo session](features/demo.md))
+app/            Application, MainActivity and the app-level coordinators: navigation, notifier,
+                widget refresh, the pending route queue (MainRouteQueue) and app shortcuts
+core/           cross-cutting contracts and helpers; knows nothing about features
+  coroutines/   ApplicationScope (work that outlives a screen) and the injected dispatchers
+  debug/        BuildConfig.DEBUG fixtures (provider / controller / store) and debug probes
+  demo/         DemoMode, the gate of the demo session, and its shared fictional data
   diagnostics/  AppDiagnostics journal, sanitizer, crash handler
-  location/     BuildingDirectory (res/raw/itmo_buildings.json), MapDestination geo URIs
-  ui/           LessonTypes and LocationTitles shared by schedule and recordbook rows;
-                LinkOpener and SubjectLinkTexts shared by the recordbook and the link sheets;
-                ShareText (the Sharesheet for a shared link)
-  friend/       FriendRepository — the schedule picker's narrow view of friends
-  home/         HomeCard model and the HomeCardSource contract every feature contributes to
-  model/        transport DTOs, UserSummary, UserProfile, RelationshipState, UserData.toUserSummary
-  navigation/   contracts between features (FriendSelectionContract, UserScreenArgs, WidgetProviders,
-                QuickSettingsTiles (the QR tile's class name for the settings add request),
-                ScheduleTodayRequest (the Fragment result that shows today in the own schedule),
-                AppLinks (parses the shared `/u/`, `/sport/` and `/sport/p/` links), ShareLinkFactory (builds
-                them from WIDGETS_BASE_URL), SportLessonRequest (the Fragment result that opens a shared
-                lesson on the sport sign page),
-                LessonDetailsArgs, PendingSportDetailsArgs, SettingsScreenArgs, SubjectLinksArgs, SheetScoresArgs
-                (the «Мои баллы» sheet: subject period, link address, connect or pick another total),
-                TeacherReviewArgs, RecordbookSubjectArgs — the subject page's arguments, validated when a
-                notification carries them); UserScreenArgs.profileIsu validates nullable Long ISUs before Int
-                navigation
-  onboarding/   OnboardingRepository — whether the first-run flow was passed
-  network/      WidgetsClient, PublicWebClient (the qualifier of the cookie-free OkHttpClient for public
-                Google Sheets), error mapping (isCausedByNetworkFailure: an IOException anywhere in the cause
-                chain is AppError.Network), serialization adapters
-  notification/ FCM receiver, WorkManager entry points, dispatcher, AppNotifier contract
-  recordbook/   MarkTracking (the mark check's switches and work), BarsLoginPrompt, MarkSubjects (the
-                names a marks notification or the home card shows)
-  resources/    SubjectLinksRepository, link models, ResourceScope, subjectLinkChips, GoogleSheetUrl (a Google
-                Sheet address, shared by the link actions and the recordbook)
-  reviews/      TeacherReviewsRepository, TeacherReviews, TeacherReview with ReviewOrigin, OwnTeacherReview,
-                OwnReviewStatus, ReviewReportReason, TeacherReviewDraft, TeacherReviewLimits, ReviewDate,
-                TeacherSummary with its scales, tags and TeacherLevel, TeacherLevelsRepository
-  result/       AppError, AppResult
-  schedule/     schedule preferences, widget-refresh, SubjectLessonsGateway and TeacherLessonsGateway
-                (TeacherLessons.kt) contracts; ScheduleChange with LessonSlot and LessonOccurrence (shared
-                with the home card) and ScheduleChangeTracking (the background check's switch and work);
-                CalendarSync (synchronization with the app's own local calendar, for settings),
-                ScheduleIcsExport with ScheduleExportRange and IcsFile (the `.ics` export)
-  services/     CustomServicesRepository — the Backend opt-in
-  settings/     WidgetAppearanceRepository and CustomSpoilerRepository — widget appearance
-                for screens outside settings (the first-run flow)
-  session/      token store, session repository, current user, device registration
-  social/       SocialRepository, PeopleSearchRepository
-  sport/        SportScoreRepository, PendingSportBookingsRepository
-  storage/      DataStore wrappers, encrypted token storage
-  text/         UiText; core/ui `resolve()` resolves UiText arguments first, so a format takes localized names
+  friend/       the friends contract the schedule picker reads
+  home/         HomeCard and the HomeCardSource contract every feature contributes to
+  location/     ITMO building directory and map destinations
+  model/        transport DTOs and the shared identity models (UserSummary, UserProfile,
+                UserData.toUserSummary)
+  navigation/   contracts between features: screen arguments, Fragment results, widget and tile
+                class names, shared-link parsing and building
+  network/      WidgetsClient, PublicWebClient (cookie-free, for public pages), error mapping
+                (an IOException anywhere in the cause chain is AppError.Network), serialization adapters
+  notification/ FCM receiver and dispatch, notification channels, the AppNotifier contract
+  onboarding/   whether the first-run flow was passed
+  presentation/ view-model helpers: one-shot event queue, refresh tracking, busy keys
+  qr/           custom QR spoiler images shared by settings and the QR widget
+  recordbook/   mark-check and BARS sign-in contracts shared with settings and home
+  resources/    subject link contracts and models shared by resources and the recordbook
+  result/       AppError, AppResult, LoadState
+  reviews/      teacher review and teacher level contracts and models
+  schedule/     schedule contracts shared with other features: preferences, widget refresh, lessons
+                by subject and by teacher, schedule changes, calendar sync and the `.ics` export
+  services/     the Backend opt-in (CustomServicesRepository, BackendGate)
+  session/      token store, session repository, current user, device registration, SessionDataCleaner
+  settings/     widget appearance settings for screens outside settings (the first-run flow)
+  social/       social and people-search contracts
+  sport/        sport score and pending booking contracts
+  storage/      DataStore wrappers, encrypted token storage, atomic files
+  text/         UiText; core/ui `resolve()` resolves UiText arguments first, so a format takes
+                localized names
   time/         AcademicTimeProvider, WallClock
-  qr/           CustomSpoilerManager
-  ui/           AvatarView, state helpers, AppNavigator port, WidgetPinRequester, the spoiler crop screen,
-                the details-sheet header (view_details_header.xml + DetailsHeader.kt), ConditionTone,
-                TeacherLevelTone (the tone dot of teachers' AI summaries), ScheduleChangeTexts (summary,
-                headline and "было → стало" lines of a schedule change for the schedule, the home card
-                and the notification), MarkTexts (markSubjectList for the marks notification and card),
-                BottomSheets.kt (expandToContent() for sheets that open at their content height)
-  weblogin/     WebLoginRepository and WebLoginPreview — approving a browser's sign-in to the web version
+  ui/           shared views, texts and UI helpers, the AppNavigator port, widget preview and
+                pinning, the spoiler crop screen
+  util/         small helpers: colors, schedule formatting, stable order, HTTPS and Telegram links
+  weblogin/     the contract for approving a browser's sign-in to the web version
   work/         rules shared by the background checks: QuietHours, CheckOutcome, outcomeOf, workResultOf
 di/             Hilt modules, one per feature or concern
 feature/<name>/ ui | presentation | domain | data
 ```
 
-Features: `auth`, `debug`, `friendselector`, `home`, `me`, `onboarding`, `qr`,
-`recordbook`, `resources`, `reviews`, `schedule`, `settings`, `social`, `sport`, `update`,
-`weblogin`, `widget`. A feature does not need all four layers. The features
-that read the network keep their fictional data for the demo session in
-`data/demo` (`DemoSchedule`, `DemoSport`, `DemoRecordbook`, `DemoSocial`,
-`DemoReviews`, `DemoSubjectLinks`, `DemoQr`); `auth` owns `DataStoreDemoMode`
-and the hidden entry `DemoEntryTaps`. `qr`,
-`schedule` and `recordbook` also have `work` for their WorkManager workers,
-schedulers and entry points: the widget updates; in `schedule/work` the
-schedule change check (`ScheduleChangesWorker`,
-`WorkManagerScheduleChangesScheduler`, `AndroidScheduleChangeNotifier`) and calendar synchronization
-(`CalendarSyncWorker`, `WorkManagerCalendarSyncScheduler`; the rest of it is
-in `domain/calendar` and `data/calendar`, see
-[calendar](features/schedule.md#calendar)); in
-`recordbook/work` the mark check (`MarksWorker`, `WorkManagerMarksScheduler`,
-`AndroidMarksNotifier`), which also reads the connected sheets, and the debug
-probe of the BARS cookie renewal (`BarsCookieProbeWorker`,
-`WorkManagerBarsSessionProbe`). `recordbook` keeps the own totals from public
-Google Sheets in `sheets` subpackages of `domain`, `data`, `presentation` and
-`ui` ([sheet scores](features/recordbook.md#sheet-scores)); `resources` only
-offers `Мои баллы` and opens that sheet through `AppNavigator`. `settings` owns the
-`Работа в фоне` row: `BackgroundWorkAccess` and `BackgroundWorkScreens` in
-`domain`, `AndroidBackgroundWorkAccess` in `data` and
-`openBackgroundWorkSettings` in `ui`; likewise `QuickSettingsTileAccess` and
-`QrTileAddResult` in `domain`, `AndroidQuickSettingsTileAccess` in `data` and
-`requestAddQrTile` in `ui` for `Добавить в шторку`. `qr` owns the quick-settings
-tile: `QrTilePreferences` in `domain`, `QrTileController` in `presentation`,
-`QrTileService` and `QrTileClick` in `ui` ([home](features/home.md#quick-settings-tile-and-app-shortcuts)).
-`weblogin` holds
-the code and link parser, the User-Agent description, the view model and
-`WebLoginBottomSheet` ([web sign-in](features/web-login.md)). `social` owns the
-person profile and its direct My ITMO `PersonRepository`; `reviews` owns
-Backend review reads and mutations and the teacher levels cache (`data`), the
-editor and report view models (`presentation`) and `ReviewEditorBottomSheet`
-and `ReportReviewDialogFragment` (`ui`). The profile, the lesson sheet and the
-subject page reach them through the shared `core/reviews` contracts and
-`AppNavigator`, and the editor reads the viewer's lessons with a teacher through
-`core/schedule/TeacherLessonsGateway` (implemented in `schedule/data`), so the
-features never import each other.
+Features (one per directory of `feature/`): `auth`, `debug`, `friendselector`,
+`home`, `me`, `onboarding`, `qr`, `recordbook`, `resources`, `reviews`,
+`schedule`, `settings`, `social`, `sport`, `update`, `web`, `weblogin`. A
+feature does not need all four layers. The features that read the network keep
+their fictional data for the demo session in `data/demo`
+([demo session](features/demo.md)). `qr`, `schedule` and `recordbook` also have
+`work` for their WorkManager workers, schedulers and entry points. A feature
+reaches another only through a `core` contract implemented by the feature that
+owns the data, or through `AppNavigator`, so the features never import each
+other.
 
 Placement rules:
 
@@ -405,8 +356,6 @@ relying on review.
   arguments, see [Verification matrix](design.md#verification-matrix).
 
 ## Known gaps
-
-Toward v2.0.1 parity: authentication polish.
 
 Structural debt, in priority order:
 

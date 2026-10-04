@@ -298,7 +298,9 @@ storage and delivery follow the schedule changes (decision
   `NetworkType.CONNECTED`, exponential backoff from 15 minutes, tag `marks`,
   `ExistingPeriodicWorkPolicy.UPDATE`, so enqueuing it on every start does not
   push the next run away. It gets `MarksCheck` through `MarksEntryPoint`, not
-  `@HiltWorker`.
+  `@HiltWorker`. `WorkManagerMarksScheduler` enqueues and cancels it, and
+  `AndroidMarksNotifier` posts the notification; all three live in
+  `feature/recordbook/work`.
 - `MarksCheck.run()` ends `SKIPPED` without a request when there is no refresh
   token or all three switches are off. Otherwise it runs `checkMyItmo()` when
   `Оценки My ITMO` is on, `checkBars()` when `Оценки БАРС` is on and
@@ -529,6 +531,7 @@ In the schedule-changes card of the debug tools, `Проверить оценк�
 (`ExistingWorkPolicy.REPLACE`, network constraint, tag `marks`) with the same
 `MarksCheck` on the real account. `Проверить продление БАРС` starts the
 read-only probe `BarsCookieProbeWorker` (`core/debug/BarsSessionProbe`,
+implemented by `WorkManagerBarsSessionProbe` in `feature/recordbook/work`,
 unique work `bars-cookie-probe`, 120 seconds after the tap, so the app can be
 sent to the background and its process killed): one ITMO.ID request with the
 WebView's cookies and, on a code, one exchange. It writes no `Set-Cookie`, no

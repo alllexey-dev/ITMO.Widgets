@@ -44,7 +44,10 @@ a friends preview and, for lessons, a full-width occupancy bar whose label uses
 the bar's tone. Start time is the scanning anchor and the only metadata on
 `colorOnSurface`; the class kind is a filled chip on `colorSurfaceContainerHighest`.
 Russian weekday and month names are capitalised by the helpers in
-`SportCardPresentation`, never at the call site.
+`SportCardPresentation`, never at the call site. Condition and occupancy tones
+come from `core/ui/ConditionTone` (allowed, waiting, warning, blocked), fixed
+colours independent of the dynamic palette; the schedule's pending sport sheet
+uses the same tones.
 
 The details bottom sheet adds a fixed bottom action: sign in, sign out, auto-sign
 or cancel the active queue, following the same offer policy as the card. Existing
