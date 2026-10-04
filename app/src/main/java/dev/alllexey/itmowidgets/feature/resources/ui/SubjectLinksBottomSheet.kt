@@ -65,7 +65,7 @@ class SubjectLinksBottomSheet : BottomSheetDialogFragment() {
         }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    private fun render(state: SubjectLinksUiState) = with(binding) {
+    private fun render(state: SubjectLinksUiState): Unit = with(binding) {
         val content = state.content
         if (content == null) {
             recyclerView.isVisible = false
