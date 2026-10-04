@@ -20,6 +20,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 
 ## Features
 
+- [Screen inventory](features/screens.md) — every Fragment, sheet, dialog and
+  Activity with its ViewModel, entry, debug host and visual tests.
 - [First-run flow](features/onboarding.md) — the three steps after sign-in, the
   root gate and the replay from maintenance.
 - [Schedule](features/schedule.md) — academic schedule, friends' schedules,
@@ -43,6 +45,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
   web version with a QR or a typed code.
 - [Demo session](features/demo.md) — the hidden entry, the gate in the
   repositories, what works and what is refused, the fictional data set.
+- [App Links and sharing](features/app-links.md) — shared profile and sport
+  lesson links, their routes in the app and the site fallback.
 
 ## Decisions
 
