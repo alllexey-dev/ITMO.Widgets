@@ -91,6 +91,21 @@ android {
 }
 
 dependencies {
+    // String paths: type-safe project accessors reject the dotted root name ITMO.Widgets.
+    implementation(project(":shared:core"))
+    implementation(project(":shared:designsystem"))
+    implementation(project(":shared:backend-client"))
+    implementation(project(":shared:feature-qr"))
+    implementation(project(":shared:feature-home"))
+    implementation(project(":shared:feature-schedule"))
+    implementation(project(":shared:feature-sport"))
+    implementation(project(":shared:feature-recordbook"))
+    implementation(project(":shared:feature-social"))
+    implementation(project(":shared:feature-settings"))
+    implementation(project(":shared:feature-resources"))
+    implementation(project(":shared:feature-reviews"))
+    implementation(project(":shared:feature-account"))
+    testImplementation(project(":shared:testing"))
     implementation(platform(libs.kotlinx.coroutines.bom))
     implementation(libs.glide)
     implementation(libs.android.image.cropper)

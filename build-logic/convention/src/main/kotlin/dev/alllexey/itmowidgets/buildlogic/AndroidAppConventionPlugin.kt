@@ -14,7 +14,8 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
 /**
  * `:app`: AGP with built-in Kotlin, the SDK levels from the catalog, JVM 17 and the Compose compiler for the
- * `ComposeView` hosts. Identity, flavors, signing and BuildConfig stay in `app/build.gradle.kts`.
+ * `ComposeView` hosts. Identity, flavors, signing and BuildConfig stay in `app/build.gradle.kts`. JVM tests also
+ * compile the core test fixtures.
  */
 class AndroidAppConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
@@ -41,6 +42,9 @@ class AndroidAppConventionPlugin : Plugin<Project> {
                 // Lets JVM tests exercise classes that log through android.util.Log.
                 unitTests.isReturnDefaultValues = true
             }
+            sourceSets.named("test") {
+                kotlin.directories.add(coreTestFixturesDir.asFile.path)
+            }
         }
         extensions.configure<KotlinAndroidProjectExtension> {
             compilerOptions {
@@ -56,9 +60,16 @@ class AndroidAppConventionPlugin : Plugin<Project> {
 
         // Konsist reads sources that are not compile inputs: an import-only edit leaves the bytecode
         // unchanged, so without this the up-to-date check or the build cache would replay a stale result.
+        // G-03's StableIdentifiersTest also scans shared/*/src/*Main/kotlin; keep both after L06 KN-02a.
+        val sharedSources = isolated.rootProject.projectDirectory.dir("shared").asFileTree.matching {
+            include("*/src/**")
+        }
         tasks.withType<Test>().configureEach {
             inputs.dir("src")
                 .withPropertyName("konsistSources")
+                .withPathSensitivity(PathSensitivity.RELATIVE)
+            inputs.files(sharedSources)
+                .withPropertyName("sharedSources")
                 .withPathSensitivity(PathSensitivity.RELATIVE)
         }
 

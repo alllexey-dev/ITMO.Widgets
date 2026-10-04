@@ -10,7 +10,8 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 /**
  * A shared module: the Android-KMP library plugin (`kotlin { android { } }`), iosArm64 and iosSimulatorArm64,
  * JVM 17, host tests with Android resources and default return values (parity with `:app`, whose moved tests log
- * through `android.util.Log`), kotlinx.serialization.
+ * through `android.util.Log`), kotlinx.serialization. `:shared:core` and the features also compile the core test
+ * fixtures in `commonTest`.
  */
 class KmpLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
@@ -45,6 +46,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 }
             }
             sourceSets.named("commonTest") {
+                if (usesCoreTestFixtures) kotlin.srcDir(coreTestFixturesDir)
                 dependencies {
                     implementation(libs.library("kotlin-test"))
                 }
