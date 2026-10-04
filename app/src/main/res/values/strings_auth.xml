@@ -1,0 +1,18 @@
+<resources>
+    <string name="demo_entered">Демо-режим</string>
+    <string name="auth_feature_widgets">Расписание и QR-пропуск на главном экране</string>
+    <string name="auth_feature_sport">Спорт с автозаписью на занятия</string>
+    <string name="auth_feature_friends">Друзья и их расписание</string>
+    <string name="auth_reauthentication_description">Сессия истекла. Войдите снова, чтобы продолжить.</string>
+    <string name="auth_login_itmo_id">Войти через ITMO.ID</string>
+    <string name="auth_login_refresh_token">Другой способ входа</string>
+    <string name="auth_official_page_notice">Логин и пароль вводятся только на странице ITMO.ID.</string>
+    <string name="auth_sign_in">Войти</string>
+    <string name="auth_manual_dialog_title">Вход по Refresh token</string>
+    <string name="auth_manual_dialog_description">Этот способ — на случай, когда вход через ITMO.ID не работает. Токен останется на устройстве.</string>
+    <string name="auth_manual_token_hint">Refresh token</string>
+    <string name="auth_manual_token_required">Вставьте Refresh token</string>
+    <string name="auth_error_network">Не удалось связаться с ITMO.ID. Проверьте интернет.</string>
+    <string name="auth_error_invalid_credentials">Сессию подтвердить не вышло. Войдите заново или проверьте Refresh token.</string>
+    <string name="auth_error_unknown">Вход не завершился. Попробуйте ещё раз.</string>
+</resources>

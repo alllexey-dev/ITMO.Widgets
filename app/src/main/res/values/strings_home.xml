@@ -1,0 +1,42 @@
+<resources>
+    <string name="home_open_qr">Открыть QR-пропуск</string>
+    <string name="home_open_my_itmo">Открыть My ITMO</string>
+    <string name="home_empty_title">Пока пусто</string>
+    <string name="home_schedule_tomorrow">Завтра</string>
+    <string name="home_schedule_now">сейчас</string>
+    <string name="home_schedule_next">далее</string>
+    <string name="home_schedule_empty">Пар сегодня нет</string>
+    <string name="home_schedule_done">На сегодня всё</string>
+    <plurals name="home_schedule_completed">
+        <item quantity="one">%1$d пара прошла</item>
+        <item quantity="few">%1$d пары прошли</item>
+        <item quantity="many">%1$d пар прошло</item>
+        <item quantity="other">%1$d пары прошли</item>
+    </plurals>
+    <string name="home_pending_waiting">ждём запись</string>
+    <string name="home_pending_predicted">прогноз</string>
+    <string name="home_sport_title">Спорт</string>
+    <string name="home_sport_score">%1$d из 100</string>
+    <plurals name="home_sport_more">
+        <item quantity="one">ещё %1$d запись</item>
+        <item quantity="few">ещё %1$d записи</item>
+        <item quantity="many">ещё %1$d записей</item>
+        <item quantity="other">ещё %1$d записи</item>
+    </plurals>
+    <string name="home_friends_title">Заявки в друзья</string>
+    <string name="home_friends_all">Все заявки</string>
+    <string name="home_hint_dismiss">Скрыть подсказку</string>
+    <string name="home_schedule_changes_dismiss">Прочитано</string>
+    <string name="home_schedule_changes_description">%1$s, %2$d. %3$s</string>
+    <string name="home_marks_dismiss">Прочитано</string>
+    <string name="home_marks_description">%1$s, %2$d. %3$s</string>
+    <string name="home_hint_widgets_title">Добавьте виджет</string>
+    <string name="home_hint_widgets_description">Ближайшая пара и QR-пропуск прямо на домашнем экране.</string>
+    <string name="home_hint_widgets_action">Добавить</string>
+    <string name="home_hint_notifications_title">Уведомления выключены</string>
+    <string name="home_hint_notifications_description">Без них не придут результаты автозаписи на спорт и заявки в друзья.</string>
+    <string name="home_hint_notifications_action">Включить</string>
+    <string name="home_hint_services_title">Друзья и автозапись</string>
+    <string name="home_hint_services_description">Друзья на паре, очереди на спорт и уведомления.</string>
+    <string name="home_hint_services_action">Подключиться</string>
+</resources>

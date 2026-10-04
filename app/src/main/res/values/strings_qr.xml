@@ -1,0 +1,12 @@
+<resources>
+    <string name="widget_preview_qr_hint">Пример QR-кода. Нажмите, чтобы открыть спойлер.</string>
+    <string name="widget_preview_qr_open_hint">Пример QR-кода. Нажмите, чтобы скрыть.</string>
+    <string name="widget_preview_qr_plain_hint">Пример, не пропуск</string>
+    <string name="widget_preview_failed">Не удалось загрузить превью</string>
+    <string name="qr_pass_title">QR-пропуск</string>
+    <string name="qr_pass_description">Покажите код считывателю на входе в корпус</string>
+    <string name="qr_pass_image_description">QR-код пропуска</string>
+    <string name="qr_pass_refresh">Обновить QR-код</string>
+    <string name="qr_pass_empty_title">QR-код пока недоступен</string>
+    <string name="qr_pass_empty_description">Попробуйте обновить пропуск через My ITMO</string>
+</resources>

@@ -1,0 +1,23 @@
+<resources>
+    <string name="review_editor_new">Новый отзыв</string>
+    <string name="review_editor_edit">Изменить отзыв</string>
+    <string name="review_editor_close">Закрыть</string>
+    <string name="review_subject_hint">Предмет</string>
+    <string name="review_text_hint">Отзыв</string>
+    <string name="review_anonymous">Анонимно</string>
+    <string name="review_anonymous_off">Имя будет видно всем</string>
+    <string name="review_send">Отправить</string>
+    <string name="review_save">Сохранить</string>
+    <string name="review_text_too_short">Не короче %1$d символов</string>
+    <string name="review_text_too_long">Не больше %1$d символов</string>
+    <string name="review_subject_too_long">Не больше %1$d символов</string>
+    <string name="review_discard_title">Не сохранять отзыв?</string>
+    <string name="review_discard">Не сохранять</string>
+    <string name="review_report_title">Жалоба на отзыв</string>
+    <string name="review_report_offensive">Оскорбления</string>
+    <string name="review_report_wrong_teacher">Не тот преподаватель</string>
+    <string name="review_report_spam">Спам</string>
+    <string name="review_report_other">Другое</string>
+    <string name="review_report_comment">Комментарий</string>
+    <string name="review_report_send">Отправить</string>
+</resources>

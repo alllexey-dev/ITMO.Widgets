@@ -1,0 +1,31 @@
+<resources>
+    <string name="web_login_title">Вход на сайт</string>
+    <string name="web_login_scan">Сканировать QR</string>
+    <string name="web_login_code_hint">Код с сайта</string>
+    <string name="web_login_continue">Продолжить</string>
+    <string name="web_login_code_invalid">Нужен код из 8 символов</string>
+    <string name="web_login_qr_unknown">Это не QR для входа на сайт</string>
+    <string name="web_login_scanner_unavailable">Сканер недоступен, введите код</string>
+    <string name="web_login_not_found">Код не найден или устарел</string>
+    <string name="web_login_services_disabled">Нужно подключение к ITMO.Widgets</string>
+    <string name="web_login_requested_at">Запрошен в %1$s</string>
+    <string name="web_login_own_only">Подтверждайте только свой вход</string>
+    <string name="web_login_approve">Войти</string>
+    <string name="web_login_done">Готово — вернитесь в браузер</string>
+    <string name="web_login_browser_unknown">Браузер</string>
+    <string name="web_login_browser_on_platform">%1$s на %2$s</string>
+    <string name="web_login_browser_yandex">Яндекс Браузер</string>
+    <string name="web_login_browser_edge">Edge</string>
+    <string name="web_login_browser_opera">Opera</string>
+    <string name="web_login_browser_samsung">Samsung Internet</string>
+    <string name="web_login_browser_firefox">Firefox</string>
+    <string name="web_login_browser_chrome">Chrome</string>
+    <string name="web_login_browser_safari">Safari</string>
+    <string name="web_login_platform_windows">Windows</string>
+    <string name="web_login_platform_macos">macOS</string>
+    <string name="web_login_platform_linux">Linux</string>
+    <string name="web_login_platform_chrome_os">ChromeOS</string>
+    <string name="web_login_platform_android">Android</string>
+    <string name="web_login_platform_ios">iOS</string>
+    <string name="web_login_platform_ipados">iPadOS</string>
+</resources>
