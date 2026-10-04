@@ -93,7 +93,8 @@
 
         <activity
             android:name=".core.ui.spoiler.SpoilerCropActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.ItmoWidgets.SpoilerCrop" />
 
         <activity
             android:name="com.canhub.cropper.CropImageActivity"

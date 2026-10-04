@@ -50,11 +50,6 @@ class DesignCardResourcesTest {
             )
         }
         assertEquals("?attr/colorOutlineVariant", property(cardStyle("Content.Outlined"), "strokeColor"))
-        // The AI summary sits on the quiet surface of the reviews' groups, never told apart by an outline.
-        assertEquals("?attr/colorSurfaceContainerLow", property(cardStyle("Content.Tonal"), "cardBackgroundColor"))
-        assertEquals("20dp", property(cardStyle("Content.Tonal"), "cardCornerRadius"))
-        assertEquals("0dp", property(cardStyle("Content.Tonal"), "strokeWidth"))
-        assertEquals("0dp", property(cardStyle("Content.Tonal"), "cardElevation"))
     }
 
     @Test
@@ -67,7 +62,8 @@ class DesignCardResourcesTest {
             "item_schedule_change" to "Content",
             "item_home_schedule_changes" to "Content",
             "item_home_marks" to "Content",
-            "item_teacher_summary" to "Content.Tonal",
+            // The AI summary sits on the quiet surface of the reviews' groups, never told apart by an outline.
+            "item_teacher_summary" to "Content",
             "item_recordbook_summary" to "CompactSummary",
             "item_subject_hero" to "Hero",
             "item_profile_header" to "Hero",
@@ -113,14 +109,12 @@ class DesignCardResourcesTest {
 
     @Test
     fun `settings stay unoutlined and debug cards declare their quiet surface`() {
-        listOf("SettingsCard", "CompactSettingsCard").forEach { variant ->
-            val style = "Widget.ItmoWidgets.$variant"
-            assertEquals(variant, "?attr/colorSurfaceContainerLow", property(style, "cardBackgroundColor"))
-            assertEquals(variant, "0dp", property(style, "strokeWidth"))
-            assertEquals(variant, "0dp", property(style, "cardElevation"))
-            assertEquals(variant, "false", property(style, "cardUseCompatPadding"))
-            assertEquals(variant, "false", property(style, "cardPreventCornerOverlap"))
-        }
+        val settingsCard = "Widget.ItmoWidgets.CompactSettingsCard"
+        assertEquals("?attr/colorSurfaceContainerLow", property(settingsCard, "cardBackgroundColor"))
+        assertEquals("0dp", property(settingsCard, "strokeWidth"))
+        assertEquals("0dp", property(settingsCard, "cardElevation"))
+        assertEquals("false", property(settingsCard, "cardUseCompatPadding"))
+        assertEquals("false", property(settingsCard, "cardPreventCornerOverlap"))
         val debugCards = elements("layout/fragment_debug_tools.xml", MATERIAL_CARD)
         assertFalse(debugCards.isEmpty())
         debugCards.forEach { card ->

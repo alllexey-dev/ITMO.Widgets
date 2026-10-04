@@ -6,7 +6,6 @@
     android:minWidth="250dp"
     android:minHeight="56dp"
     android:previewImage="@drawable/widget_single_lesson_preview"
-
     android:updatePeriodMillis="3600000"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />

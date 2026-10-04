@@ -85,7 +85,7 @@ fun ViewLinkVotePillBinding.bindVotes(
     voteDown.isEnabled = enabled
     voteUp.contentDescription = context.getString(upDescription)
     voteDown.contentDescription = context.getString(downDescription)
-    this.score.text = if (score < 0) "−${-score}" else String.format(Locale.getDefault(), "%d", score)
+    this.score.text = if (score < 0) "−${-score}" else score.toString()
     this.score.contentDescription = scoreDescription
     // The arrows pad their icons towards the number; alone, the number keeps the pill's 16 dp inset plus 12 dp.
     val resources = context.resources
