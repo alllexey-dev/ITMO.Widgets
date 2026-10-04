@@ -70,6 +70,9 @@ class StoreScreenshotCapture {
             enterDemo(activity)
 
             frame(activity, "01-home")
+            // Scrolled to the end, the feed's FAB clearance keeps the last cards clear of the quick actions.
+            open(scenario) { main -> main.findViewById<RecyclerView>(R.id.home_feed).scrollBy(0, FEED_END_PX) }
+            frame(activity, "01-home-end")
 
             open(scenario) { it.openRoot(AppRoot.SCHEDULE) }
             frame(activity, "02-schedule")
@@ -188,6 +191,7 @@ class StoreScreenshotCapture {
         const val TOAST_MILLIS = 4_000L
         const val MIN_TEXTS = 6
         const val REVIEWS_SCROLL_DP = 420
+        const val FEED_END_PX = 10_000
         const val TEST_WORDING = "Тест"
     }
 }
