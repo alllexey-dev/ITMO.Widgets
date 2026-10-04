@@ -4,10 +4,13 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.os.Build
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.net.toUri
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
@@ -25,6 +28,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSna
 import dev.alllexey.itmowidgets.feature.schedule.ui.colorRes
 import dev.alllexey.itmowidgets.feature.schedule.ui.nameRes
 import dev.alllexey.itmowidgets.feature.schedule.ui.shortTitle
+import kotlin.math.roundToInt
 
 object ScheduleWidgetRenderer {
 
@@ -54,8 +58,8 @@ object ScheduleWidgetRenderer {
         } else {
             views.setViewVisibility(R.id.widget_message, View.GONE)
             views.setViewVisibility(R.id.lesson_content, View.VISIBLE)
-            views.setFloat(R.id.lesson_content, "setAlpha", lessonAlpha(lesson))
             bindLesson(localized, views, lesson, snapshot.singleLessonStyle)
+            applyLessonAlpha(localized, views, R.id.lesson_content, singleLessonTextColors, lessonAlpha(lesson))
             views.setViewVisibility(R.id.more_lessons_layout, View.VISIBLE)
             views.setTextViewText(
                 R.id.more_lessons_text,
@@ -102,9 +106,11 @@ object ScheduleWidgetRenderer {
             applyTextSize(this, lessonRowTextSp, textSize)
             bindLesson(localized, this, lesson, style)
             // Fade the complete row, including its time column, exactly once.
-            // Reset alpha left by older widget views that only faded lesson_content.
-            setFloat(R.id.lesson_content, "setAlpha", 1f)
-            setFloat(R.id.item_root, "setAlpha", lessonAlpha(lesson))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // Reset alpha left by older widget views that only faded lesson_content.
+                setFloat(R.id.lesson_content, "setAlpha", 1f)
+            }
+            applyLessonAlpha(localized, this, R.id.item_root, lessonRowTextColors, lessonAlpha(lesson))
             setOnClickFillInIntent(R.id.item_root, Intent())
         }
     }
@@ -185,6 +191,32 @@ object ScheduleWidgetRenderer {
             views.setTextViewTextSize(id, TypedValue.COMPLEX_UNIT_SP, sp * size.scale)
         }
     }
+
+    /**
+     * `View.setAlpha` is a RemoteViews method only from API 31; below it the widget fails to inflate. There every
+     * label gets its layout colour with the alpha folded in and the type indicator an image alpha, set on every
+     * render so a reused view drops an earlier fade. Colours resolve through [context], the widget's themed
+     * context, so night variants follow the configuration of the render.
+     */
+    private fun applyLessonAlpha(
+        context: Context,
+        views: RemoteViews,
+        fadedViewId: Int,
+        textColors: Map<Int, Int>,
+        alpha: Float,
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            views.setFloat(fadedViewId, "setAlpha", alpha)
+            return
+        }
+        textColors.forEach { (id, colorRes) ->
+            views.setTextColor(id, ContextCompat.getColor(context, colorRes).withAlpha(alpha))
+        }
+        views.setInt(R.id.type_indicator, "setImageAlpha", (alpha * OPAQUE).roundToInt())
+    }
+
+    private fun Int.withAlpha(alpha: Float): Int =
+        ColorUtils.setAlphaComponent(this, (Color.alpha(this) * alpha).roundToInt())
 
     private fun lessonAlpha(lesson: ScheduleWidgetLesson): Float =
         if (lesson.state == ScheduleWidgetLessonState.COMPLETED) COMPLETED_ALPHA else 1f
@@ -268,6 +300,7 @@ object ScheduleWidgetRenderer {
     }
 
     private const val COMPLETED_ALPHA = 0.62f
+    private const val OPAQUE = 255
     private const val BUILDING_MAX_LENGTH = 14
 
     // The layouts' own sizes; ScheduleWidgetRenderingTest checks they match the XML.
@@ -295,5 +328,23 @@ object ScheduleWidgetRenderer {
         R.id.no_lessons to 14f,
         R.id.no_more_lessons to 14f,
         R.id.empty_view to 14f
+    )
+
+    // The layouts' own text colours, for fading below API 31; ScheduleWidgetRenderingTest checks they match the XML.
+    private val singleLessonTextColors = mapOf(
+        R.id.type to R.color.widget_on_surface_variant,
+        R.id.time_start to R.color.widget_on_surface,
+        R.id.time_separator to R.color.widget_on_surface_variant,
+        R.id.time_end to R.color.widget_on_surface_variant,
+        R.id.title to R.color.widget_on_surface,
+        R.id.secondary_text to R.color.widget_on_surface_variant,
+        R.id.more_lessons_text to R.color.widget_primary
+    )
+    private val lessonRowTextColors = mapOf(
+        R.id.time_start to R.color.widget_on_surface,
+        R.id.time_end to R.color.widget_on_surface_variant,
+        R.id.title to R.color.widget_on_surface,
+        R.id.type to R.color.widget_on_surface_variant,
+        R.id.secondary_text to R.color.widget_on_surface_variant
     )
 }
