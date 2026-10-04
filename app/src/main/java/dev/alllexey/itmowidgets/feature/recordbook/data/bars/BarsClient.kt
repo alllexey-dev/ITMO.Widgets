@@ -10,6 +10,7 @@ import api.bars.utils.BarsCodeSupplier
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import java.io.IOException
 import javax.inject.Inject
@@ -151,15 +152,8 @@ class BarsClient @Inject constructor(
         try { block() } catch (failure: BarsApiException) { fail(failure.toAppError()) }
     }
 
-    private suspend fun <T> safe(block: suspend () -> T): AppResult<T> = try {
-        AppResult.Success(block())
-    } catch (cancel: CancellationException) {
-        throw cancel
-    } catch (failure: BarsFailure) {
-        AppResult.Failure(failure.error)
-    } catch (failure: Exception) {
-        AppResult.Failure(failure.unexpectedError())
-    }
+    private suspend fun <T> safe(block: suspend () -> T): AppResult<T> =
+        appResultOf({ failure -> (failure as? BarsFailure)?.error ?: failure.unexpectedError() }) { block() }
 
     /** Leaves the library's renewal untouched: the saved header stays, and [backgroundAccount] reports the end. */
     private class SessionEndedSignal : RuntimeException()

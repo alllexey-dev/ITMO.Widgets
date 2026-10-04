@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideProvider
 import dev.alllexey.itmowidgets.core.network.requireResult
-import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
@@ -63,11 +63,5 @@ class SportScoreRepositoryImpl @Inject constructor(
         if (isCurrent) score.copy(attendances = override.attendances, other = override.bonus) else score
     }
 
-    private suspend fun <T> request(block: () -> T): AppResult<T> = try {
-        AppResult.Success(withContext(Dispatchers.IO) { block() })
-    } catch (cancellation: CancellationException) {
-        throw cancellation
-    } catch (error: Exception) {
-        AppResult.Failure(error.toAppError())
-    }
+    private suspend fun <T> request(block: () -> T): AppResult<T> = appResultOf { withContext(Dispatchers.IO) { block() } }
 }

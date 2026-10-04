@@ -10,7 +10,7 @@ import dev.alllexey.itmowidgets.core.model.resources.ModerationReportRequest
 import dev.alllexey.itmowidgets.core.model.resources.ResourceVoteRequest
 import dev.alllexey.itmowidgets.core.model.reviews.SaveTeacherReviewRequest
 import dev.alllexey.itmowidgets.core.model.reviews.TeacherReviewsResponse
-import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
@@ -24,7 +24,6 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -149,16 +148,12 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
     private suspend fun call(
         generation: Long,
         block: suspend () -> ApiResponse<TeacherReviewsResponse>,
-    ): AppResult<TeacherReviews> = try {
-        withContext(Dispatchers.IO) {
-            if (!isCurrent(generation)) return@withContext AppResult.Failure(AppError.CustomServicesDisabled)
+    ): AppResult<TeacherReviews> = withContext(Dispatchers.IO) {
+        if (!isCurrent(generation)) return@withContext AppResult.Failure(AppError.CustomServicesDisabled)
+        appResultOf {
             val reviews = checkNotNull(block().data) { "Backend returned no reviews" }
-            AppResult.Success(reviews.toModel())
+            reviews.toModel()
         }
-    } catch (cancellation: CancellationException) {
-        throw cancellation
-    } catch (error: Exception) {
-        AppResult.Failure(error.toAppError())
     }
 
     private fun TeacherReviewDraft.toRequest(): SaveTeacherReviewRequest? {

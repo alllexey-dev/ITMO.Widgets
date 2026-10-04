@@ -5,7 +5,7 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.model.toUserSummary
-import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -13,7 +13,6 @@ import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import java.time.LocalDate
 import javax.inject.Inject
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -32,19 +31,8 @@ class LessonFriendsRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun <T> call(request: suspend () -> ApiResponse<T>): AppResult<T> {
-        return try {
-            val data = withContext(Dispatchers.IO) { request().data }
-            if (data != null) {
-                AppResult.Success(data)
-            } else {
-                AppResult.Failure(IllegalStateException("Backend returned no data").toAppError())
-            }
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            AppResult.Failure(error.toAppError())
-        }
+    private suspend fun <T> call(request: suspend () -> ApiResponse<T>): AppResult<T> = appResultOf {
+        checkNotNull(withContext(Dispatchers.IO) { request().data }) { "Backend returned no data" }
     }
 
     private inline fun <T, R> AppResult<T>.map(transform: (T) -> R): AppResult<R> = when (this) {

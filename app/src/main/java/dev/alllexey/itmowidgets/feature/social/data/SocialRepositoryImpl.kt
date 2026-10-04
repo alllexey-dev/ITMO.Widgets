@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.model.toUserSummary
 import dev.alllexey.itmowidgets.core.model.social.UserLookupRequest
-import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -19,7 +19,6 @@ import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import dev.alllexey.itmowidgets.core.model.social.UserProfile as CoreUserProfile
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -235,23 +234,11 @@ class SocialRepositoryImpl @Inject constructor(
         currentUser.value = null
     }
 
-    private suspend fun <T> call(generation: Long, request: suspend () -> ApiResponse<T>): AppResult<T> {
-        return try {
-            withContext(Dispatchers.IO) {
-                if (!isCurrent(generation)) return@withContext AppResult.Failure(AppError.CustomServicesDisabled)
-                val data = request().data
-                if (data != null) {
-                    AppResult.Success(data)
-                } else {
-                    AppResult.Failure(IllegalStateException("Backend returned no data").toAppError())
-                }
-            }
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            AppResult.Failure(error.toAppError())
+    private suspend fun <T> call(generation: Long, request: suspend () -> ApiResponse<T>): AppResult<T> =
+        withContext(Dispatchers.IO) {
+            if (!isCurrent(generation)) return@withContext AppResult.Failure(AppError.CustomServicesDisabled)
+            appResultOf { checkNotNull(request().data) { "Backend returned no data" } }
         }
-    }
 
     private fun combineRequests(
         incoming: AppResult<List<CoreUserProfile>>,
