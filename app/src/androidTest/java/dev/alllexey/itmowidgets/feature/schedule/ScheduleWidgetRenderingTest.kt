@@ -3,11 +3,15 @@ package dev.alllexey.itmowidgets.feature.schedule
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
+import android.os.Build
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
+import androidx.core.graphics.ColorUtils
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
@@ -23,6 +27,7 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.math.roundToInt
 
 @RunWith(AndroidJUnit4::class)
 class ScheduleWidgetRenderingTest {
@@ -62,23 +67,48 @@ class ScheduleWidgetRenderingTest {
     }
 
     @Test
-    fun completedRowsFadeTimeAndContentTogetherAndResetOnReuse() {
+    fun completedLessonsFadeTimeAndContentTogetherAndResetOnReuse() {
         ActivityScenario.launch(SettingsPreviewActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 for (style in LessonStyle.entries) {
                     val parent = FrameLayout(activity)
+                    val xml = activity.layoutInflater.inflate(
+                        if (style == LessonStyle.DOT) R.layout.item_lesson_list_entry_dot else R.layout.item_lesson_list_entry_dash,
+                        parent,
+                        false
+                    )
                     val remote = ScheduleWidgetRenderer.lessonListRow(activity, lesson(ScheduleWidgetLessonState.COMPLETED), style)
                     val row = remote.apply(activity, parent)
-                    assertEquals(0.62f, row.alpha, 0.001f)
+                    assertFade(row, xml, rowTextIds, 0.62f)
                     assertEquals(1f, row.findViewById<View>(R.id.lesson_content).alpha, 0f)
                     assertEquals(1f, row.findViewById<View>(R.id.time_column).alpha, 0f)
-                    // A launcher may reuse a row rendered before whole-row fading was added.
-                    row.findViewById<View>(R.id.lesson_content).alpha = 0.62f
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        // A launcher may reuse a row rendered before whole-row fading was added.
+                        row.findViewById<View>(R.id.lesson_content).alpha = 0.62f
+                    }
                     ScheduleWidgetRenderer.lessonListRow(activity, lesson(ScheduleWidgetLessonState.CURRENT), style).reapply(activity, row)
-                    assertEquals(1f, row.alpha, 0f)
+                    assertFade(row, xml, rowTextIds, 1f)
                     assertEquals(1f, row.findViewById<View>(R.id.lesson_content).alpha, 0f)
                     ScheduleWidgetRenderer.lessonListRow(activity, lesson(ScheduleWidgetLessonState.COMPLETED), style).reapply(activity, row)
-                    assertEquals(0.62f, row.alpha, 0.001f)
+                    assertFade(row, xml, rowTextIds, 0.62f)
+
+                    val singleXml = activity.layoutInflater.inflate(
+                        if (style == LessonStyle.DOT) R.layout.widget_single_lesson_dot else R.layout.widget_single_lesson_dash,
+                        parent,
+                        false
+                    )
+                    val completed = ScheduleWidgetSnapshot(
+                        SingleLessonWidgetContent(SingleLessonWidgetKind.LESSON, lesson(ScheduleWidgetLessonState.COMPLETED)),
+                        emptyList(), style, style
+                    )
+                    val single = ScheduleWidgetRenderer.singleLessonViews(activity, completed).apply(activity, parent)
+                    val content = single.findViewById<View>(R.id.lesson_content)
+                    assertFade(content, singleXml, singleTextIds, 0.62f)
+                    val current = completed.copy(singleLesson = SingleLessonWidgetContent(
+                        SingleLessonWidgetKind.LESSON, lesson(ScheduleWidgetLessonState.CURRENT)
+                    ))
+                    ScheduleWidgetRenderer.singleLessonViews(activity, current).reapply(activity, single)
+                    assertFade(content, singleXml, singleTextIds, 1f)
                 }
             }
         }
@@ -243,6 +273,24 @@ class ScheduleWidgetRenderingTest {
         }
     }
 
+    /**
+     * API 31+ fades [faded] as a whole. Below it `View.setAlpha` is not a RemoteViews method, so every label keeps
+     * its XML colour with the alpha folded in and the type indicator gets an image alpha.
+     */
+    private fun assertFade(faded: View, xml: View, textIds: List<Int>, alpha: Float) {
+        val wholeView = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        assertEquals(if (wholeView) alpha else 1f, faded.alpha, 0.001f)
+        assertEquals(
+            if (wholeView) 255 else (alpha * 255).roundToInt(),
+            faded.findViewById<ImageView>(R.id.type_indicator).imageAlpha
+        )
+        textIds.forEach { id ->
+            val color = xml.findViewById<TextView>(id).currentTextColor
+            val expected = if (wholeView) color else ColorUtils.setAlphaComponent(color, (Color.alpha(color) * alpha).roundToInt())
+            assertEquals("$id", expected, faded.findViewById<TextView>(id).currentTextColor)
+        }
+    }
+
     // XML sizes land as whole pixels while the renderer applies exact floats, hence the 1 px tolerance.
     private fun View.textSize(id: Int): Float = findViewById<TextView>(id).textSize
 
@@ -253,6 +301,11 @@ class ScheduleWidgetRenderingTest {
         )
         layout(0, 0, width, measuredHeight)
     }
+
+    private val singleTextIds = listOf(
+        R.id.type, R.id.time_start, R.id.time_separator, R.id.time_end, R.id.title, R.id.secondary_text, R.id.more_lessons_text
+    )
+    private val rowTextIds = listOf(R.id.time_start, R.id.time_end, R.id.title, R.id.type, R.id.secondary_text)
 
     private fun lesson(state: ScheduleWidgetLessonState) = ScheduleWidgetLesson(
         "Программирование", "13:30", "15:00", 2, "Иванов И. И.", "1506", "Кронверкский проспект, 49", state
