@@ -253,13 +253,34 @@ verification.
 
 ### Running the visual tests
 
+Screens move to JVM screenshot tests (`scripts/verify.sh shots <module>`).
+Instrumented tests stay for what only a device shows: widgets, the
+quick-settings tile, WebView, notifications and the platform list. They run on a
+pool emulator through `scripts/verify.sh ui`, never with bare `adb` or Gradle
+commands against a shared device:
+
+```bash
+scripts/emulator.sh up            # prints ANDROID_SERIAL=emulator-<port>; `up --api 30` for API 30
+ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui WidgetPreviewTest
+scripts/emulator.sh down          # always, also after a failure
+```
+
+- `up` holds one of the two `emulator` build slots for the emulator's
+  lifetime, boots the read-only pool AVD `itmo-pool-api35` (or
+  `itmo-pool-api30`) headless on port 5560 or higher, and waits for the boot.
+  Every boot starts from a clean image and nothing written during a run survives
+  `down`. `scripts/emulator.sh list` shows the pool, the slots and the running
+  emulators.
+- `verify.sh ui` takes bare class names, FQCNs or `Class#method`, comma
+  separated, and runs `:app:connectedGithubDebugAndroidTest` for them. It
+  refuses any serial that is not a running emulator; `emulator-5554` belongs to
+  the integrator, and the owner's phone is never a target.
+- The pool AVDs are created once by the owner with `scripts/emulator.sh init`;
+  agents only run `init --dry-run`.
+
 By default the visual suites run in the light appearance only and write no
-screenshots, which keeps the suite short. Always target the emulator explicitly
-and preserve installed APKs/data with
-`-Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true`; UTP otherwise
-uninstalls its APKs after a run. Never use the user's phone or enable automatic
-uninstallation of an incompatible APK. Two instrumentation arguments switch the
-full checks on:
+screenshots, which keeps the suite short. Two instrumentation arguments switch
+the full checks on:
 
 - `appearanceMatrix=full` runs each visual test in all four appearances: light;
   dark; font scale 1.3 with a dynamic seed on a 320 dp width; dark with font
@@ -269,28 +290,15 @@ full checks on:
   `/sdcard/Android/data/dev.alllexey.itmowidgets/cache/<suite>-screenshots/`
   (the profile and social suites use `files/` instead of `cache/`).
 
-```bash
-ANDROID_SERIAL=emulator-5554 ./gradlew :app:connectedGithubDebugAndroidTest \
-  -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true \
-  -Pandroid.testInstrumentationRunnerArguments.appearanceMatrix=full \
-  -Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true
-```
-
-The same run through `adb`, for one class:
-
-```bash
-adb -s emulator-5554 shell am instrument -w -e appearanceMatrix full -e captureScreenshots true \
-  -e class dev.alllexey.itmowidgets.feature.onboarding.OnboardingVisualTest \
-  dev.alllexey.itmowidgets.test/androidx.test.runner.AndroidJUnitRunner
-adb -s emulator-5554 pull /sdcard/Android/data/dev.alllexey.itmowidgets/cache/onboarding-screenshots
-```
-
-Before calling a UI change done, run the affected suites with both arguments
-and look at the PNGs; the default run only proves the layout holds in light.
-`Screenshots` exports PNGs to Gradle's
-`app/build/outputs/connected_android_test_additional_output/debugAndroidTest/connected/`.
-Copy a completed suite's screenshots into ignored `vibe/` before another
-connected run can replace that output directory.
+`verify.sh ui` passes no instrumentation arguments, so a lane run proves the
+light pass only. The full matrix with PNGs is an integrator run on
+`emulator-5554`; a PR that needs it says so. Before a UI change is called
+done, the affected suites run with both arguments and someone looks at the
+PNGs; the default run only proves the layout holds in light. `Screenshots`
+exports PNGs to Gradle's
+`app/build/outputs/connected_android_test_additional_output/githubDebugAndroidTest/connected/`;
+copy a completed suite's screenshots into ignored `vibe/` before another
+connected run replaces that directory.
 
 Preview hosts set `delegate.localNightMode` before attaching their base context;
 setting it in `onCreate` can trigger an extra recreation and consume one-shot
