@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.hilt.android)
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
 }
 
 // Release signing reads the ignored keystore.properties; a debug build needs none.
@@ -144,7 +144,7 @@ dependencies {
     implementation(libs.jsoup)
     implementation(libs.hilt.android)
     "playImplementation"(libs.play.app.update.ktx)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.konsist)
     testImplementation(libs.kotlinx.coroutines.test)
