@@ -41,10 +41,14 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 
 - [Screen inventory](features/screens.md) — every Fragment, sheet, dialog and
   Activity with its ViewModel, entry, debug host and visual tests.
+- [Sign-in](features/auth.md) — the sign-in screen, the ITMO.ID page and the
+  refresh-token dialog, the session lifecycle and sign-out.
 - [First-run flow](features/onboarding.md) — the three steps after sign-in, the
   root gate and the replay from maintenance.
 - [Schedule](features/schedule.md) — academic schedule, friends' schedules,
   pending sport rows, lesson details, schedule changes checked on the device.
+- [Friend selector](features/friend-selector.md) — the sheet that picks whose
+  schedule is shown: recent chips, friends and people search, the result.
 - [Sport](features/sport.md) — catalog, bookings, queues, cards and details.
 - [Recordbook](features/recordbook.md) — MyITMO recordbook, BARS overlay,
   physical-education link, the one-page subject screen, new marks checked on
@@ -52,12 +56,18 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 - [Subject links](features/resources.md) — link categories and audiences,
   chips, sheets, the local mode without the connection.
 - [Social](features/social.md) — friends, requests, people search, person profiles.
+- [Profile tab](features/me.md) — the own identity, the social and application
+  rows, project links and sign-out.
 - [Teacher reviews](features/reviews.md) — own reviews with premoderation, votes
   and reports, and Reviews copies in person profiles; the AI summary and the
   teacher tone dots; the editor and the report.
 - [Notifications](features/notifications.md) — FCM receiver, token sync,
   handlers, the local schedule-changes and marks notifications.
 - [Widgets](features/widgets.md) — schedule and QR widgets and their previews.
+- [QR pass](features/qr.md) — the pass screen, its cache, the quick-settings
+  tile and the `qr_pass` shortcut.
+- [My ITMO in the app](features/my-itmo-web.md) — the official website in a
+  WebView overlay, its navigation policy and session cleanup.
 - [Update offer](features/update.md) — version check, reminder policy and
   «Обновить» in the `github` and `play` variants.
 - [Web sign-in](features/web-login.md) — approving a browser's sign-in to the
@@ -66,6 +76,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
   repositories, what works and what is refused, the fictional data set.
 - [App Links and sharing](features/app-links.md) — shared profile and sport
   lesson links, their routes in the app and the site fallback.
+- [Debug tools](features/debug.md) — the debug-build screen: test refresh
+  token, academic date, sport overrides, one-off background checks.
 
 ## Decisions
 
