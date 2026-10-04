@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Screenshots
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -39,33 +40,42 @@ class SelectionRowsTest {
     fun friendSelectionAndAvailabilityAreExposedOnTheWholeRowAfterRebinding() = preview { scenario ->
         scenario.onActivity { activity ->
             val friend = friend()
+            val closed = friend.copy(sharing = UserSharing(sport = true, schedule = false))
             val clicks = mutableListOf<UserSummary>()
-            val adapter = FriendSelectorAdapter(friend.isu, clicks::add, onOpenProfile = {})
+            val profiles = mutableListOf<UserSummary>()
+            val adapter = FriendSelectorAdapter(friend.isu, clicks::add, profiles::add)
             val holder = adapter.onCreateViewHolder(activity.sectionsContainer, 0)
-            val row = holder.itemView as MaterialCardView
+            val row = holder.itemView
+            val name = row.findViewById<TextView>(R.id.name)
             activity.sectionsContainer.addView(row)
 
             holder.bind(friend)
             assertChoice(row, checked = true)
             assertTrue(row.contentDescription.contains(friend.name))
-            assertTrue(row.strokeWidth > 0)
+            assertNotNull("The selected row has a secondary-container surface", row.background)
+            assertEquals(
+                MaterialColors.getColor(row, com.google.android.material.R.attr.colorOnSecondaryContainer),
+                name.currentTextColor
+            )
             assertEquals(View.VISIBLE, row.findViewById<View>(R.id.trailing_icon).visibility)
             row.performClick()
             assertEquals(listOf(friend), clicks)
 
-            holder.bind(friend.copy(sharing = UserSharing(sport = true, schedule = false)))
+            holder.bind(closed)
             assertChoice(row, checked = false, selectable = false)
-            assertFalse(row.isEnabled)
-            assertFalse(row.isClickable)
-            assertEquals(0, row.strokeWidth)
+            assertTrue(row.isEnabled)
+            assertNull(row.background)
+            assertEquals(View.VISIBLE, row.findViewById<View>(R.id.trailing_icon).visibility)
             assertTrue(row.contentDescription.contains(activity.getString(R.string.friend_picker_schedule_hidden)))
             row.performClick()
             assertEquals(1, clicks.size)
+            assertEquals(listOf(closed), profiles)
 
             adapter.setSelectedIsu(null)
             holder.bind(friend)
             assertChoice(row, checked = false)
             assertTrue(row.isEnabled)
+            assertNull(row.background)
             assertEquals(1f, row.alpha, 0f)
             assertEquals(View.INVISIBLE, row.findViewById<View>(R.id.trailing_icon).visibility)
 
@@ -134,10 +144,13 @@ class SelectionRowsTest {
         for (spec in Appearances.default) {
             preview(spec.fontScale, spec.dark, spec.colorSeed) { scenario ->
                 scenario.onActivity { activity ->
-                    val friendAdapter = FriendSelectorAdapter(onClick = {}, onOpenProfile = {})
-                    val friendHolder = friendAdapter.onCreateViewHolder(activity.sectionsContainer, 0)
-                    friendHolder.bind(friend())
-                    activity.sectionsContainer.addView(friendHolder.itemView)
+                    val friendAdapter = FriendSelectorAdapter(friend().isu, onClick = {}, onOpenProfile = {})
+                    val closed = friend().copy(isu = 900002, sharing = UserSharing(sport = true, schedule = false))
+                    for (person in listOf(friend(), closed)) {
+                        val friendHolder = friendAdapter.onCreateViewHolder(activity.sectionsContainer, 0)
+                        friendHolder.bind(person)
+                        activity.sectionsContainer.addView(friendHolder.itemView)
+                    }
                     val filterAdapter = MultiSelectSearchableAdapter(listOf(SelectableItem(LONG_SPORT)))
                     val filterHolder = filterAdapter.onCreateViewHolder(activity.sectionsContainer, 0)
                     filterAdapter.onBindViewHolder(filterHolder, 0)
@@ -151,8 +164,14 @@ class SelectionRowsTest {
                         assertTrue(row.height >= 48 * activity.resources.displayMetrics.density)
                         assertTrue(row.width >= 48 * activity.resources.displayMetrics.density)
                     }
-                    for (id in listOf(R.id.name, R.id.sharing_status, R.id.item_name_text_view)) {
-                        val text = container.findViewById<TextView>(id)
+                    val texts = (0 until container.childCount).flatMap { index ->
+                        val row = container.getChildAt(index)
+                        listOf(R.id.name, R.id.sharing_status, R.id.item_name_text_view)
+                            .mapNotNull { row.findViewById<TextView>(it) }
+                            .filter { it.visibility == View.VISIBLE }
+                    }
+                    assertTrue(texts.any { it.id == R.id.sharing_status })
+                    for (text in texts) {
                         assertTrue(text.layout.height <= text.height - text.compoundPaddingTop - text.compoundPaddingBottom)
                         for (line in 0 until text.lineCount) assertEquals(0, text.layout.getEllipsisCount(line))
                     }
