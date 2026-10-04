@@ -12,11 +12,6 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 - [Roadmap](product/roadmap.md) — v2.3 goals, parity rules, gates, iOS tiers,
   the v2.4 backlog.
 
-## Process
-
-- [Release checklist](process/release-checklist.md) — the order and checks of
-  a release, with the owner's steps marked.
-
 ## Engineering
 
 - [Architecture](architecture.md) — package structure, layers, enforced rules,
@@ -36,6 +31,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
   the module `AGENTS.md` shape, rules for writing docs.
 - [Integration](process/integration.md) — how lane PRs reach `v2.3/next` and
   how `v2.3/next` reaches the default branches.
+- [Release checklist](process/release-checklist.md) — the order and checks of
+  a release, with the owner's steps marked.
 
 ## Features
 
@@ -43,6 +40,8 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
   Activity with its ViewModel, entry, debug host and visual tests.
 - [First-run flow](features/onboarding.md) — the three steps after sign-in, the
   root gate and the replay from maintenance.
+- [Home and quick actions](features/home.md) — the home feed of cards, the QR
+  pass, the quick-settings tile, the app shortcuts and the My ITMO entry.
 - [Schedule](features/schedule.md) — academic schedule, friends' schedules,
   pending sport rows, lesson details, schedule changes checked on the device.
 - [Sport](features/sport.md) — catalog, bookings, queues, cards and details.

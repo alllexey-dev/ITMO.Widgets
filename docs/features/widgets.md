@@ -38,7 +38,7 @@ the app.
   only to compact; hiding past lessons and tomorrow selection belong only to full.
   The full list uses actual lesson ends, not the compact selection. Shared work
   refreshes at the earliest start/end or compact early-switch boundary.
-- `AppSettingsStorage` reads both formats atomically. New format-specific keys
+- `WidgetSettingsPreferences` reads both formats atomically. New format-specific keys
   override read-only shared fallback keys without changing the other format.
 - Smart update scheduling and the single visual style are fixed; there are no
   selectors. Completed rows dim uniformly; the day widget centres its

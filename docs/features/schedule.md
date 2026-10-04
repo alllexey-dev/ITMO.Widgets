@@ -76,8 +76,11 @@ answered through `FriendSelectionContract` fragment results.
   choice enters the recent history only after Apply and appears on the next opening.
   Profile refreshes update metadata in place; removed or private schedules stop
   being selectable without reordering the remaining chips.
-- The own chip reads the current user from its own flow, so an empty or failed
-  friend list still shows the avatar.
+- The own chip reads the current user from the picker state, so an empty or
+  failed friend list still shows the avatar.
+- Filtering, the pending choice and the recent-chip order live in
+  `FriendSelectorViewModel`; the pending ISU and the chip order survive process
+  death through its `SavedStateHandle`.
 
 ## Pending sport rows
 

@@ -12,7 +12,7 @@ current study groups in `UserData`, as described in
 ## Repositories
 
 - `SocialRepository` loads friends, incoming and outgoing requests and the own
-  Backend profile in one refresh, caches them as `SocialState` flows and exposes
+  Backend profile in one refresh, caches them as `LoadState` flows (`core/result/LoadState`) and exposes
   `profile(isu)`, `userFriends(isu)`, `lookup(isus)` and the actions `sendRequest`, `acceptRequest`,
   `rejectRequest`, `cancelRequest`, `removeFriend`. Every action returns the
   fresh `UserProfile` and folds it into the cached lists, so screens never
@@ -39,7 +39,7 @@ current study groups in `UserData`, as described in
 screens and `SessionDataCleaner` use the same instance. `cachedProfile`,
 `cachedUserFriends` and `cachedReviews` are unavailable while the opt-in is off
 or unknown. Disabling it clears the caches, changes friends and requests to
-`SocialState.Disabled` and clears the own Backend profile. A short atomic
+`LoadState.Disabled` and clears the own Backend profile. A short atomic
 publication check compares a local generation; a late response from before
 disabling or sign-out cannot refill the cleared cache, even after re-enabling.
 Stale opt-in reads cannot clear or revive a newer connection either.

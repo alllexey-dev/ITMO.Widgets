@@ -38,32 +38,35 @@ core/           cross-cutting contracts and helpers; knows nothing about feature
   location/     ITMO building directory and map destinations
   model/        transport DTOs and the shared identity models (UserSummary, UserProfile,
                 UserData.toUserSummary)
-  navigation/   contracts between features: screen arguments, Fragment results, widget and tile
-                class names, shared-link parsing and building
+  navigation/   contracts between features: screen arguments, Fragment results, shared-link parsing
+                and building; AppEntryIntents holds the main screen's entry actions and its class
+                name for widgets, the tile, shortcuts and notifications (core/ui/navigation/
+                AppEntryIntentFactory builds the intents without importing the activity)
   network/      WidgetsClient, PublicWebClient (cookie-free, for public pages), error mapping
                 (an IOException anywhere in the cause chain is AppError.Network), serialization adapters
   notification/ FCM receiver and dispatch, notification channels, the AppNotifier contract
   onboarding/   whether the first-run flow was passed
-  presentation/ view-model helpers: one-shot event queue, refresh tracking, busy keys
+  presentation/ the ViewModel kit: EventQueue, RefreshMode, RefreshTracker, BusyKeys, StableOrder
   qr/           custom QR spoiler images shared by settings and the QR widget
   recordbook/   mark-check and BARS sign-in contracts shared with settings and home
   resources/    subject link contracts and models shared by resources and the recordbook
-  result/       AppError, AppResult, LoadState
+  result/       AppError, AppResult (built with appResultOf {}), LoadState
   reviews/      teacher review and teacher level contracts and models
   schedule/     schedule contracts shared with other features: preferences, widget refresh, lessons
                 by subject and by teacher, schedule changes, calendar sync and the `.ics` export
-  services/     the Backend opt-in (CustomServicesRepository, BackendGate)
+  services/     BackendGate, the one reader of the Backend opt-in (isConnected, mayCallBackend,
+                isOptedIn); CustomServicesRepository, the opt-in switch
   session/      token store, session repository, current user, device registration, SessionDataCleaner
   settings/     widget appearance settings for screens outside settings (the first-run flow)
   social/       social and people-search contracts
   sport/        sport score and pending booking contracts
-  storage/      DataStore wrappers, encrypted token storage, atomic files
+  storage/      per-concern DataStore preference stores, encrypted token storage, atomic files
   text/         UiText; core/ui `resolve()` resolves UiText arguments first, so a format takes
                 localized names
   time/         AcademicTimeProvider, WallClock
   ui/           shared views, texts and UI helpers, the AppNavigator port, widget preview and
                 pinning, the spoiler crop screen
-  util/         small helpers: colors, schedule formatting, stable order, HTTPS and Telegram links
+  util/         HttpsNavigationPolicy and TelegramLinks
   weblogin/     the contract for approving a browser's sign-in to the web version
   work/         rules shared by the background checks: QuietHours, CheckOutcome, outcomeOf, workResultOf
 di/             Hilt modules, one per feature or concern
@@ -107,14 +110,35 @@ contracts go through `core`.
 
 ### Screen state and events
 
-A screen exposes one `StateFlow` of a sealed state (`Loading`, `Content`,
-`Empty`, `Error`). One-shot effects such as navigation, snackbars and dialogs go
-through a `Channel` exposed as a `Flow` and are collected with the view lifecycle.
+A ViewModel exposes one `uiState: StateFlow<S>`, at most one `events: Flow<E>`
+backed by an `EventQueue<E>` (`core/presentation`), `refresh(mode: RefreshMode)`
+when the screen refreshes, and plain action functions; no other public flow or
+value. `S`, `E` and row models live in `<Screen>UiState.kt` beside the
+ViewModel, never in the ViewModel file. They hold no `R`, `android.*` or
+`Context`: text is `UiText`, failures are `AppError`, and events carry typed
+values, never text. `SavedStateHandle` is allowed; only the route or the
+Fragment host obtains a ViewModel (decision
+[0020](decisions/0020-navigation-3.md)).
 
-Derive state, never strand it: a ViewModel does not write a transient `Loading`
-into a state otherwise driven by a repository flow, because `StateFlow` conflates
-equal values and a refresh ending on the same value emits nothing. Combine the
-repository flow with an explicit in-flight flag (`FriendSelectorViewModel`).
+`RefreshMode` says who asked: `Silent` (entry, resume; no indicator), `Pull`
+(pull-to-refresh) or `Force` (retry, manual reload; may bypass caches).
+`RefreshTracker` runs one refresh at a time: other requests join it, a `Pull`
+raises `refreshing`, and only `Force` replaces a running non-forced refresh.
+`BusyKeys<K>` marks per-row actions busy until they complete, however they
+complete. Repositories hand cached collections to the screen as
+`core/result/LoadState` (`Loading`, `Disabled`, `Content(value, error)`,
+`Error`); a one-shot or replayed single source answers `AppResult`. The kit
+never catches.
+
+Derive state, never strand it: `uiState` combines the repository flow with
+`RefreshTracker.refreshing` and `BusyKeys.busy`; a ViewModel never writes a
+transient `Loading` into a state otherwise driven by a repository flow, because
+`StateFlow` conflates equal values and a refresh ending on the same value emits
+nothing. One-shot effects (navigation, snackbars, dialogs) go through `events`
+and are collected with the view lifecycle; an event sent while no view collects
+is delivered once to the next collector. The test-only `ReferenceViewModel`
+(`app/src/test/java/dev/alllexey/itmowidgets/core/presentation/ReferenceViewModel.kt`)
+is the worked example; `FriendSelectorViewModel` is the first production one.
 
 ### Errors
 
@@ -129,16 +153,17 @@ once (`backendErrorCode`); server messages are never shown as UI text.
 
 ### Threading
 
-Data sources own their dispatcher. Disk and network run under
-`Dispatchers.IO`; cold flows that read disk do so on collection, not at call
-time. `viewModelScope` is `Main.immediate`, so ViewModel code runs on the main
-thread until it suspends.
+Data sources own their dispatcher. Disk and network run on the injected
+`AppDispatchers.io` (bound to `Dispatchers.IO` in `di/CoroutinesModule.kt`); no
+`Dispatchers.IO` outside `core/coroutines` and `di`. Cold flows that read disk
+do so on collection, not at call time. `viewModelScope` is `Main.immediate`, so
+ViewModel code runs on the main thread until it suspends.
 
 ### Persistence
 
 | Data | Store |
 |---|---|
-| Settings, flags, one-off values | DataStore (`AppSettingsStorage`, `UtilityStorage`); `demo_active` marks the demo session |
+| Settings, flags, one-off values | DataStore through the per-concern `*Preferences` stores in `core/storage` (`WidgetSettingsPreferences`, `MarkSourcePreferences`, `DemoPreferences`, ...) and `UtilityStorage`; `demo_active` marks the demo session |
 | ITMO.ID tokens, BARS session | Encrypted files via Android Keystore |
 | Schedule and QR caches | Files under `cacheDir`, observed through flows |
 | Device-only subject links and the last links answer per subject period | `filesDir/subject_links/cache.json`, atomic writes, excluded from backup and device transfer |
@@ -177,11 +202,11 @@ local generations invalidate late publications after opt-out or session clear.
 ### The two-backend seam
 
 MyItmoApi and Core's `ItmoWidgetsApi` are touched only inside `data`. A
-repository may combine both. Every call to Backend passes the custom-services
-gate inside the repository, so no data source can bypass it. Before that, every
-class holding a network client (`ItmoWidgetsApi`, `MyItmo`, `MyItmoApi`, `Bars`,
-the `@PublicWebClient` `OkHttpClient`) checks `DemoMode` where it calls the
-network: the demo session reads the feature's `data/demo` and refuses writes
+repository may combine both. Every call to Backend passes
+`BackendGate.mayCallBackend()` inside the repository, so no data source can
+bypass it. Before that, every class holding a network client (`ItmoWidgetsApi`,
+`MyItmo`, `MyItmoApi`, `Bars`, the `@PublicWebClient` `OkHttpClient`) checks
+`DemoMode` where it calls the network: the demo session reads the feature's `data/demo` and refuses writes
 with `AppError.DemoUnavailable`. *Enforced* for the constructor parameter; the
 demo gate tests cover the behaviour.
 
@@ -198,6 +223,48 @@ by `di/UpdateActionModule` in `app/src/github` (`GithubUpdateAction` opens
 `app/src/play` (`PlayUpdateAction` and `PlayInstallStateWatcher` on Play In-App
 Updates, `com.google.android.play:app-update-ktx`, a `playImplementation`
 dependency). Nothing else lives in the variant source sets.
+
+### Stable identifiers
+
+Some names outlive an app update: the launcher, SystemUI, WorkManager, placed
+widgets, pending intents and files on disk hold them. These are the manifest
+component class names, the App Link hosts and paths, the shortcut ids and
+actions, the FileProvider authority and its `cacheDir/ics/` path, the worker
+class names and unique work names, the `dev.alllexey.itmowidgets.action.*` intent
+actions, the notification channel ids and the deletion of
+`fcm_default_channel`, the DataStore file, the token files, their Keystore
+alias and format prefix, the widget snapshot, the debug override files, the
+`filesDir` and `cacheDir` directories with their inner files, the backup
+exclusions, the application id and the `github` and `play` flavors.
+
+`StableIdentifiersTest` holds them as literal values and is the source of
+truth; this list only summarises it. A class may move between files or modules
+as long as its package stays the same. A package or value change fails the
+test. The list only grows. Changing an entry needs an ADR (see decisions
+[0016](decisions/0016-parity-rewrite.md) and
+[0030](decisions/0030-release-lines-and-data-continuity.md)) and a dual read of
+the old value, so installed apps keep their work, widgets, settings and
+sessions.
+
+### Strings
+
+User-visible text is Russian and lives in
+`app/src/main/res/values/strings_<file>.xml`, split by owner, not by prefix.
+`strings_platform.xml` holds every id a system surface reaches: the manifest,
+`res/xml*`, widget and launcher-preview layouts, widget renderers, notifiers and
+push handlers, the QS tile and the device calendar. It also holds every id the
+shared builders `core/ui/{ScheduleChangeTexts,LocationTitles,LessonTypes,MarkTexts}.kt`
+use. These keys are frozen in `scripts/strings-frozen-keys.txt` (append-only)
+and are always exported to Android `res` and the Apple catalog.
+`strings_common.xml` holds ids used by two or more modules or by `core/**`.
+Every other id lives in its module's `strings_<module>.xml`: `app`, `debug`,
+`qr`, `home`, `schedule`, `sport`, `recordbook`, `social`, `settings`,
+`resources`, `reviews`, and one file per account package (`auth`,
+`onboarding`, `me`, `weblogin`, `web`, `update`).
+`scripts/strings-owners.py --where <id|path>` places a new string, and
+`--report` lists id, file and users. Only L05 writes `strings_common.xml` and
+`strings_platform.xml`; other lanes hand rows in as `## Catalog hand-in`.
+`StringOwnershipTest` keeps the split honest.
 
 ### Time
 
@@ -217,8 +284,8 @@ Workers are built by WorkManager and take their dependencies through an
 `@EntryPoint` (`QrWidgetEntryPoint`, `ScheduleWidgetEntryPoint`,
 `ScheduleChangesEntryPoint`, `CalendarSyncEntryPoint`, `MarksEntryPoint`, `BarsCookieProbeEntryPoint`,
 the FCM workers in `core/notification/FcmWork.kt`),
-not `@HiltWorker`: `androidx.hilt`'s processor cannot read Kotlin 2.0 metadata
-under kapt, and an entry point needs no custom `WorkManager` configuration.
+not `@HiltWorker`: an entry point needs no `androidx.hilt` processor next to
+Hilt's own (which runs on KSP) and no custom `WorkManager` configuration.
 
 ### Navigation
 
@@ -318,8 +385,13 @@ override stores, the debug refresh-token controller and the debug tools screen
 check `BuildConfig.DEBUG` themselves (`debug code is gated`); no production
 source names the GitHub releases page, which only the `github` variant's
 `BuildConfig.DOWNLOAD_URL` holds (`distribution variants take the download
-address from BuildConfig`). The suite filters agent worktrees by the project
-path, so it also runs inside one.
+address from BuildConfig`). The rules are split by topic:
+`LayerRulesTest`, `FeatureIsolationRulesTest`, `TimeRulesTest`,
+`GateRulesTest`, `StorageRulesTest`, `DebugRulesTest`,
+`DistributionRulesTest` and `UiRulesTest`, over the shared `ArchitectureScope`,
+whose scopes must stay above non-empty floors so a rule cannot pass on nothing.
+The scope filters agent worktrees by the project path, so the suite also runs
+inside one.
 `DesignCardResourcesTest` pins the card style family from
 [`design.md`](design.md). Add a rule when a new invariant is agreed instead of
 relying on review.
@@ -340,20 +412,34 @@ relying on review.
   code that logs through `android.util.Log` run.
 - ViewModels are created inside the test body after `MainDispatcherRule` is
   installed, never in a field.
-- Fakes over mocks: small in-memory repositories (`FakeSocialRepository`), a
-  `Proxy`-based `ItmoWidgetsApi` fake, and `myItmoStub` that answers real
-  Retrofit calls with synthetic JSON. Prefer extracting a small collaborator over
-  faking six repositories.
+- Fakes over mocks: small in-memory fakes, a `Proxy`-based `ItmoWidgetsApi`
+  fake per endpoint group, and `myItmoStub` that answers real Retrofit calls
+  with synthetic JSON. A fake of a `core` contract lives once in
+  `app/src/test/java/dev/alllexey/itmowidgets/core/testing/`
+  (`FakeSocialRepository`, `FakeCustomServicesRepository`,
+  `FixedAcademicTime`, ...); a fake of a feature contract lives in that
+  feature's `*Fakes.kt`. No test imports another feature's test code. Two fakes
+  of one contract differ in purpose and say so in their names.
+  `SportCardFixtures` lives in the debug source set, shared by debug unit
+  tests, instrumented tests and the debug hosts. Prefer extracting a small
+  collaborator over faking six repositories.
 - Instrumented tests cover what needs a device: Keystore, file storage, real
   layouts in an isolated debug host (`SportCardsVisualTest`,
   `RecordbookVisualTest`, `SelectionRowsTest`, `SportScoreCollapseTest`).
-- Visual tests share `app/src/androidTest/.../testing/`: `Appearances` (the
-  light/dark/dynamic/narrow matrix mapped onto each debug host's `Appearance`),
+- Visual tests share `app/src/androidTest/java/dev/alllexey/itmowidgets/testing/`:
+  `Appearances` (the light/dark/dynamic/narrow matrix; `Appearances.Spec.toPreview()`
+  builds the one `core/debug/PreviewAppearance` every debug host takes, and each
+  feature's mappers live in `testing/<Feature>Appearances.kt`),
   `Screenshots` (write-only PNGs), `TestUi` (`settle`, `eventually`,
   `awaitFrameCommit`) and `ViewChecks` (`assertTextFits`, `assertTouchTargets`,
   `descendants`). By default a visual test runs one appearance and takes no
   screenshots; the full matrix and the PNGs are opt-in through instrumentation
-  arguments, see [Verification matrix](design.md#verification-matrix).
+  arguments, see [Verification matrix](design.md#verification-matrix). Debug
+  hosts that implement `AppNavigator` delegate to the debug `NoOpAppNavigator`.
+- `UpgradeFrom22Test` (androidTest, pool emulator) reads the 2.2 data directory
+  captured in `app/src/androidTest/assets/upgrade-2.2/` through head stores; a
+  change that moves or reformats persisted data updates its checker in
+  `upgrade/stores/`, never the assets.
 
 ## Known gaps
 
@@ -375,5 +461,5 @@ Structural debt, in priority order:
 4. Errors surface as `AppError`.
 5. New persistence follows the DataStore/file rules and user-scoped caches
    implement `SessionDataCleaner`.
-6. Anything reaching Backend passes the custom-services gate; anything reaching
-   the network passes the demo gate.
+6. Anything reaching Backend passes `BackendGate.mayCallBackend()`; anything
+   reaching the network passes the demo gate.

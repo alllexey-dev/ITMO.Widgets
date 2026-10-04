@@ -40,10 +40,18 @@ when the steps it depends on are verified.
 
    ```bash
    git status --short --branch
-   scripts/verify.sh ship          # full verify and the Play policy check
+   scripts/verify.sh ship          # scripts/ship-check.sh, all five stages
    scripts/check-docs.sh --strict
    scripts/changelog.sh check
    ```
+
+   Every prerelease head and the release candidate need a green
+   `scripts/ship-check.sh` with all five stages, run by the integrator on
+   `emulator-5554` on the head being tagged
+   ([ship check](integration.md#ship-check)); record the path of its
+   `~/proj/.wt/run/ship/<sha7>/summary.md`. The upgrade from the release-signed
+   2.2 to the signed candidate stays a manual owner step: the manual pass
+   of section 5, item 4.
 
 3. Visual pass, once per release: the full appearance matrix of the
    screenshot tests and the instrumentation suite on a pool emulator,

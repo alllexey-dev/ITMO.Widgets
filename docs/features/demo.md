@@ -26,7 +26,7 @@ reviewer finds the entry in the access instructions of the Play listing.
   `DemoPeople.ME` (Анна Смирнова, ISU 999001, group K3221).
 - `startDemo()` cancels widget work (`prepareForSessionChange`), runs every
   `SessionDataCleaner`, clears the ITMO.ID tokens and stores `demo_active` in
-  `AppSettingsStorage`. It does not call Backend identity sync, FCM token sync,
+  `DemoPreferences`. It does not call Backend identity sync, FCM token sync,
   device registration or the signed-in lifecycle effects, so no background
   work is scheduled.
 - `demo_active` survives process death: `initialize()` restores the demo
