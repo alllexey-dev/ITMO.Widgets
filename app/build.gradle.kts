@@ -106,8 +106,17 @@ kotlin {
     }
 }
 
+// Konsist reads sources that are not compile inputs: an import-only edit leaves the bytecode
+// unchanged, so without this the up-to-date check or the build cache would replay a stale result.
+tasks.withType<Test>().configureEach {
+    inputs.dir("src")
+        .withPropertyName("konsistSources")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+}
+
 dependencies {
-    implementation("com.github.bumptech.glide:glide:5.0.5")
+    implementation(platform(libs.kotlinx.coroutines.bom))
+    implementation(libs.glide)
     implementation(libs.android.image.cropper)
     implementation(libs.itmo.widgets.core)
     implementation(libs.my.itmo.api)
@@ -124,6 +133,13 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.play.services.code.scanner)
     implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.savedstate)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.viewpager2)
+    implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp)
     implementation(libs.jsoup)
     implementation(libs.hilt.android)
@@ -134,5 +150,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.monitor)
+    androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.espresso.core)
 }
