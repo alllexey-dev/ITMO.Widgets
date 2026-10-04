@@ -1,11 +1,11 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.widget
 
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
@@ -75,7 +75,7 @@ class ScheduleWidgetDataProvider @Inject constructor(
 
     private suspend fun loadPending(): List<PendingSportBooking> = try {
         pendingBookings.refresh()
-        pendingBookings.getPendingBookings().dataOrNull().orEmpty()
+        pendingBookings.getPendingBookings().valueOrNull().orEmpty()
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (_: Exception) {

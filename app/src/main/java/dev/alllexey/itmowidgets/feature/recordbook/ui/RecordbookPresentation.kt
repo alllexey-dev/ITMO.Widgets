@@ -8,8 +8,8 @@ import androidx.core.graphics.ColorUtils
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.messageRes
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroup
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlGroupKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep

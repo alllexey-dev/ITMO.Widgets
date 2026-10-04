@@ -3,8 +3,8 @@ package dev.alllexey.itmowidgets.feature.social.presentation
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
-import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.profile
@@ -28,8 +28,8 @@ class FriendsViewModelTest {
     fun `friends tab lists friends with a remove action and requests tab groups by direction`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeSocialRepository().apply {
-                friends.value = SocialState.Content(listOf(profile(1, RelationshipState.FRIENDS)))
-                requests.value = SocialState.Content(
+                friends.value = LoadState.Content(listOf(profile(1, RelationshipState.FRIENDS)))
+                requests.value = LoadState.Content(
                     FriendRequests(
                         incoming = listOf(profile(2, RelationshipState.INCOMING)),
                         outgoing = listOf(profile(3, RelationshipState.OUTGOING))
@@ -71,8 +71,8 @@ class FriendsViewModelTest {
     fun `accepting moves the person to friends and removal asks for confirmation first`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeSocialRepository().apply {
-                friends.value = SocialState.Content(emptyList())
-                requests.value = SocialState.Content(
+                friends.value = LoadState.Content(emptyList())
+                requests.value = LoadState.Content(
                     FriendRequests(incoming = listOf(profile(2, RelationshipState.INCOMING)), outgoing = emptyList())
                 )
             }
@@ -103,8 +103,8 @@ class FriendsViewModelTest {
     @Test
     fun `a failed action surfaces an event and keeps the row`() = runTest(mainDispatcherRule.dispatcher) {
         val repository = FakeSocialRepository().apply {
-            friends.value = SocialState.Content(emptyList())
-            requests.value = SocialState.Content(
+            friends.value = LoadState.Content(emptyList())
+            requests.value = LoadState.Content(
                 FriendRequests(incoming = emptyList(), outgoing = listOf(profile(3, RelationshipState.OUTGOING)))
             )
             actionError = AppError.Network
@@ -129,13 +129,13 @@ class FriendsViewModelTest {
             advanceUntilIdle()
             assertEquals(FriendsUiState.Loading, viewModel.uiState.value)
 
-            repository.friends.value = SocialState.Disabled
-            repository.requests.value = SocialState.Disabled
+            repository.friends.value = LoadState.Disabled
+            repository.requests.value = LoadState.Disabled
             advanceUntilIdle()
             assertEquals(FriendsUiState.Disabled, viewModel.uiState.value)
 
-            repository.friends.value = SocialState.Error(AppError.Unauthorized)
-            repository.requests.value = SocialState.Content(FriendRequests.EMPTY)
+            repository.friends.value = LoadState.Error(AppError.Unauthorized)
+            repository.requests.value = LoadState.Content(FriendRequests.EMPTY)
             advanceUntilIdle()
             assertEquals(FriendsUiState.Error(AppError.Unauthorized), viewModel.uiState.value)
         }

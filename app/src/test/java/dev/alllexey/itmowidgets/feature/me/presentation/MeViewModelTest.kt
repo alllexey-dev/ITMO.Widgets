@@ -6,10 +6,10 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
-import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
@@ -42,8 +42,8 @@ class MeViewModelTest {
     fun `summarizes friends and incoming requests from the social repository`() =
         runTest(mainDispatcherRule.dispatcher) {
             val social = FakeSocialRepository().apply {
-                friends.value = SocialState.Content(listOf(friendProfile(1), friendProfile(2)))
-                requests.value = SocialState.Content(FriendRequests(listOf(friendProfile(3)), emptyList()))
+                friends.value = LoadState.Content(listOf(friendProfile(1), friendProfile(2)))
+                requests.value = LoadState.Content(FriendRequests(listOf(friendProfile(3)), emptyList()))
                 currentUser.value = friendProfile(9).user
             }
 
@@ -57,12 +57,12 @@ class MeViewModelTest {
 
     @Test
     fun `disabled services and errors are reported as such`() = runTest(mainDispatcherRule.dispatcher) {
-        val social = FakeSocialRepository().apply { friends.value = SocialState.Disabled }
+        val social = FakeSocialRepository().apply { friends.value = LoadState.Disabled }
         val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(false))
         advanceUntilIdle()
         assertEquals(MeFriendsSummary.Disabled, viewModel.uiState.value.friends)
 
-        social.friends.value = SocialState.Error(AppError.Network)
+        social.friends.value = LoadState.Error(AppError.Network)
         advanceUntilIdle()
         assertEquals(MeFriendsSummary.Error, viewModel.uiState.value.friends)
     }

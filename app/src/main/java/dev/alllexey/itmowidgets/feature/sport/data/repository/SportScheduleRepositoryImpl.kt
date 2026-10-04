@@ -3,13 +3,13 @@ package dev.alllexey.itmowidgets.feature.sport.data.repository
 import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.result.errorOrNull
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.core.util.MergedDataState
-import dev.alllexey.itmowidgets.core.util.dataOrNull
-import dev.alllexey.itmowidgets.core.util.errorOrNull
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
@@ -44,11 +44,11 @@ class SportScheduleRepositoryImpl @Inject constructor(
     private val dispatchers: AppDispatchers
 ) : SportScheduleRepository {
 
-    private val scheduleFlow = MutableSharedFlow<DataState<Map<LocalDate, List<SportLesson>>>>(replay = 1)
+    private val scheduleFlow = MutableSharedFlow<AppResult<Map<LocalDate, List<SportLesson>>>>(replay = 1)
 
-    private val filtersFlow = MutableSharedFlow<DataState<SportFilterCatalog>>(replay = 1)
+    private val filtersFlow = MutableSharedFlow<AppResult<SportFilterCatalog>>(replay = 1)
 
-    private val timeSlotsFlow = MutableSharedFlow<DataState<List<SportTimeSlot>>>(replay = 1)
+    private val timeSlotsFlow = MutableSharedFlow<AppResult<List<SportTimeSlot>>>(replay = 1)
 
     private val combined = combine(
         scheduleFlow,
@@ -59,33 +59,33 @@ class SportScheduleRepositoryImpl @Inject constructor(
 
         // schedules are required
         schedulesState.errorOrNull()?.let {
-            return@combine MergedDataState.Error(it)
+            return@combine LoadState.Error(it)
         }
 
-        val schedules = schedulesState.dataOrNull().orEmpty()
+        val schedules = schedulesState.valueOrNull().orEmpty()
 
-        val freeSignEntries = queueEntries.dataOrNull().orEmpty()
+        val freeSignEntries = queueEntries.valueOrNull().orEmpty()
             .mapNotNull { it as? SportFreeSignEntry }
             .associateBy { it.lessonId }
-        val freeSignQueues = queues.dataOrNull().orEmpty()
+        val freeSignQueues = queues.valueOrNull().orEmpty()
             .mapNotNull { it as? SportFreeSignQueue }
             .associateBy { it.lessonId }
-        val autoSignEntries = queueEntries.dataOrNull().orEmpty()
+        val autoSignEntries = queueEntries.valueOrNull().orEmpty()
             .mapNotNull { it as? SportAutoSignEntry }
             .associateBy { it.prototypeLessonId }
-        val autoSignQueues = queues.dataOrNull().orEmpty()
+        val autoSignQueues = queues.valueOrNull().orEmpty()
             .mapNotNull { it as? SportAutoSignQueue }
             .associateBy { it.lessonId }
-        val friendsRealBookings = friendsBookings.dataOrNull().orEmpty()
+        val friendsRealBookings = friendsBookings.valueOrNull().orEmpty()
             .filter { it.entry == null }
             .groupBy { it.lessonId }
-        val friendsFreeSignBookings = friendsBookings.dataOrNull().orEmpty()
+        val friendsFreeSignBookings = friendsBookings.valueOrNull().orEmpty()
             .filter { it.entry is SportFreeSignEntry }
             .groupBy { it.lessonId }
-        val friendsAutoSignBookings = friendsBookings.dataOrNull().orEmpty()
+        val friendsAutoSignBookings = friendsBookings.valueOrNull().orEmpty()
             .filter { it.entry is SportAutoSignEntry }
             .groupBy { it.lessonId }
-        val friendsAutoSignBookingsByReal = friendsBookings.dataOrNull().orEmpty()
+        val friendsAutoSignBookingsByReal = friendsBookings.valueOrNull().orEmpty()
             .filter { it.entry is SportAutoSignEntry }
             .groupBy { (it.entry as SportAutoSignEntry).realLessonId }
 
@@ -148,15 +148,15 @@ class SportScheduleRepositoryImpl @Inject constructor(
             }
 
         val lessons = realLessonsById.values + futureLessons
-        MergedDataState.of(lessons, errors.firstOrNull())
+        LoadState.Content(lessons, errors.firstOrNull())
     }
 
     override fun observeSportSchedule() = combined
 
-    override fun observeSportCatalog(): Flow<DataState<List<SportLesson>>> = scheduleFlow.map { state ->
+    override fun observeSportCatalog(): Flow<AppResult<List<SportLesson>>> = scheduleFlow.map { state ->
         when (state) {
-            is DataState.Success -> DataState.Success(state.data.values.flatten().filter { it.isFreeAttendance() })
-            is DataState.Error -> state
+            is AppResult.Success -> AppResult.Success(state.value.values.flatten().filter { it.isFreeAttendance() })
+            is AppResult.Failure -> state
         }
     }
 
@@ -166,11 +166,11 @@ class SportScheduleRepositoryImpl @Inject constructor(
 
     override suspend fun refreshSportSchedule() {
         if (demo.isActive()) {
-            scheduleFlow.emit(DataState.Success(DemoSport.schedule(timeProvider)))
+            scheduleFlow.emit(AppResult.Success(DemoSport.schedule(timeProvider)))
             return
         }
         sportLessonTemplateProvider.getSchedule()?.let { templates ->
-            scheduleFlow.emit(DataState.Success(templates))
+            scheduleFlow.emit(AppResult.Success(templates))
             return
         }
 
@@ -192,7 +192,7 @@ class SportScheduleRepositoryImpl @Inject constructor(
             }
 
             if (result != null) {
-                scheduleFlow.emit(DataState.Success(result))
+                scheduleFlow.emit(AppResult.Success(result))
             } else {
                 throw RuntimeException("SportSchedule response is null")
             }
@@ -200,13 +200,13 @@ class SportScheduleRepositoryImpl @Inject constructor(
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            scheduleFlow.emit(DataState.Error(error.toAppError()))
+            scheduleFlow.emit(AppResult.Failure(error.toAppError()))
         }
     }
 
     override suspend fun refreshSportFilters() {
         if (demo.isActive()) {
-            filtersFlow.emit(DataState.Success(DemoSport.filters()))
+            filtersFlow.emit(AppResult.Success(DemoSport.filters()))
             return
         }
         try {
@@ -219,7 +219,7 @@ class SportScheduleRepositoryImpl @Inject constructor(
             }
 
             if (result != null) {
-                filtersFlow.emit(DataState.Success(result))
+                filtersFlow.emit(AppResult.Success(result))
             } else {
                 throw RuntimeException("SportFilters response is null")
             }
@@ -227,13 +227,13 @@ class SportScheduleRepositoryImpl @Inject constructor(
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            filtersFlow.emit(DataState.Error(error.toAppError()))
+            filtersFlow.emit(AppResult.Failure(error.toAppError()))
         }
     }
 
     override suspend fun refreshSportTimeSlots() {
         if (demo.isActive()) {
-            timeSlotsFlow.emit(DataState.Success(DemoSport.timeSlots()))
+            timeSlotsFlow.emit(AppResult.Success(DemoSport.timeSlots()))
             return
         }
         try {
@@ -246,7 +246,7 @@ class SportScheduleRepositoryImpl @Inject constructor(
             }
 
             if (result != null) {
-                timeSlotsFlow.emit(DataState.Success(result))
+                timeSlotsFlow.emit(AppResult.Success(result))
             } else {
                 throw RuntimeException("SportTimeSlots response is null")
             }
@@ -254,7 +254,7 @@ class SportScheduleRepositoryImpl @Inject constructor(
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            timeSlotsFlow.emit(DataState.Error(error.toAppError()))
+            timeSlotsFlow.emit(AppResult.Failure(error.toAppError()))
         }
     }
 }

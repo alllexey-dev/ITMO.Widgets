@@ -7,8 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.core.util.dataOrNull
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
@@ -75,9 +74,9 @@ class UserSportViewModel @Inject constructor(
     private fun merge(
         confirmedIds: List<Long>,
         pending: List<SportBooking>,
-        catalog: DataState<List<SportLesson>>
+        catalog: AppResult<List<SportLesson>>
     ): List<SportBooking> {
-        val lessons = catalog.dataOrNull().orEmpty().associateBy { it.lessonId }
+        val lessons = catalog.valueOrNull().orEmpty().associateBy { it.lessonId }
         val confirmed = confirmedIds.mapNotNull { lessons[it]?.toBooking() }
         val pendingWithoutDuplicates = pending.filter { it.lessonId !in confirmedIds }
         return (confirmed + pendingWithoutDuplicates).sortedBy { it.start }

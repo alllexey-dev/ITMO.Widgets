@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.core.util.MergedDataState
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
@@ -46,9 +46,9 @@ class SportSignViewModelTest {
     )
 
     private suspend fun emitSnapshot() {
-        schedule.filters.emit(DataState.Success(emptyCatalog()))
-        schedule.timeSlots.emit(DataState.Success(emptyList()))
-        schedule.schedule.emit(MergedDataState.Success(listOf(SportCardFixtures.lesson(1))))
+        schedule.filters.emit(AppResult.Success(emptyCatalog()))
+        schedule.timeSlots.emit(AppResult.Success(emptyList()))
+        schedule.schedule.emit(LoadState.Content(listOf(SportCardFixtures.lesson(1))))
     }
 
     @Test
@@ -107,7 +107,7 @@ class SportSignViewModelTest {
         val viewModel = viewModel()
         advanceUntilIdle()
 
-        schedule.schedule.emit(MergedDataState.Error(AppError.Network))
+        schedule.schedule.emit(LoadState.Error(AppError.Network))
         advanceUntilIdle()
 
         val after = viewModel.uiState.value as SportSignUiState.Content
@@ -118,17 +118,17 @@ class SportSignViewModelTest {
     @Test
     fun `a failed source before any content is an error`() = runTest(mainDispatcherRule.dispatcher) {
         val viewModel = viewModel()
-        schedule.filters.emit(DataState.Error(AppError.Network))
-        schedule.timeSlots.emit(DataState.Error(AppError.Network))
-        schedule.schedule.emit(MergedDataState.Error(AppError.Network))
+        schedule.filters.emit(AppResult.Failure(AppError.Network))
+        schedule.timeSlots.emit(AppResult.Failure(AppError.Network))
+        schedule.schedule.emit(LoadState.Error(AppError.Network))
         advanceUntilIdle()
         assertEquals(SportSignUiState.Error(AppError.Network), viewModel.uiState.value)
     }
 
     private suspend fun emitCatalog(vararg lessons: SportLesson) {
-        schedule.filters.emit(DataState.Success(emptyCatalog()))
-        schedule.timeSlots.emit(DataState.Success(emptyList()))
-        schedule.schedule.emit(MergedDataState.Success(lessons.toList()))
+        schedule.filters.emit(AppResult.Success(emptyCatalog()))
+        schedule.timeSlots.emit(AppResult.Success(emptyList()))
+        schedule.schedule.emit(LoadState.Content(lessons.toList()))
     }
 
     private fun lessonOn(id: Long, day: Int, hour: Int = 18) = SportCardFixtures.lesson(id).let { lesson ->
@@ -176,7 +176,7 @@ class SportSignViewModelTest {
     @Test
     fun `a failed catalog reports the error`() = runTest(mainDispatcherRule.dispatcher) {
         val viewModel = viewModel()
-        schedule.schedule.emit(MergedDataState.Error(AppError.Network))
+        schedule.schedule.emit(LoadState.Error(AppError.Network))
         advanceUntilIdle()
 
         viewModel.openSharedLesson(1)

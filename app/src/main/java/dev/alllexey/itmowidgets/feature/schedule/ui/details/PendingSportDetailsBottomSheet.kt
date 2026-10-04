@@ -23,11 +23,11 @@ import dev.alllexey.itmowidgets.core.ui.ConditionTone
 import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
 import dev.alllexey.itmowidgets.core.ui.alignRailIcon
 import dev.alllexey.itmowidgets.core.ui.bind
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.MapLauncher
 import dev.alllexey.itmowidgets.core.ui.navigation.openRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentPendingSportDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportConditionBinding
 import java.io.Serializable

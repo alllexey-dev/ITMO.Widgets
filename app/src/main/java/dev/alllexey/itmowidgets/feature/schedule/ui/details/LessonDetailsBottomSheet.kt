@@ -37,11 +37,11 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.bindTeacherLevel
 import dev.alllexey.itmowidgets.core.ui.bindFact
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.detailLines
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.MapLauncher
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.FragmentLessonDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemLessonFriendBinding
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building

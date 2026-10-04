@@ -13,11 +13,12 @@ import dev.alllexey.itmowidgets.core.model.social.UserLookupRequest
 import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import dev.alllexey.itmowidgets.core.model.social.UserProfile as CoreUserProfile
 import kotlinx.coroutines.CoroutineScope
@@ -41,8 +42,8 @@ class SocialRepositoryImpl @Inject constructor(
     private val dispatchers: AppDispatchers
 ) : SocialRepository, SessionDataCleaner {
 
-    private val friends = MutableStateFlow<SocialState<List<UserProfile>>>(SocialState.Loading)
-    private val requests = MutableStateFlow<SocialState<FriendRequests>>(SocialState.Loading)
+    private val friends = MutableStateFlow<LoadState<List<UserProfile>>>(LoadState.Loading)
+    private val requests = MutableStateFlow<LoadState<FriendRequests>>(LoadState.Loading)
     private val currentUser = MutableStateFlow<UserSummary?>(null)
     private val profiles = ConcurrentHashMap<Int, UserProfile>()
     private val userFriendsCache = ConcurrentHashMap<Int, List<UserProfile>>()
@@ -60,21 +61,21 @@ class SocialRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeFriends(): Flow<SocialState<List<UserProfile>>> = friends.asStateFlow()
+    override fun observeFriends(): Flow<LoadState<List<UserProfile>>> = friends.asStateFlow()
 
-    override fun observeRequests(): Flow<SocialState<FriendRequests>> = requests.asStateFlow()
+    override fun observeRequests(): Flow<LoadState<FriendRequests>> = requests.asStateFlow()
 
     override fun observeCurrentUser(): Flow<UserSummary?> = currentUser.asStateFlow()
 
     override val currentFriends: List<UserProfile>?
         get() = synchronized(cacheLock) {
-            if (enabled == true) (friends.value as? SocialState.Content)?.value else null
+            if (enabled == true) (friends.value as? LoadState.Content)?.value else null
         }
 
     override fun cachedProfile(isu: Int): UserProfile? = synchronized(cacheLock) {
         if (enabled != true) return@synchronized null
         profiles[isu]?.let { return@synchronized it }
-        val requestLists = (requests.value as? SocialState.Content)?.value
+        val requestLists = (requests.value as? LoadState.Content)?.value
         currentFriends?.firstOrNull { it.isu == isu }
             ?: requestLists?.incoming?.firstOrNull { it.isu == isu }
             ?: requestLists?.outgoing?.firstOrNull { it.isu == isu }
@@ -87,8 +88,8 @@ class SocialRepositoryImpl @Inject constructor(
     override suspend fun refresh() {
         if (demo.isActive()) {
             synchronized(cacheLock) {
-                friends.value = SocialState.Content(DemoSocial.friends())
-                requests.value = SocialState.Content(DemoSocial.requests())
+                friends.value = LoadState.Content(DemoSocial.friends())
+                requests.value = LoadState.Content(DemoSocial.requests())
                 currentUser.value = DemoSocial.me
             }
             return
@@ -150,8 +151,8 @@ class SocialRepositoryImpl @Inject constructor(
     override suspend fun clearSessionData() {
         synchronized(cacheLock) {
             clearBackendCaches()
-            friends.value = SocialState.Loading
-            requests.value = SocialState.Loading
+            friends.value = LoadState.Loading
+            requests.value = LoadState.Loading
         }
     }
 
@@ -224,8 +225,8 @@ class SocialRepositoryImpl @Inject constructor(
     /** Called under [cacheLock], together with the opt-in state change. */
     private fun forgetBackendCaches() {
         clearBackendCaches()
-        friends.value = SocialState.Disabled
-        requests.value = SocialState.Disabled
+        friends.value = LoadState.Disabled
+        requests.value = LoadState.Disabled
     }
 
     private fun clearBackendCaches() {
@@ -244,10 +245,10 @@ class SocialRepositoryImpl @Inject constructor(
     private fun combineRequests(
         incoming: AppResult<List<CoreUserProfile>>,
         outgoing: AppResult<List<CoreUserProfile>>
-    ): SocialState<FriendRequests> {
+    ): LoadState<FriendRequests> {
         val error = (incoming as? AppResult.Failure)?.error ?: (outgoing as? AppResult.Failure)?.error
-        if (error != null) return SocialState.Error(error)
-        return SocialState.Content(
+        if (error != null) return LoadState.Error(error)
+        return LoadState.Content(
             FriendRequests(
                 incoming = (incoming as AppResult.Success).value.map(CoreUserProfile::toModel),
                 outgoing = (outgoing as AppResult.Success).value.map(CoreUserProfile::toModel)
@@ -255,9 +256,9 @@ class SocialRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun <T, R> AppResult<T>.toState(transform: (T) -> R): SocialState<R> = when (this) {
-        is AppResult.Success -> SocialState.Content(transform(value))
-        is AppResult.Failure -> SocialState.Error(error)
+    private fun <T, R> AppResult<T>.toState(transform: (T) -> R): LoadState<R> = when (this) {
+        is AppResult.Success -> LoadState.Content(transform(value))
+        is AppResult.Failure -> LoadState.Error(error)
     }
 
     private fun <T, R> AppResult<T>.map(transform: (T) -> R): AppResult<R> = when (this) {
@@ -265,10 +266,8 @@ class SocialRepositoryImpl @Inject constructor(
         is AppResult.Failure -> this
     }
 
-    private fun <T> AppResult<T>.valueOrNull(): T? = (this as? AppResult.Success)?.value
-
-    private fun <T> SocialState<T>.update(transform: (T) -> T): SocialState<T> =
-        if (this is SocialState.Content) SocialState.Content(transform(value)) else this
+    private fun <T> LoadState<T>.update(transform: (T) -> T): LoadState<T> =
+        if (this is LoadState.Content) LoadState.Content(transform(value)) else this
 
     private fun List<UserProfile>.without(isu: Int) = filterNot { it.isu == isu }
 

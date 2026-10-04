@@ -12,8 +12,8 @@ import com.google.android.material.card.MaterialCardView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.util.color
-import dev.alllexey.itmowidgets.core.util.dp
+import dev.alllexey.itmowidgets.core.ui.color
+import dev.alllexey.itmowidgets.core.ui.dp
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import java.time.LocalDate

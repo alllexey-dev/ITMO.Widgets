@@ -3,12 +3,11 @@ package dev.alllexey.itmowidgets.feature.sport.data.home
 import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.testing.FakePendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.CustomDataState
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
@@ -34,8 +33,8 @@ class SportHomeCardSourceTest {
 
     @Test
     fun `progress and future queues make the card`() = runTest {
-        sportData.score.value = DataState.Success(SportScore(50, 22, emptyList()))
-        pending.values.value = DataState.Success(listOf(booking(2, hour = 18), booking(1, hour = 16), booking(1, hour = 16), booking(3, hour = 9)))
+        sportData.score.value = AppResult.Success(SportScore(50, 22, emptyList()))
+        pending.values.value = AppResult.Success(listOf(booking(2, hour = 18), booking(1, hour = 16), booking(1, hour = 16), booking(3, hour = 9)))
 
         val card = source.observe().first().single() as HomeCard.Sport
 
@@ -45,17 +44,17 @@ class SportHomeCardSourceTest {
 
     @Test
     fun `a scored semester without queues needs no card`() = runTest {
-        sportData.score.value = DataState.Success(SportScore(80, 40, emptyList()))
+        sportData.score.value = AppResult.Success(SportScore(80, 40, emptyList()))
 
         assertTrue(source.observe().first().isEmpty())
 
-        pending.values.value = DataState.Success(listOf(booking(1, hour = 16)))
+        pending.values.value = AppResult.Success(listOf(booking(1, hour = 16)))
         assertEquals(1, (source.observe().first().single() as HomeCard.Sport).queue.size)
     }
 
     @Test
     fun `queues alone keep the card without a score`() = runTest {
-        pending.values.value = DataState.Success(listOf(booking(1, hour = 16)))
+        pending.values.value = AppResult.Success(listOf(booking(1, hour = 16)))
 
         val card = source.observe().first().single() as HomeCard.Sport
 
@@ -65,13 +64,13 @@ class SportHomeCardSourceTest {
 
     @Test
     fun `refresh reports the score error after asking both sources`() = runTest {
-        sportData.score.value = DataState.Error(AppError.Network)
+        sportData.score.value = AppResult.Failure(AppError.Network)
 
         assertEquals(AppResult.Failure(AppError.Network), source.refresh())
         assertEquals(1, sportData.scoreRefreshes)
         assertEquals(1, pending.refreshes)
 
-        sportData.score.value = DataState.Success(SportScore(1, 0, emptyList()))
+        sportData.score.value = AppResult.Success(SportScore(1, 0, emptyList()))
         assertEquals(AppResult.Success(Unit), source.refresh())
     }
 
@@ -85,19 +84,19 @@ class SportHomeCardSourceTest {
     private object Today : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
 
     private class ScoreOnlySportData : SportDataRepository {
-        val score = MutableStateFlow<DataState<SportScore>>(DataState.Error(AppError.Network))
+        val score = MutableStateFlow<AppResult<SportScore>>(AppResult.Failure(AppError.Network))
         var scoreRefreshes = 0
-        override fun observeSportScore(): Flow<DataState<SportScore>> = score
+        override fun observeSportScore(): Flow<AppResult<SportScore>> = score
         override suspend fun refreshSportScore() { scoreRefreshes++ }
-        override fun observeSportAttempts(): Flow<DataState<SportAttempts>> = flowOf(DataState.Error(AppError.Unknown()))
+        override fun observeSportAttempts(): Flow<AppResult<SportAttempts>> = flowOf(AppResult.Failure(AppError.Unknown()))
         override suspend fun refreshSportAttempts() = Unit
-        override fun observeSportAutoSignLimits(): Flow<CustomDataState<SportAutoSignLimits>> = flowOf(CustomDataState.Disabled)
+        override fun observeSportAutoSignLimits(): Flow<LoadState<SportAutoSignLimits>> = flowOf(LoadState.Disabled)
         override suspend fun refreshSportAutoSignLimits() = Unit
-        override fun observeSportQueueEntries(): Flow<CustomDataState<List<SportQueueEntry>>> = flowOf(CustomDataState.Disabled)
+        override fun observeSportQueueEntries(): Flow<LoadState<List<SportQueueEntry>>> = flowOf(LoadState.Disabled)
         override suspend fun refreshSportQueueEntries() = Unit
-        override fun observeSportQueues(): Flow<CustomDataState<List<SportQueue>>> = flowOf(CustomDataState.Disabled)
+        override fun observeSportQueues(): Flow<LoadState<List<SportQueue>>> = flowOf(LoadState.Disabled)
         override suspend fun refreshSportQueues() = Unit
-        override fun observeFriendsBookings(): Flow<CustomDataState<List<FriendSportBooking>>> = flowOf(CustomDataState.Disabled)
+        override fun observeFriendsBookings(): Flow<LoadState<List<FriendSportBooking>>> = flowOf(LoadState.Disabled)
         override suspend fun refreshFriendsBookings() = Unit
     }
 }

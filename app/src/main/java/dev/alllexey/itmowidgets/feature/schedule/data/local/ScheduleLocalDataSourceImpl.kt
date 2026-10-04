@@ -3,8 +3,8 @@ package dev.alllexey.itmowidgets.feature.schedule.data.local
 import android.content.Context
 import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dev.alllexey.itmowidgets.core.util.ScheduleUtil
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.alllexey.itmowidgets.core.schedule.ScheduleUtil
 import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.flow.Flow

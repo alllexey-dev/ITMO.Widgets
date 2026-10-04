@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.core.sport
 
-import dev.alllexey.itmowidgets.core.util.DataState
 import java.time.OffsetDateTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import dev.alllexey.itmowidgets.core.result.AppResult
 
 /** Own active queues only; never represents a confirmed booking or another user's sport. */
 data class PendingSportBooking(
@@ -23,7 +23,7 @@ data class PendingSportBooking(
 
 /** Read-only projection shared with Schedule and widgets; errors must not hide academic data. */
 interface PendingSportBookingsRepository {
-    fun observePendingBookings(): Flow<DataState<List<PendingSportBooking>>>
+    fun observePendingBookings(): Flow<AppResult<List<PendingSportBooking>>>
 
     suspend fun refresh()
 
@@ -32,5 +32,5 @@ interface PendingSportBookingsRepository {
      * first when fresh data is needed. Production returns an error, not a synthetic
      * empty success, if the sources have not initialized within a bounded wait.
      */
-    suspend fun getPendingBookings(): DataState<List<PendingSportBooking>> = observePendingBookings().first()
+    suspend fun getPendingBookings(): AppResult<List<PendingSportBooking>> = observePendingBookings().first()
 }

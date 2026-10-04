@@ -10,8 +10,9 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.FriendSelectorFixture
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
-import dev.alllexey.itmowidgets.core.friend.FriendListState
+import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment
 import dev.alllexey.itmowidgets.feature.friendselector.ui.RecentFriendAdapter
 import dev.alllexey.itmowidgets.testing.Appearances
@@ -28,7 +29,7 @@ class RecentFriendsStabilityTest {
         try {
             Appearances.default.forEachIndexed { index, spec ->
                 SettingsNavigationTestActivity.appearance = spec.toSettingsNavigation()
-                val fixture = FriendSelectorFixture().apply { friendState.value = FriendListState.Loading }
+                val fixture = FriendSelectorFixture().apply { friendState.value = LoadState.Loading }
                 SettingsNavigationTestActivity.friendSelectorFixture = fixture
                 ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
                     scenario.onActivity { open(it, 100001) }
@@ -38,7 +39,7 @@ class RecentFriendsStabilityTest {
                         assertTrue(root(it).findViewById<View>(R.id.progress).isShown)
                     }
                     capture("recent-loading-$index")
-                    fixture.friendState.value = FriendListState.Content(fixture.friends)
+                    fixture.friendState.value = LoadState.Content(fixture.friends)
                     settle()
                     val expected = listOf(Long.MIN_VALUE, 100001L, 100002L, 100003L, 100004L, 100005L)
                     var moves = 0
@@ -97,7 +98,7 @@ class RecentFriendsStabilityTest {
                     // A late own profile and externally updated history must not undo "My schedule" or move chips.
                     fixture.recentIsus = fixture.recentIsus.reversed()
                     fixture.currentUser.value = fixture.friends.first().copy(isu = 200000, name = "Тестовый пользователь")
-                    fixture.friendState.value = FriendListState.Content(fixture.friends.reversed())
+                    fixture.friendState.value = LoadState.Content(fixture.friends.reversed())
                     settle()
                     scenario.onActivity {
                         assertEquals(expected, ids(recent(it)))
@@ -128,8 +129,8 @@ class RecentFriendsStabilityTest {
                     }
                     val reopenedOrder = listOf(Long.MIN_VALUE, 100007L, 100005L, 100004L, 100003L, 100002L)
                     for ((name, state) in listOf(
-                        "error" to FriendListState.Error(AppError.Network),
-                        "disabled" to FriendListState.Disabled
+                        "error" to LoadState.Error(AppError.Network),
+                        "disabled" to LoadState.Disabled
                     )) {
                         fixture.friendState.value = state
                         settle()
@@ -140,14 +141,14 @@ class RecentFriendsStabilityTest {
                         }
                         capture("recent-$name-$index")
                     }
-                    fixture.friendState.value = FriendListState.Content(emptyList())
+                    fixture.friendState.value = LoadState.Content(emptyList())
                     settle()
                     capture("recent-empty-$index")
                     scenario.onActivity {
                         assertEquals(listOf(Long.MIN_VALUE), ids(recent(it)))
                         assertTrue(root(it).findViewById<View>(R.id.apply_button).isEnabled)
                     }
-                    fixture.friendState.value = FriendListState.Content(fixture.friends)
+                    fixture.friendState.value = LoadState.Content(fixture.friends)
                     settle()
                     scenario.onActivity {
                         assertEquals(reopenedOrder, ids(recent(it)))

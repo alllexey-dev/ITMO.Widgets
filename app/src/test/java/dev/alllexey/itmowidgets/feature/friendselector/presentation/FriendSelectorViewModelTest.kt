@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.friendselector.presentation
 
-import dev.alllexey.itmowidgets.core.friend.FriendListState
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
@@ -8,6 +7,8 @@ import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.PersonSearchResult
@@ -34,7 +35,7 @@ class FriendSelectorViewModelTest {
             val first = user(1, "Первый")
             val second = user(2, "Второй")
             val repository = FakeFriendRepository(
-                FriendListState.Content(listOf(first, second))
+                LoadState.Content(listOf(first, second))
             )
             val history = FakeHistory(listOf(2, 1))
             val viewModel = FriendSelectorViewModel(repository, history, RegisteredPeopleSearch())
@@ -55,7 +56,7 @@ class FriendSelectorViewModelTest {
     fun `renders empty state for empty friend list`() =
         runTest(mainDispatcherRule.dispatcher) {
             val viewModel = FriendSelectorViewModel(
-                FakeFriendRepository(FriendListState.Content(emptyList())),
+                FakeFriendRepository(LoadState.Content(emptyList())),
                 FakeHistory(),
                 RegisteredPeopleSearch()
             )
@@ -69,7 +70,7 @@ class FriendSelectorViewModelTest {
     fun `preserves typed errors and disabled state`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeFriendRepository(
-                FriendListState.Error(AppError.Unauthorized)
+                LoadState.Error(AppError.Unauthorized)
             )
             val viewModel = FriendSelectorViewModel(repository, FakeHistory(), RegisteredPeopleSearch())
             advanceUntilIdle()
@@ -78,7 +79,7 @@ class FriendSelectorViewModelTest {
                 viewModel.uiState.value
             )
 
-            repository.state.value = FriendListState.Disabled
+            repository.state.value = LoadState.Disabled
             advanceUntilIdle()
             assertEquals(FriendSelectorUiState.Disabled, viewModel.uiState.value)
         }
@@ -86,7 +87,7 @@ class FriendSelectorViewModelTest {
     @Test
     fun `settles on a terminal state when a repeated refresh does not change the repository`() =
         runTest(mainDispatcherRule.dispatcher) {
-            val repository = FakeFriendRepository(FriendListState.Disabled)
+            val repository = FakeFriendRepository(LoadState.Disabled)
             val viewModel = FriendSelectorViewModel(repository, FakeHistory(), RegisteredPeopleSearch())
             advanceUntilIdle()
             assertEquals(FriendSelectorUiState.Disabled, viewModel.uiState.value)
@@ -104,7 +105,7 @@ class FriendSelectorViewModelTest {
     fun `keeps the loaded list visible while refreshing`() =
         runTest(mainDispatcherRule.dispatcher) {
             val first = user(1, "Первый")
-            val repository = FakeFriendRepository(FriendListState.Content(listOf(first)))
+            val repository = FakeFriendRepository(LoadState.Content(listOf(first)))
             val viewModel = FriendSelectorViewModel(repository, FakeHistory(), RegisteredPeopleSearch())
             advanceUntilIdle()
 
@@ -126,7 +127,7 @@ class FriendSelectorViewModelTest {
             val friend = user(1, "Первый")
             val viewModel = FriendSelectorViewModel(
                 FakeFriendRepository(
-                    initialState = FriendListState.Content(listOf(friend)),
+                    initialState = LoadState.Content(listOf(friend)),
                     initialUser = me
                 ),
                 FakeHistory(),
@@ -147,7 +148,7 @@ class FriendSelectorViewModelTest {
             val friend = user(1, "Первый")
             val viewModel = FriendSelectorViewModel(
                 FakeFriendRepository(
-                    initialState = FriendListState.Content(listOf(friend)),
+                    initialState = LoadState.Content(listOf(friend)),
                     initialUser = null
                 ),
                 FakeHistory(),
@@ -166,7 +167,7 @@ class FriendSelectorViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val history = FakeHistory()
             val viewModel = FriendSelectorViewModel(
-                FakeFriendRepository(FriendListState.Content(emptyList())),
+                FakeFriendRepository(LoadState.Content(emptyList())),
                 history,
                 RegisteredPeopleSearch()
             )
@@ -194,7 +195,7 @@ class FriendSelectorViewModelTest {
             val stranger = user(2, "Чужой")
             val search = RegisteredPeopleSearch(registered = listOf(stranger))
             val viewModel = FriendSelectorViewModel(
-                FakeFriendRepository(FriendListState.Content(listOf(friend))),
+                FakeFriendRepository(LoadState.Content(listOf(friend))),
                 FakeHistory(),
                 search
             )
@@ -225,7 +226,7 @@ class FriendSelectorViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val search = RegisteredPeopleSearch(error = AppError.Network)
             val viewModel = FriendSelectorViewModel(
-                FakeFriendRepository(FriendListState.Content(emptyList())),
+                FakeFriendRepository(LoadState.Content(emptyList())),
                 FakeHistory(),
                 search
             )
@@ -264,14 +265,14 @@ class FriendSelectorViewModelTest {
     }
 
     private class FakeFriendRepository(
-        initialState: FriendListState,
+        initialState: LoadState<List<UserSummary>>,
         initialUser: UserSummary? = null
     ) : FriendRepository {
         val state = MutableStateFlow(initialState)
         val user = MutableStateFlow(initialUser)
         var refreshRequests = 0
 
-        override fun observeFriendList(): Flow<FriendListState> = state
+        override fun observeFriendList(): Flow<LoadState<List<UserSummary>>> = state
 
         override fun observeCurrentUser(): Flow<UserSummary?> = user
 
@@ -280,7 +281,7 @@ class FriendSelectorViewModelTest {
         }
 
         override val currentFriends: List<UserSummary>?
-            get() = (state.value as? FriendListState.Content)?.friends
+            get() = state.value.valueOrNull()
     }
 
     private class FakeHistory(

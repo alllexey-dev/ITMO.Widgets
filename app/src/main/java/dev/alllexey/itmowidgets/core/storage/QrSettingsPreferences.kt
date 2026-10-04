@@ -5,7 +5,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
-import dev.alllexey.itmowidgets.core.util.safeEnumOf
 import kotlinx.coroutines.flow.Flow
 
 /** How the QR pass looks: dynamic colors, the spoiler and its animation. */

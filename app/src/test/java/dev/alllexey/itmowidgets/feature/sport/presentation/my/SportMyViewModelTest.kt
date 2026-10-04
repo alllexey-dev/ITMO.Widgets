@@ -1,8 +1,9 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.my
 
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
@@ -36,9 +37,9 @@ class SportMyViewModelTest {
     )
 
     private suspend fun emitSnapshot() {
-        data.attempts.emit(DataState.Success(SportAttempts(total = 3, used = 1, free = 2, canSignIn = true)))
-        data.score.emit(DataState.Success(SportScore(attendances = 40, other = 10, attendancesData = emptyList())))
-        bookings.merged.emit(dev.alllexey.itmowidgets.core.util.MergedDataState.Success(listOf(SportCardFixtures.booking(7))))
+        data.attempts.emit(AppResult.Success(SportAttempts(total = 3, used = 1, free = 2, canSignIn = true)))
+        data.score.emit(AppResult.Success(SportScore(attendances = 40, other = 10, attendancesData = emptyList())))
+        bookings.merged.emit(LoadState.Content(listOf(SportCardFixtures.booking(7))))
     }
 
     @Test
@@ -94,7 +95,7 @@ class SportMyViewModelTest {
         advanceUntilIdle()
         val content = viewModel.uiState.value as SportMyUiState.Content
 
-        data.score.emit(DataState.Error(AppError.Network))
+        data.score.emit(AppResult.Failure(AppError.Network))
         advanceUntilIdle()
 
         val after = viewModel.uiState.value as SportMyUiState.Content
@@ -107,9 +108,9 @@ class SportMyViewModelTest {
     @Test
     fun `a failed source before any content is an error`() = runTest(mainDispatcherRule.dispatcher) {
         val viewModel = viewModel()
-        data.score.emit(DataState.Error(AppError.Network))
-        data.attempts.emit(DataState.Error(AppError.Network))
-        bookings.merged.emit(dev.alllexey.itmowidgets.core.util.MergedDataState.Error(AppError.Network))
+        data.score.emit(AppResult.Failure(AppError.Network))
+        data.attempts.emit(AppResult.Failure(AppError.Network))
+        bookings.merged.emit(LoadState.Error(AppError.Network))
         advanceUntilIdle()
         assertEquals(SportMyUiState.Error(AppError.Network), viewModel.uiState.value)
     }

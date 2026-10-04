@@ -10,7 +10,6 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemSubjectLinkBinding
 import dev.alllexey.itmowidgets.databinding.ViewLinkVotePillBinding
 import java.net.URI

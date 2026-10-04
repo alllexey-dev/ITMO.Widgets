@@ -10,7 +10,6 @@ import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.time.LocalDate
@@ -87,13 +86,13 @@ class SchedulePendingSportTest {
         assertEquals(1, official.refreshed.size)
 
         val next = booking(id = 2)
-        pending.values.value = DataState.Success(listOf(next))
+        pending.values.value = AppResult.Success(listOf(next))
         runCurrent()
         assertEquals(listOf(next), model.content().displayDays.single().pendingSport)
         preference.enabled.value = false
         runCurrent()
         assertTrue(model.content().displayDays.all { it.pendingSport.isEmpty() })
-        pending.values.value = DataState.Success(listOf(booking(id = 3)))
+        pending.values.value = AppResult.Success(listOf(booking(id = 3)))
         runCurrent()
         assertTrue(model.content().displayDays.all { it.pendingSport.isEmpty() })
         assertEquals(1, official.refreshed.size)
@@ -141,7 +140,7 @@ class SchedulePendingSportTest {
         model.ensureDataLoaded()
         runCurrent()
         val official = model.content().schedule
-        pending.values.value = DataState.Error(AppError.Network)
+        pending.values.value = AppResult.Failure(AppError.Network)
         runCurrent()
         assertEquals(official, model.content().schedule)
         assertFalse(model.content().loadingMore)
@@ -156,7 +155,7 @@ class SchedulePendingSportTest {
         assertFalse(model.content().loadingMore)
         wait.complete(Unit)
         runCurrent()
-        pending.values.value = DataState.Success(emptyList())
+        pending.values.value = AppResult.Success(emptyList())
         runCurrent()
         assertTrue(model.content().displayDays.all { it.pendingSport.isEmpty() })
     }
@@ -191,7 +190,7 @@ class SchedulePendingSportTest {
         runCurrent()
         assertEquals(ScheduleUiState.Error(AppError.Network, null), model.uiState.value)
 
-        pending.values.value = DataState.Success(listOf(booking(id = 2)))
+        pending.values.value = AppResult.Success(listOf(booking(id = 2)))
         runCurrent()
         assertEquals(ScheduleUiState.Error(AppError.Network, null), model.uiState.value)
     }
@@ -201,7 +200,7 @@ class SchedulePendingSportTest {
         val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
         val near = booking(day = Today.today().plusDays(2))
         val nextPage = booking(id = 2, day = Today.today().plusDays(15))
-        val pending = FakePendingSportBookingsRepository(booking()).apply { values.value = DataState.Success(listOf(near, nextPage)) }
+        val pending = FakePendingSportBookingsRepository(booking()).apply { values.value = AppResult.Success(listOf(near, nextPage)) }
         val model = model(official, FakeSchedulePreferencesRepository(true), pending)
         model.ensureDataLoaded()
         runCurrent()
@@ -282,7 +281,7 @@ class SchedulePendingSportTest {
             assertTrue(model.content().loadingMore)
 
             if (disablePreference) preference.enabled.value = false
-            else pending.values.value = DataState.Error(AppError.Network)
+            else pending.values.value = AppResult.Failure(AppError.Network)
             runCurrent()
             assertEquals(ScheduleUiState.Loading(null), model.uiState.value)
             refresh.complete(AppResult.Failure(AppError.Network))
@@ -296,7 +295,7 @@ class SchedulePendingSportTest {
         val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
         val near = booking(day = Today.today().plusDays(2))
         val nextPage = booking(id = 2, day = Today.today().plusDays(15))
-        val pending = FakePendingSportBookingsRepository(booking()).apply { values.value = DataState.Success(listOf(near, nextPage)) }
+        val pending = FakePendingSportBookingsRepository(booking()).apply { values.value = AppResult.Success(listOf(near, nextPage)) }
         val model = model(official, FakeSchedulePreferencesRepository(true), pending)
         model.ensureDataLoaded()
         runCurrent()

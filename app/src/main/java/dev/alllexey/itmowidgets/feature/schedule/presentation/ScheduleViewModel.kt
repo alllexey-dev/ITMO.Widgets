@@ -13,7 +13,6 @@ import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
@@ -194,8 +193,8 @@ class ScheduleViewModel @Inject constructor(
                     // old pending rows may already be signed. Hide this optional
                     // overlay rather than inventing a still-active queue.
                     pendingSport = when (state) {
-                        is DataState.Success -> state.data
-                        is DataState.Error -> emptyList()
+                        is AppResult.Success -> state.value
+                        is AppResult.Failure -> emptyList()
                     }
                     emitCurrentState()
                 }

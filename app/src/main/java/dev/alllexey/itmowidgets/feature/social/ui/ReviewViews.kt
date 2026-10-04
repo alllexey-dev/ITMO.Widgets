@@ -15,9 +15,9 @@ import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.ui.bindGroupPosition
 import dev.alllexey.itmowidgets.core.ui.bindVotes
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.shortPersonName
 import dev.alllexey.itmowidgets.core.ui.userDisplayName
-import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.databinding.ItemOwnTeacherReviewBinding
 import dev.alllexey.itmowidgets.databinding.ItemTeacherReviewBinding
 

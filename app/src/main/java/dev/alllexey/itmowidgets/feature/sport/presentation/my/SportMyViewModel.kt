@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.util.dataOrNull
-import dev.alllexey.itmowidgets.core.util.errorOrNull
+import dev.alllexey.itmowidgets.core.result.errorOrNull
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
@@ -155,9 +155,9 @@ class SportMyViewModel @Inject constructor(
                 isRefreshing,
                 userRefreshing
             ) { attemptsState, scoreState, bookingsState, refreshing, byUser ->
-                val attempts = attemptsState.dataOrNull()
-                val score = scoreState.dataOrNull()
-                val bookings = bookingsState.dataOrNull()
+                val attempts = attemptsState.valueOrNull()
+                val score = scoreState.valueOrNull()
+                val bookings = bookingsState.valueOrNull()
 
                 val errors = listOfNotNull(
                     attemptsState.errorOrNull(),

@@ -6,6 +6,7 @@ import android.os.Bundle
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorViewModel
 import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment
 import java.time.Clock
@@ -73,7 +74,6 @@ import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
@@ -606,8 +606,8 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     }
 
     private object ProfileSocial : SocialRepository {
-        override fun observeFriends() = MutableStateFlow<SocialState<List<UserProfile>>>(SocialState.Content(socialFriends))
-        override fun observeRequests() = MutableStateFlow<SocialState<FriendRequests>>(SocialState.Content(socialRequests))
+        override fun observeFriends() = MutableStateFlow<LoadState<List<UserProfile>>>(LoadState.Content(socialFriends))
+        override fun observeRequests() = MutableStateFlow<LoadState<FriendRequests>>(LoadState.Content(socialRequests))
         override fun observeCurrentUser() = MutableStateFlow(socialCurrentUser)
         override val currentFriends: List<UserProfile> get() = socialFriends
         override suspend fun refresh() = Unit

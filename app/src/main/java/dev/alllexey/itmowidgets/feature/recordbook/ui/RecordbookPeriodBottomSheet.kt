@@ -13,7 +13,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.util.color
+import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.databinding.ItemRecordbookPeriodBinding
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookPeriodBinding
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram

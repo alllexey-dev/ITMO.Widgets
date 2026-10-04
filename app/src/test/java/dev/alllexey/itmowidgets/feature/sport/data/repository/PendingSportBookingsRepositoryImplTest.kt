@@ -2,13 +2,12 @@ package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.CustomDataState
-import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.core.util.MergedDataState
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.*
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
@@ -41,9 +40,9 @@ class PendingSportBookingsRepositoryImplTest {
 
     @Test fun `disabled services emit empty and make no requests`() = runTest {
         services.enabled.value = false
-        data.entries.value = CustomDataState.Success(listOf(SportCardFixtures.entry()))
+        data.entries.value = LoadState.Content(listOf(SportCardFixtures.entry()))
 
-        assertEquals(DataState.Success(emptyList<PendingSportBooking>()), repository.observePendingBookings().first())
+        assertEquals(AppResult.Success(emptyList<PendingSportBooking>()), repository.observePendingBookings().first())
         repository.refresh()
         assertEquals(0, bookings.refreshes)
         assertEquals(0, data.refreshes)
@@ -55,14 +54,14 @@ class PendingSportBookingsRepositoryImplTest {
             sectionName = "  Секция  ", teacherFio = " Преподаватель ", roomName = " Зал ", teacherIsu = 300001
         )
         val real = prototype.copy(id = 30, start = SportCardFixtures.start.plusDays(1), end = SportCardFixtures.start.plusDays(1).plusMinutes(90), teacherIsu = 300002)
-        data.entries.value = CustomDataState.Success(listOf(
+        data.entries.value = LoadState.Content(listOf(
             auto(prototype = prototype),
             auto(id = 3, prototype = prototype.copy(id = 21), real = real),
             SportCardFixtures.entry()
         ))
 
-        val pending = repository.observePendingBookings().first { it is DataState.Success && it.data.size == 3 } as DataState.Success
-        val predicted = pending.data.first { it.isPrediction }
+        val pending = repository.observePendingBookings().first { it is AppResult.Success && it.value.size == 3 } as AppResult.Success
+        val predicted = pending.value.first { it.isPrediction }
         assertEquals(SportCardFixtures.start, predicted.start)
         assertEquals(-20L, predicted.lessonId)
         assertEquals("Секция", predicted.sectionName)
@@ -70,14 +69,14 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(300001, predicted.teacherIsu)
         assertEquals(300001, predicted.toDetailsArgs().teacherIsu)
         assertEquals("Зал", predicted.roomName)
-        val bound = pending.data.first { it.lessonId == 30L }
+        val bound = pending.value.first { it.lessonId == 30L }
         assertFalse(bound.isPrediction)
         assertEquals(300002, bound.teacherIsu)
         assertEquals(300002, bound.toDetailsArgs().teacherIsu)
         assertEquals(real.start, bound.start)
         assertEquals(real.end, bound.end)
         assertEquals(PendingSportBooking.QueueKind.AUTO, bound.queueKind)
-        val free = pending.data.first { it.queueKind == PendingSportBooking.QueueKind.FREE }
+        val free = pending.value.first { it.queueKind == PendingSportBooking.QueueKind.FREE }
         assertEquals(SportCardFixtures.start, free.start)
         assertEquals(SportCardFixtures.entry().targetLesson.teacherIsu.toInt(), free.teacherIsu)
         assertEquals(free.teacherIsu, free.toDetailsArgs().teacherIsu)
@@ -86,8 +85,8 @@ class PendingSportBookingsRepositoryImplTest {
     @Test fun `only active future unsigned queues remain and multiple queues for real lesson do not duplicate`() = runTest {
         val base = SportCardFixtures.entry()
         val signed = base.copy(id = 8, targetLesson = base.targetLesson.copy(id = 88))
-        bookings.confirmed.value = DataState.Success(listOf(SportCardFixtures.booking(88)))
-        data.entries.value = CustomDataState.Success(
+        bookings.confirmed.value = AppResult.Success(listOf(SportCardFixtures.booking(88)))
+        data.entries.value = LoadState.Content(
             SportQueueEntryStatus.entries.mapIndexed { index, status ->
                 base.copy(id = index + 10L, status = status, targetLesson = base.targetLesson.copy(id = index + 10L))
             } + listOf(
@@ -99,41 +98,41 @@ class PendingSportBookingsRepositoryImplTest {
             )
         )
 
-        val pending = repository.observePendingBookings().first { it is DataState.Success && it.data.isNotEmpty() } as DataState.Success
-        assertEquals(listOf(10L, 11L), pending.data.map { it.lessonId })
+        val pending = repository.observePendingBookings().first { it is AppResult.Success && it.value.isNotEmpty() } as AppResult.Success
+        assertEquals(listOf(10L, 11L), pending.value.map { it.lessonId })
     }
 
     @Test fun `queue updates confirmation and opt out update observers without requiring friends data`() = runTest {
-        val states = mutableListOf<DataState<List<PendingSportBooking>>>()
+        val states = mutableListOf<AppResult<List<PendingSportBooking>>>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { repository.observePendingBookings().toList(states) }
-        data.entries.value = CustomDataState.Success(listOf(SportCardFixtures.entry()))
+        data.entries.value = LoadState.Content(listOf(SportCardFixtures.entry()))
         runCurrent()
-        assertEquals(1, (states.last() as DataState.Success).data.size)
+        assertEquals(1, (states.last() as AppResult.Success).value.size)
 
-        bookings.confirmed.value = DataState.Success(listOf(SportCardFixtures.booking()))
+        bookings.confirmed.value = AppResult.Success(listOf(SportCardFixtures.booking()))
         runCurrent()
-        assertEquals(DataState.Success(emptyList<PendingSportBooking>()), states.last())
-        bookings.confirmed.value = DataState.Success(emptyList())
+        assertEquals(AppResult.Success(emptyList<PendingSportBooking>()), states.last())
+        bookings.confirmed.value = AppResult.Success(emptyList())
         runCurrent()
-        assertEquals(1, (states.last() as DataState.Success).data.size)
-        data.entries.value = CustomDataState.Success(listOf(SportCardFixtures.entry().copy(isCancelled = true)))
+        assertEquals(1, (states.last() as AppResult.Success).value.size)
+        data.entries.value = LoadState.Content(listOf(SportCardFixtures.entry().copy(isCancelled = true)))
         runCurrent()
-        assertEquals(DataState.Success(emptyList<PendingSportBooking>()), states.last())
+        assertEquals(AppResult.Success(emptyList<PendingSportBooking>()), states.last())
 
-        data.entries.value = CustomDataState.Success(listOf(SportCardFixtures.entry()))
+        data.entries.value = LoadState.Content(listOf(SportCardFixtures.entry()))
         runCurrent()
         services.enabled.value = false
         runCurrent()
-        assertEquals(DataState.Success(emptyList<PendingSportBooking>()), states.last())
+        assertEquals(AppResult.Success(emptyList<PendingSportBooking>()), states.last())
     }
 
     @Test fun `source failures are not interpreted as no confirmed bookings`() = runTest {
-        data.entries.value = CustomDataState.Success(listOf(SportCardFixtures.entry()))
-        bookings.confirmed.value = DataState.Error(AppError.Unauthorized)
-        assertEquals(DataState.Error(AppError.Unauthorized), repository.observePendingBookings().first { it is DataState.Error })
-        bookings.confirmed.value = DataState.Success(emptyList())
-        data.entries.value = CustomDataState.Error(AppError.Network)
-        assertEquals(DataState.Error(AppError.Network), repository.observePendingBookings().first { it is DataState.Error })
+        data.entries.value = LoadState.Content(listOf(SportCardFixtures.entry()))
+        bookings.confirmed.value = AppResult.Failure(AppError.Unauthorized)
+        assertEquals(AppResult.Failure(AppError.Unauthorized), repository.observePendingBookings().first { it is AppResult.Failure })
+        bookings.confirmed.value = AppResult.Success(emptyList())
+        data.entries.value = LoadState.Error(AppError.Network)
+        assertEquals(AppResult.Failure(AppError.Network), repository.observePendingBookings().first { it is AppResult.Failure })
     }
 
     @Test fun `refresh requests official bookings and own queues only`() = runTest {
@@ -155,16 +154,16 @@ class PendingSportBookingsRepositoryImplTest {
     @Test fun `first snapshot after cold refresh reads actual replay without an active observer`() = runTest {
         val sources = useColdSources()
         val entry = SportCardFixtures.entry()
-        bookings.refreshAction = { sources.confirmed.emit(DataState.Success(emptyList())) }
-        data.refreshAction = { sources.queues.emit(CustomDataState.Success(listOf(entry))) }
+        bookings.refreshAction = { sources.confirmed.emit(AppResult.Success(emptyList())) }
+        data.refreshAction = { sources.queues.emit(LoadState.Content(listOf(entry))) }
 
         repository.refresh()
 
         assertEquals(0, sources.confirmed.subscriptionCount.value)
         assertEquals(0, sources.queues.subscriptionCount.value)
         val snapshot = repository.getPendingBookings()
-        assertTrue(snapshot is DataState.Success)
-        val pending = (snapshot as DataState.Success).data.single()
+        assertTrue(snapshot is AppResult.Success)
+        val pending = (snapshot as AppResult.Success).value.single()
         assertEquals(entry.id, pending.queueId)
         assertEquals(entry.lessonId, pending.lessonId)
         assertEquals(entry.targetLesson.start, pending.start)
@@ -175,15 +174,15 @@ class PendingSportBookingsRepositoryImplTest {
 
     @Test fun `snapshot preserves source errors instead of returning synthetic empty data`() = runTest {
         val sources = useColdSources()
-        sources.confirmed.emit(DataState.Error(AppError.Unauthorized))
-        sources.queues.emit(CustomDataState.Success(listOf(SportCardFixtures.entry())))
+        sources.confirmed.emit(AppResult.Failure(AppError.Unauthorized))
+        sources.queues.emit(LoadState.Content(listOf(SportCardFixtures.entry())))
 
-        assertEquals(DataState.Error(AppError.Unauthorized), repository.getPendingBookings())
+        assertEquals(AppResult.Failure(AppError.Unauthorized), repository.getPendingBookings())
 
-        sources.confirmed.emit(DataState.Success(emptyList()))
-        sources.queues.emit(CustomDataState.Error(AppError.Network))
+        sources.confirmed.emit(AppResult.Success(emptyList()))
+        sources.queues.emit(LoadState.Error(AppError.Network))
 
-        assertEquals(DataState.Error(AppError.Network), repository.getPendingBookings())
+        assertEquals(AppResult.Failure(AppError.Network), repository.getPendingBookings())
         assertEquals(0, bookings.refreshes)
         assertEquals(0, data.refreshes)
     }
@@ -193,7 +192,7 @@ class PendingSportBookingsRepositoryImplTest {
         services.enabled.value = false
         val startedAt = currentTime
 
-        assertEquals(DataState.Success(emptyList<PendingSportBooking>()), repository.getPendingBookings())
+        assertEquals(AppResult.Success(emptyList<PendingSportBooking>()), repository.getPendingBookings())
 
         assertEquals(startedAt, currentTime)
         assertEquals(0, sources.confirmed.subscriptionCount.value)
@@ -215,7 +214,7 @@ class PendingSportBookingsRepositoryImplTest {
         advanceTimeBy(1)
         runCurrent()
         assertTrue(snapshot.isCompleted)
-        assertEquals(DataState.Error(AppError.Unknown()), snapshot.await())
+        assertEquals(AppResult.Failure(AppError.Unknown()), snapshot.await())
         assertEquals(1_000L, currentTime)
         assertEquals(0, bookings.refreshes)
         assertEquals(0, data.refreshes)
@@ -252,8 +251,8 @@ class PendingSportBookingsRepositoryImplTest {
     }
 
     private class ColdSources {
-        val confirmed = MutableSharedFlow<DataState<List<SportBooking>>>(replay = 1)
-        val queues = MutableSharedFlow<CustomDataState<List<SportQueueEntry>>>(replay = 1)
+        val confirmed = MutableSharedFlow<AppResult<List<SportBooking>>>(replay = 1)
+        val queues = MutableSharedFlow<LoadState<List<SportQueueEntry>>>(replay = 1)
     }
 
     private fun auto(
@@ -271,13 +270,13 @@ class PendingSportBookingsRepositoryImplTest {
     private object FixedTime : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
 
     private class Bookings : SportBookingRepository {
-        val confirmed = MutableStateFlow<DataState<List<SportBooking>>>(DataState.Success(emptyList()))
-        var confirmedOutput: Flow<DataState<List<SportBooking>>> = confirmed
+        val confirmed = MutableStateFlow<AppResult<List<SportBooking>>>(AppResult.Success(emptyList()))
+        var confirmedOutput: Flow<AppResult<List<SportBooking>>> = confirmed
         var refreshes = 0
         var cancelRefresh = false
         var refreshAction: suspend () -> Unit = {}
         override fun observeConfirmedSportBookings() = confirmedOutput
-        override fun observeSportBookings(): Flow<MergedDataState<List<SportBooking>>> = error("Friend-enriched bookings are not required")
+        override fun observeSportBookings(): Flow<LoadState<List<SportBooking>>> = error("Friend-enriched bookings are not required")
         override suspend fun refreshSportBookings() {
             if (cancelRefresh) throw CancellationException("Test cancellation")
             refreshes++
@@ -286,8 +285,8 @@ class PendingSportBookingsRepositoryImplTest {
     }
 
     private class SportData : SportDataRepository {
-        val entries = MutableStateFlow<CustomDataState<List<SportQueueEntry>>>(CustomDataState.Success(emptyList()))
-        var entriesOutput: Flow<CustomDataState<List<SportQueueEntry>>> = entries
+        val entries = MutableStateFlow<LoadState<List<SportQueueEntry>>>(LoadState.Content(emptyList()))
+        var entriesOutput: Flow<LoadState<List<SportQueueEntry>>> = entries
         var refreshes = 0
         var refreshAction: suspend () -> Unit = {}
         override fun observeSportQueueEntries() = entriesOutput
@@ -295,15 +294,15 @@ class PendingSportBookingsRepositoryImplTest {
             refreshes++
             refreshAction()
         }
-        override fun observeSportScore(): Flow<DataState<SportScore>> = error("Not needed")
+        override fun observeSportScore(): Flow<AppResult<SportScore>> = error("Not needed")
         override suspend fun refreshSportScore() = error("Not needed")
-        override fun observeSportAttempts(): Flow<DataState<SportAttempts>> = error("Not needed")
+        override fun observeSportAttempts(): Flow<AppResult<SportAttempts>> = error("Not needed")
         override suspend fun refreshSportAttempts() = error("Not needed")
-        override fun observeSportAutoSignLimits(): Flow<CustomDataState<SportAutoSignLimits>> = error("Not needed")
+        override fun observeSportAutoSignLimits(): Flow<LoadState<SportAutoSignLimits>> = error("Not needed")
         override suspend fun refreshSportAutoSignLimits() = error("Not needed")
-        override fun observeSportQueues(): Flow<CustomDataState<List<SportQueue>>> = error("Not needed")
+        override fun observeSportQueues(): Flow<LoadState<List<SportQueue>>> = error("Not needed")
         override suspend fun refreshSportQueues() = error("Not needed")
-        override fun observeFriendsBookings(): Flow<CustomDataState<List<FriendSportBooking>>> = error("Not needed")
+        override fun observeFriendsBookings(): Flow<LoadState<List<FriendSportBooking>>> = error("Not needed")
         override suspend fun refreshFriendsBookings() = error("Not needed")
     }
 }

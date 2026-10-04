@@ -13,7 +13,6 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPendingStatus
@@ -94,7 +93,7 @@ class ScheduleWidgetDataProviderTest {
     fun `optional error or exception removes only optional rows`() = runTest {
         enable()
         assertNotNull(available().snapshot.singleLesson.lesson)
-        pending.value = DataState.Error(AppError.Network)
+        pending.value = AppResult.Failure(AppError.Network)
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, available().snapshot.singleLesson.kind)
         pending.refreshBlock = { error("Synthetic unavailable source") }
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, available().snapshot.singleLesson.kind)
@@ -165,7 +164,7 @@ class ScheduleWidgetDataProviderTest {
     private suspend fun available() = (provider.load() as ScheduleWidgetLoadResult.Available).selection
 
     private class SnapshotPendingRepository : PendingSportBookingsRepository {
-        var value: DataState<List<PendingSportBooking>> = DataState.Success(listOf(PendingSportBooking(
+        var value: AppResult<List<PendingSportBooking>> = AppResult.Success(listOf(PendingSportBooking(
             1, PendingSportBooking.QueueKind.AUTO, -1, "Плавание", Time.now().plusHours(1),
             Time.now().plusHours(2), "Тестовый преподаватель", "Бассейн", true
         )))
@@ -175,7 +174,7 @@ class ScheduleWidgetDataProviderTest {
         val calls = mutableListOf<String>()
         override fun observePendingBookings() = error("Widgets must use the completed snapshot API")
         override suspend fun refresh() { calls += "refresh"; refreshes++; refreshBlock() }
-        override suspend fun getPendingBookings(): DataState<List<PendingSportBooking>> {
+        override suspend fun getPendingBookings(): AppResult<List<PendingSportBooking>> {
             calls += "snapshot"; reads++; return value
         }
     }

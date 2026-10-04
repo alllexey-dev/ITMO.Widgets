@@ -3,6 +3,8 @@ package dev.alllexey.itmowidgets.feature.sport.data.repository
 import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
@@ -12,9 +14,6 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import dev.alllexey.itmowidgets.core.util.CustomDataState
-import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
@@ -48,20 +47,20 @@ class SportDataRepositoryImpl @Inject constructor(
     private val queueSessionMutex = Mutex()
     private var queueSessionGeneration = 0L
 
-    private val attemptsFlow = MutableSharedFlow<DataState<SportAttempts>>(replay = 1)
-    private val scoreFlow = MutableSharedFlow<DataState<SportScore>>(replay = 1)
+    private val attemptsFlow = MutableSharedFlow<AppResult<SportAttempts>>(replay = 1)
+    private val scoreFlow = MutableSharedFlow<AppResult<SportScore>>(replay = 1)
 
     private val autoSignLimitsFlow =
-        MutableSharedFlow<CustomDataState<SportAutoSignLimits>>(replay = 1)
+        MutableSharedFlow<LoadState<SportAutoSignLimits>>(replay = 1)
 
     private val queueEntriesFlow =
-        MutableSharedFlow<CustomDataState<List<SportQueueEntry>>>(replay = 1)
+        MutableSharedFlow<LoadState<List<SportQueueEntry>>>(replay = 1)
 
     private val queuesFlow =
-        MutableSharedFlow<CustomDataState<List<SportQueue>>>(replay = 1)
+        MutableSharedFlow<LoadState<List<SportQueue>>>(replay = 1)
 
     private val friendsBookingsFlow =
-        MutableSharedFlow<CustomDataState<List<FriendSportBooking>>>(replay = 1)
+        MutableSharedFlow<LoadState<List<FriendSportBooking>>>(replay = 1)
 
     override fun observeSportScore() = scoreFlow
     override fun observeSportAttempts() = attemptsFlow
@@ -72,16 +71,12 @@ class SportDataRepositoryImpl @Inject constructor(
     override fun observeFriendsBookings() = friendsBookingsFlow
 
     override suspend fun refreshSportScore() {
-        val state = when (val result = scoreRepository.getSportScore()) {
-            is AppResult.Success -> DataState.Success(result.value)
-            is AppResult.Failure -> DataState.Error(result.error)
-        }
-        scoreFlow.emit(state)
+        scoreFlow.emit(scoreRepository.getSportScore())
     }
 
     override suspend fun refreshSportAttempts() {
         if (demo.isActive()) {
-            attemptsFlow.emit(DataState.Success(DemoSport.attempts()))
+            attemptsFlow.emit(AppResult.Success(DemoSport.attempts()))
             return
         }
         try {
@@ -91,25 +86,25 @@ class SportDataRepositoryImpl @Inject constructor(
             }
 
             if (result != null) {
-                attemptsFlow.emit(DataState.Success(result))
+                attemptsFlow.emit(AppResult.Success(result))
             } else {
-                attemptsFlow.emit(DataState.Error(AppError.Unknown()))
+                attemptsFlow.emit(AppResult.Failure(AppError.Unknown()))
             }
 
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            attemptsFlow.emit(DataState.Error(error.toAppError()))
+            attemptsFlow.emit(AppResult.Failure(error.toAppError()))
         }
     }
 
     override suspend fun refreshSportAutoSignLimits() {
         if (demo.isActive()) {
-            autoSignLimitsFlow.emit(CustomDataState.Success(DemoSport.autoSignLimits(time)))
+            autoSignLimitsFlow.emit(LoadState.Content(DemoSport.autoSignLimits(time)))
             return
         }
         if (!backend.mayCallBackend()) {
-            autoSignLimitsFlow.emit(CustomDataState.Disabled)
+            autoSignLimitsFlow.emit(LoadState.Disabled)
             return
         }
 
@@ -119,26 +114,26 @@ class SportDataRepositoryImpl @Inject constructor(
             }
 
             if (result != null) {
-                autoSignLimitsFlow.emit(CustomDataState.Success(result))
+                autoSignLimitsFlow.emit(LoadState.Content(result))
             } else {
-                autoSignLimitsFlow.emit(CustomDataState.Error(AppError.Unknown()))
+                autoSignLimitsFlow.emit(LoadState.Error(AppError.Unknown()))
             }
 
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            autoSignLimitsFlow.emit(CustomDataState.Error(error.toAppError()))
+            autoSignLimitsFlow.emit(LoadState.Error(error.toAppError()))
         }
     }
 
     override suspend fun refreshSportQueueEntries() {
         val generation = queueSessionMutex.withLock { queueSessionGeneration }
         if (demo.isActive()) {
-            emitQueueState(generation, CustomDataState.Success(DemoSport.queueEntries(time)))
+            emitQueueState(generation, LoadState.Content(DemoSport.queueEntries(time)))
             return
         }
         if (!backend.mayCallBackend()) {
-            emitQueueState(generation, CustomDataState.Disabled)
+            emitQueueState(generation, LoadState.Disabled)
             return
         }
 
@@ -162,32 +157,32 @@ class SportDataRepositoryImpl @Inject constructor(
                 }
             }
 
-            emitQueueState(generation, CustomDataState.Success(result))
+            emitQueueState(generation, LoadState.Content(result))
 
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            emitQueueState(generation, CustomDataState.Error(error.toAppError()))
+            emitQueueState(generation, LoadState.Error(error.toAppError()))
         }
     }
 
-    private suspend fun emitQueueState(generation: Long, state: CustomDataState<List<SportQueueEntry>>) =
+    private suspend fun emitQueueState(generation: Long, state: LoadState<List<SportQueueEntry>>) =
         queueSessionMutex.withLock {
             if (generation == queueSessionGeneration) queueEntriesFlow.emit(state)
         }
 
     override suspend fun clearSessionData() = queueSessionMutex.withLock {
         queueSessionGeneration++
-        queueEntriesFlow.emit(CustomDataState.Disabled)
+        queueEntriesFlow.emit(LoadState.Disabled)
     }
 
     override suspend fun refreshSportQueues() {
         if (demo.isActive()) {
-            queuesFlow.emit(CustomDataState.Success(DemoSport.queues(time)))
+            queuesFlow.emit(LoadState.Content(DemoSport.queues(time)))
             return
         }
         if (!backend.mayCallBackend()) {
-            queuesFlow.emit(CustomDataState.Disabled)
+            queuesFlow.emit(LoadState.Disabled)
             return
         }
 
@@ -211,22 +206,22 @@ class SportDataRepositoryImpl @Inject constructor(
                 }
             }
 
-            queuesFlow.emit(CustomDataState.Success(result))
+            queuesFlow.emit(LoadState.Content(result))
 
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            queuesFlow.emit(CustomDataState.Error(error.toAppError()))
+            queuesFlow.emit(LoadState.Error(error.toAppError()))
         }
     }
 
     override suspend fun refreshFriendsBookings() {
         if (demo.isActive()) {
-            friendsBookingsFlow.emit(CustomDataState.Success(DemoSport.friendsBookings(time)))
+            friendsBookingsFlow.emit(LoadState.Content(DemoSport.friendsBookings(time)))
             return
         }
         if (!backend.mayCallBackend()) {
-            friendsBookingsFlow.emit(CustomDataState.Disabled)
+            friendsBookingsFlow.emit(LoadState.Disabled)
             return
         }
 
@@ -256,12 +251,12 @@ class SportDataRepositoryImpl @Inject constructor(
                 mapped = map()
             }
 
-            friendsBookingsFlow.emit(CustomDataState.Success(mapped))
+            friendsBookingsFlow.emit(LoadState.Content(mapped))
 
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            friendsBookingsFlow.emit(CustomDataState.Error(error.toAppError()))
+            friendsBookingsFlow.emit(LoadState.Error(error.toAppError()))
         }
     }
 }

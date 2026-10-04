@@ -27,7 +27,6 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
@@ -163,7 +162,7 @@ class SiteScreenshotCapture {
         ScheduleLifecycleTestActivity.appearance = PreviewAppearance(dark = night)
         ScheduleLifecycleTestActivity.days.value = DemoSchedule.ownDays(TODAY, TODAY.plusDays(2), TODAY)
         ScheduleLifecycleTestActivity.showPendingSport.value = true
-        ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(pendingBookings())
+        ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(pendingBookings())
         try {
             ActivityScenario.launch(ScheduleLifecycleTestActivity::class.java).use { scenario ->
                 settle()
@@ -179,7 +178,7 @@ class SiteScreenshotCapture {
             ScheduleLifecycleTestActivity.appearance = PreviewAppearance()
             ScheduleLifecycleTestActivity.days.value = emptyList()
             ScheduleLifecycleTestActivity.showPendingSport.value = false
-            ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(emptyList())
+            ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(emptyList())
         }
     }
 

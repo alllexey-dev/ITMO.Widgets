@@ -4,9 +4,9 @@ import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.social.SocialState
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +21,7 @@ class SocialHomeCardSource @Inject constructor(
 ) : HomeCardSource {
 
     override fun observe(): Flow<List<HomeCard>> = social.observeRequests().map { state ->
-        val incoming = (state as? SocialState.Content)?.value?.incoming.orEmpty().map(UserProfile::user)
+        val incoming = (state as? LoadState.Content)?.value?.incoming.orEmpty().map(UserProfile::user)
         if (incoming.isEmpty()) emptyList() else listOf(HomeCard.FriendRequests(incoming))
     }
 
@@ -29,7 +29,7 @@ class SocialHomeCardSource @Inject constructor(
         if (!services.isEnabled()) return AppResult.Success(Unit)
         social.refresh()
         return when (val state = social.observeRequests().first()) {
-            is SocialState.Error -> AppResult.Failure(state.error)
+            is LoadState.Error -> AppResult.Failure(state.error)
             else -> AppResult.Success(Unit)
         }
     }

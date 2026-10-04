@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.social.SocialState
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
@@ -41,8 +41,8 @@ class SocialDemoGateTest {
 
         social.refresh()
 
-        val friends = (social.observeFriends().first() as SocialState.Content).value
-        val requests = (social.observeRequests().first() as SocialState.Content).value
+        val friends = (social.observeFriends().first() as LoadState.Content).value
+        val requests = (social.observeRequests().first() as LoadState.Content).value
         assertEquals(DemoPeople.FRIENDS.map { it.isu }, friends.map { it.isu })
         assertEquals(listOf(DemoPeople.SOFIA.isu), requests.incoming.map { it.isu })
         assertEquals(DemoPeople.ME_ISU, social.observeCurrentUser().first()?.isu)

@@ -20,7 +20,6 @@ import dev.alllexey.itmowidgets.core.navigation.ScheduleTodayRequest
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleUiState
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
@@ -222,7 +221,7 @@ class ScheduleFragmentLifecycleTest {
         val anchor = scrollToMiddle(scenario)
         val date = sampleDays()[anchor.first].date
         val start = date.atTime(16, 0).atZone(java.time.ZoneId.of("Europe/Moscow")).toOffsetDateTime()
-        ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(listOf(PendingSportBooking(
+        ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(listOf(PendingSportBooking(
             queueId = 77, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 777,
             sectionName = "Тестовая секция плавания", start = start, end = start.plusMinutes(90),
             teacherFio = "Тестовый преподаватель", roomName = "Тестовый корпус", isPrediction = true
@@ -249,7 +248,7 @@ class ScheduleFragmentLifecycleTest {
     fun pendingOnlyRefreshAndScrollPaginationKeepTheVisibleDayThroughEveryFrame() =
         withSchedule(initialDays = emptyList(), restrictToRequestedRange = true) { scenario ->
             val today = LocalDate.of(2026, 9, 7)
-            ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success((1..42).flatMap { day ->
+            ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success((1..42).flatMap { day ->
                 (0..2).map { index ->
                     val id = (day * 10 + index).toLong()
                     val start = today.plusDays(day.toLong()).atTime(14 + index * 2, 0)
@@ -352,7 +351,7 @@ class ScheduleFragmentLifecycleTest {
             withSchedule(initialDays = emptyList()) { scenario ->
                 val start = LocalDate.of(2026, 9, 8).atTime(16, 0)
                     .atZone(java.time.ZoneId.of("Europe/Moscow")).toOffsetDateTime()
-                ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(listOf(PendingSportBooking(
+                ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(listOf(PendingSportBooking(
                     queueId = 78, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 778,
                     sectionName = "Тестовая автозапись без учебных пар", start = start, end = start.plusMinutes(90),
                     teacherFio = "Тестовый преподаватель", roomName = "Тестовый корпус", isPrediction = true
@@ -381,8 +380,8 @@ class ScheduleFragmentLifecycleTest {
                     }
                     when (removal) {
                         "preference" -> ScheduleLifecycleTestActivity.showPendingSport.value = false
-                        "services" -> ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(emptyList())
-                        else -> ScheduleLifecycleTestActivity.pendingSport.value = DataState.Error(AppError.Network)
+                        "services" -> ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(emptyList())
+                        else -> ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Failure(AppError.Network)
                     }
                     eventually(scenario) { activity ->
                         val root = activity.schedule().requireView()
@@ -690,7 +689,7 @@ class ScheduleFragmentLifecycleTest {
         ScheduleLifecycleTestActivity.clearOutcome = {}
         ScheduleLifecycleTestActivity.restrictToRequestedRange = restrictToRequestedRange
         ScheduleLifecycleTestActivity.showPendingSport = MutableStateFlow(false)
-        ScheduleLifecycleTestActivity.pendingSport = MutableStateFlow(DataState.Success(emptyList()))
+        ScheduleLifecycleTestActivity.pendingSport = MutableStateFlow(AppResult.Success(emptyList()))
         ScheduleLifecycleTestActivity.refreshPendingOutcome = {}
         try {
             ActivityScenario.launch(ScheduleLifecycleTestActivity::class.java).use { scenario ->
@@ -704,7 +703,7 @@ class ScheduleFragmentLifecycleTest {
             ScheduleLifecycleTestActivity.clearOutcome = {}
             ScheduleLifecycleTestActivity.restrictToRequestedRange = false
             ScheduleLifecycleTestActivity.showPendingSport = MutableStateFlow(false)
-            ScheduleLifecycleTestActivity.pendingSport = MutableStateFlow(DataState.Success(emptyList()))
+            ScheduleLifecycleTestActivity.pendingSport = MutableStateFlow(AppResult.Success(emptyList()))
             ScheduleLifecycleTestActivity.refreshPendingOutcome = {}
         }
     }

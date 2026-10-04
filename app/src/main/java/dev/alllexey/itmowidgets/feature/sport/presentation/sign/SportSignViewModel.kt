@@ -6,10 +6,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.errorOrNull
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.util.dataOrNull
-import dev.alllexey.itmowidgets.core.util.errorOrNull
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
@@ -135,8 +135,8 @@ class SportSignViewModel @Inject constructor(
     fun openSharedLesson(lessonId: Long, predicted: Boolean = false) {
         viewModelScope.launch {
             val state = sportScheduleRepository.observeSportSchedule()
-                .first { it.dataOrNull() != null || it.errorOrNull() != null }
-            val lessons = state.dataOrNull()
+                .first { it.valueOrNull() != null || it.errorOrNull() != null }
+            val lessons = state.valueOrNull()
             if (lessons == null) {
                 state.errorOrNull()?.let { eventChannel.send(SportSignEvent.ShowError(it)) }
                 return@launch
@@ -263,9 +263,9 @@ class SportSignViewModel @Inject constructor(
             ) { filtersState, timeSlotsState, scheduleState, (operationCount, userCount), userFilters ->
                 val refreshing = operationCount > 0
                 val byUser = userCount > 0
-                val filters = filtersState?.dataOrNull()
-                val timeSlots = timeSlotsState?.dataOrNull()
-                val lessons = scheduleState?.dataOrNull()
+                val filters = filtersState?.valueOrNull()
+                val timeSlots = timeSlotsState?.valueOrNull()
+                val lessons = scheduleState?.valueOrNull()
                 lessons?.let { catalogLessons = it }
                 val errors = listOfNotNull(
                     filtersState?.errorOrNull(),

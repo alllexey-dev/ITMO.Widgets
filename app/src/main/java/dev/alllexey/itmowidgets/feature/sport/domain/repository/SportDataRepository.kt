@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.repository
 
-import dev.alllexey.itmowidgets.core.util.CustomDataState
-import dev.alllexey.itmowidgets.core.util.DataState
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
@@ -12,27 +12,27 @@ import kotlinx.coroutines.flow.Flow
 
 interface SportDataRepository {
 
-    fun observeSportScore(): Flow<DataState<SportScore>>
+    fun observeSportScore(): Flow<AppResult<SportScore>>
 
     suspend fun refreshSportScore()
 
-    fun observeSportAttempts(): Flow<DataState<SportAttempts>>
+    fun observeSportAttempts(): Flow<AppResult<SportAttempts>>
 
     suspend fun refreshSportAttempts()
 
-    fun observeSportAutoSignLimits(): Flow<CustomDataState<SportAutoSignLimits>>
+    fun observeSportAutoSignLimits(): Flow<LoadState<SportAutoSignLimits>>
 
     suspend fun refreshSportAutoSignLimits()
 
-    fun observeSportQueueEntries(): Flow<CustomDataState<List<SportQueueEntry>>>
+    fun observeSportQueueEntries(): Flow<LoadState<List<SportQueueEntry>>>
 
     suspend fun refreshSportQueueEntries()
 
-    fun observeSportQueues(): Flow<CustomDataState<List<SportQueue>>>
+    fun observeSportQueues(): Flow<LoadState<List<SportQueue>>>
 
     suspend fun refreshSportQueues()
 
-    fun observeFriendsBookings(): Flow<CustomDataState<List<FriendSportBooking>>>
+    fun observeFriendsBookings(): Flow<LoadState<List<FriendSportBooking>>>
 
     suspend fun refreshFriendsBookings()
 }

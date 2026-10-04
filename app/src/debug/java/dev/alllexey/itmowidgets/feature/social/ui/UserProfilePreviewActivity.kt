@@ -30,6 +30,7 @@ import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
@@ -49,7 +50,6 @@ import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
@@ -263,8 +263,8 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppN
     }
 
     private object PreviewSocial : SocialRepository {
-        override fun observeFriends() = flowOf<SocialState<List<UserProfile>>>(SocialState.Content(emptyList()))
-        override fun observeRequests() = flowOf<SocialState<FriendRequests>>(SocialState.Content(FriendRequests.EMPTY))
+        override fun observeFriends() = flowOf<LoadState<List<UserProfile>>>(LoadState.Content(emptyList()))
+        override fun observeRequests() = flowOf<LoadState<FriendRequests>>(LoadState.Content(FriendRequests.EMPTY))
         override fun observeCurrentUser() = flowOf<UserSummary?>(null)
         override val currentFriends: List<UserProfile> = emptyList()
         override fun cachedProfile(isu: Int): UserProfile? = cachedSocial?.takeIf { it.isu == isu }

@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.app
 
 import dev.alllexey.itmowidgets.BuildConfig
-import dev.alllexey.itmowidgets.core.friend.FriendListState
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserGroup
@@ -9,6 +8,8 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.PersonSearchResult
@@ -23,7 +24,7 @@ class FriendSelectorFixture(people: List<UserSummary>? = null) {
         UserSummary(100001 + index, "$name Константинович Оченьдлиннаяфамилия", null,
             listOf(UserGroup("TEST", 2, "ТЕСТ")), UserSharing(true, true))
     }
-    val friendState = MutableStateFlow<FriendListState>(FriendListState.Content(friends))
+    val friendState = MutableStateFlow<LoadState<List<UserSummary>>>(LoadState.Content(friends))
     val currentUser = MutableStateFlow<UserSummary?>(null)
     var recentIsus = friends.take(5).map(UserSummary::isu)
     val recorded = mutableListOf<Int>()
@@ -34,7 +35,7 @@ class FriendSelectorFixture(people: List<UserSummary>? = null) {
         override fun observeCurrentUser() = currentUser
         override suspend fun refreshFriendList() = Unit
         override val currentFriends: List<UserSummary>?
-            get() = (friendState.value as? FriendListState.Content)?.friends
+            get() = friendState.value.valueOrNull()
     }
     val history = object : FriendSelectionHistory {
         override suspend fun getRecentIsu() = recentIsus
