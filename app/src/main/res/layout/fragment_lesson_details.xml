@@ -18,6 +18,7 @@
         android:minHeight="56dp"
         app:title="@string/schedule_lesson_details_title"
         app:navigationIcon="@drawable/ic_close"
+        app:navigationIconTint="?attr/colorOnSurface"
         app:navigationContentDescription="@string/common_close" />
     <androidx.core.widget.NestedScrollView
         android:id="@+id/details_scroll"

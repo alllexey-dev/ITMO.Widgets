@@ -145,6 +145,7 @@
                     android:text="@string/common_reset"
                     android:visibility="gone"
                     app:chipIcon="@drawable/ic_close"
+                    app:chipIconTint="?attr/colorOnSurface"
                     tools:visibility="visible" />
             </com.google.android.material.chip.ChipGroup>
 
@@ -184,6 +185,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/sport_previous_week"
                     android:src="@drawable/ic_chevron_left"
+                    app:tint="?attr/colorOnPrimaryContainer"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/space"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -202,6 +204,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/sport_next_week"
                     android:src="@drawable/ic_chevron_right"
+                    app:tint="?attr/colorOnPrimaryContainer"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />

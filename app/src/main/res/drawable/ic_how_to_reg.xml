@@ -1,10 +1,7 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
-    android:viewportWidth="960"
-    android:viewportHeight="960"
-    android:tint="?colorOnPrimaryContainer">
-  <path
-      android:pathData="M80,800v-112q0,-33 17,-62t47,-44q51,-26 115,-44t141,-18q30,0 58.5,3t55.5,9l-70,70q-11,-2 -21.5,-2L400,600q-71,0 -127.5,17T180,654q-9,5 -14.5,14t-5.5,20v32h250l80,80L80,800ZM622,816L484,678l56,-56 82,82 202,-202 56,56 -258,258ZM400,480q-66,0 -113,-47t-47,-113q0,-66 47,-113t113,-47q66,0 113,47t47,113q0,66 -47,113t-113,47ZM410,720ZM400,400q33,0 56.5,-23.5T480,320q0,-33 -23.5,-56.5T400,240q-33,0 -56.5,23.5T320,320q0,33 23.5,56.5T400,400ZM400,320Z"
-      android:fillColor="#e3e3e3"/>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Material Symbols Rounded: https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsrounded/how_to_reg/default/24px.svg -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="960" android:viewportHeight="960">
+    <group android:translateY="960">
+        <path android:fillColor="#FF000000" android:pathData="M160-160q-33 0-56.5-23.5T80-240v-32q0-33 17-62t47-44q51-26 115-44t141-18q8 0 18 .5t18 1.5q16 2 26.5 15t8.5 29q-2 14-12 24t-27 10h-32q-71 0-127.5 17T180-306q-9 5-14.5 14t-5.5 20v32h270q17 0 28.5 11.5T470-200q0 17-11.5 28.5T430-160H160Zm462-96 174-174q11-11 28-11t28 11q11 11 11 28t-11 28L650-172q-12 12-28 12t-28-12l-82-82q-11-11-11-28t11-28q11-11 28-11t28 11l54 54ZM287-527q-47-47-47-113t47-113q47-47 113-47t113 47q47 47 47 113t-47 113q-47 47-113 47t-113-47Zm123 287Zm46.5-343.5Q480-607 480-640t-23.5-56.5Q433-720 400-720t-56.5 23.5Q320-673 320-640t23.5 56.5Q367-560 400-560t56.5-23.5ZM400-640Z" />
+    </group>
 </vector>

@@ -1,10 +1,7 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
-    android:viewportWidth="960"
-    android:viewportHeight="960"
-    android:tint="?colorOnPrimaryContainer">
-  <path
-      android:pathData="M680,880v-120L560,760v-80h120v-120h80v120h120v80L760,760v120h-80ZM200,800q-33,0 -56.5,-23.5T120,720v-480q0,-33 23.5,-56.5T200,160h40v-80h80v80h240v-80h80v80h40q33,0 56.5,23.5T760,240v244q-20,-3 -40,-3t-40,3v-84L200,400v320h280q0,20 3,40t11,40L200,800ZM200,320h480v-80L200,240v80ZM200,320v-80,80Z"
-      android:fillColor="#e3e3e3"/>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Material Symbols Rounded: https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsrounded/calendar_add_on/default/24px.svg -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="960" android:viewportHeight="960">
+    <group android:translateY="960">
+        <path android:fillColor="#FF000000" android:pathData="M680-200h-80q-17 0-28.5-11.5T560-240q0-17 11.5-28.5T600-280h80v-80q0-17 11.5-28.5T720-400q17 0 28.5 11.5T760-360v80h80q17 0 28.5 11.5T880-240q0 17-11.5 28.5T840-200h-80v80q0 17-11.5 28.5T720-80q-17 0-28.5-11.5T680-120v-80Zm-480 40q-33 0-56.5-23.5T120-240v-480q0-33 23.5-56.5T200-800h40v-40q0-17 11.5-28.5T280-880q17 0 28.5 11.5T320-840v40h240v-40q0-17 11.5-28.5T600-880q17 0 28.5 11.5T640-840v40h40q33 0 56.5 23.5T760-720v200q0 17-11.5 28.5T720-480q-17 0-28.5-11.5T680-520v-40H200v320h240q17 0 28.5 11.5T480-200q0 17-11.5 28.5T440-160H200Zm0-480h480v-80H200v80Zm0 0v-80 80Z" />
+    </group>
 </vector>
