@@ -10,7 +10,6 @@
     android:previewLayout="@layout/widget_qr_code_preview"
     android:initialLayout="@layout/widget_qr_code"
     android:description="@string/widget_qr_code_description"
-
     android:widgetCategory="home_screen"
     android:targetCellHeight="1"
     android:targetCellWidth="1"

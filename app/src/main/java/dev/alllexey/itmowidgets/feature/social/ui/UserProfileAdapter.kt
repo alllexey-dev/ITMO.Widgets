@@ -236,7 +236,7 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
         fun bind(section: ProfileItem.Section) = with(binding) {
             val context = root.context
             title.setText(section.titleRes)
-            count.text = String.format(Locale.getDefault(), "%d", section.count)
+            count.text = section.count.toString()
             count.isVisible = section.count > 0
             title.contentDescription = if (section.count > 0) context.getString(R.string.teacher_reviews_count, section.count) else null
             action.isVisible = section.actionRes != null

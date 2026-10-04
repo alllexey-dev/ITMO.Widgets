@@ -41,7 +41,7 @@ class ScheduleWidgetRemoteViewsService : RemoteViewsService() {
 
         override fun getItemId(position: Int): Long = position.toLong()
 
-        override fun hasStableIds(): Boolean = true
+        override fun hasStableIds(): Boolean = false
 
         override fun onDestroy() = Unit
 

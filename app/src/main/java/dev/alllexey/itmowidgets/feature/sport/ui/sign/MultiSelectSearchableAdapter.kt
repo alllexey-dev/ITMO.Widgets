@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.checkbox.MaterialCheckBox
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.bindSelectionAccessibility
-import java.util.Locale
 
 class MultiSelectSearchableAdapter(
     private val allItems: List<SelectableItem>
@@ -43,12 +42,12 @@ class MultiSelectSearchableAdapter(
     override fun getItemCount() = filteredItems.size
 
     fun filter(query: String?) {
-        val lowerCaseQuery = query?.lowercase(Locale.getDefault()) ?: ""
+        val lowerCaseQuery = query?.lowercase() ?: ""
 
         filteredItems = if (lowerCaseQuery.isEmpty()) {
             allItems.toMutableList()
         } else {
-            allItems.filter { it.name.lowercase(Locale.getDefault()).contains(lowerCaseQuery) }
+            allItems.filter { it.name.lowercase().contains(lowerCaseQuery) }
                 .toMutableList()
         }
         notifyDataSetChanged()

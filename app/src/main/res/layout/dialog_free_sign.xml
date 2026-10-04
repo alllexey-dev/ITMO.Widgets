@@ -8,7 +8,9 @@
 
     <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/free_sign_switch"
-        android:textAppearance="?attr/textAppearanceCaption"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:letterSpacing="0.0333333333"
+        android:textStyle="normal"
         android:text="@string/sport_free_sign_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />

@@ -7,6 +7,5 @@
     android:previewImage="@drawable/widget_qr_code_preview"
     android:initialLayout="@layout/widget_qr_code"
     android:description="@string/widget_qr_code_description"
-
     android:widgetCategory="home_screen"
     android:initialKeyguardLayout="@layout/widget_qr_code" />
