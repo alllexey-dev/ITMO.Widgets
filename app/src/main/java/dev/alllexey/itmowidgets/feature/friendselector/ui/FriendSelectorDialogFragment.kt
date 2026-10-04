@@ -227,7 +227,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
                 }
             }
             is PeopleResults.Error -> showState(
-                icon = R.drawable.ic_error_rounded,
+                icon = R.drawable.ic_error,
                 title = getString(R.string.common_load_error_title),
                 description = getString(people.error.messageRes()),
                 retry = true
@@ -256,7 +256,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
         binding.progress.isVisible = false
         binding.applyButton.isEnabled = false
         showState(
-            icon = if (canRetry) R.drawable.ic_error_rounded else R.drawable.ic_lock,
+            icon = if (canRetry) R.drawable.ic_error else R.drawable.ic_lock,
             title = getString(R.string.common_load_error_title),
             description = message,
             retry = canRetry

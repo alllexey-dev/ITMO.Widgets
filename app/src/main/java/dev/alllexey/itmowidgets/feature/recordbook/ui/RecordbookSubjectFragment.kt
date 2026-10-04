@@ -171,7 +171,7 @@ class RecordbookSubjectFragment : Fragment() {
             is RecordbookSubjectUiState.Error -> {
                 binding.swipeRefreshLayout.isVisible = false
                 binding.stateContainer.isVisible = true
-                binding.stateIcon.setImageResource(R.drawable.ic_error_rounded)
+                binding.stateIcon.setImageResource(R.drawable.ic_error)
                 binding.stateTitle.setText(R.string.common_load_error_title)
                 binding.stateDescription.setText(state.error.messageRes())
                 binding.stateAction.isVisible = true

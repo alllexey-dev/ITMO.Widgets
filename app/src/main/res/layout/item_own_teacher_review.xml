@@ -61,7 +61,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/teacher_review_actions"
             android:padding="@dimen/design_spacing_content"
-            android:src="@drawable/ic_more_vert_rounded"
+            android:src="@drawable/ic_more_vert"
             app:tint="?attr/colorOnSurfaceVariant" />
 
     </LinearLayout>

@@ -87,7 +87,7 @@ class UserSportFragment : Fragment(), SportBookingListener {
             is UserSportUiState.Error -> {
                 val hidden = state.error == AppError.Forbidden
                 showState(
-                    icon = if (hidden) R.drawable.ic_lock else R.drawable.ic_error_rounded,
+                    icon = if (hidden) R.drawable.ic_lock else R.drawable.ic_error,
                     title = getString(if (hidden) R.string.user_sport_hidden_title else R.string.common_load_error_title),
                     description = getString(if (hidden) R.string.user_profile_hidden else state.error.messageRes()),
                     retry = !hidden

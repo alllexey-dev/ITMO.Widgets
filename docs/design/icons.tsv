@@ -1,0 +1,77 @@
+id	symbol	fill	kind	sf_symbol	note
+account_circle	account_circle	0	shared	person.crop.circle	Bottom navigation tab
+add	add	0	shared	plus	-
+arrow_back	arrow_back	0	shared	chevron.backward	-
+arrow_drop_down	arrow_drop_down	0	shared	arrowtriangle.down.fill	-
+arrow_drop_up	arrow_drop_up	0	shared	arrowtriangle.up.fill	-
+assignment	assignment	0	shared	doc.text	-
+auto_awesome	auto_awesome	0	shared	sparkles	-
+brand_github	-	0	custom	custom.brand_github	GitHub mark; Material Symbols has no brand marks
+brand_telegram	-	0	custom	custom.brand_telegram	Simple Icons Telegram mark; Material Symbols has no brand marks
+brand_vk	-	0	custom	custom.brand_vk	Simple Icons VK mark; Material Symbols has no brand marks
+calendar_add	calendar_add_on	0	shared	calendar.badge.plus	id differs from the symbol name
+chat	chat	0	shared	bubble.left	-
+check	check	0	shared	checkmark	-
+check_circle	check_circle	0	shared	checkmark.circle	-
+chevron_left	chevron_left	0	shared	chevron.left	-
+chevron_right	chevron_right	0	shared	chevron.right	-
+clock	-	1	custom	clock.fill	Filled clock on a 400 viewport, drawn for the in-app widget preview view_widget_preview_schedule.xml
+close	close	0	shared	xmark	-
+code_blocks	code_blocks	0	shared	chevron.left.forwardslash.chevron.right	-
+computer	computer	0	shared	desktopcomputer	-
+content_copy	content_copy	0	shared	doc.on.doc	-
+delete	delete	0	shared	trash	-
+download	download	0	shared	arrow.down.to.line	-
+edit	edit	0	shared	pencil	-
+edit_calendar	edit_calendar	0	shared	calendar	SF Symbols has no calendar with a pencil
+edit_note	edit_note	0	shared	square.and.pencil	-
+error	error	0	shared	exclamationmark.circle	-
+event_note	event_note	0	shared	calendar.day.timeline.left	-
+exercise	exercise	0	shared	dumbbell	Bottom navigation tab
+expand_more	expand_more	0	shared	chevron.down	Same glyph as summary_expand
+flag	flag	0	shared	flag	-
+folder	folder	0	shared	folder	-
+format_list_numbered	format_list_numbered	0	shared	list.number	-
+globe	globe	0	shared	globe	-
+group	group	0	shared	person.2	-
+history	history	0	shared	clock.arrow.circlepath	-
+home	home	0	shared	house	Bottom navigation tab
+how_to_reg	how_to_reg	0	shared	person.crop.circle.badge.checkmark	-
+info	info	0	shared	info.circle	-
+keep	keep	0	shared	pin	Same glyph as pin (push_pin is an alias of keep); here a pinned link
+keep_off	keep_off	0	shared	pin.slash	-
+keyboard_arrow_up	keyboard_arrow_up	0	shared	chevron.up	-
+language	language	0	shared	network	-
+link	link	0	shared	link	-
+location_on	location_on	0	shared	mappin.and.ellipse	-
+lock	lock	0	shared	lock	-
+login	login	0	shared	arrow.right.to.line	-
+logout	logout	0	shared	rectangle.portrait.and.arrow.right	-
+menu_book	menu_book	0	shared	book	Bottom navigation tab
+more_vert	more_vert	0	shared	ellipsis	iOS shows the overflow menu horizontally
+notification	notifications	0	shared	bell	id differs from the symbol name
+open_in_new	open_in_new	0	shared	arrow.up.right.square	-
+person	person	0	shared	person	-
+pin	push_pin	0	shared	pin	id differs from the symbol name; pins a widget to the home screen
+qr_code	qr_code	0	shared	qrcode	-
+qr_code_scanner	qr_code_scanner	0	shared	qrcode.viewfinder	-
+refresh	refresh	0	shared	arrow.clockwise	-
+remove	remove	0	shared	minus	-
+schedule	schedule	0	shared	clock	Bottom navigation tab
+school	school	0	shared	graduationcap	-
+search	search	0	shared	magnifyingglass	-
+settings	settings	0	shared	gearshape	-
+share	share	0	shared	square.and.arrow.up	-
+shortcut_qr	qr_code	0	android	-	Adaptive launcher shortcut wrapper of shortcut_qr_foreground
+shortcut_qr_foreground	qr_code	0	android	-	Launcher shortcut foreground in the adaptive safe zone
+shortcut_today	schedule	0	android	-	Adaptive launcher shortcut wrapper of shortcut_today_foreground
+shortcut_today_foreground	schedule	0	android	-	Launcher shortcut foreground in the adaptive safe zone
+star_shine	star_shine	0	shared	sparkle	-
+stat_notifications	notifications	0	android	-	Monochrome notification mask; SystemUI tints it
+summary_collapse	expand_less	0	shared	chevron.up	id differs from the symbol name
+summary_expand	expand_more	0	shared	chevron.down	id differs from the symbol name; same glyph as expand_more
+table	table	0	shared	tablecells	-
+tile_qr	qr_code	0	android	-	Quick Settings tile; SystemUI tints it
+videocam	videocam	0	shared	video	-
+widgets	widgets	0	shared	square.grid.2x2	-
+work	work	0	shared	briefcase	-

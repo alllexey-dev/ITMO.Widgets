@@ -254,7 +254,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
         swipe.isRefreshing = false
         skeletonAdapter.setVisible(false)
         val contentState = ContentState(
-            iconRes = R.drawable.ic_error_rounded,
+            iconRes = R.drawable.ic_error,
             title = getString(R.string.common_load_error_title),
             description = getString(state.error.messageRes()),
             action = getString(R.string.common_retry)

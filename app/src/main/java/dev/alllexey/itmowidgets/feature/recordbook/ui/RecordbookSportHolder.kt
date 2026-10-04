@@ -47,8 +47,8 @@ internal class RecordbookSportHolder(
         binding.officialResult.text = if (subject.normalizedRate == RecordbookRate.InProgress)
             context.getString(R.string.recordbook_official_pending) else subject.displayRate(context)
         val icon = when (subject.status) {
-            RecordbookSubjectStatus.PASSED -> R.drawable.ic_check_rounded
-            RecordbookSubjectStatus.ATTENTION -> R.drawable.ic_close_rounded
+            RecordbookSubjectStatus.PASSED -> R.drawable.ic_check
+            RecordbookSubjectStatus.ATTENTION -> R.drawable.ic_close
             RecordbookSubjectStatus.IN_PROGRESS -> null
         }
         binding.officialIcon.isVisible = icon != null

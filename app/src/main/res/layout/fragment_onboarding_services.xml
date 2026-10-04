@@ -184,7 +184,7 @@
                     style="@style/Widget.ItmoWidgets.ProjectLink"
                     android:layout_marginTop="@dimen/design_spacing_compact"
                     android:text="@string/onboarding_services_source_link"
-                    app:icon="@drawable/ic_github" />
+                    app:icon="@drawable/ic_brand_github" />
 
             </LinearLayout>
 

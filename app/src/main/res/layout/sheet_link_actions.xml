@@ -86,7 +86,7 @@
             android:id="@+id/action_author"
             style="@style/Widget.ItmoWidgets.SheetAction"
             android:visibility="gone"
-            app:drawableStartCompat="@drawable/ic_person_rounded"
+            app:drawableStartCompat="@drawable/ic_person"
             tools:text="Автор: Иван Иванов"
             tools:visibility="visible" />
 

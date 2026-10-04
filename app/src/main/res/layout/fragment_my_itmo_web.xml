@@ -12,7 +12,7 @@
         app:title="@string/my_itmo_web_title"
         app:subtitleTextAppearance="@style/TextAppearance.Material3.BodySmall"
         app:subtitleTextColor="?attr/colorOnSurfaceVariant"
-        app:navigationIcon="@drawable/ic_close_rounded"
+        app:navigationIcon="@drawable/ic_close"
         app:navigationIconTint="?attr/colorOnSurface"
         app:navigationContentDescription="@string/common_close"
         app:menu="@menu/my_itmo_web_menu" />
@@ -39,7 +39,7 @@
             <ImageView
                 style="@style/Widget.ItmoWidgets.ContentState.Icon"
                 android:contentDescription="@null"
-                android:src="@drawable/ic_error_rounded" />
+                android:src="@drawable/ic_error" />
             <TextView
                 style="@style/Widget.ItmoWidgets.ContentState.Title"
                 android:text="@string/my_itmo_web_error_title" />

@@ -70,7 +70,7 @@ class SubjectLinksBottomSheet : BottomSheetDialogFragment() {
         if (content == null) {
             recyclerView.isVisible = false
             loading.isVisible = state.error == null
-            showState(state.error != null, R.drawable.ic_error_rounded, getString(R.string.links_error_title),
+            showState(state.error != null, R.drawable.ic_error, getString(R.string.links_error_title),
                 state.error?.toUiText()?.resolve(requireContext()), retry = true)
             return
         }

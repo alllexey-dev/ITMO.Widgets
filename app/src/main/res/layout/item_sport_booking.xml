@@ -117,7 +117,7 @@
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:layout_marginEnd="@dimen/design_spacing_compact"
-                        android:src="@drawable/ic_person_rounded"
+                        android:src="@drawable/ic_person"
                         android:contentDescription="@null"
                         app:tint="?attr/colorOnSurfaceVariant" />
                     <TextView
@@ -142,7 +142,7 @@
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:layout_marginEnd="@dimen/design_spacing_compact"
-                        android:src="@drawable/ic_location_on_rounded"
+                        android:src="@drawable/ic_location_on"
                         android:contentDescription="@null"
                         app:tint="?attr/colorOnSurfaceVariant" />
                     <TextView
@@ -168,7 +168,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/common_options"
                 android:padding="@dimen/design_spacing_content"
-                android:src="@drawable/ic_more_vert_rounded"
+                android:src="@drawable/ic_more_vert"
                 app:tint="?attr/colorOnSurfaceVariant"
                 android:layout_gravity="top|end" />
         </FrameLayout>

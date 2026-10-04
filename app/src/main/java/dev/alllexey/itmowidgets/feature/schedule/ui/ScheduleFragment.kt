@@ -377,7 +377,7 @@ class ScheduleFragment : Fragment() {
                 }
                 is ScheduleUiState.Error -> {
                     renderedBinding.swipeRefreshLayout.isRefreshing = false
-                    renderedBinding.scheduleStateIcon.setImageResource(R.drawable.ic_error_rounded)
+                    renderedBinding.scheduleStateIcon.setImageResource(R.drawable.ic_error)
                     renderedBinding.scheduleStateTitle.setText(R.string.common_load_error_title)
                     renderedBinding.scheduleStateDescription.setText(latest.error.messageRes())
                     renderedBinding.scheduleStateAction.isVisible = true

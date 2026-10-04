@@ -112,7 +112,7 @@
             <ImageView
                 style="@style/Widget.ItmoWidgets.ContentState.Icon"
                 android:contentDescription="@null"
-                android:src="@drawable/ic_check_rounded" />
+                android:src="@drawable/ic_check" />
 
             <TextView
                 style="@style/Widget.ItmoWidgets.ContentState.Title"

@@ -54,7 +54,7 @@
             android:background="@drawable/bg_friend_selection_badge"
             android:contentDescription="@null"
             android:padding="3dp"
-            android:src="@drawable/ic_check_rounded"
+            android:src="@drawable/ic_check"
             app:tint="?attr/colorOnPrimary" />
 
     </FrameLayout>

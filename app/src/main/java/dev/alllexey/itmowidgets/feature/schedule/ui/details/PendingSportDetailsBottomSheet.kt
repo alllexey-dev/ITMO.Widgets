@@ -115,7 +115,7 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
             }
         )
         row.conditionBody.setTextColor(requireContext().color.onSurface)
-        row.conditionIcon.setImageResource(R.drawable.ic_schedule_rounded)
+        row.conditionIcon.setImageResource(R.drawable.ic_schedule)
         row.conditionIcon.imageTintList = ColorStateList.valueOf(tone.accent(requireContext()))
         alignRailIcon(row.conditionIcon, row.conditionTitle)
         attentionContainer.addView(row.root)

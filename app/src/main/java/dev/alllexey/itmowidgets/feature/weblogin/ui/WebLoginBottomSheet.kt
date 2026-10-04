@@ -96,7 +96,7 @@ class WebLoginBottomSheet : BottomSheetDialogFragment() {
             when (state) {
                 WebLoginUiState.Done -> bindResult(R.drawable.ic_check_circle, getString(R.string.web_login_done),
                     R.string.common_close) { dismiss() }
-                is WebLoginUiState.Error -> bindResult(R.drawable.ic_error_rounded, state.text.resolve(requireContext()),
+                is WebLoginUiState.Error -> bindResult(R.drawable.ic_error, state.text.resolve(requireContext()),
                     R.string.common_retry) { viewModel.retry() }
                 else -> Unit
             }

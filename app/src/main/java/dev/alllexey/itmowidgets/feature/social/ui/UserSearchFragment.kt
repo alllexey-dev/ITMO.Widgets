@@ -95,7 +95,7 @@ class UserSearchFragment : Fragment() {
                 action = null
             )
             is UserSearchUiState.Error -> showState(
-                icon = R.drawable.ic_error_rounded,
+                icon = R.drawable.ic_error,
                 title = getString(R.string.common_load_error_title),
                 description = getString(state.error.messageRes()),
                 action = getString(R.string.common_retry)
