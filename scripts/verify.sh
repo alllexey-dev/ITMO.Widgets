@@ -1,0 +1,262 @@
+#!/usr/bin/env bash
+# verify.sh [quick]                        unit tests (Konsist included), lintGithubDebug, both debug assembles
+# verify.sh full                           the AGENTS.md "Build and verify" command (both lints)
+# verify.sh shots <module> [--record]      :shared:<module>:screenshotsVerify (screenshotsRecord)
+# verify.sh ui <Class>[,<Class>...]|all    :app:connectedGithubDebugAndroidTest on a pool emulator
+# verify.sh ship                           scripts/ship-check.sh when it exists, else full + check-play-policy.sh
+# verify.sh run -- <gradle args...>        ad hoc Gradle tasks (kn slot when an argument names an iOS task)
+#
+# The one build entry point for agents (master plan section 7.5, L04 TC-09; contract in the verify-script recipe).
+#
+# - Every Gradle part runs in its own scripts/slot.sh call (android, or kn for iOS tasks), one after another and
+#   never nested, with --max-workers=$ITMO_MAX_WORKERS from the slot. ITMO_SLOT_SH overrides the slot script.
+# - JAVA_HOME defaults to JDK 21 and ANDROID_HOME to ~/Library/Android/sdk on macOS; the Gradle daemon JDK comes
+#   from gradle/gradle-daemon-jvm.properties either way.
+# - ui accepts FQCNs or bare class names (resolved to the one file under app/src/androidTest*/), optionally with
+#   #method. It refuses unless ANDROID_SERIAL is emulator-<port> and the device reports ro.boot.qemu (or
+#   ro.kernel.qemu) = 1; emulator-5554 only from a worktree whose itmo-lane marker reads `integrator`.
+# - Never runs --stop, publishToMavenLocal, connected* outside ui, or install*/uninstall* tasks.
+# - The last line of a finished run is `VERIFY A <mode> PASS|FAIL <secs>s <sha7>[+dirty]`.
+# - Exit code: 0 pass, 1 fail, 2 refused (usage, missing harness, unsafe device); refusals print no VERIFY line.
+
+set -u
+
+me=verify.sh
+REPO_LETTER=A
+
+refuse() { printf '%s: %s\n' "$me" "$*" >&2; exit 2; }
+note() { printf '%s: %s\n' "$me" "$*" >&2; }
+
+script_dir=$(cd "$(dirname "$0")" 2>/dev/null && pwd -P) || refuse "cannot resolve the script directory"
+self="$script_dir/$(basename "$0")"
+root=$(cd "$script_dir/.." && pwd -P) || refuse "cannot resolve the repository root"
+cd "$root" || refuse "cannot enter $root"
+
+if [ "$(uname -s)" = Darwin ]; then
+  export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+  if [ -z "${JAVA_HOME:-}" ] && [ -x /usr/libexec/java_home ]; then
+    JAVA_HOME=$(/usr/libexec/java_home -v 21 2> /dev/null) && export JAVA_HOME || unset JAVA_HOME
+  fi
+fi
+
+# Internal: the command slot.sh runs inside a held slot, where ITMO_MAX_WORKERS is known.
+if [ "${1:-}" = __gradle ]; then
+  shift
+  exec ./gradlew ${ITMO_MAX_WORKERS:+"--max-workers=$ITMO_MAX_WORKERS"} "$@"
+fi
+
+usage() {
+  sed -n '2,7p' "$self" | sed 's/^# //' >&2
+  exit 2
+}
+
+slot_sh=${ITMO_SLOT_SH:-$root/scripts/slot.sh}
+[ -x "$slot_sh" ] || refuse "no executable slot script at $slot_sh"
+
+mode=${1:-quick}
+[ $# -gt 0 ] && shift
+case "$mode" in
+  -h | --help) usage ;;
+  quick | full | shots | ui | ship | run) ;;
+  *) note "unknown mode '$mode'"; usage ;;
+esac
+
+started=$(date +%s)
+sha=$(git rev-parse --short=7 HEAD 2> /dev/null || printf 'nogit')
+[ -n "$(git status --porcelain 2> /dev/null)" ] && sha="$sha+dirty"
+
+finish() { # rc
+  local verdict=PASS
+  [ "$1" -eq 0 ] || verdict=FAIL
+  printf 'VERIFY %s %s %s %ss %s\n' "$REPO_LETTER" "$mode" "$verdict" "$(($(date +%s) - started))" "$sha"
+  [ "$1" -eq 0 ] && exit 0
+  exit 1
+}
+
+slot_part() { # kind cmd...
+  local kind=$1
+  shift
+  note "[$kind slot] $*"
+  "$slot_sh" "$kind" -- "$@"
+}
+
+gradle_part() { # kind gradle-args...
+  local kind=$1
+  shift
+  note "[$kind slot] ./gradlew $*"
+  "$slot_sh" "$kind" -- "$self" __gradle "$@"
+}
+
+no_args() { [ $# -eq 0 ] || refuse "$mode takes no arguments (got: $*)"; }
+
+# ---- quick, full, ship -----------------------------------------------------------------------------------
+
+UNIT_TESTS=":app:testGithubDebugUnitTest :app:testPlayDebugUnitTest"
+ASSEMBLES=":app:assembleGithubDebug :app:assemblePlayDebug"
+
+run_quick() {
+  if [ -e "$root/scripts/check-docs.sh" ]; then
+    note "scripts/check-docs.sh (outside any slot)"
+    "$root/scripts/check-docs.sh" || return 1
+  fi
+  # shellcheck disable=SC2086 # task lists are fixed words
+  gradle_part android $UNIT_TESTS :app:lintGithubDebug $ASSEMBLES
+}
+
+run_full() {
+  # shellcheck disable=SC2086
+  gradle_part android $UNIT_TESTS :app:lintGithubDebug :app:lintPlayDebug $ASSEMBLES
+}
+
+run_ship() {
+  # ship-check.sh takes its own slots; calling it from a held slot would deadlock, so hand over before any.
+  if [ -e "$root/scripts/ship-check.sh" ]; then
+    note "handing over to scripts/ship-check.sh"
+    exec "$root/scripts/ship-check.sh" "$@"
+  fi
+  no_args "$@"
+  run_full || return 1
+  slot_part android "$root/scripts/check-play-policy.sh"
+}
+
+# ---- shots -----------------------------------------------------------------------------------------------
+
+run_shots() {
+  local module=${1:-} task=screenshotsVerify out rc
+  [ -n "$module" ] || refuse "usage: shots <module> [--record]"
+  shift
+  case "${1:-}" in
+    "") ;;
+    --record) task=screenshotsRecord; shift ;;
+    *) refuse "shots: unknown argument '$1'" ;;
+  esac
+  no_args "$@"
+  [[ $module =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || refuse "shots: '$module' is not a module name"
+  grep -rqs --include='*.kts' --include='*.kt' screenshotsVerify "$root/build-logic" 2> /dev/null ||
+    refuse "screenshot harness not installed (no screenshotsVerify task in build-logic yet)"
+  [ -d "$root/shared/$module" ] || refuse "shots: no module shared/$module"
+  out=$(mktemp "${TMPDIR:-/tmp}/verify-shots.XXXXXX") || refuse "cannot create a temporary file"
+  gradle_part android ":shared:$module:$task" 2>&1 | tee "$out"
+  rc=${PIPESTATUS[0]}
+  if [ "$rc" -ne 0 ] && grep -qE "(Task '$task' not found|Cannot locate tasks that match)" "$out"; then
+    rm -f "$out"
+    refuse "screenshot harness not installed in :shared:$module"
+  fi
+  rm -f "$out"
+  return "$rc"
+}
+
+# ---- ui --------------------------------------------------------------------------------------------------
+
+# Prints the FQCN of the androidTest class named by $1 (bare or fully qualified); refuses on none or several.
+resolve_class() {
+  local given=$1 base file pkg fqcn hits="" count=0 rel
+  base=${given##*.}
+  while IFS= read -r file; do
+    [ -n "$file" ] || continue
+    pkg=$(sed -n 's/^[[:space:]]*package[[:space:]][[:space:]]*\([A-Za-z0-9_.]*\).*/\1/p' "$file" | head -n 1)
+    fqcn=${pkg:+$pkg.}$base
+    if [ "$given" = "$base" ] || [ "$given" = "$fqcn" ]; then
+      count=$((count + 1))
+      hits="$hits $fqcn:$file"
+    fi
+  done <<EOF
+$(find app/src -type f -path 'app/src/androidTest*' \( -name "$base.kt" -o -name "$base.java" \) 2> /dev/null | sort)
+EOF
+  [ "$count" -gt 0 ] || refuse "ui: no test class '$given' under app/src/androidTest*/"
+  [ "$count" -eq 1 ] || refuse "ui: '$given' matches $count files, pass the FQCN:$hits"
+  hits=${hits# }
+  fqcn=${hits%%:*}
+  file=${hits#*:}
+  rel=${file#app/src/}
+  case "${rel%%/*}" in
+    androidTest | androidTestDebug | androidTestGithub | androidTestGithubDebug) ;;
+    *) refuse "ui: $file is not in a github debug source set; ui runs :app:connectedGithubDebugAndroidTest" ;;
+  esac
+  printf '%s' "$fqcn"
+}
+
+check_device() {
+  local serial=${ANDROID_SERIAL:-} marker="" git_dir adb qemu prop
+  [[ $serial =~ ^emulator-[0-9]+$ ]] ||
+    refuse "ui: ANDROID_SERIAL must name a pool emulator (emulator-<port>), got '${serial:-unset}'"
+  if [ "$serial" = emulator-5554 ]; then
+    git_dir=$(git rev-parse --absolute-git-dir 2> /dev/null) &&
+      marker=$(head -n 1 "$git_dir/itmo-lane" 2> /dev/null | tr -d ' \t\r')
+    [ "$marker" = integrator ] || refuse "ui: emulator-5554 is the integrator's; use a pool emulator"
+  fi
+  adb="${ANDROID_HOME:-}/platform-tools/adb"
+  [ -x "$adb" ] || refuse "ui: no adb at $adb (set ANDROID_HOME)"
+  for prop in ro.boot.qemu ro.kernel.qemu; do
+    qemu=$("$adb" -s "$serial" shell getprop "$prop" 2> /dev/null | tr -d ' \t\r')
+    [ "$qemu" = 1 ] && return 0
+  done
+  refuse "ui: $serial is not a reachable emulator (getprop ro.boot.qemu / ro.kernel.qemu is not 1)"
+}
+
+run_ui() {
+  local spec=${1:-} item name method classes="" fqcn old_ifs
+  [ -n "$spec" ] || refuse "usage: ui <Class>[,<Class>...]|all"
+  shift
+  no_args "$@"
+  if [ "$spec" != all ]; then
+    old_ifs=$IFS
+    IFS=,
+    set -f
+    # shellcheck disable=SC2086 # split on commas only
+    set -- $spec
+    set +f
+    IFS=$old_ifs
+    [ $# -gt 0 ] || refuse "ui: empty class list"
+    for item in "$@"; do
+      [[ $item =~ ^[A-Za-z_][A-Za-z0-9_.]*(#[A-Za-z_][A-Za-z0-9_]*)?$ ]] || refuse "ui: '$item' is not a class name"
+      name=${item%%#*}
+      method=""
+      [ "$name" = "$item" ] || method="#${item#*#}"
+      fqcn=$(resolve_class "$name") || exit 2
+      classes="$classes,$fqcn$method"
+    done
+    classes=${classes#,}
+  fi
+  check_device
+  note "running on $ANDROID_SERIAL: ${classes:-all instrumentation tests}"
+  gradle_part android :app:connectedGithubDebugAndroidTest \
+    ${classes:+"-Pandroid.testInstrumentationRunnerArguments.class=$classes"}
+}
+
+# ---- run -------------------------------------------------------------------------------------------------
+
+run_run() {
+  local kind=android arg task
+  [ "${1:-}" = -- ] || refuse "usage: run -- <gradle args...>"
+  shift
+  [ $# -gt 0 ] || refuse "run: no Gradle arguments"
+  for arg in "$@"; do
+    task=${arg##*:}
+    case "$arg" in
+      --stop | --stop=*) refuse "run: never --stop (other agents share the daemons)" ;;
+      -*) continue ;;
+    esac
+    case "$task" in
+      *ToMavenLocal* | *toMavenLocal*) refuse "run: no publishing to Maven Local ($arg)" ;;
+      install* | uninstall*) refuse "run: no installs outside ui ($arg)" ;;
+      connected* | deviceCheck) refuse "run: device tests go through \`verify.sh ui\` ($arg)" ;;
+    esac
+    case "$arg" in
+      *Ios* | *iosSimulatorArm64* | *iosArm64* | *iosX64* | link*Framework* | *:link*Framework*) kind=kn ;;
+    esac
+  done
+  gradle_part "$kind" "$@"
+}
+
+# ---- main ------------------------------------------------------------------------------------------------
+
+case "$mode" in
+  quick) no_args "$@"; run_quick ;;
+  full) no_args "$@"; run_full ;;
+  ship) run_ship "$@" ;;
+  shots) run_shots "$@" ;;
+  ui) run_ui "$@" ;;
+  run) run_run "$@" ;;
+esac
+finish $?
