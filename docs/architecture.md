@@ -2,10 +2,10 @@
 
 Package layout, layering, the dependency rule and the cross-cutting conventions
 new code follows. Everything here is implemented unless marked otherwise. Rules
-marked *enforced* are checked by the Konsist suite in
-`app/src/test/java/dev/alllexey/itmowidgets/architecture/ArchitectureTest.kt`
-and fail the build when broken. Feature-specific behaviour lives in
-[`features/`](features/); the visual language in [`design.md`](design.md).
+marked *enforced* are checked by the Konsist suite, the `*RulesTest.kt` files in
+`app/src/test/java/dev/alllexey/itmowidgets/architecture/`, and fail the build
+when broken. Feature-specific behaviour lives in [`features/`](features/); the
+visual language in [`design.md`](design.md).
 
 ## Principles
 
