@@ -7,6 +7,7 @@
 <p align="center">
   <a href="https://github.com/alllexey-dev/ITMO.Widgets/releases/latest"><img src="https://img.shields.io/github/v/release/alllexey-dev/ITMO.Widgets?style=flat-square&color=blue" alt="Latest release" /></a>
   <a href="https://github.com/alllexey-dev/ITMO.Widgets/releases"><img src="https://img.shields.io/github/downloads/alllexey-dev/ITMO.Widgets/total?style=flat-square&color=orange" alt="Downloads" /></a>
+  <a href="https://github.com/alllexey-dev/ITMO.Widgets/actions/workflows/android-ci.yml?query=branch%3Amaster"><img src="https://img.shields.io/github/actions/workflow/status/alllexey-dev/ITMO.Widgets/android-ci.yml?branch=master&style=flat-square&label=CI" alt="CI" /></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android 8.0+" />
   <a href="LICENSE"><img src="https://img.shields.io/github/license/alllexey-dev/ITMO.Widgets?style=flat-square" alt="MIT" /></a>
 </p>
