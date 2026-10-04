@@ -1,0 +1,493 @@
+package dev.alllexey.itmowidgets.upgrade
+
+import android.content.Context
+import android.content.ContextWrapper
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.net.Uri
+import androidx.core.graphics.createBitmap
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import api.myitmo.MyItmo
+import dev.alllexey.itmowidgets.core.debug.FileSportLessonTemplateStore
+import dev.alllexey.itmowidgets.core.debug.FileSportScoreOverrideStore
+import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
+import dev.alllexey.itmowidgets.core.diagnostics.FileAppDiagnostics
+import dev.alllexey.itmowidgets.core.model.resources.LinkCategory
+import dev.alllexey.itmowidgets.core.model.resources.LinkVisibility
+import dev.alllexey.itmowidgets.core.model.resources.SaveSubjectLinkRequest
+import dev.alllexey.itmowidgets.core.model.resources.SubjectLinksResponse
+import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
+import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.session.SessionTokens
+import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
+import dev.alllexey.itmowidgets.core.storage.TokenCipher
+import dev.alllexey.itmowidgets.core.storage.UtilityStorage
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.FileAcademicTimeOverrideStore
+import dev.alllexey.itmowidgets.di.NetworkModule
+import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
+import dev.alllexey.itmowidgets.feature.qr.data.QrWidgetStateStoreImpl
+import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSourceImpl
+import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
+import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCacheImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksFileStore
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.StoredBarsPlan
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.StoredBarsSnapshot
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.StoredCheckpointMark
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.StoredMarkNews
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.StoredMarks
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.StoredMyItmoSnapshot
+import dev.alllexey.itmowidgets.feature.recordbook.data.marks.StoredMyItmoSubject
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresFileStore
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.StoredSheetConnection
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.StoredSheetScores
+import dev.alllexey.itmowidgets.feature.resources.data.CachedLinks
+import dev.alllexey.itmowidgets.feature.resources.data.LocalLink
+import dev.alllexey.itmowidgets.feature.resources.data.LocalPin
+import dev.alllexey.itmowidgets.feature.resources.data.StoredLinks
+import dev.alllexey.itmowidgets.feature.resources.data.SubjectLinksFileStore
+import dev.alllexey.itmowidgets.feature.reviews.data.StoredLevel
+import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsFileStore
+import dev.alllexey.itmowidgets.feature.schedule.data.TeacherWeeksFileStore
+import dev.alllexey.itmowidgets.feature.schedule.data.WeekLesson
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncFileStore
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.StoredCalendarSync
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.StoredCleanup
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.StoredEvent
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.TARGET_APP
+import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesFileStore
+import dev.alllexey.itmowidgets.feature.schedule.data.changes.StoredChange
+import dev.alllexey.itmowidgets.feature.schedule.data.changes.StoredLesson
+import dev.alllexey.itmowidgets.feature.schedule.data.changes.StoredScheduleChanges
+import dev.alllexey.itmowidgets.feature.schedule.data.changes.StoredSnapshot
+import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSourceImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
+import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItem
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItemKind
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetLesson
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetLessonState
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetContent
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind
+import java.io.File
+import java.time.Clock
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.util.Base64
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * Not a test: run once at tag `v2.2` to capture the 2.2 data directory that `UpgradeFrom22Test` reads at head.
+ * Every value goes through 2.2's own stores into `externalCacheDir/upgrade-2.2/{files,no_backup,cache}` (the app's
+ * real directories stay untouched). Tokens go through an identity cipher into `plaintext/`: a Keystore key cannot be
+ * shipped, so the head test encrypts them with the frozen 2.2 envelope. All values are synthetic.
+ */
+@RunWith(AndroidJUnit4::class)
+class UpgradeFixtureCapture22 {
+
+    private val target = InstrumentationRegistry.getInstrumentation().targetContext
+    private val root = File(checkNotNull(target.externalCacheDir), "upgrade-2.2")
+    private val files = File(root, "files")
+    private val noBackup = File(root, "no_backup")
+    private val cache = File(root, "cache")
+    private val plaintext = File(root, "plaintext")
+    private val context: Context = object : ContextWrapper(target) {
+        override fun getFilesDir() = files
+        override fun getNoBackupFilesDir() = noBackup
+        override fun getCacheDir() = cache
+        override fun getApplicationContext() = this
+    }
+    private val clock = Clock.fixed(CAPTURED_AT, ZoneOffset.UTC)
+    private val gson = NetworkModule.provideGson(NetworkModule.provideWidgetsClient(MyItmo(), "https://localhost/"))
+
+    @Test
+    fun capture() = runBlocking {
+        root.deleteRecursively()
+        check(files.mkdirs() && noBackup.mkdirs() && cache.mkdirs() && plaintext.mkdirs())
+
+        val barsTokens = BarsTokenStore(File(plaintext, "bars_tokens.enc"), IdentityCipher)
+        capturePreferences(barsTokens)
+        captureTokens(barsTokens)
+        captureFileStores()
+        captureWidgetAndCaches()
+        captureSpoiler()
+        captureDebugOverrides()
+        captureDiagnostics()
+    }
+
+    private suspend fun capturePreferences(barsTokens: BarsTokenStore) {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        val preferences = PreferenceDataStoreFactory.create(
+            scope = scope,
+            produceFile = { File(files, "datastore/app_preferences.preferences_pb") }
+        )
+        val settings = AppSettingsStorage(preferences)
+        settings.setCustomServicesEnabled(true)
+        settings.setScheduleSportAutoSignEnabled(true)
+        settings.setScheduleChangesEnabled(false)
+        // The per-format keys differ from the legacy shared keys below, so a read shows which one won.
+        settings.setCompactWidgetNextLessonEarlyEnabled(true)
+        settings.setCompactWidgetTeacherHidden(false)
+        settings.setFullWidgetTeacherHidden(true)
+        settings.setFullWidgetPastLessonsHidden(false)
+        settings.setFullWidgetTomorrowEnabled(false)
+        settings.setCompactWidgetTextSize(WidgetTextSize.LARGE)
+        settings.setFullWidgetTextSize(WidgetTextSize.EXTRA_LARGE)
+        // 2.2 only reads these four (written by 2.0 and 2.1); no 2.2 setter exists.
+        preferences.edit {
+            it[booleanPreferencesKey("widget_forward_scheduling_enabled")] = false
+            it[booleanPreferencesKey("widget_hide_teacher_enabled")] = true
+            it[booleanPreferencesKey("widget_hide_previous_lessons_enabled")] = true
+            it[booleanPreferencesKey("widget_future_schedule_enabled")] = true
+        }
+        settings.setQrDynamicColorsEnabled(false)
+        settings.setQrSpoilerEnabled(false)
+        settings.setQrSpoilerAnimationType(QrAnimationType.FADE)
+        settings.setSportSignHideTeacherSelectorEnabled(false)
+        settings.setSportSignHideTimeSelectorEnabled(false)
+        settings.setMyItmoMarksEnabled(false)
+        settings.setSheetMarksEnabled(false)
+        settings.setBarsMarksEnabled(false)
+        settings.setBarsLoginPrompt(BarsLoginPrompt.SHOWN)
+        settings.setBackgroundWorkHintShown()
+        settings.setQrTileAdded(true)
+        settings.dismissHomeHint("WIDGETS")
+        settings.dismissHomeHint("SERVICES")
+        settings.setHomeCardHidden("SPORT", true)
+        settings.setHomeCardHidden("FRIEND_REQUESTS", true)
+        settings.setDemoActive(true)
+
+        val utility = UtilityStorage(preferences, appVersionName = "2.2")
+        utility.setRegisteredFirebaseToken("upgrade22-registered-fcm-token", ownerIsu = ISU)
+        utility.setFirebaseToken("upgrade22-fcm-token")
+        utility.setLastUpdateTimestamp(CAPTURED_MS - 3_600_000)
+        utility.setLessonWidgetStyleChanged(false)
+        utility.setSkippedVersion("2.1.1")
+        utility.setVersionNotificationTimestamp(CAPTURED_MS - 7_200_000)
+        utility.setOnboardingCompleted(true)
+
+        DataStoreSubjectBindingStore(preferences).apply {
+            put(1001, 2001)
+            put(1002, 2002)
+        }
+        check(BarsPreferenceRepositoryImpl(barsTokens, preferences, settings).setEnabled(true) is AppResult.Success)
+        QrWidgetStateStoreImpl(preferences).setState(42, QrWidgetState.VISIBLE)
+        DataStoreFriendSelectionHistory(preferences).apply {
+            record(100002)
+            record(100003)
+        }
+
+        assertEquals(40, preferences.data.first().asMap().size)
+        scope.cancel()
+    }
+
+    private fun captureTokens(barsTokens: BarsTokenStore) {
+        MyItmoStorage(File(plaintext, "myitmo_tokens.enc"), IdentityCipher, clock).replaceWithTokens(
+            SessionTokens(
+                accessToken = "upgrade22-access-token",
+                accessExpiresInSeconds = HUNDRED_YEARS_SECONDS,
+                refreshToken = "upgrade22-refresh-token",
+                refreshExpiresInSeconds = HUNDRED_YEARS_SECONDS,
+                idToken = ID_TOKEN
+            )
+        )
+        barsTokens.install(ISU, "Bearer upgrade22-bars-session")
+    }
+
+    private fun captureFileStores() {
+        MarksFileStore(File(files, "marks"), gson).write(
+            StoredMarks(
+                owner = ISU,
+                myItmo = StoredMyItmoSnapshot(
+                    half = HALF,
+                    fetchedAt = CAPTURED_MS,
+                    subjects = listOf(StoredMyItmoSubject(9001, 3, 9101, 1001, SUBJECT, 87.5, "отлично"))
+                ),
+                bars = StoredBarsSnapshot(
+                    half = HALF,
+                    fetchedAt = CAPTURED_MS,
+                    plans = listOf(
+                        StoredBarsPlan(
+                            9201, "exam", "PLAN-9201", SUBJECT, 42.0, null, 1, false,
+                            listOf(StoredCheckpointMark(9301, 10.0, false), StoredCheckpointMark(9302, null, true))
+                        )
+                    )
+                ),
+                news = listOf(StoredMarkNews("news-9001", HALF, "тестовая дисциплина", SUBJECT, CAPTURED_MS, true))
+            )
+        )
+        SheetScoresFileStore(File(files, "sheet_scores"), gson).write(
+            StoredSheetScores(
+                owner = ISU,
+                connections = listOf(
+                    StoredSheetConnection(
+                        subjectId = 2001,
+                        subjectName = SUBJECT,
+                        periodKey = PERIOD,
+                        url = "https://docs.google.com/spreadsheets/d/upgrade22SyntheticSheetId0001/edit#gid=0",
+                        tabGid = 0,
+                        tabName = "Баллы",
+                        rowKey = ISU.toString(),
+                        keyColumn = 0,
+                        keyKind = "ISU",
+                        headerPath = "Итого",
+                        columnIndex = 5,
+                        value = "71",
+                        baseline = "65",
+                        tracked = true,
+                        status = "OK",
+                        updatedAt = CAPTURED_MS,
+                        connectedAt = CAPTURED_MS - DAY_MS
+                    )
+                )
+            )
+        )
+        val before = storedLesson()
+        ScheduleChangesFileStore(File(files, "schedule_changes"), gson).write(
+            StoredScheduleChanges(
+                snapshot = StoredSnapshot("2026-10-04", "2026-10-11", listOf(before)),
+                emptyHeld = true,
+                changes = listOf(
+                    StoredChange(
+                        id = "change-5001",
+                        detectedAt = CAPTURED_MS,
+                        kind = "UPDATED",
+                        fields = listOf("TIME", "PLACE"),
+                        subjectName = SUBJECT,
+                        typeId = 1,
+                        flowName = "Тестовый поток",
+                        before = before,
+                        after = before.copy(start = "11:40", end = "13:10", room = "202"),
+                        read = false,
+                        notified = true
+                    )
+                )
+            )
+        )
+        CalendarSyncFileStore(File(files, "calendar_sync"), gson).write(
+            StoredCalendarSync(
+                enabled = true,
+                target = TARGET_APP,
+                calendarId = 7,
+                problem = "NO_PERMISSION",
+                events = listOf(
+                    StoredEvent(
+                        key = "lesson-5001-2026-10-05",
+                        eventId = 77,
+                        calendarId = 7,
+                        start = Instant.parse("2026-10-05T07:00:00Z").toEpochMilli(),
+                        end = Instant.parse("2026-10-05T08:30:00Z").toEpochMilli(),
+                        title = SUBJECT,
+                        location = "Тестовый корпус, 101",
+                        description = "Тестовый преподаватель"
+                    )
+                ),
+                cleanups = listOf(StoredCleanup(calendarId = 8, until = CAPTURED_MS + 7 * DAY_MS))
+            )
+        )
+        val scope = ResourceScope(2001, SUBJECT, PERIOD)
+        SubjectLinksFileStore(File(files, "subject_links"), gson).write(
+            StoredLinks(
+                local = mapOf(
+                    LINK_ID to LocalLink(
+                        id = LINK_ID,
+                        request = SaveSubjectLinkRequest(
+                            2001, SUBJECT, PERIOD, LinkCategory.MATERIALS, "https://example.com/upgrade22/materials",
+                            "Тестовые материалы", LinkVisibility.PRIVATE, null
+                        ),
+                        updatedAt = OffsetDateTime.parse("2026-10-04T12:00:00+03:00")
+                    )
+                ),
+                localPins = mapOf(scope.key to LocalPin(scope, LINK_ID)),
+                scopes = mapOf(
+                    scope.key to CachedLinks(
+                        scope,
+                        SubjectLinksResponse(emptyList(), emptyList(), emptyList(), null, emptyList(), true)
+                    )
+                )
+            )
+        )
+        TeacherLevelsFileStore(File(files, "teacher_levels"), gson).write(
+            mapOf(100101 to StoredLevel("POSITIVE", CAPTURED_MS), 100102 to StoredLevel(null, CAPTURED_MS))
+        )
+        TeacherWeeksFileStore(File(files, "teacher_lessons"), gson).write(
+            mapOf(
+                LocalDate.parse("2026-09-28") to listOf(
+                    WeekLesson(100101, 3001, SUBJECT),
+                    WeekLesson(100102, 3002, "")
+                )
+            )
+        )
+    }
+
+    private suspend fun captureWidgetAndCaches() {
+        val lesson = ScheduleWidgetLesson(
+            SUBJECT, "10:00", "11:30", 1, "Тестовый преподаватель", "101", "Тестовый корпус",
+            ScheduleWidgetLessonState.UPCOMING
+        )
+        val widgetSettings = AppSettingsStorage(
+            PreferenceDataStoreFactory.create(
+                produceFile = { File(checkNotNull(target.externalCacheDir), "upgrade22-widget.preferences_pb") }
+            )
+        )
+        ScheduleWidgetSnapshotStoreImpl(gson, context, widgetSettings, FixedTime, SignedInTokens).write(
+            ScheduleWidgetSnapshot(
+                singleLesson = SingleLessonWidgetContent(SingleLessonWidgetKind.LESSON, lesson, remainingLessons = 2),
+                lessonList = listOf(
+                    ScheduleListWidgetItem(ScheduleListWidgetItemKind.HEADER, dateIso = "2026-10-05", tomorrow = true),
+                    ScheduleListWidgetItem(ScheduleListWidgetItemKind.LESSON, lesson = lesson),
+                    ScheduleListWidgetItem(ScheduleListWidgetItemKind.END)
+                ),
+                singleLessonStyle = LessonStyle.DOT,
+                lessonListStyle = LessonStyle.LINE,
+                compactTextSize = WidgetTextSize.LARGE,
+                fullTextSize = WidgetTextSize.EXTRA_LARGE
+            )
+        )
+        ScheduleLocalDataSourceImpl(gson, clock, context).save(
+            DaySchedule(
+                dayNumber = 1,
+                weekNumber = 6,
+                date = LocalDate.parse("2026-10-05"),
+                note = null,
+                lessons = listOf(
+                    Lesson(
+                        pairId = 5001,
+                        start = LocalTime.parse("10:00"),
+                        end = LocalTime.parse("11:30"),
+                        type = "Лекция",
+                        typeId = Lesson.TypeId(1),
+                        note = null,
+                        subjectName = SUBJECT,
+                        subjectId = 2001,
+                        groupName = "Т3100",
+                        flowId = 3001,
+                        flowTypeId = 2,
+                        teacherIsu = 100101,
+                        teacherFio = "Тестовый преподаватель",
+                        room = Room("101"),
+                        building = Building("Тестовый корпус"),
+                        buildingId = 13,
+                        mainBuildingId = 13,
+                        format = "Очный",
+                        formatId = 1,
+                        zoomUrl = null,
+                        zoomPassword = null,
+                        zoomInfo = null
+                    )
+                )
+            ),
+            ISU
+        )
+        QrCodeLocalDataSourceImpl(context, clock).save(QR_HEX)
+        QrBitmapCacheImpl(context).saveBitmap("noise", "upgrade-2.2", solid(8, Color.rgb(30, 90, 200)))
+    }
+
+    private fun captureSpoiler() {
+        val source = File(checkNotNull(target.externalCacheDir), "upgrade22-spoiler-source.png")
+        source.outputStream().use { check(solid(64, Color.rgb(200, 60, 120)).compress(Bitmap.CompressFormat.PNG, 100, it)) }
+        assertTrue(CustomSpoilerManager(context).saveCustomSpoiler(Uri.fromFile(source)))
+        source.delete()
+    }
+
+    private fun captureDebugOverrides() {
+        FileSportLessonTemplateStore(File(noBackup, "debug/sport_lesson_templates")).setEnabled(true)
+        FileSportScoreOverrideStore(File(noBackup, "debug/sport_score_override"))
+            .setOverride(SportScoreOverride(attendances = 7, bonus = 3))
+        FileAcademicTimeOverrideStore(File(noBackup, "debug/academic_date_override"))
+            .setOverrideDate(LocalDate.parse("2026-10-12"))
+    }
+
+    private suspend fun captureDiagnostics() {
+        val diagnostics = FileAppDiagnostics(File(files, "diagnostics"), clock)
+        diagnostics.warn("UpgradeCapture", "Synthetic warning of the 2.2 fixture", null)
+        diagnostics.awaitWrites()
+        assertEquals(1, File(files, "diagnostics/log.jsonl").readLines().size)
+    }
+
+    private fun storedLesson() = StoredLesson(
+        pairId = 5001,
+        date = "2026-10-05",
+        start = "10:00",
+        end = "11:30",
+        subjectId = 2001,
+        subjectName = SUBJECT,
+        typeId = 1,
+        flowId = 3001,
+        flowName = "Тестовый поток",
+        teacherIsu = 100101,
+        teacherName = "Тестовый преподаватель",
+        room = "101",
+        building = "Тестовый корпус",
+        formatId = 1,
+        format = "Очный"
+    )
+
+    private fun solid(size: Int, color: Int): Bitmap = createBitmap(size, size).apply { eraseColor(color) }
+
+    private object IdentityCipher : TokenCipher {
+        override fun encrypt(value: String) = value
+        override fun decrypt(value: String) = value
+    }
+
+    private object FixedTime : AcademicTimeProvider {
+        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
+        override fun today(): LocalDate = LocalDate.now(Clock.fixed(CAPTURED_AT, zoneId))
+        override fun now(): OffsetDateTime = OffsetDateTime.ofInstant(CAPTURED_AT, zoneId)
+    }
+
+    private object SignedInTokens : dev.alllexey.itmowidgets.core.session.SessionTokenStore {
+        override fun hasRefreshToken() = true
+        override fun getIdToken() = ID_TOKEN
+        override fun replaceWithRefreshToken(refreshToken: String) = Unit
+        override fun replaceWithTokens(tokens: SessionTokens) = Unit
+        override fun clearTokens() = Unit
+    }
+
+    private companion object {
+        val CAPTURED_AT: Instant = Instant.parse("2026-10-04T09:00:00Z")
+        val CAPTURED_MS = CAPTURED_AT.toEpochMilli()
+        const val DAY_MS = 86_400_000L
+        const val HUNDRED_YEARS_SECONDS = 3_153_600_000L
+        const val ISU = 123456
+        const val SUBJECT = "Тестовая дисциплина"
+        const val HALF = "2026/2027-1"
+        const val PERIOD = "2026-1"
+        const val LINK_ID = "00000000-0000-4000-8000-000000000022"
+        const val QR_HEX = "0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        val ID_TOKEN = listOf("""{"alg":"none"}""", """{"isu":123456,"name":"Тестовый пользователь"}""")
+            .joinToString(".", postfix = ".signature") {
+                Base64.getUrlEncoder().withoutPadding().encodeToString(it.toByteArray(Charsets.UTF_8))
+            }
+    }
+}
