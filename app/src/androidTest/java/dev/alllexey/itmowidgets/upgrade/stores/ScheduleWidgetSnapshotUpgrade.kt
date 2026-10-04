@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetLes
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetContent
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind
+import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.time.Clock
@@ -52,7 +53,8 @@ object ScheduleWidgetSnapshotUpgrade {
             scheduleChecks = ScheduleCheckPreferences(fixture.preferences),
             backend = OptedInBackend,
             timeProvider = FixedTime(fixture.clock),
-            tokens = SignedInTokens
+            tokens = SignedInTokens,
+            dispatchers = DeviceDispatchers
         )
 
         assertEquals(expected, store.read())

@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.recordbook.work
 import android.content.Context
 import android.os.Process
 import android.os.SystemClock
-import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
@@ -23,6 +22,7 @@ import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
+import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -36,6 +36,7 @@ interface BarsCookieProbeEntryPoint {
     fun probeCookies(): ItmoIdCookies
     fun probeBars(): Bars
     fun probeDispatchers(): AppDispatchers
+    fun probeLog(): AppLog
 }
 
 /**
@@ -55,7 +56,7 @@ class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : Corout
             val http = (failure as? BarsApiException)?.httpCode
             "outcome=ERROR step=$step type=${failure.javaClass.simpleName} http=$http cause=${failure.cause?.javaClass?.simpleName}"
         }
-        Log.i(TAG, line)
+        dependencies.probeLog().info(TAG, line)
         return Result.success()
     }
 

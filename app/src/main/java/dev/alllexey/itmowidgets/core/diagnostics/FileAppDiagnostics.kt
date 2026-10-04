@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.core.diagnostics
 
 import android.content.Context
-import android.util.Log
 import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.BuildConfig
@@ -34,11 +33,16 @@ class FileAppDiagnostics internal constructor(
     private val directory: File,
     private val clock: Clock,
     dispatchers: AppDispatchers,
+    private val log: AppLog,
 ) : AppDiagnostics {
 
     @Inject
-    constructor(@ApplicationContext context: Context, @WallClock clock: Clock, dispatchers: AppDispatchers) :
-        this(File(context.filesDir, "diagnostics"), clock, dispatchers)
+    constructor(
+        @ApplicationContext context: Context,
+        @WallClock clock: Clock,
+        dispatchers: AppDispatchers,
+        log: AppLog,
+    ) : this(File(context.filesDir, "diagnostics"), clock, dispatchers, log)
 
     private val logFile = File(directory, "log.jsonl")
     private val crashFile = File(directory, "pending_crash.jsonl")
@@ -103,7 +107,9 @@ class FileAppDiagnostics internal constructor(
             message = DiagnosticSanitizer.sanitize(message),
             stackTrace = error?.let(DiagnosticSanitizer::stackTrace)
         )
-        if (BuildConfig.DEBUG) Log.println(if (level == DiagnosticLevel.WARNING) Log.WARN else Log.ERROR, tag, entry.message)
+        if (BuildConfig.DEBUG) {
+            if (level == DiagnosticLevel.WARNING) log.warn(tag, entry.message) else log.error(tag, entry.message)
+        }
         scope.launch {
             ensureLoaded()
             append(entry)
@@ -131,7 +137,7 @@ class FileAppDiagnostics internal constructor(
             }
             entries.value = current
         } catch (error: Exception) {
-            if (BuildConfig.DEBUG) Log.w(TAG, "Diagnostics write failed: ${error.javaClass.simpleName}")
+            if (BuildConfig.DEBUG) log.warn(TAG, "Diagnostics write failed: ${error.javaClass.simpleName}")
         }
     }
 

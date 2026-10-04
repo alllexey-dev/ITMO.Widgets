@@ -1,22 +1,23 @@
 package dev.alllexey.itmowidgets.core.storage
 
-import android.util.Log
 import api.myitmo.model.other.TokenResponse
 import api.myitmo.storage.Storage
+import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.time.WallClock
 import java.io.File
 import java.time.Clock
-import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.io.encoding.Base64
 
 @Singleton
 class MyItmoStorage @Inject constructor(
     @TokenStorageFile tokenFile: File,
     private val tokenCipher: TokenCipher,
-    @param:WallClock private val clock: Clock
+    @param:WallClock private val clock: Clock,
+    private val log: AppLog
 ) : Storage, SessionTokenStore {
 
     private val encryptedFile = AtomicTextFile(tokenFile)
@@ -138,7 +139,7 @@ class MyItmoStorage @Inject constructor(
         return runCatching {
             TokenState.deserialize(tokenCipher.decrypt(encrypted))
         }.onFailure { error ->
-            Log.w(TAG, "Discarding unreadable token storage", error)
+            log.warn(TAG, "Discarding unreadable token storage", error)
             runCatching { encryptedFile.write(null) }
         }.getOrDefault(TokenState())
     }
@@ -184,18 +185,19 @@ class MyItmoStorage @Inject constructor(
         const val SEPARATOR = "\n"
         const val FIELD_COUNT = 5
 
+        // 2.2 wrote the fields unpadded and read them with a decoder that also accepts padding. A stricter
+        // reader would discard the stored session and sign the user out.
+        val FIELD_ENCODER = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT)
+        val FIELD_DECODER = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT_OPTIONAL)
+
         fun String?.encode(): String {
             if (this == null) return NULL_VALUE
-            return Base64.getUrlEncoder()
-                .withoutPadding()
-                .encodeToString(toByteArray(Charsets.UTF_8))
+            return FIELD_ENCODER.encode(encodeToByteArray())
         }
 
         fun String.decode(): String? {
             if (this == NULL_VALUE) return null
-            return Base64.getUrlDecoder()
-                .decode(this)
-                .toString(Charsets.UTF_8)
+            return FIELD_DECODER.decode(this).decodeToString()
         }
     }
 }

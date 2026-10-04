@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.upgrade.stores
 
+import dev.alllexey.itmowidgets.core.diagnostics.AndroidAppLog
 import dev.alllexey.itmowidgets.core.storage.AndroidKeystoreTokenCipher
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
@@ -19,7 +20,7 @@ object TokenFilesUpgrade {
         assertTrue(myItmoFile.readText().startsWith("v1:"))
         assertFalse(myItmoFile.readText().contains("upgrade22"))
 
-        val myItmo = MyItmoStorage(myItmoFile, AndroidKeystoreTokenCipher(), fixture.clock)
+        val myItmo = MyItmoStorage(myItmoFile, AndroidKeystoreTokenCipher(), fixture.clock, AndroidAppLog())
         assertTrue(myItmo.hasRefreshToken())
         assertEquals("upgrade22-access-token", myItmo.getAccessToken())
         assertEquals(Captured22.TOKEN_EXPIRES_AT, myItmo.getAccessExpiresAt())

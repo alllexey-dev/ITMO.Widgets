@@ -3,8 +3,8 @@ package dev.alllexey.itmowidgets.feature.qr.ui.rendering
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import java.io.File
 import java.io.FileOutputStream
@@ -12,7 +12,8 @@ import java.security.MessageDigest
 import javax.inject.Inject
 
 class QrBitmapCacheImpl @Inject constructor(
-    @param:ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
+    private val log: AppLog
 ) : QrBitmapCache, SessionDataCleaner {
 
     private val cacheDir: File by lazy {
@@ -27,7 +28,7 @@ class QrBitmapCacheImpl @Inject constructor(
             try {
                 BitmapFactory.decodeFile(file.absolutePath)
             } catch (e: Exception) {
-                Log.e("QrBitmapCache", "Failed to load cached bitmap", e)
+                log.error("QrBitmapCache", "Failed to load cached bitmap", e)
                 null
             }
         } else {
@@ -45,7 +46,7 @@ class QrBitmapCacheImpl @Inject constructor(
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
             }
         } catch (e: Exception) {
-            Log.e("WidgetBitmapCache", "Failed to cache bitmap", e)
+            log.error("WidgetBitmapCache", "Failed to cache bitmap", e)
         }
     }
 
