@@ -1,0 +1,44 @@
+# Findings scripts/check-docs.sh accepts: `<finding key or whole doc path>  # <reason>`, one per line.
+# The list only shrinks: fix a finding and delete its line (a stale line fails --strict).
+# Only L02-governance edits this file; other lanes fix the doc or hand the text in.
+
+AGENTS.md:lines  # about 175 lines with the lane authorization section until the G-07 rewrite to at most 130
+AGENTS.md:path:plan.md  # user-global rule file under ~/.claude/rules/generated/, named to exclude it
+AGENTS.md:path:allsteps.md  # user-global rule file, named to exclude it
+AGENTS.md:path:local-ci-check-manual.md  # user-global rule file, named to exclude it
+AGENTS.md:path:ya-build-test.md  # user-global rule file, named to exclude it
+AGENTS.md:path:linter-rules.md  # user-global rule file, named to exclude it
+AGENTS.md:path:ticket.md  # user-global rule file, named to exclude it
+AGENTS.md:path:working-rules.md  # user-global rule file, named to exclude it
+
+docs/design.md:path:files/  # app data directory on the device, not a repository path
+docs/design.md:path:cache/  # app data directory on the device, not a repository path
+
+docs/features/app-links.md:unindexed  # not in docs/README.md yet; index it in the next docs/README.md edit
+docs/features/app-links.md:path:site/.well-known/assetlinks.json  # Web repository file without the W/ prefix
+docs/features/demo.md:vibe:vibe/play-listing.md  # Play listing draft lives in vibe/; move the facts into a doc
+docs/features/home.md:unindexed  # not in docs/README.md yet; index it in the next docs/README.md edit
+
+docs/features/web-login.md:path:Chrome/  # user-agent product token, not a path
+docs/features/web-login.md:path:Chromium/  # user-agent product token, not a path
+docs/features/web-login.md:path:CriOS/  # user-agent product token, not a path
+docs/features/web-login.md:path:Edg/  # user-agent product token, not a path
+docs/features/web-login.md:path:EdgA/  # user-agent product token, not a path
+docs/features/web-login.md:path:Edge/  # user-agent product token, not a path
+docs/features/web-login.md:path:EdgiOS/  # user-agent product token, not a path
+docs/features/web-login.md:path:Firefox/  # user-agent product token, not a path
+docs/features/web-login.md:path:FxiOS/  # user-agent product token, not a path
+docs/features/web-login.md:path:OPR/  # user-agent product token, not a path
+docs/features/web-login.md:path:OPT/  # user-agent product token, not a path
+docs/features/web-login.md:path:SamsungBrowser/  # user-agent product token, not a path
+docs/features/web-login.md:path:Safari/  # user-agent product token, not a path
+docs/features/web-login.md:path:Version/  # user-agent product token, not a path
+docs/features/web-login.md:path:YaBrowser/  # user-agent product token, not a path
+docs/features/web-login.md:path:YaSearchBrowser/  # user-agent product token, not a path
+
+docs/product/releases.md:path:assetlinks.json  # Web repository file without the W/ prefix
+docs/product/releases.md:path:V8__service_credentials.sql  # Backend migration without the B/ prefix
+docs/product/releases.md:path:V9__teacher_reviews.sql  # Backend migration without the B/ prefix
+docs/product/releases.md:path:V10__teacher_summaries.sql  # Backend migration without the B/ prefix
+docs/product/roadmap.md  # v2.1-v2.2 stage log with vibe/ plan links and pre-move paths until the roadmap rewrite
+docs/settings.md:path:docs/ops/account-deletion.md  # Backend doc without the B/ prefix
