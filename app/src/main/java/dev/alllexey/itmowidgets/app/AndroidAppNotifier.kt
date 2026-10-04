@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.NotificationDestination
 import dev.alllexey.itmowidgets.core.ui.resolve
+import dev.alllexey.itmowidgets.core.ui.withAppLocale
 import javax.inject.Inject
 
 class AndroidAppNotifier @Inject constructor(
@@ -34,14 +35,15 @@ class AndroidAppNotifier @Inject constructor(
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return
         AppNotificationChannels.create(context)
+        val localized = context.withAppLocale()
         val intent = intentFor(notification)
         val pendingIntent = PendingIntent.getActivity(context, notification.id, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val built = NotificationCompat.Builder(context, notification.channel)
             .setSmallIcon(R.drawable.ic_stat_notifications)
-            .setContentTitle(notification.title.resolve(context))
-            .setContentText(notification.text.resolve(context))
-            .setStyle(NotificationCompat.BigTextStyle().bigText(notification.text.resolve(context)))
+            .setContentTitle(notification.title.resolve(localized))
+            .setContentText(notification.text.resolve(localized))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(notification.text.resolve(localized)))
             .setContentIntent(pendingIntent)
             .setSilent(notification.silent)
             .apply {
@@ -57,7 +59,7 @@ class AndroidAppNotifier @Inject constructor(
                     setPublicVersion(
                         NotificationCompat.Builder(context, notification.channel)
                             .setSmallIcon(R.drawable.ic_stat_notifications)
-                            .setContentTitle(title.resolve(context))
+                            .setContentTitle(title.resolve(localized))
                             .setContentIntent(pendingIntent)
                             .setAutoCancel(true)
                             .build()
@@ -73,8 +75,8 @@ class AndroidAppNotifier @Inject constructor(
                 manager.notify("friends-summary", 0,
                     NotificationCompat.Builder(context, AppNotificationChannels.FRIENDS)
                         .setSmallIcon(R.drawable.ic_stat_notifications)
-                        .setContentTitle(context.getString(R.string.notification_channel_friends))
-                        .setContentText(notification.text.resolve(context))
+                        .setContentTitle(localized.getString(R.string.notification_channel_friends))
+                        .setContentText(notification.text.resolve(localized))
                         .setGroup(AppNotificationChannels.FRIENDS)
                         .setGroupSummary(true)
                         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)

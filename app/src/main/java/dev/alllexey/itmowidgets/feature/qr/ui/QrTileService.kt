@@ -13,6 +13,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.ui.navigation.AppEntryIntentFactory
+import dev.alllexey.itmowidgets.core.ui.withAppLocale
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrTileController
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrTileState
 import javax.inject.Inject
@@ -35,7 +36,7 @@ class QrTileService : TileService(), QrTileHost {
             val state = controller.state()
             qsTile?.apply {
                 this.state = if (state == QrTileState.ACTIVE) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-                label = getString(R.string.qr_tile_label)
+                label = withAppLocale().getString(R.string.qr_tile_label)
                 icon = Icon.createWithResource(this@QrTileService, R.drawable.ic_tile_qr)
                 updateTile()
             }
