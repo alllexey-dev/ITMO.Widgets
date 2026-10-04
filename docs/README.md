@@ -7,9 +7,15 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 ## Product
 
 - [Releases](product/releases.md) — release sequence, the `github` and `play`
-  distribution variants, minimum compatible Core and Backend.
-- [Roadmap](product/roadmap.md) — staged delivery plan for v2.1 and v2.2 with
-  progress.
+  distribution variants, release lines and version codes, client and Backend
+  compatibility.
+- [Roadmap](product/roadmap.md) — v2.3 goals, parity rules, gates, iOS tiers,
+  the v2.4 backlog.
+
+## Process
+
+- [Release checklist](process/release-checklist.md) — the order and checks of
+  a release, with the owner's steps marked.
 
 ## Engineering
 
