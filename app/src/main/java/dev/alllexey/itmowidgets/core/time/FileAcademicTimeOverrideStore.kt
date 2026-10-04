@@ -1,10 +1,12 @@
 package dev.alllexey.itmowidgets.core.time
 
 import dev.alllexey.itmowidgets.BuildConfig
+import dev.alllexey.itmowidgets.core.debug.DebugOnly
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import java.io.File
 import java.time.LocalDate
 
+@DebugOnly
 class FileAcademicTimeOverrideStore(file: File) : AcademicTimeOverrideStore {
 
     private val storage = AtomicTextFile(file)

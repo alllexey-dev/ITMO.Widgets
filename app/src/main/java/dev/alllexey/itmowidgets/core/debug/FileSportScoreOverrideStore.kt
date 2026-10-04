@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import java.io.File
 
+@DebugOnly
 class FileSportScoreOverrideStore(file: File) : SportScoreOverrideStore {
 
     private val storage = AtomicTextFile(file)

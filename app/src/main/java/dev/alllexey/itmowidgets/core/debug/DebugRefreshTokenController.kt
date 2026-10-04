@@ -19,6 +19,7 @@ interface DebugRefreshTokenController {
     suspend fun replaceRefreshToken(refreshToken: String): AppResult<Unit>
 }
 
+@DebugOnly
 class DefaultDebugRefreshTokenController(
     private val tokenStore: SessionTokenStore,
     private val myItmo: MyItmo,

@@ -39,4 +39,21 @@ class FeatureIsolationRulesTest {
                 file.imports.any { it.name.startsWith(FEATURE_PACKAGE_PREFIX) }
             }
     }
+
+    @Test
+    fun `features and core do not depend on the app shell`() {
+        productionFiles
+            .filter { file ->
+                val packageName = file.packagee?.name.orEmpty()
+                packageName.startsWith(FEATURE_PACKAGE_PREFIX) || packageName.startsWith(CORE_PACKAGE_PREFIX)
+            }
+            .requireNonEmpty("feature and core files")
+            .assertFalse { file ->
+                file.imports.any { it.name.startsWith(APP_PACKAGE_PREFIX) }
+            }
+    }
+
+    private companion object {
+        const val APP_PACKAGE_PREFIX = "dev.alllexey.itmowidgets.app."
+    }
 }

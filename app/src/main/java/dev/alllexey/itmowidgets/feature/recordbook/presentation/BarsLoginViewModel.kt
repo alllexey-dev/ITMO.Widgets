@@ -7,7 +7,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.util.HttpsNavigationPolicy
-import api.bars.utils.BarsAuthHelper
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
 import java.util.UUID
 import javax.inject.Inject
@@ -22,7 +21,6 @@ data class BarsLoginState(val completing: Boolean = false, val error: AppError? 
 @HiltViewModel
 class BarsLoginViewModel @Inject constructor(
     private val repository: BarsSessionRepository,
-    private val auth: BarsAuthHelper,
     private val savedState: SavedStateHandle
 ) : ViewModel() {
     private val state = MutableStateFlow(BarsLoginState())
@@ -32,9 +30,9 @@ class BarsLoginViewModel @Inject constructor(
     private var oauthState: String
         get() = savedState.get<String>(KEY) ?: UUID.randomUUID().toString().also { savedState[KEY] = it }
         set(value) { savedState[KEY] = value }
-    val loginUrl: String get() = auth.getLoginUrl(oauthState)
+    val loginUrl: String get() = repository.loginUrl(oauthState)
 
-    fun isCallback(url: String): Boolean = auth.isCallback(url)
+    fun isCallback(url: String): Boolean = repository.isCallback(url)
 
     /** Any https page may show during sign-in; only the exact callback completes it. */
     fun isNavigable(url: String): Boolean = HttpsNavigationPolicy.isNavigable(url)
