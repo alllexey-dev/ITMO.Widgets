@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.ui.navigation.AppEntryIntentFactory
+import dev.alllexey.itmowidgets.core.ui.withAppLocale
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
@@ -44,20 +45,21 @@ object ScheduleWidgetRenderer {
     /** Builds the exact widget layout without registering a host or issuing an update. */
     fun singleLessonViews(context: Context, snapshot: ScheduleWidgetSnapshot): RemoteViews {
         val content = snapshot.singleLesson
+        val localized = context.withAppLocale()
         val views = RemoteViews(context.packageName, singleLessonLayout(snapshot.singleLessonStyle))
         applyTextSize(views, singleLessonTextSp, snapshot.resolvedCompactTextSize)
         val lesson = content.lesson
         if (lesson == null) {
-            bindSingleMessage(context, views, content.kind)
+            bindSingleMessage(localized, views, content.kind)
         } else {
             views.setViewVisibility(R.id.widget_message, View.GONE)
             views.setViewVisibility(R.id.lesson_content, View.VISIBLE)
             views.setFloat(R.id.lesson_content, "setAlpha", lessonAlpha(lesson))
-            bindLesson(context, views, lesson, snapshot.singleLessonStyle)
+            bindLesson(localized, views, lesson, snapshot.singleLessonStyle)
             views.setViewVisibility(R.id.more_lessons_layout, View.VISIBLE)
             views.setTextViewText(
                 R.id.more_lessons_text,
-                supportingText(context, lesson.state, content.remainingLessons)
+                supportingText(localized, lesson.state, content.remainingLessons)
             )
         }
         return views
@@ -95,9 +97,10 @@ object ScheduleWidgetRenderer {
         style: LessonStyle,
         textSize: WidgetTextSize = WidgetTextSize.NORMAL,
     ): RemoteViews {
+        val localized = context.withAppLocale()
         return RemoteViews(context.packageName, lessonListLayout(style)).apply {
             applyTextSize(this, lessonRowTextSp, textSize)
-            bindLesson(context, this, lesson, style)
+            bindLesson(localized, this, lesson, style)
             // Fade the complete row, including its time column, exactly once.
             // Reset alpha left by older widget views that only faded lesson_content.
             setFloat(R.id.lesson_content, "setAlpha", 1f)

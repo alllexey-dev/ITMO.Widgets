@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.NotificationDestination
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.ui.headline
+import dev.alllexey.itmowidgets.core.ui.withAppLocale
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigests
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
@@ -21,13 +22,14 @@ class AndroidScheduleChangeNotifier @Inject constructor(
 ) : ScheduleChangeNotifier {
 
     override fun show(digest: ScheduleChangeDigest) {
+        val localized = context.withAppLocale()
         notifier.show(AppNotification(
             channel = AppNotificationChannels.SCHEDULE_CHANGES,
             id = ScheduleChangeDigests.NOTIFICATION_ID,
             title = UiText.Dynamic(
-                context.resources.getQuantityString(R.plurals.schedule_changes_notification_title, digest.unread, digest.unread)
+                localized.resources.getQuantityString(R.plurals.schedule_changes_notification_title, digest.unread, digest.unread)
             ),
-            text = UiText.Dynamic(digest.first.headline(context)),
+            text = UiText.Dynamic(digest.first.headline(localized)),
             destination = NotificationDestination.ScheduleChanges,
             silent = !digest.audible
         ))

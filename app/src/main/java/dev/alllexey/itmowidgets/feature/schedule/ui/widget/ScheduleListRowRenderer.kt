@@ -5,13 +5,16 @@ import android.widget.RemoteViews
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.ui.withAppLocale
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItem
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleListWidgetItemKind
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-class ScheduleListRowRenderer(private val context: Context) {
+class ScheduleListRowRenderer(context: Context) {
+    private val context = context.withAppLocale()
+
     fun render(
         item: ScheduleListWidgetItem,
         style: LessonStyle,

@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.notification.FcmWork
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
+import dev.alllexey.itmowidgets.core.ui.AppLocale
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -18,13 +19,14 @@ import kotlinx.coroutines.launch
 class ItmoWidgetsApplication : Application() {
 
     @Inject lateinit var diagnostics: FileAppDiagnostics
-    @Inject @field:ApplicationScope lateinit var applicationScope: CoroutineScope
+    @Inject @ApplicationScope lateinit var applicationScope: CoroutineScope
     @Inject lateinit var scheduleChangeTracking: ScheduleChangeTracking
     @Inject lateinit var markTracking: MarkTracking
     @Inject lateinit var calendarSync: CalendarSync
 
     override fun onCreate() {
         super.onCreate()
+        AppLocale.apply(this)
         DiagnosticsCrashHandler.install(diagnostics)
         diagnostics.importPendingCrashes()
         AppNotificationChannels.create(this)

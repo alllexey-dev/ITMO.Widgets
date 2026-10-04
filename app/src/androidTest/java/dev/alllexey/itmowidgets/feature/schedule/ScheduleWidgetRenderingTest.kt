@@ -151,7 +151,9 @@ class ScheduleWidgetRenderingTest {
                             val type = root.findViewById<TextView>(R.id.type)
                             assertEquals(activity.getString(if (status == ScheduleWidgetPendingStatus.PREDICTED)
                                 R.string.schedule_widget_pending_prediction else R.string.schedule_widget_pending_waiting), type.text)
-                            assertTrue(type.contentDescription.contains("не подтвержден"))
+                            assertEquals(activity.getString(if (status == ScheduleWidgetPendingStatus.PREDICTED)
+                                R.string.schedule_auto_sign_prediction_description
+                                else R.string.schedule_auto_sign_waiting_description), type.contentDescription)
                             assertEquals(0, type.layout.getEllipsisCount(0))
                             Screenshots.save("widget-pending-screenshots", "$single-${style.name}-${status.name}-${spec.name}") {
                                 Bitmap.createBitmap(width, root.height, Bitmap.Config.ARGB_8888).also { root.draw(Canvas(it)) }

@@ -81,6 +81,8 @@ android {
             )
         }
     }
+    androidResources { localeFilters += "ru" }
+    bundle { language { enableSplit = false } }
     buildFeatures {
         buildConfig = true
         resValues = true
