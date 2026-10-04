@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.*
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
@@ -70,7 +70,7 @@ class DefaultFcmTokenSyncTest {
 
     private class Fixture {
         val utility = UtilityStorage(MemoryPreferences(), "test")
-        val settings = AppSettingsStorage(MemoryPreferences())
+        val settings = ServicesOptInPreferences(MemoryPreferences())
         val demo = FakeDemoMode()
         var token = "synthetic-token"
         var signedIn = true

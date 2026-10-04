@@ -6,14 +6,14 @@ import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import kotlinx.coroutines.CancellationException
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
 class CustomServicesRepositoryImpl @Inject constructor(
-    private val settings: AppSettingsStorage,
+    private val servicesOptIn: ServicesOptInPreferences,
     private val gate: BackendGate,
     private val identitySync: BackendIdentitySync,
     private val tokenSync: FcmTokenSync,
@@ -32,7 +32,7 @@ class CustomServicesRepositoryImpl @Inject constructor(
     override suspend fun setEnabled(enabled: Boolean) {
         if (demo.isActive()) return
         if (!enabled) bestEffort { devices.unregisterCurrentDevice() }
-        settings.setCustomServicesEnabled(enabled)
+        servicesOptIn.setCustomServicesEnabled(enabled)
         if (enabled) {
             // Opting in is the first moment the backend may learn who the user is;
             // without this the stored profile stays empty until the next launch.

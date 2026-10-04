@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.FakeMarksScheduler
@@ -20,7 +20,7 @@ import org.junit.Test
 
 class BarsMarksActivationTest {
 
-    private val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+    private val settings = MarkSourcePreferences(InMemoryPreferencesDataStore())
     private val scheduler = FakeMarksScheduler()
     private val notifier = RecordingAppNotifier()
     private val activation = BarsMarksActivation(settings, scheduler, notifier)
@@ -60,7 +60,7 @@ class BarsMarksActivationTest {
 
     @Test
     fun `a failing preference store does not reach the BARS request`() = runTest {
-        val broken = BarsMarksActivation(AppSettingsStorage(FailingDataStore()), scheduler, notifier)
+        val broken = BarsMarksActivation(MarkSourcePreferences(FailingDataStore()), scheduler, notifier)
 
         broken.onBarsAnswered()
 

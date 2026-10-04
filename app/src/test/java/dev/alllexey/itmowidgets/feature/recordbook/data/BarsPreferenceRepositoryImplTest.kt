@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.data
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenPersistence
@@ -33,7 +33,7 @@ class BarsPreferenceRepositoryImplTest {
                 override fun encrypt(value: String) = value
                 override fun decrypt(value: String) = value
             })
-            val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+            val settings = MarkSourcePreferences(InMemoryPreferencesDataStore())
             fun repository() = BarsPreferenceRepositoryImpl(store, preferences, settings)
             assertFalse(repository().isEnabled())
             repository().setEnabled(true)
@@ -57,7 +57,7 @@ class BarsPreferenceRepositoryImplTest {
                 override fun encrypt(value: String) = value
                 override fun decrypt(value: String) = value
             })
-            val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+            val settings = MarkSourcePreferences(InMemoryPreferencesDataStore())
             settings.setBarsMarksEnabled(true)
             settings.setBarsLoginPrompt(BarsLoginPrompt.PENDING)
             settings.setMyItmoMarksEnabled(false)

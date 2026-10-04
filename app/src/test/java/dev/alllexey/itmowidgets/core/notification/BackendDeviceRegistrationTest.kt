@@ -10,7 +10,7 @@ import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.DefaultBackendDeviceSession
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import java.lang.reflect.Proxy
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,7 +53,7 @@ class BackendDeviceRegistrationTest {
     }
 
     private class Fixture {
-        val settings = AppSettingsStorage(MemoryPreferences())
+        val settings = ServicesOptInPreferences(MemoryPreferences())
         val utility = UtilityStorage(MemoryPreferences(), "test")
         var owner: Int? = 123456
         var response: ApiResponse<*> = ApiResponse.success("OK")

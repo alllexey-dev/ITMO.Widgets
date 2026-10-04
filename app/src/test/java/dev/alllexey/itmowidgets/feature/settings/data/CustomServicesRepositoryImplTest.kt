@@ -4,7 +4,7 @@ import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
@@ -16,11 +16,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CustomServicesRepositoryImplTest {
-    private val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+    private val settings = ServicesOptInPreferences(InMemoryPreferencesDataStore())
     private val demo = FakeDemoMode()
     private val calls = mutableListOf<String>()
     private val repository = CustomServicesRepositoryImpl(
-        settings = settings,
+        servicesOptIn = settings,
         gate = DefaultBackendGate(settings, demo),
         identitySync = object : BackendIdentitySync {
             override suspend fun sync(scheduleRetry: Boolean): Boolean = true.also { calls += "identity" }

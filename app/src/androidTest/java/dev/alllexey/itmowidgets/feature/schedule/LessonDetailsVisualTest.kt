@@ -60,20 +60,20 @@ import org.junit.runner.RunWith
 /** The real card → sheet path on the lifecycle host; the opt-in is off, so the friends block stays hidden. */
 @RunWith(AndroidJUnit4::class)
 class LessonDetailsVisualTest {
-    private val settings = EntryPointAccessors
+    private val servicesOptIn = EntryPointAccessors
         .fromApplication(ApplicationProvider.getApplicationContext(), NotificationDebugEntryPoint::class.java)
-        .settings()
+        .servicesOptIn()
     private var originalServices = false
 
     @Before
     fun servicesOff() {
-        originalServices = runBlocking { settings.getCustomServicesEnabled() }
-        runBlocking { settings.setCustomServicesEnabled(false) }
+        originalServices = runBlocking { servicesOptIn.getCustomServicesEnabled() }
+        runBlocking { servicesOptIn.setCustomServicesEnabled(false) }
     }
 
     @After
     fun restore() {
-        runBlocking { settings.setCustomServicesEnabled(originalServices) }
+        runBlocking { servicesOptIn.setCustomServicesEnabled(originalServices) }
         ScheduleLifecycleTestActivity.days = MutableStateFlow(emptyList())
         ScheduleLifecycleTestActivity.changes.value = emptyList()
         ScheduleLifecycleTestActivity.appearance = PreviewAppearance()

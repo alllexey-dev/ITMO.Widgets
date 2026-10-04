@@ -16,7 +16,6 @@ import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import kotlinx.coroutines.CancellationException
 
 /** Persistent work owns network processing beyond Firebase's short callback lifetime. */
@@ -53,7 +52,6 @@ interface FcmWorkerEntryPoint {
     fun dispatcher(): FcmPayloadDispatcher
     fun tokenSync(): FcmTokenSync
     fun sessionTokens(): SessionTokenStore
-    fun settings(): AppSettingsStorage
     fun backendGate(): BackendGate
     fun currentUser(): CurrentUserProvider
 }

@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
 import dev.alllexey.itmowidgets.feature.qr.ui.widget.QrCodeWidgetProvider
@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 class AndroidSessionLifecycleEffects @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val settings: AppSettingsStorage,
+    private val widgetSettings: WidgetSettingsPreferences,
     private val scheduleWidgetStore: ScheduleWidgetSnapshotStore,
     private val qrWidgetStateStore: QrWidgetStateStore,
     private val qrWidgetImages: QrWidgetImages,
@@ -64,9 +64,9 @@ class AndroidSessionLifecycleEffects @Inject constructor(
 
     private suspend fun renderSignedOutScheduleWidgets() {
         val snapshot = ScheduleWidgetSnapshot.signedOut(
-            singleLessonStyle = settings.getSingleLessonWidgetStyle(),
-            lessonListStyle = settings.getLessonListWidgetStyle()
-        ).withTextSizes(settings.getScheduleWidgetSettings())
+            singleLessonStyle = widgetSettings.getSingleLessonWidgetStyle(),
+            lessonListStyle = widgetSettings.getLessonListWidgetStyle()
+        ).withTextSizes(widgetSettings.getScheduleWidgetSettings())
         scheduleWidgetStore.write(snapshot)
 
         val manager = AppWidgetManager.getInstance(context)

@@ -12,7 +12,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
 
-class ScheduleWidgetSettingsStorageTest {
+class WidgetSettingsLegacyKeysTest {
     @Test fun `legacy values seed both formats until each independent setting is explicitly changed`() = runTest {
         val data = MemoryPreferences(preferencesOf(
             booleanPreferencesKey("widget_forward_scheduling_enabled") to false,
@@ -20,7 +20,7 @@ class ScheduleWidgetSettingsStorageTest {
             booleanPreferencesKey("widget_hide_previous_lessons_enabled") to true,
             booleanPreferencesKey("widget_future_schedule_enabled") to true
         ))
-        val storage = AppSettingsStorage(data)
+        val storage = WidgetSettingsPreferences(data)
         val original = ScheduleWidgetSettings(
             CompactScheduleWidgetSettings(showNextLessonEarly = false, hideTeacher = true),
             FullScheduleWidgetSettings(hideTeacher = true, hidePastLessons = true, showTomorrowWhenTodayIsOver = true)
@@ -34,15 +34,15 @@ class ScheduleWidgetSettingsStorageTest {
         storage.setFullWidgetPastLessonsHidden(false)
         storage.setFullWidgetTomorrowEnabled(false)
         assertEquals(compact, storage.getScheduleWidgetSettings().compact)
-        val restored = AppSettingsStorage(data)
+        val restored = WidgetSettingsPreferences(data)
         assertEquals(ScheduleWidgetSettings(), restored.getScheduleWidgetSettings())
         assertEquals(restored.getScheduleWidgetSettings(), restored.observeScheduleWidgetSettings().first())
         assertTrue(data.data.value[booleanPreferencesKey("widget_hide_teacher_enabled")] == true)
-        assertFalse(restored.getCustomServicesEnabled())
+        assertFalse(ServicesOptInPreferences(data).getCustomServicesEnabled())
     }
 
     @Test fun `fresh formats and reversed teacher choices never share a writable key`() = runTest {
-        val storage = AppSettingsStorage(MemoryPreferences(preferencesOf()))
+        val storage = WidgetSettingsPreferences(MemoryPreferences(preferencesOf()))
         assertEquals(ScheduleWidgetSettings(), storage.getScheduleWidgetSettings())
         storage.setFullWidgetTeacherHidden(true)
         assertFalse(storage.getScheduleWidgetSettings().compact.hideTeacher)
@@ -55,7 +55,7 @@ class ScheduleWidgetSettingsStorageTest {
 
     @Test fun `text size is stored per format and an unknown stored value reads as normal`() = runTest {
         val data = MemoryPreferences(preferencesOf(stringPreferencesKey("compact_widget_text_size") to "GIGANTIC"))
-        val storage = AppSettingsStorage(data)
+        val storage = WidgetSettingsPreferences(data)
         assertEquals(WidgetTextSize.NORMAL, storage.getScheduleWidgetSettings().compact.textSize)
         storage.setCompactWidgetTextSize(WidgetTextSize.EXTRA_LARGE)
         assertEquals(WidgetTextSize.EXTRA_LARGE, storage.getScheduleWidgetSettings().compact.textSize)

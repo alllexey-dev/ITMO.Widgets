@@ -7,7 +7,8 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.util.dataOrNull
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
+import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPreferences
@@ -21,7 +22,8 @@ import kotlinx.coroutines.coroutineScope
 
 class ScheduleWidgetDataProvider @Inject constructor(
     private val repository: ScheduleRepository,
-    private val settings: AppSettingsStorage,
+    private val scheduleChecks: ScheduleCheckPreferences,
+    private val widgetSettings: WidgetSettingsPreferences,
     private val backend: BackendGate,
     private val timeProvider: AcademicTimeProvider,
     private val selector: ScheduleWidgetSelector,
@@ -81,7 +83,7 @@ class ScheduleWidgetDataProvider @Inject constructor(
     }
 
     private suspend fun pendingEnabled(): Boolean =
-        settings.getScheduleSportAutoSignEnabled() && backend.isOptedIn()
+        scheduleChecks.getScheduleSportAutoSignEnabled() && backend.isOptedIn()
 
     private fun signedOut(preferences: ScheduleWidgetPreferences) = ScheduleWidgetLoadResult.Available(
         ScheduleWidgetSelection(
@@ -94,10 +96,10 @@ class ScheduleWidgetDataProvider @Inject constructor(
 
     private suspend fun readPreferences(): ScheduleWidgetPreferences {
         return ScheduleWidgetPreferences(
-            smartScheduling = settings.getWidgetSmartSchedulingEnabled(),
-            display = settings.getScheduleWidgetSettings(),
-            singleLessonStyle = settings.getSingleLessonWidgetStyle(),
-            lessonListStyle = settings.getLessonListWidgetStyle()
+            smartScheduling = widgetSettings.getWidgetSmartSchedulingEnabled(),
+            display = widgetSettings.getScheduleWidgetSettings(),
+            singleLessonStyle = widgetSettings.getSingleLessonWidgetStyle(),
+            lessonListStyle = widgetSettings.getLessonListWidgetStyle()
         )
     }
 }

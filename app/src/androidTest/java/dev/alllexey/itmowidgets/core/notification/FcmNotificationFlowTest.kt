@@ -39,8 +39,8 @@ class FcmNotificationFlowTest {
 
     @Test
     fun notificationsGroupAndOpenTheirTargetsOnceAfterAuthenticationAndRecreation() {
-        val originalServices = runBlocking { dependencies.settings().getCustomServicesEnabled() }
-        runBlocking { dependencies.settings().setCustomServicesEnabled(false) }
+        val originalServices = runBlocking { dependencies.servicesOptIn().getCustomServicesEnabled() }
+        runBlocking { dependencies.servicesOptIn().setCustomServicesEnabled(false) }
         // Notification routing is what this test is about; the first-run flow would hold the window.
         runBlocking { onboarding.complete() }
         dependencies.tokens().clearTokens()
@@ -106,7 +106,7 @@ class FcmNotificationFlowTest {
             dependencies.notifier().clear()
             dependencies.tokens().clearTokens()
             runBlocking {
-                dependencies.settings().setCustomServicesEnabled(originalServices)
+                dependencies.servicesOptIn().setCustomServicesEnabled(originalServices)
                 onboarding.reset()
             }
         }

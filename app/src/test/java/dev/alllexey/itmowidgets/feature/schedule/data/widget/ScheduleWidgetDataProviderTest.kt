@@ -10,7 +10,7 @@ import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.DataState
@@ -34,25 +34,25 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleWidgetDataProviderTest {
-    private val settings = AppSettingsStorage(MemoryPreferences())
+    private val stores = PreferenceStores(MemoryPreferences())
     private val official = OfficialRepository()
     private val pending = PendingRepository()
     private val tokens = Tokens()
     private val demo = FakeDemoMode()
     private val provider = ScheduleWidgetDataProvider(
-        official, settings, DefaultBackendGate(settings, demo), Time, ScheduleWidgetSelector(), pending, tokens
+        official, stores.scheduleChecks, stores.widgetSettings, DefaultBackendGate(stores.servicesOptIn, demo), Time, ScheduleWidgetSelector(), pending, tokens
     )
 
     @Test
     fun `worker settings select teachers independently for the two rendered formats`() = runTest {
         enable()
-        settings.setCompactWidgetTeacherHidden(true)
-        settings.setFullWidgetTeacherHidden(false)
+        stores.widgetSettings.setCompactWidgetTeacherHidden(true)
+        stores.widgetSettings.setFullWidgetTeacherHidden(false)
         val first = available().snapshot
         assertNull(first.singleLesson.lesson?.teacher)
         assertEquals("Тестовый преподаватель", first.lessonList.first().lesson?.teacher)
-        settings.setCompactWidgetTeacherHidden(false)
-        settings.setFullWidgetTeacherHidden(true)
+        stores.widgetSettings.setCompactWidgetTeacherHidden(false)
+        stores.widgetSettings.setFullWidgetTeacherHidden(true)
         val reversed = available().snapshot
         assertEquals("Тестовый преподаватель", reversed.singleLesson.lesson?.teacher)
         assertNull(reversed.lessonList.first().lesson?.teacher)
@@ -60,10 +60,10 @@ class ScheduleWidgetDataProviderTest {
 
     @Test
     fun `default off and disabled services never read or refresh optional backend data`() = runTest {
-        settings.setCustomServicesEnabled(true)
+        stores.servicesOptIn.setCustomServicesEnabled(true)
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, available().snapshot.singleLesson.kind)
-        settings.setCustomServicesEnabled(false)
-        settings.setScheduleSportAutoSignEnabled(true)
+        stores.servicesOptIn.setCustomServicesEnabled(false)
+        stores.scheduleChecks.setScheduleSportAutoSignEnabled(true)
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, available().snapshot.singleLesson.kind)
         assertEquals(0, pending.refreshes)
         assertEquals(0, pending.reads)
@@ -72,7 +72,7 @@ class ScheduleWidgetDataProviderTest {
 
     @Test
     fun `the demo session alone does not count as the opt-in`() = runTest {
-        settings.setScheduleSportAutoSignEnabled(true)
+        stores.scheduleChecks.setScheduleSportAutoSignEnabled(true)
         demo.active.value = true
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, available().snapshot.singleLesson.kind)
         assertEquals(0, pending.refreshes)
@@ -82,7 +82,7 @@ class ScheduleWidgetDataProviderTest {
     @Test
     fun `cold widget refreshes sources before reading pending snapshot and includes pending only day`() = runTest {
         enable()
-        settings.setFullWidgetTomorrowEnabled(true)
+        stores.widgetSettings.setFullWidgetTomorrowEnabled(true)
         val result = available()
         assertEquals(ScheduleWidgetPendingStatus.PREDICTED, result.snapshot.singleLesson.lesson?.pendingStatus)
         assertEquals(listOf("refresh", "snapshot"), pending.calls)
@@ -119,8 +119,8 @@ class ScheduleWidgetDataProviderTest {
             pending.refreshBlock = { gate.await() }
             val load = async { available() }
             runCurrent()
-            if (services) settings.setCustomServicesEnabled(false)
-            else settings.setScheduleSportAutoSignEnabled(false)
+            if (services) stores.servicesOptIn.setCustomServicesEnabled(false)
+            else stores.scheduleChecks.setScheduleSportAutoSignEnabled(false)
             gate.complete(Unit)
             assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, load.await().snapshot.singleLesson.kind)
         }
@@ -160,8 +160,8 @@ class ScheduleWidgetDataProviderTest {
     }
 
     private suspend fun enable() {
-        settings.setScheduleSportAutoSignEnabled(true)
-        settings.setCustomServicesEnabled(true)
+        stores.scheduleChecks.setScheduleSportAutoSignEnabled(true)
+        stores.servicesOptIn.setCustomServicesEnabled(true)
     }
 
     private suspend fun available() = (provider.load() as ScheduleWidgetLoadResult.Available).selection

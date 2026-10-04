@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesScheduler
@@ -16,7 +16,7 @@ import org.junit.Test
 class DefaultScheduleChangeTrackingTest {
 
     private val tokens = Tokens()
-    private val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+    private val settings = ScheduleCheckPreferences(InMemoryPreferencesDataStore())
     private val scheduler = FakeScheduleChangesScheduler()
     private val repository = FakeScheduleChangesRepository()
     private val tracking = DefaultScheduleChangeTracking(settings, tokens, scheduler, repository)
@@ -53,7 +53,7 @@ class DefaultScheduleChangeTrackingTest {
     fun `sync follows both the session and the switch`() = runTest {
         for ((signedIn, enabled) in listOf(true to true, true to false, false to true, false to false)) {
             val scheduler = FakeScheduleChangesScheduler()
-            val settings = AppSettingsStorage(InMemoryPreferencesDataStore()).apply { setScheduleChangesEnabled(enabled) }
+            val settings = ScheduleCheckPreferences(InMemoryPreferencesDataStore()).apply { setScheduleChangesEnabled(enabled) }
             val tracking = DefaultScheduleChangeTracking(settings, Tokens(signedIn), scheduler, FakeScheduleChangesRepository())
 
             tracking.syncWork()

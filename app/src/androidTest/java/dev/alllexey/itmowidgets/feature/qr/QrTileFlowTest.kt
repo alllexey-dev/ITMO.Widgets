@@ -32,12 +32,12 @@ import org.junit.runner.RunWith
 class QrTileFlowTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
-    private val settings = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java).settings()
+    private val deviceHints = EntryPointAccessors.fromApplication(context, NotificationDebugEntryPoint::class.java).deviceHints()
 
     @After
     fun removeTheTileAndSignOut() {
         shell("cmd statusbar remove-tile $TILE")
-        eventually { assertEquals(false, runBlocking { settings.observeQrTileAdded().first() }) }
+        eventually { assertEquals(false, runBlocking { deviceHints.observeQrTileAdded().first() }) }
         shell("cmd statusbar collapse")
         runCatching { onActivity { it.finish() } }
         TestSession.signOut()
@@ -50,7 +50,7 @@ class QrTileFlowTest {
         TestSession.completeOnboarding()
 
         shell("cmd statusbar add-tile $TILE")
-        eventually { assertEquals(true, runBlocking { settings.observeQrTileAdded().first() }) }
+        eventually { assertEquals(true, runBlocking { deviceHints.observeQrTileAdded().first() }) }
 
         shell("cmd statusbar click-tile $TILE")
         eventually {

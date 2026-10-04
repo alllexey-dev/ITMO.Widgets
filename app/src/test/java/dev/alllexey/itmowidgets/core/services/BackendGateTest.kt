@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.core.services
 
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import kotlinx.coroutines.flow.first
@@ -33,7 +33,7 @@ class BackendGateTest {
 
     @Test
     fun `answers follow the stored opt-in and the demo switch`() = runTest {
-        val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+        val settings = ServicesOptInPreferences(InMemoryPreferencesDataStore())
         val demo = FakeDemoMode()
         val gate = DefaultBackendGate(settings, demo)
 
@@ -51,7 +51,7 @@ class BackendGateTest {
     }
 
     private suspend fun gate(optedIn: Boolean, demo: Boolean): BackendGate {
-        val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+        val settings = ServicesOptInPreferences(InMemoryPreferencesDataStore())
         settings.setCustomServicesEnabled(optedIn)
         return DefaultBackendGate(settings, FakeDemoMode(demo))
     }

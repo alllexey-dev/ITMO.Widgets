@@ -2,7 +2,8 @@ package dev.alllexey.itmowidgets.feature.settings.data
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -21,9 +22,8 @@ class SchedulePreferencesRepositoryImplTest {
     @Test
     fun `schedule preference defaults off and observes storage changes without custom services`() = runTest {
         val file = temporaryFolder.newFile("settings.preferences_pb").apply { delete() }
-        val storage = AppSettingsStorage(
-            PreferenceDataStoreFactory.create(scope = backgroundScope, produceFile = { file })
-        )
+        val dataStore = PreferenceDataStoreFactory.create(scope = backgroundScope, produceFile = { file })
+        val storage = ScheduleCheckPreferences(dataStore)
         val repository: SchedulePreferencesRepository = SchedulePreferencesRepositoryImpl(storage)
         assertFalse(repository.observeSportAutoSignEnabled().first())
 
@@ -38,6 +38,6 @@ class SchedulePreferencesRepositoryImplTest {
         }
         storage.setScheduleSportAutoSignEnabled(false)
         assertFalse(disabled.await())
-        assertFalse(storage.getCustomServicesEnabled())
+        assertFalse(ServicesOptInPreferences(dataStore).getCustomServicesEnabled())
     }
 }

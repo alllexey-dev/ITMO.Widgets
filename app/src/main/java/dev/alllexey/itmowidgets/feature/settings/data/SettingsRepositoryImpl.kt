@@ -12,7 +12,14 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
+import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
+import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
+import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
+import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.util.safeEnumOf
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
@@ -33,7 +40,14 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 class SettingsRepositoryImpl @Inject constructor(
-    private val settings: AppSettingsStorage,
+    private val servicesOptIn: ServicesOptInPreferences,
+    private val scheduleChecks: ScheduleCheckPreferences,
+    private val widgetSettings: WidgetSettingsPreferences,
+    private val qrSettings: QrSettingsPreferences,
+    private val sportSignSelectors: SportSignSelectorPreferences,
+    private val markSources: MarkSourcePreferences,
+    private val homeLayout: HomeLayoutPreferences,
+    private val deviceHints: DeviceHintPreferences,
     private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     private val demo: DemoMode
@@ -44,11 +58,11 @@ class SettingsRepositoryImpl @Inject constructor(
     private val sharingMutex = Mutex()
 
     override fun observeLocalSettings(): Flow<LocalSettings> {
-        val scheduleWidget = settings.observeScheduleWidgetSettings()
+        val scheduleWidget = widgetSettings.observeScheduleWidgetSettings()
         val qrWidget = combine(
-            settings.observeQrDynamicColorsEnabled(),
-            settings.observeQrSpoilerEnabled(),
-            settings.observeQrSpoilerAnimationType()
+            qrSettings.observeQrDynamicColorsEnabled(),
+            qrSettings.observeQrSpoilerEnabled(),
+            qrSettings.observeQrSpoilerAnimationType()
         ) { dynamicColors, spoilerEnabled, animationType ->
             QrWidgetSettings(
                 dynamicColors = dynamicColors,
@@ -57,8 +71,8 @@ class SettingsRepositoryImpl @Inject constructor(
             )
         }
         val sport = combine(
-            settings.observeSportSignHideTeacherSelectorEnabled(),
-            settings.observeSportSignHideTimeSelectorEnabled()
+            sportSignSelectors.observeSportSignHideTeacherSelectorEnabled(),
+            sportSignSelectors.observeSportSignHideTimeSelectorEnabled()
         ) { hideTeacher, hideTime ->
             SportDisplaySettings(
                 hideTeacherSelector = hideTeacher,
@@ -67,9 +81,9 @@ class SettingsRepositoryImpl @Inject constructor(
         }
 
         val device = combine(
-            settings.observeHiddenHomeCards(),
-            settings.observeBackgroundWorkHintShown(),
-            settings.observeQrTileAdded()
+            homeLayout.observeHiddenHomeCards(),
+            deviceHints.observeBackgroundWorkHintShown(),
+            deviceHints.observeQrTileAdded()
         ) { hiddenHomeCards, backgroundWorkHintShown, qrTileAdded ->
             DeviceLocalSettings(
                 hiddenHomeCards = hiddenHomeCards.mapNotNull { safeEnumOf<HomeCardKind>(it) }.toSet(),
@@ -79,14 +93,14 @@ class SettingsRepositoryImpl @Inject constructor(
         }
         // The typed combine takes at most five flows, so the three mark switches travel together.
         val marks = combine(
-            settings.observeMyItmoMarksEnabled(),
-            settings.observeBarsMarksEnabled(),
-            settings.observeSheetMarksEnabled(),
+            markSources.observeMyItmoMarksEnabled(),
+            markSources.observeBarsMarksEnabled(),
+            markSources.observeSheetMarksEnabled(),
             ::MarkLocalSettings
         )
         val app = combine(
-            settings.observeScheduleSportAutoSignEnabled(),
-            settings.observeScheduleChangesEnabled(),
+            scheduleChecks.observeScheduleSportAutoSignEnabled(),
+            scheduleChecks.observeScheduleChangesEnabled(),
             marks,
             device
         ) { showSportAutoSign, scheduleChangesEnabled, markSettings, deviceSettings ->
@@ -99,7 +113,7 @@ class SettingsRepositoryImpl @Inject constructor(
         }
 
         return combine(
-            settings.observeCustomServicesEnabled(),
+            servicesOptIn.observeCustomServicesEnabled(),
             scheduleWidget,
             qrWidget,
             sport,
@@ -167,67 +181,67 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
-        settings.setScheduleSportAutoSignEnabled(enabled)
+        scheduleChecks.setScheduleSportAutoSignEnabled(enabled)
     }
 
     override suspend fun setHomeCardVisible(kind: HomeCardKind, visible: Boolean) {
-        settings.setHomeCardHidden(kind.name, hidden = !visible)
+        homeLayout.setHomeCardHidden(kind.name, hidden = !visible)
     }
 
     override suspend fun setBackgroundWorkHintShown() {
-        settings.setBackgroundWorkHintShown()
+        deviceHints.setBackgroundWorkHintShown()
     }
 
     override suspend fun setQrTileAdded(added: Boolean) {
-        settings.setQrTileAdded(added)
+        deviceHints.setQrTileAdded(added)
     }
 
     override suspend fun setCompactWidgetNextLessonEarlyEnabled(enabled: Boolean) {
-        settings.setCompactWidgetNextLessonEarlyEnabled(enabled)
+        widgetSettings.setCompactWidgetNextLessonEarlyEnabled(enabled)
     }
 
     override suspend fun setCompactWidgetTeacherHidden(hidden: Boolean) {
-        settings.setCompactWidgetTeacherHidden(hidden)
+        widgetSettings.setCompactWidgetTeacherHidden(hidden)
     }
 
     override suspend fun setFullWidgetTeacherHidden(hidden: Boolean) {
-        settings.setFullWidgetTeacherHidden(hidden)
+        widgetSettings.setFullWidgetTeacherHidden(hidden)
     }
 
     override suspend fun setFullWidgetPastLessonsHidden(hidden: Boolean) {
-        settings.setFullWidgetPastLessonsHidden(hidden)
+        widgetSettings.setFullWidgetPastLessonsHidden(hidden)
     }
 
     override suspend fun setFullWidgetTomorrowEnabled(enabled: Boolean) {
-        settings.setFullWidgetTomorrowEnabled(enabled)
+        widgetSettings.setFullWidgetTomorrowEnabled(enabled)
     }
 
     override suspend fun setCompactWidgetTextSize(size: WidgetTextSize) {
-        settings.setCompactWidgetTextSize(size)
+        widgetSettings.setCompactWidgetTextSize(size)
     }
 
     override suspend fun setFullWidgetTextSize(size: WidgetTextSize) {
-        settings.setFullWidgetTextSize(size)
+        widgetSettings.setFullWidgetTextSize(size)
     }
 
     override suspend fun setQrDynamicColorsEnabled(enabled: Boolean) {
-        settings.setQrDynamicColorsEnabled(enabled)
+        qrSettings.setQrDynamicColorsEnabled(enabled)
     }
 
     override suspend fun setQrSpoilerEnabled(enabled: Boolean) {
-        settings.setQrSpoilerEnabled(enabled)
+        qrSettings.setQrSpoilerEnabled(enabled)
     }
 
     override suspend fun setQrAnimationType(type: QrAnimationType) {
-        settings.setQrSpoilerAnimationType(type)
+        qrSettings.setQrSpoilerAnimationType(type)
     }
 
     override suspend fun setTeacherSelectorHidden(hidden: Boolean) {
-        settings.setSportSignHideTeacherSelectorEnabled(hidden)
+        sportSignSelectors.setSportSignHideTeacherSelectorEnabled(hidden)
     }
 
     override suspend fun setTimeSelectorHidden(hidden: Boolean) {
-        settings.setSportSignHideTimeSelectorEnabled(hidden)
+        sportSignSelectors.setSportSignHideTimeSelectorEnabled(hidden)
     }
 
     private suspend fun updateSharingSettings(

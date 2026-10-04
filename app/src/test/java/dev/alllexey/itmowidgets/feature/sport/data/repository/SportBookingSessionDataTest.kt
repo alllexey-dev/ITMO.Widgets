@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.DataState
@@ -170,7 +170,7 @@ class SportBookingSessionDataTest {
     private fun emptyBookings(): DataState<List<SportBooking>> = DataState.Success(emptyList())
 
     private class Fixture {
-        val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+        val settings = ServicesOptInPreferences(InMemoryPreferencesDataStore())
         val syncCalls = AtomicInteger()
         @Volatile var responseCode = 200
         @Volatile var responseBody: () -> String = { BOOKINGS }

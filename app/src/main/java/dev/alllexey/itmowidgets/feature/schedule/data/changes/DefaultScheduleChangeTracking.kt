@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
 import javax.inject.Inject
@@ -12,16 +12,16 @@ import kotlinx.coroutines.flow.Flow
 /** The switch and the session decide whether the periodic check exists; off also forgets the snapshot. */
 @Singleton
 class DefaultScheduleChangeTracking @Inject constructor(
-    private val settings: AppSettingsStorage,
+    private val scheduleChecks: ScheduleCheckPreferences,
     private val sessionTokens: SessionTokenStore,
     private val scheduler: ScheduleChangesScheduler,
     private val repository: ScheduleChangesRepository
 ) : ScheduleChangeTracking {
 
-    override fun observeEnabled(): Flow<Boolean> = settings.observeScheduleChangesEnabled()
+    override fun observeEnabled(): Flow<Boolean> = scheduleChecks.observeScheduleChangesEnabled()
 
     override suspend fun setEnabled(enabled: Boolean) {
-        settings.setScheduleChangesEnabled(enabled)
+        scheduleChecks.setScheduleChangesEnabled(enabled)
         if (enabled) {
             syncWork()
         } else {
@@ -32,7 +32,7 @@ class DefaultScheduleChangeTracking @Inject constructor(
     }
 
     override suspend fun syncWork() {
-        if (sessionTokens.hasRefreshToken() && settings.getScheduleChangesEnabled()) scheduler.ensurePeriodic()
+        if (sessionTokens.hasRefreshToken() && scheduleChecks.getScheduleChangesEnabled()) scheduler.ensurePeriodic()
         else scheduler.cancel()
     }
 

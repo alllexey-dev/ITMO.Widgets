@@ -79,7 +79,7 @@ class DemoModeFlowTest {
                 onView(withId(R.id.demo_banner)).inRoot(withDecorView(`is`(decorView))).check(matches(isDisplayed()))
             }
             assertEquals(true, (dependencies.session().state.value as? SessionState.SignedIn)?.demo)
-            assertTrue(runBlocking { dependencies.settings().getDemoActive() })
+            assertTrue(runBlocking { dependencies.demoPreferences().getDemoActive() })
 
             scenario.recreate()
             scenario.onActivity { decorView = it.window.decorView }
@@ -92,7 +92,7 @@ class DemoModeFlowTest {
 
             eventually { onView(withId(R.id.auth_logo)).inRoot(withDecorView(`is`(decorView))).check(matches(isDisplayed())) }
             assertEquals(SessionState.SignedOut, dependencies.session().state.value)
-            assertFalse(runBlocking { dependencies.settings().getDemoActive() })
+            assertFalse(runBlocking { dependencies.demoPreferences().getDemoActive() })
         }
     }
 
