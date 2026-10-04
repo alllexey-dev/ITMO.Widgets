@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
@@ -27,6 +28,7 @@ import org.junit.rules.TemporaryFolder
 
 class IcsFileExportTest {
     @get:Rule val temporary = TemporaryFolder()
+    @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
     private val directory by lazy { File(temporary.root, "ics") }
     private val requests = mutableListOf<Pair<LocalDate, LocalDate>>()
@@ -41,7 +43,8 @@ class IcsFileExportTest {
             },
             Today,
             BuildingDirectory(emptyList()),
-            directory
+            directory,
+            mainDispatcherRule.appDispatchers
         ) { file -> "content://test/${file.name}" }
     }
 

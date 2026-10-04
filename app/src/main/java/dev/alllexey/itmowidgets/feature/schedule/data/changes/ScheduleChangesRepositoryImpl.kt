@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
@@ -28,7 +29,6 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
@@ -54,6 +54,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     @param:WallClock private val clock: Clock,
     private val notifier: AppNotifier,
     private val demo: DemoMode,
+    private val dispatchers: AppDispatchers,
 ) : ScheduleChangesRepository, SessionDataCleaner {
 
     private val checks = Mutex()
@@ -80,7 +81,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
         val today = time.today()
         val end = today.plusDays(WINDOW_DAYS)
         val current = try {
-            withContext(Dispatchers.IO) { request(today, end) }?.academicSnapshot(today, end)
+            withContext(dispatchers.io) { request(today, end) }?.academicSnapshot(today, end)
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
@@ -122,7 +123,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     override suspend fun clearSessionData() {
         generation.incrementAndGet()
         lock.withLock {
-            withContext(Dispatchers.IO) { store.clear() }
+            withContext(dispatchers.io) { store.clear() }
             state.value = StoredScheduleChanges()
         }
     }
@@ -170,7 +171,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     /** Writes [next] without expired and surplus changes, then publishes it. Must hold [lock]. */
     private suspend fun persist(next: StoredScheduleChanges) {
         val kept = pruned(next)
-        withContext(Dispatchers.IO) { store.write(kept) }
+        withContext(dispatchers.io) { store.write(kept) }
         state.value = kept
     }
 
@@ -181,7 +182,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     }
 
     /** A corrupt file is removed and the state starts empty. Must hold [lock]. */
-    private suspend fun loaded(): StoredScheduleChanges = state.value ?: withContext(Dispatchers.IO) {
+    private suspend fun loaded(): StoredScheduleChanges = state.value ?: withContext(dispatchers.io) {
         try {
             store.read() ?: StoredScheduleChanges()
         } catch (_: Exception) {

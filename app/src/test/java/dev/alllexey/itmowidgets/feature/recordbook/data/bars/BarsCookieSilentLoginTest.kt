@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 import api.bars.Bars
 import api.bars.BarsConfiguration
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import java.net.UnknownHostException
 import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
@@ -13,9 +14,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class BarsCookieSilentLoginTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     private val cookie = "SYNTHETIC_SESSION=synthetic-value; SYNTHETIC_ID=synthetic-id"
     private val callback = "https://bars.itmo.ru/rest/login"
     private val server = MockWebServer()
@@ -26,7 +34,7 @@ class BarsCookieSilentLoginTest {
     @Before fun start() {
         server.start()
         bars = Bars(configuration())
-        login = BarsCookieSilentLogin(bars.authHelper, cookies)
+        login = BarsCookieSilentLogin(bars.authHelper, cookies, dispatchers)
     }
 
     @After fun stop() = server.shutdown()
@@ -84,7 +92,7 @@ class BarsCookieSilentLoginTest {
 
     @Test fun `no network before any answer is a network failure and stores no cookies`() = runTest {
         val offline = Bars(configuration(), OkHttpClient.Builder().addInterceptor { throw UnknownHostException("Synthetic") }.build())
-        val login = BarsCookieSilentLogin(offline.authHelper, cookies)
+        val login = BarsCookieSilentLogin(offline.authHelper, cookies, dispatchers)
 
         assertEquals(BarsCookieRenewal.Failed(AppError.Network), login.renew("s1"))
         assertEquals(1, cookies.reads.size)

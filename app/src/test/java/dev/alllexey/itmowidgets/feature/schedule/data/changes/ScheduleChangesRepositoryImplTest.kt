@@ -3,6 +3,8 @@ package dev.alllexey.itmowidgets.feature.schedule.data.changes
 import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -38,6 +40,13 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class ScheduleChangesRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    /** The fake network holds a request on a blocked thread; see [blockingIoAppDispatchers]. */
+    private val dispatchers = blockingIoAppDispatchers(mainDispatcherRule.dispatcher)
+
     @get:Rule val temporary = TemporaryFolder()
     private val folder by lazy { File(temporary.root, "schedule_changes") }
     private val requests = CopyOnWriteArrayList<String>()
@@ -330,7 +339,7 @@ class ScheduleChangesRepositoryImplTest {
         assertFalse(file.exists())
     }
 
-    private fun repository(demo: DemoMode = noDemo()) = ScheduleChangesRepositoryImpl(api, store, ClockTime(clock), clock, notifier, demo)
+    private fun repository(demo: DemoMode = noDemo()) = ScheduleChangesRepositoryImpl(api, store, ClockTime(clock), clock, notifier, demo, dispatchers)
 
     private fun awaitRequests(count: Int) {
         repeat(WAIT_SECONDS.toInt() * 100) { if (requests.size >= count) return; Thread.sleep(10) }

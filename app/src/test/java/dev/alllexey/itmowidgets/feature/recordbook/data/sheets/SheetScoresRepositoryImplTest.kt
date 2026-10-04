@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -48,6 +50,13 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class SheetScoresRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    /** The fake network holds a request on a blocked thread; see [blockingIoAppDispatchers]. */
+    private val dispatchers = blockingIoAppDispatchers(mainDispatcherRule.dispatcher)
+
     @get:Rule val temporary = TemporaryFolder()
 
     private val id = "1TestSheetIdForUnitTests_0123456789-abc"
@@ -114,8 +123,9 @@ class SheetScoresRepositoryImplTest {
     }
 
     private fun repository(demo: DemoMode = noDemo()) = SheetScoresRepositoryImpl(
-        PublicSheetClient(NetworkModule.providePublicWebClient(), server.url("/"), demo), store, users, clock,
+        PublicSheetClient(NetworkModule.providePublicWebClient(), server.url("/"), demo, dispatchers), store, users, clock,
         FixedAcademicTime(), demo,
+        dispatchers = dispatchers,
     )
 
     private fun html(name: String) = MockResponse().setHeader("Content-Type", "text/html; charset=utf-8").setBody(SheetFixtures.text(name))

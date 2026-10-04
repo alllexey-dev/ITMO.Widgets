@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -14,9 +15,16 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import okhttp3.Request
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 
 class PersonRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     @Test
     fun `loads the requested directory profile trims facts and discards contacts and blank duplicates`() = runTest {
         val requests = mutableListOf<Request>()
@@ -38,7 +46,7 @@ class PersonRepositoryImplTest {
                     {"group":" T200 ","course":"0","faculty_name":" "},
                     {"group":" ","course":"3","faculty_name":null}]}}"""
         }.api
-        val repository = PersonRepositoryImpl(api, noDemo())
+        val repository = PersonRepositoryImpl(api, noDemo(), dispatchers)
 
         val person = (repository.person(100001) as AppResult.Success).value
 
@@ -54,7 +62,8 @@ class PersonRepositoryImplTest {
     fun `null lists and blank optional values become empty presentation facts`() = runTest {
         val repository = PersonRepositoryImpl(myItmoStub {
             """{"error_code":0,"result":{"isu":100001,"fio":null,"photo":" ","positions":null,"rooms":null,"education":null}}"""
-        }.api, noDemo())
+        }.api, noDemo(),
+            dispatchers = dispatchers)
 
         assertEquals(AppResult.Success(Person(100001, "", null, emptyList(), emptyList(), emptyList())), repository.person(100001))
     }
@@ -64,7 +73,8 @@ class PersonRepositoryImplTest {
         for (course in listOf("abc", "0", "-2", "2.5", "2147483648", "")) {
             val repository = PersonRepositoryImpl(myItmoStub {
                 """{"error_code":0,"result":{"isu":100001,"education":[{"group":"T100","course":"$course"}]}}"""
-            }.api, noDemo())
+            }.api, noDemo(),
+                dispatchers = dispatchers)
 
             val person = (repository.person(100001) as AppResult.Success).value
 
@@ -74,14 +84,14 @@ class PersonRepositoryImplTest {
 
     @Test
     fun `service profile isu one is not treated as missing`() = runTest {
-        val repository = PersonRepositoryImpl(myItmoStub { """{"error_code":0,"result":{"isu":1,"fio":"Служебная запись"}}""" }.api, noDemo())
+        val repository = PersonRepositoryImpl(myItmoStub { """{"error_code":0,"result":{"isu":1,"fio":"Служебная запись"}}""" }.api, noDemo(), dispatchers)
 
         assertEquals(1, (repository.person(1) as AppResult.Success).value.isu)
     }
 
     @Test
     fun `observed bad request with numeric code and explicit null means not found`() = runTest {
-        val repository = PersonRepositoryImpl(myItmoStub(code = 400) { """{"error_code":100,"result":null}""" }.api, noDemo())
+        val repository = PersonRepositoryImpl(myItmoStub(code = 400) { """{"error_code":100,"result":null}""" }.api, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Failure(AppError.NotFound), repository.person(100001))
     }
@@ -101,7 +111,7 @@ class PersonRepositoryImplTest {
             "not json", "null", "[]", "",
         )
         for (body in bodies) {
-            val repository = PersonRepositoryImpl(myItmoStub(code = 400) { body }.api, noDemo())
+            val repository = PersonRepositoryImpl(myItmoStub(code = 400) { body }.api, noDemo(), dispatchers = dispatchers)
 
             val result = repository.person(100001) as AppResult.Failure
 
@@ -111,7 +121,7 @@ class PersonRepositoryImplTest {
 
     @Test
     fun `numeric code one hundred in a successful HTTP response stays unknown`() = runTest {
-        val repository = PersonRepositoryImpl(myItmoStub { """{"error_code":100,"result":null}""" }.api, noDemo())
+        val repository = PersonRepositoryImpl(myItmoStub { """{"error_code":100,"result":null}""" }.api, noDemo(), dispatchers)
 
         assertTrue((repository.person(100001) as AppResult.Failure).error is AppError.Unknown)
     }
@@ -119,7 +129,7 @@ class PersonRepositoryImplTest {
     @Test
     fun `HTTP status keeps priority over the missing personality envelope`() = runTest {
         for ((code, expected) in listOf(401 to AppError.Unauthorized, 403 to AppError.Forbidden, 404 to AppError.NotFound)) {
-            val repository = PersonRepositoryImpl(myItmoStub(code = code) { """{"error_code":100,"result":null}""" }.api, noDemo())
+            val repository = PersonRepositoryImpl(myItmoStub(code = code) { """{"error_code":100,"result":null}""" }.api, noDemo(), dispatchers = dispatchers)
 
             assertEquals(AppResult.Failure(expected), repository.person(100001))
         }
@@ -135,7 +145,7 @@ class PersonRepositoryImplTest {
             """{"error_code":0,"result":{"isu":100002}}""" to AppError.NotFound,
         )
         for ((body, expected) in cases) {
-            val repository = PersonRepositoryImpl(myItmoStub { body }.api, noDemo())
+            val repository = PersonRepositoryImpl(myItmoStub { body }.api, noDemo(), dispatchers)
 
             assertEquals(AppResult.Failure(expected), repository.person(100001))
         }
@@ -149,7 +159,7 @@ class PersonRepositoryImplTest {
         val api = object : MyItmoApi by delegate {
             override fun getPersonality(personId: Int) = myItmoStub(code = code) { body }.api.getPersonality(personId)
         }
-        val repository = PersonRepositoryImpl(api, noDemo())
+        val repository = PersonRepositoryImpl(api, noDemo(), dispatchers)
         assertNull(repository.cachedPerson(100001))
         val person = (repository.person(100001) as AppResult.Success).value
         assertEquals(person, repository.cachedPerson(100001))
@@ -169,7 +179,7 @@ class PersonRepositoryImplTest {
 
     @Test
     fun `network failure maps to network without being treated as missing`() = runTest {
-        val repository = PersonRepositoryImpl(myItmoStub { throw IOException("Synthetic offline response") }.api, noDemo())
+        val repository = PersonRepositoryImpl(myItmoStub { throw IOException("Synthetic offline response") }.api, noDemo(), dispatchers)
 
         assertEquals(AppResult.Failure(AppError.Network), repository.person(100001))
     }
@@ -177,7 +187,7 @@ class PersonRepositoryImplTest {
     @Test
     fun `cancellation is rethrown instead of converted to an app error`() = runTest {
         val cancellation = CancellationException("Synthetic cancellation")
-        val repository = PersonRepositoryImpl(myItmoStub { throw cancellation }.api, noDemo())
+        val repository = PersonRepositoryImpl(myItmoStub { throw cancellation }.api, noDemo(), dispatchers)
 
         try {
             repository.person(100001)

@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -33,7 +34,6 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -60,6 +60,7 @@ class SheetScoresRepositoryImpl @Inject constructor(
     @param:WallClock private val clock: Clock,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
+    private val dispatchers: AppDispatchers,
 ) : SheetScoresRepository, SessionDataCleaner {
 
     private val lock = Mutex()
@@ -157,7 +158,7 @@ class SheetScoresRepositoryImpl @Inject constructor(
     override suspend fun clearSessionData() {
         generation.incrementAndGet()
         lock.withLock {
-            withContext(Dispatchers.IO) { store.clear() }
+            withContext(dispatchers.io) { store.clear() }
             state.value = emptyList()
         }
     }
@@ -238,14 +239,14 @@ class SheetScoresRepositoryImpl @Inject constructor(
     /** Must hold [lock]. */
     private suspend fun persist(next: List<SheetScore>) {
         val owner = currentUser.getCurrentUser()?.isu
-        withContext(Dispatchers.IO) { store.write(StoredSheetScores(owner = owner, connections = next.map { it.toStored() })) }
+        withContext(dispatchers.io) { store.write(StoredSheetScores(owner = owner, connections = next.map { it.toStored() })) }
         state.value = next
     }
 
     /** A corrupt file or another account's file is removed and the state starts empty. Must hold [lock]. */
     private suspend fun loaded(): List<SheetScore> = state.value ?: run {
         val owner = currentUser.getCurrentUser()?.isu
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             val stored = try {
                 store.read()
             } catch (_: Exception) {

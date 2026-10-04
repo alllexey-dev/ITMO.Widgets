@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 import dev.alllexey.itmowidgets.core.model.RelationshipState
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserProfile
@@ -19,9 +20,15 @@ import kotlinx.coroutines.test.runTest
 import okhttp3.Request
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 
 class PeopleSearchRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
 
     @Test
     fun `marks registered people drops contacts and reports the next page`() = runTest {
@@ -36,7 +43,7 @@ class PeopleSearchRepositoryImplTest {
             ]}}"""
         }
         val social = FakeSocial(registered = listOf(100002))
-        val repository = PeopleSearchRepositoryImpl(myItmo.api, social, noDemo())
+        val repository = PeopleSearchRepositoryImpl(myItmo.api, social, noDemo(), dispatchers)
 
         val page = (repository.search("  иванов ") as AppResult.Success).value
 
@@ -61,7 +68,7 @@ class PeopleSearchRepositoryImplTest {
             calls += 1
             """{"error_code":0,"result":{"count":21,"data":[{"id":100009,"fio":"Последний"}]}}"""
         }
-        val repository = PeopleSearchRepositoryImpl(myItmo.api, FakeSocial(), noDemo())
+        val repository = PeopleSearchRepositoryImpl(myItmo.api, FakeSocial(), noDemo(), dispatchers)
 
         assertEquals(AppResult.Success(PeopleSearchPage.EMPTY), repository.search("   "))
         val page = (repository.search("п", offset = 20) as AppResult.Success).value
@@ -74,13 +81,15 @@ class PeopleSearchRepositoryImplTest {
     fun `directory and lookup failures stay typed`() = runTest {
         val failing = PeopleSearchRepositoryImpl(
             myItmoStub { """{"error_code":401,"result":null}""" }.api,
-            FakeSocial(), noDemo()
+            FakeSocial(), noDemo(),
+            dispatchers = dispatchers
         )
         assertEquals(AppResult.Failure(AppError.Unauthorized), failing.search("а"))
 
         val disabled = PeopleSearchRepositoryImpl(
             myItmoStub { """{"error_code":0,"result":{"count":1,"data":[{"id":100001,"fio":"Кто-то"}]}}""" }.api,
-            FakeSocial(lookupError = AppError.CustomServicesDisabled), noDemo()
+            FakeSocial(lookupError = AppError.CustomServicesDisabled), noDemo(),
+            dispatchers = dispatchers
         )
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), disabled.search("к"))
     }

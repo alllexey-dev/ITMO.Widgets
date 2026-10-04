@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import kotlinx.coroutines.test.runCurrent
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
@@ -55,6 +56,12 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class MarkTrackingRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     @get:Rule val temporary = TemporaryFolder()
     private val folder by lazy { File(temporary.root, "marks") }
     private val store get() = MarksFileStore(folder, Gson())
@@ -463,7 +470,7 @@ class MarkTrackingRepositoryImplTest {
     }
 
     private fun repository(demo: DemoMode = noDemo()) =
-        MarkTrackingRepositoryImpl(recordbook, bars, store, ClockTime(clock), clock, notifier, users, sheets, demo)
+        MarkTrackingRepositoryImpl(recordbook, bars, store, ClockTime(clock), clock, notifier, users, sheets, demo, dispatchers)
 
     private fun barsAnswer(answer: BarsMarkRead) {
         bars.answers.clear()

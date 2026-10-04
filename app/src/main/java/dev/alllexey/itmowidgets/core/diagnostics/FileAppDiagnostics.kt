@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.BuildConfig
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.time.WallClock
 import java.io.File
 import java.time.Clock
@@ -12,7 +13,6 @@ import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
@@ -33,16 +33,17 @@ import kotlinx.coroutines.withContext
 class FileAppDiagnostics internal constructor(
     private val directory: File,
     private val clock: Clock,
+    dispatchers: AppDispatchers,
 ) : AppDiagnostics {
 
     @Inject
-    constructor(@ApplicationContext context: Context, @WallClock clock: Clock) :
-        this(File(context.filesDir, "diagnostics"), clock)
+    constructor(@ApplicationContext context: Context, @WallClock clock: Clock, dispatchers: AppDispatchers) :
+        this(File(context.filesDir, "diagnostics"), clock, dispatchers)
 
     private val logFile = File(directory, "log.jsonl")
     private val crashFile = File(directory, "pending_crash.jsonl")
     private val gson = Gson()
-    private val writer = Dispatchers.IO.limitedParallelism(1)
+    private val writer = dispatchers.io.limitedParallelism(1)
     private val scope = CoroutineScope(SupervisorJob() + writer)
     private val fileLock = Any()
 

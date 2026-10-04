@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.gson.GsonBuilder
 import dev.alllexey.itmowidgets.core.utils.LocalDateTypeAdapter
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
+import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import java.io.File
 import java.time.Clock
 import java.time.Instant
@@ -179,7 +180,7 @@ class ScheduleLocalDataSourceTest {
     private class Fixture(val context: Context) {
         val gson = GsonBuilder().registerTypeAdapter(LocalDate::class.java, LocalDateTypeAdapter()).create()
         val clock = MutableClock()
-        fun local() = ScheduleLocalDataSourceImpl(gson, clock, context)
+        fun local() = ScheduleLocalDataSourceImpl(gson, clock, context, DeviceDispatchers)
     }
 
     private class MutableClock : Clock() {

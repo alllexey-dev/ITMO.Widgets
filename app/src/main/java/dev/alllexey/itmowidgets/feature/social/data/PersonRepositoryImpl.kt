@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import com.google.gson.GsonBuilder
@@ -16,7 +17,6 @@ import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import retrofit2.Response
@@ -28,6 +28,7 @@ import javax.inject.Singleton
 class PersonRepositoryImpl @Inject constructor(
     private val myItmoApi: MyItmoApi,
     private val demo: DemoMode,
+    private val dispatchers: AppDispatchers,
 ) : PersonRepository, SessionDataCleaner {
     private val cache = ConcurrentHashMap<Int, Person>()
 
@@ -37,7 +38,7 @@ class PersonRepositoryImpl @Inject constructor(
         DemoSocial.person(isu)?.let { person -> AppResult.Success(person.also { cache[isu] = it }) }
             ?: AppResult.Failure(AppError.NotFound)
     } else try {
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             val response = myItmoApi.getPersonality(isu).execute()
             if (response.isMissingPerson()) return@withContext AppResult.Failure(AppError.NotFound)
             if (!response.isSuccessful) throw HttpException(response)

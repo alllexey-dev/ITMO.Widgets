@@ -17,15 +17,22 @@ import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import java.io.IOException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 class SessionRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
 
     @Test
     fun `initializes as signed out without a refresh token`() = runTest {
@@ -217,7 +224,8 @@ class SessionRepositoryImplTest {
             backendDeviceSession = deviceSession,
             diagnostics = RecordingDiagnostics(),
             demoPreferences = settings,
-            demo = DataStoreDemoMode(settings)
+            demo = DataStoreDemoMode(settings),
+            dispatchers = dispatchers
         )
         return Fixture(
             repository,

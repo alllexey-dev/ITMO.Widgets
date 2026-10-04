@@ -21,12 +21,12 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.BuildConfig
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** Workers are built by WorkManager; see `QrWidgetEntryPoint` for why this is not `@HiltWorker`. */
@@ -35,6 +35,7 @@ import kotlinx.coroutines.withContext
 interface BarsCookieProbeEntryPoint {
     fun probeCookies(): ItmoIdCookies
     fun probeBars(): Bars
+    fun probeDispatchers(): AppDispatchers
 }
 
 /**
@@ -47,7 +48,7 @@ class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : Corout
         if (!BuildConfig.DEBUG) return Result.success()
         val dependencies = EntryPointAccessors.fromApplication(applicationContext, BarsCookieProbeEntryPoint::class.java)
         val line = try {
-            probe(dependencies.probeBars(), dependencies.probeCookies())
+            probe(dependencies.probeBars(), dependencies.probeCookies(), dependencies.probeDispatchers())
         } catch (cancel: CancellationException) {
             throw cancel
         } catch (failure: Exception) {
@@ -61,18 +62,18 @@ class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : Corout
     /** The last step started, so an error line says where the probe stopped without echoing any value. */
     private var step = "start"
 
-    private suspend fun probe(bars: Bars, cookies: ItmoIdCookies): String {
+    private suspend fun probe(bars: Bars, cookies: ItmoIdCookies, dispatchers: AppDispatchers): String {
         val state = BarsAuthHelper.newState()
         step = "loginUrl"
         val url = bars.authHelper.getLoginUrl(state)
         step = "cookies"
         val cookie = cookies.cookieHeader(url)
         step = "request"
-        val answer = withContext(Dispatchers.IO) { bars.authHelper.requestCodeWithCookies(state, cookie) }
+        val answer = withContext(dispatchers.io) { bars.authHelper.requestCodeWithCookies(state, cookie) }
         step = "exchange"
         val exchange = if (answer.outcome == BarsSessionCode.Outcome.CODE) {
             val valid = try {
-                Bars.isValidAuthorization(withContext(Dispatchers.IO) { bars.authHelper.exchange(answer.code) })
+                Bars.isValidAuthorization(withContext(dispatchers.io) { bars.authHelper.exchange(answer.code) })
             } catch (cancel: CancellationException) {
                 throw cancel
             } catch (_: Exception) {

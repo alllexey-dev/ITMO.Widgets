@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
@@ -25,10 +26,17 @@ import java.time.ZoneOffset
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 class SportSignPushHandlerTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     @Test fun `both payload types book then satisfy notify and refresh every projection`() = runTest {
         for (auto in listOf(false, true)) {
             val fixture = Fixture(auto)
@@ -108,7 +116,7 @@ class SportSignPushHandlerTest {
         assertEquals(0, fixture.bookingsRefresh)
     }
 
-    private class Fixture(auto: Boolean) {
+    private inner class Fixture(auto: Boolean) {
         val settings = ServicesOptInPreferences(MemoryPreferences())
         val demo = FakeDemoMode()
         private val gate = DefaultBackendGate(settings, demo)
@@ -133,7 +141,7 @@ class SportSignPushHandlerTest {
             ApiResponse.success("OK")
         }
         private val handler = SportSignPushHandler(auto, gson,
-            SportActionRepositoryImpl(gate, myItmo.api, api, demo), api,
+            SportActionRepositoryImpl(gate, myItmo.api, api, demo, dispatchers), api,
             proxy<SportBookingRepository> { method, _ ->
                 check(method == "refreshSportBookings")
                 bookingsRefresh++; Unit

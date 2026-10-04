@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
@@ -13,7 +14,6 @@ import dev.alllexey.itmowidgets.feature.sport.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportBookings
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -21,7 +21,8 @@ class UserSportRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     private val time: AcademicTimeProvider,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : UserSportRepository {
 
     override suspend fun getUserBookings(isu: Int): AppResult<UserSportBookings> {
@@ -30,7 +31,7 @@ class UserSportRepositoryImpl @Inject constructor(
         }
         if (!backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
         return try {
-            val response = withContext(Dispatchers.IO) { widgetsApi.userSportBookings(isu).data }
+            val response = withContext(dispatchers.io) { widgetsApi.userSportBookings(isu).data }
                 ?: return AppResult.Failure(IllegalStateException("Backend returned no data").toAppError())
             AppResult.Success(
                 UserSportBookings(

@@ -2,11 +2,11 @@ package dev.alllexey.itmowidgets.feature.schedule.data.local
 
 import android.content.Context
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.util.ScheduleUtil
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -29,7 +29,8 @@ private const val SCHEDULE_CACHE_EXPIRATION_MS = 24 * 60 * 60 * 1000L
 class ScheduleLocalDataSourceImpl @Inject constructor(
     private val gson: Gson,
     @param:WallClock private val clock: Clock,
-    @ApplicationContext context: Context
+    @ApplicationContext context: Context,
+    private val dispatchers: AppDispatchers
 ) : ScheduleLocalDataSource {
 
     val cacheDir = File(context.cacheDir, "schedule_cache")
@@ -44,7 +45,7 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
 
     /**
      * Reading the cache touches the disk, so the whole upstream — including the
-     * lazy range hydration and JSON deserialization — runs on [Dispatchers.IO].
+     * lazy range hydration and JSON deserialization — runs on the IO dispatcher.
      */
     override fun observeRange(
         userIsu: Int?,
@@ -70,7 +71,7 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
                     }
                 }.distinctUntilChanged()
             )
-        }.flowOn(Dispatchers.IO)
+        }.flowOn(dispatchers.io)
     }
 
     override fun peekRange(userIsu: Int?, start: LocalDate, end: LocalDate): List<DaySchedule>? {
@@ -81,7 +82,7 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
     }
 
     override suspend fun save(schedule: DaySchedule, userIsu: Int?) {
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             cacheMutex.withLock {
                 val key = key(userIsu, schedule.date)
                 val entry = cacheEntry(schedule, userIsu, clock.millis())
@@ -99,7 +100,7 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
     ) {
         val dates = ScheduleUtil.generateDates(start, end)
         if (dates.isEmpty()) return
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             cacheMutex.withLock {
                 val timestamp = clock.millis()
                 val replacement = schedules
@@ -119,13 +120,13 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
 
     override suspend fun get(userIsu: Int?, date: LocalDate): CacheEntry? {
         val key = key(userIsu, date)
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatchers.io) {
             cacheMutex.withLock { readFromDisk(key)?.takeUnless(::isExpired) }
         }
     }
 
     override suspend fun clearUser(userIsu: Int) {
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             cacheMutex.withLock {
                 val prefix = "${userIsu}_"
                 cacheDir.listFiles()?.filter { it.name.startsWith(prefix) }?.forEach { it.delete() }
@@ -138,7 +139,7 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
      * Existing observers remain attached to the same snapshot flow across a clear.
      */
     override suspend fun clear() {
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             cacheMutex.withLock {
                 cacheDir.deleteRecursively()
                 cacheDir.mkdirs()

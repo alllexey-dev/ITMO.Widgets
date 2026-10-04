@@ -4,18 +4,25 @@ import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.unreachableMyItmo
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class RecordbookDemoGateTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     @Test
     fun `the program, subjects and control points come from the demo set`() = runTest {
-        val repository = RecordbookRepositoryImpl(unreachableMyItmo(), FixedAcademicTime(), FakeDemoMode(active = true))
+        val repository = RecordbookRepositoryImpl(unreachableMyItmo(), FixedAcademicTime(), FakeDemoMode(active = true), dispatchers = dispatchers)
 
         val program = (repository.getPrograms() as AppResult.Success).value.single()
         val current = program.periods.single { it.actual }

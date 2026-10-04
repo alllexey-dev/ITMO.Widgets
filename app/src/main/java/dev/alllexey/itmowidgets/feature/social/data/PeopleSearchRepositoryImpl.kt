@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import api.myitmo.model.personality.PersonalityMin
@@ -12,7 +13,6 @@ import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.PersonSearchResult
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -23,7 +23,8 @@ import javax.inject.Inject
 class PeopleSearchRepositoryImpl @Inject constructor(
     private val myItmoApi: MyItmoApi,
     private val social: SocialRepository,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : PeopleSearchRepository {
 
     override suspend fun search(query: String, offset: Int): AppResult<PeopleSearchPage> {
@@ -35,7 +36,7 @@ class PeopleSearchRepositoryImpl @Inject constructor(
         }
 
         val page = try {
-            withContext(Dispatchers.IO) {
+            withContext(dispatchers.io) {
                 myItmoApi.searchPersonalities(PAGE_SIZE, offset, normalized).execute().body().requireResult()
             }
         } catch (cancellation: CancellationException) {

@@ -4,20 +4,21 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 /** `discipline:subject,discipline:subject` under one key; a damaged value reads as no bindings. */
 @Singleton
 class DataStoreSubjectBindingStore @Inject constructor(
-    @param:AppPreferences private val preferences: DataStore<Preferences>
+    @param:AppPreferences private val preferences: DataStore<Preferences>,
+    private val dispatchers: AppDispatchers
 ) : SubjectBindingStore, SessionDataCleaner {
 
     override suspend fun get(disciplineId: Long): Long? = read()[disciplineId]
@@ -26,12 +27,12 @@ class DataStoreSubjectBindingStore @Inject constructor(
 
     override suspend fun remove(disciplineId: Long) = write(read() - disciplineId)
 
-    override suspend fun clearSessionData() = withContext(Dispatchers.IO) {
+    override suspend fun clearSessionData() = withContext(dispatchers.io) {
         preferences.edit { it.remove(KEY) }
         Unit
     }
 
-    private suspend fun read(): Map<Long, Long> = withContext(Dispatchers.IO) {
+    private suspend fun read(): Map<Long, Long> = withContext(dispatchers.io) {
         try {
             decode(preferences.data.first()[KEY])
         } catch (cancel: CancellationException) {
@@ -41,7 +42,7 @@ class DataStoreSubjectBindingStore @Inject constructor(
         }
     }
 
-    private suspend fun write(bindings: Map<Long, Long>) = withContext(Dispatchers.IO) {
+    private suspend fun write(bindings: Map<Long, Long>) = withContext(dispatchers.io) {
         preferences.edit { it[KEY] = bindings.entries.joinToString(",") { (discipline, subject) -> "$discipline:$subject" } }
         Unit
     }

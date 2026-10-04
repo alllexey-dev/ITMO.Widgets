@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
@@ -36,9 +37,15 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class SettingsRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
 
     @Test
     fun `aggregates documented local defaults`() = runTest {
@@ -351,7 +358,8 @@ class SettingsRepositoryImplTest {
                 stores.deviceHints,
                 DefaultBackendGate(stores.servicesOptIn, noDemo()),
                 fakeApi.instance,
-                noDemo()
+                noDemo(),
+                dispatchers
             )
         )
     }

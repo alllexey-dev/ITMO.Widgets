@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.auth.data
 
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import api.myitmo.MyItmo
@@ -21,7 +22,6 @@ import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +42,8 @@ class SessionRepositoryImpl @Inject constructor(
     private val fcmTokenSync: FcmTokenSync,
     private val diagnostics: AppDiagnostics,
     private val demoPreferences: DemoPreferences,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : SessionRepository {
 
     private val mutableState = MutableStateFlow<SessionState>(SessionState.Initializing)
@@ -114,7 +115,7 @@ class SessionRepositoryImpl @Inject constructor(
             runCatching { lifecycleEffects.prepareForSessionChange() }
             clearSessionDataIgnoringFailures()
             // An expired session must not stay behind the demo: widgets would keep refreshing it.
-            withContext(Dispatchers.IO) { tokenStore.clearTokens() }
+            withContext(dispatchers.io) { tokenStore.clearTokens() }
             demoPreferences.setDemoActive(true)
             // No Backend identity, FCM token, device or background work: the demo stays on the device.
             mutableState.value = DEMO_SESSION
@@ -140,7 +141,7 @@ class SessionRepositoryImpl @Inject constructor(
             runCatching { backendDeviceSession.unregisterCurrentDevice() }
             runCatching { lifecycleEffects.prepareForSessionChange() }
             clearSessionDataIgnoringFailures()
-            withContext(Dispatchers.IO) { tokenStore.clearTokens() }
+            withContext(dispatchers.io) { tokenStore.clearTokens() }
             runCatching { lifecycleEffects.onSignedOut() }
             mutableState.value = SessionState.SignedOut
         }
@@ -161,7 +162,7 @@ class SessionRepositoryImpl @Inject constructor(
             lifecycleEffects.prepareForSessionChange()
             clearSessionData()
             demoPreferences.setDemoActive(false)
-            withContext(Dispatchers.IO) { tokenStore.replaceWithTokens(tokens) }
+            withContext(dispatchers.io) { tokenStore.replaceWithTokens(tokens) }
             mutableState.value = SessionState.SignedIn(currentUserProvider.getCurrentUser())
             runCatching { lifecycleEffects.onSignedIn() }
             synchronizeSignedInSession()
@@ -169,7 +170,7 @@ class SessionRepositoryImpl @Inject constructor(
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (_: Exception) {
-            withContext(Dispatchers.IO) { tokenStore.clearTokens() }
+            withContext(dispatchers.io) { tokenStore.clearTokens() }
             clearSessionDataIgnoringFailures()
             runCatching { lifecycleEffects.onSignedOut() }
             mutableState.value = SessionState.SignedOut

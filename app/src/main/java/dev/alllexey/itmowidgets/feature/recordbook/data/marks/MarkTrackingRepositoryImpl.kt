@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
@@ -41,7 +42,6 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
@@ -71,6 +71,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     private val currentUser: CurrentUserProvider,
     private val sheets: SheetScoresRepository,
     private val demo: DemoMode,
+    private val dispatchers: AppDispatchers,
 ) : MarkTrackingRepository, SessionDataCleaner {
 
     private val checks = Mutex()
@@ -260,7 +261,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
         demoRead.value = emptySet()
         generation.incrementAndGet()
         lock.withLock {
-            withContext(Dispatchers.IO) { store.clear() }
+            withContext(dispatchers.io) { store.clear() }
             state.value = StoredMarks()
         }
     }
@@ -317,7 +318,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     /** Writes [next] without expired and surplus unread subjects, then publishes it. Must hold [lock]. */
     private suspend fun persist(next: StoredMarks) {
         val kept = pruned(next)
-        withContext(Dispatchers.IO) { store.write(kept) }
+        withContext(dispatchers.io) { store.write(kept) }
         state.value = kept
     }
 
@@ -327,7 +328,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     /** A corrupt file or another account's file is removed and the state starts empty. Must hold [lock]. */
     private suspend fun loaded(): StoredMarks = state.value ?: run {
         val owner = currentUser.getCurrentUser()?.isu
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             val stored = try {
                 store.read()
             } catch (_: Exception) {

@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
@@ -16,10 +17,17 @@ import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataS
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 /** The demo schedule is read from the demo set; My ITMO and Backend are never asked. */
 class ScheduleDemoGateTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     private val demo = FakeDemoMode(active = true)
     private val time = FixedAcademicTime()
     private val myItmo = unreachable<MyItmoApi>()
@@ -30,7 +38,7 @@ class ScheduleDemoGateTest {
 
     @Test
     fun `the own week has lessons, the volleyball and no Sunday classes`() = runTest {
-        val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, time, demo)
+        val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, time, demo, dispatchers)
 
         val days = remote.getSchedule(null, week.start, week.endInclusive)
 
@@ -42,8 +50,8 @@ class ScheduleDemoGateTest {
 
     @Test
     fun `a friend's schedule and friends on a lesson come from the demo set`() = runTest {
-        val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, time, demo)
-        val friends = LessonFriendsRepositoryImpl(gate, backend, demo)
+        val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, time, demo, dispatchers)
+        val friends = LessonFriendsRepositoryImpl(gate, backend, demo, dispatchers)
 
         val ivan = remote.getSchedule(DemoPeople.IVAN.isu, week.start, week.endInclusive)
         val lecture = ivan.first { day -> day.lessons.any { it.typeId.raw == 1 } }.let { day -> day.date to day.lessons.first { it.typeId.raw == 1 } }
@@ -55,7 +63,7 @@ class ScheduleDemoGateTest {
 
     @Test
     fun `the export source reads the demo schedule`() = runTest {
-        val source = MyItmoOwnScheduleSource(myItmo, time, demo)
+        val source = MyItmoOwnScheduleSource(myItmo, time, demo, dispatchers)
 
         val days = source.read(week.start, week.start.plusDays(40))
 

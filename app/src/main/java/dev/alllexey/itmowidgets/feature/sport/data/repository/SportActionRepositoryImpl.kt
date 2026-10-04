@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import api.myitmo.utils.ApiException
@@ -13,7 +14,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -22,7 +22,8 @@ class SportActionRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
     private val myItmoApi: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : SportActionRepository {
 
     /** The demo session shows the queues, so their buttons are there; pressing them is refused. */
@@ -32,7 +33,7 @@ class SportActionRepositoryImpl @Inject constructor(
 
     override suspend fun signIn(lessonId: Long): AppResult<Unit> {
         return runAction {
-            withContext(Dispatchers.IO) {
+            withContext(dispatchers.io) {
                 val response = myItmoApi.signInLessons(listOf(lessonId)).execute()
                 if (!response.isSuccessful) throw HttpException(response)
                 val body = response.body()
@@ -47,7 +48,7 @@ class SportActionRepositoryImpl @Inject constructor(
 
     override suspend fun signOut(lessonId: Long): AppResult<Unit> {
         return runAction {
-            withContext(Dispatchers.IO) {
+            withContext(dispatchers.io) {
                 val response = myItmoApi.signOutLessons(listOf(lessonId)).execute()
                 if (!response.isSuccessful) throw HttpException(response)
                 val body = response.body()

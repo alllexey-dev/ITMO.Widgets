@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.reviews.data.demo.DemoReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
@@ -14,7 +15,6 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -30,12 +30,13 @@ class TeacherLevelsRepositoryImpl @Inject constructor(
     private val store: TeacherLevelsFileStore,
     @param:WallClock private val clock: Clock,
     private val demo: DemoMode,
+    private val dispatchers: AppDispatchers,
 ) : TeacherLevelsRepository, SessionDataCleaner {
     private val lock = Mutex()
     private val generation = AtomicLong()
 
     override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> = if (demo.isActive()) DemoReviews.levels(isus) else lock.withLock {
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             val started = generation.get()
             if (!backend.mayCallBackend()) {
                 store.clear()
@@ -64,7 +65,7 @@ class TeacherLevelsRepositoryImpl @Inject constructor(
 
     override suspend fun clearSessionData() {
         generation.incrementAndGet()
-        lock.withLock { withContext(Dispatchers.IO) { store.clear() } }
+        lock.withLock { withContext(dispatchers.io) { store.clear() } }
     }
 
     private fun readOrClear(): Map<Int, StoredLevel> = try {

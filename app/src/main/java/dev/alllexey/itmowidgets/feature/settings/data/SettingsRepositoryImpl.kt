@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.model.ApiResponse
@@ -30,7 +31,6 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SportDisplaySettings
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,7 +50,8 @@ class SettingsRepositoryImpl @Inject constructor(
     private val deviceHints: DeviceHintPreferences,
     private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : SettingsRepository {
 
     private val sharingState =
@@ -259,7 +260,7 @@ class SettingsRepositoryImpl @Inject constructor(
         sharingState.value = SharingSettingsState.Content(requested, updating = true)
 
         try {
-            val response = withContext(Dispatchers.IO) {
+            val response = withContext(dispatchers.io) {
                 widgetsApi.updateMyPrivacySettings(requested.toDto())
             }
             val saved = response.requireData().toDomain()
@@ -275,7 +276,7 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     private suspend fun fetchSharingSettings(): SharingSettings {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatchers.io) {
             widgetsApi.myPrivacySettings().requireData().toDomain()
         }
     }

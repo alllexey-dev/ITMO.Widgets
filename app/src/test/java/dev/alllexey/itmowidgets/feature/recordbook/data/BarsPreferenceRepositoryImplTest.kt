@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenPersistence
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import java.io.File
@@ -19,6 +20,12 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class BarsPreferenceRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     @get:Rule val folder = TemporaryFolder()
     @Test fun `persists the toggle and logout clears both the toggle and BARS credentials`() = runTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -34,7 +41,7 @@ class BarsPreferenceRepositoryImplTest {
                 override fun decrypt(value: String) = value
             })
             val settings = MarkSourcePreferences(InMemoryPreferencesDataStore())
-            fun repository() = BarsPreferenceRepositoryImpl(store, preferences, settings)
+            fun repository() = BarsPreferenceRepositoryImpl(store, preferences, settings, dispatchers)
             assertFalse(repository().isEnabled())
             repository().setEnabled(true)
             assertTrue(repository().isEnabled())
@@ -62,7 +69,7 @@ class BarsPreferenceRepositoryImplTest {
             settings.setBarsLoginPrompt(BarsLoginPrompt.PENDING)
             settings.setMyItmoMarksEnabled(false)
 
-            BarsPreferenceRepositoryImpl(store, preferences, settings).clearSessionData()
+            BarsPreferenceRepositoryImpl(store, preferences, settings, dispatchers).clearSessionData()
 
             assertNull(settings.getBarsMarksEnabled())
             assertEquals(BarsLoginPrompt.NONE, settings.getBarsLoginPrompt())

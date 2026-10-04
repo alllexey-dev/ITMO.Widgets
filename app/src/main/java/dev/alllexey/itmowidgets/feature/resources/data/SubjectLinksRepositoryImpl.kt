@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.resources.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.resources.data.demo.DemoSubjectLinks
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,7 +39,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -68,6 +68,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
     @param:WallClock private val clock: Clock,
     private val demo: DemoMode,
+    private val dispatchers: AppDispatchers,
 ) : SubjectLinksRepository, SessionDataCleaner {
     private val state = MutableStateFlow<StoredLinks?>(null)
     private val loadError = MutableStateFlow<AppError?>(null)
@@ -228,7 +229,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
                 calls.forEach { it.cancel() }
                 calls.joinAll()
                 stateLock.withLock {
-                    withContext(Dispatchers.IO) { storage.clear() }
+                    withContext(dispatchers.io) { storage.clear() }
                     state.value = StoredLinks()
                     loadError.value = null
                     scopeErrors.value = emptyMap()
@@ -311,7 +312,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         requireEnabled(generation)
         try {
             val response = coroutineScope {
-                val call = async(Dispatchers.IO, start = CoroutineStart.LAZY) { checkSession(generation); block() }
+                val call = async(dispatchers.io, start = CoroutineStart.LAZY) { checkSession(generation); block() }
                 stateLock.withLock { checkSession(generation); activeRequests.add(call) }
                 try { call.await() } finally { activeRequests.remove(call) }
             }
@@ -349,7 +350,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         checkSession(generation)
         if (state.value != null) return@withLock
         val saved = try {
-            withContext(Dispatchers.IO) { storage.read() }
+            withContext(dispatchers.io) { storage.read() }
         } catch (cancel: CancellationException) {
             throw cancel
         } catch (failure: Exception) {
@@ -364,7 +365,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     private suspend fun mutate(generation: Long, transform: (StoredLinks) -> StoredLinks) = stateLock.withLock {
         checkSession(generation)
         val next = transform(current())
-        withContext(Dispatchers.IO) { storage.write(next) }
+        withContext(dispatchers.io) { storage.write(next) }
         state.value = next
     }
 

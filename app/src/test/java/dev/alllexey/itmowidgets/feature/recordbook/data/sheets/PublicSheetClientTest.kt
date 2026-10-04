@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.di.NetworkModule
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFixtures
@@ -17,16 +18,23 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class PublicSheetClientTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     private val id = "1TestSheetIdForUnitTests_0123456789-abc"
     private val server = MockWebServer()
     private lateinit var client: PublicSheetClient
 
     @Before fun start() {
         server.start()
-        client = PublicSheetClient(NetworkModule.providePublicWebClient(), server.url("/"), noDemo())
+        client = PublicSheetClient(NetworkModule.providePublicWebClient(), server.url("/"), noDemo(), dispatchers)
     }
 
     @After fun stop() = server.shutdown()

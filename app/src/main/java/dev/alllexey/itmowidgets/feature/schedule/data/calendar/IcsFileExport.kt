@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 import android.content.Context
 import androidx.core.content.FileProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -16,7 +17,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSour
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
@@ -28,6 +28,7 @@ class IcsFileExport internal constructor(
     private val time: AcademicTimeProvider,
     private val buildings: BuildingDirectory,
     private val directory: File,
+    private val dispatchers: AppDispatchers,
     private val uriOf: (File) -> String
 ) : ScheduleIcsExport {
 
@@ -35,8 +36,9 @@ class IcsFileExport internal constructor(
         @ApplicationContext context: Context,
         schedule: OwnScheduleSource,
         time: AcademicTimeProvider,
-        buildings: BuildingDirectory
-    ) : this(schedule, time, buildings, File(context.cacheDir, DIRECTORY), { file ->
+        buildings: BuildingDirectory,
+        dispatchers: AppDispatchers
+    ) : this(schedule, time, buildings, File(context.cacheDir, DIRECTORY), dispatchers, { file ->
         FileProvider.getUriForFile(context, "${context.packageName}$AUTHORITY_SUFFIX", file).toString()
     })
 
@@ -50,7 +52,7 @@ class IcsFileExport internal constructor(
             AppResult.Success(null)
         } else {
             val name = "itmo-schedule-${dates.start}-${dates.endInclusive}.ics"
-            val file = withContext(Dispatchers.IO) {
+            val file = withContext(dispatchers.io) {
                 check(directory.isDirectory || directory.mkdirs())
                 directory.listFiles()?.forEach(File::delete)
                 File(directory, name).apply { writeText(IcsWriter.write(events, time.now().toInstant()), Charsets.UTF_8) }

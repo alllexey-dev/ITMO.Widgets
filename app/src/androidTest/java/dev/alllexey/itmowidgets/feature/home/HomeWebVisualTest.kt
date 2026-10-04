@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.feature.web.data.WebSessionDataCleaner
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebPreviewFragment
 import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -114,7 +115,7 @@ class HomeWebVisualTest {
         }
         assertTrue(done.await(5, TimeUnit.SECONDS))
         assertTrue(CookieManager.getInstance().getCookie("https://example.invalid/").contains("synthetic_session"))
-        runBlocking { WebSessionDataCleaner(instrumentation.targetContext).clearSessionData() }
+        runBlocking { WebSessionDataCleaner(instrumentation.targetContext, DeviceDispatchers).clearSessionData() }
         assertNull(CookieManager.getInstance().getCookie("https://example.invalid/"))
     }
 

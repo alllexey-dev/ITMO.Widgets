@@ -2,10 +2,10 @@ package dev.alllexey.itmowidgets.feature.qr.ui.rendering
 
 import android.graphics.Bitmap
 import androidx.core.graphics.scale
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -15,7 +15,8 @@ import kotlinx.coroutines.withContext
 class QrPreviewBitmapCache @Inject constructor(
     private val generator: QrCodeGenerator,
     private val renderer: QrBitmapRenderer,
-    private val spoilers: CustomSpoilerManager
+    private val spoilers: CustomSpoilerManager,
+    private val dispatchers: AppDispatchers
 ) {
     private data class Key(val palette: Pair<Int, Int>, val revision: Long, val generation: Long)
     private val images = LinkedHashMap<Key, Pair<Bitmap, Bitmap>>(4, 0.75f, true)
@@ -35,8 +36,8 @@ class QrPreviewBitmapCache @Inject constructor(
         cached(palette)?.let { return@withLock it }
         while (true) {
             val key = key(palette)
-            val custom = withContext(Dispatchers.IO) { spoilers.getCustomSpoilerBitmap() }
-            val rendered = withContext(Dispatchers.Default) {
+            val custom = withContext(dispatchers.io) { spoilers.getCustomSpoilerBitmap() }
+            val rendered = withContext(dispatchers.default) {
                 val qr = renderer.render(
                     generator.toBooleans(generator.generate("WIDGET PREVIEW")),
                     420, palette.first, palette.second, 0.05f, 0.06f

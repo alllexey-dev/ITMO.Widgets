@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.network.toAppError
@@ -25,7 +26,6 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.predictedStart
 import dev.alllexey.itmowidgets.feature.sport.domain.model.repeats
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.Flow
@@ -40,7 +40,8 @@ class SportScheduleRepositoryImpl @Inject constructor(
     private val myItmoApi: MyItmoApi,
     private val timeProvider: AcademicTimeProvider,
     private val sportLessonTemplateProvider: SportLessonTemplateProvider,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : SportScheduleRepository {
 
     private val scheduleFlow = MutableSharedFlow<DataState<Map<LocalDate, List<SportLesson>>>>(replay = 1)
@@ -174,7 +175,7 @@ class SportScheduleRepositoryImpl @Inject constructor(
         }
 
         try {
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(dispatchers.io) {
                 val from = timeProvider.today()
                 val to = from.plusDays(21)
 
@@ -209,7 +210,7 @@ class SportScheduleRepositoryImpl @Inject constructor(
             return
         }
         try {
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(dispatchers.io) {
                 val response = myItmoApi
                     .sportFilters
                     .execute()
@@ -236,7 +237,7 @@ class SportScheduleRepositoryImpl @Inject constructor(
             return
         }
         try {
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(dispatchers.io) {
                 val response = myItmoApi
                     .sportTimeSlots
                     .execute()

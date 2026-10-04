@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.weblogin.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.network.appResultOf
@@ -11,7 +12,6 @@ import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import java.util.UUID
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import dev.alllexey.itmowidgets.core.model.WebLoginPreview as WirePreview
 
@@ -19,6 +19,7 @@ class WebLoginRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     private val demo: DemoMode,
+    private val dispatchers: AppDispatchers,
 ) : WebLoginRepository {
 
     override suspend fun preview(code: String): AppResult<WebLoginPreview> = call { widgetsApi.webLoginPreview(code) }
@@ -39,7 +40,7 @@ class WebLoginRepositoryImpl @Inject constructor(
     private suspend fun <T> call(request: suspend () -> ApiResponse<T>): AppResult<T?> {
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         if (!backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
-        val response = when (val result = appResultOf { withContext(Dispatchers.IO) { request() } }) {
+        val response = when (val result = appResultOf { withContext(dispatchers.io) { request() } }) {
             is AppResult.Success -> result.value
             is AppResult.Failure -> return result
         }

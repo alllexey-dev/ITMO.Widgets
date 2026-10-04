@@ -13,6 +13,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.storage.AndroidKeystoreTokenCipher
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
@@ -32,7 +33,6 @@ import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import java.io.File
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
 @Module
@@ -70,10 +70,11 @@ abstract class StorageModule {
         @Singleton
         @AppPreferences
         fun provideAppPreferences(
-            @ApplicationContext context: Context
+            @ApplicationContext context: Context,
+            dispatchers: AppDispatchers
         ): DataStore<Preferences> {
             return PreferenceDataStoreFactory.create(
-                scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+                scope = CoroutineScope(SupervisorJob() + dispatchers.io),
                 produceFile = {
                     context.preferencesDataStoreFile(APP_PREFERENCES_FILE)
                 }

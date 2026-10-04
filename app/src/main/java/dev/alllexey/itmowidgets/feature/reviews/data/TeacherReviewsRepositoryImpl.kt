@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.reviews.data.demo.DemoReviews
@@ -25,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -39,6 +39,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
     @param:ApplicationScope private val scope: CoroutineScope,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
+    private val dispatchers: AppDispatchers,
 ) : TeacherReviewsRepository, SessionDataCleaner {
     private val cache = ConcurrentHashMap<Int, TeacherReviews>()
     private val updates = MutableSharedFlow<TeacherReviews>(extraBufferCapacity = 8)
@@ -148,7 +149,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
     private suspend fun call(
         generation: Long,
         block: suspend () -> ApiResponse<TeacherReviewsResponse>,
-    ): AppResult<TeacherReviews> = withContext(Dispatchers.IO) {
+    ): AppResult<TeacherReviews> = withContext(dispatchers.io) {
         if (!isCurrent(generation)) return@withContext AppResult.Failure(AppError.CustomServicesDisabled)
         appResultOf {
             val reviews = checkNotNull(block().data) { "Backend returned no reviews" }

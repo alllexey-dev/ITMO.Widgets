@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.data
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +17,12 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class DataStoreSubjectBindingStoreTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     @get:Rule val folder = TemporaryFolder()
 
     @Test
@@ -23,7 +30,7 @@ class DataStoreSubjectBindingStoreTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         try {
             val preferences = PreferenceDataStoreFactory.create(scope = scope, produceFile = { File(folder.root, "subjects.preferences_pb") })
-            val store = DataStoreSubjectBindingStore(preferences)
+            val store = DataStoreSubjectBindingStore(preferences, dispatchers)
 
             assertNull(store.get(1))
             store.put(1, 100)

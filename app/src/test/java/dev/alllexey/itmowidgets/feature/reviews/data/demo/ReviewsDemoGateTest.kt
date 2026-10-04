@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherReviewsRepositoryImpl
 import kotlinx.coroutines.test.runTest
@@ -16,16 +17,23 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class ReviewsDemoGateTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
 
     @Test
     fun `reviews and summaries come from the demo set and every change is refused`() = runTest {
         val demo = FakeDemoMode(active = true)
         // Without the stored opt-in the demo still reads as connected.
         val repository = TeacherReviewsRepositoryImpl(
-            FakeBackendGate(optedIn = false, demo), unreachable<ItmoWidgetsApi>(), backgroundScope, FixedAcademicTime(), demo
+            FakeBackendGate(optedIn = false, demo), unreachable<ItmoWidgetsApi>(), backgroundScope, FixedAcademicTime(), demo,
+            dispatchers = dispatchers
         )
         val refused = AppResult.Failure(AppError.DemoUnavailable)
 

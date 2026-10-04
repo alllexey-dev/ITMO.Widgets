@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.MutableClock
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.FakePhoneCalendars
@@ -44,6 +45,12 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class CalendarSyncRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     @get:Rule val temporary = TemporaryFolder()
 
     private val folder by lazy { File(temporary.root, "calendar_sync") }
@@ -422,7 +429,7 @@ class CalendarSyncRepositoryImplTest {
 
     private suspend fun enabled() = repository().also { check(it.enable() == CalendarSyncResult.DONE) }
 
-    private fun repository() = CalendarSyncRepositoryImpl(calendars, source, store, ClockTime(clock), BUILDINGS)
+    private fun repository() = CalendarSyncRepositoryImpl(calendars, source, store, ClockTime(clock), BUILDINGS, dispatchers)
 
     private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.value, 1, date, null, lessons.toList())
 
