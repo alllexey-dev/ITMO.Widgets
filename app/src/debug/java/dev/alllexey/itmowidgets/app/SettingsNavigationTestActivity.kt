@@ -55,6 +55,8 @@ import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebPreviewFragment
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.transition.Transition
@@ -205,9 +207,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
                 if (f is FriendSelectorDialogFragment) {
                     ViewModelProvider(f, object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = friendSelectorFixture.let {
-                            FriendSelectorViewModel(it.repository, it.history, it.search) as T
-                        }
+                        override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
+                            friendSelectorFixture.let {
+                                FriendSelectorViewModel(it.repository, it.history, it.search, extras.createSavedStateHandle()) as T
+                            }
                     })[FriendSelectorViewModel::class.java]
                     return
                 }
