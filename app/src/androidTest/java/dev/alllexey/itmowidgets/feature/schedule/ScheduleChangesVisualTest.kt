@@ -10,13 +10,14 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.schedule.LessonSlot
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesPreviewActivity
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toScheduleChanges
+import dev.alllexey.itmowidgets.testing.toScheduleChanges
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
@@ -205,7 +206,7 @@ class ScheduleChangesVisualTest {
     ) = LessonSlot(pairId, date, start, start.plusMinutes(90), room, building, formatId, format, teacherIsu, teacherName)
 
     private fun preview(
-        appearance: ScheduleChangesPreviewActivity.Appearance,
+        appearance: PreviewAppearance,
         changes: List<ScheduleChange>,
         block: (ActivityScenario<ScheduleChangesPreviewActivity>) -> Unit
     ) {
@@ -219,7 +220,7 @@ class ScheduleChangesVisualTest {
                 block(scenario)
             }
         } finally {
-            ScheduleChangesPreviewActivity.appearance = ScheduleChangesPreviewActivity.Appearance()
+            ScheduleChangesPreviewActivity.appearance = PreviewAppearance()
             ScheduleChangesPreviewActivity.changes.value = emptyList()
         }
     }

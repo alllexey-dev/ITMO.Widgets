@@ -62,6 +62,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
 import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 
 @RunWith(AndroidJUnit4::class)
 class SettingsRendererTest {
@@ -454,7 +455,7 @@ class SettingsRendererTest {
 
     private fun previewIntent(fontScale: Float = 1f, widthDp: Int = 0, dark: Boolean = false, colorSeed: Int? = null) =
         Intent(ApplicationProvider.getApplicationContext(), SettingsPreviewActivity::class.java).apply {
-            SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance(fontScale, dark)
+            SettingsPreviewActivity.appearance = PreviewAppearance(fontScale, dark)
             putExtra(SettingsPreviewActivity.EXTRA_WIDTH_DP, widthDp)
             colorSeed?.let { putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, it) }
         }

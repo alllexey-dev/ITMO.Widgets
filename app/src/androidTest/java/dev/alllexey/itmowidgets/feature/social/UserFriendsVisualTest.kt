@@ -10,6 +10,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSharing
@@ -20,7 +21,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
+import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.*
@@ -105,7 +106,7 @@ class UserFriendsVisualTest {
                 }
             }
         } finally {
-            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.appearance = PreviewAppearance()
             SettingsNavigationTestActivity.friendsDelayMs = 0
             SettingsNavigationTestActivity.friendsResult = AppResult.Success(emptyList())
         }

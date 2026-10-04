@@ -20,6 +20,7 @@ import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -114,13 +115,11 @@ class ScheduleChangesPreviewActivity : AppCompatActivity() {
         override fun now(): OffsetDateTime = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
     }
 
-    data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val widthDp: Int = 0, val colorSeed: Int? = null)
-
     companion object {
         private const val FRAGMENT = "schedule-changes-preview"
 
         // Set before launch so overrides precede framework/instrumentation resource access.
-        @Volatile var appearance = Appearance()
+        @Volatile var appearance = PreviewAppearance()
         val changes = MutableStateFlow<List<ScheduleChange>>(emptyList())
         @Volatile var readCalls = 0
     }

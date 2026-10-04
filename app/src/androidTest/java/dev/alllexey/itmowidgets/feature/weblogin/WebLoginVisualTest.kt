@@ -11,13 +11,14 @@ import com.google.android.material.progressindicator.IndeterminateDrawable
 import com.google.android.material.textfield.TextInputLayout
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginBottomSheet
 import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginPreviewActivity
 import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginPreviewActivity.Companion.SYNTHETIC_PREVIEW
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toWebLogin
+import dev.alllexey.itmowidgets.testing.toWebLogin
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
@@ -211,7 +212,7 @@ class WebLoginVisualTest {
     }
 
     private fun withPreview(
-        appearance: WebLoginPreviewActivity.Appearance,
+        appearance: PreviewAppearance,
         repository: WebLoginPreviewActivity.FixtureRepository,
         block: (ActivityScenario<WebLoginPreviewActivity>) -> Unit,
     ) {
@@ -221,7 +222,7 @@ class WebLoginVisualTest {
         try {
             ActivityScenario.launch<WebLoginPreviewActivity>(intent).use(block)
         } finally {
-            WebLoginPreviewActivity.appearance = WebLoginPreviewActivity.Appearance()
+            WebLoginPreviewActivity.appearance = PreviewAppearance()
             WebLoginPreviewActivity.repository = WebLoginPreviewActivity.FixtureRepository()
         }
     }

@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Debug hosts: one line each, grouped by feature, so a port deletes only its own lines. -->
     <application>
+        <!-- recordbook -->
+        <activity android:name=".feature.recordbook.ui.RecordbookPreviewActivity" android:exported="false" />
+        <!-- resources -->
+        <activity android:name=".app.SubjectLinksPreviewActivity" android:exported="false" />
+        <!-- reviews -->
+        <activity android:name=".feature.reviews.ui.ReviewEditorPreviewActivity" android:exported="false" />
+        <!-- schedule -->
+        <activity android:name=".feature.schedule.ui.ScheduleLifecycleTestActivity" android:exported="false" />
+        <activity android:name=".feature.schedule.ui.changes.ScheduleChangesPreviewActivity" android:exported="false" />
+        <!-- settings -->
+        <activity android:name=".app.SettingsNavigationTestActivity" android:exported="false" />
+        <activity android:name=".feature.settings.ui.SettingsPreviewActivity" android:exported="false" />
+        <!-- social -->
+        <activity android:name=".feature.social.ui.UserProfilePreviewActivity" android:exported="false" />
+        <!-- sport -->
         <activity android:name=".feature.sport.ui.SportCardsPreviewActivity" android:exported="false" />
         <activity android:name=".feature.sport.ui.SportScoreCollapsePreviewActivity" android:exported="false" />
-        <activity android:name=".feature.recordbook.ui.RecordbookPreviewActivity" android:exported="false" />
-        <activity android:name=".feature.social.ui.UserProfilePreviewActivity" android:exported="false" />
-        <activity android:name=".app.SubjectLinksPreviewActivity" android:exported="false" />
-        <activity android:name=".feature.reviews.ui.ReviewEditorPreviewActivity" android:exported="false" />
-        <activity android:name=".feature.weblogin.ui.WebLoginPreviewActivity" android:exported="false" />
+        <!-- update -->
         <activity android:name=".feature.update.ui.AppUpdatePreviewActivity" android:exported="false" />
-        <activity
-            android:name=".app.SettingsNavigationTestActivity"
-            android:exported="false" />
-        <activity
-            android:name=".feature.schedule.ui.ScheduleLifecycleTestActivity"
-            android:exported="false" />
-        <activity
-            android:name=".feature.schedule.ui.changes.ScheduleChangesPreviewActivity"
-            android:exported="false" />
-        <activity
-            android:name=".feature.settings.ui.SettingsPreviewActivity"
-            android:exported="false" />
+        <!-- weblogin -->
+        <activity android:name=".feature.weblogin.ui.WebLoginPreviewActivity" android:exported="false" />
     </application>
 
 </manifest>

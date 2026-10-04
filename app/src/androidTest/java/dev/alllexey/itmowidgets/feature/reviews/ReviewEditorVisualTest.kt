@@ -26,6 +26,7 @@ import com.google.android.material.chip.ChipGroup
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.TextInputLayout
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
@@ -40,7 +41,7 @@ import dev.alllexey.itmowidgets.feature.reviews.ui.ReviewEditorPreviewActivity
 import dev.alllexey.itmowidgets.feature.reviews.ui.ReviewEditorPreviewActivity.Companion.REVIEW_ID
 import dev.alllexey.itmowidgets.feature.reviews.ui.ReviewEditorPreviewActivity.Companion.TEACHER_ISU
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toReviewEditor
+import dev.alllexey.itmowidgets.testing.toReviewEditor
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
@@ -283,7 +284,7 @@ class ReviewEditorVisualTest {
     }
 
     private fun reset() {
-        ReviewEditorPreviewActivity.appearance = ReviewEditorPreviewActivity.Appearance()
+        ReviewEditorPreviewActivity.appearance = PreviewAppearance()
         ReviewEditorPreviewActivity.reviews = null
         ReviewEditorPreviewActivity.lessons = AppResult.Success(TeacherLessons(emptySet(), emptyList()))
         ReviewEditorPreviewActivity.lessonsDelayMs = 0

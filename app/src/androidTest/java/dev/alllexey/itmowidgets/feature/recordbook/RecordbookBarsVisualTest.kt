@@ -16,6 +16,7 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
@@ -31,7 +32,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgra
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toRecordbook
+import dev.alllexey.itmowidgets.testing.toRecordbook
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
@@ -83,7 +84,7 @@ class RecordbookBarsVisualTest {
     }
 
     @Test fun barsFailureKeepsMyItmoAndOffersLoginOnlyWhenSessionEnded() {
-        preview(RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario, bars ->
+        preview(PreviewAppearance(widthDp = 320, fontScale = 1.3f)) { scenario, bars ->
             bars.failure = AppError.Unauthorized
             scenario.onActivity { it.findViewById<View>(R.id.bars_chip).performClick() }
             settle()
@@ -102,7 +103,7 @@ class RecordbookBarsVisualTest {
         }
     }
 
-    private fun preview(appearance: RecordbookPreviewActivity.Appearance, block: (ActivityScenario<RecordbookPreviewActivity>, Bars) -> Unit) {
+    private fun preview(appearance: PreviewAppearance, block: (ActivityScenario<RecordbookPreviewActivity>, Bars) -> Unit) {
         val bars = Bars()
         RecordbookPreviewActivity.appearance = appearance
         RecordbookPreviewActivity.repository = MyItmo()

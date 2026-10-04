@@ -1,0 +1,8 @@
+package dev.alllexey.itmowidgets.testing
+
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
+
+// The sport debug hosts' view of the shared matrix; a port deletes this file with its hosts.
+
+fun Appearances.Spec.toSportCards(): PreviewAppearance = toPreview()
+fun Appearances.Spec.toSportScoreCollapse(): PreviewAppearance = toPreview()

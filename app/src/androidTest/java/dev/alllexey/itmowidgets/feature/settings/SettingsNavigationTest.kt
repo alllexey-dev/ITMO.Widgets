@@ -49,8 +49,9 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import kotlinx.coroutines.CompletableDeferred
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
+import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
@@ -211,7 +212,7 @@ class SettingsNavigationTest {
                 }
             }
         } finally {
-            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.appearance = PreviewAppearance()
             SettingsNavigationTestActivity.MemoryMarkTracking.bars.value = null
             SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = false
         }
@@ -284,7 +285,7 @@ class SettingsNavigationTest {
                 }
             }
         } finally {
-            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.appearance = PreviewAppearance()
             SettingsNavigationTestActivity.MemoryBackgroundWork.unrestricted = false
             SettingsNavigationTestActivity.MemoryMarkTracking.bars.value = null
         }
@@ -352,7 +353,7 @@ class SettingsNavigationTest {
                 }
             }
         } finally {
-            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.appearance = PreviewAppearance()
             sync.state.value = CalendarSyncState()
         }
     }
@@ -446,7 +447,7 @@ class SettingsNavigationTest {
                 }
             }
         } finally {
-            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.appearance = PreviewAppearance()
             export.gate = null
             export.result = AppResult.Success(null)
         }
@@ -524,7 +525,7 @@ class SettingsNavigationTest {
                 }
             }
         } finally {
-            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.appearance = PreviewAppearance()
             SettingsNavigationTestActivity.MemoryQuickSettingsTile.canRequest = false
             SettingsNavigationTestActivity.qrTileAdded.value = false
         }
@@ -584,7 +585,7 @@ class SettingsNavigationTest {
             }
         } finally {
             instrumentation.removeMonitor(links)
-            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.appearance = PreviewAppearance()
         }
     }
 

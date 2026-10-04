@@ -20,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.color
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
@@ -35,7 +36,7 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSettingsPreview
+import dev.alllexey.itmowidgets.testing.toSettingsPreview
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
@@ -415,7 +416,7 @@ class ScheduleCardsVisualTest {
             spec.colorSeed?.let { intent.putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, it) }
             ActivityScenario.launch<SettingsPreviewActivity>(intent).use(block)
         } finally {
-            SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance()
+            SettingsPreviewActivity.appearance = PreviewAppearance()
         }
     }
 

@@ -20,6 +20,7 @@ import com.google.android.material.textfield.TextInputLayout
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.model.UserSharing
@@ -37,7 +38,7 @@ import dev.alllexey.itmowidgets.feature.resources.ui.LinkActionsBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkEditorBottomSheet
 import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSubjectLinks
+import dev.alllexey.itmowidgets.testing.toSubjectLinks
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
@@ -488,7 +489,7 @@ class SubjectLinksVisualTest {
     }
 
     private fun withPreview(
-        appearance: SubjectLinksPreviewActivity.Appearance,
+        appearance: PreviewAppearance,
         screen: String,
         linkId: String? = null,
         clipboard: String? = null,
@@ -508,7 +509,7 @@ class SubjectLinksVisualTest {
         try {
             ActivityScenario.launch<SubjectLinksPreviewActivity>(intent).use { block(it, repository) }
         } finally {
-            SubjectLinksPreviewActivity.appearance = SubjectLinksPreviewActivity.Appearance()
+            SubjectLinksPreviewActivity.appearance = PreviewAppearance()
             SubjectLinksPreviewActivity.repository = MemorySubjectLinksRepository()
         }
     }

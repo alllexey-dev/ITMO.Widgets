@@ -20,11 +20,7 @@ import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
-import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
-import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
@@ -33,8 +29,8 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
-import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
@@ -50,7 +46,7 @@ import kotlinx.coroutines.flow.map
 
 /** Real Fragment/FragmentManager lifecycle, with no session, network, or persistent fixtures. */
 @AndroidEntryPoint
-class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator {
+class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator by NoOpAppNavigator {
     val openedScreens = mutableListOf<Pair<AppScreen, Bundle?>>()
 
     override fun attachBaseContext(newBase: Context) {
@@ -133,21 +129,6 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator {
         openedScreens.add(screen to arguments?.let(::Bundle))
     }
 
-    override fun openRoot(root: AppRoot) = Unit
-    override fun dismissOverlays() = Unit
-    override fun openLessonDetails(args: LessonDetailsArgs) = Unit
-    override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
-    override fun openSubjectLinks(args: SubjectLinksArgs) = Unit
-    override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) = Unit
-    override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
-
-    override fun openSheetScores(args: SheetScoresArgs) = Unit
-    override fun openWebLogin() = Unit
-
-    override fun openReviewEditor(args: TeacherReviewArgs) = Unit
-
-    override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) = Unit
-
     private class PreviewRepository : ScheduleRepository {
         override fun observeScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) =
             (if (userIsu == null) days else friendDays).let { source ->
@@ -176,11 +157,9 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator {
         override fun now(): OffsetDateTime = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
     }
 
-    data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val widthDp: Int = 0, val colorSeed: Int? = null)
-
     companion object {
         const val SCHEDULE_TAG = "schedule-under-test"
-        @Volatile var appearance = Appearance()
+        @Volatile var appearance = PreviewAppearance()
         @Volatile var days = MutableStateFlow<List<DaySchedule>>(emptyList())
         @Volatile var friendDays = MutableStateFlow<List<DaySchedule>>(emptyList())
         @Volatile var refreshOutcome: suspend () -> AppResult<Unit> = { AppResult.Success(Unit) }

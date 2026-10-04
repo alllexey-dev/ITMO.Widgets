@@ -18,7 +18,7 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetRendere
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleListRowRenderer
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSettingsPreview
+import dev.alllexey.itmowidgets.testing.toSettingsPreview
 import dev.alllexey.itmowidgets.testing.Screenshots
 import org.junit.Assert.*
 import org.junit.Test

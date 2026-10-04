@@ -9,6 +9,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
@@ -29,7 +30,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewFixtures
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewFixtures.Phase
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.SheetScoresBottomSheet
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toRecordbook
+import dev.alllexey.itmowidgets.testing.toRecordbook
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
@@ -200,7 +201,7 @@ class SheetScoresVisualTest {
         }
     }
 
-    private fun withHost(appearance: RecordbookPreviewActivity.Appearance, block: (ActivityScenario<RecordbookPreviewActivity>) -> Unit) {
+    private fun withHost(appearance: PreviewAppearance, block: (ActivityScenario<RecordbookPreviewActivity>) -> Unit) {
         RecordbookPreviewActivity.appearance = appearance
         RecordbookPreviewFixtures.install(Phase.MIDDLE)
         try {
@@ -210,7 +211,7 @@ class SheetScoresVisualTest {
             }
         } finally {
             RecordbookPreviewFixtures.reset()
-            RecordbookPreviewActivity.appearance = RecordbookPreviewActivity.Appearance()
+            RecordbookPreviewActivity.appearance = PreviewAppearance()
         }
     }
 

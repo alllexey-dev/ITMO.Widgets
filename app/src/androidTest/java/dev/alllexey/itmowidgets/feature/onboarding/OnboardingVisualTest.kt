@@ -8,8 +8,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.materialswitch.MaterialSwitch
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
+import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
@@ -27,7 +28,7 @@ class OnboardingVisualTest {
 
     @After
     fun reset() {
-        SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+        SettingsNavigationTestActivity.appearance = PreviewAppearance()
         SettingsNavigationTestActivity.onboardingFixture =
             SettingsNavigationTestActivity.OnboardingFixture()
         SettingsNavigationTestActivity.startDestination = R.id.navigation_home
@@ -185,7 +186,7 @@ class OnboardingVisualTest {
     }
 
     private fun launch(
-        appearance: SettingsNavigationTestActivity.Appearance,
+        appearance: PreviewAppearance,
         block: (ActivityScenario<SettingsNavigationTestActivity>) -> Unit
     ) {
         SettingsNavigationTestActivity.appearance = appearance

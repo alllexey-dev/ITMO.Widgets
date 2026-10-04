@@ -20,6 +20,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.model.UserSharing
@@ -34,7 +35,7 @@ import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottom
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonItem
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Appearances.assertEffective
-import dev.alllexey.itmowidgets.testing.Appearances.toSportCards
+import dev.alllexey.itmowidgets.testing.toSportCards
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
@@ -191,7 +192,7 @@ class SportCardsVisualTest {
     }
 
     @Test fun freePlaceLabelFollowsRussianPluralForms() {
-        preview(SportCardsPreviewActivity.Appearance()) { scenario ->
+        preview(PreviewAppearance()) { scenario ->
             listOf(1 to "Свободное место", 2 to "Свободных места", 4 to "Свободных места",
                 5 to "Свободных мест", 11 to "Свободных мест", 21 to "Свободное место",
                 0 to "Свободных мест").forEach { (available, expected) ->
@@ -220,7 +221,7 @@ class SportCardsVisualTest {
             Triple(SportCardFixtures.booking(), R.string.sport_lesson_sign_out, "unsign"),
             Triple(SportCardFixtures.booking().copy(signed = false, signEntry = SportCardFixtures.entry()), R.string.sport_card_cancel_auto, "unauto")
         )
-        preview(SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario ->
+        preview(PreviewAppearance(widthDp = 320, fontScale = 1.3f)) { scenario ->
             scenario.onActivity { it.showLessons(listOf(SportLessonItem(lesson))) }
             settle()
             scenario.onActivity {
@@ -256,7 +257,7 @@ class SportCardsVisualTest {
     }
 
     @Test fun detailsRespectReadOnlyBusyAndChangedDeadline() {
-        preview(SportCardsPreviewActivity.Appearance(dark = true)) { scenario ->
+        preview(PreviewAppearance(dark = true)) { scenario ->
             val lesson = SportCardFixtures.lesson()
             for ((enabled, busy) in listOf(false to false, true to true)) {
                 scenario.onActivity {
@@ -290,7 +291,7 @@ class SportCardsVisualTest {
     }
 
     @Test fun recycledLessonActionsStayCorrectAndBusyCannotSubmitAgain() {
-        preview(SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario ->
+        preview(PreviewAppearance(widthDp = 320, fontScale = 1.3f)) { scenario ->
             val original = SportCardFixtures.lesson()
             val cases = listOf(
                 SportLessonItem(original) to "sign",
@@ -342,7 +343,7 @@ class SportCardsVisualTest {
     }
 
     @Test fun allBookingStatesResetAndPredictionDoesNotInventPlaces() {
-        preview(SportCardsPreviewActivity.Appearance(dark = true, widthDp = 320, fontScale = 1.3f)) { scenario ->
+        preview(PreviewAppearance(dark = true, widthDp = 320, fontScale = 1.3f)) { scenario ->
             SportQueueEntryStatus.entries.forEach { state ->
                 val item = SportCardFixtures.booking().copy(signed = false, signEntry = SportCardFixtures.entry(state))
                 scenario.onActivity { it.showBookings(listOf(item)) }
@@ -370,7 +371,7 @@ class SportCardsVisualTest {
     }
 
     @Test fun shareActionForUpcomingLessonsBookingsAndPredictions() {
-        preview(SportCardsPreviewActivity.Appearance()) { scenario ->
+        preview(PreviewAppearance()) { scenario ->
             val lesson = SportCardFixtures.lesson().copy(sectionName = SectionName(LONG_SECTION))
             val past = lesson.copy(start = lesson.start.minusDays(2), end = lesson.end.minusDays(2))
             val cases = listOf<Pair<SportCommon, Boolean>>(
@@ -430,7 +431,7 @@ class SportCardsVisualTest {
     }
 
     @Test fun bookingConditionsSeparateWarningsWaitingAndRestrictions() {
-        preview(SportCardsPreviewActivity.Appearance(dark = true, widthDp = 320, fontScale = 1.3f)) { scenario ->
+        preview(PreviewAppearance(dark = true, widthDp = 320, fontScale = 1.3f)) { scenario ->
             val base = SportCardFixtures.lesson()
             val cases = listOf(
                 base.copy(intersection = true) to R.string.sport_booking_allowed,
@@ -469,7 +470,7 @@ class SportCardsVisualTest {
     }
 
     @Test fun allLessonKindsKeepTimeReadableWithLargeFont() {
-        preview(SportCardsPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario ->
+        preview(PreviewAppearance(widthDp = 320, fontScale = 1.3f)) { scenario ->
             val base = SportCardFixtures.lesson().copy(intersection = true)
             val lessons = listOf(1, 2, 5, 6, 7, 8, 99).map { base.copy(typeId = it) } +
                 listOf(2, 3, 4).map { base.copy(lessonLevel = it) }
@@ -497,12 +498,12 @@ class SportCardsVisualTest {
     private fun sheet(activity: SportCardsPreviewActivity) =
         activity.supportFragmentManager.findFragmentByTag(SportCommonDetailsBottomSheet.TAG) as DialogFragment
 
-    private fun preview(appearance: SportCardsPreviewActivity.Appearance, block: (ActivityScenario<SportCardsPreviewActivity>) -> Unit) {
+    private fun preview(appearance: PreviewAppearance, block: (ActivityScenario<SportCardsPreviewActivity>) -> Unit) {
         SportCardsPreviewActivity.appearance = appearance
         try {
             ActivityScenario.launch<SportCardsPreviewActivity>(Intent(ApplicationProvider.getApplicationContext(), SportCardsPreviewActivity::class.java)).use(block)
         } finally {
-            SportCardsPreviewActivity.appearance = SportCardsPreviewActivity.Appearance()
+            SportCardsPreviewActivity.appearance = PreviewAppearance()
         }
     }
 

@@ -21,6 +21,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.material.R as MaterialR
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserProfile
@@ -63,7 +64,7 @@ import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity.Com
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity.Companion.sampleSummary
 import dev.alllexey.itmowidgets.feature.social.ui.text
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toUserProfile
+import dev.alllexey.itmowidgets.testing.toUserProfile
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
@@ -1235,7 +1236,7 @@ class UserProfileVisualTest {
     }
 
     private fun reset() {
-        UserProfilePreviewActivity.appearance = UserProfilePreviewActivity.Appearance()
+        UserProfilePreviewActivity.appearance = PreviewAppearance()
         UserProfilePreviewActivity.person = AppResult.Failure(AppError.NotFound)
         UserProfilePreviewActivity.social = AppResult.Failure(AppError.NotFound)
         UserProfilePreviewActivity.reviews = AppResult.Success(reviewsOf(emptyList()))

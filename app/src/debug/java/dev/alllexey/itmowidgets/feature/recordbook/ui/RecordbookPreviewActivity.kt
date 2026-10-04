@@ -22,14 +22,12 @@ import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
-import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
@@ -41,11 +39,10 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
-import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
@@ -84,7 +81,7 @@ import java.time.ZoneId
 
 /** Real production Fragments with test-supplied in-memory repositories; never reads a session. */
 @AndroidEntryPoint
-class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
+class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNavigator {
     val openedProfiles = mutableListOf<Int>()
 
     override fun attachBaseContext(newBase: Context) {
@@ -194,10 +191,6 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
             .addToBackStack("subject").commit()
     }
 
-    override fun dismissOverlays() = Unit
-
-    override fun openRoot(root: AppRoot) = Unit
-
     override fun openSubjectLinks(args: SubjectLinksArgs) { linkNavigation += "links" }
 
     override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) { linkNavigation += "editor" }
@@ -210,16 +203,6 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         if (supportFragmentManager.isStateSaved || supportFragmentManager.findFragmentByTag(SheetScoresBottomSheet.TAG) != null) return
         SheetScoresBottomSheet.newInstance(args).show(supportFragmentManager, SheetScoresBottomSheet.TAG)
     }
-
-    override fun openLessonDetails(args: LessonDetailsArgs) = Unit
-
-    override fun openWebLogin() = Unit
-
-    override fun openReviewEditor(args: TeacherReviewArgs) = Unit
-
-    override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) = Unit
-
-    override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
 
     private object FixedTime : AcademicTimeProvider {
         override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
@@ -239,11 +222,9 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator {
         override suspend fun setEnabled(enabled: Boolean): AppResult<Unit> { this.enabled = enabled; return AppResult.Success(Unit) }
     }
 
-    data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val widthDp: Int = 0, val colorSeed: Int? = null)
-
     companion object {
         const val ROOT_TAG = "recordbook"
-        @Volatile var appearance = Appearance()
+        @Volatile var appearance = PreviewAppearance()
         @Volatile var repository: RecordbookRepository? = null
         @Volatile var bars: BarsRecordbookRepository? = null
         @Volatile var sportRepository: SportScoreRepository? = null

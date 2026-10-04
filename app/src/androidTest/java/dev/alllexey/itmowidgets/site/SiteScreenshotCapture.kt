@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.FriendSelectorFixture
 import dev.alllexey.itmowidgets.app.HomeFixture
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.home.HomeCard
@@ -75,7 +76,7 @@ class SiteScreenshotCapture {
     // region Home, profile, QR, picker (SettingsNavigationTestActivity)
 
     private fun captureHomeAndSocial() {
-        SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance(dark = night)
+        SettingsNavigationTestActivity.appearance = PreviewAppearance(dark = night)
         SettingsNavigationTestActivity.homeFixture = HomeFixture(cards = homeCards())
         SettingsNavigationTestActivity.sessionUser = CurrentUser(ME_ISU, ME_NAME, null)
         SettingsNavigationTestActivity.socialCurrentUser = me()
@@ -117,7 +118,7 @@ class SiteScreenshotCapture {
                 capture("me")
             }
         } finally {
-            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.appearance = PreviewAppearance()
             SettingsNavigationTestActivity.homeFixture = HomeFixture()
             SettingsNavigationTestActivity.startDestination = R.id.navigation_home
             SettingsNavigationTestActivity.friendSelectorFixture = FriendSelectorFixture()
@@ -159,7 +160,7 @@ class SiteScreenshotCapture {
     // region Schedule (ScheduleLifecycleTestActivity)
 
     private fun captureSchedule() {
-        ScheduleLifecycleTestActivity.appearance = ScheduleLifecycleTestActivity.Appearance(dark = night)
+        ScheduleLifecycleTestActivity.appearance = PreviewAppearance(dark = night)
         ScheduleLifecycleTestActivity.days.value = DemoSchedule.ownDays(TODAY, TODAY.plusDays(2), TODAY)
         ScheduleLifecycleTestActivity.showPendingSport.value = true
         ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(pendingBookings())
@@ -175,7 +176,7 @@ class SiteScreenshotCapture {
                 capture("lesson")
             }
         } finally {
-            ScheduleLifecycleTestActivity.appearance = ScheduleLifecycleTestActivity.Appearance()
+            ScheduleLifecycleTestActivity.appearance = PreviewAppearance()
             ScheduleLifecycleTestActivity.days.value = emptyList()
             ScheduleLifecycleTestActivity.showPendingSport.value = false
             ScheduleLifecycleTestActivity.pendingSport.value = DataState.Success(emptyList())
@@ -187,7 +188,7 @@ class SiteScreenshotCapture {
     // region Sport (SportCardsPreviewActivity)
 
     private fun captureSport() {
-        SportCardsPreviewActivity.appearance = SportCardsPreviewActivity.Appearance(dark = night)
+        SportCardsPreviewActivity.appearance = PreviewAppearance(dark = night)
         try {
             ActivityScenario.launch(SportCardsPreviewActivity::class.java).use { scenario ->
                 scenario.onActivity { it.showLessons(catalog().map { lesson -> SportLessonItem(lesson) }) }
@@ -201,7 +202,7 @@ class SiteScreenshotCapture {
                 capture("sport-details")
             }
         } finally {
-            SportCardsPreviewActivity.appearance = SportCardsPreviewActivity.Appearance()
+            SportCardsPreviewActivity.appearance = PreviewAppearance()
         }
     }
 
@@ -225,7 +226,7 @@ class SiteScreenshotCapture {
     // region Recordbook (RecordbookPreviewActivity)
 
     private fun captureRecordbook() {
-        RecordbookPreviewActivity.appearance = RecordbookPreviewActivity.Appearance(dark = night)
+        RecordbookPreviewActivity.appearance = PreviewAppearance(dark = night)
         RecordbookPreviewActivity.repository = SiteRecordbook()
         RecordbookPreviewActivity.sportRepository = object : SportScoreRepository {
             override suspend fun getScorePeriods() = AppResult.Success(DemoSport.periods(RECORDBOOK_TIME))
@@ -257,7 +258,7 @@ class SiteScreenshotCapture {
                 capture("subject-schedule")
             }
         } finally {
-            RecordbookPreviewActivity.appearance = RecordbookPreviewActivity.Appearance()
+            RecordbookPreviewActivity.appearance = PreviewAppearance()
             RecordbookPreviewActivity.repository = null
             RecordbookPreviewActivity.sportRepository = null
             RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons()

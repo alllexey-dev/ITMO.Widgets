@@ -3,19 +3,8 @@ package dev.alllexey.itmowidgets.testing
 import android.content.res.Configuration
 import android.view.View
 import androidx.test.platform.app.InstrumentationRegistry
-import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
-import dev.alllexey.itmowidgets.app.SubjectLinksPreviewActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.util.color
-import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
-import dev.alllexey.itmowidgets.feature.reviews.ui.ReviewEditorPreviewActivity
-import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
-import dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesPreviewActivity
-import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
-import dev.alllexey.itmowidgets.feature.social.ui.UserProfilePreviewActivity
-import dev.alllexey.itmowidgets.feature.sport.ui.SportCardsPreviewActivity
-import dev.alllexey.itmowidgets.feature.sport.ui.SportScoreCollapsePreviewActivity
-import dev.alllexey.itmowidgets.feature.update.ui.AppUpdatePreviewActivity
-import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginPreviewActivity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 
@@ -32,14 +21,16 @@ import org.junit.Assert.assertNotEquals
 object Appearances {
     const val ARGUMENT = "appearanceMatrix"
 
-    /** One appearance; the debug hosts each take their own subset of these fields. */
+    /** One appearance; the debug hosts each read their own subset of these fields. */
     data class Spec(
         val name: String,
         val dark: Boolean = false,
         val fontScale: Float = 1f,
         val colorSeed: Int? = null,
         val widthDp: Int = 0
-    )
+    ) {
+        fun toPreview(): PreviewAppearance = PreviewAppearance(fontScale, dark, widthDp, colorSeed)
+    }
 
     val all: List<Spec> = listOf(
         Spec("light"),
@@ -67,39 +58,4 @@ object Appearances {
         else assertNotEquals("The seeded palette must differ from the ordinary $name theme",
             checkNotNull(defaultPrimary[dark]), primary)
     }
-
-    fun Spec.toSettingsNavigation() =
-        SettingsNavigationTestActivity.Appearance(dark = dark, fontScale = fontScale, colorSeed = colorSeed)
-
-    fun Spec.toSettingsPreview() = SettingsPreviewActivity.Appearance(fontScale = fontScale, dark = dark)
-
-    fun Spec.toAppUpdate() =
-        AppUpdatePreviewActivity.Appearance(widthDp = widthDp, fontScale = fontScale, dark = dark, colorSeed = colorSeed)
-
-    fun Spec.toSportCards() =
-        SportCardsPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
-
-    fun Spec.toSportScoreCollapse() =
-        SportScoreCollapsePreviewActivity.Appearance(fontScale = fontScale, dark = dark, seedColor = colorSeed)
-
-    fun Spec.toRecordbook() =
-        RecordbookPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
-
-    fun Spec.toScheduleLifecycle() =
-        ScheduleLifecycleTestActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
-
-    fun Spec.toScheduleChanges() =
-        ScheduleChangesPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
-
-    fun Spec.toUserProfile() =
-        UserProfilePreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
-
-    fun Spec.toSubjectLinks() =
-        SubjectLinksPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
-
-    fun Spec.toReviewEditor() =
-        ReviewEditorPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
-
-    fun Spec.toWebLogin() =
-        WebLoginPreviewActivity.Appearance(fontScale = fontScale, dark = dark, widthDp = widthDp, colorSeed = colorSeed)
 }

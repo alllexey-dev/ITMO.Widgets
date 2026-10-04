@@ -12,9 +12,10 @@ import androidx.test.espresso.action.Press
 import androidx.test.espresso.action.Swipe
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.feature.sport.ui.SportScoreCollapsePreviewActivity
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSportScoreCollapse
+import dev.alllexey.itmowidgets.testing.toSportScoreCollapse
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.*
@@ -87,7 +88,7 @@ class SportScoreCollapseTest {
     }
 
     @Test fun listReservesTheCardWhenContentArrivesAfterLoading() {
-        preview(SportScoreCollapsePreviewActivity.Appearance(), startLoading = true) { scenario ->
+        preview(PreviewAppearance(), startLoading = true) { scenario ->
             settle()
             val entryFrames = mutableListOf<Snapshot>()
             lateinit var drawListener: ViewTreeObserver.OnDrawListener
@@ -143,7 +144,7 @@ class SportScoreCollapseTest {
     }
 
     @Test fun touchScrollDrawsIntermediateCollapseFrames() {
-        preview(SportScoreCollapsePreviewActivity.Appearance(), startLoading = true) { scenario ->
+        preview(PreviewAppearance(), startLoading = true) { scenario ->
             scenario.onActivity { it.showContent((1L..12L).map { id -> SportCardFixtures.booking(id) }) }
             settle()
             val frames = mutableListOf<Snapshot>()
@@ -185,7 +186,7 @@ class SportScoreCollapseTest {
     }
 
     @Test fun collapseUpdatesDrawingBoundsWithoutRequestingLayout() {
-        preview(SportScoreCollapsePreviewActivity.Appearance()) { scenario ->
+        preview(PreviewAppearance()) { scenario ->
             scenario.onActivity { it.showContent((1L..12L).map { id -> SportCardFixtures.booking(id) }) }
             settle()
             scenario.onActivity { activity ->
@@ -208,7 +209,7 @@ class SportScoreCollapseTest {
     }
 
     @Test fun emptyContentExpandsCardAndBookingsReturnBelowIt() {
-        preview(SportScoreCollapsePreviewActivity.Appearance(dark = true)) { scenario ->
+        preview(PreviewAppearance(dark = true)) { scenario ->
             val bookings = (1L..12L).map { SportCardFixtures.booking(it) }
             scenario.onActivity { it.showContent(bookings) }
             settle()
@@ -232,7 +233,7 @@ class SportScoreCollapseTest {
     }
 
     @Test fun releasingMidCollapseSnapsToTheNearerEdge() {
-        preview(SportScoreCollapsePreviewActivity.Appearance()) { scenario ->
+        preview(PreviewAppearance()) { scenario ->
             scenario.onActivity { it.showBookings((1L..12L).map { id -> SportCardFixtures.booking(id) }) }
             settle()
 
@@ -312,7 +313,7 @@ class SportScoreCollapseTest {
     }
 
     private fun preview(
-        appearance: SportScoreCollapsePreviewActivity.Appearance,
+        appearance: PreviewAppearance,
         startLoading: Boolean = false,
         block: (ActivityScenario<SportScoreCollapsePreviewActivity>) -> Unit
     ) {
@@ -323,7 +324,7 @@ class SportScoreCollapseTest {
                     .putExtra(SportScoreCollapsePreviewActivity.EXTRA_START_LOADING, startLoading)
             ).use(block)
         } finally {
-            SportScoreCollapsePreviewActivity.appearance = SportScoreCollapsePreviewActivity.Appearance()
+            SportScoreCollapsePreviewActivity.appearance = PreviewAppearance()
         }
     }
 

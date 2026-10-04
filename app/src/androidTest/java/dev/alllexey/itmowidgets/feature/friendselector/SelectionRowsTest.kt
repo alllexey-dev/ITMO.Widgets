@@ -13,6 +13,7 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.color.MaterialColors
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
@@ -212,7 +213,7 @@ class SelectionRowsTest {
         colorSeed: Int? = null,
         block: (ActivityScenario<SettingsPreviewActivity>) -> Unit
     ) {
-        SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance(fontScale, dark)
+        SettingsPreviewActivity.appearance = PreviewAppearance(fontScale, dark)
         val intent = Intent(ApplicationProvider.getApplicationContext(), SettingsPreviewActivity::class.java).apply {
             putExtra(SettingsPreviewActivity.EXTRA_WIDTH_DP, 320)
             colorSeed?.let { putExtra(SettingsPreviewActivity.EXTRA_COLOR_SEED, it) }

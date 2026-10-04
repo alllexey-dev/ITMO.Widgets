@@ -18,15 +18,11 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
-import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
-import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
-import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
@@ -42,7 +38,7 @@ import java.util.Locale
 
 /** Isolated real adapters and details sheet, with synthetic test inputs and no network actions. */
 @AndroidEntryPoint
-class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, SportSignActionsListener, AppNavigator {
+class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, SportSignActionsListener, AppNavigator by NoOpAppNavigator {
     lateinit var list: RecyclerView
     var actionCount = 0
     var lastAction: String? = null
@@ -122,21 +118,6 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
         openedScreens.add(screen to arguments?.let(::Bundle))
     }
 
-    override fun openRoot(root: AppRoot) = Unit
-    override fun dismissOverlays() = Unit
-    override fun openLessonDetails(args: LessonDetailsArgs) = Unit
-    override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
-    override fun openSubjectLinks(args: SubjectLinksArgs) = Unit
-    override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) = Unit
-    override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
-
-    override fun openSheetScores(args: SheetScoresArgs) = Unit
-    override fun openWebLogin() = Unit
-
-    override fun openReviewEditor(args: TeacherReviewArgs) = Unit
-
-    override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) = Unit
-
     fun showBookings(items: List<SportBooking>) {
         list.adapter = bookingAdapter
         bookingAdapter.submitList(items)
@@ -167,6 +148,5 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
         override fun now() = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
     }
 
-    data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val widthDp: Int = 0, val colorSeed: Int? = null)
-    companion object { @Volatile var appearance = Appearance() }
+    companion object { @Volatile var appearance = PreviewAppearance() }
 }
