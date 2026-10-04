@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
@@ -20,7 +21,6 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
@@ -38,7 +38,8 @@ class SportBookingRepositoryImpl @Inject constructor(
     private val myItmoApi: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi,
     private val time: AcademicTimeProvider,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : SportBookingRepository, SessionDataCleaner {
 
     private val bookingsFlow = MutableSharedFlow<DataState<List<SportBooking>>>(replay = 1)
@@ -105,7 +106,7 @@ class SportBookingRepositoryImpl @Inject constructor(
             return
         }
         try {
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(dispatchers.io) {
                 val response = myItmoApi.chosenSportSections.execute()
                 if (!response.isSuccessful) throw HttpException(response)
                 response.body().requireResult().flatMap { it.toBookings() }
@@ -115,7 +116,7 @@ class SportBookingRepositoryImpl @Inject constructor(
 
             if (backend.mayCallBackend()) {
                 try {
-                    withContext(Dispatchers.IO) {
+                    withContext(dispatchers.io) {
                         widgetsApi.syncSportLessons(result.map { it.lessonId })
                     }
                 } catch (cancellation: CancellationException) {

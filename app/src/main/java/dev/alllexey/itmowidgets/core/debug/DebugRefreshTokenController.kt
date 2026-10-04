@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.debug
 
 import api.myitmo.MyItmo
 import dev.alllexey.itmowidgets.BuildConfig
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -9,7 +10,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 interface DebugRefreshTokenController {
@@ -23,7 +23,8 @@ class DefaultDebugRefreshTokenController(
     private val tokenStore: SessionTokenStore,
     private val myItmo: MyItmo,
     private val dataCleaners: Set<SessionDataCleaner>,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : DebugRefreshTokenController {
 
     override fun hasRefreshToken(): Boolean {
@@ -32,7 +33,7 @@ class DefaultDebugRefreshTokenController(
 
     override suspend fun replaceRefreshToken(
         refreshToken: String
-    ): AppResult<Unit> = withContext(Dispatchers.IO) {
+    ): AppResult<Unit> = withContext(dispatchers.io) {
         if (!BuildConfig.DEBUG) {
             return@withContext AppResult.Failure(AppError.Forbidden)
         }

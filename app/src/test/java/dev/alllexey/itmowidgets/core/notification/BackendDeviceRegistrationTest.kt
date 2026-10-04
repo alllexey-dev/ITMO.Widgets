@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.notification
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
@@ -16,9 +17,16 @@ import java.lang.reflect.Proxy
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 
 class BackendDeviceRegistrationTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     @Test fun `only successful registration is persisted with its owner and unregister clears it`() = runTest {
         val fixture = Fixture()
         fixture.prepare()
@@ -52,7 +60,7 @@ class BackendDeviceRegistrationTest {
         assertTrue(fixture.calls.isEmpty())
     }
 
-    private class Fixture {
+    private inner class Fixture {
         val settings = ServicesOptInPreferences(MemoryPreferences())
         val utility = UtilityStorage(MemoryPreferences(), "test")
         var owner: Int? = 123456
@@ -62,7 +70,7 @@ class BackendDeviceRegistrationTest {
             arrayOf(ItmoWidgetsApi::class.java)) { _, method, _ -> calls += method.name; response } as ItmoWidgetsApi
         val device = DefaultBackendDeviceSession(DefaultBackendGate(settings, noDemo()), utility, api, "Synthetic device", object : CurrentUserProvider {
             override suspend fun getCurrentUser() = owner?.let { CurrentUser(it, "Synthetic user", null) }
-        }, noDemo())
+        }, noDemo(), dispatchers)
         suspend fun prepare() {
             settings.setCustomServicesEnabled(true)
             utility.setFirebaseToken("synthetic-token")

@@ -1,12 +1,12 @@
 package dev.alllexey.itmowidgets.core.session
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.RegisterDeviceRequest
 import dev.alllexey.itmowidgets.core.model.UnregisterDeviceRequest
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 interface BackendDeviceSession {
@@ -22,7 +22,8 @@ class DefaultBackendDeviceSession(
     private val widgetsApi: ItmoWidgetsApi,
     private val deviceName: String,
     private val currentUser: CurrentUserProvider,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : BackendDeviceSession {
 
     override suspend fun registerCurrentDevice() {
@@ -31,7 +32,7 @@ class DefaultBackendDeviceSession(
         val fcmToken = utilityStorage.getFirebaseToken()?.trim()?.takeIf(String::isNotEmpty)
             ?: return
 
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             val response = widgetsApi.registerDevice(
                 RegisterDeviceRequest(
                     fcmToken = fcmToken,
@@ -48,7 +49,7 @@ class DefaultBackendDeviceSession(
         val fcmToken = utilityStorage.getFirebaseToken()?.trim()?.takeIf(String::isNotEmpty)
             ?: return
 
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             val response = widgetsApi.unregisterCurrentDevice(UnregisterDeviceRequest(fcmToken))
             check(response.success) { "Device unregistration rejected" }
             utilityStorage.setRegisteredFirebaseToken(null)

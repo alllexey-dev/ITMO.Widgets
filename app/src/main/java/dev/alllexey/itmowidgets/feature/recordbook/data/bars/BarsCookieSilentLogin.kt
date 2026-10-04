@@ -2,11 +2,11 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import api.bars.utils.BarsAuthHelper
 import api.bars.utils.BarsSessionCode
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** Result of renewing the BARS session without a WebView. */
@@ -36,7 +36,8 @@ interface BarsBackgroundLogin {
  */
 class BarsCookieSilentLogin @Inject constructor(
     private val auth: BarsAuthHelper,
-    private val cookies: ItmoIdCookies
+    private val cookies: ItmoIdCookies,
+    private val dispatchers: AppDispatchers
 ) : BarsBackgroundLogin {
 
     override suspend fun renew(state: String): BarsCookieRenewal {
@@ -51,7 +52,7 @@ class BarsCookieSilentLogin @Inject constructor(
         }
         if (header.isNullOrBlank()) return BarsCookieRenewal.SessionEnded
         val answer = try {
-            withContext(Dispatchers.IO) { auth.requestCodeWithCookies(state, header) }
+            withContext(dispatchers.io) { auth.requestCodeWithCookies(state, header) }
         } catch (cancel: CancellationException) {
             throw cancel
         } catch (failure: Exception) {

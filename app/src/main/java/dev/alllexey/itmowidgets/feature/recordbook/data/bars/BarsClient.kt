@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import api.bars.Bars
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import api.bars.BarsApi
 import api.bars.model.Term
@@ -16,7 +17,6 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -39,7 +39,8 @@ class BarsClient @Inject constructor(
     silentLogin: BarsSilentLogin,
     backgroundLogin: BarsBackgroundLogin,
     private val listener: BarsSessionListener,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) {
     private val mutex = Mutex()
 
@@ -75,7 +76,7 @@ class BarsClient @Inject constructor(
     private suspend fun <T> runBackground(block: suspend Account.() -> T): BarsBackground<T> = try {
         mutex.withLock {
             val owner = owner()
-            if (withContext(Dispatchers.IO) { storage.getAuthorization() } == null) {
+            if (withContext(dispatchers.io) { storage.getAuthorization() } == null) {
                 BarsBackground.NoSession
             } else {
                 cookieRenewal = true
@@ -148,7 +149,7 @@ class BarsClient @Inject constructor(
         return owner
     }
 
-    private suspend fun <T> io(block: () -> T): T = withContext(Dispatchers.IO) {
+    private suspend fun <T> io(block: () -> T): T = withContext(dispatchers.io) {
         try { block() } catch (failure: BarsApiException) { fail(failure.toAppError()) }
     }
 

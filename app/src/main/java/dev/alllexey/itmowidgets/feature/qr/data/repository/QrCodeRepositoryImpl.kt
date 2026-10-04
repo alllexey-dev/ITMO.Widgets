@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.qr.data.repository
 
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
@@ -7,7 +8,6 @@ import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSource
 import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSource
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -16,17 +16,18 @@ import javax.inject.Singleton
 @Singleton
 class QrCodeRepositoryImpl @Inject constructor(
     private val local: QrCodeLocalDataSource,
-    private val remote: QrCodeRemoteDataSource
+    private val remote: QrCodeRemoteDataSource,
+    private val dispatchers: AppDispatchers
 ) : QrCodeRepository, SessionDataCleaner {
 
-    override suspend fun currentQr() = withContext(Dispatchers.IO) { local.snapshot() }
+    override suspend fun currentQr() = withContext(dispatchers.io) { local.snapshot() }
 
     override fun observeQrHex(): Flow<String> {
         return local.observe()
     }
 
     override suspend fun currentQrHex(allowExpired: Boolean): String? =
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             local.get(allowExpired)
         }
 
@@ -49,6 +50,6 @@ class QrCodeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun clearSessionData() {
-        withContext(Dispatchers.IO) { clearCache() }
+        withContext(dispatchers.io) { clearCache() }
     }
 }

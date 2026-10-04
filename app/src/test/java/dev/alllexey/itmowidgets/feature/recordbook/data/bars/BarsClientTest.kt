@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import api.bars.Bars
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import api.bars.BarsConfiguration
@@ -24,9 +25,16 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class BarsClientTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     private val old = "Bearer synthetic-old-credential"
     private val fresh = "Bearer synthetic-fresh-credential"
     private class Memory : BarsTokenPersistence {
@@ -66,7 +74,7 @@ class BarsClientTest {
         server.dispatcher = fake
         server.start()
         val bars = Bars(configuration()).apply { storage = this@BarsClientTest.storage }
-        client = BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener, noDemo())
+        client = BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener, noDemo(), dispatchers)
     }
     @After fun stop() = server.shutdown()
 
@@ -82,12 +90,12 @@ class BarsClientTest {
             chain.proceed(chain.request())
         }.build()
         val bars = Bars(configuration(), offline).apply { storage = this@BarsClientTest.storage }
-        return BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener, noDemo())
+        return BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener, noDemo(), dispatchers)
     }
 
     @Test fun `the demo session has no BARS and asks nothing`() = runTest {
         val bars = Bars(configuration()).apply { storage = this@BarsClientTest.storage }
-        val demo = BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener, FakeDemoMode(active = true))
+        val demo = BarsClient(bars, storage, owner, silentLogin, backgroundLogin, listener, FakeDemoMode(active = true), dispatchers = dispatchers)
 
         assertEquals(AppResult.Failure(AppError.DemoUnavailable), demo.account { execute { bars.api.getDisciplines(true) } })
         assertEquals(AppResult.Failure(AppError.DemoUnavailable), demo.login("synthetic-code"))

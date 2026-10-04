@@ -6,6 +6,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
@@ -52,6 +54,13 @@ import dev.alllexey.itmowidgets.core.model.resources.SubjectLinkStatus as WireSt
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SubjectLinksRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    /** The fake network holds a request on a blocked thread; see [blockingIoAppDispatchers]. */
+    private val dispatchers = blockingIoAppDispatchers(mainDispatcherRule.dispatcher)
+
     @get:Rule val temporary = TemporaryFolder()
     private val scope = ResourceScope(42, "Предмет", "2026-1")
     private val gson = ItmoWidgetsImpl(MyItmo()).gson
@@ -237,7 +246,7 @@ class SubjectLinksRepositoryImplTest {
     }
 
     private fun repo(folder: File, api: FakeApi, services: FakeBackendGate, demo: DemoMode = noDemo()) =
-        SubjectLinksRepositoryImpl(SubjectLinksFileStore(folder, gson), api.instance, services, clock, demo)
+        SubjectLinksRepositoryImpl(SubjectLinksFileStore(folder, gson), api.instance, services, clock, demo, dispatchers)
 
     private suspend fun SubjectLinksRepositoryImpl.content(scope: ResourceScope): SubjectLinksSnapshot =
         (observe(scope).first() as SubjectLinksState.Content).snapshot

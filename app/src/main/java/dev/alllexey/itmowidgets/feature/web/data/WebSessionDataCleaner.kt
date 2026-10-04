@@ -5,6 +5,7 @@ import android.webkit.WebView
 import dagger.hilt.android.qualifiers.ApplicationContext
 import android.webkit.CookieManager
 import android.webkit.WebStorage
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +14,10 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 /** Web sessions must not survive native sign-out or switching to another account. */
-class WebSessionDataCleaner @Inject constructor(@param:ApplicationContext private val context: Context) : SessionDataCleaner {
+class WebSessionDataCleaner @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val dispatchers: AppDispatchers
+) : SessionDataCleaner {
     override suspend fun clearSessionData() {
         val cookies = withContext(Dispatchers.Main.immediate) {
             WebStorage.getInstance().deleteAllData()
@@ -24,6 +28,6 @@ class WebSessionDataCleaner @Inject constructor(@param:ApplicationContext privat
                 }
             }
         }
-        withContext(Dispatchers.IO) { cookies.flush() }
+        withContext(dispatchers.io) { cookies.flush() }
     }
 }

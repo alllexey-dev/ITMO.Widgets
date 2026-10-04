@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.*
+import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import java.io.File
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -115,7 +116,7 @@ class ScheduleWidgetSnapshotStoreTest {
     }
 
     private fun store(context: Context) = ScheduleWidgetSnapshotStoreImpl(
-        Gson(), context, scheduleChecks, DefaultBackendGate(servicesOptIn, NoDemo), time, tokens
+        Gson(), context, scheduleChecks, DefaultBackendGate(servicesOptIn, NoDemo), time, tokens, DeviceDispatchers
     )
 
     private suspend fun enable() {

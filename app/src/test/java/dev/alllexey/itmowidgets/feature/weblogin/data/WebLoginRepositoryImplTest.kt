@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.weblogin.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -15,19 +16,26 @@ import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
 import dev.alllexey.itmowidgets.core.model.WebLoginPreview as WirePreview
 
 class WebLoginRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     private val challenge = UUID.fromString("00000000-0000-0000-0000-000000000042")
     private val createdAt = OffsetDateTime.parse("2026-09-24T09:04:30Z")
     private val expiresAt = OffsetDateTime.parse("2026-09-24T09:06:30Z")
 
     @Test fun `preview and approval go to Backend with the code and the challenge`() = runTest {
         val api = FakeApi().apply { preview = ApiResponse.success(WirePreview(challenge, " Chrome ", createdAt, expiresAt)) }
-        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo())
+        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Success(WebLoginPreview(challenge, "Chrome", createdAt, expiresAt)), repository.preview("ABCD2345"))
         assertEquals(AppResult.Success(Unit), repository.approve(challenge))
@@ -37,14 +45,14 @@ class WebLoginRepositoryImplTest {
     @Test fun `a blank user agent reads as none`() = runTest {
         val api = FakeApi().apply { preview = ApiResponse.success(WirePreview(challenge, "  ", createdAt, expiresAt)) }
 
-        val result = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo()).preview("ABCD2345")
+        val result = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers).preview("ABCD2345")
 
         assertEquals(null, (result as AppResult.Success).value.userAgent)
     }
 
     @Test fun `without the connection nothing reaches Backend`() = runTest {
         val api = FakeApi()
-        val repository = WebLoginRepositoryImpl(services(enabled = false), api.instance, noDemo())
+        val repository = WebLoginRepositoryImpl(services(enabled = false), api.instance, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.preview("ABCD2345"))
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.approve(challenge))
@@ -54,7 +62,7 @@ class WebLoginRepositoryImplTest {
     @Test fun `an unknown used or expired code is not found`() = runTest {
         val notFound = HttpException(Response.error<Unit>(404, """{"success":false,"error":{"code":"not_found"}}""".toResponseBody()))
         val api = FakeApi().apply { failure = notFound }
-        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo())
+        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Failure(AppError.NotFound), repository.preview("ABCD2345"))
         assertEquals(AppResult.Failure(AppError.NotFound), repository.approve(challenge))
@@ -62,7 +70,7 @@ class WebLoginRepositoryImplTest {
 
     @Test fun `network failures and error bodies are typed`() = runTest {
         val api = FakeApi().apply { failure = IOException("offline") }
-        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo())
+        val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
         assertEquals(AppResult.Failure(AppError.Network), repository.preview("ABCD2345"))
 
         api.failure = null

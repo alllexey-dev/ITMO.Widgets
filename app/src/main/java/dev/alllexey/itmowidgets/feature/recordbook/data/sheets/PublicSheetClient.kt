@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.network.PublicWebClient
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -10,7 +11,6 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -46,11 +46,12 @@ sealed interface SheetFetch<out T> {
 class PublicSheetClient internal constructor(
     private val client: OkHttpClient,
     private val base: HttpUrl,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) {
 
-    @Inject constructor(@PublicWebClient client: OkHttpClient, demo: DemoMode) :
-        this(client, "https://docs.google.com/".toHttpUrl(), demo)
+    @Inject constructor(@PublicWebClient client: OkHttpClient, demo: DemoMode, dispatchers: AppDispatchers) :
+        this(client, "https://docs.google.com/".toHttpUrl(), demo, dispatchers)
 
     suspend fun tabs(spreadsheetId: String): SheetFetch<List<SheetTab>> =
         exchange(sheetUrl(spreadsheetId).addPathSegment("htmlview").build()) { response ->
@@ -105,7 +106,7 @@ class PublicSheetClient internal constructor(
             }
         }
         try {
-            withContext(Dispatchers.IO) {
+            withContext(dispatchers.io) {
                 try {
                     call.execute().use(handle)
                 } catch (_: IOException) {

@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
+import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import java.io.File
 import java.time.Instant
 import java.time.LocalDate
@@ -259,7 +260,8 @@ class CalendarSyncProviderTest {
         OwnScheduleSource { _, _ -> days },
         CalendarSyncFileStore(folder, Gson()),
         Time,
-        BuildingDirectory(emptyList())
+        BuildingDirectory(emptyList()),
+        DeviceDispatchers
     )
 
     private fun createOtherCalendar(): Long {

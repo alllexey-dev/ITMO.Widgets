@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.debug
 
 import api.myitmo.MyItmo
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import api.myitmo.model.other.TokenResponse
 import api.myitmo.utils.TokenRefreshException
@@ -12,9 +13,15 @@ import dev.alllexey.itmowidgets.core.session.SessionTokens
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 
 class DefaultDebugRefreshTokenControllerTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
 
     @Test
     fun `trims token validates it and clears session data`() = runTest {
@@ -25,7 +32,8 @@ class DefaultDebugRefreshTokenControllerTest {
             tokenStore = tokenStore,
             myItmo = myItmo,
             dataCleaners = setOf(cleaner),
-            demo = noDemo()
+            demo = noDemo(),
+            dispatchers = dispatchers
         )
 
         val result = controller.replaceRefreshToken("  test-refresh-token  ")
@@ -44,7 +52,8 @@ class DefaultDebugRefreshTokenControllerTest {
             tokenStore = tokenStore,
             myItmo = FakeMyItmo(rejectToken = true),
             dataCleaners = setOf(cleaner),
-            demo = noDemo()
+            demo = noDemo(),
+            dispatchers = dispatchers
         )
 
         val result = controller.replaceRefreshToken("rejected-token")

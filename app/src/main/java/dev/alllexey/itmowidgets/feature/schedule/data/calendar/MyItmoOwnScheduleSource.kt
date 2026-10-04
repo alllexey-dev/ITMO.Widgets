@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
@@ -9,7 +10,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSour
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.time.LocalDate
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 
@@ -20,10 +20,11 @@ import retrofit2.HttpException
 class MyItmoOwnScheduleSource @Inject constructor(
     private val api: MyItmoApi,
     private val time: AcademicTimeProvider,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : OwnScheduleSource {
 
-    override suspend fun read(start: LocalDate, end: LocalDate): List<DaySchedule> = withContext(Dispatchers.IO) {
+    override suspend fun read(start: LocalDate, end: LocalDate): List<DaySchedule> = withContext(dispatchers.io) {
         if (demo.isActive()) return@withContext DemoSchedule.ownDays(start, end, time.today())
         generateSequence(start) { it.plusDays(CHUNK_DAYS) }
             .takeWhile { !it.isAfter(end) }

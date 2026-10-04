@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.schedule.data.widget
 import android.content.Context
 import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
@@ -14,7 +15,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSna
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -27,6 +27,7 @@ class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
     private val backend: BackendGate,
     private val timeProvider: AcademicTimeProvider,
     private val tokens: SessionTokenStore,
+    private val dispatchers: AppDispatchers,
 ) : ScheduleWidgetSnapshotStore, SessionDataCleaner {
 
     private val mutex = Mutex()
@@ -36,7 +37,7 @@ class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
         File(context.noBackupFilesDir, SNAPSHOT_FILE)
     )
 
-    override suspend fun read(): ScheduleWidgetSnapshot = withContext(Dispatchers.IO) {
+    override suspend fun read(): ScheduleWidgetSnapshot = withContext(dispatchers.io) {
         if (!tokens.hasRefreshToken()) return@withContext ScheduleWidgetSnapshot.signedOut()
         val cached = mutex.withLock { file.read()?.let { it to generation } }
             ?: return@withContext ScheduleWidgetSnapshot.loading()
@@ -55,7 +56,7 @@ class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
     }
 
     override suspend fun write(snapshot: ScheduleWidgetSnapshot) {
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             mutex.withLock { file.write(gson.toJson(snapshot)) }
         }
     }
@@ -63,7 +64,7 @@ class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
     override suspend fun currentGeneration(): Long = mutex.withLock { generation }
 
     override suspend fun writeIfCurrent(snapshot: ScheduleWidgetSnapshot, generation: Long): Boolean =
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             mutex.withLock {
                 if (this@ScheduleWidgetSnapshotStoreImpl.generation != generation) return@withLock false
                 file.write(gson.toJson(snapshot))
@@ -72,7 +73,7 @@ class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
         }
 
     override suspend fun clear() {
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             mutex.withLock {
                 generation++
                 file.write(null)

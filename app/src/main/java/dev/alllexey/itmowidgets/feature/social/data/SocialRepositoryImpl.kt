@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.ApiResponse
@@ -20,7 +21,6 @@ import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import dev.alllexey.itmowidgets.core.model.social.UserProfile as CoreUserProfile
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -37,7 +37,8 @@ class SocialRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     @param:ApplicationScope private val scope: CoroutineScope,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : SocialRepository, SessionDataCleaner {
 
     private val friends = MutableStateFlow<SocialState<List<UserProfile>>>(SocialState.Loading)
@@ -235,7 +236,7 @@ class SocialRepositoryImpl @Inject constructor(
     }
 
     private suspend fun <T> call(generation: Long, request: suspend () -> ApiResponse<T>): AppResult<T> =
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             if (!isCurrent(generation)) return@withContext AppResult.Failure(AppError.CustomServicesDisabled)
             appResultOf { checkNotNull(request().data) { "Backend returned no data" } }
         }

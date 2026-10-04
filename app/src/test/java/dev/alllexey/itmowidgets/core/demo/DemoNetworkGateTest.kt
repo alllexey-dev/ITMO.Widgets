@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.session.DefaultBackendIdentitySync
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.core.testing.unreachable
@@ -35,6 +36,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 /**
@@ -42,6 +44,12 @@ import org.junit.Test
  * The Backend ones send nothing in the demo, even with the stored opt-in, and nothing without the opt-in.
  */
 class DemoNetworkGateTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     private val demo = FakeDemoMode(active = true)
     private val backend = unreachable<ItmoWidgetsApi>()
     private val stores = PreferenceStores().also {
@@ -51,7 +59,7 @@ class DemoNetworkGateTest {
 
     @Test
     fun `the pass is a code no turnstile accepts`() = runTest {
-        assertEquals(DemoQr.HEX, QrCodeRemoteDataSourceImpl(unreachableMyItmo(), demo).getQrHex())
+        assertEquals(DemoQr.HEX, QrCodeRemoteDataSourceImpl(unreachableMyItmo(), demo, dispatchers).getQrHex())
         assertTrue(DemoQr.HEX.startsWith("DEMO"))
     }
 
@@ -63,7 +71,7 @@ class DemoNetworkGateTest {
     @Test
     fun `no update is offered and web sign-in is refused`() = runTest {
         val update = update(gate, demo)
-        val webLogin = WebLoginRepositoryImpl(gate, backend, demo)
+        val webLogin = WebLoginRepositoryImpl(gate, backend, demo, dispatchers)
 
         assertNull(update.loadUpdate())
         assertEquals(AppResult.Failure(AppError.DemoUnavailable), webLogin.preview("ABCD2345"))
@@ -90,7 +98,7 @@ class DemoNetworkGateTest {
         val noDemo = FakeDemoMode()
         val stored = PreferenceStores()
         val optedOut = DefaultBackendGate(stored.servicesOptIn, noDemo)
-        val webLogin = WebLoginRepositoryImpl(optedOut, backend, noDemo)
+        val webLogin = WebLoginRepositoryImpl(optedOut, backend, noDemo, dispatchers)
         val privacy = settingsRepository(stored, optedOut, noDemo)
 
         assertNull(update(optedOut, noDemo).loadUpdate())
@@ -105,7 +113,8 @@ class DemoNetworkGateTest {
 
     private fun update(gate: BackendGate, demo: DemoMode) = AppUpdateRepositoryImpl(
         backend, gate, UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2"), AppVersionName("2.2"),
-        Clock.systemUTC(), RecordingDiagnostics(), demo
+        Clock.systemUTC(), RecordingDiagnostics(), demo,
+        dispatchers = dispatchers
     )
 
     private suspend fun assertBackendSessionsStayLocal(gate: BackendGate, demo: DemoMode) {
@@ -115,8 +124,8 @@ class DemoNetworkGateTest {
         val utility = UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2").also {
             it.setFirebaseToken("demo-token")
         }
-        val devices = DefaultBackendDeviceSession(gate, utility, backend, "Pixel", user, demo)
-        val identity = DefaultBackendIdentitySync(unusedContext(), gate, unreachableMyItmo(), backend, RecordingDiagnostics(), demo)
+        val devices = DefaultBackendDeviceSession(gate, utility, backend, "Pixel", user, demo, dispatchers)
+        val identity = DefaultBackendIdentitySync(unusedContext(), gate, unreachableMyItmo(), backend, RecordingDiagnostics(), demo, dispatchers)
 
         devices.registerCurrentDevice()
         devices.unregisterCurrentDevice()
@@ -135,7 +144,8 @@ class DemoNetworkGateTest {
         stores.deviceHints,
         gate,
         backend,
-        demo
+        demo,
+        dispatchers
     )
 
     /** A context nobody may touch: allocated without Android's stub constructor, any call on it fails. */

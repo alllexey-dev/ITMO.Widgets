@@ -2,8 +2,8 @@ package dev.alllexey.itmowidgets.core.session
 
 import android.util.Log
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import java.util.Base64
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 data class CurrentUser(
@@ -27,10 +27,11 @@ interface CurrentUserProvider {
  */
 class IdTokenCurrentUserProvider(
     private val tokenStore: SessionTokenStore,
-    private val gson: Gson
+    private val gson: Gson,
+    private val dispatchers: AppDispatchers
 ) : CurrentUserProvider {
 
-    override suspend fun getCurrentUser(): CurrentUser? = withContext(Dispatchers.IO) {
+    override suspend fun getCurrentUser(): CurrentUser? = withContext(dispatchers.io) {
         val idToken = tokenStore.getIdToken() ?: return@withContext null
         decodeClaims(idToken)
     }

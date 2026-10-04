@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import androidx.datastore.core.DataStore
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
@@ -34,10 +36,17 @@ import kotlinx.coroutines.test.runTest
 import okhttp3.Interceptor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SportBookingSessionDataTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    /** The fake network holds a request on a blocked thread; see [blockingIoAppDispatchers]. */
+    private val dispatchers = blockingIoAppDispatchers(mainDispatcherRule.dispatcher)
 
     @Test
     fun `clear removes confirmed bookings from live observation and replay`() = runTest {
@@ -169,7 +178,7 @@ class SportBookingSessionDataTest {
 
     private fun emptyBookings(): DataState<List<SportBooking>> = DataState.Success(emptyList())
 
-    private class Fixture {
+    private inner class Fixture {
         val settings = ServicesOptInPreferences(InMemoryPreferencesDataStore())
         val syncCalls = AtomicInteger()
         @Volatile var responseCode = 200
@@ -201,7 +210,7 @@ class SportBookingSessionDataTest {
             flowOf(CustomDataState.Disabled)
         } as SportDataRepository
 
-        val repository = SportBookingRepositoryImpl(DefaultBackendGate(settings, noDemo()), sportData, myItmo.api, widgetsApi, FixedAcademicTime(), noDemo())
+        val repository = SportBookingRepositoryImpl(DefaultBackendGate(settings, noDemo()), sportData, myItmo.api, widgetsApi, FixedAcademicTime(), noDemo(), dispatchers)
     }
 
     private class InMemoryPreferencesDataStore : DataStore<Preferences> {

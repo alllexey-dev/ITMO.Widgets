@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.GroupData
@@ -20,15 +21,22 @@ import java.time.LocalDate
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Rule
 import org.junit.Test
 
 class LessonFriendsRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     private val date = LocalDate.of(2026, 9, 8)
 
     @Test
     fun `without the opt-in nothing is requested`() = runTest {
         val api = FakeApi()
-        val repository = LessonFriendsRepositoryImpl(services(enabled = false), api.instance, noDemo())
+        val repository = LessonFriendsRepositoryImpl(services(enabled = false), api.instance, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.friendsOnLesson(42, date))
         assertEquals(0, api.calls)
@@ -45,7 +53,7 @@ class LessonFriendsRepositoryImplTest {
                 ))
             }
         }
-        val repository = LessonFriendsRepositoryImpl(services(enabled = true), api.instance, noDemo())
+        val repository = LessonFriendsRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
 
         val friends = (repository.friendsOnLesson(42, date) as AppResult.Success).value
 
@@ -60,10 +68,10 @@ class LessonFriendsRepositoryImplTest {
     @Test
     fun `transport failures and empty envelopes are errors, not empty lists`() = runTest {
         val failing = FakeApi().apply { result = { _, _ -> throw IOException("offline") } }
-        assertEquals(AppResult.Failure(AppError.Network), LessonFriendsRepositoryImpl(services(true), failing.instance, noDemo()).friendsOnLesson(42, date))
+        assertEquals(AppResult.Failure(AppError.Network), LessonFriendsRepositoryImpl(services(true), failing.instance, noDemo(), dispatchers).friendsOnLesson(42, date))
 
         val empty = FakeApi().apply { result = { _, _ -> ApiResponse(success = true, data = null, error = null) } }
-        val result = LessonFriendsRepositoryImpl(services(true), empty.instance, noDemo()).friendsOnLesson(42, date)
+        val result = LessonFriendsRepositoryImpl(services(true), empty.instance, noDemo(), dispatchers).friendsOnLesson(42, date)
         assertEquals(true, result is AppResult.Failure)
     }
 

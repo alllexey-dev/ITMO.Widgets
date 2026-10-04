@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
@@ -22,7 +23,6 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueue
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -41,7 +41,8 @@ class SportDataRepositoryImpl @Inject constructor(
     private val widgetsApi: ItmoWidgetsApi,
     private val scoreRepository: SportScoreRepositoryImpl,
     private val time: AcademicTimeProvider,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : SportDataRepository, SessionDataCleaner {
 
     private val queueSessionMutex = Mutex()
@@ -84,7 +85,7 @@ class SportDataRepositoryImpl @Inject constructor(
             return
         }
         try {
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(dispatchers.io) {
                 val response = myItmoApi.sportAttempts.execute()
                 response.body()?.result?.toModel()
             }
@@ -113,7 +114,7 @@ class SportDataRepositoryImpl @Inject constructor(
         }
 
         try {
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(dispatchers.io) {
                 widgetsApi.sportAutoSignLimits().data?.toModel()
             }
 
@@ -142,7 +143,7 @@ class SportDataRepositoryImpl @Inject constructor(
         }
 
         try {
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(dispatchers.io) {
                 supervisorScope {
                     val freeSign = async {
                         widgetsApi.mySportFreeSignEntries().data
@@ -191,7 +192,7 @@ class SportDataRepositoryImpl @Inject constructor(
         }
 
         try {
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(dispatchers.io) {
                 supervisorScope {
                     val freeSign = async {
                         widgetsApi.currentSportFreeSignQueues().data
@@ -230,7 +231,7 @@ class SportDataRepositoryImpl @Inject constructor(
         }
 
         try {
-            val bookings = withContext(Dispatchers.IO) {
+            val bookings = withContext(dispatchers.io) {
                 widgetsApi.friendsSportBookings().data?.bookings
             } ?: throw RuntimeException("FriendSportBookings response is null")
 

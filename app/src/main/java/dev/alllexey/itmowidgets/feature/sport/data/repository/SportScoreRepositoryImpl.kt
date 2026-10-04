@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import api.myitmo.MyItmo
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
@@ -15,14 +16,14 @@ import dev.alllexey.itmowidgets.feature.sport.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class SportScoreRepositoryImpl @Inject constructor(
     private val myItmo: MyItmo,
     private val overrideProvider: SportScoreOverrideProvider,
     private val time: AcademicTimeProvider,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : SportScoreRepository {
     override suspend fun getScorePeriods(): AppResult<List<SportScorePeriod>> = if (demo.isActive()) {
         AppResult.Success(DemoSport.periods(time))
@@ -63,5 +64,5 @@ class SportScoreRepositoryImpl @Inject constructor(
         if (isCurrent) score.copy(attendances = override.attendances, other = override.bonus) else score
     }
 
-    private suspend fun <T> request(block: () -> T): AppResult<T> = appResultOf { withContext(Dispatchers.IO) { block() } }
+    private suspend fun <T> request(block: () -> T): AppResult<T> = appResultOf { withContext(dispatchers.io) { block() } }
 }

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.update.data
 
 import androidx.datastore.core.DataStore
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
@@ -23,10 +24,16 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 class AppUpdateRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
 
     private val now: Instant = Instant.parse("2026-09-15T10:00:00Z")
 
@@ -101,7 +108,8 @@ class AppUpdateRepositoryImplTest {
                 installedVersion = AppVersionName(INSTALLED_VERSION),
                 clock = Clock.fixed(now, ZoneOffset.UTC),
                 diagnostics = RecordingDiagnostics(),
-                demo = noDemo()
+                demo = noDemo(),
+                dispatchers = dispatchers
             )
         )
     }

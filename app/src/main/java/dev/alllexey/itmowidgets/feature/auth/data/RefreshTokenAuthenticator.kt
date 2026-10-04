@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.feature.auth.data
 
 import api.myitmo.MyItmo
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 interface RefreshTokenAuthenticator {
@@ -11,10 +11,10 @@ interface RefreshTokenAuthenticator {
     suspend fun authenticate(refreshToken: String): SessionTokens
 }
 
-class DefaultRefreshTokenAuthenticator @Inject constructor() : RefreshTokenAuthenticator {
+class DefaultRefreshTokenAuthenticator @Inject constructor(private val dispatchers: AppDispatchers) : RefreshTokenAuthenticator {
 
     override suspend fun authenticate(refreshToken: String): SessionTokens =
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             val candidate = MyItmo()
             candidate.storage.refreshToken = refreshToken
             candidate.storage.refreshExpiresAt = Long.MAX_VALUE

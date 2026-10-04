@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import api.bars.Bars
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import api.bars.BarsConfiguration
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -21,9 +22,16 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class BarsMarkReaderTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     private val old = "Bearer synthetic-old-credential"
     private val memory = object : BarsTokenPersistence {
         var value: String? = null
@@ -60,7 +68,7 @@ class BarsMarkReaderTest {
             override fun getHost() = server.hostName
             override fun getRestUrl() = server.url("/backend/rest/").toString()
         }).apply { storage = this@BarsMarkReaderTest.storage }
-        reader = BarsMarkReader(BarsClient(bars, storage, owner, silentLogin, backgroundLogin, CountingBarsSessionListener(), noDemo()))
+        reader = BarsMarkReader(BarsClient(bars, storage, owner, silentLogin, backgroundLogin, CountingBarsSessionListener(), noDemo(), dispatchers))
     }
 
     @After fun stop() = server.shutdown()

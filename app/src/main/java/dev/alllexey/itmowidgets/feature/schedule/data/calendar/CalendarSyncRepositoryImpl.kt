@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -24,7 +25,6 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,7 +58,8 @@ class CalendarSyncRepositoryImpl @Inject constructor(
     private val schedule: OwnScheduleSource,
     private val store: CalendarSyncFileStore,
     private val time: AcademicTimeProvider,
-    private val buildings: BuildingDirectory
+    private val buildings: BuildingDirectory,
+    private val dispatchers: AppDispatchers
 ) : CalendarSyncRepository, SessionDataCleaner {
 
     private val mutex = Mutex()
@@ -137,7 +138,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
             writing {
                 val stored = loaded()
                 guarded { if (calendars.hasAccess()) removeOurs(stored, keep = null) }
-                withContext(Dispatchers.IO) { store.clear() }
+                withContext(dispatchers.io) { store.clear() }
                 state.value = StoredCalendarSync()
             }
         }
@@ -335,7 +336,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
     }
 
     /** Calendar writes and the ids they produce must not stop halfway when the caller is cancelled. */
-    private suspend fun <T> writing(block: suspend () -> T): T = withContext(NonCancellable + Dispatchers.IO) { block() }
+    private suspend fun <T> writing(block: suspend () -> T): T = withContext(NonCancellable + dispatchers.io) { block() }
 
     /** [block]'s value, or null when the provider failed or the permission was revoked meanwhile. */
     private suspend fun <T> guarded(block: suspend () -> T): T? = try {
@@ -353,12 +354,12 @@ class CalendarSyncRepositoryImpl @Inject constructor(
     }
 
     private suspend fun persist(next: StoredCalendarSync) {
-        withContext(Dispatchers.IO) { store.write(next) }
+        withContext(dispatchers.io) { store.write(next) }
         state.value = next
     }
 
     /** A corrupt file is removed and the state starts empty. Must hold [mutex]. */
-    private suspend fun loaded(): StoredCalendarSync = state.value ?: withContext(Dispatchers.IO) {
+    private suspend fun loaded(): StoredCalendarSync = state.value ?: withContext(dispatchers.io) {
         try {
             store.read() ?: StoredCalendarSync()
         } catch (_: Exception) {

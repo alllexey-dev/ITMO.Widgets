@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -32,6 +34,13 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class TeacherLessonsGatewayImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    /** The fake network holds a request on a blocked thread; see [blockingIoAppDispatchers]. */
+    private val dispatchers = blockingIoAppDispatchers(mainDispatcherRule.dispatcher)
+
     @get:Rule val temporary = TemporaryFolder()
     private val folder by lazy { temporary.newFolder() }
     private val requests = CopyOnWriteArrayList<ClosedRange<LocalDate>>()
@@ -223,7 +232,7 @@ class TeacherLessonsGatewayImplTest {
         assertTrue(requests.isEmpty())
     }
 
-    private fun gateway(demo: DemoMode = noDemo()) = TeacherLessonsGatewayImpl(api, TeacherWeeksFileStore(folder, Gson()), FixedTime(TODAY), demo)
+    private fun gateway(demo: DemoMode = noDemo()) = TeacherLessonsGatewayImpl(api, TeacherWeeksFileStore(folder, Gson()), FixedTime(TODAY), demo, dispatchers)
 
     private fun day(date: String, vararg lessons: String) =
         """{"day_number":1,"week_number":1,"date":"$date","lessons":[${lessons.joinToString(",")}]}"""

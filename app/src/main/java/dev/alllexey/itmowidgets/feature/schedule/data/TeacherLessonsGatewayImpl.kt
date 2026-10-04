@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
 import api.myitmo.MyItmoApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -15,7 +16,6 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +35,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
     private val store: TeacherWeeksFileStore,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
+    private val dispatchers: AppDispatchers,
 ) : TeacherLessonsGateway, SessionDataCleaner {
 
     private val cacheLock = Mutex()
@@ -59,7 +60,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
         val arrivalLock = Mutex()
         if (arrived.isNotEmpty()) send(AppResult.Success(arrived.lessonsWith(teacherIsu)))
         val failures = weeks.filter { it.start !in arrived }.map { week ->
-            async(Dispatchers.IO) {
+            async(dispatchers.io) {
                 val lessons = try {
                     request(week)
                 } catch (cancellation: CancellationException) {
@@ -82,7 +83,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
         generation.incrementAndGet()
         cacheLock.withLock {
             finished = null
-            withContext(Dispatchers.IO) { store.clear() }
+            withContext(dispatchers.io) { store.clear() }
         }
     }
 
@@ -96,7 +97,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
             val next = (loaded() + (monday to lessons)).filterKeys { it in sampled }
             finished = next
             try {
-                withContext(Dispatchers.IO) { store.write(next) }
+                withContext(dispatchers.io) { store.write(next) }
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (_: Exception) {
@@ -107,7 +108,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
 
     /** A corrupt file is ignored and replaced with the next finished week. Must hold [cacheLock]. */
     private suspend fun loaded(): Map<LocalDate, List<WeekLesson>> = finished ?: try {
-        withContext(Dispatchers.IO) { store.read() }
+        withContext(dispatchers.io) { store.read() }
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (_: Exception) {

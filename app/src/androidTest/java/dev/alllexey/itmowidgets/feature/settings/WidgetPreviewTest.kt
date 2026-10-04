@@ -58,6 +58,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsRenderer
 import dev.alllexey.itmowidgets.testing.Appearances
+import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.testing.toSettingsPreview
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -345,7 +346,7 @@ class WidgetPreviewTest {
             vm.sections.onEach(renderer::render).launchIn(activity.lifecycleScope)
             val isolated = object : ContextWrapper(activity) { override fun getFilesDir() = files }
             spoilers = CustomSpoilerManager(isolated)
-            images = QrPreviewBitmapCache(QrCodeGenerator(), QrBitmapRenderer(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)), spoilers)
+            images = QrPreviewBitmapCache(QrCodeGenerator(), QrBitmapRenderer(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)), spoilers, DeviceDispatchers)
             factory = DefaultWidgetPreviewFactory(
                 images,
                 QrColorResolver(activity, PreviewQrPreferences),

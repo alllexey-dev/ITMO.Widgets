@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.UserSummary
@@ -13,13 +14,13 @@ import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import java.time.LocalDate
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class LessonFriendsRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : LessonFriendsRepository {
 
     override suspend fun friendsOnLesson(pairId: Long, date: LocalDate): AppResult<List<UserSummary>> {
@@ -32,7 +33,7 @@ class LessonFriendsRepositoryImpl @Inject constructor(
     }
 
     private suspend fun <T> call(request: suspend () -> ApiResponse<T>): AppResult<T> = appResultOf {
-        checkNotNull(withContext(Dispatchers.IO) { request().data }) { "Backend returned no data" }
+        checkNotNull(withContext(dispatchers.io) { request().data }) { "Backend returned no data" }
     }
 
     private inline fun <T, R> AppResult<T>.map(transform: (T) -> R): AppResult<R> = when (this) {

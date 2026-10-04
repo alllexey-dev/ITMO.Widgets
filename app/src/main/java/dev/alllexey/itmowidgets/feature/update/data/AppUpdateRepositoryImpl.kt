@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.update.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -14,7 +15,6 @@ import java.time.Clock
 import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
@@ -31,7 +31,8 @@ class AppUpdateRepositoryImpl @Inject constructor(
     private val installedVersion: AppVersionName,
     @param:WallClock private val clock: Clock,
     private val diagnostics: AppDiagnostics,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : AppUpdateRepository {
 
     /** The demo session never offers an update: it asks nothing from Backend. */
@@ -63,7 +64,7 @@ class AppUpdateRepositoryImpl @Inject constructor(
     }
 
     private suspend fun fetchVersionInfo() = try {
-        withContext(Dispatchers.IO) { widgetsApi.appVersionInfo().data }
+        withContext(dispatchers.io) { widgetsApi.appVersionInfo().data }
     } catch (cancellation: CancellationException) {
         throw cancellation
     } catch (error: Exception) {

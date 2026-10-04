@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.model.ApiResponse
@@ -29,6 +30,12 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class TeacherLevelsRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     @get:Rule val temporary = TemporaryFolder()
 
     private val directory get() = File(temporary.root, "teacher_levels")
@@ -50,7 +57,7 @@ class TeacherLevelsRepositoryImplTest {
     }
 
     private fun repository(demo: DemoMode = noDemo()) =
-        TeacherLevelsRepositoryImpl(services, api.instance, TeacherLevelsFileStore(directory, Gson()), clock, demo)
+        TeacherLevelsRepositoryImpl(services, api.instance, TeacherLevelsFileStore(directory, Gson()), clock, demo, dispatchers)
 
     @Test
     fun `a disabled opt-in answers nothing without a request and erases the file`() = runTest {

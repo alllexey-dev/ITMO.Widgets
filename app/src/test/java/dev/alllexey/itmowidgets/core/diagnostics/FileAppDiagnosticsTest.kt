@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.core.diagnostics
 
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import java.io.File
 import java.nio.file.Files
 import java.time.Clock
@@ -12,9 +13,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class FileAppDiagnosticsTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
 
     private val directory: File = Files.createTempDirectory("diagnostics").toFile()
     private val clock = Clock.fixed(Instant.parse("2026-09-16T09:00:00Z"), ZoneOffset.UTC)
@@ -26,12 +33,12 @@ class FileAppDiagnosticsTest {
 
     @Test
     fun `records survive a restart newest first and never store the secret`() = runTest {
-        val first = FileAppDiagnostics(directory, clock)
+        val first = FileAppDiagnostics(directory, clock, dispatchers)
         first.warn("Sync", "first")
         first.error("Push", "token=eyJhbGciOiJSUzI1NiJ9.eyJpc3UiOjF9.c2ln", IllegalStateException("boom"))
         first.awaitWrites()
 
-        val reopened = FileAppDiagnostics(directory, clock)
+        val reopened = FileAppDiagnostics(directory, clock, dispatchers)
         val entries = reopened.observe().first()
 
         assertEquals(listOf("Push", "Sync"), entries.map { it.tag })
@@ -44,7 +51,7 @@ class FileAppDiagnosticsTest {
 
     @Test
     fun `the journal is bounded and clear removes the file`() = runTest {
-        val diagnostics = FileAppDiagnostics(directory, clock)
+        val diagnostics = FileAppDiagnostics(directory, clock, dispatchers)
         repeat(FileAppDiagnostics.MAX_ENTRIES + 25) { diagnostics.warn("Tag", "message $it") }
         diagnostics.awaitWrites()
 
@@ -61,11 +68,11 @@ class FileAppDiagnosticsTest {
 
     @Test
     fun `a crash written synchronously is imported on the next start`() = runTest {
-        val crashed = FileAppDiagnostics(directory, clock)
+        val crashed = FileAppDiagnostics(directory, clock, dispatchers)
         crashed.recordCrash("main", RuntimeException("Bearer abc.def.ghi"))
         assertTrue(File(directory, "pending_crash.jsonl").exists())
 
-        val next = FileAppDiagnostics(directory, clock)
+        val next = FileAppDiagnostics(directory, clock, dispatchers)
         next.importPendingCrashes()
         next.awaitWrites()
 
@@ -82,7 +89,7 @@ class FileAppDiagnosticsTest {
         directory.mkdirs()
         File(directory, "log.jsonl").writeText("not json\n{\"at\":\"2026-09-16T08:00:00Z\",\"level\":\"WARNING\",\"tag\":\"T\",\"message\":\"ok\"}\n")
 
-        val entries = FileAppDiagnostics(directory, clock).observe().first()
+        val entries = FileAppDiagnostics(directory, clock, dispatchers).observe().first()
 
         assertEquals(listOf("ok"), entries.map { it.message })
     }

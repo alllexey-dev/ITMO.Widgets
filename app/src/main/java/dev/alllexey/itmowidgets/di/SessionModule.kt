@@ -10,6 +10,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoCurrentUserProvider
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
@@ -44,14 +45,16 @@ object SessionModule {
         myItmo: MyItmo,
         widgetsApi: ItmoWidgetsApi,
         diagnostics: AppDiagnostics,
-        demo: DemoMode
+        demo: DemoMode,
+        dispatchers: AppDispatchers
     ): BackendIdentitySync = DefaultBackendIdentitySync(
         context = context,
         gate = gate,
         myItmo = myItmo,
         widgetsApi = widgetsApi,
         diagnostics = diagnostics,
-        demo = demo
+        demo = demo,
+        dispatchers = dispatchers
     )
 
     @Provides
@@ -59,10 +62,11 @@ object SessionModule {
     fun provideCurrentUserProvider(
         tokenStore: SessionTokenStore,
         gson: Gson,
-        demo: DemoMode
+        demo: DemoMode,
+        dispatchers: AppDispatchers
     ): CurrentUserProvider = DemoCurrentUserProvider(
         demo = demo,
-        signedIn = IdTokenCurrentUserProvider(tokenStore = tokenStore, gson = gson)
+        signedIn = IdTokenCurrentUserProvider(tokenStore = tokenStore, gson = gson, dispatchers = dispatchers)
     )
 
     @Provides
@@ -80,13 +84,15 @@ object SessionModule {
         utilityStorage: UtilityStorage,
         currentUser: CurrentUserProvider,
         widgetsApi: ItmoWidgetsApi,
-        demo: DemoMode
+        demo: DemoMode,
+        dispatchers: AppDispatchers
     ): BackendDeviceSession = DefaultBackendDeviceSession(
         gate = gate,
         utilityStorage = utilityStorage,
         currentUser = currentUser,
         widgetsApi = widgetsApi,
         demo = demo,
+        dispatchers = dispatchers,
         deviceName = listOf(Build.MANUFACTURER, Build.MODEL)
             .map(String::trim)
             .filter(String::isNotEmpty)

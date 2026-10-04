@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.data.remote
 
 import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.LessonSyncRequest
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -12,7 +13,6 @@ import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import retrofit2.awaitResponse
@@ -24,14 +24,15 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
     private val api: MyItmoApi,
     private val widgetsApi: ItmoWidgetsApi,
     private val time: AcademicTimeProvider,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : ScheduleRemoteDataSource {
 
     override suspend fun getSchedule(
         userIsu: Int?,
         start: LocalDate,
         end: LocalDate
-    ): List<DaySchedule> = withContext(Dispatchers.IO) {
+    ): List<DaySchedule> = withContext(dispatchers.io) {
         if (demo.isActive()) {
             return@withContext if (userIsu == null) {
                 DemoSchedule.ownDays(start, end, time.today())

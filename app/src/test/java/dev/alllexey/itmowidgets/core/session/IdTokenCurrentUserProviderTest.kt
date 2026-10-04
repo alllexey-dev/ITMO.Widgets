@@ -1,13 +1,20 @@
 package dev.alllexey.itmowidgets.core.session
 
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import java.util.Base64
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 
 class IdTokenCurrentUserProviderTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
 
     @Test
     fun `reads identity claims from the id token`() = runTest {
@@ -58,7 +65,7 @@ class IdTokenCurrentUserProviderTest {
     }
 
     private fun provider(idToken: String?): IdTokenCurrentUserProvider {
-        return IdTokenCurrentUserProvider(FakeTokenStore(idToken), Gson())
+        return IdTokenCurrentUserProvider(FakeTokenStore(idToken), Gson(), dispatchers)
     }
 
     private fun token(payloadJson: String): String {

@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.qr.data.repository
 
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -10,15 +11,21 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class QrCodeRepositoryImplTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
 
     @Test
     fun `cached value skips remote request`() = runTest {
         val local = FakeLocalDataSource(cached = "cached")
         val remote = FakeRemoteDataSource()
-        val repository = QrCodeRepositoryImpl(local, remote)
+        val repository = QrCodeRepositoryImpl(local, remote, dispatchers)
 
         val result = repository.refreshQrHex(force = false)
 
@@ -32,7 +39,7 @@ class QrCodeRepositoryImplTest {
     fun `forced refresh replaces cached value`() = runTest {
         val local = FakeLocalDataSource(cached = "cached")
         val remote = FakeRemoteDataSource(value = "fresh")
-        val repository = QrCodeRepositoryImpl(local, remote)
+        val repository = QrCodeRepositoryImpl(local, remote, dispatchers)
 
         val result = repository.refreshQrHex(force = true)
 
@@ -45,7 +52,8 @@ class QrCodeRepositoryImplTest {
     fun `remote failure is mapped at data boundary`() = runTest {
         val repository = QrCodeRepositoryImpl(
             local = FakeLocalDataSource(),
-            remote = FakeRemoteDataSource(failure = IllegalStateException("boom"))
+            remote = FakeRemoteDataSource(failure = IllegalStateException("boom")),
+            dispatchers = dispatchers
         )
 
         val result = repository.refreshQrHex()
@@ -57,7 +65,7 @@ class QrCodeRepositoryImplTest {
     @Test
     fun `expired cache remains available for widget fallback`() = runTest {
         val local = FakeLocalDataSource(cached = "last-working-code", expired = true)
-        val repository = QrCodeRepositoryImpl(local, FakeRemoteDataSource())
+        val repository = QrCodeRepositoryImpl(local, FakeRemoteDataSource(), dispatchers)
 
         assertEquals(null, repository.currentQr())
         assertEquals(null, repository.currentQrHex())

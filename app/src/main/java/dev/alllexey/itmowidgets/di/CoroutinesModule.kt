@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +17,16 @@ object CoroutinesModule {
 
     @Provides
     @Singleton
+    fun provideAppDispatchers(): AppDispatchers = AppDispatchers(
+        io = Dispatchers.IO,
+        default = Dispatchers.Default,
+        main = Dispatchers.Main,
+    )
+
+    @Provides
+    @Singleton
     @ApplicationScope
-    fun provideApplicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    fun provideApplicationScope(
+        dispatchers: AppDispatchers
+    ): CoroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
 }

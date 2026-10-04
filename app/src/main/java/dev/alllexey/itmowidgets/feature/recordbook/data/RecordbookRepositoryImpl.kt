@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data
 
 import api.myitmo.MyItmo
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -22,7 +23,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** One instance per process: the memory cache is what the study screens render first. */
@@ -30,7 +30,8 @@ import kotlinx.coroutines.withContext
 class RecordbookRepositoryImpl @Inject constructor(
     private val myItmo: MyItmo,
     private val time: AcademicTimeProvider,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val dispatchers: AppDispatchers
 ) : RecordbookRepository, SessionDataCleaner {
 
     private val api by lazy { myItmo.api }
@@ -86,7 +87,7 @@ class RecordbookRepositoryImpl @Inject constructor(
         call: () -> retrofit2.Call<api.myitmo.model.ResultResponse<T>>,
         transform: (T) -> R
     ): AppResult<R> = appResultOf {
-        val result = withContext(Dispatchers.IO) {
+        val result = withContext(dispatchers.io) {
             myItmo.execute(call()).requireResult()
         }
         transform(result)

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import androidx.datastore.core.DataStore
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import androidx.datastore.preferences.core.Preferences
@@ -40,10 +41,16 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SportQueueSessionDataTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
 
     @Test
     fun `session clear replaces personal queue replay for existing and new subscribers`() = runTest {
@@ -158,9 +165,10 @@ class SportQueueSessionDataTest {
             widgetsApi = api.instance,
             scoreRepository = SportScoreRepositoryImpl(myItmo, object : SportScoreOverrideProvider {
                 override fun getOverride() = null
-            }, FixedAcademicTime(), noDemo()),
+            }, FixedAcademicTime(), noDemo(), dispatchers),
             time = FixedAcademicTime(),
-            demo = noDemo()
+            demo = noDemo(),
+            dispatchers = dispatchers
         )
         return Fixture(settings, api, repository)
     }

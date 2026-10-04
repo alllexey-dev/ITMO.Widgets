@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
@@ -18,10 +19,17 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 /** Friends, profiles and the directory of the demo session, without Backend or My ITMO. */
 class SocialDemoGateTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val dispatchers = mainDispatcherRule.appDispatchers
+
     private val demo = FakeDemoMode(active = true)
     private val backend = unreachable<ItmoWidgetsApi>()
     // Without the stored opt-in the demo still reads as connected.
@@ -29,7 +37,7 @@ class SocialDemoGateTest {
 
     @Test
     fun `friends, requests and profiles come from the demo set and actions are refused`() = runTest {
-        val social = SocialRepositoryImpl(gate, backend, backgroundScope, demo)
+        val social = SocialRepositoryImpl(gate, backend, backgroundScope, demo, dispatchers)
 
         social.refresh()
 
@@ -47,9 +55,9 @@ class SocialDemoGateTest {
 
     @Test
     fun `people and the directory search come from the demo set`() = runTest {
-        val social = SocialRepositoryImpl(gate, backend, backgroundScope, demo)
-        val persons = PersonRepositoryImpl(unreachable<MyItmoApi>(), demo)
-        val search = PeopleSearchRepositoryImpl(unreachable<MyItmoApi>(), social, demo)
+        val social = SocialRepositoryImpl(gate, backend, backgroundScope, demo, dispatchers)
+        val persons = PersonRepositoryImpl(unreachable<MyItmoApi>(), demo, dispatchers)
+        val search = PeopleSearchRepositoryImpl(unreachable<MyItmoApi>(), social, demo, dispatchers)
 
         val teacher = (persons.person(DemoPeople.DATABASES_TEACHER.isu) as AppResult.Success).value
         val student = (persons.person(DemoPeople.MARIA.isu) as AppResult.Success).value
