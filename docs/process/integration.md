@@ -106,12 +106,30 @@ batch head or a red ship check reverts the culprit; it is never fixed forward on
 
 ## Ship check
 
-The ship check (card SS-01, run by `scripts/verify.sh` in `ship` mode once merged) checks the version lines, runs
-the full verification, builds both unsigned release variants with the Play policy check and runs the 2.2 upgrade
-on the integrator's emulator. It runs:
+The ship check is `scripts/ship-check.sh`, also reached through `scripts/verify.sh ship`. The integrator runs it in
+`~/proj/.wt/android/next`. Each stage writes PASS or FAIL to `~/proj/.wt/run/ship/<sha7>/summary.md`, with its log
+next to it, and any FAIL makes the exit code non-zero:
 
-- on a batch head when the batch carries a toolchain, module-graph, shell or storage change named in the
-  integrator card, and otherwise weekly;
+1. version lines per [0030](../decisions/0030-release-lines-and-data-continuity.md), and `origin/release/2.2`
+   below 100;
+2. `scripts/verify.sh full`, whose unit tests include `StableIdentifiersTest` and Konsist for both flavors;
+3. unsigned `:app:assembleGithubRelease :app:bundlePlayRelease` with both release manifests, then
+   `SKIP_BUILD=1 scripts/check-play-policy.sh`. `--central` builds against MyItmoApi from Maven Central;
+4. `scripts/verify.sh ui all` on `emulator-5554`, `UpgradeFrom22Test` included;
+5. the real upgrade path on `emulator-5554`. The script installs the `v2.2` `githubDebug` APK, which is built
+   once in `~/proj/.wt/android/ship-v22` and cached in `~/proj/.wt/run/apk/`. It launches that APK once, seeds
+   the 2.2 data directory from `app/src/androidTest/assets/upgrade-2.2/` and runs `adb install -r` with the
+   head `githubDebug`. The stage passes when 30 s after the start there is no `FATAL EXCEPTION`, the process is
+   alive and every seeded file is either present or migrated with a format marker.
+
+`--no-device` runs stages 1-3, as a lane does for its own PR. Device stages refuse every serial except
+`emulator-5554` and any worktree other than the integrator's. The release-signed upgrade belongs to the owner at
+T16. The last line has the `--local-verify` format: `VERIFY A ship|ship-no-device PASS|FAIL <secs>s <sha7>`.
+
+It runs:
+
+- on a batch head (per the integrator card L01-INT) when the batch carries a toolchain, module-graph, shell or
+  storage change, and otherwise weekly;
 - on every prerelease head and on the release candidate.
 
 A red ship check reverts the culprit like a red batch head.
