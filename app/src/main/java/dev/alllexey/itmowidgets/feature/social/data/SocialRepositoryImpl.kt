@@ -12,7 +12,7 @@ import dev.alllexey.itmowidgets.core.model.social.UserLookupRequest
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
@@ -35,7 +35,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SocialRepositoryImpl @Inject constructor(
-    private val customServices: CustomServicesRepository,
+    private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     @param:ApplicationScope private val scope: CoroutineScope,
     private val demo: DemoMode
@@ -52,7 +52,7 @@ class SocialRepositoryImpl @Inject constructor(
 
     init {
         scope.launch {
-            customServices.observeEnabled().collect { on ->
+            backend.observeConnected().collect { on ->
                 synchronized(cacheLock) {
                     updateEnabled(on)
                 }
@@ -197,7 +197,7 @@ class SocialRepositoryImpl @Inject constructor(
 
     private suspend fun beginRequest(): Long? {
         val (generation, wasEnabled) = synchronized(cacheLock) { cacheGeneration to enabled }
-        val on = customServices.isEnabled()
+        val on = backend.mayCallBackend()
         return synchronized(cacheLock) {
             // An older opt-in read must neither revive cleared data nor clear a newer connection.
             if (generation != cacheGeneration || (enabled != wasEnabled && on != enabled)) {

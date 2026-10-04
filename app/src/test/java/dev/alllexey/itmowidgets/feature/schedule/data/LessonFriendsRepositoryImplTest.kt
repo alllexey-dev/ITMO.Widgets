@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.GroupData
@@ -13,13 +14,10 @@ import dev.alllexey.itmowidgets.core.model.social.RelationshipState
 import dev.alllexey.itmowidgets.core.model.social.UserProfile
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import java.io.IOException
 import java.lang.reflect.Proxy
 import java.time.LocalDate
 import kotlin.coroutines.Continuation
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -74,11 +72,7 @@ class LessonFriendsRepositoryImplTest {
         RelationshipState.FRIENDS
     )
 
-    private fun services(enabled: Boolean) = object : CustomServicesRepository {
-        override fun observeEnabled(): Flow<Boolean> = flowOf(enabled)
-        override suspend fun isEnabled(): Boolean = enabled
-        override suspend fun setEnabled(enabled: Boolean) = Unit
-    }
+    private fun services(enabled: Boolean) = FakeBackendGate(enabled)
 
     /** Only the lesson-friends call is answered; anything else is a test bug. */
     private class FakeApi {

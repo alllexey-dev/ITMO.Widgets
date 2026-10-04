@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmPayloadHandler
 import dev.alllexey.itmowidgets.core.notification.NotificationDestination
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.WallClock
@@ -39,12 +40,13 @@ class SportSignPushHandler(
     private val notifier: AppNotifier,
     private val clock: Clock,
     private val diagnostics: AppDiagnostics,
+    private val backend: BackendGate,
     private val demo: DemoMode
 ) : FcmPayloadHandler {
     override val type = if (auto) SportAutoSignLessonsPayload.TYPE else SportFreeSignLessonsPayload.TYPE
 
     override suspend fun handle(payload: JsonElement) {
-        if (demo.isActive() || !actions.areCommunityServicesEnabled()) return
+        if (demo.isActive() || !backend.mayCallBackend()) return
         val lessons = payload.asJsonObject["sportLessons"]?.takeIf { it.isJsonArray }?.asJsonArray ?: return
         val seen = mutableSetOf<Long>()
         for (element in lessons.take(100)) {
@@ -53,7 +55,7 @@ class SportSignPushHandler(
                 // Delayed work must not book an expired or malformed lesson.
                 if (lesson.id <= 0 || !seen.add(lesson.id) || lesson.end.toInstant() <= clock.instant()) return@safely
                 val section = lesson.sectionName.trim().takeIf { it.isNotEmpty() } ?: return@safely
-                if (!actions.areCommunityServicesEnabled()) return@safely
+                if (!backend.mayCallBackend()) return@safely
                 when (actions.signIn(lesson.id).sportSignOutcome()) {
                     SportSignOutcome.SIGNED_IN -> {
                         // Notification failures must never convert a successful booking into cancellation.
@@ -113,10 +115,11 @@ class SportSignPushHandler(
         private val notifier: AppNotifier,
         @param:WallClock private val clock: Clock,
         private val diagnostics: AppDiagnostics,
+        private val backend: BackendGate,
         private val demo: DemoMode
     ) {
         fun create(auto: Boolean): FcmPayloadHandler =
-            SportSignPushHandler(auto, gson, actions, api, bookings, pending, widgets, notifier, clock, diagnostics, demo)
+            SportSignPushHandler(auto, gson, actions, api, bookings, pending, widgets, notifier, clock, diagnostics, backend, demo)
     }
 
     companion object {

@@ -13,6 +13,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
@@ -53,6 +54,7 @@ interface FcmWorkerEntryPoint {
     fun tokenSync(): FcmTokenSync
     fun sessionTokens(): SessionTokenStore
     fun settings(): AppSettingsStorage
+    fun backendGate(): BackendGate
     fun currentUser(): CurrentUserProvider
 }
 
@@ -62,7 +64,7 @@ class FcmMessageWorker(context: Context, params: WorkerParameters) : CoroutineWo
         if (!FcmDeliveryGuard.canDeliver(
                 inputData.getInt(FcmWork.RECIPIENT, 0), dependencies.currentUser().getCurrentUser()?.isu,
                 dependencies.sessionTokens().hasRefreshToken(),
-                dependencies.settings().getCustomServicesEnabled()
+                dependencies.backendGate().isOptedIn()
             )
         ) return Result.success()
         val json = inputData.getString(FcmWork.PAYLOAD) ?: return Result.success()

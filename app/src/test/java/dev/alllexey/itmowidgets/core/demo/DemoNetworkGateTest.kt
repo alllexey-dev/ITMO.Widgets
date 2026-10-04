@@ -5,7 +5,8 @@ import android.content.ContextWrapper
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.services.BackendGate
+import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.DefaultBackendDeviceSession
@@ -28,22 +29,25 @@ import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
 import java.time.Clock
 import java.util.UUID
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Single-call clients of the demo session: the pass, the update offer, web sign-in, privacy and Backend sessions. */
+/**
+ * Single-call clients of the demo session: the pass, the update offer, web sign-in, privacy and Backend sessions.
+ * The Backend ones send nothing in the demo, even with the stored opt-in, and nothing without the opt-in.
+ */
 class DemoNetworkGateTest {
     private val demo = FakeDemoMode(active = true)
     private val backend = unreachable<ItmoWidgetsApi>()
     private val settings = AppSettingsStorage(InMemoryPreferencesDataStore()).also {
         kotlinx.coroutines.runBlocking { it.setCustomServicesEnabled(true) }
     }
+    private val gate = DefaultBackendGate(settings, demo)
 
     @Test
     fun `the pass is a code no turnstile accepts`() = runTest {
@@ -58,11 +62,8 @@ class DemoNetworkGateTest {
 
     @Test
     fun `no update is offered and web sign-in is refused`() = runTest {
-        val update = AppUpdateRepositoryImpl(
-            backend, Connected, UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2"), AppVersionName("2.2"),
-            Clock.systemUTC(), RecordingDiagnostics(), demo
-        )
-        val webLogin = WebLoginRepositoryImpl(Connected, backend, demo)
+        val update = update(gate, demo)
+        val webLogin = WebLoginRepositoryImpl(gate, backend, demo)
 
         assertNull(update.loadUpdate())
         assertEquals(AppResult.Failure(AppError.DemoUnavailable), webLogin.preview("ABCD2345"))
@@ -71,7 +72,7 @@ class DemoNetworkGateTest {
 
     @Test
     fun `privacy shows the defaults and refuses changes`() = runTest {
-        val repository = SettingsRepositoryImpl(settings, backend, demo)
+        val repository = SettingsRepositoryImpl(settings, gate, backend, demo)
 
         repository.refreshSharingSettings()
 
@@ -81,14 +82,41 @@ class DemoNetworkGateTest {
 
     @Test
     fun `Backend never learns about the demo session`() = runTest {
+        assertBackendSessionsStayLocal(gate, demo)
+    }
+
+    @Test
+    fun `without the opt-in no Backend client sends anything`() = runTest {
+        val noDemo = FakeDemoMode()
+        val stored = AppSettingsStorage(InMemoryPreferencesDataStore())
+        val optedOut = DefaultBackendGate(stored, noDemo)
+        val webLogin = WebLoginRepositoryImpl(optedOut, backend, noDemo)
+        val privacy = SettingsRepositoryImpl(stored, optedOut, backend, noDemo)
+
+        assertNull(update(optedOut, noDemo).loadUpdate())
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), webLogin.preview("ABCD2345"))
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), webLogin.approve(UUID.randomUUID()))
+        privacy.refreshSharingSettings()
+        assertEquals(SharingSettingsState.Disabled, privacy.observeSharingSettings().first())
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), privacy.setScheduleVisibility(SharingVisibility.ALL))
+        assertBackendSessionsStayLocal(optedOut, noDemo)
+        assertFalse(optedOut.mayCallBackend())
+    }
+
+    private fun update(gate: BackendGate, demo: DemoMode) = AppUpdateRepositoryImpl(
+        backend, gate, UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2"), AppVersionName("2.2"),
+        Clock.systemUTC(), RecordingDiagnostics(), demo
+    )
+
+    private suspend fun assertBackendSessionsStayLocal(gate: BackendGate, demo: DemoMode) {
         val user = object : CurrentUserProvider {
             override suspend fun getCurrentUser() = CurrentUser(DemoPeople.ME_ISU, DemoPeople.ME_NAME, null)
         }
         val utility = UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2").also {
             it.setFirebaseToken("demo-token")
         }
-        val devices = DefaultBackendDeviceSession(settings, utility, backend, "Pixel", user, demo)
-        val identity = DefaultBackendIdentitySync(unusedContext(), settings, unreachableMyItmo(), backend, RecordingDiagnostics(), demo)
+        val devices = DefaultBackendDeviceSession(gate, utility, backend, "Pixel", user, demo)
+        val identity = DefaultBackendIdentitySync(unusedContext(), gate, unreachableMyItmo(), backend, RecordingDiagnostics(), demo)
 
         devices.registerCurrentDevice()
         devices.unregisterCurrentDevice()
@@ -101,11 +129,5 @@ class DemoNetworkGateTest {
         val unsafe = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe").apply { isAccessible = true }.get(null)
         val allocate = unsafe.javaClass.getMethod("allocateInstance", Class::class.java)
         return allocate.invoke(unsafe, ContextWrapper::class.java) as Context
-    }
-
-    private object Connected : CustomServicesRepository {
-        override fun observeEnabled(): Flow<Boolean> = flowOf(true)
-        override suspend fun isEnabled() = true
-        override suspend fun setEnabled(enabled: Boolean) = Unit
     }
 }

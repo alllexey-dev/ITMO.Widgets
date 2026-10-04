@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.schedule.data.widget
 import android.content.Context
 import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
@@ -23,6 +24,7 @@ class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
     gson: Gson,
     @ApplicationContext context: Context,
     private val settings: AppSettingsStorage,
+    private val backend: BackendGate,
     private val timeProvider: AcademicTimeProvider,
     private val tokens: SessionTokenStore,
 ) : ScheduleWidgetSnapshotStore, SessionDataCleaner {
@@ -41,7 +43,7 @@ class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
         val snapshot = runCatching {
             gson.fromJson(cached.first, ScheduleWidgetSnapshot::class.java)
         }.getOrNull() ?: ScheduleWidgetSnapshot.loading()
-        val enabled = settings.getScheduleSportAutoSignEnabled() && settings.getCustomServicesEnabled()
+        val enabled = settings.getScheduleSportAutoSignEnabled() && backend.isOptedIn()
         // Settings reads suspend: cleanup/new login may have invalidated the JSON meanwhile.
         mutex.withLock {
             when {

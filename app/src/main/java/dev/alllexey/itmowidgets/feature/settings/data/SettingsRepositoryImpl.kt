@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.model.SharingVisibility as ApiSharingVisibi
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
@@ -33,6 +34,7 @@ import kotlinx.coroutines.withContext
 
 class SettingsRepositoryImpl @Inject constructor(
     private val settings: AppSettingsStorage,
+    private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     private val demo: DemoMode
 ) : SettingsRepository {
@@ -129,7 +131,7 @@ class SettingsRepositoryImpl @Inject constructor(
                 sharingState.value = SharingSettingsState.Content(SharingSettings())
                 return
             }
-            if (!settings.getCustomServicesEnabled()) {
+            if (!backend.mayCallBackend()) {
                 sharingState.value = SharingSettingsState.Disabled
                 return
             }
@@ -232,7 +234,7 @@ class SettingsRepositoryImpl @Inject constructor(
         transform: (SharingSettings) -> SharingSettings
     ): AppResult<Unit> = sharingMutex.withLock {
         if (demo.isActive()) return@withLock AppResult.Failure(AppError.DemoUnavailable)
-        if (!settings.getCustomServicesEnabled()) {
+        if (!backend.mayCallBackend()) {
             sharingState.value = SharingSettingsState.Disabled
             return@withLock AppResult.Failure(AppError.CustomServicesDisabled)
         }

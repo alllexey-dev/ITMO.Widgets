@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.model.UserPrivacySettings
 import dev.alllexey.itmowidgets.core.model.SharingVisibility as ApiSharingVisibility
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
@@ -339,7 +340,7 @@ class SettingsRepositoryImplTest {
         return Fixture(
             storage = storage,
             api = fakeApi,
-            repository = SettingsRepositoryImpl(storage, fakeApi.instance, noDemo())
+            repository = SettingsRepositoryImpl(storage, DefaultBackendGate(storage, noDemo()), fakeApi.instance, noDemo())
         )
     }
 

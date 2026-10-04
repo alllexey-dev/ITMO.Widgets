@@ -5,11 +5,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
@@ -36,7 +38,10 @@ class ScheduleWidgetDataProviderTest {
     private val official = OfficialRepository()
     private val pending = PendingRepository()
     private val tokens = Tokens()
-    private val provider = ScheduleWidgetDataProvider(official, settings, Time, ScheduleWidgetSelector(), pending, tokens)
+    private val demo = FakeDemoMode()
+    private val provider = ScheduleWidgetDataProvider(
+        official, settings, DefaultBackendGate(settings, demo), Time, ScheduleWidgetSelector(), pending, tokens
+    )
 
     @Test
     fun `worker settings select teachers independently for the two rendered formats`() = runTest {
@@ -63,6 +68,15 @@ class ScheduleWidgetDataProviderTest {
         assertEquals(0, pending.refreshes)
         assertEquals(0, pending.reads)
         assertTrue(official.users.all { it == null })
+    }
+
+    @Test
+    fun `the demo session alone does not count as the opt-in`() = runTest {
+        settings.setScheduleSportAutoSignEnabled(true)
+        demo.active.value = true
+        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, available().snapshot.singleLesson.kind)
+        assertEquals(0, pending.refreshes)
+        assertEquals(0, pending.reads)
     }
 
     @Test

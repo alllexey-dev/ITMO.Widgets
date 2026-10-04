@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.core.model.toUserSummary
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import java.time.LocalDate
@@ -18,7 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class LessonFriendsRepositoryImpl @Inject constructor(
-    private val customServices: CustomServicesRepository,
+    private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     private val demo: DemoMode
 ) : LessonFriendsRepository {
@@ -26,7 +26,7 @@ class LessonFriendsRepositoryImpl @Inject constructor(
     override suspend fun friendsOnLesson(pairId: Long, date: LocalDate): AppResult<List<UserSummary>> {
         if (demo.isActive()) return AppResult.Success(DemoSchedule.friendsOnLesson(pairId, date))
         // Without the opt-in the access token never leaves the device.
-        if (!customServices.isEnabled()) return AppResult.Failure(AppError.CustomServicesDisabled)
+        if (!backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
         return call { widgetsApi.friendsOnLesson(pairId, date) }.map { profiles ->
             profiles.map { it.user.toUserSummary() }
         }

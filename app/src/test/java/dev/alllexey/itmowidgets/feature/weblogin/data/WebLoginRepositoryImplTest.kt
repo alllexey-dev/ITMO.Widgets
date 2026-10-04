@@ -1,18 +1,16 @@
 package dev.alllexey.itmowidgets.feature.weblogin.data
 
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import java.io.IOException
 import java.lang.reflect.Proxy
 import java.time.OffsetDateTime
 import java.util.UUID
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
@@ -75,11 +73,7 @@ class WebLoginRepositoryImplTest {
         assertTrue((repository.preview("ABCD2345") as AppResult.Failure).error is AppError.Unknown)
     }
 
-    private fun services(enabled: Boolean) = object : CustomServicesRepository {
-        override fun observeEnabled(): Flow<Boolean> = flowOf(enabled)
-        override suspend fun isEnabled(): Boolean = enabled
-        override suspend fun setEnabled(enabled: Boolean) = error("not used")
-    }
+    private fun services(enabled: Boolean) = FakeBackendGate(enabled)
 
     private class FakeApi {
         var preview: ApiResponse<WirePreview?> = ApiResponse(success = true, data = null, error = null)

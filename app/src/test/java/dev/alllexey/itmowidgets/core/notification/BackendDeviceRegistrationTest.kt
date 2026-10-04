@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.model.ApiResponse
+import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.DefaultBackendDeviceSession
@@ -59,7 +60,7 @@ class BackendDeviceRegistrationTest {
         val calls = mutableListOf<String>()
         private val api = Proxy.newProxyInstance(ItmoWidgetsApi::class.java.classLoader,
             arrayOf(ItmoWidgetsApi::class.java)) { _, method, _ -> calls += method.name; response } as ItmoWidgetsApi
-        val device = DefaultBackendDeviceSession(settings, utility, api, "Synthetic device", object : CurrentUserProvider {
+        val device = DefaultBackendDeviceSession(DefaultBackendGate(settings, noDemo()), utility, api, "Synthetic device", object : CurrentUserProvider {
             override suspend fun getCurrentUser() = owner?.let { CurrentUser(it, "Synthetic user", null) }
         }, noDemo())
         suspend fun prepare() {

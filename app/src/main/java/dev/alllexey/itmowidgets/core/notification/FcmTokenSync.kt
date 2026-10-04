@@ -2,10 +2,10 @@ package dev.alllexey.itmowidgets.core.notification
 
 import com.google.firebase.messaging.FirebaseMessaging
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -36,7 +36,7 @@ class DefaultFirebaseTokenProvider @Inject constructor() : FirebaseTokenProvider
 class DefaultFcmTokenSync @Inject constructor(
     private val tokens: FirebaseTokenProvider,
     private val utility: UtilityStorage,
-    private val settings: AppSettingsStorage,
+    private val gate: BackendGate,
     private val sessionTokens: SessionTokenStore,
     private val deviceSession: BackendDeviceSession,
     private val currentUser: CurrentUserProvider,
@@ -50,7 +50,7 @@ class DefaultFcmTokenSync @Inject constructor(
             if (token.isEmpty()) return@withLock
             if (utility.getFirebaseToken() != token) utility.setFirebaseToken(token)
             val ownerIsu = currentUser.getCurrentUser()?.isu?.takeIf { it > 0 }
-            if (settings.getCustomServicesEnabled() && sessionTokens.hasRefreshToken() && ownerIsu != null &&
+            if (gate.mayCallBackend() && sessionTokens.hasRefreshToken() && ownerIsu != null &&
                 (utility.getRegisteredFirebaseToken() != token || utility.getRegisteredFirebaseOwner() != ownerIsu)
             ) {
                 deviceSession.registerCurrentDevice()

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.resources.data
 
 import api.myitmo.MyItmo
 import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
+import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -23,7 +24,6 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import java.io.File
 import java.io.IOException
 import java.lang.reflect.Proxy
@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -62,7 +61,7 @@ class SubjectLinksRepositoryImplTest {
     private val url = "https://github.com/example"
 
     @Test fun `without the opt-in links stay on the device and survive a restart`() = runTest {
-        val api = FakeApi(); val services = Services(false); val folder = temporary.newFolder()
+        val api = FakeApi(); val services = FakeBackendGate(false); val folder = temporary.newFolder()
         val repository = repo(folder, api, services)
 
         assertTrue(repository.save(scope, id, LinkCategory.TASKS, url, "Лабы", LinkVisibility.PRIVATE, null) is AppResult.Success)
@@ -76,7 +75,7 @@ class SubjectLinksRepositoryImplTest {
     }
 
     @Test fun `without the opt-in shared actions and non-private visibility need the connection`() = runTest {
-        val repository = repo(temporary.newFolder(), FakeApi(), Services(false))
+        val repository = repo(temporary.newFolder(), FakeApi(), FakeBackendGate(false))
         val disabled = AppResult.Failure(AppError.CustomServicesDisabled)
 
         assertEquals(disabled, repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.FLOW, 7103))
@@ -85,12 +84,12 @@ class SubjectLinksRepositoryImplTest {
     }
 
     @Test fun `the first refresh with the opt-in uploads local links as private and drops them locally`() = runTest {
-        val api = FakeApi(); val services = Services(false); val folder = temporary.newFolder()
+        val api = FakeApi(); val services = FakeBackendGate(false); val folder = temporary.newFolder()
         val repository = repo(folder, api, services)
         repository.save(scope, id, LinkCategory.TASKS, url, "Лабы", LinkVisibility.PRIVATE, null)
         repository.pin(scope, id)
 
-        services.enabled.value = true
+        services.optedIn.value = true
         assertTrue(repository.refresh(scope) is AppResult.Success)
 
         assertEquals(listOf("saveSubjectLink", "pinSubjectLink", "subjectLinks"), api.calls)
@@ -99,12 +98,12 @@ class SubjectLinksRepositoryImplTest {
         assertEquals(id, link.id)
         assertFalse(link.local)
         assertEquals(id, repository.content(scope).pinnedId)
-        services.enabled.value = false
+        services.optedIn.value = false
         assertTrue(repo(folder, api, services).content(scope).mine.isEmpty())
     }
 
     @Test fun `a flow link sends its flow and reads back the flow name and the audiences`() = runTest {
-        val api = FakeApi(); val repository = repo(temporary.newFolder(), api, Services(true))
+        val api = FakeApi(); val repository = repo(temporary.newFolder(), api, FakeBackendGate(true))
         repository.refresh(scope)
 
         val saved = repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.FLOW, 7103)
@@ -122,7 +121,7 @@ class SubjectLinksRepositoryImplTest {
     }
 
     @Test fun `a flow is sent only with FLOW visibility`() = runTest {
-        val api = FakeApi(); val repository = repo(temporary.newFolder(), api, Services(true))
+        val api = FakeApi(); val repository = repo(temporary.newFolder(), api, FakeBackendGate(true))
         repository.refresh(scope)
 
         assertTrue(repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.FLOW, null) is AppResult.Failure)
@@ -133,7 +132,7 @@ class SubjectLinksRepositoryImplTest {
     }
 
     @Test fun `a network error keeps the cached snapshot`() = runTest {
-        val api = FakeApi(); val repository = repo(temporary.newFolder(), api, Services(true))
+        val api = FakeApi(); val repository = repo(temporary.newFolder(), api, FakeBackendGate(true))
         api.shared += api.link(UUID.randomUUID(), LinkCategory.SCORES, isMine = false)
         repository.refresh(scope)
         val before = repository.content(scope)
@@ -147,7 +146,7 @@ class SubjectLinksRepositoryImplTest {
     }
 
     @Test fun `an action answer updates the cached snapshot`() = runTest {
-        val api = FakeApi(); val repository = repo(temporary.newFolder(), api, Services(true))
+        val api = FakeApi(); val repository = repo(temporary.newFolder(), api, FakeBackendGate(true))
         val shared = api.link(UUID.randomUUID(), LinkCategory.SCORES, isMine = false)
         api.shared += shared
         repository.refresh(scope)
@@ -161,7 +160,7 @@ class SubjectLinksRepositoryImplTest {
 
     @Test fun `the first load of a scope that fails is an error`() = runTest {
         val api = FakeApi().apply { failNext = true }
-        val repository = repo(temporary.newFolder(), api, Services(true))
+        val repository = repo(temporary.newFolder(), api, FakeBackendGate(true))
 
         repository.refresh(scope)
 
@@ -169,10 +168,10 @@ class SubjectLinksRepositoryImplTest {
     }
 
     @Test fun `session cleanup deletes the file and ignores a late answer`() = runTest {
-        val api = FakeApi(); val services = Services(false); val folder = temporary.newFolder()
+        val api = FakeApi(); val services = FakeBackendGate(false); val folder = temporary.newFolder()
         val repository = repo(folder, api, services)
         repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.PRIVATE, null)
-        services.enabled.value = true
+        services.optedIn.value = true
         api.pauseFetch = true
 
         val pending = async { repository.refresh(scope) }
@@ -184,7 +183,7 @@ class SubjectLinksRepositoryImplTest {
 
         assertEquals(AppResult.Failure(AppError.Unauthorized), pending.await())
         assertFalse(File(folder, "cache.json").exists())
-        services.enabled.value = false
+        services.optedIn.value = false
         assertTrue(repository.content(scope).mine.isEmpty())
         assertTrue(repo(folder, api, services).content(scope).mine.isEmpty())
     }
@@ -192,7 +191,7 @@ class SubjectLinksRepositoryImplTest {
     @Test fun `a corrupted file is not replaced with an empty one`() = runTest {
         val folder = temporary.newFolder(); val original = "{unreadable"
         File(folder, "cache.json").writeText(original)
-        val repository = repo(folder, FakeApi(), Services(false))
+        val repository = repo(folder, FakeApi(), FakeBackendGate(false))
 
         assertTrue(repository.observe(scope).first() is SubjectLinksState.Error)
         assertTrue(repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.PRIVATE, null) is AppResult.Failure)
@@ -209,7 +208,7 @@ class SubjectLinksRepositoryImplTest {
              "scopes":{"42-2026-1":{"scope":{"subjectId":42,"subjectName":"Предмет","periodKey":"2026-1"},
                "response":{"mine":[],"shared":[{"visibility":"GROUP"}],"previous":[],"audiences":[],"premoderation":true}}}}
         """.trimIndent())
-        val repository = repo(folder, FakeApi(), Services(false))
+        val repository = repo(folder, FakeApi(), FakeBackendGate(false))
 
         val restored = repository.content(scope).mine.single()
         assertEquals(id, restored.id)
@@ -219,7 +218,7 @@ class SubjectLinksRepositoryImplTest {
 
     @Test fun `the demo shows its links and refuses every change without Backend`() = runTest {
         val api = FakeApi()
-        val repository = repo(temporary.newFolder(), api, Services(false), FakeDemoMode(active = true))
+        val repository = repo(temporary.newFolder(), api, FakeBackendGate(false), FakeDemoMode(active = true))
         val algorithms = ResourceScope(DemoStudy.ALGORITHMS.id, DemoStudy.ALGORITHMS.name, "2026-1")
         val refused = AppResult.Failure(AppError.DemoUnavailable)
 
@@ -237,18 +236,11 @@ class SubjectLinksRepositoryImplTest {
         assertTrue(api.calls.isEmpty())
     }
 
-    private fun repo(folder: File, api: FakeApi, services: Services, demo: DemoMode = noDemo()) =
+    private fun repo(folder: File, api: FakeApi, services: FakeBackendGate, demo: DemoMode = noDemo()) =
         SubjectLinksRepositoryImpl(SubjectLinksFileStore(folder, gson), api.instance, services, clock, demo)
 
     private suspend fun SubjectLinksRepositoryImpl.content(scope: ResourceScope): SubjectLinksSnapshot =
         (observe(scope).first() as SubjectLinksState.Content).snapshot
-
-    private class Services(on: Boolean) : CustomServicesRepository {
-        val enabled = MutableStateFlow(on)
-        override fun observeEnabled() = enabled
-        override suspend fun isEnabled() = enabled.value
-        override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
-    }
 
     private inner class FakeApi {
         val mine = linkedMapOf<UUID, WireLink>()
