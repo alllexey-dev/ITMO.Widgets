@@ -71,10 +71,6 @@ class QrToolkit @Inject constructor(
         return bitmap
     }
 
-    fun resetNoise() {
-        bitmapCache.clearCache("noise")
-    }
-
     suspend fun generateEmptyQrBitmap(): Bitmap {
         val (bgColor, _) = colorResolver.getQrColors()
         return renderer.renderEmpty(

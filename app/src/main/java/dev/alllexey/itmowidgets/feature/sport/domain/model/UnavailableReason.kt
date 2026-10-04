@@ -2,19 +2,19 @@ package dev.alllexey.itmowidgets.feature.sport.domain.model
 
 import java.time.OffsetDateTime
 
-sealed class UnavailableReason(val shortDescription: String, val weight: Int) {
-    object Full : UnavailableReason("Нет мест", 10)
-    object AlreadyEnrolled : UnavailableReason("Вы уже записаны", 20)
-    object TimeConflict : UnavailableReason("Есть запись в это время", 30)
-    object DailyLimitReached : UnavailableReason("Лимит записей на день", 40)
-    object WeeklyLimitReached : UnavailableReason("Лимит записей на неделе", 50)
-    object CreditAchieved : UnavailableReason("Зачёт достигнут", 55)
-    object SelectionFailed : UnavailableReason("Не пройден отбор", 60)
-    object ExternatOnly : UnavailableReason("Занятие для экстерната", 65)
-    object DebtOnly : UnavailableReason("Только для студентов с задолженностью", 67)
-    object HealthGroupMismatch : UnavailableReason("Другая группа здоровья", 70)
-    object LessonInPast : UnavailableReason("Занятие в прошлом", 90)
-    data class Other(val reason: String) : UnavailableReason(reason, 100)
+sealed class UnavailableReason(val weight: Int) {
+    object Full : UnavailableReason(10)
+    object AlreadyEnrolled : UnavailableReason(20)
+    object TimeConflict : UnavailableReason(30)
+    object DailyLimitReached : UnavailableReason(40)
+    object WeeklyLimitReached : UnavailableReason(50)
+    object CreditAchieved : UnavailableReason(55)
+    object SelectionFailed : UnavailableReason(60)
+    object ExternatOnly : UnavailableReason(65)
+    object DebtOnly : UnavailableReason(67)
+    object HealthGroupMismatch : UnavailableReason(70)
+    object LessonInPast : UnavailableReason(90)
+    data class Other(val reason: String) : UnavailableReason(100)
 
     companion object {
         fun getSortedUnavailableReasons(

@@ -19,6 +19,7 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.ProjectLinks
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.ui.shareText
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
@@ -79,10 +80,10 @@ class MeFragment : Fragment() {
         binding.debugToolsRow.setOnClickListener { openScreen(AppScreen.DEBUG_TOOLS) }
         binding.signOutRow.setOnClickListener { showSignOutConfirmation() }
         binding.profileShareButton.setOnClickListener { shareOwnProfile() }
-        binding.githubButton.setOnClickListener { openLink(R.string.project_github_url) }
+        binding.githubButton.setOnClickListener { openLink(ProjectLinks.GITHUB_URL) }
         // The native client handles tg:// itself; the web page is only a fallback.
         binding.telegramButton.setOnClickListener {
-            openLink(R.string.project_telegram_deeplink, R.string.project_telegram_url)
+            openLink(ProjectLinks.TELEGRAM_DEEPLINK, ProjectLinks.TELEGRAM_URL)
         }
 
         viewModel.uiState
@@ -116,10 +117,10 @@ class MeFragment : Fragment() {
         )
     }
 
-    private fun openLink(vararg urlResources: Int) {
-        for (urlRes in urlResources) {
+    private fun openLink(vararg urls: String) {
+        for (url in urls) {
             try {
-                startActivity(Intent(Intent.ACTION_VIEW, getString(urlRes).toUri()))
+                startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
                 return
             } catch (_: ActivityNotFoundException) {
                 continue

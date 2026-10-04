@@ -9,7 +9,7 @@
     <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/free_sign_switch"
         android:textAppearance="?attr/textAppearanceCaption"
-        android:text="Записать даже если до начала занятия остался всего час"
+        android:text="@string/sport_free_sign_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
