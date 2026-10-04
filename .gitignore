@@ -1,12 +1,10 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea/*
+!/.idea/codeStyles/
+!/.idea/inspectionProfiles/
+!/.idea/dictionaries/
 .DS_Store
 /build
 /captures
@@ -23,3 +21,9 @@ app/debug/
 .kotlin/
 .claude/
 keystore.properties
+/vibe/
+*.apk
+*.aab
+*.jks
+*.keystore
+.env*
