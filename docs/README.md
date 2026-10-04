@@ -18,6 +18,17 @@ is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
 - [Design](design.md) — visual language, components, states, verification matrix.
 - [Settings](settings.md) — the complete user-facing settings contract.
 
+## Process
+
+- [Workflow](process/workflow.md) — work tiers, the cross-repo chain,
+  verification tiers, batches, closing a feature.
+- [Plan template](process/plan-template.md) — lane files, the card format,
+  executing a card.
+- [Parallel agents](process/parallel-agents.md) — worktrees and branches,
+  build slots, emulators, admission and the pull rule.
+- [Ownership](process/ownership.md) — hot-file writers per wave, hand-ins,
+  the module `AGENTS.md` shape, rules for writing docs.
+
 ## Features
 
 - [First-run flow](features/onboarding.md) — the three steps after sign-in, the
