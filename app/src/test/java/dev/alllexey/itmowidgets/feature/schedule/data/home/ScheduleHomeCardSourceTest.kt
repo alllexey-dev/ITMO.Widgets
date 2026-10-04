@@ -3,22 +3,20 @@ package dev.alllexey.itmowidgets.feature.schedule.data.home
 import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.testing.FakePendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.home.HomeScheduleSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZoneId
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
@@ -28,8 +26,8 @@ import org.junit.Test
 
 class ScheduleHomeCardSourceTest {
     private val repository = FakeScheduleRepository()
-    private val pending = FakePending()
-    private val preferences = FakePreferences()
+    private val pending = FakePendingSportBookingsRepository()
+    private val preferences = FakeSchedulePreferencesRepository()
     private val source = ScheduleHomeCardSource(repository, pending, preferences, Today, HomeScheduleSelector())
 
     @Test
@@ -40,8 +38,8 @@ class ScheduleHomeCardSourceTest {
 
         assertEquals(1, card.rows.size)
         val request = repository.observed.single()
-        assertEquals(Today.today(), request.start)
-        assertEquals(Today.today().plusDays(1), request.end)
+        assertEquals(Today.today(), request.startDate)
+        assertEquals(Today.today().plusDays(1), request.endDate)
     }
 
     @Test
@@ -63,7 +61,7 @@ class ScheduleHomeCardSourceTest {
         assertEquals(1, pending.refreshes)
         assertTrue(source.observe().first().single() is HomeCard.Schedule)
         val request = repository.refreshed.single()
-        assertEquals(Today.today().plusDays(1), request.end)
+        assertEquals(Today.today().plusDays(1), request.endDate)
     }
 
     private fun lesson(pairId: Long, start: String) = Lesson(
@@ -81,42 +79,5 @@ class ScheduleHomeCardSourceTest {
         teacherFio = "Тренер", roomName = "Бассейн", isPrediction = false
     )
 
-    private object Today : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.of(2026, 9, 7)
-        override fun now() = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
-    }
-
-    private class FakePreferences : SchedulePreferencesRepository {
-        val enabled = MutableStateFlow(false)
-        override fun observeSportAutoSignEnabled() = enabled
-    }
-
-    private class FakePending : PendingSportBookingsRepository {
-        val values = MutableStateFlow<DataState<List<PendingSportBooking>>>(DataState.Success(emptyList()))
-        var refreshes = 0
-        override fun observePendingBookings() = values
-        override suspend fun refresh() { refreshes++ }
-    }
-
-    private class FakeScheduleRepository : ScheduleRepository {
-        val days = MutableStateFlow<List<DaySchedule>>(emptyList())
-        val observed = mutableListOf<Request>()
-        val refreshed = mutableListOf<Request>()
-        var refreshResult: AppResult<Unit> = AppResult.Success(Unit)
-
-        data class Request(val userIsu: Int?, val start: LocalDate, val end: LocalDate)
-
-        override fun observeScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate): Flow<List<DaySchedule>> {
-            observed += Request(userIsu, startDate, endDate)
-            return days.map { list -> list.filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) } }
-        }
-
-        override suspend fun refreshSchedule(userIsu: Int?, startDate: LocalDate, endDate: LocalDate): AppResult<Unit> {
-            refreshed += Request(userIsu, startDate, endDate)
-            return refreshResult
-        }
-
-        override suspend fun clearCaches() = Unit
-    }
+    private object Today : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
 }

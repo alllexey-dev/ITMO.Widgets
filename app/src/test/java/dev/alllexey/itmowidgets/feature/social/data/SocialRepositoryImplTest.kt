@@ -49,7 +49,7 @@ class SocialRepositoryImplTest {
 
     @Test
     fun `refresh loads friends requests and own profile`() = runTest {
-        val api = FakeApi().apply {
+        val api = FakeSocialApi().apply {
             friends = listOf(profile(1, CoreRelationshipState.FRIENDS))
             incoming = listOf(profile(2, CoreRelationshipState.INCOMING))
             outgoing = listOf(profile(3, CoreRelationshipState.OUTGOING))
@@ -67,7 +67,7 @@ class SocialRepositoryImplTest {
 
     @Test
     fun `people seen in lists profiles and actions are cached until the session is cleared`() = runTest {
-        val api = FakeApi().apply {
+        val api = FakeSocialApi().apply {
             friends = listOf(profile(1, CoreRelationshipState.FRIENDS))
             incoming = listOf(profile(2, CoreRelationshipState.INCOMING))
             userFriends = listOf(profile(7, CoreRelationshipState.NONE))
@@ -99,7 +99,7 @@ class SocialRepositoryImplTest {
 
     @Test
     fun `disabled services skip the backend entirely`() = runTest {
-        val api = FakeApi()
+        val api = FakeSocialApi()
         val repository = SocialRepositoryImpl(services(enabled = false), api.instance, backgroundScope, noDemo(), dispatchers = dispatchers)
 
         repository.refresh()
@@ -114,7 +114,7 @@ class SocialRepositoryImplTest {
 
     @Test
     fun `own profile failure does not hide the lists and a list failure is typed`() = runTest {
-        val api = FakeApi().apply {
+        val api = FakeSocialApi().apply {
             friends = listOf(profile(1, CoreRelationshipState.FRIENDS))
             meFailure = IOException("offline")
             outgoingFailure = IOException("offline")
@@ -130,7 +130,7 @@ class SocialRepositoryImplTest {
 
     @Test
     fun `accepting a request moves the person from incoming to friends without a refresh`() = runTest {
-        val api = FakeApi().apply {
+        val api = FakeSocialApi().apply {
             incoming = listOf(profile(2, CoreRelationshipState.INCOMING), profile(4, CoreRelationshipState.INCOMING))
             actionResult = { isu -> profile(isu, CoreRelationshipState.FRIENDS) }
         }
@@ -147,7 +147,7 @@ class SocialRepositoryImplTest {
 
     @Test
     fun `sending cancelling and removing update the cached lists`() = runTest {
-        val api = FakeApi().apply {
+        val api = FakeSocialApi().apply {
             friends = listOf(profile(1, CoreRelationshipState.FRIENDS))
         }
         val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo(), dispatchers = dispatchers)
@@ -168,7 +168,7 @@ class SocialRepositoryImplTest {
 
     @Test
     fun `a failed action leaves the lists untouched`() = runTest {
-        val api = FakeApi().apply {
+        val api = FakeSocialApi().apply {
             incoming = listOf(profile(2, CoreRelationshipState.INCOMING))
             actionFailure = IOException("offline")
         }
@@ -182,7 +182,7 @@ class SocialRepositoryImplTest {
 
     @Test
     fun `lookup deduplicates chunks by fifty and keeps request order`() = runTest {
-        val api = FakeApi().apply {
+        val api = FakeSocialApi().apply {
             lookupResult = { isus -> isus.map { profile(it, CoreRelationshipState.NONE) } }
         }
         val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo(), dispatchers = dispatchers)
@@ -197,7 +197,7 @@ class SocialRepositoryImplTest {
 
     @Test
     fun `clearing session data forgets everything loaded`() = runTest {
-        val api = FakeApi().apply { friends = listOf(profile(1, CoreRelationshipState.FRIENDS)); me = user(9) }
+        val api = FakeSocialApi().apply { friends = listOf(profile(1, CoreRelationshipState.FRIENDS)); me = user(9) }
         val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo(), dispatchers = dispatchers)
         repository.refresh()
 
@@ -211,7 +211,7 @@ class SocialRepositoryImplTest {
 
     @Test
     fun `target friends retain viewer capabilities and never overwrite own friends cache`() = runTest {
-        val api = FakeApi().apply { friends = listOf(profile(1, CoreRelationshipState.FRIENDS)) }
+        val api = FakeSocialApi().apply { friends = listOf(profile(1, CoreRelationshipState.FRIENDS)) }
         val repository = SocialRepositoryImpl(services(enabled = true), api.instance, backgroundScope, noDemo(), dispatchers = dispatchers)
         repository.refresh()
         api.userFriends = listOf(profile(2, CoreRelationshipState.NONE).copy(user = user(2).copy(
@@ -538,7 +538,7 @@ class SocialRepositoryImplTest {
         repository.assertCachesEmpty()
     }
 
-    private fun populatedApi() = FakeApi().apply {
+    private fun populatedApi() = FakeSocialApi().apply {
         friends = listOf(profile(1, CoreRelationshipState.FRIENDS))
         incoming = listOf(profile(2, CoreRelationshipState.INCOMING))
         userFriends = listOf(profile(7, CoreRelationshipState.NONE))
@@ -609,7 +609,7 @@ class SocialRepositoryImplTest {
     private fun profile(isu: Int, relationship: CoreRelationshipState) =
         CoreUserProfile(user(isu), relationship)
 
-    private class FakeApi {
+    private class FakeSocialApi {
         var friends: List<CoreUserProfile> = emptyList()
         var userFriends: List<CoreUserProfile> = emptyList()
         var userFriendsFailure: Exception? = null
@@ -635,7 +635,7 @@ class SocialRepositoryImplTest {
             when (method.name) {
                 "equals" -> return@newProxyInstance proxy === arguments?.firstOrNull()
                 "hashCode" -> return@newProxyInstance System.identityHashCode(proxy)
-                "toString" -> return@newProxyInstance "FakeApi"
+                "toString" -> return@newProxyInstance "FakeSocialApi"
             }
             callCount.incrementAndGet()
             val response = when (method.name) {

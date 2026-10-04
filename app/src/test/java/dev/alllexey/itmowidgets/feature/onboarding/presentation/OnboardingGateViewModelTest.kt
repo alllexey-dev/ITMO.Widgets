@@ -1,16 +1,11 @@
 package dev.alllexey.itmowidgets.feature.onboarding.presentation
 
-import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
-import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.CurrentUser
-import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -106,37 +101,4 @@ class OnboardingGateViewModelTest {
         val onboarding: FakeOnboardingRepository,
         val viewModel: OnboardingGateViewModel
     )
-
-    private class FakeSessionRepository(initial: SessionState) : SessionRepository {
-        val mutableState = MutableStateFlow(initial)
-        override val state: StateFlow<SessionState> = mutableState.asStateFlow()
-
-        override suspend fun initialize() = Unit
-        override suspend fun completeItmoIdLogin(tokenResponseJson: String): AppResult<Unit> =
-            error("Authentication is unavailable in this fixture")
-        override suspend fun signInWithRefreshToken(refreshToken: String): AppResult<Unit> =
-            error("Authentication is unavailable in this fixture")
-        override suspend fun startDemo() = Unit
-
-        override suspend fun signOut() = Unit
-    }
-
-    /** `null` stands for storage that has not answered yet, which the gate must not guess. */
-    private class FakeOnboardingRepository(initial: Boolean?) : OnboardingRepository {
-        private val completed = MutableSharedFlow<Boolean>(replay = 1)
-
-        init {
-            if (initial != null) completed.tryEmit(initial)
-        }
-
-        override fun observeCompleted(): Flow<Boolean> = completed.asSharedFlow()
-
-        override suspend fun complete() {
-            completed.emit(true)
-        }
-
-        override suspend fun reset() {
-            completed.emit(false)
-        }
-    }
 }

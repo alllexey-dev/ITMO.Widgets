@@ -8,11 +8,12 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
+import dev.alllexey.itmowidgets.core.testing.FakeTeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.feature.social.presentation.FakeTeacherReviewsRepository
-import dev.alllexey.itmowidgets.feature.social.presentation.ownReview
-import dev.alllexey.itmowidgets.feature.social.presentation.teacherReviews
+import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
+import dev.alllexey.itmowidgets.core.testing.ownReview
+import dev.alllexey.itmowidgets.core.testing.teacherReviews
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first

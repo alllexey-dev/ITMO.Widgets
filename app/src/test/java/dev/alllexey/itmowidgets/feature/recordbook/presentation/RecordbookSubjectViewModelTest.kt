@@ -14,16 +14,15 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
-import dev.alllexey.itmowidgets.feature.recordbook.FakeScheduleRefreshGateway
+import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
-import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSubjectBindingStore
-import dev.alllexey.itmowidgets.feature.recordbook.FakeSubjectLessonsGateway
-import dev.alllexey.itmowidgets.feature.recordbook.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.FakeSubjectLessonsGateway
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.recordbook.barsJournal
 import dev.alllexey.itmowidgets.feature.recordbook.barsSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
@@ -41,11 +40,11 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.sheetScore
-import dev.alllexey.itmowidgets.feature.recordbook.subjectLesson
-import dev.alllexey.itmowidgets.feature.resources.presentation.FakeSubjectLinksRepository
-import dev.alllexey.itmowidgets.feature.resources.presentation.linksSnapshot
-import dev.alllexey.itmowidgets.feature.resources.presentation.subjectLink
-import dev.alllexey.itmowidgets.feature.reviews.presentation.FakeTeacherLevelsRepository
+import dev.alllexey.itmowidgets.core.testing.subjectLesson
+import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
+import dev.alllexey.itmowidgets.core.testing.linksSnapshot
+import dev.alllexey.itmowidgets.core.testing.subjectLink
+import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlinx.coroutines.CompletableDeferred
@@ -69,7 +68,7 @@ class RecordbookSubjectViewModelTest {
     private fun model(withBars: Boolean = false, sheets: FakeSheetScoresRepository = FakeSheetScoresRepository()) = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
         put("entry_id", 42L); put("program_id", 1L); put("semester", 2); put("study_year", "2025/2026")
         if (withBars) { put("bars_plan", 8L); put("bars_type", "flow"); put("bars_identifier", "7") }
-    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels, marks, sheets)
+    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(LocalDate.of(2026, 9, 7)), resources, levels, marks, sheets)
     private val lessons = FakeSubjectLessonsGateway()
     private val scheduleRefresh = FakeScheduleRefreshGateway()
     private val bindingStore = FakeSubjectBindingStore()
@@ -197,7 +196,7 @@ class RecordbookSubjectViewModelTest {
         repository.subjects = AppResult.Success(listOf(subject))
         return RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
             put("entry_id", 42L); put("program_id", 1L); put("semester", 3); put("study_year", "2026/2027")
-        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(), resources, levels, marks, sheets)
+        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(LocalDate.of(2026, 9, 7)), resources, levels, marks, sheets)
     }
 
     @Test fun `an exact discipline id shows the upcoming lessons and their teachers without asking`() = runTest {

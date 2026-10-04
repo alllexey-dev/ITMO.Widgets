@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.testing.ClockAcademicTime
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
@@ -13,7 +14,6 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.core.testing.myItmoResponses
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
 import java.io.File
 import java.io.IOException
@@ -22,7 +22,6 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.concurrent.CopyOnWriteArrayList
@@ -339,7 +338,7 @@ class ScheduleChangesRepositoryImplTest {
         assertFalse(file.exists())
     }
 
-    private fun repository(demo: DemoMode = noDemo()) = ScheduleChangesRepositoryImpl(api, store, ClockTime(clock), clock, notifier, demo, dispatchers)
+    private fun repository(demo: DemoMode = noDemo()) = ScheduleChangesRepositoryImpl(api, store, ClockAcademicTime(clock), clock, notifier, demo, dispatchers)
 
     private fun awaitRequests(count: Int) {
         repeat(WAIT_SECONDS.toInt() * 100) { if (requests.size >= count) return; Thread.sleep(10) }
@@ -361,13 +360,6 @@ class ScheduleChangesRepositoryImplTest {
         override fun getZone(): ZoneId = ZoneOffset.UTC
         override fun withZone(zone: ZoneId?): Clock = this
         override fun instant(): Instant = now
-    }
-
-    /** Moscow time read from the same clock as the detection time. */
-    private class ClockTime(private val clock: Clock) : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.ofInstant(clock.instant(), zoneId)
-        override fun now(): OffsetDateTime = OffsetDateTime.ofInstant(clock.instant(), zoneId)
     }
 
     private companion object {

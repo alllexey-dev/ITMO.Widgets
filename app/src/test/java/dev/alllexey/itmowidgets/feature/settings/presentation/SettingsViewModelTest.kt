@@ -2,11 +2,9 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
@@ -14,7 +12,9 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
+import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
+import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -684,7 +684,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             assertEquals(1, fixture.onboardingRepository.resetCount)
-            assertFalse(fixture.onboardingRepository.completed.value)
+            assertEquals(false, fixture.onboardingRepository.completed.value)
             assertEquals(SettingsEvent.CloseOverlays, fixture.viewModel.events.first())
         }
 
@@ -1741,7 +1741,7 @@ class SettingsViewModelTest {
             )
         }
         val refresher = FakeWidgetRefreshRequester()
-        val onboarding = FakeOnboardingRepository()
+        val onboarding = FakeOnboardingRepository(completed = true)
         val viewModel = SettingsViewModel(
             repository = repository,
             customServicesRepository = customServicesRepository,
@@ -1803,22 +1803,6 @@ class SettingsViewModelTest {
     /** Below Android 13 by default, so the tile row stays out of the other cases. */
     private class FakeQuickSettingsTileAccess(var canRequest: Boolean = false) : QuickSettingsTileAccess {
         override fun canRequestAdd(): Boolean = canRequest
-    }
-
-    private class FakeOnboardingRepository : OnboardingRepository {
-        val completed = MutableStateFlow(true)
-        var resetCount = 0
-
-        override fun observeCompleted(): Flow<Boolean> = completed
-
-        override suspend fun complete() {
-            completed.value = true
-        }
-
-        override suspend fun reset() {
-            resetCount += 1
-            completed.value = false
-        }
     }
 
     private class FakeSettingsRepository(
@@ -2038,24 +2022,6 @@ class SettingsViewModelTest {
         override suspend fun setQrTileAdded(added: Boolean) {
             qrTileAddedRequests += added
             qrTileAdded.value = added
-        }
-    }
-
-    private class FakeCustomServicesRepository(
-        private val onSet: (Boolean) -> Unit
-    ) : CustomServicesRepository {
-
-        private val enabled = MutableStateFlow(false)
-        val requests = mutableListOf<Boolean>()
-
-        override fun observeEnabled(): Flow<Boolean> = enabled
-
-        override suspend fun isEnabled(): Boolean = enabled.value
-
-        override suspend fun setEnabled(enabled: Boolean) {
-            requests += enabled
-            this.enabled.value = enabled
-            onSet(enabled)
         }
     }
 

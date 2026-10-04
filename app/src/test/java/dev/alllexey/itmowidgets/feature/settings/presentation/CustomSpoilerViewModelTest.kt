@@ -1,8 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -18,7 +17,7 @@ class CustomSpoilerViewModelTest {
 
     @Test
     fun `save updates state and writes exactly once even with repeated taps`() = runTest(main.dispatcher) {
-        val repository = FakeRepository()
+        val repository = FakeCustomSpoilerRepository()
         val vm = CustomSpoilerViewModel(repository)
         advanceUntilIdle()
         assertEquals(false, vm.state.value.configured)
@@ -27,7 +26,7 @@ class CustomSpoilerViewModelTest {
         vm.resetImage()
         runCurrent()
         assertTrue(vm.state.value.busy)
-        assertEquals(1, repository.saveCount)
+        assertEquals(1, repository.saved.size)
         repository.result.complete(true)
         advanceUntilIdle()
         assertEquals(CustomSpoilerUiState(configured = true), vm.state.value)
@@ -36,7 +35,7 @@ class CustomSpoilerViewModelTest {
 
     @Test
     fun `failed replacement preserves configured image`() = runTest(main.dispatcher) {
-        val repository = FakeRepository(hasImage = true)
+        val repository = FakeCustomSpoilerRepository(hasImage = true)
         val vm = CustomSpoilerViewModel(repository)
         advanceUntilIdle()
         vm.saveImage("content://test/invalid")
@@ -48,7 +47,7 @@ class CustomSpoilerViewModelTest {
 
     @Test
     fun `reset clears custom image`() = runTest(main.dispatcher) {
-        val repository = FakeRepository(hasImage = true)
+        val repository = FakeCustomSpoilerRepository(hasImage = true)
         val vm = CustomSpoilerViewModel(repository)
         advanceUntilIdle()
         vm.resetImage()
@@ -56,16 +55,5 @@ class CustomSpoilerViewModelTest {
         advanceUntilIdle()
         assertEquals(CustomSpoilerUiState(configured = false), vm.state.value)
         assertEquals(CustomSpoilerEvent.RESET, vm.events.first())
-    }
-
-    private class FakeRepository(val hasImage: Boolean = false) : CustomSpoilerRepository {
-        val result = CompletableDeferred<Boolean>()
-        var saveCount = 0
-        override suspend fun hasImage() = hasImage
-        override suspend fun saveImage(sourceUri: String): Boolean {
-            saveCount++
-            return result.await()
-        }
-        override suspend fun resetImage() = result.await()
     }
 }

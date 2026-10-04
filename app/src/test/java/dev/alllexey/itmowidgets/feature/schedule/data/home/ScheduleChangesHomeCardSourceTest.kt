@@ -4,13 +4,13 @@ import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.testing.slot
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -77,11 +77,7 @@ class ScheduleChangesHomeCardSourceTest {
         assertEquals(0, repository.checks)
     }
 
-    private object Noon : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = TODAY
-        override fun now() = TODAY.atTime(12, 0).atZone(zoneId).toOffsetDateTime()
-    }
+    private object Noon : AcademicTimeProvider by FixedAcademicTime(TODAY.atTime(12, 0))
 
     private companion object {
         val TODAY: LocalDate = LocalDate.of(2026, 9, 7)

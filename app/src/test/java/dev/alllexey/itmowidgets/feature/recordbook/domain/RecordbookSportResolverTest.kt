@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
-import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import java.time.OffsetDateTime

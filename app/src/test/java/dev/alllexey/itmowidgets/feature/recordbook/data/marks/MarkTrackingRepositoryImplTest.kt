@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 
+import dev.alllexey.itmowidgets.core.testing.ClockAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import kotlinx.coroutines.test.runCurrent
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
@@ -19,7 +20,6 @@ import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.testing.MutableClock
 import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsMarkSource
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
@@ -40,9 +40,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import java.io.File
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -470,18 +467,11 @@ class MarkTrackingRepositoryImplTest {
     }
 
     private fun repository(demo: DemoMode = noDemo()) =
-        MarkTrackingRepositoryImpl(recordbook, bars, store, ClockTime(clock), clock, notifier, users, sheets, demo, dispatchers)
+        MarkTrackingRepositoryImpl(recordbook, bars, store, ClockAcademicTime(clock), clock, notifier, users, sheets, demo, dispatchers)
 
     private fun barsAnswer(answer: BarsMarkRead) {
         bars.answers.clear()
         bars.answers += answer
-    }
-
-    /** Moscow time read from the same clock as the wall-clock stamps. */
-    private class ClockTime(private val clock: MutableClock) : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.ofInstant(clock.instant(), zoneId)
-        override fun now(): OffsetDateTime = OffsetDateTime.ofInstant(clock.instant(), zoneId)
     }
 
     private companion object {

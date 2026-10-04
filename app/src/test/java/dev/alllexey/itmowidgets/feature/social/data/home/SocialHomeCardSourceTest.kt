@@ -4,12 +4,11 @@ import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialState
-import dev.alllexey.itmowidgets.feature.social.presentation.FakeSocialRepository
-import dev.alllexey.itmowidgets.feature.social.presentation.profile
-import kotlinx.coroutines.flow.MutableStateFlow
+import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
+import dev.alllexey.itmowidgets.core.testing.profile
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -18,7 +17,7 @@ import org.junit.Test
 
 class SocialHomeCardSourceTest {
     private val social = FakeSocialRepository()
-    private val services = FakeServices()
+    private val services = FakeCustomServicesRepository(enabled = true)
     private val source = SocialHomeCardSource(social, services)
 
     @Test
@@ -54,12 +53,5 @@ class SocialHomeCardSourceTest {
         social.requests.value = SocialState.Error(AppError.Network)
         assertEquals(AppResult.Failure(AppError.Network), source.refresh())
         assertEquals(1, social.refreshes)
-    }
-
-    private class FakeServices : CustomServicesRepository {
-        val enabled = MutableStateFlow(true)
-        override fun observeEnabled() = enabled
-        override suspend fun isEnabled() = enabled.value
-        override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
     }
 }

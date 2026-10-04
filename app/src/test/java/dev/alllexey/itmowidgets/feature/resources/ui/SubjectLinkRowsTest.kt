@@ -7,8 +7,8 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.ui.GroupPosition
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkSection
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
-import dev.alllexey.itmowidgets.feature.resources.presentation.linksSnapshot
-import dev.alllexey.itmowidgets.feature.resources.presentation.subjectLink
+import dev.alllexey.itmowidgets.core.testing.linksSnapshot
+import dev.alllexey.itmowidgets.core.testing.subjectLink
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

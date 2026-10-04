@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
+import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
@@ -39,7 +40,7 @@ object RecordbookPreviewFixtures {
     }
 
     const val MATH = "Математический анализ (продвинутый уровень)"
-    const val PE = "Физическая культура и спорт (элективная)"
+    val PE = DemoStudy.PHYSICAL_EDUCATION.name
     const val MATH_ID = 1L
     const val LMS_URL = "https://lms.itmo.ru/course/1"
     /** A synthetic Google Sheet address: no real sheet has this id. */
@@ -96,7 +97,7 @@ object RecordbookPreviewFixtures {
     private fun subjects(phase: Phase): List<RecordbookSubject> = when (phase) {
         Phase.START -> listOf(
             subject(MATH_ID, MATH, "Экзамен", 8.0, null),
-            subject(2, "Алгоритмы и структуры данных", "Экзамен", null, null),
+            subject(2, DemoStudy.ALGORITHMS.name, "Экзамен", null, null),
             subject(3, PE, "Зачёт", null, null, details = false),
             subject(4, "Проектирование и разработка распределённых информационных систем", "Дифференцированный зачёт", 5.0, null),
             subject(5, "Иностранный язык", "Зачёт", null, null),
@@ -104,7 +105,7 @@ object RecordbookPreviewFixtures {
         )
         Phase.MIDDLE -> listOf(
             subject(MATH_ID, MATH, "Экзамен", 72.0, null),
-            subject(2, "Алгоритмы и структуры данных", "Экзамен", 58.5, null),
+            subject(2, DemoStudy.ALGORITHMS.name, "Экзамен", 58.5, null),
             subject(3, PE, "Зачёт", null, null, details = false),
             subject(4, "Проектирование и разработка распределённых информационных систем", "Дифференцированный зачёт", 81.5, null),
             subject(5, "Иностранный язык", "Зачёт", 52.0, null),
@@ -112,7 +113,7 @@ object RecordbookPreviewFixtures {
         )
         Phase.SESSION -> listOf(
             subject(MATH_ID, MATH, "Экзамен", 48.5, "2/FX"),
-            subject(2, "Алгоритмы и структуры данных", "Экзамен", 76.5, "4/C"),
+            subject(2, DemoStudy.ALGORITHMS.name, "Экзамен", 76.5, "4/C"),
             subject(3, PE, "Зачёт", null, "зачет", details = false),
             subject(4, "Проектирование и разработка распределённых информационных систем", "Дифференцированный зачёт", 93.0, "5/A"),
             subject(5, "Иностранный язык", "Зачёт", 62.0, "зачет"),

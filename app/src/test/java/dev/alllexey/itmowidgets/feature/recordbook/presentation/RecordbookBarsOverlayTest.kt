@@ -9,8 +9,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
-import dev.alllexey.itmowidgets.feature.recordbook.FakeSportScoreRepository
-import dev.alllexey.itmowidgets.feature.recordbook.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.recordbook.TEST_HALF
 import dev.alllexey.itmowidgets.feature.recordbook.barsJournal
 import dev.alllexey.itmowidgets.feature.recordbook.barsSubject
@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.of
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
+import java.time.LocalDate
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -40,7 +41,7 @@ class RecordbookBarsOverlayTest {
     private val preference = FakeBarsPreference()
     private val marks = FakeMarkTrackingRepository()
     private fun model(state: SavedStateHandle = SavedStateHandle()) = RecordbookViewModel(myItmo, bars, preference, state,
-        RecordbookSportResolver(FakeSportScoreRepository()), FixedAcademicTime(), marks, sheets = FakeSheetScoresRepository())
+        RecordbookSportResolver(FakeSportScoreRepository()), FixedAcademicTime(LocalDate.of(2026, 9, 7)), marks, sheets = FakeSheetScoresRepository())
     private val content get() = model().let { it.ensureDataLoaded(); it }
 
     @Test fun `disabled overlay never asks BARS`() = runTest {

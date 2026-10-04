@@ -4,10 +4,9 @@ import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.feature.home.FakeHomeHintStatus
 import dev.alllexey.itmowidgets.feature.home.FakeHomeHintStore
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -17,7 +16,7 @@ import org.junit.Test
 class HintHomeCardSourceTest {
     private val status = FakeHomeHintStatus()
     private val store = FakeHomeHintStore()
-    private val services = FakeServices()
+    private val services = FakeCustomServicesRepository(enabled = true)
     private val source = HintHomeCardSource(status, store, services)
 
     @Test
@@ -57,12 +56,5 @@ class HintHomeCardSourceTest {
         status.widgetPlaced = true
         assertEquals(AppResult.Success(Unit), source.refresh())
         assertTrue(source.observe().first().isEmpty())
-    }
-
-    private class FakeServices : CustomServicesRepository {
-        val enabled = MutableStateFlow(true)
-        override fun observeEnabled() = enabled
-        override suspend fun isEnabled() = enabled.value
-        override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
     }
 }

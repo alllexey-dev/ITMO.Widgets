@@ -1,13 +1,12 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.feature.schedule.FakeCalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeCalendarSyncScheduler
@@ -19,7 +18,7 @@ import org.junit.Test
 
 class DefaultCalendarSyncTest {
 
-    private val tokens = Tokens()
+    private val tokens = FakeSessionTokenStore()
     private val scheduler = FakeCalendarSyncScheduler()
     private val repository = FakeCalendarSyncRepository()
     private val sync = DefaultCalendarSync(repository, scheduler, tokens, noDemo())
@@ -81,7 +80,7 @@ class DefaultCalendarSyncTest {
     fun `the work follows both the session and the switch`() = runTest {
         for ((signedIn, enabled) in listOf(true to true, true to false, false to true, false to false)) {
             val scheduler = FakeCalendarSyncScheduler()
-            val sync = DefaultCalendarSync(FakeCalendarSyncRepository(enabled), scheduler, Tokens(signedIn), noDemo())
+            val sync = DefaultCalendarSync(FakeCalendarSyncRepository(enabled), scheduler, FakeSessionTokenStore(signedIn), noDemo())
 
             sync.syncWork()
             sync.requestSync()
@@ -97,7 +96,7 @@ class DefaultCalendarSyncTest {
     fun `a run is skipped without a session or with the switch off`() = runTest {
         assertEquals(CheckOutcome.SKIPPED, sync.run())
         repository.state.value = CalendarSyncState(enabled = true)
-        tokens.refresh = false
+        tokens.signedIn = false
         assertEquals(CheckOutcome.SKIPPED, sync.run())
         assertEquals(0, repository.syncs)
     }
@@ -129,13 +128,5 @@ class DefaultCalendarSyncTest {
         sync.stopWork()
 
         assertEquals(1, scheduler.cancelCalls)
-    }
-
-    private class Tokens(var refresh: Boolean = true) : SessionTokenStore {
-        override fun hasRefreshToken() = refresh
-        override fun getIdToken(): String? = null
-        override fun replaceWithRefreshToken(refreshToken: String) = Unit
-        override fun replaceWithTokens(tokens: SessionTokens) = Unit
-        override fun clearTokens() = Unit
     }
 }

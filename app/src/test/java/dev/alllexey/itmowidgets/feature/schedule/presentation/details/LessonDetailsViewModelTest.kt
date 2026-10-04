@@ -6,20 +6,18 @@ import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
+import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.testing.slot
-import dev.alllexey.itmowidgets.feature.reviews.presentation.FakeTeacherLevelsRepository
+import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -33,7 +31,7 @@ class LessonDetailsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val services = FakeCustomServices()
+    private val services = FakeCustomServicesRepository(enabled = true)
     private val repository = FakeLessonFriendsRepository()
     private val levels = FakeTeacherLevelsRepository()
 
@@ -178,13 +176,6 @@ class LessonDetailsViewModelTest {
     )
 
     private fun friend(isu: Int, name: String) = UserSummary(isu, name, null, emptyList(), UserSharing(sport = false, schedule = true))
-
-    private class FakeCustomServices : CustomServicesRepository {
-        val enabled = MutableStateFlow(true)
-        override fun observeEnabled(): Flow<Boolean> = enabled
-        override suspend fun isEnabled(): Boolean = enabled.value
-        override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
-    }
 
     private class FakeLessonFriendsRepository : LessonFriendsRepository {
         var result: AppResult<List<UserSummary>> = AppResult.Success(emptyList())

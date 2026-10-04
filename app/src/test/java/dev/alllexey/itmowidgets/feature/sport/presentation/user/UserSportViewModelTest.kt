@@ -34,7 +34,7 @@ class UserSportViewModelTest {
 
     @Test
     fun `confirmed lessons resolve against the catalog without the merged schedule`() = runTest(mainDispatcherRule.dispatcher) {
-        val schedule = FakeSportScheduleRepository(catalog = DataState.Success(listOf(lesson(10), lesson(11))))
+        val schedule = CatalogSportScheduleRepository(catalog = DataState.Success(listOf(lesson(10), lesson(11))))
         val bookings = FakeUserSportRepository(AppResult.Success(UserSportBookings(
             confirmedLessonIds = listOf(11),
             pending = listOf(pending(12), pending(11))
@@ -52,7 +52,7 @@ class UserSportViewModelTest {
 
     @Test
     fun `a failed catalog still shows pending entries`() = runTest(mainDispatcherRule.dispatcher) {
-        val schedule = FakeSportScheduleRepository(catalog = DataState.Error(AppError.Network))
+        val schedule = CatalogSportScheduleRepository(catalog = DataState.Error(AppError.Network))
         val bookings = FakeUserSportRepository(AppResult.Success(UserSportBookings(
             confirmedLessonIds = listOf(11),
             pending = listOf(pending(12))
@@ -66,7 +66,7 @@ class UserSportViewModelTest {
 
     @Test
     fun `backend refusal is surfaced as an error`() = runTest(mainDispatcherRule.dispatcher) {
-        val schedule = FakeSportScheduleRepository(catalog = DataState.Success(emptyList()))
+        val schedule = CatalogSportScheduleRepository(catalog = DataState.Success(emptyList()))
         val viewModel = UserSportViewModel(handle(5), FakeUserSportRepository(AppResult.Failure(AppError.Forbidden)), schedule)
         advanceUntilIdle()
 
@@ -132,7 +132,7 @@ class UserSportViewModelTest {
     }
 
     /** The merged schedule never emits here, exactly like a process whose sport tab was never opened. */
-    private class FakeSportScheduleRepository(private val catalog: DataState<List<SportLesson>>) : SportScheduleRepository {
+    private class CatalogSportScheduleRepository(private val catalog: DataState<List<SportLesson>>) : SportScheduleRepository {
         var refreshCount = 0
 
         override fun observeSportSchedule(): Flow<MergedDataState<List<SportLesson>>> = MutableSharedFlow()

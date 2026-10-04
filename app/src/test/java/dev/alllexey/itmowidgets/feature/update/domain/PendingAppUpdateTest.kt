@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.update.domain
 
+import dev.alllexey.itmowidgets.feature.update.FakeAppUpdateRepository
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -85,26 +86,4 @@ class PendingAppUpdateTest {
         skipped: String = "2.1",
         notifiedAt: Instant = Instant.EPOCH
     ) = AppUpdateReminder(AppVersionName(skipped), notifiedAt)
-
-    private class FakeAppUpdateRepository(
-        var update: AppUpdate?,
-        var reminderState: AppUpdateReminder = AppUpdateReminder(AppVersionName("2.1"), Instant.EPOCH)
-    ) : AppUpdateRepository {
-        var notifications = 0
-            private set
-        var skippedVersion: AppVersionName? = null
-            private set
-
-        override suspend fun loadUpdate(): AppUpdate? = update
-
-        override suspend fun reminder(): AppUpdateReminder = reminderState
-
-        override suspend fun markNotified() {
-            notifications += 1
-        }
-
-        override suspend fun skip(version: AppVersionName) {
-            skippedVersion = version
-        }
-    }
 }

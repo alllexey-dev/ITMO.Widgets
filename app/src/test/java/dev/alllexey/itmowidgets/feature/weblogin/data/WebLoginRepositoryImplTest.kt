@@ -34,7 +34,7 @@ class WebLoginRepositoryImplTest {
     private val expiresAt = OffsetDateTime.parse("2026-09-24T09:06:30Z")
 
     @Test fun `preview and approval go to Backend with the code and the challenge`() = runTest {
-        val api = FakeApi().apply { preview = ApiResponse.success(WirePreview(challenge, " Chrome ", createdAt, expiresAt)) }
+        val api = FakeWebLoginApi().apply { preview = ApiResponse.success(WirePreview(challenge, " Chrome ", createdAt, expiresAt)) }
         val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Success(WebLoginPreview(challenge, "Chrome", createdAt, expiresAt)), repository.preview("ABCD2345"))
@@ -43,7 +43,7 @@ class WebLoginRepositoryImplTest {
     }
 
     @Test fun `a blank user agent reads as none`() = runTest {
-        val api = FakeApi().apply { preview = ApiResponse.success(WirePreview(challenge, "  ", createdAt, expiresAt)) }
+        val api = FakeWebLoginApi().apply { preview = ApiResponse.success(WirePreview(challenge, "  ", createdAt, expiresAt)) }
 
         val result = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers).preview("ABCD2345")
 
@@ -51,7 +51,7 @@ class WebLoginRepositoryImplTest {
     }
 
     @Test fun `without the connection nothing reaches Backend`() = runTest {
-        val api = FakeApi()
+        val api = FakeWebLoginApi()
         val repository = WebLoginRepositoryImpl(services(enabled = false), api.instance, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.preview("ABCD2345"))
@@ -61,7 +61,7 @@ class WebLoginRepositoryImplTest {
 
     @Test fun `an unknown used or expired code is not found`() = runTest {
         val notFound = HttpException(Response.error<Unit>(404, """{"success":false,"error":{"code":"not_found"}}""".toResponseBody()))
-        val api = FakeApi().apply { failure = notFound }
+        val api = FakeWebLoginApi().apply { failure = notFound }
         val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Failure(AppError.NotFound), repository.preview("ABCD2345"))
@@ -69,7 +69,7 @@ class WebLoginRepositoryImplTest {
     }
 
     @Test fun `network failures and error bodies are typed`() = runTest {
-        val api = FakeApi().apply { failure = IOException("offline") }
+        val api = FakeWebLoginApi().apply { failure = IOException("offline") }
         val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
         assertEquals(AppResult.Failure(AppError.Network), repository.preview("ABCD2345"))
 
@@ -83,7 +83,7 @@ class WebLoginRepositoryImplTest {
 
     private fun services(enabled: Boolean) = FakeBackendGate(enabled)
 
-    private class FakeApi {
+    private class FakeWebLoginApi {
         var preview: ApiResponse<WirePreview?> = ApiResponse(success = true, data = null, error = null)
         var failure: Exception? = null
         val calls = mutableListOf<String>()

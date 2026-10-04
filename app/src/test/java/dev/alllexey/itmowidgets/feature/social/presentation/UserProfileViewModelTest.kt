@@ -12,6 +12,13 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
+import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
+import dev.alllexey.itmowidgets.core.testing.communityReview
+import dev.alllexey.itmowidgets.core.testing.ownReview
+import dev.alllexey.itmowidgets.core.testing.profile
+import dev.alllexey.itmowidgets.core.testing.teacherReviews
+import dev.alllexey.itmowidgets.core.testing.teacherSummary
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider

@@ -2,9 +2,8 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
-import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
@@ -19,7 +18,7 @@ import org.junit.Test
 
 class DefaultMarkTrackingTest {
 
-    private val tokens = Tokens()
+    private val tokens = FakeSessionTokenStore()
     private val settings = MarkSourcePreferences(InMemoryPreferencesDataStore())
     private val scheduler = FakeMarksScheduler()
     private val repository = FakeMarkTrackingRepository()
@@ -81,7 +80,7 @@ class DefaultMarkTrackingTest {
                 barsSwitch?.let { setBarsMarksEnabled(it) }
                 setSheetMarksEnabled(false)
             }
-            val tracking = DefaultMarkTracking(settings, Tokens(signedIn), scheduler, FakeMarkTrackingRepository(),
+            val tracking = DefaultMarkTracking(settings, FakeSessionTokenStore(signedIn), scheduler, FakeMarkTrackingRepository(),
                 RecordingAppNotifier())
 
             tracking.syncWork()
@@ -130,12 +129,5 @@ class DefaultMarkTrackingTest {
         tracking.setSheetsEnabled(true)
         assertEquals(1, scheduler.ensureCalls)
         assertEquals(listOf(MarkSource.SHEETS), repository.resets)
-    }
-    private class Tokens(var refresh: Boolean = true) : SessionTokenStore {
-        override fun hasRefreshToken() = refresh
-        override fun getIdToken(): String? = null
-        override fun replaceWithRefreshToken(refreshToken: String) = Unit
-        override fun replaceWithTokens(tokens: SessionTokens) = Unit
-        override fun clearTokens() = Unit
     }
 }

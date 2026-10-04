@@ -4,6 +4,9 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.testing.ownReview
+import dev.alllexey.itmowidgets.core.testing.profile
+import dev.alllexey.itmowidgets.core.testing.teacherReviews
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import org.junit.Assert.assertEquals
 import org.junit.Test

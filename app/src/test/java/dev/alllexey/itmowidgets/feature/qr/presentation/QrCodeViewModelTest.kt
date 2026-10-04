@@ -24,7 +24,7 @@ class QrCodeViewModelTest {
     @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
     @Test fun `first load uses cache and repeated refresh cannot duplicate the request`() = runTest {
-        val repository = FakeRepository()
+        val repository = FakeQrCodeRepository()
         val vm = QrCodeViewModel(repository, clock())
         vm.start()
         runCurrent()
@@ -40,7 +40,7 @@ class QrCodeViewModelTest {
     }
 
     @Test fun `a fresh screen shows the cached pass before the network answers`() = runTest {
-        val repository = FakeRepository()
+        val repository = FakeQrCodeRepository()
         repository.pending = CompletableDeferred()
         val vm = QrCodeViewModel(repository, clock())
         vm.start()
@@ -53,7 +53,7 @@ class QrCodeViewModelTest {
     }
 
     @Test fun `expiry hides the pass even during a pending refresh and failed refresh never revives it`() = runTest {
-        val repository = FakeRepository()
+        val repository = FakeQrCodeRepository()
         val vm = QrCodeViewModel(repository, clock())
         vm.start()
         runCurrent()
@@ -70,7 +70,7 @@ class QrCodeViewModelTest {
     }
 
     @Test fun `refresh failure keeps only a still valid pass and offers retry feedback`() = runTest {
-        val repository = FakeRepository()
+        val repository = FakeQrCodeRepository()
         val vm = QrCodeViewModel(repository, clock())
         vm.start()
         runCurrent()
@@ -84,7 +84,7 @@ class QrCodeViewModelTest {
     }
 
     @Test fun `returning after expiry clears old content before loading and empty differs from error`() = runTest {
-        val repository = FakeRepository()
+        val repository = FakeQrCodeRepository()
         val vm = QrCodeViewModel(repository, clock())
         vm.start()
         runCurrent()
@@ -113,7 +113,7 @@ class QrCodeViewModelTest {
         override fun instant(): Instant = Instant.ofEpochMilli(testScheduler.currentTime)
     }
 
-    private class FakeRepository : QrCodeRepository {
+    private class FakeQrCodeRepository : QrCodeRepository {
         var code: QrCodeSnapshot? = QrCodeSnapshot("ITMO-TEST", 1000)
         var result: AppResult<Unit> = AppResult.Success(Unit)
         var pending: CompletableDeferred<AppResult<Unit>>? = null

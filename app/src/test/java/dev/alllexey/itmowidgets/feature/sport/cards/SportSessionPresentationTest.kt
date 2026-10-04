@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.cards
 
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
@@ -73,11 +74,7 @@ class SportSessionPresentationTest {
     }
 
     @Test fun `dates use academic zone on both sides of midnight`() {
-        val time = object : AcademicTimeProvider {
-            override val zoneId = ZoneId.of("Europe/Moscow")
-            override fun today() = LocalDate.of(2026, 9, 8)
-            override fun now() = today().atStartOfDay(zoneId).toOffsetDateTime()
-        }
+        val time = FixedAcademicTime(LocalDate.of(2026, 9, 8))
         val start = OffsetDateTime.parse("2026-09-07T22:30:00Z")
         val timing = SportSessionTiming(start, start.plusMinutes(90), time)
         assertTrue(timing.isToday)
@@ -88,11 +85,7 @@ class SportSessionPresentationTest {
     }
 
     @Test fun `russian weekday and month names are capitalised for display`() {
-        val time = object : AcademicTimeProvider {
-            override val zoneId = ZoneId.of("Europe/Moscow")
-            override fun today() = LocalDate.of(2026, 9, 1)
-            override fun now() = today().atStartOfDay(zoneId).toOffsetDateTime()
-        }
+        val time = FixedAcademicTime(LocalDate.of(2026, 9, 1))
         val friday = OffsetDateTime.parse("2026-09-25T08:10:00+03:00")
         assertEquals("Пятница, 25 сентября 2026", SportSessionTiming(friday, friday.plusMinutes(90), time).fullDateText())
     }

@@ -1,25 +1,24 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterOption
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
+import java.time.LocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.Locale
 
 class SportSignStateFactoryTest {
 
-    private val timeProvider = FixedTimeProvider()
+    private val timeProvider = FixedAcademicTime(LocalDateTime.of(2026, 7, 22, 9, 0))
     private val factory = SportSignStateFactory(timeProvider)
     private val catalog = SportFilterCatalog(
         buildings = listOf(
@@ -196,14 +195,5 @@ class SportSignStateFactoryTest {
             signQueue = null,
             friendsBookings = emptyList()
         )
-    }
-
-    private class FixedTimeProvider : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-
-        override fun today(): LocalDate = LocalDate.of(2026, 7, 22)
-
-        override fun now(): OffsetDateTime =
-            OffsetDateTime.parse("2026-07-22T09:00:00+03:00")
     }
 }

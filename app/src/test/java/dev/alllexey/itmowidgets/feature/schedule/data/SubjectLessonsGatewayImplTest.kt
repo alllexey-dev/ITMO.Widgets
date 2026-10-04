@@ -1,18 +1,15 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
-import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.schedule.subjectsIn
-import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import java.time.LocalDate
 import java.time.LocalTime
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
@@ -76,20 +73,4 @@ class SubjectLessonsGatewayImplTest {
         building = Building("Кронверкский проспект, 49"), buildingId = 13, mainBuildingId = 13, format = "Очный", formatId = 1,
         zoomUrl = null, zoomPassword = null, zoomInfo = null
     )
-
-    private class FakeScheduleRepository : ScheduleRepository {
-        val days = MutableStateFlow<List<DaySchedule>>(emptyList())
-        val observed = mutableListOf<Request>()
-
-        data class Request(val userIsu: Int?, val start: LocalDate, val end: LocalDate)
-
-        override fun observeScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate): Flow<List<DaySchedule>> {
-            observed += Request(userIsu, startDate, endDate)
-            return days.map { list -> list.filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) } }
-        }
-
-        override suspend fun refreshSchedule(userIsu: Int?, startDate: LocalDate, endDate: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
-
-        override suspend fun clearCaches() = Unit
-    }
 }

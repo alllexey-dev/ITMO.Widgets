@@ -2,11 +2,8 @@ package dev.alllexey.itmowidgets.feature.update.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
-import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateReminder
-import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
+import dev.alllexey.itmowidgets.feature.update.FakeAppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
-import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -58,19 +55,4 @@ class AppUpdateViewModelTest {
             )
         )
     )
-
-    private class FakeAppUpdateRepository : AppUpdateRepository {
-        var skippedVersion: AppVersionName? = null
-            private set
-
-        override suspend fun loadUpdate(): AppUpdate? = null
-
-        override suspend fun reminder() = AppUpdateReminder(AppVersionName("2.1"), Instant.EPOCH)
-
-        override suspend fun markNotified() = Unit
-
-        override suspend fun skip(version: AppVersionName) {
-            skippedVersion = version
-        }
-    }
 }

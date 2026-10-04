@@ -1,9 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation
 
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.DataState
 import dev.alllexey.itmowidgets.core.util.MergedDataState
@@ -24,9 +23,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataReposit
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
-import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -52,6 +49,8 @@ internal class FakeSportDataRepository : SportDataRepository {
     val score = MutableSharedFlow<DataState<SportScore>>(replay = 1)
     val attempts = MutableSharedFlow<DataState<SportAttempts>>(replay = 1)
     var gate: CompletableDeferred<Unit> = CompletableDeferred(Unit)
+    var limitsRefreshCount = 0
+    var entriesRefreshCount = 0
 
     override fun observeSportScore(): Flow<DataState<SportScore>> = score
     override suspend fun refreshSportScore() = gate.await()
@@ -59,9 +58,13 @@ internal class FakeSportDataRepository : SportDataRepository {
     override suspend fun refreshSportAttempts() = gate.await()
     override fun observeSportAutoSignLimits(): Flow<CustomDataState<SportAutoSignLimits>> =
         flowOf(CustomDataState.Success(SportAutoSignLimits(3, 2, OffsetDateTime.parse("2026-08-01T00:00:00+03:00"))))
-    override suspend fun refreshSportAutoSignLimits() = Unit
+    override suspend fun refreshSportAutoSignLimits() {
+        limitsRefreshCount += 1
+    }
     override fun observeSportQueueEntries(): Flow<CustomDataState<List<SportQueueEntry>>> = flowOf(CustomDataState.Success(emptyList()))
-    override suspend fun refreshSportQueueEntries() = Unit
+    override suspend fun refreshSportQueueEntries() {
+        entriesRefreshCount += 1
+    }
     override fun observeSportQueues(): Flow<CustomDataState<List<SportQueue>>> = flowOf(CustomDataState.Success(emptyList()))
     override suspend fun refreshSportQueues() = Unit
     override fun observeFriendsBookings(): Flow<CustomDataState<List<FriendSportBooking>>> = flowOf(CustomDataState.Success(emptyList()))
@@ -87,20 +90,21 @@ internal class FakeSportScheduleRepository : SportScheduleRepository {
     override suspend fun refreshSportTimeSlots() = Unit
 }
 
+/** Answers every action with [result]; sign-ins are recorded in [signedInLessons]. */
 internal class FakeSportActionRepository : SportActionRepository {
-    override suspend fun areCommunityServicesEnabled() = true
-    override suspend fun signIn(lessonId: Long): AppResult<Unit> = AppResult.Success(Unit)
-    override suspend fun signOut(lessonId: Long): AppResult<Unit> = AppResult.Success(Unit)
-    override suspend fun createFreeSignEntry(lessonId: Long, forceSign: Boolean): AppResult<Unit> = AppResult.Success(Unit)
-    override suspend fun cancelFreeSignEntry(entryId: Long): AppResult<Unit> = AppResult.Success(Unit)
-    override suspend fun createAutoSignEntry(prototypeLessonId: Long): AppResult<Unit> = AppResult.Success(Unit)
-    override suspend fun cancelAutoSignEntry(entryId: Long): AppResult<Unit> = AppResult.Success(Unit)
-}
+    var result: AppResult<Unit> = AppResult.Success(Unit)
+    val signedInLessons = mutableListOf<Long>()
 
-internal class FakeAcademicTimeProvider(private val today: LocalDate = LocalDate.of(2026, 9, 8)) : AcademicTimeProvider {
-    override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-    override fun today(): LocalDate = today
-    override fun now(): OffsetDateTime = today.atTime(12, 0).atZone(zoneId).toOffsetDateTime()
+    override suspend fun areCommunityServicesEnabled() = true
+    override suspend fun signIn(lessonId: Long): AppResult<Unit> {
+        signedInLessons += lessonId
+        return result
+    }
+    override suspend fun signOut(lessonId: Long): AppResult<Unit> = result
+    override suspend fun createFreeSignEntry(lessonId: Long, forceSign: Boolean): AppResult<Unit> = result
+    override suspend fun cancelFreeSignEntry(entryId: Long): AppResult<Unit> = result
+    override suspend fun createAutoSignEntry(prototypeLessonId: Long): AppResult<Unit> = result
+    override suspend fun cancelAutoSignEntry(entryId: Long): AppResult<Unit> = result
 }
 
 internal object FakeSportSignPreferences : SportSignPreferencesRepository {
@@ -114,9 +118,7 @@ internal fun bookingDelegate(
     followUpScope: CoroutineScope,
 ) = SportBookingDelegate(
     actionRepository = FakeSportActionRepository(),
-    scheduleRefreshGateway = object : ScheduleRefreshGateway {
-        override suspend fun refreshOwnSchedule(startDate: LocalDate, endDate: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
-    },
+    scheduleRefreshGateway = FakeScheduleRefreshGateway(),
     sportBookingRepository = bookings,
     sportScheduleRepository = schedule,
     sportDataRepository = data,

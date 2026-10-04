@@ -2,20 +2,16 @@ package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import dev.alllexey.itmowidgets.core.testing.MutableAcademicTime
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.RecordingScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -23,20 +19,20 @@ import org.junit.Test
 
 class ScheduleChangesCheckTest {
 
-    private val tokens = Tokens()
+    private val tokens = FakeSessionTokenStore()
     private val settings = ScheduleCheckPreferences(InMemoryPreferencesDataStore())
     private val repository = FakeScheduleChangesRepository()
     private val notifier = RecordingScheduleChangeNotifier()
-    private val time = MutableTime(LocalDateTime.of(2026, 9, 7, 12, 0))
+    private val time = MutableAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
     private val check = ScheduleChangesCheck(tokens, settings, repository, notifier, time)
 
     @Test
     fun `no session or a switched off check asks nothing and shows nothing`() = runTest {
         repository.changes.value = listOf(scheduleChange(id = "1"))
-        tokens.refresh = false
+        tokens.signedIn = false
         assertEquals(CheckOutcome.SKIPPED, check.run())
 
-        tokens.refresh = true
+        tokens.signedIn = true
         settings.setScheduleChangesEnabled(false)
         assertEquals(CheckOutcome.SKIPPED, check.run())
 
@@ -94,20 +90,5 @@ class ScheduleChangesCheckTest {
         assertEquals(1, repository.checks)
         assertTrue(notifier.shown.isEmpty())
         assertTrue(repository.notified.isEmpty())
-    }
-
-    private class Tokens : SessionTokenStore {
-        var refresh = true
-        override fun hasRefreshToken() = refresh
-        override fun getIdToken(): String? = null
-        override fun replaceWithRefreshToken(refreshToken: String) = Unit
-        override fun replaceWithTokens(tokens: SessionTokens) = Unit
-        override fun clearTokens() = Unit
-    }
-
-    private class MutableTime(var current: LocalDateTime) : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = current.toLocalDate()
-        override fun now(): OffsetDateTime = current.atZone(zoneId).toOffsetDateTime()
     }
 }

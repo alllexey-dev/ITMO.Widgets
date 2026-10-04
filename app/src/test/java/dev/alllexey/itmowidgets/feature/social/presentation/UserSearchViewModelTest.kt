@@ -6,7 +6,9 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.PersonSearchResult
+import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.text.UiText
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -25,7 +27,7 @@ class UserSearchViewModelTest {
 
     @Test
     fun `debounces typing and splits registered people from the rest`() = runTest(mainDispatcherRule.dispatcher) {
-        val search = FakePeopleSearch(
+        val search = PagedPeopleSearch(
             pages = mapOf(
                 0 to PeopleSearchPage(
                     results = listOf(
@@ -78,7 +80,7 @@ class UserSearchViewModelTest {
     @Test
     fun `adding a friend updates the row without a new search and failures become events`() =
         runTest(mainDispatcherRule.dispatcher) {
-            val search = FakePeopleSearch(
+            val search = PagedPeopleSearch(
                 pages = mapOf(0 to PeopleSearchPage(listOf(PersonSearchResult(1, "Кто-то", null, profile(1))), 1, null))
             )
             val social = FakeSocialRepository()
@@ -104,7 +106,7 @@ class UserSearchViewModelTest {
     @Test
     fun `clearing the query resets immediately and search errors are typed`() =
         runTest(mainDispatcherRule.dispatcher) {
-            val search = FakePeopleSearch(error = AppError.Network)
+            val search = PagedPeopleSearch(error = AppError.Network)
             val viewModel = UserSearchViewModel(search, FakeSocialRepository())
 
             viewModel.onQueryChanged("а")
@@ -119,7 +121,7 @@ class UserSearchViewModelTest {
 
     @Test
     fun `invite is delegated to the screen with the person's name`() = runTest(mainDispatcherRule.dispatcher) {
-        val search = FakePeopleSearch(
+        val search = PagedPeopleSearch(
             pages = mapOf(0 to PeopleSearchPage(listOf(PersonSearchResult(2, "Посторонний", null, null)), 1, null))
         )
         val viewModel = UserSearchViewModel(search, FakeSocialRepository())
@@ -132,7 +134,7 @@ class UserSearchViewModelTest {
         assertEquals(UserSearchEvent.Invite("Посторонний"), viewModel.eventFlow.first())
     }
 
-    private class FakePeopleSearch(
+    private class PagedPeopleSearch(
         private val pages: Map<Int, PeopleSearchPage> = emptyMap(),
         private val error: AppError? = null
     ) : PeopleSearchRepository {

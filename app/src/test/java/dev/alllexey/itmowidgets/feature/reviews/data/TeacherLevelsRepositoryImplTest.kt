@@ -42,7 +42,7 @@ class TeacherLevelsRepositoryImplTest {
     private val file get() = File(directory, "levels.json")
     private val clock = MutableClock(Instant.parse("2026-09-29T10:00:00Z"))
     private val services = FakeBackendGate(optedIn = true)
-    private val api = FakeApi()
+    private val api = FakeTeacherLevelsApi()
 
     @Test
     fun `the demo knows the tones of its teachers without Backend`() = runTest {
@@ -188,7 +188,7 @@ class TeacherLevelsRepositoryImplTest {
         override fun instant(): Instant = now
     }
 
-    private class FakeApi {
+    private class FakeTeacherLevelsApi {
         val levels = mutableMapOf<Int, SummaryLevel>()
         val requests = CopyOnWriteArrayList<List<Int>>()
         var failure: Exception? = null

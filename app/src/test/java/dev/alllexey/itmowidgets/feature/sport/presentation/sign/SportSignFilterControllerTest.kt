@@ -1,17 +1,15 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
+import java.time.LocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
 
 class SportSignFilterControllerTest {
 
-    private val timeProvider = FixedTimeProvider()
+    private val timeProvider = FixedAcademicTime(LocalDateTime.of(2026, 7, 22, 9, 0))
     private val controller = SportSignFilterController(timeProvider)
 
     @Test
@@ -59,14 +57,5 @@ class SportSignFilterControllerTest {
         assertEquals(true, filters.showOnlyAvailable)
         assertEquals(false, filters.showOnlyFriends)
         assertEquals(true, filters.showAutoSign)
-    }
-
-    private class FixedTimeProvider : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-
-        override fun today(): LocalDate = LocalDate.of(2026, 7, 22)
-
-        override fun now(): OffsetDateTime =
-            OffsetDateTime.parse("2026-07-22T09:00:00+03:00")
     }
 }

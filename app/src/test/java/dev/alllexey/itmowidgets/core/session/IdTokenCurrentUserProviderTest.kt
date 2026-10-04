@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.session
 
 import com.google.gson.Gson
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import java.util.Base64
 import kotlinx.coroutines.test.runTest
@@ -65,7 +66,7 @@ class IdTokenCurrentUserProviderTest {
     }
 
     private fun provider(idToken: String?): IdTokenCurrentUserProvider {
-        return IdTokenCurrentUserProvider(FakeTokenStore(idToken), Gson(), dispatchers)
+        return IdTokenCurrentUserProvider(FakeSessionTokenStore(signedIn = false, idToken = idToken), Gson(), dispatchers)
     }
 
     private fun token(payloadJson: String): String {
@@ -73,17 +74,5 @@ class IdTokenCurrentUserProviderTest {
             .withoutPadding()
             .encodeToString(payloadJson.toByteArray(Charsets.UTF_8))
         return "header.$payload.signature"
-    }
-
-    private class FakeTokenStore(private val idToken: String?) : SessionTokenStore {
-        override fun hasRefreshToken(): Boolean = false
-
-        override fun getIdToken(): String? = idToken
-
-        override fun replaceWithRefreshToken(refreshToken: String) = Unit
-
-        override fun replaceWithTokens(tokens: SessionTokens) = Unit
-
-        override fun clearTokens() = Unit
     }
 }
