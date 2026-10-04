@@ -2,10 +2,9 @@
 
 ## Release sequence
 
-1. **v2.0.1** restores full functional parity with the legacy application on the
-   refactored Hilt/repository architecture: authentication, onboarding, FCM, QR,
-   all widgets, settings, diagnostics, schedule and sport. Not finished yet; the
-   roadmap's "completed baseline" wording is aspirational.
+1. **v2.0.1** restored full functional parity with the legacy application on
+   the refactored Hilt/repository architecture: authentication, onboarding, FCM,
+   QR, all widgets, settings, diagnostics, schedule and sport.
 2. **v2.0.2** is reserved for compatibility or bug-fix work found after v2.0.1.
    No product features.
 3. **v2.1** adds the social and study-context layer: explicit friendships and
@@ -22,12 +21,20 @@
    home feed. It is the first release built for Google Play as well: the demo
    session for the review, account deletion on request and the two
    distribution variants. GitHub ships it first; Play follows its closed test.
+6. **v2.3** (Android) is a parity rewrite onto Kotlin Multiplatform and Compose
+   Multiplatform with the Material 3 Expressive look and no new product
+   features (decision 0016); a 2.2 install upgrades in place.
+7. **iOS 2.3** is the first iOS client: the same shared content screens in a
+   SwiftUI shell with full Android parity, shipped in the form the Apple
+   account allows (decision 0023, [roadmap](roadmap.md#ios)).
 
 Achievements, messaging, posts, followers and free-window discovery are outside
 the roadmap. Do not add them opportunistically.
 
 Development happens on `master`, which builds `2.3-SNAPSHOT` (version code
-20290); the latest release is `2.2` (version code 6).
+20290); the latest release is `2.2` (version code 6). The steps of a release
+and the owner's decision points are in the
+[release checklist](../process/release-checklist.md).
 
 ## Distribution
 
@@ -69,19 +76,32 @@ either updates the other:
 
 ## Version compatibility
 
-Core and Backend use their own semantic versions. Each Android release records
+Core and Backend use their own semantic versions. Each client release records
 the minimum Core and Backend it needs.
 
-| Android | Core | Backend | MyItmoApi | Notes |
+| Client | Core | Backend | MyItmoApi | Notes |
 |---|---|---|---|---|
+| iOS 2.3 | 2.0, built in | 1.8.0 in production; the development Backend before gate R | 2.0.0 | Not released. Uses the `platform` parameter, alert pushes and account deletion of 1.8.0. |
+| 2.3 (development) | 2.0, built in (`:shared:backend-client`, decision 0026); 1.7.0 from Maven Central until it lands | 1.7.0 or later; new request fields are optional | 2.0.0 from M2; a pinned MyItmoApi commit through the composite build before it (decision 0024) | Not released. Works against production 1.7.0. |
 | 2.2 | 1.7.0 (Maven Central), including `teacherReviews` with `reviews`/`mine`/`summary` and `saveMyTeacherReview`, `deleteMyTeacherReview`, `voteTeacherReview`, `reportTeacherReview`, `teacherSummaryLevels` | 1.7.0, PostgreSQL through V10: V4 (subject links), V5 (web sessions and admin), V6, V7 (external teacher reviews), V8 (`V8__service_credentials.sql`; `my_itmo_storage` stays until a separate migration of the next release), V9 (`V9__teacher_reviews.sql`) and V10 (`V10__teacher_summaries.sql`, AI summaries and the `GEMINI_API_KEY` row) | 1.8.2 (through Core and directly; `BarsAuthHelper.requestCodeWithCookies` for the background BARS renewal of the mark check) | Released on GitHub (`github` variant); Google Play follows. Backend 1.7.0 has run on production since 2026-10-03 and stays compatible with 2.1.1. |
 | 2.1.1 | 1.2.0 | 1.2.1 (`770293b`, current groups in every profile response) | 1.8.1 | Client-only release; works against Backend 1.2.0 as well, then lesson friends may show an older group. |
 | 2.1 | 1.2.0 (Maven Central, tag `1.2.0`) | 1.2.0, commit `a70cab1` or later | 1.8.1 (Maven Central, tag `1.8.1`) | Backend 1.2.0 requires the PostgreSQL cutover; 2.0.x clients are rejected by it and are told to update through `GET /api/app/version`. |
 | 2.0.x (legacy) | 1.1.x | 1.1.6 | 1.6.0 | MariaDB backend, reciprocal friend requests, boolean privacy. |
 
-Core is published to Maven Local during development and to Maven Central for a
-release (decision 0003 covers the snapshot period). Public publication of Core
-or MyItmoApi and any deployment happen only on explicit request.
+From 2.3 Core 2.0 is a client module inside this repository and is not
+published; Core 1.x stays frozen at 1.7.0 on Maven Central (decision 0026).
+MyItmoApi 2.x comes through a composite build pinned to a commit during
+development and from Maven Central for a release (decision 0024). Public
+publication of MyItmoApi and any deployment happen only on explicit request.
+
+`app.minimum` stays 2.1 until 2.2 reaches Play production, may rise to 2.2
+after that and never goes above 2.2 in v2.3; while it is at most 2.2 Backend
+changes only additively (decision 0030).
+
+| Backend | Content | Android and iOS served |
+|---|---|---|
+| 1.8.0 (planned) | The single Backend release of v2.3, in production at gate R: `version-info?platform=ANDROID\|IOS`, Spring Boot 4.1, V11 (drops `my_itmo_storage`), V12 `device_platform`, 401 for missing or invalid credentials (403 stays for denied access, `restricted` and `csrf`), push v2 with APNs alerts, `DELETE /api/users/me`, MyItmoApi 2.0.0. Expand-only, so the rollback to the 1.7.0 image stays image-only | Android 2.1 and later; iOS 2.3 |
+| 1.7.0 | In production since 2026-10-03 | Android 2.1 and later |
 
 ## What each release must not break
 

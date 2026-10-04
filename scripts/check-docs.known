@@ -35,5 +35,4 @@ docs/product/releases.md:path:assetlinks.json  # Web repository file without the
 docs/product/releases.md:path:V8__service_credentials.sql  # Backend migration without the B/ prefix
 docs/product/releases.md:path:V9__teacher_reviews.sql  # Backend migration without the B/ prefix
 docs/product/releases.md:path:V10__teacher_summaries.sql  # Backend migration without the B/ prefix
-docs/product/roadmap.md  # v2.1-v2.2 stage log with vibe/ plan links and pre-move paths until the roadmap rewrite
 docs/settings.md:path:docs/ops/account-deletion.md  # Backend doc without the B/ prefix
