@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.data.repository
 
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.feature.schedule.data.local.CacheEntry
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSource
@@ -18,7 +18,6 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.HttpException
 import retrofit2.Response
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -29,8 +28,8 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleRepositoryImplTest {
 
-    private val local = FakeLocalDataSource()
-    private val remote = FakeRemoteDataSource()
+    private val local = FakeScheduleLocalDataSource()
+    private val remote = FakeScheduleRemoteDataSource()
 
     @Test
     fun `refuses another user's schedule while custom services are off`() = runTest {
@@ -203,11 +202,11 @@ class ScheduleRepositoryImplTest {
         return ScheduleRepositoryImpl(
             local = local,
             remote = remote,
-            customServices = FakeCustomServices(customServicesEnabled)
+            customServices = FakeCustomServicesRepository(customServicesEnabled)
         )
     }
 
-    private class FakeRemoteDataSource : ScheduleRemoteDataSource {
+    private class FakeScheduleRemoteDataSource : ScheduleRemoteDataSource {
         val requestedUsers = mutableListOf<Int?>()
         var schedules: List<DaySchedule> = emptyList()
         var error: Exception? = null
@@ -225,7 +224,7 @@ class ScheduleRepositoryImplTest {
         }
     }
 
-    private class FakeLocalDataSource : ScheduleLocalDataSource {
+    private class FakeScheduleLocalDataSource : ScheduleLocalDataSource {
         val replacements = mutableListOf<Replacement>()
         var saves = 0
         var clears = 0
@@ -251,18 +250,6 @@ class ScheduleRepositoryImplTest {
             clearStarted.complete(Unit)
             clearGate?.await()
             clearedUsers += userIsu
-        }
-    }
-
-    private class FakeCustomServices(enabled: Boolean) : CustomServicesRepository {
-        private val state = MutableStateFlow(enabled)
-
-        override fun observeEnabled(): Flow<Boolean> = state
-
-        override suspend fun isEnabled(): Boolean = state.value
-
-        override suspend fun setEnabled(enabled: Boolean) {
-            state.value = enabled
         }
     }
 

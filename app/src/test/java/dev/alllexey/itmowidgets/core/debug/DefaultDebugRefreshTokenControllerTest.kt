@@ -1,15 +1,14 @@
 package dev.alllexey.itmowidgets.core.debug
 
 import api.myitmo.MyItmo
+import dev.alllexey.itmowidgets.core.testing.FakeSessionDataCleaner
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import api.myitmo.model.other.TokenResponse
 import api.myitmo.utils.TokenRefreshException
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -25,9 +24,9 @@ class DefaultDebugRefreshTokenControllerTest {
 
     @Test
     fun `trims token validates it and clears session data`() = runTest {
-        val tokenStore = FakeTokenStore()
-        val cleaner = CountingCleaner()
-        val myItmo = FakeMyItmo()
+        val tokenStore = FakeSessionTokenStore(signedIn = false)
+        val cleaner = FakeSessionDataCleaner()
+        val myItmo = TokenRefreshingMyItmo()
         val controller = DefaultDebugRefreshTokenController(
             tokenStore = tokenStore,
             myItmo = myItmo,
@@ -41,16 +40,16 @@ class DefaultDebugRefreshTokenControllerTest {
         assertEquals(AppResult.Success(Unit), result)
         assertEquals("test-refresh-token", tokenStore.refreshToken)
         assertEquals(1, myItmo.refreshRequests)
-        assertEquals(1, cleaner.clearRequests)
+        assertEquals(1, cleaner.requests)
     }
 
     @Test
     fun `clears rejected token and returns typed error`() = runTest {
-        val tokenStore = FakeTokenStore()
-        val cleaner = CountingCleaner()
+        val tokenStore = FakeSessionTokenStore(signedIn = false)
+        val cleaner = FakeSessionDataCleaner()
         val controller = DefaultDebugRefreshTokenController(
             tokenStore = tokenStore,
-            myItmo = FakeMyItmo(rejectToken = true),
+            myItmo = TokenRefreshingMyItmo(rejectToken = true),
             dataCleaners = setOf(cleaner),
             demo = noDemo(),
             dispatchers = dispatchers
@@ -60,38 +59,10 @@ class DefaultDebugRefreshTokenControllerTest {
 
         assertEquals(AppResult.Failure(AppError.Unauthorized), result)
         assertNull(tokenStore.refreshToken)
-        assertEquals(2, cleaner.clearRequests)
+        assertEquals(2, cleaner.requests)
     }
 
-    private class FakeTokenStore : SessionTokenStore {
-        var refreshToken: String? = null
-
-        override fun hasRefreshToken(): Boolean = refreshToken != null
-
-        override fun getIdToken(): String? = null
-
-        override fun replaceWithRefreshToken(refreshToken: String) {
-            this.refreshToken = refreshToken
-        }
-
-        override fun replaceWithTokens(tokens: SessionTokens) {
-            refreshToken = tokens.refreshToken
-        }
-
-        override fun clearTokens() {
-            refreshToken = null
-        }
-    }
-
-    private class CountingCleaner : SessionDataCleaner {
-        var clearRequests = 0
-
-        override suspend fun clearSessionData() {
-            clearRequests += 1
-        }
-    }
-
-    private class FakeMyItmo(
+    private class TokenRefreshingMyItmo(
         private val rejectToken: Boolean = false
     ) : MyItmo() {
         var refreshRequests = 0

@@ -6,22 +6,20 @@ import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
-import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPendingStatus
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
+import java.time.LocalDateTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,9 +33,9 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleWidgetDataProviderTest {
     private val stores = PreferenceStores(MemoryPreferences())
-    private val official = OfficialRepository()
-    private val pending = PendingRepository()
-    private val tokens = Tokens()
+    private val official = FakeScheduleRepository(listOf(DaySchedule(1, 1, Time.today(), null, emptyList())))
+    private val pending = SnapshotPendingRepository()
+    private val tokens = FakeSessionTokenStore()
     private val demo = FakeDemoMode()
     private val provider = ScheduleWidgetDataProvider(
         official, stores.scheduleChecks, stores.widgetSettings, DefaultBackendGate(stores.servicesOptIn, demo), Time, ScheduleWidgetSelector(), pending, tokens
@@ -67,7 +65,7 @@ class ScheduleWidgetDataProviderTest {
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, available().snapshot.singleLesson.kind)
         assertEquals(0, pending.refreshes)
         assertEquals(0, pending.reads)
-        assertTrue(official.users.all { it == null })
+        assertTrue(official.refreshed.map { it.userIsu }.all { it == null })
     }
 
     @Test
@@ -86,7 +84,7 @@ class ScheduleWidgetDataProviderTest {
         val result = available()
         assertEquals(ScheduleWidgetPendingStatus.PREDICTED, result.snapshot.singleLesson.lesson?.pendingStatus)
         assertEquals(listOf("refresh", "snapshot"), pending.calls)
-        assertEquals(Time.today() to Time.today().plusDays(1), official.ranges.single())
+        assertEquals(Time.today() to Time.today().plusDays(1), official.refreshed.map { it.startDate to it.endDate }.single())
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, result.snapshot.withoutPendingSport().singleLesson.kind)
         assertEquals(ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY, result.nextUpdateDelay)
         assertEquals(0, official.clears)
@@ -106,8 +104,8 @@ class ScheduleWidgetDataProviderTest {
     @Test
     fun `official failure without cache is not disguised as pending content`() = runTest {
         enable()
-        official.value.value = emptyList()
-        official.result = AppResult.Failure(AppError.Network)
+        official.days.value = emptyList()
+        official.refreshResult = AppResult.Failure(AppError.Network)
         assertTrue(provider.load() is ScheduleWidgetLoadResult.Unavailable)
     }
 
@@ -132,7 +130,7 @@ class ScheduleWidgetDataProviderTest {
         tokens.signedIn = false
         assertEquals(SingleLessonWidgetKind.SIGNED_OUT, available().snapshot.singleLesson.kind)
         assertEquals(0, pending.refreshes)
-        assertEquals(0, official.users.size)
+        assertEquals(0, official.refreshed.map { it.userIsu }.size)
     }
 
     @Test
@@ -166,22 +164,7 @@ class ScheduleWidgetDataProviderTest {
 
     private suspend fun available() = (provider.load() as ScheduleWidgetLoadResult.Available).selection
 
-    private class OfficialRepository : ScheduleRepository {
-        val value = MutableStateFlow(listOf(DaySchedule(1, 1, Time.today(), null, emptyList())))
-        var result: AppResult<Unit> = AppResult.Success(Unit)
-        val users = mutableListOf<Int?>()
-        val ranges = mutableListOf<Pair<LocalDate, LocalDate>>()
-        var clears = 0
-        override fun observeScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) = value
-        override suspend fun refreshSchedule(userIsu: Int?, startDate: LocalDate, endDate: LocalDate): AppResult<Unit> {
-            users += userIsu
-            ranges += startDate to endDate
-            return result
-        }
-        override suspend fun clearCaches() { clears++ }
-    }
-
-    private class PendingRepository : PendingSportBookingsRepository {
+    private class SnapshotPendingRepository : PendingSportBookingsRepository {
         var value: DataState<List<PendingSportBooking>> = DataState.Success(listOf(PendingSportBooking(
             1, PendingSportBooking.QueueKind.AUTO, -1, "Плавание", Time.now().plusHours(1),
             Time.now().plusHours(2), "Тестовый преподаватель", "Бассейн", true
@@ -203,18 +186,5 @@ class ScheduleWidgetDataProviderTest {
             transform(data.value).also { data.value = it }
     }
 
-    private class Tokens : SessionTokenStore {
-        var signedIn = true
-        override fun hasRefreshToken() = signedIn
-        override fun getIdToken(): String? = null
-        override fun replaceWithRefreshToken(refreshToken: String) = Unit
-        override fun replaceWithTokens(tokens: SessionTokens) = Unit
-        override fun clearTokens() { signedIn = false }
-    }
-
-    private object Time : AcademicTimeProvider {
-        override val zoneId = ZoneId.of("Europe/Moscow")
-        override fun now(): OffsetDateTime = OffsetDateTime.parse("2026-09-08T10:00:00+03:00")
-        override fun today(): LocalDate = now().toLocalDate()
-    }
+    private object Time : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 8, 10, 0))
 }

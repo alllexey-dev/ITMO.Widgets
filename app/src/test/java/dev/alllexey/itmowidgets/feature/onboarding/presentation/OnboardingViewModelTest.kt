@@ -1,16 +1,15 @@
 package dev.alllexey.itmowidgets.feature.onboarding.presentation
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
-import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
+import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -317,55 +316,6 @@ class OnboardingViewModelTest {
         val spoiler: FakeCustomSpoilerRepository,
         val viewModel: OnboardingViewModel
     )
-
-    /** Writes wait for [result], so a test sees the busy frame before the answer. */
-    private class FakeCustomSpoilerRepository(private val hasImage: Boolean = false) : CustomSpoilerRepository {
-        val result = CompletableDeferred<Boolean>()
-        val saved = mutableListOf<String>()
-        var resets = 0
-
-        override suspend fun hasImage(): Boolean = hasImage
-
-        override suspend fun saveImage(sourceUri: String): Boolean {
-            saved += sourceUri
-            return result.await()
-        }
-
-        override suspend fun resetImage(): Boolean {
-            resets++
-            return result.await()
-        }
-    }
-
-    private class FakeOnboardingRepository : OnboardingRepository {
-        private val completed = MutableStateFlow(false)
-
-        override fun observeCompleted(): Flow<Boolean> = completed
-
-        override suspend fun complete() {
-            completed.value = true
-        }
-
-        override suspend fun reset() {
-            completed.value = false
-        }
-    }
-
-    private class FakeCustomServicesRepository : CustomServicesRepository {
-        val enabled = MutableStateFlow(false)
-        val requests = mutableListOf<Boolean>()
-        var failing = false
-
-        override fun observeEnabled(): Flow<Boolean> = enabled
-
-        override suspend fun isEnabled(): Boolean = enabled.value
-
-        override suspend fun setEnabled(enabled: Boolean) {
-            requests += enabled
-            if (failing) error("Opt-in is unavailable in this fixture")
-            this.enabled.value = enabled
-        }
-    }
 
     private class FakeWidgetAppearanceRepository : WidgetAppearanceRepository {
         val state = MutableStateFlow(WidgetAppearance())

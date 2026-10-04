@@ -3,6 +3,11 @@ package dev.alllexey.itmowidgets.feature.social.presentation
 import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.testing.communityReview
+import dev.alllexey.itmowidgets.core.testing.copiedReview
+import dev.alllexey.itmowidgets.core.testing.ownReview
+import dev.alllexey.itmowidgets.core.testing.teacherReviews
+import dev.alllexey.itmowidgets.core.testing.teacherSummary
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
 import org.junit.Assert.assertEquals

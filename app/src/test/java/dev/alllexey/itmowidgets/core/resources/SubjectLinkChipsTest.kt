@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.core.resources
 
-import dev.alllexey.itmowidgets.feature.resources.presentation.linkTime
-import dev.alllexey.itmowidgets.feature.resources.presentation.linksSnapshot
-import dev.alllexey.itmowidgets.feature.resources.presentation.subjectLink
+import dev.alllexey.itmowidgets.core.testing.linkTime
+import dev.alllexey.itmowidgets.core.testing.linksSnapshot
+import dev.alllexey.itmowidgets.core.testing.subjectLink
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

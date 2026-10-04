@@ -2,8 +2,9 @@ package dev.alllexey.itmowidgets.feature.sport.data.repository
 
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.DataState
@@ -12,8 +13,7 @@ import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.*
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
-import java.time.OffsetDateTime
-import java.time.ZoneId
+import java.time.LocalDateTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -36,7 +36,7 @@ import org.junit.Test
 class PendingSportBookingsRepositoryImplTest {
     private val bookings = Bookings()
     private val data = SportData()
-    private val services = Services()
+    private val services = FakeCustomServicesRepository(enabled = true)
     private val repository = PendingSportBookingsRepositoryImpl(bookings, data, services, FixedTime)
 
     @Test fun `disabled services emit empty and make no requests`() = runTest {
@@ -268,18 +268,7 @@ class PendingSportBookingsRepositoryImplTest {
         maxNotificationAttempts = 10, targetLesson = prototype, realLesson = real
     )
 
-    private object FixedTime : AcademicTimeProvider {
-        override val zoneId = ZoneId.of("Europe/Moscow")
-        override fun now() = OffsetDateTime.parse("2026-09-07T12:00:00+03:00")
-        override fun today() = now().toLocalDate()
-    }
-
-    private class Services : CustomServicesRepository {
-        val enabled = MutableStateFlow(true)
-        override fun observeEnabled() = enabled
-        override suspend fun isEnabled() = enabled.value
-        override suspend fun setEnabled(enabled: Boolean) { this.enabled.value = enabled }
-    }
+    private object FixedTime : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
 
     private class Bookings : SportBookingRepository {
         val confirmed = MutableStateFlow<DataState<List<SportBooking>>>(DataState.Success(emptyList()))

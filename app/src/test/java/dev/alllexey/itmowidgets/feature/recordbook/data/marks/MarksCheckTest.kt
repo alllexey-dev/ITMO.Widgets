@@ -1,14 +1,13 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
+import dev.alllexey.itmowidgets.core.testing.MutableAcademicTime
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.SheetsCheck
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.workResultOf
 import dev.alllexey.itmowidgets.feature.recordbook.FakeBarsPreference
@@ -20,10 +19,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarge
 import dev.alllexey.itmowidgets.feature.recordbook.markNews
 import androidx.work.ListenableWorker.Result
 import java.time.Instant
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -32,21 +28,21 @@ import org.junit.Test
 
 class MarksCheckTest {
 
-    private val tokens = Tokens()
+    private val tokens = FakeSessionTokenStore()
     private val settings = MarkSourcePreferences(InMemoryPreferencesDataStore())
     private val repository = FakeMarkTrackingRepository()
     private val notifier = RecordingMarksNotifier()
     private val chip = FakeBarsPreference(enabled = false)
-    private val time = MutableTime(LocalDateTime.of(2026, 9, 7, 12, 0))
+    private val time = MutableAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
     private val check = MarksCheck(tokens, settings, repository, notifier, chip, time)
 
     @Test
     fun `no session or both sources off asks nothing and shows nothing`() = runTest {
         repository.news.value = listOf(markNews("Тестовый предмет 1"))
-        tokens.refresh = false
+        tokens.signedIn = false
         assertEquals(CheckOutcome.SKIPPED, check.run())
 
-        tokens.refresh = true
+        tokens.signedIn = true
         settings.setMyItmoMarksEnabled(false)
         settings.setBarsMarksEnabled(false)
         settings.setSheetMarksEnabled(false)
@@ -211,19 +207,5 @@ class MarksCheckTest {
         check.run()
 
         assertEquals(listOf("Тестовый предмет из таблицы"), notifier.digests.single().first.subjects)
-    }
-    private class Tokens : SessionTokenStore {
-        var refresh = true
-        override fun hasRefreshToken() = refresh
-        override fun getIdToken(): String? = null
-        override fun replaceWithRefreshToken(refreshToken: String) = Unit
-        override fun replaceWithTokens(tokens: SessionTokens) = Unit
-        override fun clearTokens() = Unit
-    }
-
-    private class MutableTime(var current: LocalDateTime) : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = current.toLocalDate()
-        override fun now(): OffsetDateTime = current.atZone(zoneId).toOffsetDateTime()
     }
 }

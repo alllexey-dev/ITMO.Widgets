@@ -2,16 +2,15 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation.changes
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.testing.slot
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -25,11 +24,7 @@ class ScheduleChangesViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val time = object : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.of(2026, 9, 7)
-        override fun now(): OffsetDateTime = OffsetDateTime.parse("2026-09-07T12:00:00+03:00")
-    }
+    private val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
 
     @Test
     fun `the screen is blank until the file answers and says when there is nothing`() = runTest(mainDispatcherRule.dispatcher) {

@@ -2,23 +2,20 @@ package dev.alllexey.itmowidgets.feature.debug.presentation
 
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
-import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
+import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSportLessonTemplateController
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -34,7 +31,7 @@ class DebugToolsViewModelTest {
 
     private val timeController = FakeTimeOverrideController()
     private val scoreController = FakeScoreOverrideController()
-    private val lessonController = FakeLessonTemplateController()
+    private val lessonController = FakeSportLessonTemplateController()
     private val refreshTokenController = FakeRefreshTokenController()
     private val customServicesRepository = FakeCustomServicesRepository()
     private val scheduleChangeTracking = FakeScheduleChangeTracking()
@@ -162,16 +159,7 @@ class DebugToolsViewModelTest {
         )
     }
 
-    private object FixedTimeProvider : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-
-        override fun today(): LocalDate = LocalDate.of(2026, 7, 24)
-
-        override fun now(): OffsetDateTime = today()
-            .atStartOfDay()
-            .atZone(zoneId)
-            .toOffsetDateTime()
-    }
+    private object FixedTimeProvider : AcademicTimeProvider by FixedAcademicTime(LocalDate.of(2026, 7, 24))
 
     private class FakeTimeOverrideController : AcademicTimeOverrideController {
         private var value: LocalDate? = null
@@ -190,28 +178,6 @@ class DebugToolsViewModelTest {
 
         override fun setOverride(value: SportScoreOverride?) {
             this.value = value
-        }
-    }
-
-    private class FakeLessonTemplateController : SportLessonTemplateController {
-        private var enabled = false
-
-        override fun isEnabled(): Boolean = enabled
-
-        override fun setEnabled(enabled: Boolean) {
-            this.enabled = enabled
-        }
-    }
-
-    private class FakeCustomServicesRepository : CustomServicesRepository {
-        val enabled = MutableStateFlow(false)
-
-        override fun observeEnabled(): Flow<Boolean> = enabled
-
-        override suspend fun isEnabled(): Boolean = enabled.value
-
-        override suspend fun setEnabled(enabled: Boolean) {
-            this.enabled.value = enabled
         }
     }
 

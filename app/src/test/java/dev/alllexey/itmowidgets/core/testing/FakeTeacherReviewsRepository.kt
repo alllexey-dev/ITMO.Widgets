@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.social.presentation
+package dev.alllexey.itmowidgets.core.testing
 
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError

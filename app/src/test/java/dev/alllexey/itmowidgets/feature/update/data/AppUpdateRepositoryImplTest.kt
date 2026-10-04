@@ -97,7 +97,7 @@ class AppUpdateRepositoryImplTest {
         versionInfo: AppVersionInfo = versionInfo(),
         customServicesEnabled: Boolean = true
     ): Fixture {
-        val api = FakeItmoWidgetsApi().apply { versionInfoResponse = { ApiResponse.success(versionInfo) } }
+        val api = FakeAppVersionApi().apply { versionInfoResponse = { ApiResponse.success(versionInfo) } }
         val storage = UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = INSTALLED_VERSION)
         return Fixture(
             api = api,
@@ -121,7 +121,7 @@ class AppUpdateRepositoryImplTest {
     ) = AppVersionInfo(minVersion = min, latestVersion = latest, note = note)
 
     private data class Fixture(
-        val api: FakeItmoWidgetsApi,
+        val api: FakeAppVersionApi,
         val repository: AppUpdateRepositoryImpl
     )
 
@@ -138,7 +138,7 @@ class AppUpdateRepositoryImplTest {
         }
     }
 
-    private class FakeItmoWidgetsApi {
+    private class FakeAppVersionApi {
         var versionInfoCalls: Int = 0
             private set
         var versionInfoResponse: () -> ApiResponse<AppVersionInfo> = {
@@ -156,7 +156,7 @@ class AppUpdateRepositoryImplTest {
                 }
                 "equals" -> proxy === arguments?.firstOrNull()
                 "hashCode" -> System.identityHashCode(proxy)
-                "toString" -> "FakeItmoWidgetsApi"
+                "toString" -> "FakeAppVersionApi"
                 else -> error("Unexpected ItmoWidgetsApi call: ${method.name}")
             }
         } as ItmoWidgetsApi

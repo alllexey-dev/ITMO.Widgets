@@ -7,13 +7,14 @@ import dev.alllexey.itmowidgets.core.util.MergedDataState
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
-import dev.alllexey.itmowidgets.feature.sport.presentation.FakeAcademicTimeProvider
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportSignPreferences
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
 import dev.alllexey.itmowidgets.feature.sport.presentation.emptyCatalog
+import java.time.LocalDateTime
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -37,7 +38,7 @@ class SportSignViewModelTest {
 
     private val schedule = FakeSportScheduleRepository()
     private val data = FakeSportDataRepository()
-    private val time = FakeAcademicTimeProvider()
+    private val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 8, 12, 0))
 
     private fun TestScope.viewModel() = SportSignViewModel(
         schedule, data, SportSignFilterController(time), SportSignStateFactory(time),

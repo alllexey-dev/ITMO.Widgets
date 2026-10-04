@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
@@ -11,12 +12,9 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.testing.myItmoResponses
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.StudyWeeks
 import java.io.File
 import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
@@ -232,19 +230,13 @@ class TeacherLessonsGatewayImplTest {
         assertTrue(requests.isEmpty())
     }
 
-    private fun gateway(demo: DemoMode = noDemo()) = TeacherLessonsGatewayImpl(api, TeacherWeeksFileStore(folder, Gson()), FixedTime(TODAY), demo, dispatchers)
+    private fun gateway(demo: DemoMode = noDemo()) = TeacherLessonsGatewayImpl(api, TeacherWeeksFileStore(folder, Gson()), FixedAcademicTime(TODAY.atTime(12, 0)), demo, dispatchers)
 
     private fun day(date: String, vararg lessons: String) =
         """{"day_number":1,"week_number":1,"date":"$date","lessons":[${lessons.joinToString(",")}]}"""
 
     private fun lesson(flowId: Int, subject: String, teacher: Int?, flowType: Int = 2) =
         """{"pair_id":$flowId,"subject":"$subject","teacher_id":${teacher ?: "null"},"flow_type_id":$flowType,"flow_id":$flowId}"""
-
-    private class FixedTime(private val today: LocalDate) : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = today
-        override fun now(): OffsetDateTime = today.atTime(12, 0).atZone(zoneId).toOffsetDateTime()
-    }
 
     private companion object {
         const val TEACHER = 100001

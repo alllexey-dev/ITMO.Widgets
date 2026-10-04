@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.reviews.presentation
+package dev.alllexey.itmowidgets.core.testing
 
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository

@@ -4,21 +4,21 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.testing.FakePendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.DataState
-import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.time.LocalDate
-import java.time.ZoneId
+import java.time.LocalDateTime
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runCurrent
@@ -33,7 +33,7 @@ class SchedulePendingSportTest {
 
     @Test
     fun `disabled preference never observes or refreshes sport`() = runTest(dispatcher.dispatcher) {
-        val pending = PendingRepository()
+        val pending = FakePendingSportBookingsRepository(booking())
         val model = model(pending = pending)
         model.ensureDataLoaded()
         runCurrent()
@@ -54,9 +54,9 @@ class SchedulePendingSportTest {
             override fun today() = now.toLocalDate()
             override fun now() = now
         }
-        val official = OfficialRepository()
-        val pending = PendingRepository()
-        val model = ScheduleViewModel(official, clock, SavedStateHandle(), Preferences(true), pending, FakeScheduleChangesRepository(), FakeCalendarSync())
+        val official = FakeScheduleRepository(listOf(day()))
+        val pending = FakePendingSportBookingsRepository(booking())
+        val model = ScheduleViewModel(official, clock, SavedStateHandle(), FakeSchedulePreferencesRepository(true), pending, FakeScheduleChangesRepository(), FakeCalendarSync())
         model.ensureDataLoaded()
         runCurrent()
         val original = model.content().schedule
@@ -65,16 +65,16 @@ class SchedulePendingSportTest {
         model.updateTimeState()
         assertEquals(original, model.content().schedule)
         assertTrue(model.content().displayDays.single().pendingSport.isEmpty())
-        assertEquals(1, official.refreshes)
+        assertEquals(1, official.refreshed.size)
         assertEquals(1, pending.refreshes)
         assertEquals(0, official.clears)
     }
 
     @Test
     fun `live toggles and queue emissions update the overlay without touching official data`() = runTest(dispatcher.dispatcher) {
-        val preference = Preferences()
-        val pending = PendingRepository()
-        val official = OfficialRepository()
+        val preference = FakeSchedulePreferencesRepository()
+        val pending = FakePendingSportBookingsRepository(booking())
+        val official = FakeScheduleRepository(listOf(day()))
         val model = model(official, preference, pending)
         model.ensureDataLoaded()
         runCurrent()
@@ -84,7 +84,7 @@ class SchedulePendingSportTest {
         assertEquals(listOf(booking()), model.content().displayDays.single().pendingSport)
         assertEquals(1, pending.refreshes)
         assertEquals(official.days.value, model.content().schedule)
-        assertEquals(1, official.refreshes)
+        assertEquals(1, official.refreshed.size)
 
         val next = booking(id = 2)
         pending.values.value = DataState.Success(listOf(next))
@@ -96,13 +96,14 @@ class SchedulePendingSportTest {
         pending.values.value = DataState.Success(listOf(booking(id = 3)))
         runCurrent()
         assertTrue(model.content().displayDays.all { it.pendingSport.isEmpty() })
-        assertEquals(1, official.refreshes)
+        assertEquals(1, official.refreshed.size)
     }
 
     @Test
     fun `friend root argument never exposes own queues even without selected user`() = runTest(dispatcher.dispatcher) {
-        val pending = PendingRepository()
-        val model = model(preferences = Preferences(true), pending = pending,
+        val pending = FakePendingSportBookingsRepository(booking())
+        val official = FakeScheduleRepository(listOf(day())).apply { schedulesFor(123456).value = listOf(day()) }
+        val model = model(official, FakeSchedulePreferencesRepository(true), pending,
             saved = SavedStateHandle(mapOf(ScheduleViewModel.ARG_USER_ISU to 123456)))
         model.ensureDataLoaded()
         runCurrent()
@@ -115,8 +116,8 @@ class SchedulePendingSportTest {
 
     @Test
     fun `selecting friend hides queues immediately and returning to own restarts projection`() = runTest(dispatcher.dispatcher) {
-        val pending = PendingRepository()
-        val model = model(preferences = Preferences(true), pending = pending)
+        val pending = FakePendingSportBookingsRepository(booking())
+        val model = model(preferences = FakeSchedulePreferencesRepository(true), pending = pending)
         model.ensureDataLoaded()
         runCurrent()
         assertEquals(1, model.content().displayDays.single().pendingSport.size)
@@ -135,8 +136,8 @@ class SchedulePendingSportTest {
 
     @Test
     fun `pending errors and an unfinished refresh do not replace academic content or spinner state`() = runTest(dispatcher.dispatcher) {
-        val pending = PendingRepository()
-        val model = model(preferences = Preferences(true), pending = pending)
+        val pending = FakePendingSportBookingsRepository(booking())
+        val model = model(preferences = FakeSchedulePreferencesRepository(true), pending = pending)
         model.ensureDataLoaded()
         runCurrent()
         val official = model.content().schedule
@@ -162,11 +163,11 @@ class SchedulePendingSportTest {
 
     @Test
     fun `pending does not disguise failure of an empty official schedule`() = runTest(dispatcher.dispatcher) {
-        val official = OfficialRepository().apply {
+        val official = FakeScheduleRepository(listOf(day())).apply {
             days.value = emptyList()
-            result = AppResult.Failure(AppError.Network)
+            refreshResult = AppResult.Failure(AppError.Network)
         }
-        val model = model(official, Preferences(true))
+        val model = model(official, FakeSchedulePreferencesRepository(true))
         model.ensureDataLoaded()
         runCurrent()
         assertEquals(ScheduleUiState.Error(AppError.Network, null), model.uiState.value)
@@ -175,12 +176,12 @@ class SchedulePendingSportTest {
     @Test
     fun `pending only initial load stays loading and does not hide its failure`() = runTest(dispatcher.dispatcher) {
         val response = CompletableDeferred<AppResult<Unit>>()
-        val official = OfficialRepository().apply {
+        val official = FakeScheduleRepository(listOf(day())).apply {
             days.value = emptyList()
-            refreshBlock = { response.await() }
+            refreshHandler = { response.await() }
         }
-        val pending = PendingRepository()
-        val model = model(official, Preferences(true), pending)
+        val pending = FakePendingSportBookingsRepository(booking())
+        val model = model(official, FakeSchedulePreferencesRepository(true), pending)
         model.ensureDataLoaded()
         runCurrent()
 
@@ -197,17 +198,17 @@ class SchedulePendingSportTest {
 
     @Test
     fun `pending only content survives delayed refresh failure and paginated loading after official success`() = runTest(dispatcher.dispatcher) {
-        val official = OfficialRepository().apply { days.value = emptyList() }
+        val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
         val near = booking(day = Today.today().plusDays(2))
         val nextPage = booking(id = 2, day = Today.today().plusDays(15))
-        val pending = PendingRepository().apply { values.value = DataState.Success(listOf(near, nextPage)) }
-        val model = model(official, Preferences(true), pending)
+        val pending = FakePendingSportBookingsRepository(booking()).apply { values.value = DataState.Success(listOf(near, nextPage)) }
+        val model = model(official, FakeSchedulePreferencesRepository(true), pending)
         model.ensureDataLoaded()
         runCurrent()
         val initialDisplay = model.content().displayDays
 
         val refresh = CompletableDeferred<AppResult<Unit>>()
-        official.refreshBlock = { refresh.await() }
+        official.refreshHandler = { refresh.await() }
         model.loadInitialSchedule(forceRefresh = true)
         runCurrent()
         assertEquals(initialDisplay, model.content().displayDays)
@@ -222,7 +223,7 @@ class SchedulePendingSportTest {
         assertFalse(model.content().loadingMore)
 
         val page = CompletableDeferred<AppResult<Unit>>()
-        official.refreshBlock = { page.await() }
+        official.refreshHandler = { page.await() }
         model.fetchNextDays()
         runCurrent()
         assertTrue(model.content().loadingMore)
@@ -237,15 +238,15 @@ class SchedulePendingSportTest {
 
     @Test
     fun `returning from a friend must successfully load own schedule again before showing pending only data`() = runTest(dispatcher.dispatcher) {
-        val official = OfficialRepository().apply { days.value = emptyList() }
-        val model = model(official, Preferences(true))
+        val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
+        val model = model(official, FakeSchedulePreferencesRepository(true))
         model.ensureDataLoaded()
         runCurrent()
         assertEquals(1, model.content().displayDays.single().pendingSport.size)
 
         val friend = SelectedUser(123456, "Тестовый друг", null)
         val friendResponse = CompletableDeferred<AppResult<Unit>>()
-        official.refreshBlock = { friendResponse.await() }
+        official.refreshHandler = { friendResponse.await() }
         model.setSelectedUser(friend)
         model.loadInitialSchedule()
         runCurrent()
@@ -255,7 +256,7 @@ class SchedulePendingSportTest {
         assertEquals(ScheduleUiState.Empty(friend), model.uiState.value)
 
         val ownResponse = CompletableDeferred<AppResult<Unit>>()
-        official.refreshBlock = { ownResponse.await() }
+        official.refreshHandler = { ownResponse.await() }
         model.setSelectedUser(null)
         model.loadInitialSchedule()
         runCurrent()
@@ -268,14 +269,14 @@ class SchedulePendingSportTest {
     @Test
     fun `removing pending only data during refresh restores loading and subsequent official error`() = runTest(dispatcher.dispatcher) {
         for (disablePreference in listOf(true, false)) {
-            val official = OfficialRepository().apply { days.value = emptyList() }
-            val preference = Preferences(true)
-            val pending = PendingRepository()
+            val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
+            val preference = FakeSchedulePreferencesRepository(true)
+            val pending = FakePendingSportBookingsRepository(booking())
             val model = model(official, preference, pending)
             model.ensureDataLoaded()
             runCurrent()
             val refresh = CompletableDeferred<AppResult<Unit>>()
-            official.refreshBlock = { refresh.await() }
+            official.refreshHandler = { refresh.await() }
             model.loadInitialSchedule(forceRefresh = true)
             runCurrent()
             assertTrue(model.content().loadingMore)
@@ -292,11 +293,11 @@ class SchedulePendingSportTest {
 
     @Test
     fun `queue-only dates follow loaded range and never enter official schedule`() = runTest(dispatcher.dispatcher) {
-        val official = OfficialRepository().apply { days.value = emptyList() }
+        val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
         val near = booking(day = Today.today().plusDays(2))
         val nextPage = booking(id = 2, day = Today.today().plusDays(15))
-        val pending = PendingRepository().apply { values.value = DataState.Success(listOf(near, nextPage)) }
-        val model = model(official, Preferences(true), pending)
+        val pending = FakePendingSportBookingsRepository(booking()).apply { values.value = DataState.Success(listOf(near, nextPage)) }
+        val model = model(official, FakeSchedulePreferencesRepository(true), pending)
         model.ensureDataLoaded()
         runCurrent()
         assertTrue(model.content().schedule.isEmpty())
@@ -328,46 +329,13 @@ class SchedulePendingSportTest {
     }
 
     private fun model(
-        official: OfficialRepository = OfficialRepository(), preferences: Preferences = Preferences(),
-        pending: PendingRepository = PendingRepository(), saved: SavedStateHandle = SavedStateHandle()
+        official: FakeScheduleRepository = FakeScheduleRepository(listOf(day())), preferences: FakeSchedulePreferencesRepository = FakeSchedulePreferencesRepository(),
+        pending: FakePendingSportBookingsRepository = FakePendingSportBookingsRepository(booking()), saved: SavedStateHandle = SavedStateHandle()
     ) = ScheduleViewModel(official, Today, saved, preferences, pending, FakeScheduleChangesRepository(), FakeCalendarSync())
 
     private fun ScheduleViewModel.content() = uiState.value as ScheduleUiState.Content
 
-    private class Preferences(enabled: Boolean = false) : SchedulePreferencesRepository {
-        val enabled = MutableStateFlow(enabled)
-        override fun observeSportAutoSignEnabled() = enabled
-    }
-
-    private class PendingRepository : PendingSportBookingsRepository {
-        val values = MutableStateFlow<DataState<List<PendingSportBooking>>>(DataState.Success(listOf(booking())))
-        var observations = 0
-        var refreshes = 0
-        var refreshBlock: suspend () -> Unit = {}
-        override fun observePendingBookings() = values.also { observations++ }
-        override suspend fun refresh() { refreshes++; refreshBlock() }
-    }
-
-    private class OfficialRepository : ScheduleRepository {
-        val days = MutableStateFlow(listOf(day()))
-        var refreshes = 0
-        var clears = 0
-        var result: AppResult<Unit> = AppResult.Success(Unit)
-        var refreshBlock: suspend () -> AppResult<Unit> = { result }
-        override fun observeScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) =
-            days.map { it.filter { day -> day.date in startDate..endDate } }
-        override suspend fun refreshSchedule(userIsu: Int?, startDate: LocalDate, endDate: LocalDate): AppResult<Unit> {
-            refreshes++
-            return refreshBlock()
-        }
-        override suspend fun clearCaches() { clears++ }
-    }
-
-    private object Today : AcademicTimeProvider {
-        override val zoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.of(2026, 9, 7)
-        override fun now() = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
-    }
+    private object Today : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
 
     companion object {
         private fun day() = DaySchedule(1, 1, Today.today(), null, emptyList())

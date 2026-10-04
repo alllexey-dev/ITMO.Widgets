@@ -7,12 +7,12 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
+import java.time.LocalDateTime
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -163,11 +163,7 @@ class IcsExportViewModelTest {
         }
     }
 
-    private object Today : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.of(2026, 10, 2)
-        override fun now(): OffsetDateTime = today().atTime(9, 0).atZone(zoneId).toOffsetDateTime()
-    }
+    private object Today : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 10, 2, 9, 0))
 
     private companion object {
         val FILE = IcsFile("content://test/a.ics", "a.ics", 23)

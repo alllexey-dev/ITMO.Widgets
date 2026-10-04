@@ -1,8 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
-import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesScheduler
@@ -15,7 +14,7 @@ import org.junit.Test
 
 class DefaultScheduleChangeTrackingTest {
 
-    private val tokens = Tokens()
+    private val tokens = FakeSessionTokenStore()
     private val settings = ScheduleCheckPreferences(InMemoryPreferencesDataStore())
     private val scheduler = FakeScheduleChangesScheduler()
     private val repository = FakeScheduleChangesRepository()
@@ -42,7 +41,7 @@ class DefaultScheduleChangeTrackingTest {
         assertEquals(1, scheduler.ensureCalls)
         assertEquals(0, scheduler.cancelCalls)
 
-        tokens.refresh = false
+        tokens.signedIn = false
         tracking.setEnabled(true)
         assertEquals(1, scheduler.ensureCalls)
         assertEquals(1, scheduler.cancelCalls)
@@ -54,7 +53,7 @@ class DefaultScheduleChangeTrackingTest {
         for ((signedIn, enabled) in listOf(true to true, true to false, false to true, false to false)) {
             val scheduler = FakeScheduleChangesScheduler()
             val settings = ScheduleCheckPreferences(InMemoryPreferencesDataStore()).apply { setScheduleChangesEnabled(enabled) }
-            val tracking = DefaultScheduleChangeTracking(settings, Tokens(signedIn), scheduler, FakeScheduleChangesRepository())
+            val tracking = DefaultScheduleChangeTracking(settings, FakeSessionTokenStore(signedIn), scheduler, FakeScheduleChangesRepository())
 
             tracking.syncWork()
 
@@ -72,13 +71,5 @@ class DefaultScheduleChangeTrackingTest {
         assertEquals(1, scheduler.cancelCalls)
         assertEquals(1, scheduler.runOnceCalls)
         assertEquals(0, scheduler.ensureCalls)
-    }
-
-    private class Tokens(var refresh: Boolean = true) : SessionTokenStore {
-        override fun hasRefreshToken() = refresh
-        override fun getIdToken(): String? = null
-        override fun replaceWithRefreshToken(refreshToken: String) = Unit
-        override fun replaceWithTokens(tokens: SessionTokens) = Unit
-        override fun clearTokens() = Unit
     }
 }

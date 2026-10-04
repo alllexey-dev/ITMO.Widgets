@@ -343,7 +343,7 @@ class SettingsRepositoryImplTest {
 
     private fun createRepository(): Fixture {
         val stores = PreferenceStores(InMemoryPreferencesDataStore())
-        val fakeApi = FakeItmoWidgetsApi()
+        val fakeApi = FakePrivacySettingsApi()
         return Fixture(
             stores = stores,
             api = fakeApi,
@@ -366,7 +366,7 @@ class SettingsRepositoryImplTest {
 
     private data class Fixture(
         val stores: PreferenceStores,
-        val api: FakeItmoWidgetsApi,
+        val api: FakePrivacySettingsApi,
         val repository: SettingsRepositoryImpl
     )
 
@@ -383,7 +383,7 @@ class SettingsRepositoryImplTest {
         }
     }
 
-    private class FakeItmoWidgetsApi {
+    private class FakePrivacySettingsApi {
         var mySettingsCalls: Int = 0
             private set
         val updatedSettings = mutableListOf<UserPrivacySettings>()
@@ -412,7 +412,7 @@ class SettingsRepositoryImplTest {
                 }
                 "equals" -> proxy === arguments?.firstOrNull()
                 "hashCode" -> System.identityHashCode(proxy)
-                "toString" -> "FakeItmoWidgetsApi"
+                "toString" -> "FakePrivacySettingsApi"
                 else -> error("Unexpected ItmoWidgetsApi call: ${method.name}")
             }
         } as ItmoWidgetsApi

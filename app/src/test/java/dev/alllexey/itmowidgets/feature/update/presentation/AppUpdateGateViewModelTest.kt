@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.feature.update.presentation
 
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.feature.update.FakeAppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
-import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateReminder
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
@@ -47,20 +47,4 @@ class AppUpdateGateViewModelTest {
         note = "",
         unsupported = false
     )
-
-    private class FakeAppUpdateRepository(private val update: AppUpdate?) : AppUpdateRepository {
-        var loads = 0
-            private set
-
-        override suspend fun loadUpdate(): AppUpdate? {
-            loads += 1
-            return update
-        }
-
-        override suspend fun reminder() = AppUpdateReminder(AppVersionName("2.1"), Instant.EPOCH)
-
-        override suspend fun markNotified() = Unit
-
-        override suspend fun skip(version: AppVersionName) = Unit
-    }
 }

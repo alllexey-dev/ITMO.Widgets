@@ -4,7 +4,8 @@ import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.testing.FakePendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.DataState
@@ -15,8 +16,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueue
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
-import java.time.LocalDate
-import java.time.ZoneId
+import java.time.LocalDateTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -28,8 +28,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SportHomeCardSourceTest {
-    private val sportData = FakeSportData()
-    private val pending = FakePending()
+    private val sportData = ScoreOnlySportData()
+    private val pending = FakePendingSportBookingsRepository()
     private val source = SportHomeCardSource(sportData, pending, Today)
 
     @Test
@@ -82,20 +82,9 @@ class SportHomeCardSourceTest {
         teacherFio = "Тренер", roomName = "Бассейн", isPrediction = false
     )
 
-    private object Today : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.of(2026, 9, 7)
-        override fun now() = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
-    }
+    private object Today : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
 
-    private class FakePending : PendingSportBookingsRepository {
-        val values = MutableStateFlow<DataState<List<PendingSportBooking>>>(DataState.Success(emptyList()))
-        var refreshes = 0
-        override fun observePendingBookings() = values
-        override suspend fun refresh() { refreshes++ }
-    }
-
-    private class FakeSportData : SportDataRepository {
+    private class ScoreOnlySportData : SportDataRepository {
         val score = MutableStateFlow<DataState<SportScore>>(DataState.Error(AppError.Network))
         var scoreRefreshes = 0
         override fun observeSportScore(): Flow<DataState<SportScore>> = score

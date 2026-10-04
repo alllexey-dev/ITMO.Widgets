@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
@@ -16,8 +17,6 @@ import java.io.File
 import java.io.IOException
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -98,11 +97,7 @@ class IcsFileExportTest {
         zoomInfo = null
     )
 
-    private object Today : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = TODAY
-        override fun now(): OffsetDateTime = TODAY.atTime(9, 0).atZone(zoneId).toOffsetDateTime()
-    }
+    private object Today : AcademicTimeProvider by FixedAcademicTime(TODAY.atTime(9, 0))
 
     private companion object {
         val TODAY: LocalDate = LocalDate.of(2026, 10, 2)

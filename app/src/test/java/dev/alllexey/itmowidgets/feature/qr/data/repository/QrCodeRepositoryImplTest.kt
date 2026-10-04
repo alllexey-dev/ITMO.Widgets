@@ -23,8 +23,8 @@ class QrCodeRepositoryImplTest {
 
     @Test
     fun `cached value skips remote request`() = runTest {
-        val local = FakeLocalDataSource(cached = "cached")
-        val remote = FakeRemoteDataSource()
+        val local = FakeQrCodeLocalDataSource(cached = "cached")
+        val remote = FakeQrCodeRemoteDataSource()
         val repository = QrCodeRepositoryImpl(local, remote, dispatchers)
 
         val result = repository.refreshQrHex(force = false)
@@ -37,8 +37,8 @@ class QrCodeRepositoryImplTest {
 
     @Test
     fun `forced refresh replaces cached value`() = runTest {
-        val local = FakeLocalDataSource(cached = "cached")
-        val remote = FakeRemoteDataSource(value = "fresh")
+        val local = FakeQrCodeLocalDataSource(cached = "cached")
+        val remote = FakeQrCodeRemoteDataSource(value = "fresh")
         val repository = QrCodeRepositoryImpl(local, remote, dispatchers)
 
         val result = repository.refreshQrHex(force = true)
@@ -51,8 +51,8 @@ class QrCodeRepositoryImplTest {
     @Test
     fun `remote failure is mapped at data boundary`() = runTest {
         val repository = QrCodeRepositoryImpl(
-            local = FakeLocalDataSource(),
-            remote = FakeRemoteDataSource(failure = IllegalStateException("boom")),
+            local = FakeQrCodeLocalDataSource(),
+            remote = FakeQrCodeRemoteDataSource(failure = IllegalStateException("boom")),
             dispatchers = dispatchers
         )
 
@@ -64,8 +64,8 @@ class QrCodeRepositoryImplTest {
 
     @Test
     fun `expired cache remains available for widget fallback`() = runTest {
-        val local = FakeLocalDataSource(cached = "last-working-code", expired = true)
-        val repository = QrCodeRepositoryImpl(local, FakeRemoteDataSource(), dispatchers)
+        val local = FakeQrCodeLocalDataSource(cached = "last-working-code", expired = true)
+        val repository = QrCodeRepositoryImpl(local, FakeQrCodeRemoteDataSource(), dispatchers)
 
         assertEquals(null, repository.currentQr())
         assertEquals(null, repository.currentQrHex())
@@ -75,7 +75,7 @@ class QrCodeRepositoryImplTest {
         )
     }
 
-    private class FakeLocalDataSource(
+    private class FakeQrCodeLocalDataSource(
         private var cached: String? = null,
         private var expired: Boolean = false
     ) : QrCodeLocalDataSource {
@@ -101,7 +101,7 @@ class QrCodeRepositoryImplTest {
         }
     }
 
-    private class FakeRemoteDataSource(
+    private class FakeQrCodeRemoteDataSource(
         private val value: String = "remote",
         private val failure: Exception? = null
     ) : QrCodeRemoteDataSource {

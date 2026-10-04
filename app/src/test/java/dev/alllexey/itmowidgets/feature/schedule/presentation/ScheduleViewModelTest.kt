@@ -5,10 +5,14 @@ import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
+import dev.alllexey.itmowidgets.core.testing.FakePendingSportBookingsRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.testing.slot
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.ScheduleRequest
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
@@ -16,13 +20,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
-import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
-import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.util.DataState
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -35,8 +33,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleViewModelTest {
@@ -44,7 +40,7 @@ class ScheduleViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val timeProvider = FixedAcademicTimeProvider(
+    private val timeProvider = FixedAcademicTime(
         LocalDate.of(2026, 2, 16)
     )
 
@@ -63,7 +59,7 @@ class ScheduleViewModelTest {
     fun `renders cached content after successful refresh`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeScheduleRepository().apply {
-                schedules.value = listOf(daySchedule())
+                days.value = listOf(daySchedule())
             }
             val viewModel = createViewModel(repository)
 
@@ -71,7 +67,7 @@ class ScheduleViewModelTest {
             advanceUntilIdle()
 
             val state = viewModel.uiState.value as ScheduleUiState.Content
-            assertEquals(repository.schedules.value, state.schedule)
+            assertEquals(repository.days.value, state.schedule)
             assertFalse(state.loadingMore)
         }
 
@@ -79,7 +75,7 @@ class ScheduleViewModelTest {
     fun `the first state is content from memory and the entry refresh shows no indicator`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeScheduleRepository().apply {
-                schedules.value = listOf(daySchedule())
+                days.value = listOf(daySchedule())
                 memorySnapshot = true
                 refreshHandler = { CompletableDeferred<AppResult<Unit>>().await() }
             }
@@ -88,7 +84,7 @@ class ScheduleViewModelTest {
             viewModel.ensureDataLoaded()
 
             val state = viewModel.uiState.value as ScheduleUiState.Content
-            assertEquals(repository.schedules.value, state.schedule)
+            assertEquals(repository.days.value, state.schedule)
             assertFalse(state.loadingMore)
 
             viewModel.loadInitialSchedule(forceRefresh = true)
@@ -98,7 +94,7 @@ class ScheduleViewModelTest {
     @Test
     fun `without a memory snapshot the first state is loading until the cache answers`() =
         runTest(mainDispatcherRule.dispatcher) {
-            val repository = FakeScheduleRepository().apply { schedules.value = listOf(daySchedule()) }
+            val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule()) }
             val viewModel = createViewModel(repository)
 
             viewModel.ensureDataLoaded()
@@ -128,7 +124,7 @@ class ScheduleViewModelTest {
     fun `a successful pull on the own schedule asks for a calendar sync, a failed or friend's one does not`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeScheduleRepository().apply {
-                schedules.value = listOf(daySchedule())
+                days.value = listOf(daySchedule())
                 schedulesFor(123456).value = listOf(daySchedule())
             }
             val calendarSync = FakeCalendarSync()
@@ -155,7 +151,7 @@ class ScheduleViewModelTest {
     fun `keeps cached content and emits event when refresh fails`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeScheduleRepository().apply {
-                schedules.value = listOf(daySchedule())
+                days.value = listOf(daySchedule())
             }
             val viewModel = createViewModel(repository)
             viewModel.ensureDataLoaded()
@@ -168,9 +164,9 @@ class ScheduleViewModelTest {
             runCurrent()
 
             val loadingState = viewModel.uiState.value as ScheduleUiState.Content
-            assertEquals(repository.schedules.value, loadingState.schedule)
+            assertEquals(repository.days.value, loadingState.schedule)
             assertTrue(loadingState.loadingMore)
-            assertFalse(repository.cachesCleared)
+            assertEquals(0, repository.clears)
 
             refresh.complete(AppResult.Failure(AppError.Forbidden))
             advanceUntilIdle()
@@ -180,9 +176,9 @@ class ScheduleViewModelTest {
                 event.await()
             )
             val state = viewModel.uiState.value as ScheduleUiState.Content
-            assertEquals(repository.schedules.value, state.schedule)
+            assertEquals(repository.days.value, state.schedule)
             assertFalse(state.loadingMore)
-            assertFalse(repository.cachesCleared)
+            assertEquals(0, repository.clears)
         }
 
     @Test
@@ -190,7 +186,7 @@ class ScheduleViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val cached = listOf(daySchedule())
             val repository = FakeScheduleRepository().apply {
-                schedules.value = cached
+                days.value = cached
             }
             val viewModel = createViewModel(repository)
             viewModel.ensureDataLoaded()
@@ -200,21 +196,21 @@ class ScheduleViewModelTest {
             val updated = listOf(daySchedule().copy(note = "Обновлено"))
             repository.refreshHandler = {
                 refresh.await().also { result ->
-                    if (result is AppResult.Success) repository.schedules.value = updated
+                    if (result is AppResult.Success) repository.days.value = updated
                 }
             }
             viewModel.loadInitialSchedule(forceRefresh = true)
             runCurrent()
 
             assertEquals(ScheduleUiState.Content(cached, true, null), viewModel.uiState.value)
-            assertEquals(cached, repository.schedules.value)
-            assertFalse(repository.cachesCleared)
+            assertEquals(cached, repository.days.value)
+            assertEquals(0, repository.clears)
 
             refresh.complete(AppResult.Success(Unit))
             advanceUntilIdle()
 
             assertEquals(ScheduleUiState.Content(updated, false, null), viewModel.uiState.value)
-            assertFalse(repository.cachesCleared)
+            assertEquals(0, repository.clears)
         }
 
     @Test
@@ -250,32 +246,32 @@ class ScheduleViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val loadedDays = daysIncludingNextPage()
             val repository = FakeScheduleRepository().apply {
-                schedules.value = loadedDays
+                days.value = loadedDays
             }
             val viewModel = createViewModel(repository)
             viewModel.ensureDataLoaded()
             advanceUntilIdle()
             viewModel.fetchNextDays()
             advanceUntilIdle()
-            val observations = repository.observedRanges.toList()
+            val observations = repository.observed.toList()
 
             viewModel.loadInitialSchedule(forceRefresh = true)
             advanceUntilIdle()
 
             assertEquals(
                 ScheduleRequest(null, timeProvider.today().minusDays(1), timeProvider.today().plusDays(28)),
-                repository.refreshRequests.last()
+                repository.refreshed.last()
             )
-            assertEquals(observations, repository.observedRanges)
+            assertEquals(observations, repository.observed)
             assertEquals(ScheduleUiState.Content(loadedDays, false, null), viewModel.uiState.value)
-            assertFalse(repository.cachesCleared)
+            assertEquals(0, repository.clears)
         }
 
     @Test
     fun `initial reload resets the paginated range`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeScheduleRepository().apply {
-                schedules.value = daysIncludingNextPage()
+                days.value = daysIncludingNextPage()
             }
             val viewModel = createViewModel(repository)
             viewModel.ensureDataLoaded()
@@ -286,8 +282,8 @@ class ScheduleViewModelTest {
             viewModel.loadInitialSchedule()
             advanceUntilIdle()
 
-            assertEquals(initialRequest(), repository.refreshRequests.last())
-            assertEquals(initialRequest(), repository.observedRanges.last())
+            assertEquals(initialRequest(), repository.refreshed.last())
+            assertEquals(initialRequest(), repository.observed.last())
             assertEquals(16, (viewModel.uiState.value as ScheduleUiState.Content).schedule.size)
         }
 
@@ -298,7 +294,7 @@ class ScheduleViewModelTest {
             val ownDays = daysIncludingNextPage()
             val friendDays = ownDays.map { it.copy(note = "Расписание друга") }
             val repository = FakeScheduleRepository().apply {
-                schedules.value = ownDays
+                days.value = ownDays
                 schedulesFor(user.isu).value = friendDays
             }
             val viewModel = createViewModel(repository)
@@ -313,14 +309,14 @@ class ScheduleViewModelTest {
             assertEquals(ScheduleUiState.Loading(user), viewModel.uiState.value)
             advanceUntilIdle()
 
-            assertEquals(initialRequest(user.isu), repository.refreshRequests.last())
-            assertEquals(initialRequest(user.isu), repository.observedRanges.last())
+            assertEquals(initialRequest(user.isu), repository.refreshed.last())
+            assertEquals(initialRequest(user.isu), repository.observed.last())
             assertEquals(
                 ScheduleUiState.Content(friendDays.take(16), false, user),
                 viewModel.uiState.value
             )
-            assertEquals(ownDays, repository.schedules.value)
-            assertFalse(repository.cachesCleared)
+            assertEquals(ownDays, repository.days.value)
+            assertEquals(0, repository.clears)
         }
 
     @Test
@@ -328,7 +324,7 @@ class ScheduleViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val user = SelectedUser(123456, "Иван Иванов", null)
             val repository = FakeScheduleRepository().apply {
-                schedules.value = listOf(daySchedule())
+                days.value = listOf(daySchedule())
             }
             val viewModel = createViewModel(repository)
             viewModel.ensureDataLoaded()
@@ -353,7 +349,7 @@ class ScheduleViewModelTest {
             runCurrent()
 
             assertEquals(ScheduleUiState.Loading(user), viewModel.uiState.value)
-            assertEquals(initialRequest(user.isu), repository.refreshRequests.last())
+            assertEquals(initialRequest(user.isu), repository.refreshed.last())
 
             newRefresh.complete(AppResult.Success(Unit))
             advanceUntilIdle()
@@ -390,7 +386,7 @@ class ScheduleViewModelTest {
     fun `a change marks its lesson only on its own day`() =
         runTest(mainDispatcherRule.dispatcher) {
             val (tomorrow, later) = timeProvider.today().plusDays(1) to timeProvider.today().plusDays(2)
-            val repository = FakeScheduleRepository().apply { schedules.value = listOf(daySchedule(tomorrow), daySchedule(later)) }
+            val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule(tomorrow), daySchedule(later)) }
             val changes = FakeScheduleChangesRepository(
                 scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, tomorrow))
             )
@@ -406,7 +402,7 @@ class ScheduleViewModelTest {
     fun `a cancelled lesson still in the cache is marked by its old slot`() =
         runTest(mainDispatcherRule.dispatcher) {
             val day = timeProvider.today().plusDays(2)
-            val repository = FakeScheduleRepository().apply { schedules.value = listOf(daySchedule(day)) }
+            val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule(day)) }
             val changes = FakeScheduleChangesRepository(
                 scheduleChange(kind = ScheduleChangeKind.CANCELLED, before = slot(2, day))
             )
@@ -439,19 +435,19 @@ class ScheduleViewModelTest {
     fun `a change leaving the store removes the mark without asking for the schedule again`() =
         runTest(mainDispatcherRule.dispatcher) {
             val day = timeProvider.today().plusDays(1)
-            val repository = FakeScheduleRepository().apply { schedules.value = listOf(daySchedule(day)) }
+            val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule(day)) }
             val changes = FakeScheduleChangesRepository(scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, day)))
             val viewModel = createViewModel(repository, changesRepository = changes)
             viewModel.ensureDataLoaded()
             advanceUntilIdle()
-            val requests = repository.refreshRequests.size
+            val requests = repository.refreshed.size
             assertEquals(mapOf(day to setOf(1L)), viewModel.changedPairIdsByDay())
 
             changes.changes.value = emptyList()
             advanceUntilIdle()
 
             assertEquals(mapOf(day to emptySet<Long>()), viewModel.changedPairIdsByDay())
-            assertEquals(requests, repository.refreshRequests.size)
+            assertEquals(requests, repository.refreshed.size)
         }
 
     private fun ScheduleViewModel.changedPairIdsByDay(): Map<LocalDate, Set<Long>> =
@@ -467,13 +463,8 @@ class ScheduleViewModelTest {
             repository = repository,
             timeProvider = timeProvider,
             savedStateHandle = savedStateHandle,
-            preferences = object : SchedulePreferencesRepository {
-                override fun observeSportAutoSignEnabled() = flowOf(false)
-            },
-            pendingRepository = object : PendingSportBookingsRepository {
-                override fun observePendingBookings() = flowOf<DataState<List<PendingSportBooking>>>(DataState.Success(emptyList()))
-                override suspend fun refresh() = Unit
-            },
+            preferences = FakeSchedulePreferencesRepository(),
+            pendingRepository = FakePendingSportBookingsRepository(),
             changesRepository = changesRepository,
             calendarSync = calendarSync
         )
@@ -497,67 +488,5 @@ class ScheduleViewModelTest {
             note = null,
             lessons = emptyList()
         )
-    }
-
-    private data class ScheduleRequest(
-        val userIsu: Int?,
-        val startDate: LocalDate,
-        val endDate: LocalDate
-    )
-
-    private class FakeScheduleRepository : ScheduleRepository {
-        private val schedulesByUser = mutableMapOf<Int?, MutableStateFlow<List<DaySchedule>>>()
-        val schedules get() = schedulesFor(null)
-        val observedRanges = mutableListOf<ScheduleRequest>()
-        val refreshRequests = mutableListOf<ScheduleRequest>()
-        var refreshResult: AppResult<Unit> = AppResult.Success(Unit)
-        var refreshHandler: suspend (ScheduleRequest) -> AppResult<Unit> = { refreshResult }
-        var cachesCleared = false
-        var memorySnapshot = false
-
-        fun schedulesFor(userIsu: Int?): MutableStateFlow<List<DaySchedule>> =
-            schedulesByUser.getOrPut(userIsu) { MutableStateFlow(emptyList()) }
-
-        override fun observeScheduleForRange(
-            userIsu: Int?,
-            startDate: LocalDate,
-            endDate: LocalDate
-        ): Flow<List<DaySchedule>> {
-            observedRanges += ScheduleRequest(userIsu, startDate, endDate)
-            return schedulesFor(userIsu).map { days ->
-                days.filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) }
-            }
-        }
-
-        override fun peekScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate): List<DaySchedule>? =
-            if (memorySnapshot) schedulesFor(userIsu).value.filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) } else null
-
-        override suspend fun refreshSchedule(
-            userIsu: Int?,
-            startDate: LocalDate,
-            endDate: LocalDate
-        ): AppResult<Unit> {
-            val request = ScheduleRequest(userIsu, startDate, endDate)
-            refreshRequests += request
-            return refreshHandler(request)
-        }
-
-        override suspend fun clearCaches() {
-            cachesCleared = true
-            schedulesByUser.values.forEach { it.value = emptyList() }
-        }
-    }
-
-    private class FixedAcademicTimeProvider(
-        private val date: LocalDate
-    ) : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-
-        override fun today(): LocalDate = date
-
-        override fun now(): OffsetDateTime = date
-            .atStartOfDay()
-            .atZone(zoneId)
-            .toOffsetDateTime()
     }
 }

@@ -81,7 +81,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `disabled or unknown opt-in exposes no cache and disabled requests never call Backend`() = runTest {
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(false), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         assertNull(repository.cachedReviews(100001))
@@ -94,7 +94,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `maps exact date before year and absent date preserving Backend order`() = runTest {
-        val api = FakeApi().apply {
+        val api = FakeTeacherReviewsApi().apply {
             result = result!!.copy(reviews = listOf(
                 review(1).copy(writtenOn = LocalDate.of(2025, 1, 25)),
                 review(2).copy(writtenBeforeYear = 2024),
@@ -115,7 +115,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `keeps https source links and falls back for absent unsafe and malformed links`() = runTest {
         val links = listOf(" https://example.test/source ", "http://example.test/source", null, " ", "not a url", "https:///missing-host")
-        val api = FakeApi().apply {
+        val api = FakeTeacherReviewsApi().apply {
             result = result!!.copy(reviews = links.mapIndexed { index, link -> review(index + 1).copy(sourceLink = link) })
         }
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
@@ -127,7 +127,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `trims optional strings drops blank reviews and preserves full text and order`() = runTest {
-        val api = FakeApi().apply {
+        val api = FakeTeacherReviewsApi().apply {
             result = result!!.copy(reviews = listOf(
                 review(1).copy(subjectTitle = " Предмет ", sourceTitle = " Источник ", text = " Первый\nвторой абзац "),
                 review(2).copy(text = " \n\t "),
@@ -148,7 +148,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `HTTP and network failures preserve the successful cache`() = runTest {
-        val api = FakeApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
+        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val cached = (repository.reviews(100001) as AppResult.Success).value
 
@@ -162,7 +162,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `an absent Backend payload is a failure instead of an empty successful list`() = runTest {
-        val api = FakeApi().apply { result = null }
+        val api = FakeTeacherReviewsApi().apply { result = null }
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         assertTrue((repository.reviews(100001) as AppResult.Failure).error is AppError.Unknown)
@@ -171,7 +171,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `maps the whole summary skipping unknown tags and blank items`() = runTest {
-        val api = FakeApi().apply { result = result!!.copy(summary = wireSummary()) }
+        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(summary = wireSummary()) }
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         val summary = (repository.reviews(100001) as AppResult.Success).value.summary
@@ -200,7 +200,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `a reply without a summary or with a blank description has no summary`() = runTest {
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         assertNull((repository.reviews(100001) as AppResult.Success).value.summary)
@@ -210,7 +210,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `a low confidence summary hides its level`() = runTest {
-        val api = FakeApi().apply { result = result!!.copy(summary = wireSummary().copy(confidence = WireConfidence.LOW)) }
+        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(summary = wireSummary().copy(confidence = WireConfidence.LOW)) }
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         val summary = (repository.reviews(100001) as AppResult.Success).value.summary!!
@@ -222,7 +222,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `opting out clears warm cache and reconnect does not resurrect it`() = runTest {
         val services = FakeBackendGate(true)
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         repository.reviews(100001)
         assertNotNull(repository.cachedReviews(100001))
@@ -240,7 +240,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `direct disabled gate clears caches before the observer runs`() = runTest {
         val services = FakeBackendGate(true)
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         repository.reviews(100001)
 
@@ -255,7 +255,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `clearing session data forgets cached reviews`() = runTest {
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         repository.reviews(100001)
         assertNotNull(repository.cachedReviews(100001))
@@ -268,7 +268,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `pending responses cannot report success or restore cache after opting out`() = runTest {
         val services = FakeBackendGate(true)
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         repository.reviews(100001)
         val gate = ResponseGate()
@@ -287,7 +287,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `pre-disconnect responses cannot replace fresh reviews after reconnect`() = runTest {
         val services = FakeBackendGate(true)
-        val api = FakeApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
+        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
         val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val gate = ResponseGate()
         api.beforeResponse = gate::await
@@ -311,7 +311,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `pre-clear responses cannot replace fresh session cache`() = runTest {
-        val api = FakeApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
+        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val gate = ResponseGate()
         api.beforeResponse = gate::await
@@ -333,7 +333,7 @@ class TeacherReviewsRepositoryImplTest {
         val services = FakeBackendGate(true)
         val gate = CompletableDeferred<Unit>()
         services.beforeAnswer = { gate.await() }
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val pending = async(start = CoroutineStart.UNDISPATCHED) { repository.reviews(100001) }
         runCurrent()
@@ -348,7 +348,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `a suspended enabled read cannot reach Backend after disconnect and reconnect`() = runTest {
         val services = FakeBackendGate(true)
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         runCurrent()
         val gate = CompletableDeferred<Unit>()
@@ -369,7 +369,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `a suspended disabled read cannot clear newer connected reviews`() = runTest {
         val services = FakeBackendGate(false)
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         runCurrent()
         val gate = CompletableDeferred<Unit>()
@@ -390,7 +390,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `session cleanup invalidates a suspended opt-in read before the API call`() = runTest {
         val services = FakeBackendGate(true)
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         runCurrent()
         val gate = CompletableDeferred<Unit>()
@@ -407,7 +407,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `request cancellation remains cancellation`() = runTest {
-        val api = FakeApi().apply { failure = CancellationException("Synthetic cancellation") }
+        val api = FakeTeacherReviewsApi().apply { failure = CancellationException("Synthetic cancellation") }
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         try {
@@ -422,7 +422,7 @@ class TeacherReviewsRepositoryImplTest {
     fun `maps own community reviews copies own review and viewer capabilities`() = runTest {
         val author = UserData(100002, " Автор Отзыва ", null, listOf(GroupData("M3234", 2, "ФИТиП")),
             UserCapabilities(canViewSchedule = true, canViewSport = false))
-        val api = FakeApi().apply {
+        val api = FakeTeacherReviewsApi().apply {
             result = result!!.copy(
                 reviews = listOf(
                     community(1).copy(verified = true, author = author, writtenOn = LocalDate.of(2026, 9, 12), score = 3, myVote = 1),
@@ -465,7 +465,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `save sends cleaned content and sorted flows and publishes the answer`() = runTest {
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val updates = collectUpdates(repository)
         api.result = api.result!!.copy(mine = ownWire())
@@ -482,7 +482,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `save sends a blank subject as null and at most fifty flows`() = runTest {
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
 
         repository.save(100001, TeacherReviewDraft("   ", VALID_TEXT, true, (60L downTo 1L).toSet()))
@@ -495,7 +495,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `delete vote and report call their routes with the review UUID`() = runTest {
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val updates = collectUpdates(repository)
         val id = UUID(0, 7)
@@ -517,7 +517,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `mutations without the opt-in never call Backend`() = runTest {
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(false), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val id = UUID(0, 7).toString()
 
@@ -534,7 +534,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `invalid input fails before the network`() = runTest {
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val id = UUID(0, 7).toString()
 
@@ -555,7 +555,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `limits count code points like Backend`() = runTest {
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val emoji = "\uD83D\uDE00"
 
@@ -567,7 +567,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `restricted and network failures keep the cache and publish nothing`() = runTest {
-        val api = FakeApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
+        val api = FakeTeacherReviewsApi().apply { result = result!!.copy(reviews = listOf(review(1))) }
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val cached = (repository.reviews(100001) as AppResult.Success).value
         val updates = collectUpdates(repository)
@@ -586,7 +586,7 @@ class TeacherReviewsRepositoryImplTest {
     @Test
     fun `a mutation answer after opting out reaches neither cache nor updates`() = runTest {
         val services = FakeBackendGate(true)
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(services, api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val updates = collectUpdates(repository)
         val gate = ResponseGate()
@@ -608,7 +608,7 @@ class TeacherReviewsRepositoryImplTest {
 
     @Test
     fun `a mutation answer after session cleanup reaches neither cache nor updates`() = runTest {
-        val api = FakeApi()
+        val api = FakeTeacherReviewsApi()
         val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api.instance, backgroundScope, FixedAcademicTime(), noDemo(), dispatchers)
         val updates = collectUpdates(repository)
         val gate = ResponseGate()
@@ -672,7 +672,7 @@ class TeacherReviewsRepositoryImplTest {
         fun open() = release.countDown()
     }
 
-    private class FakeApi {
+    private class FakeTeacherReviewsApi {
         var result: WireTeacherReviews? = WireTeacherReviews(100001, PROVIDER_URL, emptyList(), null, false, false, false, false)
         var failure: Exception? = null
         var beforeResponse: () -> Unit = {}

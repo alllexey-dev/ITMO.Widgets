@@ -8,9 +8,9 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
+import dev.alllexey.itmowidgets.core.testing.ClockAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.MutableClock
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.FakePhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
@@ -21,13 +21,10 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import java.io.File
 import java.io.IOException
-import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -429,7 +426,7 @@ class CalendarSyncRepositoryImplTest {
 
     private suspend fun enabled() = repository().also { check(it.enable() == CalendarSyncResult.DONE) }
 
-    private fun repository() = CalendarSyncRepositoryImpl(calendars, source, store, ClockTime(clock), BUILDINGS, dispatchers)
+    private fun repository() = CalendarSyncRepositoryImpl(calendars, source, store, ClockAcademicTime(clock), BUILDINGS, dispatchers)
 
     private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.value, 1, date, null, lessons.toList())
 
@@ -440,12 +437,6 @@ class CalendarSyncRepositoryImplTest {
         building = Building("Кронверкский пр., 49"), buildingId = 13, mainBuildingId = 13, format = "Очный", formatId = 1,
         zoomUrl = null, zoomPassword = null, zoomInfo = null
     )
-
-    private class ClockTime(private val clock: Clock) : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.ofInstant(clock.instant(), zoneId)
-        override fun now(): OffsetDateTime = OffsetDateTime.ofInstant(clock.instant(), zoneId)
-    }
 
     private companion object {
         /** 2026-09-07 09:00 in Moscow is a Monday morning. */

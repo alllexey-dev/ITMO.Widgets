@@ -1,11 +1,9 @@
 package dev.alllexey.itmowidgets.feature.qr.presentation
 
-import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrTilePreferences
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -61,32 +59,6 @@ class QrTileControllerTest {
 
         override suspend fun setAdded(added: Boolean) {
             writes += added
-        }
-    }
-
-    private class FakeSessionRepository(
-        initialState: SessionState,
-        private val resolvesTo: SessionState = initialState
-    ) : SessionRepository {
-        private val mutableState = MutableStateFlow(initialState)
-        override val state: StateFlow<SessionState> = mutableState
-        var initializeCalls = 0
-
-        override suspend fun initialize() {
-            initializeCalls += 1
-            mutableState.value = resolvesTo
-        }
-
-        override suspend fun completeItmoIdLogin(tokenResponseJson: String): AppResult<Unit> =
-            AppResult.Success(Unit)
-
-        override suspend fun signInWithRefreshToken(refreshToken: String): AppResult<Unit> =
-            AppResult.Success(Unit)
-
-        override suspend fun startDemo() = Unit
-
-        override suspend fun signOut() {
-            mutableState.value = SessionState.SignedOut
         }
     }
 }

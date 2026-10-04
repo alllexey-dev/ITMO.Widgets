@@ -10,12 +10,12 @@ import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionState
-import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
+import dev.alllexey.itmowidgets.core.testing.FakeSessionDataCleaner
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import java.io.IOException
@@ -201,8 +201,8 @@ class SessionRepositoryImplTest {
         unregisterError: Exception? = null,
         order: MutableList<String> = mutableListOf()
     ): Fixture {
-        val tokenStore = FakeTokenStore(hasRefreshToken, order)
-        val cleaner = FakeCleaner(order)
+        val tokenStore = FakeSessionTokenStore(hasRefreshToken, clearOrder = order)
+        val cleaner = FakeSessionDataCleaner(order)
         val effects = FakeEffects(order)
         val identitySync = FakeIdentitySync()
         val deviceSession = FakeDeviceSession(order, unregisterError)
@@ -211,7 +211,7 @@ class SessionRepositoryImplTest {
         val tokenSync = FakeTokenSync()
         val repository = SessionRepositoryImpl(
             tokenStore = tokenStore,
-            myItmo = FakeMyItmo(refreshTokenExpired),
+            myItmo = RefreshExpiryMyItmo(refreshTokenExpired),
             gson = Gson(),
             currentUserProvider = object : CurrentUserProvider {
                 override suspend fun getCurrentUser(): CurrentUser? = currentUser
@@ -242,8 +242,8 @@ class SessionRepositoryImplTest {
 
     private data class Fixture(
         val repository: SessionRepositoryImpl,
-        val tokenStore: FakeTokenStore,
-        val cleaner: FakeCleaner,
+        val tokenStore: FakeSessionTokenStore,
+        val cleaner: FakeSessionDataCleaner,
         val effects: FakeEffects,
         val identitySync: FakeIdentitySync,
         val deviceSession: FakeDeviceSession,
@@ -260,36 +260,7 @@ class SessionRepositoryImplTest {
         }
     }
 
-    private class FakeTokenStore(
-        hasRefreshToken: Boolean,
-        private val order: MutableList<String>
-    ) : SessionTokenStore {
-        private var refreshToken: String? = if (hasRefreshToken) "stored-token" else null
-        var tokens: SessionTokens? = null
-        var cleared = false
-
-        override fun hasRefreshToken(): Boolean = refreshToken != null
-
-        override fun getIdToken(): String? = tokens?.idToken
-
-        override fun replaceWithRefreshToken(refreshToken: String) {
-            this.refreshToken = refreshToken
-        }
-
-        override fun replaceWithTokens(tokens: SessionTokens) {
-            this.tokens = tokens
-            refreshToken = tokens.refreshToken
-        }
-
-        override fun clearTokens() {
-            order += "tokens"
-            refreshToken = null
-            tokens = null
-            cleared = true
-        }
-    }
-
-    private class FakeMyItmo(
+    private class RefreshExpiryMyItmo(
         private val expired: Boolean
     ) : MyItmo() {
         override fun isRefreshTokenExpired(): Boolean = expired
@@ -304,19 +275,6 @@ class SessionRepositoryImplTest {
             lastToken = refreshToken
             error?.let { throw it }
             return TOKENS
-        }
-    }
-
-    private class FakeCleaner(
-        private val order: MutableList<String>
-    ) : SessionDataCleaner {
-        var requests = 0
-        var onClear: () -> Unit = {}
-
-        override suspend fun clearSessionData() {
-            onClear()
-            requests += 1
-            order += "clean"
         }
     }
 

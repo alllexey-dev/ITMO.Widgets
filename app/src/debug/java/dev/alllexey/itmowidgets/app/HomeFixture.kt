@@ -75,7 +75,7 @@ data class HomeFixture(
             date = DATE,
             tomorrow = false,
             rows = listOf(
-                HomeScheduleRow.Lesson(lesson(1, "09:30", "11:00", "Математический анализ"), HomeLessonState.CURRENT, progress = 0.55f),
+                HomeScheduleRow.Lesson(lesson(1, "09:30", "11:00", DemoStudy.MATH.name), HomeLessonState.CURRENT, progress = 0.55f),
                 HomeScheduleRow.Lesson(lesson(2, "11:20", "12:50", "Дискретная математика и основы алгоритмов", 3), HomeLessonState.UPCOMING),
                 HomeScheduleRow.PendingSport(pending(1, 12), predicted = false),
                 HomeScheduleRow.Lesson(lesson(3, "13:30", "15:00", "Физика", 2, room = null), HomeLessonState.UPCOMING)
@@ -84,7 +84,7 @@ data class HomeFixture(
         )
 
         /** A synthetic move of a Tuesday lesson to Wednesday, found this morning. */
-        fun scheduleChangeSample(subject: String = "Математический анализ") = ScheduleChange(
+        fun scheduleChangeSample(subject: String = DemoStudy.MATH.name) = ScheduleChange(
             id = "fixture-1",
             detectedAt = Instant.parse("2026-09-07T06:00:00Z"),
             kind = ScheduleChangeKind.UPDATED,

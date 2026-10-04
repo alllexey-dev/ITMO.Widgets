@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.resources.presentation
+package dev.alllexey.itmowidgets.core.testing
 
 import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory

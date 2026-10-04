@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.feature.home.FakeHomeCardPreferences
-import dev.alllexey.itmowidgets.feature.home.FakeHomeCardSource
+import dev.alllexey.itmowidgets.core.testing.FakeHomeCardSource
 import dev.alllexey.itmowidgets.feature.home.FakeHomeHintStore
 import dev.alllexey.itmowidgets.feature.home.homeScheduleCard
 import java.time.Clock

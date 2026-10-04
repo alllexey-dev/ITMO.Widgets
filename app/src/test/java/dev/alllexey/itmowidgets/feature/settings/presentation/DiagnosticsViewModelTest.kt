@@ -2,13 +2,11 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticEntry
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticLevel
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import java.time.Instant
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
+import java.time.LocalDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -24,11 +22,7 @@ class DiagnosticsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val time = object : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.of(2026, 9, 16)
-        override fun now(): OffsetDateTime = OffsetDateTime.parse("2026-09-16T12:00:00+03:00")
-    }
+    private val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 16, 12, 0))
 
     @Test
     fun `entries render in the academic zone and export as plain text`() = runTest(mainDispatcherRule.dispatcher) {
