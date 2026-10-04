@@ -11,7 +11,7 @@ import dev.alllexey.itmowidgets.core.notification.*
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -109,7 +109,7 @@ class SportSignPushHandlerTest {
     }
 
     private class Fixture(auto: Boolean) {
-        val settings = AppSettingsStorage(MemoryPreferences())
+        val settings = ServicesOptInPreferences(MemoryPreferences())
         val demo = FakeDemoMode()
         private val gate = DefaultBackendGate(settings, demo)
         val queue = mutableListOf<String>()

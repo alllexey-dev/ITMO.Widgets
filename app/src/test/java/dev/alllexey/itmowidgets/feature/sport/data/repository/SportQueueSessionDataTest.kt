@@ -16,7 +16,7 @@ import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry
 import dev.alllexey.itmowidgets.core.model.SportLessonDto
 import dev.alllexey.itmowidgets.core.model.UserSummary
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import dev.alllexey.itmowidgets.core.util.CustomDataState
 import dev.alllexey.itmowidgets.core.util.dataOrNull
@@ -141,7 +141,7 @@ class SportQueueSessionDataTest {
     }
 
     private suspend fun createFixture(): Fixture {
-        val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+        val settings = ServicesOptInPreferences(InMemoryPreferencesDataStore())
         settings.setCustomServicesEnabled(true)
         val api = QueueApi()
         val myItmo = myItmoStub { error("Queue refresh must not request MyITMO") }
@@ -166,7 +166,7 @@ class SportQueueSessionDataTest {
     }
 
     private data class Fixture(
-        val settings: AppSettingsStorage,
+        val settings: ServicesOptInPreferences,
         val api: QueueApi,
         val repository: SportDataRepositoryImpl
     )

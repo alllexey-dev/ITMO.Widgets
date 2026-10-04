@@ -4,7 +4,7 @@ import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
@@ -20,7 +20,7 @@ import org.junit.Test
 class DefaultMarkTrackingTest {
 
     private val tokens = Tokens()
-    private val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+    private val settings = MarkSourcePreferences(InMemoryPreferencesDataStore())
     private val scheduler = FakeMarksScheduler()
     private val repository = FakeMarkTrackingRepository()
     private val notifier = RecordingAppNotifier()
@@ -76,7 +76,7 @@ class DefaultMarkTrackingTest {
         val bars = listOf(null, false, true)
         for (signedIn in listOf(true, false)) for (myItmo in listOf(true, false)) for (barsSwitch in bars) {
             val scheduler = FakeMarksScheduler()
-            val settings = AppSettingsStorage(InMemoryPreferencesDataStore()).apply {
+            val settings = MarkSourcePreferences(InMemoryPreferencesDataStore()).apply {
                 setMyItmoMarksEnabled(myItmo)
                 barsSwitch?.let { setBarsMarksEnabled(it) }
                 setSheetMarksEnabled(false)

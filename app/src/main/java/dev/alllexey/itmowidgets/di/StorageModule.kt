@@ -15,11 +15,19 @@ import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.storage.AndroidKeystoreTokenCipher
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.DemoPreferences
+import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
+import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
+import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
+import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
+import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.core.storage.TokenStorageFile
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
+import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import java.io.File
 import javax.inject.Singleton
@@ -74,9 +82,57 @@ abstract class StorageModule {
 
         @Provides
         @Singleton
-        fun provideAppSettingsStorage(
+        fun provideServicesOptInPreferences(
             @AppPreferences dataStore: DataStore<Preferences>
-        ): AppSettingsStorage = AppSettingsStorage(dataStore)
+        ): ServicesOptInPreferences = ServicesOptInPreferences(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideScheduleCheckPreferences(
+            @AppPreferences dataStore: DataStore<Preferences>
+        ): ScheduleCheckPreferences = ScheduleCheckPreferences(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideWidgetSettingsPreferences(
+            @AppPreferences dataStore: DataStore<Preferences>
+        ): WidgetSettingsPreferences = WidgetSettingsPreferences(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideQrSettingsPreferences(
+            @AppPreferences dataStore: DataStore<Preferences>
+        ): QrSettingsPreferences = QrSettingsPreferences(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideSportSignSelectorPreferences(
+            @AppPreferences dataStore: DataStore<Preferences>
+        ): SportSignSelectorPreferences = SportSignSelectorPreferences(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideMarkSourcePreferences(
+            @AppPreferences dataStore: DataStore<Preferences>
+        ): MarkSourcePreferences = MarkSourcePreferences(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideHomeLayoutPreferences(
+            @AppPreferences dataStore: DataStore<Preferences>
+        ): HomeLayoutPreferences = HomeLayoutPreferences(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideDeviceHintPreferences(
+            @AppPreferences dataStore: DataStore<Preferences>
+        ): DeviceHintPreferences = DeviceHintPreferences(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideDemoPreferences(
+            @AppPreferences dataStore: DataStore<Preferences>
+        ): DemoPreferences = DemoPreferences(dataStore)
 
         @Provides
         @Singleton

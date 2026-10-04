@@ -15,7 +15,7 @@ import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import java.io.IOException
 import kotlinx.coroutines.test.runTest
@@ -200,7 +200,7 @@ class SessionRepositoryImplTest {
         val identitySync = FakeIdentitySync()
         val deviceSession = FakeDeviceSession(order, unregisterError)
         val authenticator = FakeAuthenticator(authError)
-        val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+        val settings = DemoPreferences(InMemoryPreferencesDataStore())
         val tokenSync = FakeTokenSync()
         val repository = SessionRepositoryImpl(
             tokenStore = tokenStore,
@@ -216,7 +216,7 @@ class SessionRepositoryImplTest {
             fcmTokenSync = tokenSync,
             backendDeviceSession = deviceSession,
             diagnostics = RecordingDiagnostics(),
-            settings = settings,
+            demoPreferences = settings,
             demo = DataStoreDemoMode(settings)
         )
         return Fixture(
@@ -240,7 +240,7 @@ class SessionRepositoryImplTest {
         val identitySync: FakeIdentitySync,
         val deviceSession: FakeDeviceSession,
         val authenticator: FakeAuthenticator,
-        val settings: AppSettingsStorage,
+        val settings: DemoPreferences,
         val tokenSync: FakeTokenSync
     )
 

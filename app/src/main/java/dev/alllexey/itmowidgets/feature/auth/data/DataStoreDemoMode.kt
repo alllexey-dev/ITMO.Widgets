@@ -1,15 +1,15 @@
 package dev.alllexey.itmowidgets.feature.auth.data
 
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
 class DataStoreDemoMode @Inject constructor(
-    private val settings: AppSettingsStorage
+    private val demoPreferences: DemoPreferences
 ) : DemoMode {
 
-    override suspend fun isActive(): Boolean = settings.getDemoActive()
+    override suspend fun isActive(): Boolean = demoPreferences.getDemoActive()
 
-    override fun observeActive(): Flow<Boolean> = settings.observeDemoActive()
+    override fun observeActive(): Flow<Boolean> = demoPreferences.observeDemoActive()
 }

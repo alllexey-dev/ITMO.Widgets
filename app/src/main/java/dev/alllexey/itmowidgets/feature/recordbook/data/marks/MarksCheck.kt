@@ -4,7 +4,7 @@ import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.outcomeOf
@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.first
 /** One background run: check the switched-on sources, then deliver what waits, even when a check failed. */
 class MarksCheck @Inject constructor(
     private val sessionTokens: SessionTokenStore,
-    private val settings: AppSettingsStorage,
+    private val markSources: MarkSourcePreferences,
     private val repository: MarkTrackingRepository,
     private val notifier: MarksNotifier,
     private val barsPreference: BarsPreferenceRepository,
@@ -27,9 +27,9 @@ class MarksCheck @Inject constructor(
 ) {
     suspend fun run(): CheckOutcome {
         if (!sessionTokens.hasRefreshToken()) return CheckOutcome.SKIPPED
-        val myItmo = settings.getMyItmoMarksEnabled()
-        val bars = settings.getBarsMarksEnabled() == true
-        val sheets = settings.getSheetMarksEnabled()
+        val myItmo = markSources.getMyItmoMarksEnabled()
+        val bars = markSources.getBarsMarksEnabled() == true
+        val sheets = markSources.getSheetMarksEnabled()
         if (!myItmo && !bars && !sheets) return CheckOutcome.SKIPPED
         val errors = mutableListOf<AppError>()
         if (myItmo) (repository.checkMyItmo() as? AppResult.Failure)?.let { errors += it.error }
@@ -38,7 +38,7 @@ class MarksCheck @Inject constructor(
                 // A network failure is retried and never prompts: only ITMO.ID's answer or missing cookies end a session.
                 is BarsCheck.Failed -> errors += result.error
                 BarsCheck.SessionEnded ->
-                    if (settings.getBarsLoginPrompt() == BarsLoginPrompt.NONE) settings.setBarsLoginPrompt(BarsLoginPrompt.PENDING)
+                    if (markSources.getBarsLoginPrompt() == BarsLoginPrompt.NONE) markSources.setBarsLoginPrompt(BarsLoginPrompt.PENDING)
                 is BarsCheck.Done, BarsCheck.NoSession -> Unit
             }
         }
@@ -51,7 +51,7 @@ class MarksCheck @Inject constructor(
     private suspend fun deliver() {
         val decision = MarkDigests.decide(
             repository.observeNews().first(),
-            settings.getBarsLoginPrompt(),
+            markSources.getBarsLoginPrompt(),
             timeProvider.now().toLocalDateTime()
         )
         decision.digest?.let { digest ->
@@ -61,7 +61,7 @@ class MarksCheck @Inject constructor(
         if (decision.showPrompt) {
             notifier.showBarsPrompt()
             // Shown or not (no permission), the reminder is spent; the recordbook's snackbar still offers the sign-in.
-            settings.setBarsLoginPrompt(BarsLoginPrompt.SHOWN)
+            markSources.setBarsLoginPrompt(BarsLoginPrompt.SHOWN)
         }
         // Delivered even without the permission: the records stay in the home card and the recordbook dots.
         if (decision.handled.isNotEmpty()) repository.markNotified(decision.handled)

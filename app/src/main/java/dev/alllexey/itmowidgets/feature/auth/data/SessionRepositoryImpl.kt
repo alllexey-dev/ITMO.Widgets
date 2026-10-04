@@ -18,7 +18,7 @@ import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +41,7 @@ class SessionRepositoryImpl @Inject constructor(
     private val backendDeviceSession: BackendDeviceSession,
     private val fcmTokenSync: FcmTokenSync,
     private val diagnostics: AppDiagnostics,
-    private val settings: AppSettingsStorage,
+    private val demoPreferences: DemoPreferences,
     private val demo: DemoMode
 ) : SessionRepository {
 
@@ -115,7 +115,7 @@ class SessionRepositoryImpl @Inject constructor(
             clearSessionDataIgnoringFailures()
             // An expired session must not stay behind the demo: widgets would keep refreshing it.
             withContext(Dispatchers.IO) { tokenStore.clearTokens() }
-            settings.setDemoActive(true)
+            demoPreferences.setDemoActive(true)
             // No Backend identity, FCM token, device or background work: the demo stays on the device.
             mutableState.value = DEMO_SESSION
         }
@@ -150,7 +150,7 @@ class SessionRepositoryImpl @Inject constructor(
         mutableState.value = SessionState.SigningOut
         withContext(NonCancellable) {
             clearSessionDataIgnoringFailures()
-            runCatching { settings.setDemoActive(false) }
+            runCatching { demoPreferences.setDemoActive(false) }
             runCatching { lifecycleEffects.onSignedOut() }
             mutableState.value = SessionState.SignedOut
         }
@@ -160,7 +160,7 @@ class SessionRepositoryImpl @Inject constructor(
         return try {
             lifecycleEffects.prepareForSessionChange()
             clearSessionData()
-            settings.setDemoActive(false)
+            demoPreferences.setDemoActive(false)
             withContext(Dispatchers.IO) { tokenStore.replaceWithTokens(tokens) }
             mutableState.value = SessionState.SignedIn(currentUserProvider.getCurrentUser())
             runCatching { lifecycleEffects.onSignedIn() }

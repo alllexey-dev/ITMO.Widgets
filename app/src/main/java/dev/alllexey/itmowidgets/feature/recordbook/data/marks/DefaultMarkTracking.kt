@@ -5,7 +5,7 @@ import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigests
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSource
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
@@ -19,7 +19,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class DefaultMarkTracking @Inject constructor(
-    private val settings: AppSettingsStorage,
+    private val markSources: MarkSourcePreferences,
     private val sessionTokens: SessionTokenStore,
     private val scheduler: MarksScheduler,
     private val repository: MarkTrackingRepository,
@@ -27,30 +27,30 @@ class DefaultMarkTracking @Inject constructor(
 ) : MarkTracking {
 
     override suspend fun setMyItmoEnabled(enabled: Boolean) {
-        settings.setMyItmoMarksEnabled(enabled)
+        markSources.setMyItmoMarksEnabled(enabled)
         if (!enabled) repository.resetSource(MarkSource.MY_ITMO)
         syncWork()
     }
 
     override suspend fun setBarsEnabled(enabled: Boolean) {
-        settings.setBarsMarksEnabled(enabled)
+        markSources.setBarsMarksEnabled(enabled)
         if (!enabled) {
             repository.resetSource(MarkSource.BARS)
-            settings.setBarsLoginPrompt(BarsLoginPrompt.NONE)
+            markSources.setBarsLoginPrompt(BarsLoginPrompt.NONE)
             notifier.cancel(AppNotificationChannels.MARKS, MarkDigests.PROMPT_ID)
         }
         syncWork()
     }
 
     override suspend fun setSheetsEnabled(enabled: Boolean) {
-        settings.setSheetMarksEnabled(enabled)
+        markSources.setSheetMarksEnabled(enabled)
         if (!enabled) repository.resetSource(MarkSource.SHEETS)
         syncWork()
     }
 
     override suspend fun syncWork() {
-        val anySource = settings.getMyItmoMarksEnabled() || settings.getBarsMarksEnabled() == true ||
-            settings.getSheetMarksEnabled()
+        val anySource = markSources.getMyItmoMarksEnabled() || markSources.getBarsMarksEnabled() == true ||
+            markSources.getSheetMarksEnabled()
         if (sessionTokens.hasRefreshToken() && anySource) scheduler.ensurePeriodic() else scheduler.cancel()
     }
 

@@ -4,7 +4,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -24,7 +24,7 @@ import org.junit.Test
 class ScheduleChangesCheckTest {
 
     private val tokens = Tokens()
-    private val settings = AppSettingsStorage(InMemoryPreferencesDataStore())
+    private val settings = ScheduleCheckPreferences(InMemoryPreferencesDataStore())
     private val repository = FakeScheduleChangesRepository()
     private val notifier = RecordingScheduleChangeNotifier()
     private val time = MutableTime(LocalDateTime.of(2026, 9, 7, 12, 0))

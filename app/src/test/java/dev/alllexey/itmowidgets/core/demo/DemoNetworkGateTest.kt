@@ -11,10 +11,10 @@ import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.DefaultBackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.DefaultBackendIdentitySync
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.core.testing.unreachableMyItmo
@@ -44,10 +44,10 @@ import org.junit.Test
 class DemoNetworkGateTest {
     private val demo = FakeDemoMode(active = true)
     private val backend = unreachable<ItmoWidgetsApi>()
-    private val settings = AppSettingsStorage(InMemoryPreferencesDataStore()).also {
-        kotlinx.coroutines.runBlocking { it.setCustomServicesEnabled(true) }
+    private val stores = PreferenceStores().also {
+        kotlinx.coroutines.runBlocking { it.servicesOptIn.setCustomServicesEnabled(true) }
     }
-    private val gate = DefaultBackendGate(settings, demo)
+    private val gate = DefaultBackendGate(stores.servicesOptIn, demo)
 
     @Test
     fun `the pass is a code no turnstile accepts`() = runTest {
@@ -72,7 +72,7 @@ class DemoNetworkGateTest {
 
     @Test
     fun `privacy shows the defaults and refuses changes`() = runTest {
-        val repository = SettingsRepositoryImpl(settings, gate, backend, demo)
+        val repository = settingsRepository(stores, gate, demo)
 
         repository.refreshSharingSettings()
 
@@ -88,10 +88,10 @@ class DemoNetworkGateTest {
     @Test
     fun `without the opt-in no Backend client sends anything`() = runTest {
         val noDemo = FakeDemoMode()
-        val stored = AppSettingsStorage(InMemoryPreferencesDataStore())
-        val optedOut = DefaultBackendGate(stored, noDemo)
+        val stored = PreferenceStores()
+        val optedOut = DefaultBackendGate(stored.servicesOptIn, noDemo)
         val webLogin = WebLoginRepositoryImpl(optedOut, backend, noDemo)
-        val privacy = SettingsRepositoryImpl(stored, optedOut, backend, noDemo)
+        val privacy = settingsRepository(stored, optedOut, noDemo)
 
         assertNull(update(optedOut, noDemo).loadUpdate())
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), webLogin.preview("ABCD2345"))
@@ -123,6 +123,20 @@ class DemoNetworkGateTest {
 
         assertTrue(identity.sync())
     }
+
+    private fun settingsRepository(stores: PreferenceStores, gate: BackendGate, demo: DemoMode) = SettingsRepositoryImpl(
+        stores.servicesOptIn,
+        stores.scheduleChecks,
+        stores.widgetSettings,
+        stores.qrSettings,
+        stores.sportSignSelectors,
+        stores.markSources,
+        stores.homeLayout,
+        stores.deviceHints,
+        gate,
+        backend,
+        demo
+    )
 
     /** A context nobody may touch: allocated without Android's stub constructor, any call on it fails. */
     private fun unusedContext(): Context {

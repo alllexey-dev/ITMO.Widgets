@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
 import androidx.datastore.core.DataStore
+import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
@@ -12,7 +13,6 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
@@ -51,7 +51,7 @@ class SettingsRepositoryImplTest {
     fun `aggregates every supported local setting`() = runTest {
         val fixture = createRepository()
 
-        fixture.storage.setCustomServicesEnabled(true)
+        fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
         fixture.repository.setCompactWidgetNextLessonEarlyEnabled(false)
         fixture.repository.setCompactWidgetTeacherHidden(true)
         fixture.repository.setFullWidgetPastLessonsHidden(true)
@@ -96,11 +96,11 @@ class SettingsRepositoryImplTest {
         fixture.repository.setScheduleSportAutoSignEnabled(true)
 
         assertEquals(LocalSettings(showSportAutoSign = true), enabledSettings.await())
-        assertTrue(fixture.storage.getScheduleSportAutoSignEnabled())
+        assertTrue(fixture.stores.scheduleChecks.getScheduleSportAutoSignEnabled())
         fixture.repository.setScheduleSportAutoSignEnabled(false)
         assertEquals(LocalSettings(), fixture.repository.observeLocalSettings().first())
-        assertFalse(fixture.storage.getScheduleSportAutoSignEnabled())
-        assertFalse(fixture.storage.getCustomServicesEnabled())
+        assertFalse(fixture.stores.scheduleChecks.getScheduleSportAutoSignEnabled())
+        assertFalse(fixture.stores.servicesOptIn.getCustomServicesEnabled())
         assertEquals(0, fixture.api.mySettingsCalls)
         assertTrue(fixture.api.updatedSettings.isEmpty())
     }
@@ -110,10 +110,10 @@ class SettingsRepositoryImplTest {
         val fixture = createRepository()
         assertTrue(fixture.repository.observeLocalSettings().first().scheduleChangesEnabled)
 
-        fixture.storage.setScheduleChangesEnabled(false)
+        fixture.stores.scheduleChecks.setScheduleChangesEnabled(false)
         assertEquals(LocalSettings(scheduleChangesEnabled = false), fixture.repository.observeLocalSettings().first())
 
-        fixture.storage.setScheduleChangesEnabled(true)
+        fixture.stores.scheduleChecks.setScheduleChangesEnabled(true)
         assertEquals(LocalSettings(), fixture.repository.observeLocalSettings().first())
     }
 
@@ -125,7 +125,7 @@ class SettingsRepositoryImplTest {
         fixture.repository.setBackgroundWorkHintShown()
 
         assertEquals(LocalSettings(backgroundWorkHintShown = true), fixture.repository.observeLocalSettings().first())
-        assertTrue(fixture.storage.observeBackgroundWorkHintShown().first())
+        assertTrue(fixture.stores.deviceHints.observeBackgroundWorkHintShown().first())
     }
 
     @Test
@@ -136,7 +136,7 @@ class SettingsRepositoryImplTest {
         fixture.repository.setQrTileAdded(true)
 
         assertEquals(LocalSettings(qrTileAdded = true), fixture.repository.observeLocalSettings().first())
-        assertTrue(fixture.storage.observeQrTileAdded().first())
+        assertTrue(fixture.stores.deviceHints.observeQrTileAdded().first())
     }
 
     @Test
@@ -146,14 +146,14 @@ class SettingsRepositoryImplTest {
         assertTrue(defaults.myItmoMarksEnabled)
         assertEquals(null, defaults.barsMarksEnabled)
 
-        fixture.storage.setMyItmoMarksEnabled(false)
-        fixture.storage.setBarsMarksEnabled(true)
+        fixture.stores.markSources.setMyItmoMarksEnabled(false)
+        fixture.stores.markSources.setBarsMarksEnabled(true)
         assertEquals(
             LocalSettings(myItmoMarksEnabled = false, barsMarksEnabled = true),
             fixture.repository.observeLocalSettings().first()
         )
 
-        fixture.storage.clearBarsMarkState()
+        fixture.stores.markSources.clearBarsMarkState()
         assertEquals(LocalSettings(myItmoMarksEnabled = false), fixture.repository.observeLocalSettings().first())
     }
 
@@ -162,10 +162,10 @@ class SettingsRepositoryImplTest {
         val fixture = createRepository()
         assertTrue(fixture.repository.observeLocalSettings().first().sheetMarksEnabled)
 
-        fixture.storage.setSheetMarksEnabled(false)
+        fixture.stores.markSources.setSheetMarksEnabled(false)
         assertEquals(LocalSettings(sheetMarksEnabled = false), fixture.repository.observeLocalSettings().first())
 
-        fixture.storage.setSheetMarksEnabled(true)
+        fixture.stores.markSources.setSheetMarksEnabled(true)
         assertEquals(LocalSettings(), fixture.repository.observeLocalSettings().first())
     }
 
@@ -185,7 +185,7 @@ class SettingsRepositoryImplTest {
     @Test
     fun `fetches and maps sharing settings`() = runTest {
         val fixture = createRepository()
-        fixture.storage.setCustomServicesEnabled(true)
+        fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
         fixture.api.mySettingsResponse = {
             ApiResponse.success(
                 UserPrivacySettings(scheduleVisibility = ApiSharingVisibility.NOBODY, sportVisibility = ApiSharingVisibility.FRIENDS)
@@ -206,7 +206,7 @@ class SettingsRepositoryImplTest {
     @Test
     fun `reports a failed sharing fetch as an error state`() = runTest {
         val fixture = createRepository()
-        fixture.storage.setCustomServicesEnabled(true)
+        fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
         fixture.api.mySettingsResponse = {
             ApiResponse(
                 success = false,
@@ -226,7 +226,7 @@ class SettingsRepositoryImplTest {
     @Test
     fun `updates one sharing field while preserving the other`() = runTest {
         val fixture = createRepository()
-        fixture.storage.setCustomServicesEnabled(true)
+        fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
         fixture.api.mySettingsResponse = {
             ApiResponse.success(
                 UserPrivacySettings(scheduleVisibility = ApiSharingVisibility.NOBODY, sportVisibility = ApiSharingVisibility.FRIENDS)
@@ -253,7 +253,7 @@ class SettingsRepositoryImplTest {
     @Test
     fun `restores sharing state when an update fails`() = runTest {
         val fixture = createRepository()
-        fixture.storage.setCustomServicesEnabled(true)
+        fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
         fixture.api.mySettingsResponse = {
             ApiResponse.success(
                 UserPrivacySettings(scheduleVisibility = ApiSharingVisibility.FRIENDS, sportVisibility = ApiSharingVisibility.NOBODY)
@@ -292,7 +292,7 @@ class SettingsRepositoryImplTest {
     fun `maps every audience pair and preserves the other audience on update`() = runTest {
         for (schedule in SharingVisibility.entries) for (sport in SharingVisibility.entries) {
             val fixture = createRepository()
-            fixture.storage.setCustomServicesEnabled(true)
+            fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
             fixture.api.mySettingsResponse = {
                 ApiResponse.success(UserPrivacySettings(ApiSharingVisibility.valueOf(schedule.name), ApiSharingVisibility.valueOf(sport.name)))
             }
@@ -308,7 +308,7 @@ class SettingsRepositoryImplTest {
     @Test
     fun `unavailable privacy API is an error not invented legacy or default values`() = runTest {
         val fixture = createRepository()
-        fixture.storage.setCustomServicesEnabled(true)
+        fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
         fixture.api.mySettingsResponse = { throw IOException("Privacy endpoint unavailable") }
         fixture.repository.refreshSharingSettings()
         assertEquals(SharingSettingsState.Error, fixture.repository.observeSharingSettings().first())
@@ -321,7 +321,7 @@ class SettingsRepositoryImplTest {
         val fixture = createRepository()
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), fixture.repository.setFriendsVisibility(SharingVisibility.NOBODY))
         assertTrue(fixture.api.updatedSettings.isEmpty())
-        fixture.storage.setCustomServicesEnabled(true)
+        fixture.stores.servicesOptIn.setCustomServicesEnabled(true)
         fixture.repository.refreshSharingSettings()
         assertEquals(AppResult.Success(Unit), fixture.repository.setFriendsVisibility(SharingVisibility.NOBODY))
         assertEquals(UserPrivacySettings(ApiSharingVisibility.FRIENDS, ApiSharingVisibility.FRIENDS, ApiSharingVisibility.NOBODY), fixture.api.updatedSettings.last())
@@ -335,17 +335,29 @@ class SettingsRepositoryImplTest {
     }
 
     private fun createRepository(): Fixture {
-        val storage = AppSettingsStorage(InMemoryPreferencesDataStore())
+        val stores = PreferenceStores(InMemoryPreferencesDataStore())
         val fakeApi = FakeItmoWidgetsApi()
         return Fixture(
-            storage = storage,
+            stores = stores,
             api = fakeApi,
-            repository = SettingsRepositoryImpl(storage, DefaultBackendGate(storage, noDemo()), fakeApi.instance, noDemo())
+            repository = SettingsRepositoryImpl(
+                stores.servicesOptIn,
+                stores.scheduleChecks,
+                stores.widgetSettings,
+                stores.qrSettings,
+                stores.sportSignSelectors,
+                stores.markSources,
+                stores.homeLayout,
+                stores.deviceHints,
+                DefaultBackendGate(stores.servicesOptIn, noDemo()),
+                fakeApi.instance,
+                noDemo()
+            )
         )
     }
 
     private data class Fixture(
-        val storage: AppSettingsStorage,
+        val stores: PreferenceStores,
         val api: FakeItmoWidgetsApi,
         val repository: SettingsRepositoryImpl
     )

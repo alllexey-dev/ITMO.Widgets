@@ -6,7 +6,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
@@ -23,7 +23,7 @@ import kotlinx.coroutines.sync.withLock
 class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
     gson: Gson,
     @ApplicationContext context: Context,
-    private val settings: AppSettingsStorage,
+    private val scheduleChecks: ScheduleCheckPreferences,
     private val backend: BackendGate,
     private val timeProvider: AcademicTimeProvider,
     private val tokens: SessionTokenStore,
@@ -43,7 +43,7 @@ class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
         val snapshot = runCatching {
             gson.fromJson(cached.first, ScheduleWidgetSnapshot::class.java)
         }.getOrNull() ?: ScheduleWidgetSnapshot.loading()
-        val enabled = settings.getScheduleSportAutoSignEnabled() && backend.isOptedIn()
+        val enabled = scheduleChecks.getScheduleSportAutoSignEnabled() && backend.isOptedIn()
         // Settings reads suspend: cleanup/new login may have invalidated the JSON meanwhile.
         mutex.withLock {
             when {

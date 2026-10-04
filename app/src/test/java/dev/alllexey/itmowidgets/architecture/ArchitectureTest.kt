@@ -176,7 +176,7 @@ class ArchitectureTest {
     fun `settings utility and friend history use DataStore`() {
         productionFiles
             .filter {
-                it.name == "AppSettingsStorage.kt" ||
+                it.name in SETTINGS_STORE_FILES ||
                     it.name == "UtilityStorage.kt" ||
                     it.name == "DataStoreFriendSelectionHistory.kt"
             }
@@ -248,6 +248,18 @@ class ArchitectureTest {
     }
 
     private companion object {
+        val SETTINGS_STORE_FILES = setOf(
+            "DataStorePreferences.kt",
+            "ServicesOptInPreferences.kt",
+            "ScheduleCheckPreferences.kt",
+            "WidgetSettingsPreferences.kt",
+            "QrSettingsPreferences.kt",
+            "SportSignSelectorPreferences.kt",
+            "MarkSourcePreferences.kt",
+            "HomeLayoutPreferences.kt",
+            "DeviceHintPreferences.kt",
+            "DemoPreferences.kt"
+        )
         const val CORE_DEBUG_PACKAGE = "dev.alllexey.itmowidgets.core.debug"
         const val FEATURE_DEBUG_PACKAGE = "dev.alllexey.itmowidgets.feature.debug"
         const val GITHUB_RELEASES = "github.com/alllexey-dev/ITMO.Widgets/releases"

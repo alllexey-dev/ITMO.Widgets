@@ -13,7 +13,8 @@ import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
-import dev.alllexey.itmowidgets.core.storage.AppSettingsStorage
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.*
 import java.io.File
@@ -35,7 +36,8 @@ import org.junit.runner.RunWith
 class ScheduleWidgetSnapshotStoreTest {
     @get:Rule val temporaryFolder = TemporaryFolder()
     private val preferences = MemoryPreferences()
-    private val settings = AppSettingsStorage(preferences)
+    private val scheduleChecks = ScheduleCheckPreferences(preferences)
+    private val servicesOptIn = ServicesOptInPreferences(preferences)
     private val tokens = Tokens()
     private val time = Time()
 
@@ -45,10 +47,10 @@ class ScheduleWidgetSnapshotStoreTest {
         enable()
         store(context).write(snapshot())
         assertEquals(ScheduleWidgetPendingStatus.PREDICTED, store(context).read().singleLesson.lesson?.pendingStatus)
-        settings.setScheduleSportAutoSignEnabled(false)
+        scheduleChecks.setScheduleSportAutoSignEnabled(false)
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(context).read().singleLesson.kind)
         enable()
-        settings.setCustomServicesEnabled(false)
+        servicesOptIn.setCustomServicesEnabled(false)
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(context).read().singleLesson.kind)
         enable()
         time.value = time.value.plusMinutes(7)
@@ -112,11 +114,13 @@ class ScheduleWidgetSnapshotStoreTest {
         }
     }
 
-    private fun store(context: Context) = ScheduleWidgetSnapshotStoreImpl(Gson(), context, settings, DefaultBackendGate(settings, NoDemo), time, tokens)
+    private fun store(context: Context) = ScheduleWidgetSnapshotStoreImpl(
+        Gson(), context, scheduleChecks, DefaultBackendGate(servicesOptIn, NoDemo), time, tokens
+    )
 
     private suspend fun enable() {
-        settings.setScheduleSportAutoSignEnabled(true)
-        settings.setCustomServicesEnabled(true)
+        scheduleChecks.setScheduleSportAutoSignEnabled(true)
+        servicesOptIn.setCustomServicesEnabled(true)
     }
 
     private fun snapshot(): ScheduleWidgetSnapshot {
