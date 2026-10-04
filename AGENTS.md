@@ -52,15 +52,15 @@ Documents describe the current state. History goes to each repository's
   enforces privacy on behalf of Backend.
 
 Cross-repository change order: privacy boundary → Backend + tests → Core + tests
-→ `publishToMavenLocal` → Android → test against `https://dev.widgets.alllexey.dev`
-→ release and deploy only on explicit request.
+→ Android → test against `https://dev.widgets.alllexey.dev` → release and deploy
+only on explicit request. Nothing goes through Maven Local (ADRs 0024 and 0026).
 
 ## Hard rules
 
 - Academic logic takes time from `AcademicTimeProvider` or an injected `Clock`.
   No direct `now()` calls in feature code; the Konsist suite enforces it.
-- Android stays on XML, Fragments, ViewBinding, Navigation, Hilt and WorkManager.
-  No Compose without an explicit migration decision.
+- UI moves to Compose Multiplatform screens in shared modules, with Koin and
+  Navigation 3, as ADRs 0017, 0019 and 0020 decide.
 - Dependency direction inside a feature is `ui -> presentation -> domain <- data`;
   features never import each other. See `docs/architecture.md`.
 - Everything that reaches Backend is gated on the custom-services opt-in inside
@@ -69,9 +69,9 @@ Cross-repository change order: privacy boundary → Backend + tests → Core + t
   never reaches Backend. Every class that takes a network client checks
   `DemoMode` before the call; the Konsist suite enforces it.
 - User-visible text lives in string resources and is Russian.
-- Every meaningful UI change is verified on an emulator in light and dark theme,
-  one dynamic palette, font scale 1.0 and 1.3, with long names and every state.
-  Compilation is not visual verification.
+- Visual verification follows ADR 0022: JVM screenshot baselines in every UI
+  change, the full emulator appearance matrix before a release. Compilation is
+  not visual verification.
 
 ## Secrets and data
 
@@ -95,10 +95,10 @@ build and test before a cross-repository change is called done.
 scripts/check-play-policy.sh
 ```
 
-```bash
-# Core (JDK 17 locally; the artifact targets JVM 11)
-JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew build publishToMavenLocal
-```
+Core 1.x is frozen at `1.7.0` on Maven Central; Core 2.0 is the module
+`:shared:backend-client` of this repository and builds with the Android commands
+above (ADR 0026). MyItmoApi 2.x enters through the pinned composite build (ADR
+0024); no repository publishes to Maven Local.
 
 ```bash
 # Backend (JDK 21, Docker via colima for Testcontainers)
@@ -169,7 +169,7 @@ Plans in these repositories use the v2.3 card format; the user-global rules `pla
 2. Authorization and privacy are enforced and tested on Backend.
 3. Time-dependent logic is deterministic.
 4. Loading, content, empty and error states are handled without layout jumps.
-5. Light, dark and dynamic themes and accessibility were checked visually.
+5. Screenshot baselines cover every changed UI state; releases run the ADR 0022 matrix.
 6. Tests exist at the layer where the behaviour lives.
 7. Every affected repository builds and tests with its JDK.
 8. No secret or user data appears in the diff, logs or docs.
