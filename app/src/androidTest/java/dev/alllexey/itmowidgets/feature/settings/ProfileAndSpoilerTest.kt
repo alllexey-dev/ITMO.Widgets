@@ -19,6 +19,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.canhub.cropper.CropImageView
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.qr.CustomSpoilerManager
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.databinding.FragmentMeBinding
@@ -29,7 +30,7 @@ import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropActivity
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSettingsPreview
+import dev.alllexey.itmowidgets.testing.toSettingsPreview
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.io.File
@@ -72,7 +73,7 @@ class ProfileAndSpoilerTest {
                 screenshot("profile-${spec.name}", scenario)
             }
         }
-        SettingsPreviewActivity.appearance = SettingsPreviewActivity.Appearance()
+        SettingsPreviewActivity.appearance = PreviewAppearance()
     }
 
     @Test

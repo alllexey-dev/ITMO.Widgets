@@ -22,13 +22,10 @@ import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
-import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
-import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -54,8 +51,8 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.social.SocialState
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
-import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
@@ -71,7 +68,7 @@ import kotlinx.coroutines.launch
 
 /** The real profile Fragment with synthetic repositories; never reads a session or calls a service. */
 @AndroidEntryPoint
-class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
+class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNavigator {
     override fun attachBaseContext(newBase: Context) {
         // AppCompat chooses its night configuration while attaching, before onCreate.
         delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
@@ -139,17 +136,6 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
         openedScreens.add(screen to arguments?.let(::Bundle))
     }
 
-    override fun openRoot(root: AppRoot) = Unit
-    override fun dismissOverlays() = Unit
-    override fun openLessonDetails(args: LessonDetailsArgs) = Unit
-    override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
-    override fun openSubjectLinks(args: SubjectLinksArgs) = Unit
-    override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) = Unit
-    override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
-
-    override fun openSheetScores(args: SheetScoresArgs) = Unit
-    override fun openWebLogin() = Unit
-
     override fun openReviewEditor(args: TeacherReviewArgs) {
         openedEditors.add(args)
     }
@@ -158,13 +144,11 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator {
         openedReports.add(reviewId)
     }
 
-    data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val widthDp: Int = 0, val colorSeed: Int? = null)
-
     companion object {
         const val ROOT_TAG = "user-profile"
         const val ISU = 100001
         const val LONG_NAME = "Александра Константиновна Константинопольская"
-        @Volatile var appearance = Appearance()
+        @Volatile var appearance = PreviewAppearance()
         @Volatile var person: AppResult<Person> = AppResult.Failure(AppError.NotFound)
         @Volatile var social: AppResult<UserProfile> = AppResult.Failure(AppError.NotFound)
         @Volatile var reviews: AppResult<TeacherReviews> = AppResult.Success(TeacherReviews(ISU, emptyList(), null, false, false, false, false))

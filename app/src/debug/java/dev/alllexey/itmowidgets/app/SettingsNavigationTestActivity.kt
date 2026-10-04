@@ -103,10 +103,12 @@ import kotlinx.coroutines.flow.onStart
 import dev.alllexey.itmowidgets.core.diagnostics.NoDiagnostics
 import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
 import dev.alllexey.itmowidgets.core.debug.MemoryIcsExport
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
+import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
 
 /** Actual settings/NavHost lifecycle, backed only by in-memory settings and no credentials. */
 @AndroidEntryPoint
-class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
+class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOpAppNavigator {
     lateinit var binding: ActivityMainBinding
         private set
     lateinit var navigation: MainNavigationCoordinator
@@ -124,8 +126,6 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     private val onboardingAppearance = FixtureWidgetAppearance()
     private val customSpoiler = FixtureCustomSpoiler()
 
-    data class Appearance(val dark: Boolean = false, val fontScale: Float = 1f, val colorSeed: Int? = null)
-
     /** The first-run flow with no stored preferences and no backend behind the opt-in. */
     data class OnboardingFixture(
         val servicesEnabled: Boolean = false,
@@ -135,7 +135,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
     )
 
     companion object {
-        @Volatile var appearance = Appearance()
+        @Volatile var appearance = PreviewAppearance()
         @Volatile var startDestination = R.id.navigation_home
         @Volatile var onboardingFixture = OnboardingFixture()
         @Volatile var friendSelectorFixture = FriendSelectorFixture()
@@ -395,23 +395,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator {
         openedRoots += root
     }
 
-    override fun openSubjectLinks(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs) = Unit
-
-    override fun openLinkEditor(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs, linkId: String?) = Unit
-
-    override fun openLinkActions(args: dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs, linkId: String) = Unit
-
-
-    override fun openSheetScores(args: dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs) = Unit
-
     override fun openLessonDetails(args: LessonDetailsArgs) = navigation.openLessonDetails(args)
 
     /** Only recorded: the sheet itself talks to Backend and has its own preview host. */
     override fun openWebLogin() { webLoginOpened += Unit }
-
-    override fun openReviewEditor(args: dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs) = Unit
-
-    override fun openReviewReport(args: dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs, reviewId: String) = Unit
 
     override fun openPendingSportDetails(args: PendingSportDetailsArgs) = navigation.openPendingSportDetails(args)
 

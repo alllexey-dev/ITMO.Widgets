@@ -15,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 
 /** Isolated renderer host: no authenticated graph, repositories, or session fixtures. */
 class SettingsPreviewActivity : AppCompatActivity() {
@@ -81,12 +82,10 @@ class SettingsPreviewActivity : AppCompatActivity() {
     companion object {
         // Set before launch so overrides precede framework/instrumentation resource access.
         @Volatile
-        var appearance = Appearance()
+        var appearance = PreviewAppearance()
 
         const val EXTRA_PROFILE = "preview_profile"
         const val EXTRA_COLOR_SEED = "preview_color_seed"
         const val EXTRA_WIDTH_DP = "preview_width_dp"
     }
-
-    data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false)
 }

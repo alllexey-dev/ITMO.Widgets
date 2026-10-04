@@ -12,6 +12,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
@@ -37,7 +38,7 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsB
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Appearances.assertEffective
-import dev.alllexey.itmowidgets.testing.Appearances.toScheduleLifecycle
+import dev.alllexey.itmowidgets.testing.toScheduleLifecycle
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
@@ -75,7 +76,7 @@ class LessonDetailsVisualTest {
         runBlocking { settings.setCustomServicesEnabled(originalServices) }
         ScheduleLifecycleTestActivity.days = MutableStateFlow(emptyList())
         ScheduleLifecycleTestActivity.changes.value = emptyList()
-        ScheduleLifecycleTestActivity.appearance = ScheduleLifecycleTestActivity.Appearance()
+        ScheduleLifecycleTestActivity.appearance = PreviewAppearance()
     }
 
     @Test
@@ -348,7 +349,7 @@ class LessonDetailsVisualTest {
                 }
             }
         }
-        ScheduleLifecycleTestActivity.appearance = ScheduleLifecycleTestActivity.Appearance()
+        ScheduleLifecycleTestActivity.appearance = PreviewAppearance()
         withSchedule { scenario ->
             scenario.onActivity { it.recycler().descendants().first { view -> view.id == R.id.card_container && view.isShown }.performClick() }
             settle()

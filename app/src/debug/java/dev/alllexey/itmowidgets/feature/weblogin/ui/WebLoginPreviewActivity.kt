@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
@@ -73,8 +74,6 @@ class WebLoginPreviewActivity : AppCompatActivity() {
         }
     }
 
-    data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val widthDp: Int = 0, val colorSeed: Int? = null)
-
     /** Synthetic answers: codes in [previews] exist, everything else is not found. */
     class FixtureRepository : WebLoginRepository {
         val previews = mutableMapOf<String, AppResult<WebLoginPreview>>()
@@ -103,7 +102,7 @@ class WebLoginPreviewActivity : AppCompatActivity() {
             expiresAt = OffsetDateTime.parse("2026-09-24T09:06:30Z"),
         )
 
-        @Volatile var appearance = Appearance()
+        @Volatile var appearance = PreviewAppearance()
         @Volatile var repository: WebLoginRepository = FixtureRepository()
     }
 }

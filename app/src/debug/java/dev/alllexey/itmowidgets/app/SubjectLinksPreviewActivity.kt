@@ -17,15 +17,12 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
-import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
-import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
-import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
-import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewModel
 import dev.alllexey.itmowidgets.feature.resources.ui.LinkActionsBottomSheet
@@ -38,7 +35,7 @@ import dev.alllexey.itmowidgets.feature.resources.ui.SubjectLinksBottomSheet
  * reads a session. [EXTRA_SCREEN] picks the first sheet: `links`, `editor` or `actions` (with [EXTRA_LINK_ID]).
  */
 @AndroidEntryPoint
-class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator {
+class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNavigator {
     override fun attachBaseContext(newBase: Context) {
         val config = Configuration(newBase.resources.configuration).apply {
             fontScale = appearance.fontScale
@@ -78,22 +75,6 @@ class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator {
         sheetRequests += args
     }
 
-    override fun openScreen(screen: AppScreen, arguments: Bundle?) = Unit
-
-    override fun openWebLogin() = Unit
-
-    override fun openReviewEditor(args: TeacherReviewArgs) = Unit
-
-    override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) = Unit
-
-    override fun openRoot(root: AppRoot) = Unit
-
-    override fun dismissOverlays() = Unit
-
-    override fun openLessonDetails(args: LessonDetailsArgs) = Unit
-
-    override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
-
     /** Hands every sheet a view model over [repository] before Hilt could create one, and narrows its window. */
     private class PreviewModels : FragmentManager.FragmentLifecycleCallbacks() {
         override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
@@ -121,8 +102,6 @@ class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator {
         }
     }
 
-    data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val widthDp: Int = 0, val colorSeed: Int? = null)
-
     companion object {
         const val EXTRA_SCREEN = "screen"
         const val EXTRA_LINK_ID = "link_id"
@@ -131,7 +110,7 @@ class SubjectLinksPreviewActivity : AppCompatActivity(), AppNavigator {
         const val SCREEN_ACTIONS = "actions"
         val ARGS = SubjectLinksArgs(42L, "Математический анализ", "2026-1")
 
-        @Volatile var appearance = Appearance()
+        @Volatile var appearance = PreviewAppearance()
         @Volatile var repository: SubjectLinksRepository = MemorySubjectLinksRepository()
         /** «Мои баллы» the sheets asked for; the sheet itself belongs to the recordbook. */
         val sheetRequests: MutableList<SheetScoresArgs> = java.util.Collections.synchronizedList(mutableListOf())

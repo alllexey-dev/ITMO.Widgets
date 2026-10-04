@@ -14,6 +14,7 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import java.util.Locale
@@ -78,16 +79,9 @@ class AppUpdatePreviewActivity : AppCompatActivity() {
 
         // Set before launch so overrides precede framework/instrumentation resource access.
         @Volatile
-        var appearance = Appearance()
+        var appearance = PreviewAppearance()
 
         @Volatile
         var offer = AppUpdate(AppVersionName("2.1"), AppVersionName("2.2"), "", false)
     }
-
-    data class Appearance(
-        val widthDp: Int = 0,
-        val fontScale: Float = 1f,
-        val dark: Boolean = false,
-        val colorSeed: Int? = null
-    )
 }

@@ -15,11 +15,12 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.appbar.MaterialToolbar
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.feature.web.data.WebSessionDataCleaner
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebPreviewFragment
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
+import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.util.concurrent.CountDownLatch
@@ -101,7 +102,7 @@ class HomeWebVisualTest {
             MyItmoWebPreviewFragment.gate?.countDown()
             MyItmoWebPreviewFragment.gate = null
             MyItmoWebPreviewFragment.failMainFrame = false
-            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.appearance = PreviewAppearance()
         }
     }
 

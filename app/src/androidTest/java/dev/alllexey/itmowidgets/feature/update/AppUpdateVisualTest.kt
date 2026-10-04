@@ -7,11 +7,12 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdatePreviewActivity
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toAppUpdate
+import dev.alllexey.itmowidgets.testing.toAppUpdate
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
@@ -74,7 +75,7 @@ class AppUpdateVisualTest {
     )
 
     private fun preview(
-        appearance: AppUpdatePreviewActivity.Appearance,
+        appearance: PreviewAppearance,
         offer: AppUpdate,
         block: (ActivityScenario<AppUpdatePreviewActivity>) -> Unit
     ) {
@@ -87,7 +88,7 @@ class AppUpdateVisualTest {
                 block(scenario)
             }
         } finally {
-            AppUpdatePreviewActivity.appearance = AppUpdatePreviewActivity.Appearance()
+            AppUpdatePreviewActivity.appearance = PreviewAppearance()
         }
     }
 

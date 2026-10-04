@@ -30,6 +30,7 @@ import com.google.android.material.color.MaterialColors
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
@@ -58,7 +59,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.SubjectHubAdapter
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity
 import dev.alllexey.itmowidgets.testing.Appearances
 import dev.alllexey.itmowidgets.testing.Appearances.assertEffective
-import dev.alllexey.itmowidgets.testing.Appearances.toRecordbook
+import dev.alllexey.itmowidgets.testing.toRecordbook
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
@@ -171,7 +172,7 @@ class RecordbookVisualTest {
     }
 
     @Test fun firstLoadWithoutAnyAnswerShowsTheSkeleton() {
-        withPreview(RecordbookPreviewActivity.Appearance(), configure = { it.pending = CompletableDeferred() }) { scenario, _ ->
+        withPreview(PreviewAppearance(), configure = { it.pending = CompletableDeferred() }) { scenario, _ ->
             settle()
             scenario.onActivity { activity ->
                 assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loading).visibility)
@@ -182,7 +183,7 @@ class RecordbookVisualTest {
     }
 
     @Test fun semesterNumbersStayContinuousInPickerAndHeading() {
-        withPreview(RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario, repository ->
+        withPreview(PreviewAppearance(widthDp = 320, fontScale = 1.3f)) { scenario, repository ->
             settle()
             listOf(4, 3).forEach { semester ->
                 scenario.onActivity { it.findViewById<View>(R.id.period_button).performClick() }
@@ -478,7 +479,7 @@ class RecordbookVisualTest {
     }
 
     @Test fun creditSubjectCountsDownToTheCredit() {
-        withFixture(Phase.MIDDLE, RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario ->
+        withFixture(Phase.MIDDLE, PreviewAppearance(widthDp = 320, fontScale = 1.3f)) { scenario ->
             openSubject(scenario, "Иностранный")
             scenario.onActivity { activity ->
                 assertEquals(activity.getString(R.string.subject_credit_next, "8"), activity.findViewById<TextView>(R.id.hint).text.toString())
@@ -557,7 +558,7 @@ class RecordbookVisualTest {
     }
 
     @Test fun sportFailureAndMissingPeriodKeepOfficialCreditAndRetryRecoversPoints() {
-        withPreview(RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f, dark = true), configure = {
+        withPreview(PreviewAppearance(widthDp = 320, fontScale = 1.3f, dark = true), configure = {
             it.sportRate = "зачет"
             it.sportScore = AppResult.Failure(AppError.Network)
         }) { scenario, repository ->
@@ -810,7 +811,7 @@ class RecordbookVisualTest {
         return IntArray(2).also(view::getLocationInWindow)[1]
     }
 
-    private fun withFixture(phase: Phase, appearance: RecordbookPreviewActivity.Appearance, block: (ActivityScenario<RecordbookPreviewActivity>) -> Unit) {
+    private fun withFixture(phase: Phase, appearance: PreviewAppearance, block: (ActivityScenario<RecordbookPreviewActivity>) -> Unit) {
         RecordbookPreviewActivity.appearance = appearance
         RecordbookPreviewFixtures.install(phase)
         try {
@@ -908,7 +909,7 @@ class RecordbookVisualTest {
     )
 
     @Test fun emptyErrorLoadingAndContentTransitionsStayInTheContentArea() {
-        withPreview(RecordbookPreviewActivity.Appearance(widthDp = 320, fontScale = 1.3f)) { scenario, repository ->
+        withPreview(PreviewAppearance(widthDp = 320, fontScale = 1.3f)) { scenario, repository ->
             settle()
             val pending = CompletableDeferred<AppResult<List<RecordbookSubject>>>()
             repository.pending = pending
@@ -947,7 +948,7 @@ class RecordbookVisualTest {
         }
     }
 
-    private fun withPreview(appearance: RecordbookPreviewActivity.Appearance, configure: (PreviewRepository) -> Unit = {}, block: (ActivityScenario<RecordbookPreviewActivity>, PreviewRepository) -> Unit) {
+    private fun withPreview(appearance: PreviewAppearance, configure: (PreviewRepository) -> Unit = {}, block: (ActivityScenario<RecordbookPreviewActivity>, PreviewRepository) -> Unit) {
         val repository = PreviewRepository().apply(configure)
         RecordbookPreviewActivity.appearance = appearance
         RecordbookPreviewActivity.repository = repository

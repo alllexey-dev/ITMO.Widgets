@@ -9,12 +9,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.FriendSelectorFixture
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.friend.FriendListState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment
 import dev.alllexey.itmowidgets.feature.friendselector.ui.RecentFriendAdapter
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
+import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.*
@@ -159,7 +160,7 @@ class RecentFriendsStabilityTest {
                 }
             }
         } finally {
-            SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+            SettingsNavigationTestActivity.appearance = PreviewAppearance()
             SettingsNavigationTestActivity.friendSelectorFixture = FriendSelectorFixture()
         }
     }

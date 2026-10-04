@@ -14,6 +14,7 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.ui.CircularProgressBar
 import dev.alllexey.itmowidgets.databinding.FragmentSportMyBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
@@ -48,7 +49,7 @@ class SportScoreCollapsePreviewActivity : AppCompatActivity(), SportBookingListe
         delegate.localNightMode =
             if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         super.onCreate(savedInstanceState)
-        appearance.seedColor?.let {
+        appearance.colorSeed?.let {
             DynamicColors.applyToActivityIfAvailable(this, DynamicColorsOptions.Builder().setContentBasedSource(it).build())
         }
         binding = FragmentSportMyBinding.inflate(layoutInflater)
@@ -114,9 +115,8 @@ class SportScoreCollapsePreviewActivity : AppCompatActivity(), SportBookingListe
     override fun onLocationClick(booking: SportBooking) = Unit
     override fun onBookingClick(booking: SportBooking) = Unit
 
-    data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val seedColor: Int? = null)
     companion object {
         const val EXTRA_START_LOADING = "start_loading"
-        @Volatile var appearance = Appearance()
+        @Volatile var appearance = PreviewAppearance()
     }
 }

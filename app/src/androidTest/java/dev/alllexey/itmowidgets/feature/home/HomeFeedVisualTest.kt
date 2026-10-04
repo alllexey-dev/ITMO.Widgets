@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.HomeFixture
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeHint
@@ -22,7 +23,7 @@ import dev.alllexey.itmowidgets.feature.home.ui.HomeFeedAdapter
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSettingsNavigation
+import dev.alllexey.itmowidgets.testing.toSettingsNavigation
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
@@ -43,7 +44,7 @@ class HomeFeedVisualTest {
 
     @After
     fun reset() {
-        SettingsNavigationTestActivity.appearance = SettingsNavigationTestActivity.Appearance()
+        SettingsNavigationTestActivity.appearance = PreviewAppearance()
         SettingsNavigationTestActivity.homeFixture = HomeFixture()
     }
 

@@ -58,7 +58,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsRenderer
 import dev.alllexey.itmowidgets.testing.Appearances
-import dev.alllexey.itmowidgets.testing.Appearances.toSettingsPreview
+import dev.alllexey.itmowidgets.testing.toSettingsPreview
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants

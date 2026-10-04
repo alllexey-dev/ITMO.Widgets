@@ -18,10 +18,7 @@ import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
-import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
-import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -32,8 +29,7 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
-import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
-import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewViewModel
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorViewModel
 import java.util.Collections
@@ -47,7 +43,7 @@ import kotlinx.coroutines.flow.flow
  * or calls a service. [EXTRA_SCREEN] picks [SCREEN_EDITOR] or [SCREEN_REPORT].
  */
 @AndroidEntryPoint
-class ReviewEditorPreviewActivity : AppCompatActivity(), AppNavigator {
+class ReviewEditorPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNavigator {
     override fun attachBaseContext(newBase: Context) {
         // AppCompat chooses its night configuration while attaching, before onCreate.
         delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
@@ -79,18 +75,6 @@ class ReviewEditorPreviewActivity : AppCompatActivity(), AppNavigator {
 
     override fun openReviewReport(args: TeacherReviewArgs, reviewId: String) =
         ReportReviewDialogFragment.newInstance(args, reviewId).show(supportFragmentManager, ReportReviewDialogFragment.TAG)
-
-    override fun openScreen(screen: AppScreen, arguments: Bundle?) = Unit
-    override fun openRoot(root: AppRoot) = Unit
-    override fun dismissOverlays() = Unit
-    override fun openLessonDetails(args: LessonDetailsArgs) = Unit
-    override fun openPendingSportDetails(args: PendingSportDetailsArgs) = Unit
-    override fun openSubjectLinks(args: SubjectLinksArgs) = Unit
-    override fun openLinkEditor(args: SubjectLinksArgs, linkId: String?) = Unit
-    override fun openLinkActions(args: SubjectLinksArgs, linkId: String) = Unit
-
-    override fun openSheetScores(args: SheetScoresArgs) = Unit
-    override fun openWebLogin() = Unit
 
     /** Hands both screens a view model over the fixtures before Hilt could create one, and narrows their window. */
     private class PreviewModels : FragmentManager.FragmentLifecycleCallbacks() {
@@ -146,8 +130,6 @@ class ReviewEditorPreviewActivity : AppCompatActivity(), AppNavigator {
         }
     }
 
-    data class Appearance(val fontScale: Float = 1f, val dark: Boolean = false, val widthDp: Int = 0, val colorSeed: Int? = null)
-
     companion object {
         const val EXTRA_SCREEN = "screen"
         const val SCREEN_EDITOR = "editor"
@@ -157,7 +139,7 @@ class ReviewEditorPreviewActivity : AppCompatActivity(), AppNavigator {
         const val REVIEW_ID = "0f8fad5b-d9cb-469f-a165-70867728950e"
         val ARGS = TeacherReviewArgs(TEACHER_ISU, TEACHER_NAME)
 
-        @Volatile var appearance = Appearance()
+        @Volatile var appearance = PreviewAppearance()
         @Volatile var reviews: TeacherReviews? = null
         @Volatile var lessons: AppResult<TeacherLessons> = AppResult.Success(TeacherLessons(emptySet(), emptyList()))
         @Volatile var lessonsDelayMs = 0L
