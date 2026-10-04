@@ -10,9 +10,10 @@ import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.app.MainActivity
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.ui.navigation.AppEntryIntentFactory
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
@@ -250,8 +251,7 @@ object ScheduleWidgetRenderer {
     }
 
     private fun openSchedulePendingIntent(context: Context, requestCode: Int): PendingIntent {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            action = MainActivity.ACTION_OPEN_SCHEDULE
+        val intent = AppEntryIntentFactory.open(context, AppEntryIntents.ACTION_OPEN_SCHEDULE).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP

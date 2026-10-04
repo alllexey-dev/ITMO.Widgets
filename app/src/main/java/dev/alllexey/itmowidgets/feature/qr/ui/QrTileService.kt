@@ -11,7 +11,8 @@ import android.service.quicksettings.TileService
 import androidx.annotation.RequiresApi
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.app.MainActivity
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
+import dev.alllexey.itmowidgets.core.ui.navigation.AppEntryIntentFactory
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrTileController
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrTileState
 import javax.inject.Inject
@@ -94,8 +95,9 @@ class QrTileService : TileService(), QrTileHost {
         private const val REQUEST_CODE = 7301
 
         /** The same flags as a widget tap: an open task is brought forward and gets the route in onNewIntent. */
-        fun passIntent(context: Context): Intent = Intent(context, MainActivity::class.java)
-            .setAction(MainActivity.ACTION_OPEN_QR_PASS)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        fun passIntent(context: Context): Intent =
+            AppEntryIntentFactory.open(context, AppEntryIntents.ACTION_OPEN_QR_PASS).addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            )
     }
 }

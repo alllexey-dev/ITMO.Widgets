@@ -6,6 +6,7 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -22,8 +23,8 @@ class AppShortcutsTest {
         assertEquals(setOf(AppShortcuts.QR_PASS, AppShortcuts.TODAY), shortcuts.keys)
 
         val expected = mapOf(
-            AppShortcuts.QR_PASS to Triple(MainActivity.ACTION_OPEN_QR_PASS, R.string.shortcut_qr_short, R.string.shortcut_qr_long),
-            AppShortcuts.TODAY to Triple(MainActivity.ACTION_OPEN_TODAY, R.string.shortcut_today_short, R.string.shortcut_today_long)
+            AppShortcuts.QR_PASS to Triple(AppEntryIntents.ACTION_OPEN_QR_PASS, R.string.shortcut_qr_short, R.string.shortcut_qr_long),
+            AppShortcuts.TODAY to Triple(AppEntryIntents.ACTION_OPEN_TODAY, R.string.shortcut_today_short, R.string.shortcut_today_long)
         )
         val mainActivity = ComponentName(context, MainActivity::class.java)
         expected.forEach { (id, values) ->
