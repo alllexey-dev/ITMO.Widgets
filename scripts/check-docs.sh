@@ -15,6 +15,7 @@
 # - lines  [AGENTS.md:lines] AGENTS.md has at most 130 lines.
 # - unindexed [<doc>:unindexed] every docs/**/*.md is linked from docs/README.md or from a directory README.md
 #          that docs/README.md links; fails for docs/decisions/*.md, warns for other docs (fails with --strict).
+# - changelog `scripts/changelog.sh check` validates the changelog.d/ fragments when that script exists.
 #
 # Ratchet: scripts/check-docs.known accepts today's findings, one `<entry>  # <reason>` per line, where <entry> is
 # a finding key or a whole doc path. New findings fail; stale entries warn and fail only with --strict, so the
@@ -330,6 +331,11 @@ run_check() {
   [ -f "$known" ] || known=/dev/null
   LC_ALL=C awk -v strict="$strict" -v known_name="scripts/check-docs.known" -f "$tmp/ratchet.awk" \
     "$tmp/ignored" "$known" "$tmp/raw"
+  local status=$?
+  if [ -f "$root/scripts/changelog.sh" ]; then
+    "$BASH" "$root/scripts/changelog.sh" check || status=1
+  fi
+  return $status
 }
 
 # ---- self-test ------------------------------------------------------------------------------------------------
@@ -433,6 +439,13 @@ self_test() {
   st_expect 0 "patterns, home, sibling and URL tokens pass" --strict
   st_fixture; awk 'BEGIN { for (i = 0; i < 131; i++) print "line" }' > "$st_repo/AGENTS.md"
   st_expect 1 "AGENTS.md over 130 lines fails"
+  if [ -f "$script_dir/changelog.sh" ]; then
+    st_fixture; cp "$script_dir/changelog.sh" "$st_repo/scripts/changelog.sh"; mkdir "$st_repo/changelog.d"
+    printf -- '- Schedule widget in Compose.\n' > "$st_repo/changelog.d/l10-schedule-widgets.md"
+    st_expect 0 "a valid changelog fragment passes" --strict
+    printf -- '- Recordbook.\n' > "$st_repo/changelog.d/L12-recordbook.md"
+    st_expect 1 "an invalid changelog fragment fails"
+  fi
 
   if [ "$st_failures" -gt 0 ]; then
     printf 'check-docs self-test: FAIL (%d case(s))\n' "$st_failures"

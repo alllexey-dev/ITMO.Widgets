@@ -3,6 +3,8 @@
 Reference documents in `docs/` describe the current state; this file records
 what changed and when. Unreleased entries describe local development, not a
 publication or deployment.
+New entries are written as fragments in `changelog.d/` (format in its
+`README.md`) and collected here by `scripts/changelog.sh collect` at release.
 
 ## 2.3 — development
 
