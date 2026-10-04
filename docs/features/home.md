@@ -91,7 +91,11 @@ remembers whether the tile is in the quick settings: `onTileAdded` and
 `onTileRemoved` write it in the application scope, and so does the answer to
 the add request. Android has no public way to ask whether a tile is added. On
 Android 13+ the `Виджет QR-кода` settings page offers `Добавить в шторку` while
-the flag is off (see [settings](../settings.md#qr-widget)).
+the flag is off (see [settings](../settings.md#qr-widget)). That request belongs
+to `feature/settings`: `QuickSettingsTileAccess` and `QrTileAddResult` in
+`domain`, `AndroidQuickSettingsTileAccess` in `data` and `requestAddQrTile` in
+`ui`. The tile itself is `feature/qr`: `QrTilePreferences` in `domain`,
+`QrTileController` in `presentation`, `QrTileService` and `QrTileClick` in `ui`.
 
 Two static shortcuts (`res/xml/shortcuts.xml`, ids in `app/AppShortcuts`):
 

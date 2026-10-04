@@ -101,10 +101,19 @@ or the official cache.
   pending rows; it never replaces the academic screen.
 - The adapter diffs the whole display day, so live additions and cancellations
   render without clearing the cache or resetting scroll.
+- A pending row opens `PendingSportDetailsBottomSheet`
+  (`feature/schedule/ui/details`) with `core/navigation/PendingSportDetailsArgs`;
+  the home feed opens the same sheet through `AppNavigator`.
 
 ## Behaviour
 
 - Timeline markers and day alpha follow [`design.md`](../design.md).
+- Lesson type colours and names (`core/ui/LessonTypes.kt`) and the short
+  building and room titles (`core/ui/LocationTitles.kt`) are shared with the
+  recordbook's lesson rows.
+- `core/navigation/ScheduleTodayRequest` is the Fragment result `MainActivity`
+  sends to show today in the own schedule (the `Сегодня` shortcut, see
+  [home](home.md#quick-settings-tile-and-app-shortcuts)).
 - The list snapshots its scroll position before the view is destroyed; restoration
   waits for data, and adapter callbacks never touch an old view.
 - Switching between own and a friend's schedule keeps the reader on the day and
@@ -133,7 +142,8 @@ or the official cache.
   `Открыть на карте`. Then, each only when present: the `Изменения` block, the
   meeting info and password when MyITMO sends them, note. Buttons:
   `Открыть на карте` (a known building from `core/location/BuildingDirectory`,
-  else the raw building text) through the generic `geo:` intent in
+  read from `res/raw/itmo_buildings.json`, else the raw building text) through
+  the generic `geo:` intent of a `core/location/MapDestination` in
   `core/ui/navigation/MapLauncher`, and `Открыть видеозвонок` when the lesson
   carries a link (MyITMO calls the field `zoom_url`, but lessons run on any
   platform, so the link itself is not shown). No map provider setting. A card
@@ -199,6 +209,9 @@ Backend (decision [0013](../decisions/0013-schedule-changes-on-device.md)).
   again on every start does not push the next run away. The worker gets
   `ScheduleChangesCheck` through the `ScheduleChangesEntryPoint` entry point,
   not `@HiltWorker` (see `QrWidgetEntryPoint`).
+  `WorkManagerScheduleChangesScheduler` enqueues and cancels it, and
+  `AndroidScheduleChangeNotifier` posts the notification; all three live in
+  `feature/schedule/work`.
 - `ScheduleChangesCheck.run()` ends `SKIPPED` without a request when there is no
   refresh token or the switch is off. Otherwise it runs
   `ScheduleChangesRepository.check()` and then delivers the notification, even
@@ -288,7 +301,9 @@ time:
 
 ### Storage
 
-`ScheduleChangesFileStore` keeps everything in
+The change model, shared with the home card, is `ScheduleChange` in
+`core/schedule` with `LessonSlot` (one side of a change) and `LessonOccurrence`
+(a `pairId` on a date). `ScheduleChangesFileStore` keeps everything in
 `filesDir/schedule_changes/state.json` (format 1): the snapshot, `emptyHeld`
 and the changes with both sides, subject, type, flow, `read` and `notified`.
 The snapshot and the changes are written together, atomically (`.tmp`,
@@ -514,8 +529,10 @@ through; failed ones stay in the file with their calendar and are retried.
   work. `CalendarSyncWorker` runs the unique periodic work `calendar-sync`
   every 2 hours with `NetworkType.CONNECTED`, backoff from 15 minutes,
   `ExistingPeriodicWorkPolicy.UPDATE`, tag `calendar-sync`, through
-  `CalendarSyncEntryPoint`. It does not depend on `Изменения расписания` and
-  has no quiet hours, since it notifies nothing. Failures are retried through
+  `CalendarSyncEntryPoint`; `WorkManagerCalendarSyncScheduler` enqueues and
+  cancels it. Both live in `feature/schedule/work`, the rest of the
+  synchronization in `domain/calendar` and `data/calendar`. The work does not
+  depend on `Изменения расписания` and has no quiet hours, since it notifies nothing. Failures are retried through
   `outcomeOf` and `workResultOf` like the background checks.
 - The one-off work `calendar-sync-now` (`ExistingWorkPolicy.REPLACE`, network)
   runs right after turning on and after a successful

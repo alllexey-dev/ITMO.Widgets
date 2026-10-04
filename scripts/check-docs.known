@@ -11,12 +11,8 @@ AGENTS.md:path:linter-rules.md  # user-global rule file, named to exclude it
 AGENTS.md:path:ticket.md  # user-global rule file, named to exclude it
 AGENTS.md:path:working-rules.md  # user-global rule file, named to exclude it
 
-docs/design.md:path:files/  # app data directory on the device, not a repository path
-docs/design.md:path:cache/  # app data directory on the device, not a repository path
-
 docs/features/app-links.md:unindexed  # not in docs/README.md yet; index it in the next docs/README.md edit
 docs/features/app-links.md:path:site/.well-known/assetlinks.json  # Web repository file without the W/ prefix
-docs/features/demo.md:vibe:vibe/play-listing.md  # Play listing draft lives in vibe/; move the facts into a doc
 docs/features/home.md:unindexed  # not in docs/README.md yet; index it in the next docs/README.md edit
 
 docs/features/web-login.md:path:Chrome/  # user-agent product token, not a path

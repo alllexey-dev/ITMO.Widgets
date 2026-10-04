@@ -18,8 +18,7 @@ or a session change are ignored. On success the screen confirms with
 
 The logo stays decorative for accessibility services
 (`importantForAccessibility="no"`): there is no focus stop and no hint. The
-reviewer finds the entry in the access instructions of the Play listing
-(`vibe/play-listing.md`).
+reviewer finds the entry in the access instructions of the Play listing.
 
 ## Session
 

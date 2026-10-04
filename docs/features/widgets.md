@@ -61,6 +61,8 @@ Shows the building pass, hidden behind a spoiler by default, with dynamic
 colours and an opening animation (circle, fade or none). A custom spoiler image
 is picked through the photo picker, cropped square and stored as a bounded
 420 × 420 PNG; saving is atomic and refreshes widgets only after success.
+`core/qr/CustomSpoilerManager` stores and reads that image for the settings
+preview and the widget renderer.
 Expiry is passive: an expired code stops being emitted (known gap).
 
 ## Launcher picker previews
