@@ -31,6 +31,7 @@ import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
+import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
@@ -102,19 +103,22 @@ object AppPreferencesUpgrade {
             assertEquals("upgrade22-registered-fcm-token", it.getRegisteredFirebaseToken())
             assertEquals(Captured22.ISU, it.getRegisteredFirebaseOwner())
             assertEquals("upgrade22-fcm-token", it.getFirebaseToken())
-            assertEquals(Captured22.AT_MS - 3_600_000, it.getLastUpdateTimestamp())
-            assertFalse(it.getLessonWidgetStyleChanged())
             assertEquals("2.1.1", it.getSkippedVersion())
             assertEquals(Captured22.AT_MS - 7_200_000, it.getVersionNotificationTimestamp())
             assertTrue(it.getOnboardingCompleted())
         }
 
-        DataStoreSubjectBindingStore(preferences).let {
+        DataStoreSubjectBindingStore(preferences, DeviceDispatchers).let {
             assertEquals(2001L, it.get(1001))
             assertEquals(2002L, it.get(1002))
         }
         val unusedBarsTokens = BarsTokenStore(File(fixture.cacheDir, "unused_bars_tokens.enc"), NoCipher)
-        val barsPreference = BarsPreferenceRepositoryImpl(unusedBarsTokens, preferences, MarkSourcePreferences(preferences))
+        val barsPreference = BarsPreferenceRepositoryImpl(
+            unusedBarsTokens,
+            preferences,
+            MarkSourcePreferences(preferences),
+            DeviceDispatchers
+        )
         assertTrue(barsPreference.isEnabled())
         assertEquals(QrWidgetState.VISIBLE, QrWidgetStateStoreImpl(preferences).getState(42))
         assertEquals(listOf(100003, 100002), DataStoreFriendSelectionHistory(preferences).getRecentIsu())

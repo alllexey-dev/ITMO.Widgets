@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.upgrade.stores
 
+import dev.alllexey.itmowidgets.core.diagnostics.AndroidAppLog
 import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSourceImpl
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCacheImpl
 import dev.alllexey.itmowidgets.upgrade.Captured22
@@ -13,7 +14,7 @@ object QrCacheUpgrade {
         val hex = QrCodeLocalDataSourceImpl(fixture.context, fixture.clock).get(allowExpired = true)
         assertTrue("qr_hex read as $hex", hex == null || hex == Captured22.QR_HEX)
 
-        val bitmap = QrBitmapCacheImpl(fixture.context).getBitmap("noise", "upgrade-2.2")
+        val bitmap = QrBitmapCacheImpl(fixture.context, AndroidAppLog()).getBitmap("noise", "upgrade-2.2")
         assertTrue(bitmap == null || bitmap.width == 8 && bitmap.height == 8)
     }
 }

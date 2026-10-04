@@ -1,8 +1,10 @@
 package dev.alllexey.itmowidgets.upgrade.stores
 
+import dev.alllexey.itmowidgets.core.diagnostics.AndroidAppLog
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticEntry
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticLevel
 import dev.alllexey.itmowidgets.core.diagnostics.FileAppDiagnostics
+import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
@@ -14,7 +16,12 @@ import org.junit.Assert.assertEquals
 object DiagnosticsLogUpgrade {
 
     fun check(fixture: Upgrade22Fixture): Unit = runBlocking {
-        val diagnostics = FileAppDiagnostics(File(fixture.filesDir, "diagnostics"), fixture.clock)
+        val diagnostics = FileAppDiagnostics(
+            File(fixture.filesDir, "diagnostics"),
+            fixture.clock,
+            DeviceDispatchers,
+            AndroidAppLog()
+        )
         assertEquals(
             listOf(
                 DiagnosticEntry(

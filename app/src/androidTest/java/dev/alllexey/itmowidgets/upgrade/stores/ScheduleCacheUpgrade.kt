@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
+import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.time.LocalDate
@@ -51,7 +52,7 @@ object ScheduleCacheUpgrade {
             )
         )
 
-        val cache = ScheduleLocalDataSourceImpl(fixture.gson, fixture.clock, fixture.context)
+        val cache = ScheduleLocalDataSourceImpl(fixture.gson, fixture.clock, fixture.context, DeviceDispatchers)
         val days = cache.observeRange(Captured22.ISU, date, date).first()
         assertTrue("schedule_cache read as $days", days.isEmpty() || days == listOf(expected))
     }

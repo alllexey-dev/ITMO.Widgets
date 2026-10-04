@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoCurrentUserProvider
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
@@ -63,10 +64,16 @@ object SessionModule {
         tokenStore: SessionTokenStore,
         gson: Gson,
         demo: DemoMode,
-        dispatchers: AppDispatchers
+        dispatchers: AppDispatchers,
+        log: AppLog
     ): CurrentUserProvider = DemoCurrentUserProvider(
         demo = demo,
-        signedIn = IdTokenCurrentUserProvider(tokenStore = tokenStore, gson = gson, dispatchers = dispatchers)
+        signedIn = IdTokenCurrentUserProvider(
+            tokenStore = tokenStore,
+            gson = gson,
+            dispatchers = dispatchers,
+            log = log
+        )
     )
 
     @Provides
