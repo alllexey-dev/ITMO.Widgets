@@ -456,15 +456,6 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     companion object {
         private const val BOOKINGS_WAIT_MILLIS = 8_000L
         private const val SPORT_TYPE_ID = 11
-        const val ACTION_OPEN_SPORT = "dev.alllexey.itmowidgets.action.OPEN_SPORT"
-        const val ACTION_OPEN_USER_PROFILE = "dev.alllexey.itmowidgets.action.OPEN_USER_PROFILE"
-        const val ACTION_OPEN_SCHEDULE = "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE"
-        const val ACTION_OPEN_SCHEDULE_CHANGES = "dev.alllexey.itmowidgets.action.OPEN_SCHEDULE_CHANGES"
-        const val ACTION_OPEN_RECORDBOOK = "dev.alllexey.itmowidgets.action.OPEN_RECORDBOOK"
-        const val ACTION_OPEN_RECORDBOOK_SUBJECT = "dev.alllexey.itmowidgets.action.OPEN_RECORDBOOK_SUBJECT"
-        const val ACTION_OPEN_BARS_LOGIN = "dev.alllexey.itmowidgets.action.OPEN_BARS_LOGIN"
-        const val ACTION_OPEN_QR_PASS = "dev.alllexey.itmowidgets.action.OPEN_QR_PASS"
-        const val ACTION_OPEN_TODAY = "dev.alllexey.itmowidgets.action.OPEN_TODAY"
         private const val PENDING_USER = "pending_user_isu"
         private const val PENDING_ROOT = "pending_root_destination"
         private const val PENDING_SCREEN = "pending_screen"

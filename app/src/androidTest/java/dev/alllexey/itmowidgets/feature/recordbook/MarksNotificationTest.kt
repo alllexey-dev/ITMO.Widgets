@@ -16,6 +16,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.AndroidAppNotifier
 import dev.alllexey.itmowidgets.app.MainActivity
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
@@ -67,7 +68,7 @@ class MarksNotificationTest {
         val public = checkNotNull(shown.notification.publicVersion) { "The lock screen needs a public version" }
         assertEquals("Новые оценки", public.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
         assertNull(public.extras.getCharSequence(Notification.EXTRA_TEXT))
-        assertEquals(pendingIntentOf(MainActivity.ACTION_OPEN_RECORDBOOK, DIGEST), shown.notification.contentIntent)
+        assertEquals(pendingIntentOf(AppEntryIntents.ACTION_OPEN_RECORDBOOK, DIGEST), shown.notification.contentIntent)
     }
 
     @Test
@@ -87,14 +88,14 @@ class MarksNotificationTest {
 
             val intent = AndroidAppNotifier(context).intentFor(captured.shown.single())
 
-            assertEquals(MainActivity.ACTION_OPEN_RECORDBOOK_SUBJECT, intent.action)
+            assertEquals(AppEntryIntents.ACTION_OPEN_RECORDBOOK_SUBJECT, intent.action)
             assertEquals(
                 RecordbookSubjectArgs(11, 1, 3, "2026/2027", bars?.planId, bars?.type, bars?.identifier),
                 RecordbookSubjectArgs.from(intent.extras)
             )
         }
         notifier.showDigest(MarkDigest(names(1), single = null), MarkSubjectTarget(1, 3, "2026/2027", 11, journal))
-        assertEquals(pendingIntentOf(MainActivity.ACTION_OPEN_RECORDBOOK_SUBJECT, DIGEST), eventually(DIGEST).notification.contentIntent)
+        assertEquals(pendingIntentOf(AppEntryIntents.ACTION_OPEN_RECORDBOOK_SUBJECT, DIGEST), eventually(DIGEST).notification.contentIntent)
     }
 
     @Test
@@ -109,7 +110,7 @@ class MarksNotificationTest {
         assertEquals("Без входа оценки БАРС не проверяются.", prompt.text())
         assertEquals(Notification.VISIBILITY_PRIVATE, prompt.notification.visibility)
         assertEquals("Войдите в БАРС", prompt.notification.publicVersion.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-        assertEquals(pendingIntentOf(MainActivity.ACTION_OPEN_BARS_LOGIN, PROMPT), prompt.notification.contentIntent)
+        assertEquals(pendingIntentOf(AppEntryIntents.ACTION_OPEN_BARS_LOGIN, PROMPT), prompt.notification.contentIntent)
         assertEquals(1, ours(DIGEST).size)
     }
 

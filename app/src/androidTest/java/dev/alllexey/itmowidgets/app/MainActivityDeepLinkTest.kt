@@ -18,6 +18,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportFragment
@@ -45,7 +46,7 @@ class MainActivityDeepLinkTest {
     @Test
     fun qrShortcutFromColdStartOpensThePassAboveHome() {
         signedIn()
-        ActivityScenario.launch<MainActivity>(route(MainActivity.ACTION_OPEN_QR_PASS)).use {
+        ActivityScenario.launch<MainActivity>(route(AppEntryIntents.ACTION_OPEN_QR_PASS)).use {
             awaitRoute(R.id.navigation_home, R.id.qr_pass)
             back()
             awaitRoute(R.id.navigation_home, overlay = null)
@@ -56,7 +57,7 @@ class MainActivityDeepLinkTest {
     @Test
     fun todayShortcutOpensTheScheduleAndBackReturnsHome() {
         signedIn()
-        ActivityScenario.launch<MainActivity>(route(MainActivity.ACTION_OPEN_TODAY)).use {
+        ActivityScenario.launch<MainActivity>(route(AppEntryIntents.ACTION_OPEN_TODAY)).use {
             awaitRoute(R.id.navigation_schedule, overlay = null)
             back()
             awaitRoute(R.id.navigation_home, overlay = null)
@@ -67,7 +68,7 @@ class MainActivityDeepLinkTest {
     fun routeWaitsForSignInAndOnboarding() {
         TestSession.signOut()
         TestSession.resetOnboarding()
-        ActivityScenario.launch<MainActivity>(route(MainActivity.ACTION_OPEN_QR_PASS)).use {
+        ActivityScenario.launch<MainActivity>(route(AppEntryIntents.ACTION_OPEN_QR_PASS)).use {
             awaitRoute(R.id.auth, overlay = null)
             TestSession.seedActiveSession()
             awaitRoute(R.id.onboarding, overlay = null)
@@ -79,7 +80,7 @@ class MainActivityDeepLinkTest {
     @Test
     fun routeRunsOnceAcrossRecreation() {
         signedIn()
-        ActivityScenario.launch<MainActivity>(route(MainActivity.ACTION_OPEN_QR_PASS)).use { scenario ->
+        ActivityScenario.launch<MainActivity>(route(AppEntryIntents.ACTION_OPEN_QR_PASS)).use { scenario ->
             awaitRoute(R.id.navigation_home, R.id.qr_pass)
             scenario.recreate()
             awaitRoute(R.id.navigation_home, R.id.qr_pass)
@@ -98,14 +99,14 @@ class MainActivityDeepLinkTest {
     fun routeArrivingWhileOpenReplacesTheOverlay() {
         signedIn()
         // ActivityScenario cannot close an activity that went through onNewIntent; this one finishes itself.
-        instrumentation.startActivitySync(route(MainActivity.ACTION_OPEN_SPORT))
+        instrumentation.startActivitySync(route(AppEntryIntents.ACTION_OPEN_SPORT))
         try {
             awaitRoute(R.id.navigation_sport, overlay = null)
             onActivity { it.openScreen(AppScreen.SETTINGS, null) }
             awaitRoute(R.id.navigation_sport, R.id.settings)
             // What a tile or a widget sends to a running task: the same instance gets onNewIntent.
             context.startActivity(
-                route(MainActivity.ACTION_OPEN_QR_PASS)
+                route(AppEntryIntents.ACTION_OPEN_QR_PASS)
                     .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             )
             awaitRoute(R.id.navigation_home, R.id.qr_pass)
@@ -120,7 +121,7 @@ class MainActivityDeepLinkTest {
     @Test
     fun launchFromRecentsDoesNotRepeatTheRoute() {
         signedIn()
-        val intent = route(MainActivity.ACTION_OPEN_QR_PASS).addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY)
+        val intent = route(AppEntryIntents.ACTION_OPEN_QR_PASS).addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY)
         ActivityScenario.launch<MainActivity>(intent).use {
             awaitRoute(R.id.navigation_home, overlay = null)
             // The route never runs later either.
@@ -133,9 +134,9 @@ class MainActivityDeepLinkTest {
     fun notificationAndWidgetRoutesReturnHomeOnBack() {
         signedIn()
         mapOf(
-            MainActivity.ACTION_OPEN_SCHEDULE to R.id.navigation_schedule,
-            MainActivity.ACTION_OPEN_SPORT to R.id.navigation_sport,
-            MainActivity.ACTION_OPEN_RECORDBOOK to R.id.navigation_recordbook
+            AppEntryIntents.ACTION_OPEN_SCHEDULE to R.id.navigation_schedule,
+            AppEntryIntents.ACTION_OPEN_SPORT to R.id.navigation_sport,
+            AppEntryIntents.ACTION_OPEN_RECORDBOOK to R.id.navigation_recordbook
         ).forEach { (action, destination) ->
             ActivityScenario.launch<MainActivity>(route(action)).use {
                 awaitRoute(destination, overlay = null)

@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.app.MainActivity
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
 import dev.alllexey.itmowidgets.core.schedule.LessonSlot
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
@@ -64,7 +65,7 @@ class ScheduleChangesNotificationTest {
         val expected = PendingIntent.getActivity(
             context, 1,
             Intent(context, MainActivity::class.java)
-                .setAction(MainActivity.ACTION_OPEN_SCHEDULE_CHANGES)
+                .setAction(AppEntryIntents.ACTION_OPEN_SCHEDULE_CHANGES)
                 .setData(Uri.parse("itmowidgets-notification://$CHANNEL/1")),
             PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
         )

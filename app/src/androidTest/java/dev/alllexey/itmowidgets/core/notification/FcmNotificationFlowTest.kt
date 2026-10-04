@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.app.AppOverlayHostFragment
 import dev.alllexey.itmowidgets.app.OnboardingTestEntryPoint
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -47,7 +48,7 @@ class FcmNotificationFlowTest {
         instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.POST_NOTIFICATIONS)
         try {
             val intent = Intent(context, MainActivity::class.java).apply {
-                action = MainActivity.ACTION_OPEN_USER_PROFILE
+                action = AppEntryIntents.ACTION_OPEN_USER_PROFILE
                 putExtra(UserScreenArgs.ISU, 100001)
             }
             instrumentation.startActivitySync(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))

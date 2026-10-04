@@ -14,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
@@ -93,18 +94,18 @@ class AndroidAppNotifier @Inject constructor(
         flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         data = Uri.parse("itmowidgets-notification://${notification.channel}/${notification.id}")
         when (val target = notification.destination) {
-            NotificationDestination.Sport -> action = MainActivity.ACTION_OPEN_SPORT
+            NotificationDestination.Sport -> action = AppEntryIntents.ACTION_OPEN_SPORT
             is NotificationDestination.UserProfile -> {
-                action = MainActivity.ACTION_OPEN_USER_PROFILE
+                action = AppEntryIntents.ACTION_OPEN_USER_PROFILE
                 putExtra(UserScreenArgs.ISU, target.isu)
             }
-            NotificationDestination.ScheduleChanges -> action = MainActivity.ACTION_OPEN_SCHEDULE_CHANGES
-            NotificationDestination.Recordbook -> action = MainActivity.ACTION_OPEN_RECORDBOOK
+            NotificationDestination.ScheduleChanges -> action = AppEntryIntents.ACTION_OPEN_SCHEDULE_CHANGES
+            NotificationDestination.Recordbook -> action = AppEntryIntents.ACTION_OPEN_RECORDBOOK
             is NotificationDestination.RecordbookSubject -> {
-                action = MainActivity.ACTION_OPEN_RECORDBOOK_SUBJECT
+                action = AppEntryIntents.ACTION_OPEN_RECORDBOOK_SUBJECT
                 putExtras(target.args.toBundle())
             }
-            NotificationDestination.BarsLogin -> action = MainActivity.ACTION_OPEN_BARS_LOGIN
+            NotificationDestination.BarsLogin -> action = AppEntryIntents.ACTION_OPEN_BARS_LOGIN
         }
     }
 

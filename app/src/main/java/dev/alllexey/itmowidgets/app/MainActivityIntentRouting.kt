@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.app
 
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.AppLink
 import dev.alllexey.itmowidgets.core.navigation.AppLinks
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
@@ -46,19 +47,19 @@ object MainActivityIntentRouting {
         link: String? = null
     ): MainActivityRoute? = if (launchedFromHistory) null else when (action) {
         ACTION_VIEW -> linkRoute(AppLinks.parse(link))
-        MainActivity.ACTION_OPEN_SCHEDULE -> MainActivityRoute(R.id.navigation_schedule)
-        MainActivity.ACTION_OPEN_SPORT -> MainActivityRoute(R.id.navigation_sport)
-        MainActivity.ACTION_OPEN_SCHEDULE_CHANGES ->
+        AppEntryIntents.ACTION_OPEN_SCHEDULE -> MainActivityRoute(R.id.navigation_schedule)
+        AppEntryIntents.ACTION_OPEN_SPORT -> MainActivityRoute(R.id.navigation_sport)
+        AppEntryIntents.ACTION_OPEN_SCHEDULE_CHANGES ->
             MainActivityRoute(R.id.navigation_schedule, screen = AppScreen.SCHEDULE_CHANGES)
-        MainActivity.ACTION_OPEN_USER_PROFILE -> isu?.takeIf { it > 0 }?.let { MainActivityRoute(R.id.navigation_me, it) }
-        MainActivity.ACTION_OPEN_RECORDBOOK -> MainActivityRoute(R.id.navigation_recordbook)
+        AppEntryIntents.ACTION_OPEN_USER_PROFILE -> isu?.takeIf { it > 0 }?.let { MainActivityRoute(R.id.navigation_me, it) }
+        AppEntryIntents.ACTION_OPEN_RECORDBOOK -> MainActivityRoute(R.id.navigation_recordbook)
         // Arguments that do not describe a page still open the recordbook, where the subject is one tap away.
-        MainActivity.ACTION_OPEN_RECORDBOOK_SUBJECT -> subject?.validOrNull()
+        AppEntryIntents.ACTION_OPEN_RECORDBOOK_SUBJECT -> subject?.validOrNull()
             ?.let { MainActivityRoute(R.id.navigation_recordbook, screen = AppScreen.RECORDBOOK_SUBJECT, subject = it) }
             ?: MainActivityRoute(R.id.navigation_recordbook)
-        MainActivity.ACTION_OPEN_BARS_LOGIN -> MainActivityRoute(R.id.navigation_recordbook, barsLogin = true)
-        MainActivity.ACTION_OPEN_QR_PASS -> MainActivityRoute(R.id.navigation_home, screen = AppScreen.QR_PASS)
-        MainActivity.ACTION_OPEN_TODAY -> MainActivityRoute(R.id.navigation_schedule, today = true)
+        AppEntryIntents.ACTION_OPEN_BARS_LOGIN -> MainActivityRoute(R.id.navigation_recordbook, barsLogin = true)
+        AppEntryIntents.ACTION_OPEN_QR_PASS -> MainActivityRoute(R.id.navigation_home, screen = AppScreen.QR_PASS)
+        AppEntryIntents.ACTION_OPEN_TODAY -> MainActivityRoute(R.id.navigation_schedule, today = true)
         else -> null
     }
 

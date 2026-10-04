@@ -14,6 +14,7 @@ import dagger.hilt.android.EntryPointAccessors
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.AppOverlayHostFragment
 import dev.alllexey.itmowidgets.app.MainActivity
+import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint
 import dev.alllexey.itmowidgets.feature.qr.ui.QrTileService
 import dev.alllexey.itmowidgets.testing.TestSession
@@ -68,7 +69,7 @@ class QrTileFlowTest {
         val intent = QrTileService.passIntent(context)
 
         assertEquals(ComponentName(context, MainActivity::class.java), intent.component)
-        assertEquals(MainActivity.ACTION_OPEN_QR_PASS, intent.action)
+        assertEquals(AppEntryIntents.ACTION_OPEN_QR_PASS, intent.action)
         val flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         assertEquals(flags, intent.flags)
     }
