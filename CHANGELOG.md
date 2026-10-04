@@ -4,6 +4,12 @@ Reference documents in `docs/` describe the current state; this file records
 what changed and when. Unreleased entries describe local development, not a
 publication or deployment.
 
+## 2.3 — development
+
+- v2.3 starts: `master` builds `2.3-SNAPSHOT` (version code 20290), 2.2.x fixes
+  move to `release/2.2`, and agents work in lanes under § v2.3 lanes of
+  `AGENTS.md`.
+
 ## 2.2 — 2026-10-03
 
 ### 2026-10-03

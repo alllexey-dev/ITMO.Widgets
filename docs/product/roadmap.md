@@ -201,6 +201,10 @@ Keep MyITMO as the source of university data, ITMO.Widgets Backend as the source
   the dev Caddy routing and the verification on a device are pending. Not
   released to production.
 
+- Stage 45: done with the 2.2 release on 2026-10-03 (GitHub release `2.2`,
+  tag `v2.2`). The roadmap is complete; v2.3 is a parity rewrite with no new
+  product stages.
+
 ## Plan Structure
 
 The work is delivered through the completed v2.0.1 baseline and two large product releases:

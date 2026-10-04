@@ -26,9 +26,8 @@
 Achievements, messaging, posts, followers and free-window discovery are outside
 the roadmap. Do not add them opportunistically.
 
-Development happens on `master`; the latest release is `2.2` (version code
-6). The release checklist of 2.2 is
-`vibe/release-2.2.md` (local only).
+Development happens on `master`, which builds `2.3-SNAPSHOT` (version code
+20290); the latest release is `2.2` (version code 6).
 
 ## Distribution
 
@@ -59,6 +58,12 @@ either updates the other:
   permission or foreground service in the merged release manifests, `targetSdk`
   36, 16 KB aligned native libraries, no GitHub update link in the `play`
   bundle.
+- `release/2.2` starts at the `v2.2` tag and carries only 2.2.x fixes and Play
+  uploads while 2.3 is in development; its version codes continue 7, 8, … below
+  100, and every fix is ported to `master` by hand (the ledger is kept locally).
+- From 2.3 the version code is `major*10000 + minor*100 + patch`: 2.3.0 = 20300,
+  `2.3.0-beta.N` = 20290 + N with N ≤ 9, development builds 20290. Previews ship
+  only as a GitHub `--prerelease` or a Play internal upload.
 - Until the Play listing is public, GitHub is the only channel; the README and
   the site get the Google Play button only after publication.
 

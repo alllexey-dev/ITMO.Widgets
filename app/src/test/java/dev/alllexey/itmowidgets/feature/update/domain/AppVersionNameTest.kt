@@ -31,4 +31,11 @@ class AppVersionNameTest {
     fun `keeps the reported name for display and storage`() {
         assertEquals("2.1-SNAPSHOT", AppVersionName("2.1-SNAPSHOT").raw)
     }
+
+    @Test
+    fun `orders the 2_2 patch line, 2_3 development, betas up to 9 and 2_3 releases`() {
+        // Suffixes compare as text, so beta.10 would sort below beta.9: betas stop at 9.
+        val order = listOf("2.2.9", "2.3-SNAPSHOT", "2.3.0-beta.1", "2.3.0-beta.9", "2.3", "2.3.1").map(::AppVersionName)
+        order.zipWithNext().forEach { (lower, higher) -> assertTrue("$lower < $higher", lower < higher) }
+    }
 }

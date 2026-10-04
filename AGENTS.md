@@ -118,6 +118,51 @@ device-specific issue requires it.
 - UTF-8, LF, no trailing whitespace, final newline. Comments explain invariants,
   not obvious code.
 
+## v2.3 lanes
+
+Applies only to an agent executing a card of a v2.3 lane file (read from the main checkout's
+`vibe/` by absolute path). For such an agent this section replaces the Git hygiene lines about
+commit, push and branch names (lines 115-116) and Definition of done item 10; where it and the
+rest of this file disagree (for example `publishToMavenLocal`), this section wins.
+
+Allowed without asking:
+- work in a worktree `~/proj/.wt/<repo>/<lane-id>-<slug>` created by `~/proj/.wt/bin/lane new`
+  from `origin/v2.3/next`; never in a main checkout, `/tmp`, `/private/tmp` or `.claude/worktrees/`;
+- the card's exact branch `v2.3/<lane-id>/<card-id>-<slug>` (lowercase);
+- commits with explicit paths, one line `<CARD-ID>: <summary>`, no AI attribution, secrets,
+  user data, build outputs or IDE files;
+- rebase on `v2.3/next`, `--force-with-lease` on the own branch only, push the own branch,
+  a PR into `v2.3/next` with the fields of the plan's integration protocol, deleting the own
+  branch after merge.
+
+Only the integrator merges into `v2.3/next`, and only through `~/proj/.wt/bin/integrate`;
+protected refs (`master`, Backend `dev`, `release/*`) move only through `~/proj/.wt/bin/promote`
+after the owner's OK for that batch.
+
+Forbidden for every agent, the integrator included:
+- tags, `gh release`, `publishToMavenLocal`, `mvn install`/`deploy`, Maven Central publishing,
+  the Backend release workflow, Play Console, App Store Connect, TestFlight, Firebase, Apple
+  portal, server changes on alllexey.dev;
+- `./gradlew --stop`, killing other agents' daemons or emulators, `colima stop/start`, editing
+  `~/.gradle/gradle.properties`, AVDs or `~/.m2`;
+- `git stash`, `reset --hard`, `clean`, `checkout` or branch switches in a main checkout;
+  deleting branches or worktrees that are not the agent's own; `--no-verify`;
+- opening secrets (see Secrets and data), real user data as fixtures, production data changes;
+- changes outside parity or outside the card's declared surface without the integrator's OK;
+- the owner's phone or iPhone (integrator only); `connected*`/`install*` without
+  `ANDROID_SERIAL=emulator-*`.
+
+Still the owner's explicit word each time: protected-ref moves, dev and production deploys,
+the Flyway V11 merge, every tag and release, store uploads, `app.minimum` and `APP_VERSION`,
+ADR acceptance and M3E values, deletions of branches and stashes, hooks, permission rules,
+rulesets, colima resize, AVD creation, installs on the owner's devices.
+
+Plans in these repositories use the v2.3 card format; the user-global rules `plan.md`,
+`allsteps.md`, `local-ci-check-manual.md`, `ya-build-test.md`, `linter-rules.md` and
+`ticket.md` under `~/.claude/rules/generated/` do not apply here. `working-rules.md`
+"never commit or push on your own" yields for the lane actions above only; its other rules
+(no AI attribution, test rules) still apply.
+
 ## Definition of done
 
 1. The source-of-truth boundary is respected and no duplicate API layer exists.
