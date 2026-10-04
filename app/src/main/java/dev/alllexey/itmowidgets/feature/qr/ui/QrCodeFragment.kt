@@ -11,13 +11,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
-import com.google.android.material.progressindicator.IndeterminateDrawable
 import androidx.core.content.ContextCompat
 import dev.alllexey.itmowidgets.core.util.color
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.showProgress
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.databinding.FragmentQrCodeBinding
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeUiState
@@ -73,12 +72,11 @@ class QrCodeFragment : Fragment() {
         val content = state as? QrCodeUiState.Content
         qrInstruction.visibility = if (content != null) View.VISIBLE else View.INVISIBLE
         refreshButton.isEnabled = state != QrCodeUiState.Loading && content?.refreshing != true
-        refreshButton.icon = if (content?.refreshing == true) {
-            val spec = CircularProgressIndicatorSpec(requireContext(), null, 0,
-                com.google.android.material.R.style.Widget_Material3_CircularProgressIndicator_ExtraSmall)
-            spec.indicatorColors = intArrayOf(requireContext().color.primary)
-            IndeterminateDrawable.createCircularDrawable(requireContext(), spec)
-        } else ContextCompat.getDrawable(requireContext(), R.drawable.ic_refresh)
+        refreshButton.showProgress(
+            show = content?.refreshing == true,
+            color = requireContext().color.primary,
+            idleIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_refresh)
+        )
         if (content != null) {
             stateContainer.isVisible = false
             if (renderedHex != content.code.hex) {

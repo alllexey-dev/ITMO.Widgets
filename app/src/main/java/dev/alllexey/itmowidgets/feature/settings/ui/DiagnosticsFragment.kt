@@ -1,13 +1,9 @@
 package dev.alllexey.itmowidgets.feature.settings.ui
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.getSystemService
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -17,6 +13,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.ui.copyToClipboard
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.databinding.FragmentDiagnosticsBinding
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsUiState
@@ -70,10 +67,7 @@ class DiagnosticsFragment : Fragment() {
     }
 
     private fun copyJournal() {
-        val clipboard = requireContext().getSystemService<ClipboardManager>() ?: return
-        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.diagnostics_title), viewModel.exportText()))
-        // Android 13+ shows its own confirmation overlay.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        requireContext().copyToClipboard(getString(R.string.diagnostics_title), viewModel.exportText()) {
             Snackbar.make(binding.root, R.string.diagnostics_copied, Snackbar.LENGTH_SHORT).show()
         }
     }

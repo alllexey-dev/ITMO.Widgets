@@ -1,8 +1,5 @@
 package dev.alllexey.itmowidgets.feature.resources.ui
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -24,6 +21,7 @@ import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
+import dev.alllexey.itmowidgets.core.ui.copyToClipboard
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
 import dev.alllexey.itmowidgets.core.ui.navigation.openSheetScores
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
@@ -78,13 +76,11 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun copyLink(url: String) {
-        val clipboard = requireContext().getSystemService(ClipboardManager::class.java) ?: return
-        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.links_copy), url))
-        // Android 13+ shows its own confirmation overlay; the sheet closes either way.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        val copied = requireContext().copyToClipboard(getString(R.string.links_copy), url) {
             Toast.makeText(requireContext(), R.string.links_copied, Toast.LENGTH_SHORT).show()
         }
-        dismiss()
+        // The sheet closes whether or not the system confirmed the copy itself.
+        if (copied) dismiss()
     }
 
     private fun render(state: SubjectLinksUiState) = with(binding) {

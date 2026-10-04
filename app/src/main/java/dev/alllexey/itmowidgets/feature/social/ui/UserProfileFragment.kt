@@ -1,8 +1,5 @@
 package dev.alllexey.itmowidgets.feature.social.ui
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -22,6 +19,7 @@ import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.ui.copyToClipboard
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
@@ -156,9 +154,7 @@ class UserProfileFragment : Fragment() {
 
     /** The number goes to the clipboard; Android 13 and newer confirm a copy themselves. */
     private fun copyIsu(isu: Int) {
-        val clipboard = requireContext().getSystemService(ClipboardManager::class.java) ?: return
-        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.person_isu_label), isu.toString()))
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        requireContext().copyToClipboard(getString(R.string.person_isu_label), isu.toString()) {
             Toast.makeText(requireContext(), R.string.person_isu_copied, Toast.LENGTH_SHORT).show()
         }
     }
