@@ -9,3 +9,5 @@ consumers; the three repositories are developed and deployed together.
 **Consequence.** A matching version string does not prove an API is present.
 `docs/product/releases.md` records the commit hashes each Android revision
 needs, and the Android version catalog is not bumped for social or FCM work.
+
+**Superseded by 0024.**

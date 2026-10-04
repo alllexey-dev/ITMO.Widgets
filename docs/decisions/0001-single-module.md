@@ -9,3 +9,5 @@ repositories.
 
 **Revisit when.** Incremental build times hurt, a second developer joins, or a
 second in-repo reuse site appears.
+
+**Superseded by 0018.**
