@@ -1,0 +1,431 @@
+#!/usr/bin/env bash
+# ship-check.sh [--no-device] [--central] [--keep-going] [--only <n>[,<n>...]]
+#
+# The ship check (master plan section 5.4, L01 SS-01): run on batch heads that carry a toolchain, module-graph,
+# shell or storage change, weekly otherwise, on every prerelease head and on the release candidate.
+#
+# Stages, each PASS or FAIL in ~/proj/.wt/run/ship/<sha7>/summary.md with its log beside it:
+#   1 version   versionCode/versionName per ADR 0030; origin/release/2.2 stays below 100
+#   2 full      scripts/verify.sh full (unit tests incl. StableIdentifiersTest and Konsist, both lints, assembles)
+#   3 release   unsigned :app:assembleGithubRelease :app:bundlePlayRelease and both process*ReleaseManifest through
+#               `verify.sh run --`, then SKIP_BUILD=1 scripts/check-play-policy.sh
+#   4 ui        scripts/verify.sh ui all on emulator-5554, UpgradeFrom22Test included
+#   5 upgrade   install the v2.2 githubDebug on emulator-5554, seed the 2.2 data directory of
+#               app/src/androidTest/assets/upgrade-2.2/, `adb install -r` the head githubDebug and start it
+#
+# --no-device runs stages 1-3. --central passes -PmyItmoApiFromCentral=true to stage 3. --keep-going runs every
+# selected stage after a FAIL (default: stop at the first one). --only picks stages (device stages still need the
+# integrator's emulator).
+#
+# - Takes no build slot itself: every Gradle run of the head goes through a scripts/verify.sh mode, and the one-time
+#   v2.2 build through `~/proj/.wt/bin/slot.sh android --` (slot.sh is re-entrant through ITMO_SLOT_HELD).
+# - Device stages run only on emulator-5554 from a worktree whose itmo-lane marker reads `integrator`; any other
+#   ANDROID_SERIAL is refused (the owner's phone shares the applicationId). Release outputs stay unsigned: a
+#   keystore.properties in the worktree is refused.
+# - The last line is `VERIFY A ship|ship-no-device PASS|FAIL <secs>s <sha7>` (the --local-verify format).
+# - Exit code: 0 every stage passed, 1 a stage failed, 2 refused (usage, signing config, unsafe device).
+
+set -u
+
+me=ship-check.sh
+REPO_LETTER=A
+PACKAGE=dev.alllexey.itmowidgets
+HEAD_ACTIVITY=.app.MainActivity
+DEVICE_SERIAL=emulator-5554
+V22_TAG=v2.2
+SMOKE_WAIT_SECONDS=30
+
+refuse() { printf '%s: %s\n' "$me" "$*" >&2; exit 2; }
+note() { printf '%s: %s\n' "$me" "$*" >&2; }
+
+script_dir=$(cd "$(dirname "$0")" 2> /dev/null && pwd -P) || refuse "cannot resolve the script directory"
+root=$(cd "$script_dir/.." && pwd -P) || refuse "cannot resolve the repository root"
+cd "$root" || refuse "cannot enter $root"
+
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+wt=${ITMO_WT:-$HOME/proj/.wt}
+verify_sh="$root/scripts/verify.sh"
+adb="$ANDROID_HOME/platform-tools/adb"
+assets="$root/app/src/androidTest/assets/upgrade-2.2"
+
+usage() {
+  sed -n '2,2p' "$0" | sed 's/^# //' >&2
+  exit 2
+}
+
+device=1 central="" keep_going="" only=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --no-device) device="" ;;
+    --central) central=-PmyItmoApiFromCentral=true ;;
+    --keep-going) keep_going=1 ;;
+    --only)
+      [ $# -gt 1 ] || usage
+      only=",$2,"
+      [[ $2 =~ ^[1-5](,[1-5])*$ ]] || refuse "--only takes stage numbers 1-5, got '$2'"
+      shift
+      ;;
+    -h | --help) usage ;;
+    *) note "unknown argument '$1'"; usage ;;
+  esac
+  shift
+done
+
+selected() { # stage
+  if [ -n "$only" ]; then
+    case "$only" in *",$1,"*) ;; *) return 1 ;; esac
+  fi
+  [ "$1" -le 3 ] || [ -n "$device" ]
+}
+
+mode=ship
+[ -n "$device" ] || mode=ship-no-device
+
+[ -x "$verify_sh" ] || refuse "no executable scripts/verify.sh"
+if selected 3 && [ -e "$root/keystore.properties" ]; then
+  refuse "keystore.properties exists in $root: release outputs must stay unsigned here"
+fi
+
+# Device stages: emulator-5554 only, only from the integrator's worktree, only if it really is an emulator.
+if selected 4 || selected 5; then
+  [ -z "${ANDROID_SERIAL:-}" ] || [ "$ANDROID_SERIAL" = "$DEVICE_SERIAL" ] ||
+    refuse "device stages run only on $DEVICE_SERIAL, not '$ANDROID_SERIAL' (use --no-device)"
+  git_dir=$(git rev-parse --absolute-git-dir 2> /dev/null) || refuse "not a git worktree"
+  marker=$(head -n 1 "$git_dir/itmo-lane" 2> /dev/null | tr -d ' \t\r')
+  [ "$marker" = integrator ] || refuse "device stages need the integrator's worktree (use --no-device)"
+  [ -x "$adb" ] || refuse "no adb at $adb"
+  qemu=$("$adb" -s "$DEVICE_SERIAL" shell getprop ro.kernel.qemu 2> /dev/null | tr -d ' \t\r')
+  [ "$qemu" = 1 ] || qemu=$("$adb" -s "$DEVICE_SERIAL" shell getprop ro.boot.qemu 2> /dev/null | tr -d ' \t\r')
+  [ "$qemu" = 1 ] || refuse "$DEVICE_SERIAL is not a reachable emulator"
+  export ANDROID_SERIAL=$DEVICE_SERIAL
+fi
+
+head_sha=$(git rev-parse HEAD) || refuse "cannot resolve HEAD"
+sha=${head_sha:0:7}
+dirty=""
+[ -z "$(git status --porcelain 2> /dev/null)" ] || dirty="+dirty"
+out_dir="$wt/run/ship/$sha"
+mkdir -p "$out_dir" || refuse "cannot create $out_dir"
+summary="$out_dir/summary.md"
+rows=""
+failed=""
+started=$(date +%s)
+
+write_summary() {
+  {
+    printf '# Ship check %s%s\n\n' "$sha" "$dirty"
+    printf -- '- Head: `%s`\n' "$head_sha"
+    printf -- '- Worktree: `%s`\n' "$root"
+    printf -- '- Mode: %s%s\n' "$mode" "${central:+ (MyItmoApi from Central)}"
+    printf -- '- Started: %s\n\n' "$(date -r "$started" '+%Y-%m-%d %H:%M:%S %z')"
+    printf '| Stage | Result | Time | Log |\n|---|---|---|---|\n'
+    printf '%b' "$rows"
+  } > "$summary"
+}
+
+run_stage() { # n name function
+  local n=$1 name=$2 fn=$3 log t0 rc verdict
+  log="$out_dir/stage$n-$name.log"
+  if ! selected "$n"; then
+    return 0
+  fi
+  if [ -n "$failed" ] && [ -z "$keep_going" ]; then
+    rows="$rows| $n $name | NOT RUN | - | - |\n"
+    write_summary
+    return 0
+  fi
+  note "stage $n $name (log: $log)"
+  t0=$(date +%s)
+  "$fn" 2>&1 | tee "$log"
+  rc=${PIPESTATUS[0]}
+  verdict=PASS
+  if [ "$rc" -ne 0 ]; then
+    verdict=FAIL
+    failed=1
+  fi
+  printf '%s: stage %s %s %s\n' "$me" "$n" "$name" "$verdict" | tee -a "$log" >&2
+  rows="$rows| $n $name | $verdict | $(($(date +%s) - t0))s | \`$(basename "$log")\` |\n"
+  write_summary
+}
+
+# ---- 1 version -------------------------------------------------------------------------------------------
+
+gradle_value() { # file-content key -> value of `key = ...` in defaultConfig
+  printf '%s\n' "$1" | sed -n "s/^[[:space:]]*$2[[:space:]]*=[[:space:]]*\"\{0,1\}\([^\"[:space:]]*\)\"\{0,1\}[[:space:]]*\$/\1/p" |
+    head -n 1
+}
+
+stage_version() {
+  local build code name major minor patch beta base expected last_beta tag n rel rel_code ok=0
+  build=$(cat app/build.gradle.kts) || return 1
+  code=$(gradle_value "$build" versionCode)
+  name=$(gradle_value "$build" versionName)
+  echo "head: versionName=$name versionCode=$code"
+  [[ $code =~ ^[0-9]+$ ]] || { echo "FAIL: no numeric versionCode in app/build.gradle.kts"; return 1; }
+
+  if [[ $name =~ ^([0-9]+)\.([0-9]+)-SNAPSHOT$ ]]; then
+    major=${BASH_REMATCH[1]} minor=${BASH_REMATCH[2]}
+    base=$((major * 10000 + minor * 100))
+    expected=$((base - 10))
+    last_beta=0
+    for tag in $(git for-each-ref --format='%(refname:short)' "refs/tags/v$major.$minor.0-beta.*"); do
+      n=${tag##*beta.}
+      [[ $n =~ ^[1-9]$ ]] && [ "$n" -gt "$last_beta" ] && last_beta=$n
+    done
+    if [ "$code" -eq "$expected" ] || { [ "$last_beta" -gt 0 ] && [ "$code" -eq $((expected + last_beta)) ]; }; then
+      echo "ok: development line $name = $code (base $expected, last beta tag: $last_beta)"
+    else
+      [ "$last_beta" -eq 0 ] || expected="$expected or the last beta's $((expected + last_beta))"
+      echo "FAIL: $name needs versionCode $expected, got $code"
+      ok=1
+    fi
+  elif [[ $name =~ ^([0-9]+)\.([0-9]+)\.0-beta\.([0-9]+)$ ]]; then
+    major=${BASH_REMATCH[1]} minor=${BASH_REMATCH[2]} beta=${BASH_REMATCH[3]}
+    expected=$((major * 10000 + minor * 100 - 10 + beta))
+    if ! [[ $beta =~ ^[1-9]$ ]]; then
+      echo "FAIL: prerelease $name: N must be 1..9 (ADR 0030)"
+      ok=1
+    elif [ "$code" -ne "$expected" ]; then
+      echo "FAIL: prerelease $name needs versionCode $expected, got $code"
+      ok=1
+    else
+      echo "ok: prerelease $name = $expected"
+    fi
+  elif [[ $name =~ ^([0-9]+)\.([0-9]+)(\.([0-9]+))?$ ]]; then
+    major=${BASH_REMATCH[1]} minor=${BASH_REMATCH[2]} patch=${BASH_REMATCH[4]:-0}
+    expected=$((major * 10000 + minor * 100 + patch))
+    if [ "$patch" -gt 99 ]; then
+      echo "FAIL: release $name: patch above 99"
+      ok=1
+    elif [ "$code" -ne "$expected" ]; then
+      echo "FAIL: release $name needs versionCode $expected, got $code"
+      ok=1
+    else
+      echo "ok: release $name = $expected"
+    fi
+  else
+    echo "FAIL: versionName '$name' is none of M.m-SNAPSHOT, M.m.0-beta.N, M.m[.p] (ADR 0030)"
+    ok=1
+  fi
+
+  git fetch -q origin release/2.2 2> /dev/null || echo "note: fetch of origin release/2.2 failed, using the local ref"
+  if ! rel=$(git show origin/release/2.2:app/build.gradle.kts 2> /dev/null); then
+    echo "FAIL: no origin/release/2.2"
+    return 1
+  fi
+  rel_code=$(gradle_value "$rel" versionCode)
+  echo "origin/release/2.2: versionName=$(gradle_value "$rel" versionName) versionCode=$rel_code"
+  if ! [[ $rel_code =~ ^[0-9]+$ ]] || [ "$rel_code" -ge 100 ]; then
+    echo "FAIL: origin/release/2.2 versionCode must stay below 100"
+    ok=1
+  elif [ "$rel_code" -ge "$code" ]; then
+    echo "FAIL: head versionCode $code does not install over release/2.2's $rel_code"
+    ok=1
+  fi
+  return "$ok"
+}
+
+# ---- 2 full ----------------------------------------------------------------------------------------------
+
+stage_full() {
+  "$verify_sh" full
+}
+
+# ---- 3 release -------------------------------------------------------------------------------------------
+
+stage_release() {
+  local stamp apk bundle rc=0
+  stamp="$out_dir/.stage3-start"
+  : > "$stamp"
+  # shellcheck disable=SC2086 # $central is one optional word
+  "$verify_sh" run -- :app:assembleGithubRelease :app:bundlePlayRelease \
+    :app:processGithubReleaseManifest :app:processPlayReleaseManifest $central || return 1
+  apk=app/build/outputs/apk/github/release/app-github-release-unsigned.apk
+  bundle=app/build/outputs/bundle/playRelease/app-play-release.aab
+  if [ ! -f "$apk" ] || [ "$apk" -ot "$stamp" ]; then
+    echo "FAIL: no fresh unsigned github release APK at $apk"
+    rc=1
+  fi
+  if [ ! -f "$bundle" ] || [ "$bundle" -ot "$stamp" ]; then
+    echo "FAIL: no fresh play bundle at $bundle"
+    rc=1
+  elif unzip -l "$bundle" | grep -Eq 'META-INF/[^ ]*\.(RSA|DSA|EC|SF)$'; then
+    echo "FAIL: $bundle is signed; release outputs stay unsigned"
+    rc=1
+  fi
+  [ "$rc" -eq 0 ] || return 1
+  echo "ok: unsigned $apk and $bundle"
+  SKIP_BUILD=1 "$root/scripts/check-play-policy.sh"
+}
+
+# ---- 4 ui ------------------------------------------------------------------------------------------------
+
+stage_ui() {
+  local stamp results
+  stamp="$out_dir/.stage4-start"
+  : > "$stamp"
+  "$verify_sh" ui all || return 1
+  results=$(find app/build/outputs/androidTest-results -name '*.xml' -newer "$stamp" -print0 2> /dev/null |
+    xargs -0 grep -l 'UpgradeFrom22Test' 2> /dev/null | head -n 1)
+  if [ -z "$results" ]; then
+    echo "FAIL: no fresh instrumentation result mentions UpgradeFrom22Test"
+    return 1
+  fi
+  echo "ok: UpgradeFrom22Test ran ($results)"
+}
+
+# ---- 5 upgrade -------------------------------------------------------------------------------------------
+
+dev() { "$adb" -s "$DEVICE_SERIAL" "$@"; }
+dev_sh() { # keeps the remote exit status (adb shell protocol v2)
+  local out rc
+  out=$("$adb" -s "$DEVICE_SERIAL" shell "$@")
+  rc=$?
+  [ -z "$out" ] || printf '%s\n' "$out" | tr -d '\r'
+  return "$rc"
+}
+
+# Prints the path of the v2.2 githubDebug APK, building it once in a detached worktree at the tag.
+v22_apk() {
+  local tag_sha cache work slot java17
+  tag_sha=$(git rev-parse "$V22_TAG^{commit}" 2> /dev/null) || { echo "FAIL: no tag $V22_TAG" >&2; return 1; }
+  cache="$wt/run/apk/$V22_TAG-${tag_sha:0:12}-githubDebug.apk"
+  if [ -f "$cache" ]; then
+    printf '%s\n' "$cache"
+    return 0
+  fi
+  work="$wt/android/ship-v22"
+  if [ ! -e "$work" ]; then
+    git worktree add --detach "$work" "$tag_sha" >&2 || return 1
+  elif [ "$(git -C "$work" rev-parse HEAD 2> /dev/null)" != "$tag_sha" ]; then
+    echo "FAIL: $work is not at $V22_TAG ($tag_sha); remove it with git worktree remove" >&2
+    return 1
+  fi
+  slot=${ITMO_SLOT_SH:-$wt/bin/slot.sh}
+  [ -x "$slot" ] || slot="$root/scripts/slot.sh"
+  java17=$(/usr/libexec/java_home -v 17 2> /dev/null) || { echo "FAIL: no JDK 17 for the $V22_TAG build" >&2; return 1; }
+  echo "building $V22_TAG githubDebug in $work (JDK 17)" >&2
+  (
+    cd "$work" &&
+      JAVA_HOME=$java17 "$slot" android -- \
+        bash -c 'exec ./gradlew ${ITMO_MAX_WORKERS:+--max-workers=$ITMO_MAX_WORKERS} :app:assembleGithubDebug'
+  ) >&2 || return 1
+  mkdir -p "$wt/run/apk" || return 1
+  cp "$work/app/build/outputs/apk/github/debug/app-github-debug.apk" "$cache.tmp" && mv "$cache.tmp" "$cache" || return 1
+  printf '%s\n' "$cache"
+}
+
+# Checks that the app's data directory now holds the 2.2 assets byte for byte.
+seeded_sums() {
+  local want got
+  want=$(cd "$assets" && find files no_backup cache -type f | sort | while IFS= read -r f; do
+    printf '%s  %s\n' "$(shasum -a 256 "$f" | cut -d ' ' -f 1)" "$f"
+  done)
+  # shellcheck disable=SC2046 # one word per asset path, none has spaces
+  got=$(dev_sh run-as "$PACKAGE" sha256sum $(cd "$assets" && find files no_backup cache -type f | sort)) || {
+    echo "FAIL: seeded files missing in the app's data directory"
+    return 1
+  }
+  if [ "$want" != "$got" ]; then
+    echo "FAIL: seeded files differ from the assets"
+    diff <(printf '%s\n' "$want") <(printf '%s\n' "$got")
+    return 1
+  fi
+  echo "ok: $(printf '%s\n' "$want" | wc -l | tr -d ' ') asset files seeded byte for byte"
+}
+
+stage_upgrade() {
+  local old_apk head_apk tmp=/data/local/tmp/ship-upgrade-2.2 since log rel dir found f pid ok=0
+  old_apk=$(v22_apk) || return 1
+  echo "v2.2 APK: $old_apk"
+  "$verify_sh" run -- :app:assembleGithubDebug || return 1
+  head_apk="$root/app/build/outputs/apk/github/debug/app-github-debug.apk"
+  [ -f "$head_apk" ] || { echo "FAIL: no head githubDebug APK at $head_apk"; return 1; }
+
+  echo "install $V22_TAG on $DEVICE_SERIAL (fresh)"
+  dev uninstall "$PACKAGE" > /dev/null 2>&1
+  dev install "$old_apk" || return 1
+  dev_sh monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1 > /dev/null 2>&1 || return 1
+  sleep 8
+  # DataStore keeps its file open while the process lives.
+  dev_sh am force-stop "$PACKAGE"
+
+  echo "seed the 2.2 data directory"
+  dev_sh rm -rf "$tmp"
+  dev_sh mkdir -p "$tmp" || return 1
+  for dir in files no_backup cache; do
+    dev push "$assets/$dir" "$tmp/" > /dev/null || return 1
+  done
+  dev_sh chmod -R a+rX "$tmp"
+  dev_sh run-as "$PACKAGE" sh -c "'mkdir -p files no_backup cache && cp -R $tmp/files/. files/ && cp -R $tmp/no_backup/. no_backup/ && cp -R $tmp/cache/. cache/'" ||
+    { echo "FAIL: run-as copy into the app's data directory"; return 1; }
+  dev_sh rm -rf "$tmp"
+  seeded_sums || return 1
+
+  echo "install -r the head githubDebug ($sha) and start $HEAD_ACTIVITY"
+  dev install -r "$head_apk" || return 1
+  # adb shell joins its arguments into one remote command line, so arguments with spaces are quoted for it.
+  since=$(dev_sh "date '+%m-%d %H:%M:%S.000'") || return 1
+  dev_sh am start -W -n "$PACKAGE/$HEAD_ACTIVITY" || return 1
+  sleep "$SMOKE_WAIT_SECONDS"
+
+  if ! log=$(dev_sh "logcat -d -b crash,main -T '$since'"); then
+    echo "FAIL: logcat since $since"
+    ok=1
+  elif printf '%s\n' "$log" | grep -A 3 'FATAL EXCEPTION' | grep -Eq "Process: $PACKAGE[,:]"; then
+    echo "FAIL: FATAL EXCEPTION within ${SMOKE_WAIT_SECONDS}s:"
+    printf '%s\n' "$log" | grep -A 30 'FATAL EXCEPTION'
+    ok=1
+  else
+    echo "ok: no FATAL EXCEPTION for $PACKAGE within ${SMOKE_WAIT_SECONDS}s"
+  fi
+  pid=$(dev_sh pidof "$PACKAGE")
+  if [ -z "$pid" ]; then
+    echo "FAIL: $PACKAGE is not running after ${SMOKE_WAIT_SECONDS}s"
+    ok=1
+  else
+    echo "ok: $PACKAGE alive (pid $pid)"
+  fi
+
+  # Durable 2.2 files stay where 2.2 left them, or a store migrated them and its new file carries a format marker.
+  # Caches (cache/) may be read or dropped and are not checked.
+  found=$(dev_sh run-as "$PACKAGE" find files no_backup -type f)
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    if printf '%s\n' "$found" | grep -qxF "$rel"; then
+      echo "ok: $rel present"
+      continue
+    fi
+    dir=$(basename "$(dirname "$rel")")
+    f=""
+    for f in $(printf '%s\n' "$found" | grep -E "(^|/)$dir/[^/]+$"); do
+      dev_sh run-as "$PACKAGE" grep -q '"format"' "$f" && break
+      f=""
+    done
+    if [ -n "$f" ]; then
+      echo "ok: $rel migrated to $f (format marker)"
+    else
+      echo "FAIL: $rel is gone and no file in a '$dir' directory carries a format marker"
+      ok=1
+    fi
+  done <<EOF
+$(cd "$assets" && find files no_backup -type f | sort)
+EOF
+  return "$ok"
+}
+
+# ---- main ------------------------------------------------------------------------------------------------
+
+write_summary
+run_stage 1 version stage_version
+run_stage 2 full stage_full
+run_stage 3 release stage_release
+run_stage 4 ui stage_ui
+run_stage 5 upgrade stage_upgrade
+
+note "summary: $summary"
+cat "$summary" >&2
+verdict=PASS
+[ -z "$failed" ] || verdict=FAIL
+printf 'VERIFY %s %s %s %ss %s\n' "$REPO_LETTER" "$mode" "$verdict" "$(($(date +%s) - started))" "$sha""$dirty"
+[ -z "$failed" ]
