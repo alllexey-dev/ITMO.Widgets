@@ -320,7 +320,7 @@ run_check() {
   LC_ALL=C awk -v agents_max="$AGENTS_MAX_LINES" -v never_open="$NEVER_OPEN" -f "$tmp/scan.awk" \
     "$tmp/files" pass=1 "${docs[@]}" pass=2 "${docs[@]}" > "$tmp/raw" || die "the scan failed"
 
-  awk -F '\t' '$5 != "" { print $5 }' "$tmp/raw" | sort -u > "$tmp/candidates"
+  awk -F '\t' '$5 != "" && !seen[$5]++ { print $5 }' "$tmp/raw" > "$tmp/candidates"
   : > "$tmp/ignored"
   if [ -s "$tmp/candidates" ]; then
     git check-ignore --no-index --stdin < "$tmp/candidates" > "$tmp/ignored"
