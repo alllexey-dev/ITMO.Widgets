@@ -11,7 +11,7 @@ import api.myitmo.model.recordbook.RecordBookTeacher
 import api.myitmo.model.recordbook.Semester
 import api.myitmo.model.recordbook.Specialization
 import dev.alllexey.itmowidgets.core.network.requireResult
-import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
@@ -22,7 +22,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -86,17 +85,11 @@ class RecordbookRepositoryImpl @Inject constructor(
     private suspend fun <T, R> request(
         call: () -> retrofit2.Call<api.myitmo.model.ResultResponse<T>>,
         transform: (T) -> R
-    ): AppResult<R> {
-        return try {
-            val result = withContext(Dispatchers.IO) {
-                myItmo.execute(call()).requireResult()
-            }
-            AppResult.Success(transform(result))
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            AppResult.Failure(error.toAppError())
+    ): AppResult<R> = appResultOf {
+        val result = withContext(Dispatchers.IO) {
+            myItmo.execute(call()).requireResult()
         }
+        transform(result)
     }
 
     private fun Specialization.toModel() = RecordbookProgram(

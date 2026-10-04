@@ -3,8 +3,13 @@ package dev.alllexey.itmowidgets.core.network
 import api.myitmo.utils.ApiException
 import api.myitmo.utils.TokenRefreshException
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.appResultOf
 import retrofit2.HttpException
 import java.io.IOException
+
+/** [appResultOf] with the default mapping of network, ITMO.ID and Backend failures. */
+internal inline fun <T> appResultOf(block: () -> T): AppResult<T> = appResultOf(Throwable::toAppError, block)
 
 /**
  * A failure before any answer (no DNS, refused or lost connection, timeout) is [AppError.Network] wherever it is

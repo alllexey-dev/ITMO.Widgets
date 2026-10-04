@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.feature.weblogin.data
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.model.ApiResponse
-import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -11,7 +11,6 @@ import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import java.util.UUID
 import javax.inject.Inject
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import dev.alllexey.itmowidgets.core.model.WebLoginPreview as WirePreview
@@ -40,14 +39,11 @@ class WebLoginRepositoryImpl @Inject constructor(
     private suspend fun <T> call(request: suspend () -> ApiResponse<T>): AppResult<T?> {
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         if (!backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
-        return try {
-            val response = withContext(Dispatchers.IO) { request() }
-            if (response.success) AppResult.Success(response.data) else AppResult.Failure(backendError(response.error?.code))
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            AppResult.Failure(error.toAppError())
+        val response = when (val result = appResultOf { withContext(Dispatchers.IO) { request() } }) {
+            is AppResult.Success -> result.value
+            is AppResult.Failure -> return result
         }
+        return if (response.success) AppResult.Success(response.data) else AppResult.Failure(backendError(response.error?.code))
     }
 
     private fun backendError(code: String?): AppError = when (code) {

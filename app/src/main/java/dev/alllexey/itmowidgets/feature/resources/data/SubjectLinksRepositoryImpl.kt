@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.WallClock
@@ -369,13 +370,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
 
     private fun current(): StoredLinks = checkNotNull(state.value)
 
-    private suspend fun <T> attempt(block: suspend () -> T): AppResult<T> = try {
-        AppResult.Success(block())
-    } catch (cancel: CancellationException) {
-        throw cancel
-    } catch (failure: Exception) {
-        AppResult.Failure(failure.appError())
-    }
+    private suspend fun <T> attempt(block: suspend () -> T): AppResult<T> = appResultOf({ it.appError() }) { block() }
 
     private fun snapshot(data: StoredLinks, scope: ResourceScope, on: Boolean, failed: Boolean): SubjectLinksSnapshot? {
         val local = data.local.values.filter { it.scope.key == scope.key }.sortedByDescending { it.updatedAt }.map { it.toModel() }
