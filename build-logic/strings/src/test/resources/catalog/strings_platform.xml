@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ITMO.Widgets</string>
+    <string name="links_invalid_url">Нужна ссылка https://</string>
+    <string name="sport_lesson">%1$s, %2$d баллов, 100%%</string>
+    <plurals name="lessons_count">
+        <item quantity="one">%1$d пара</item>
+        <item quantity="few">%1$d пары</item>
+        <item quantity="many">%1$d пар</item>
+        <item quantity="other">%1$d пары</item>
+    </plurals>
+</resources>
