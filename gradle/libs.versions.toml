@@ -167,7 +167,7 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 # Robolectric 4.17 runtime for @Config(sdk = [35]); resolved by Gradle so Robolectric never writes ~/.m2 (SP-13a).
 robolectric-android-all = { module = "org.robolectric:android-all-instrumented", version = "15-robolectric-13954326-i7" }
-# Robolectric 4.17 runtime for @Config(sdk = [29]): AtomicTextFileTest's pre-API-30 android.util.AtomicFile (KM-04).
+# Robolectric 4.17 runtime for @Config(sdk = [29]), opted in by :app through itmoTesting.extraRobolectricSdks (KM-04).
 robolectric-android-all-sdk29 = { module = "org.robolectric:android-all-instrumented", version = "10-robolectric-5803371-i7" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
