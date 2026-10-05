@@ -27,6 +27,17 @@ class LayerRulesTest {
     }
 
     @Test
+    fun `domain does not use javax inject`() {
+        // KMP domain code is wired by the DI module, not annotated; KM-06 moves domain into commonMain.
+        Ratchet.assertOnly(RatchetRule.DOMAIN_JAVAX_INJECT, domainFilesImporting { it.startsWith("javax.inject.") })
+    }
+
+    @Test
+    fun `domain does not use the Java platform`() {
+        Ratchet.assertOnly(RatchetRule.DOMAIN_JAVA, domainFilesImporting { it.startsWith("java.") })
+    }
+
+    @Test
     fun `ui depends on presentation and domain instead of infrastructure`() {
         productionFiles
             .filter { it.packagee?.name?.contains(".ui") == true }
@@ -120,6 +131,14 @@ class LayerRulesTest {
             }
     }
 
+    /** Domain files with an import matching [forbidden], keyed for the ratchet, with the offending imports. */
+    private fun domainFilesImporting(forbidden: (String) -> Boolean): Map<String, String> = productionFiles
+        .filter { it.packagee?.name?.contains(".domain") == true }
+        .requireAtLeast(MIN_DOMAIN_FILES, "domain files")
+        .associate { file -> file.ratchetKey to file.imports.map { it.name }.filter(forbidden) }
+        .filterValues { it.isNotEmpty() }
+        .mapValues { (_, imports) -> "imports ${imports.joinToString()}" }
+
     private companion object {
         /** MyItmoApi 1.x (`api.myitmo`, `api.bars`), MyItmoApi 2.x and the Core 2.0 Backend client. */
         val CLIENT_LIBRARIES = listOf(
@@ -130,12 +149,6 @@ class LayerRulesTest {
         val FEATURE_DATA = Regex("""^dev\.alllexey\.itmowidgets\.feature\.\w+\.data\.""")
         val FEATURE_OUTER_LAYER =
             Regex("""^dev\.alllexey\.itmowidgets\.feature\.\w+\.(data|presentation|ui|work)\.""")
-
-        /** The feature of a package or import, or null outside `feature.*`. */
-        fun featureOf(name: String): String? = name
-            .takeIf { it.startsWith(FEATURE_PACKAGE_PREFIX) }
-            ?.removePrefix(FEATURE_PACKAGE_PREFIX)
-            ?.substringBefore(".")
 
         const val CORE_TRANSPORT_MODELS =
             "dev.alllexey.itmowidgets.core.model."

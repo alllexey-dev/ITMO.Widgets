@@ -4,6 +4,7 @@ import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionClasses
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class StorageRulesTest {
@@ -27,19 +28,18 @@ class StorageRulesTest {
 
     @Test
     fun `settings utility and friend history use DataStore`() {
-        productionFiles
-            .filter {
-                it.nameWithExtension in SETTINGS_STORE_FILES ||
-                    it.nameWithExtension == "UtilityStorage.kt" ||
-                    it.nameWithExtension == "DataStoreFriendSelectionHistory.kt"
-            }
-            .requireNonEmpty("settings, utility and friend history stores")
-            .assertTrue { file ->
-                "DataStore<Preferences>" in file.text
-            }
+        // Named files, not a *Preferences.kt glob: core/storage/AppPreferences.kt is the DataStore qualifier.
+        val stores = productionFiles.filter { it.nameWithExtension in DATA_STORE_FILES }
+        assertEquals(
+            "A per-concern store was renamed or removed; update the list",
+            DATA_STORE_FILES,
+            stores.map { it.nameWithExtension }.toSet()
+        )
+        stores.assertTrue { file -> "DataStore<Preferences>" in file.text }
     }
 
     private companion object {
+        /** The per-concern settings stores AA-07 split from AppSettingsStorage, over one `app_preferences` DataStore. */
         val SETTINGS_STORE_FILES = setOf(
             "DataStorePreferences.kt",
             "ServicesOptInPreferences.kt",
@@ -52,5 +52,6 @@ class StorageRulesTest {
             "DeviceHintPreferences.kt",
             "DemoPreferences.kt"
         )
+        val DATA_STORE_FILES = SETTINGS_STORE_FILES + "UtilityStorage.kt" + "DataStoreFriendSelectionHistory.kt"
     }
 }

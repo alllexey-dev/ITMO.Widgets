@@ -1,0 +1,16 @@
+# Known violations in feature.sport, KN-01c. Lines only go away: delete yours when the code is fixed
+# (a stale line fails its rule) and never add one. Format and rules: vibe/v2.3/recipes/konsist-rule.md.
+
+viewmodel-shape dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
+viewmodel-shape dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
+viewmodel-shape dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportViewModel
+
+presentation-imports-r dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
+
+domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttendance
+domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutomation
+domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
+domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
+domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
+domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportLessonPrediction
+domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
