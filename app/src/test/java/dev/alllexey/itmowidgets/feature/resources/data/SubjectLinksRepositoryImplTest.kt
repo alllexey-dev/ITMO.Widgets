@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.resources.data
 
-import api.myitmo.MyItmo
 import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
@@ -10,7 +9,6 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
 import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.resources.LinkAudience as WireAudience
 import dev.alllexey.itmowidgets.core.model.resources.PinSubjectLinkRequest
@@ -39,6 +37,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -63,7 +62,6 @@ class SubjectLinksRepositoryImplTest {
 
     @get:Rule val temporary = TemporaryFolder()
     private val scope = ResourceScope(42, "Предмет", "2026-1")
-    private val gson = ItmoWidgetsImpl(MyItmo()).gson
     private val now = OffsetDateTime.parse("2026-09-22T09:00:00Z")
     private val clock = object : Clock { override fun now() = this@SubjectLinksRepositoryImplTest.now.toInstant().toKotlinInstant() }
     private val id = UUID.randomUUID().toString()
@@ -82,7 +80,7 @@ class SubjectLinksRepositoryImplTest {
         assertEquals("Лабы", restored.title)
         assertTrue(restored.local)
         assertEquals(now.toInstant().toKotlinInstant(), restored.updatedAt)
-        assertTrue(File(folder, "cache.json").readText().contains("\"updatedAt\":${gson.toJson(now)}"))
+        assertTrue(File(folder, "cache.json").readText().contains("\"updatedAt\":\"2026-09-22T09:00:00Z\""))
     }
 
     @Test fun `without the opt-in shared actions and non-private visibility need the connection`() = runTest {
@@ -248,7 +246,7 @@ class SubjectLinksRepositoryImplTest {
     }
 
     private fun repo(folder: File, api: FakeSubjectLinksApi, services: FakeBackendGate, demo: DemoMode = noDemo()) =
-        SubjectLinksRepositoryImpl(SubjectLinksFileStore(folder, gson), api.instance, services, clock, demo, dispatchers)
+        SubjectLinksRepositoryImpl(SubjectLinksFileStore(folder.toOkioPath()), api.instance, services, clock, demo, dispatchers)
 
     private suspend fun SubjectLinksRepositoryImpl.content(scope: ResourceScope): SubjectLinksSnapshot =
         (observe(scope).first() as SubjectLinksState.Content).snapshot

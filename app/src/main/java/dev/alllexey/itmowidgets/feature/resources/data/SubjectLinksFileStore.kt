@@ -1,42 +1,142 @@
 package dev.alllexey.itmowidgets.feature.resources.data
 
-import android.content.Context
-import com.google.gson.Gson
-import com.google.gson.JsonParser
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dev.alllexey.itmowidgets.core.model.resources.LinkVisibility
-import dev.alllexey.itmowidgets.core.model.resources.SaveSubjectLinkRequest
-import dev.alllexey.itmowidgets.core.model.resources.SubjectLinksResponse
+import dev.alllexey.itmowidgets.core.resources.LinkCategory
+import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
-import java.io.File
-import java.io.FileOutputStream
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.util.UUID
+import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import javax.inject.Inject
 import kotlin.time.Instant
-import kotlin.time.toJavaInstant
+import kotlin.uuid.Uuid
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.char
+import kotlinx.datetime.format.optional
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import okio.FileSystem
+import okio.Path
 
-/** 2 since links name one schedule flow; 1 held GROUP/FLOW audiences in its cached answers. */
-private const val FORMAT = 2
+/**
+ * 3: app-owned rows and ISO instants. 2 held Core 1.x's answers as Gson wrote them and links naming one schedule flow;
+ * 1 held GROUP/FLOW audiences. Formats 1 and 2 keep their device-only links and pins and drop the cached answers.
+ */
+private const val FORMAT = 3
+private val READABLE = 1..FORMAT
+
+/**
+ * The JSON of the links file (recipe `kotlinx-file-store`): absent nullable keys read as null and nulls are not
+ * written, as Gson did, and `format` is always written.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+internal val ResourcesStoreJson = Json {
+    explicitNulls = false
+    ignoreUnknownKeys = true
+    encodeDefaults = true
+}
+
+/** What a device-only link sends on the first refresh with the opt-in; the shape 2.2 wrote as Core's save request. */
+@Serializable
+internal data class StoredLinkRequest(
+    val subjectId: Long,
+    val subjectName: String,
+    val periodKey: String,
+    val category: LinkCategory,
+    val url: String,
+    val title: String? = null,
+    val visibility: LinkVisibility,
+    val flowId: Long? = null,
+)
 
 /** A PRIVATE link saved without the opt-in; [request] is what the first refresh with the opt-in sends. */
-internal data class LocalLink(val id: String, val request: SaveSubjectLinkRequest, val updatedAt: OffsetDateTime) {
-    // The one java.time edge left until KM-05c: Gson writes `updatedAt` as OffsetDateTime text at UTC, as v2.2 did.
-    constructor(id: String, request: SaveSubjectLinkRequest, savedAt: Instant) :
-        this(id, request, OffsetDateTime.ofInstant(savedAt.toJavaInstant(), ZoneOffset.UTC))
-
+@Serializable
+internal data class LocalLink(
+    val id: String,
+    val request: StoredLinkRequest,
+    @Serializable(with = StoredInstantSerializer::class) val updatedAt: Instant,
+) {
     val scope: ResourceScope get() = ResourceScope(request.subjectId, request.subjectName, request.periodKey)
 }
 
 /** A pin of an own link made without the opt-in. */
-internal data class LocalPin(val scope: ResourceScope, val linkId: String)
+@Serializable
+internal data class LocalPin(@Serializable(with = StoredScopeSerializer::class) val scope: ResourceScope, val linkId: String)
+
+/** A link of a cached answer, trimmed as the screens show it. */
+@Serializable
+internal data class StoredLink(
+    val id: String,
+    val subjectId: Long,
+    val subjectName: String,
+    val periodKey: String,
+    val category: LinkCategory,
+    val url: String,
+    val title: String? = null,
+    val visibility: LinkVisibility,
+    val flowId: Long? = null,
+    val audienceLabel: String? = null,
+    val status: SubjectLinkStatus,
+    val reviewNote: String? = null,
+    val score: Int,
+    val myVote: Int,
+    val isMine: Boolean,
+    val reportedByMe: Boolean,
+    val author: StoredAuthor? = null,
+    @Serializable(with = StoredInstantSerializer::class) val updatedAt: Instant,
+)
+
+/** A link's author with the viewer-scoped sharing Backend sent. */
+@Serializable
+internal data class StoredAuthor(
+    val isu: Int,
+    val name: String,
+    val pictureUrl: String? = null,
+    val groups: List<StoredAuthorGroup> = emptyList(),
+    val sharing: StoredAuthorSharing,
+)
+
+@Serializable
+internal data class StoredAuthorGroup(val name: String, val course: Int, val facultyShortName: String)
+
+@Serializable
+internal data class StoredAuthorSharing(val sport: Boolean, val schedule: Boolean, val friends: Boolean = false)
+
+@Serializable
+internal data class StoredAudience(val flowId: Long, val label: String, val typeId: Int, val depth: Int)
 
 /** The last server answer for a scope. */
-internal data class CachedLinks(val scope: ResourceScope, val response: SubjectLinksResponse)
+@Serializable
+internal data class StoredLinksAnswer(
+    val mine: List<StoredLink> = emptyList(),
+    val shared: List<StoredLink> = emptyList(),
+    val previous: List<StoredLink> = emptyList(),
+    val pinnedId: String? = null,
+    val audiences: List<StoredAudience> = emptyList(),
+    val premoderation: Boolean,
+)
 
+@Serializable
+internal data class CachedLinks(
+    @Serializable(with = StoredScopeSerializer::class) val scope: ResourceScope,
+    val response: StoredLinksAnswer,
+)
+
+@Serializable
 internal data class StoredLinks(
     val format: Int = FORMAT,
     val local: Map<String, LocalLink> = emptyMap(),
@@ -44,55 +144,103 @@ internal data class StoredLinks(
     val scopes: Map<String, CachedLinks> = emptyMap(),
 )
 
-/** Persistent local links and server snapshots, never cacheDir. Caller owns IO dispatch and serialization. */
-class SubjectLinksFileStore internal constructor(private val directory: File, private val gson: Gson) {
-    @Inject constructor(@ApplicationContext context: Context, gson: Gson) : this(File(context.filesDir, "subject_links"), gson)
+/**
+ * Persistent local links and server snapshots in `filesDir`, never `cacheDir`. Caller owns IO dispatch and
+ * serialization.
+ */
+class SubjectLinksFileStore internal constructor(private val directory: Path) {
+    @Inject constructor(directories: AppDirectories) : this(directories.files / "subject_links")
 
-    private val file get() = File(directory, "cache.json")
+    private val file = AtomicTextFile(directory / "cache.json")
 
+    /** Throws on a corrupt file or an unknown format: device-only links must never become an empty store. */
     internal fun read(): StoredLinks {
-        if (!file.exists()) return StoredLinks()
-        val tree = JsonParser.parseString(file.readText()).asJsonObject
-        val format = tree.get("format")?.asInt
-        check((format == FORMAT || format == 1) && tree.get("local")?.isJsonObject == true) { "Invalid subject links store" }
-        if (format == 1) {
-            // Format 1 cached server answers with GROUP audiences; the cache is refetched, device-only links stay.
-            tree.remove("scopes")
-            tree.addProperty("format", FORMAT)
-        }
-        val state = checkNotNull(gson.fromJson(tree, StoredLinks::class.java))
-        // Corruption must not silently discard device-only links by being replaced with an empty store.
-        checkNotNull(state.local).forEach { (id, link) ->
-            UUID.fromString(id)
+        val text = file.read() ?: return StoredLinks()
+        val tree = ResourcesStoreJson.parseToJsonElement(text).jsonObject
+        val format = tree["format"]?.jsonPrimitive?.int
+        check(format != null && format in READABLE && tree["local"] is JsonObject) { "Invalid subject links store" }
+        // Older formats cached Core's answers in Gson's shapes. One that failed to decode would cost the device-only
+        // links, so the answers are dropped and refetched on the next open, as the 1 -> 2 migration did.
+        val current = if (format == FORMAT) tree else JsonObject(tree - "scopes" + ("format" to JsonPrimitive(FORMAT)))
+        val state = ResourcesStoreJson.decodeFromJsonElement(StoredLinks.serializer(), current)
+        state.local.forEach { (id, link) ->
+            Uuid.parse(id)
             check(link.id == id && link.request.visibility == LinkVisibility.PRIVATE)
-            check(link.scope.valid() && link.request.url.isNotBlank() && link.request.category.name.isNotEmpty())
-            checkNotNull(link.updatedAt)
+            check(link.scope.valid() && link.request.url.isNotBlank())
         }
-        checkNotNull(state.localPins).forEach { (key, pin) ->
-            UUID.fromString(pin.linkId)
+        state.localPins.forEach { (key, pin) ->
+            Uuid.parse(pin.linkId)
             check(pin.scope.valid() && pin.scope.key == key)
         }
-        checkNotNull(state.scopes).forEach { (key, cached) ->
+        state.scopes.forEach { (key, cached) ->
             check(cached.scope.valid() && cached.scope.key == key)
-            checkNotNull(cached.response.mine); checkNotNull(cached.response.shared); checkNotNull(cached.response.previous)
+            with(cached.response) {
+                (mine + shared + previous).forEach { Uuid.parse(it.id) }
+                pinnedId?.let(Uuid::parse)
+            }
         }
         return state
     }
 
-    internal fun write(state: StoredLinks) {
-        check(directory.isDirectory || directory.mkdirs())
-        val temporary = File(directory, "cache.json.tmp")
-        FileOutputStream(temporary).use { stream ->
-            stream.write(gson.toJson(state).toByteArray(Charsets.UTF_8)); stream.fd.sync()
-        }
-        Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-    }
+    internal fun write(state: StoredLinks) = file.write(ResourcesStoreJson.encodeToString(StoredLinks.serializer(), state))
 
-    internal fun clear() { check(!directory.exists() || directory.deleteRecursively()) }
+    internal fun clear() = FileSystem.SYSTEM.deleteRecursively(directory)
 
     private fun ResourceScope.valid() = subjectId > 0 && subjectName.isNotBlank() && periodKey.matches(PERIOD_KEY)
 
     private companion object {
         val PERIOD_KEY = Regex("[0-9]{4}-[12]")
     }
+}
+
+@Serializable
+private class StoredScope(val subjectId: Long, val subjectName: String, val periodKey: String)
+
+/** A scope in the shape 2.2 wrote, so that pins of every format decode alike. */
+private object StoredScopeSerializer : KSerializer<ResourceScope> {
+    override val descriptor: SerialDescriptor = StoredScope.serializer().descriptor
+
+    override fun serialize(encoder: Encoder, value: ResourceScope) = encoder.encodeSerializableValue(
+        StoredScope.serializer(), StoredScope(value.subjectId, value.subjectName, value.periodKey)
+    )
+
+    override fun deserialize(decoder: Decoder): ResourceScope =
+        decoder.decodeSerializableValue(StoredScope.serializer()).let { ResourceScope(it.subjectId, it.subjectName, it.periodKey) }
+}
+
+/**
+ * Reads ISO instants and the `OffsetDateTime` text Gson wrote up to format 2, which drops `:00` seconds
+ * (`2026-09-22T12:00+03:00`) and which no built-in parser accepts; writes `Instant.toString()` (UTC).
+ */
+private object StoredInstantSerializer : KSerializer<Instant> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("dev.alllexey.itmowidgets.feature.resources.data.StoredInstant", PrimitiveKind.STRING)
+
+    private val format = DateTimeComponents.Format {
+        date(LocalDate.Formats.ISO)
+        char('T')
+        hour()
+        char(':')
+        minute()
+        optional {
+            char(':')
+            second()
+            optional {
+                char('.')
+                secondFraction(1, 9)
+            }
+        }
+        offset(UtcOffset.Formats.ISO)
+    }
+
+    override fun deserialize(decoder: Decoder): Instant {
+        val text = decoder.decodeString()
+        return try {
+            format.parse(text).toInstantUsingOffset()
+        } catch (error: IllegalArgumentException) {
+            throw SerializationException("Not a stored date-time: $text", error)
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: Instant) = encoder.encodeString(value.toString())
 }

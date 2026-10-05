@@ -15,3 +15,8 @@ Files 2.2's Gson stores wrote, read by the JVM golden tests of the stores that m
 | `marks/state-sp08.json` | SP-08 fixture `files/marks/state.json` (2.2 on the host JVM): null scores, rates and marks absent, `60.0` kept as a double, a plan with empty `marks` |
 | `sheet_scores/state.json` | G-04 capture, `androidTest/assets/upgrade-2.2/files/sheet_scores/state.json` |
 | `sheet_scores/state-sp08.json` | SP-08 fixture `files/sheet_scores/state.json` (2.2 on the host JVM): a connection with every nullable field absent, an empty `tabName` and `headerPath` |
+| `subject_links/cache.json` | G-04 capture, `androidTest/assets/upgrade-2.2/files/subject_links/cache.json` (format 2) |
+| `subject_links/cache-sp08.json` | SP-08 fixture (2.2 on the host JVM, format 2): two local links (`updatedAt` without seconds and with nanoseconds), a pin, a cached answer with an author, a `previous` link and audiences |
+| `subject_links/cache-format1.json` | SP-08 variant, hand-derived from `cache-sp08.json`: `"format":1` and a `scopes` entry of an unknown shape |
+| `teacher_levels/levels.json` | G-04 capture, `androidTest/assets/upgrade-2.2/files/teacher_levels/levels.json` |
+| `teacher_levels/levels-sp08.json` | SP-08 fixture (2.2 on the host JVM): one `level` absent, `VERY_NEGATIVE` |

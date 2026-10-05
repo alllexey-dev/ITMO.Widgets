@@ -1,6 +1,11 @@
 package dev.alllexey.itmowidgets.feature.resources.data
 
+import dev.alllexey.itmowidgets.core.model.UserGroup
+import dev.alllexey.itmowidgets.core.model.UserSharing
+import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.model.resources.ReportReason
+import dev.alllexey.itmowidgets.core.model.resources.SaveSubjectLinkRequest
+import dev.alllexey.itmowidgets.core.model.resources.SubjectLinksResponse
 import dev.alllexey.itmowidgets.core.model.toUserSummary
 import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
@@ -18,13 +23,26 @@ import dev.alllexey.itmowidgets.core.model.resources.LinkVisibility as WireVisib
 import dev.alllexey.itmowidgets.core.model.resources.SubjectLink as WireLink
 import dev.alllexey.itmowidgets.core.model.resources.UserRestriction as WireRestriction
 
-internal fun WireLink.toModel() = SubjectLink(
+// Core 1.x answers into the stored rows: the one place that changes when the wire types do.
+
+internal fun SubjectLinksResponse.toStored() = StoredLinksAnswer(
+    mine = mine.map { it.toStored() },
+    shared = shared.map { it.toStored() },
+    previous = previous.map { it.toStored() },
+    pinnedId = pinnedId?.toString(),
+    audiences = audiences.map { it.toStored() },
+    premoderation = premoderation,
+)
+
+internal fun WireLink.toStored() = StoredLink(
     id = id.toString(),
-    scope = ResourceScope(subjectId, subjectName.trim(), periodKey),
+    subjectId = subjectId,
+    subjectName = subjectName.trim(),
+    periodKey = periodKey,
     category = LinkCategory.valueOf(category.name),
     url = url,
     title = title?.trim()?.takeIf { it.isNotEmpty() },
-    visibility = visibility.toModel(),
+    visibility = LinkVisibility.valueOf(visibility.name),
     flowId = flowId,
     audienceLabel = audienceLabel?.trim()?.takeIf { it.isNotEmpty() },
     status = SubjectLinkStatus.valueOf(status.name),
@@ -33,14 +51,44 @@ internal fun WireLink.toModel() = SubjectLink(
     myVote = myVote,
     isMine = isMine,
     reportedByMe = reportedByMe,
-    author = author?.toUserSummary(),
+    author = author?.toUserSummary()?.toStored(),
     updatedAt = updatedAt.toInstant().toKotlinInstant(),
+)
+
+internal fun WireAudience.toStored() = StoredAudience(flowId, label.trim(), typeId, depth)
+
+internal fun StoredLinkRequest.toWire() = SaveSubjectLinkRequest(
+    subjectId, subjectName, periodKey, WireCategory.valueOf(category.name), url, title, WireVisibility.valueOf(visibility.name), flowId,
+)
+
+internal fun ResourceReportReason.toWire() = ReportReason.valueOf(name)
+internal fun WireRestriction.toModel() = UserRestriction(id.toString(), RestrictionCapability.valueOf(capability.name), reason, expiresAt?.toInstant()?.toKotlinInstant())
+
+// Stored rows into the domain.
+
+internal fun StoredLink.toModel() = SubjectLink(
+    id = id,
+    scope = ResourceScope(subjectId, subjectName, periodKey),
+    category = category,
+    url = url,
+    title = title,
+    visibility = visibility,
+    flowId = flowId,
+    audienceLabel = audienceLabel,
+    status = status,
+    reviewNote = reviewNote,
+    score = score,
+    myVote = myVote,
+    isMine = isMine,
+    reportedByMe = reportedByMe,
+    author = author?.toModel(),
+    updatedAt = updatedAt,
 )
 
 internal fun LocalLink.toModel() = SubjectLink(
     id = id,
     scope = scope,
-    category = LinkCategory.valueOf(request.category.name),
+    category = request.category,
     url = request.url,
     title = request.title,
     visibility = LinkVisibility.PRIVATE,
@@ -53,13 +101,24 @@ internal fun LocalLink.toModel() = SubjectLink(
     isMine = true,
     reportedByMe = false,
     author = null,
-    updatedAt = updatedAt.toInstant().toKotlinInstant(),
+    updatedAt = updatedAt,
     local = true,
 )
 
-internal fun WireAudience.toModel() = LinkAudience(flowId, label.trim(), typeId, depth)
-internal fun WireVisibility.toModel() = LinkVisibility.valueOf(name)
-internal fun LinkVisibility.toWire() = WireVisibility.valueOf(name)
-internal fun LinkCategory.toWire() = WireCategory.valueOf(name)
-internal fun ResourceReportReason.toWire() = ReportReason.valueOf(name)
-internal fun WireRestriction.toModel() = UserRestriction(id.toString(), RestrictionCapability.valueOf(capability.name), reason, expiresAt?.toInstant()?.toKotlinInstant())
+internal fun StoredAudience.toModel() = LinkAudience(flowId, label, typeId, depth)
+
+private fun UserSummary.toStored() = StoredAuthor(
+    isu = isu,
+    name = name,
+    pictureUrl = pictureUrl,
+    groups = groups.map { StoredAuthorGroup(it.name, it.course, it.facultyShortName) },
+    sharing = StoredAuthorSharing(sport = sharing.sport, schedule = sharing.schedule, friends = sharing.friends),
+)
+
+private fun StoredAuthor.toModel() = UserSummary(
+    isu = isu,
+    name = name,
+    pictureUrl = pictureUrl,
+    groups = groups.map { UserGroup(it.name, it.course, it.facultyShortName) },
+    sharing = UserSharing(sport = sharing.sport, schedule = sharing.schedule, friends = sharing.friends),
+)
