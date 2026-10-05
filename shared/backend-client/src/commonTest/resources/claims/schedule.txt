@@ -1,0 +1,5 @@
+# The schedule fixtures ScheduleVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
+http/schedule/friendsOnLesson.json
+http/schedule/syncLessons.json
+http/schedule/userLessons.json
+requests/LessonSyncRequest.json

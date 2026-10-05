@@ -1,0 +1,4 @@
+# The app fixtures AppVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
+# Not here: http/app/latestAppVersion.json is not mirrored (GET /api/app/version, kept for 2.0.x).
+http/app/appVersionInfo.json
+http/app/appVersionInfoIos.json

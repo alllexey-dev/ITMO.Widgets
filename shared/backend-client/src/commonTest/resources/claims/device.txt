@@ -1,0 +1,5 @@
+# The device fixtures DeviceVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
+http/device/registerDevice.json
+http/device/unregisterCurrentDevice.json
+requests/RegisterDeviceRequest.json
+requests/UnregisterDeviceRequest.json
