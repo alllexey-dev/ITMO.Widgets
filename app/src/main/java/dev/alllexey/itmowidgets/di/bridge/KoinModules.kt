@@ -14,6 +14,8 @@ object KoinModules {
     /** Types Hilt constructs and Koin only forwards; the graph check takes them as given. */
     val bridges: List<Module> = listOf(
         coreBridgeModule,
+        resourcesBridgeModule,
+        reviewsBridgeModule,
     )
 
     /** Definitions Koin constructs; the graph check verifies their constructors. */
