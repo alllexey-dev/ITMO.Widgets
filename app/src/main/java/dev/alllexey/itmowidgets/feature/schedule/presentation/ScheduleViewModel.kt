@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
@@ -17,7 +19,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +26,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -65,14 +65,15 @@ class ScheduleViewModel @Inject constructor(
     private var pendingObserveJob: Job? = null
     private var pendingRefreshJob: Job? = null
     private var changedOccurrences = emptySet<LessonOccurrence>()
+    private var userSwitched = false
 
     private val _uiState = MutableStateFlow<ScheduleUiState>(
         ScheduleUiState.Loading(selectedUser)
     )
     val uiState: StateFlow<ScheduleUiState> = _uiState.asStateFlow()
 
-    private val eventChannel = Channel<ScheduleEvent>(capacity = Channel.BUFFERED)
-    val events: Flow<ScheduleEvent> = eventChannel.receiveAsFlow()
+    private val eventQueue = EventQueue<ScheduleEvent>()
+    val events: Flow<ScheduleEvent> = eventQueue.events
 
     init {
         viewModelScope.launch {
@@ -94,18 +95,26 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    fun ensureDataLoaded() {
-        if (observeJob == null) {
-            loadInitialSchedule(silent = true)
-        }
+    /**
+     * [RefreshMode.Silent] (entry, resume) loads the first page once, behind the cached days, and does nothing while a
+     * range is observed. [RefreshMode.Pull] and [RefreshMode.Force] show the indicator and refresh the loaded range;
+     * right after [setSelectedUser] they load the first page of that user instead.
+     *
+     * No `RefreshTracker` here: the user and the range are inputs of a refresh, so every request cancels the one in
+     * flight instead of joining it, and a stale answer never lands on another user's or range's screen.
+     */
+    fun refresh(mode: RefreshMode) {
+        if (mode == RefreshMode.Silent && observeJob != null) return
+        val reloadLoadedRange = mode.showsIndicator && !userSwitched
+        userSwitched = false
+        load(reloadLoadedRange, silent = !mode.showsIndicator)
     }
 
     fun updateTimeState() {
         if (hasStarted) emitCurrentState()
     }
 
-    /** A pull or retry shows the indicator; the load on entry stays silent behind the cached days. */
-    fun loadInitialSchedule(forceRefresh: Boolean = false, silent: Boolean = false) {
+    private fun load(forceRefresh: Boolean, silent: Boolean) {
         hasStarted = true
         silentLoad = silent
         refreshJob?.cancel()
@@ -171,6 +180,7 @@ class ScheduleViewModel @Inject constructor(
         savedStateHandle[STATE_SELECTED_USER_ISU] = user?.isu
         savedStateHandle[STATE_SELECTED_USER_NAME] = user?.name
         savedStateHandle[STATE_SELECTED_USER_AVATAR] = user?.avatar
+        userSwitched = true
         updatePendingObservation()
         emitCurrentState()
     }
@@ -255,7 +265,7 @@ class ScheduleViewModel @Inject constructor(
                 } else if (!hasDisplayableContent(currentDisplayDays())) {
                     lastError = result.error
                 } else {
-                    eventChannel.send(ScheduleEvent.ShowError(result.error))
+                    eventQueue.send(ScheduleEvent.ShowError(result.error))
                 }
             }
         }

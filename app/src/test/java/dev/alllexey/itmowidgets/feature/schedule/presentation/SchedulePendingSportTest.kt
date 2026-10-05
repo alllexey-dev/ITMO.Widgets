@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
@@ -42,13 +43,13 @@ class SchedulePendingSportTest {
     fun `disabled preference never observes or refreshes sport`() = runTest(dispatcher.dispatcher) {
         val pending = FakePendingSportBookingsRepository(booking())
         val model = model(pending = pending)
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
 
         assertTrue(model.content().displayDays.all { it.pendingSport.isEmpty() })
         assertEquals(0, pending.observations)
         assertEquals(0, pending.refreshes)
-        model.loadInitialSchedule(forceRefresh = true)
+        model.refresh(RefreshMode.Pull)
         runCurrent()
         assertEquals(0, pending.refreshes)
     }
@@ -59,7 +60,7 @@ class SchedulePendingSportTest {
         val official = FakeScheduleRepository(listOf(day()))
         val pending = FakePendingSportBookingsRepository(booking())
         val model = ScheduleViewModel(official, clock, SavedStateHandle(), FakeSchedulePreferencesRepository(true), pending, FakeScheduleChangesRepository(), FakeCalendarSync())
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
         val original = model.content().schedule
         assertEquals(1, model.content().displayDays.single().pendingSport.size)
@@ -78,7 +79,7 @@ class SchedulePendingSportTest {
         val pending = FakePendingSportBookingsRepository(booking())
         val official = FakeScheduleRepository(listOf(day()))
         val model = model(official, preference, pending)
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
 
         preference.enabled.value = true
@@ -107,7 +108,7 @@ class SchedulePendingSportTest {
         val official = FakeScheduleRepository(listOf(day())).apply { schedulesFor(123456).value = listOf(day()) }
         val model = model(official, FakeSchedulePreferencesRepository(true), pending,
             saved = SavedStateHandle(mapOf(ScheduleViewModel.ARG_USER_ISU to 123456)))
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
 
         assertNull(model.content().selectedUser)
@@ -120,17 +121,17 @@ class SchedulePendingSportTest {
     fun `selecting friend hides queues immediately and returning to own restarts projection`() = runTest(dispatcher.dispatcher) {
         val pending = FakePendingSportBookingsRepository(booking())
         val model = model(preferences = FakeSchedulePreferencesRepository(true), pending = pending)
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
         assertEquals(1, model.content().displayDays.single().pendingSport.size)
 
         model.setSelectedUser(SelectedUser(123456, "Тестовый друг", null))
         assertTrue(model.content().displayDays.all { it.pendingSport.isEmpty() })
-        model.loadInitialSchedule()
+        model.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(1, pending.observations)
         model.setSelectedUser(null)
-        model.loadInitialSchedule()
+        model.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(2, pending.observations)
         assertEquals(1, model.content().displayDays.single().pendingSport.size)
@@ -140,7 +141,7 @@ class SchedulePendingSportTest {
     fun `pending errors and an unfinished refresh do not replace academic content or spinner state`() = runTest(dispatcher.dispatcher) {
         val pending = FakePendingSportBookingsRepository(booking())
         val model = model(preferences = FakeSchedulePreferencesRepository(true), pending = pending)
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
         val official = model.content().schedule
         pending.values.value = AppResult.Failure(AppError.Network)
@@ -151,7 +152,7 @@ class SchedulePendingSportTest {
 
         val wait = CompletableDeferred<Unit>()
         pending.refreshBlock = { wait.await() }
-        model.loadInitialSchedule(forceRefresh = true)
+        model.refresh(RefreshMode.Pull)
         runCurrent()
         assertEquals(2, pending.refreshes)
         assertEquals(official, model.content().schedule)
@@ -170,7 +171,7 @@ class SchedulePendingSportTest {
             refreshResult = AppResult.Failure(AppError.Network)
         }
         val model = model(official, FakeSchedulePreferencesRepository(true))
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
         assertEquals(ScheduleUiState.Error(AppError.Network, null), model.uiState.value)
     }
@@ -184,7 +185,7 @@ class SchedulePendingSportTest {
         }
         val pending = FakePendingSportBookingsRepository(booking())
         val model = model(official, FakeSchedulePreferencesRepository(true), pending)
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
 
         assertEquals(ScheduleUiState.Loading(null), model.uiState.value)
@@ -205,13 +206,13 @@ class SchedulePendingSportTest {
         val nextPage = booking(id = 2, day = Today.today().plus(15, DateTimeUnit.DAY))
         val pending = FakePendingSportBookingsRepository(booking()).apply { values.value = AppResult.Success(listOf(near, nextPage)) }
         val model = model(official, FakeSchedulePreferencesRepository(true), pending)
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
         val initialDisplay = model.content().displayDays
 
         val refresh = CompletableDeferred<AppResult<Unit>>()
         official.refreshHandler = { refresh.await() }
-        model.loadInitialSchedule(forceRefresh = true)
+        model.refresh(RefreshMode.Pull)
         runCurrent()
         assertEquals(initialDisplay, model.content().displayDays)
         assertTrue(model.content().loadingMore)
@@ -242,7 +243,7 @@ class SchedulePendingSportTest {
     fun `returning from a friend must successfully load own schedule again before showing pending only data`() = runTest(dispatcher.dispatcher) {
         val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
         val model = model(official, FakeSchedulePreferencesRepository(true))
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
         assertEquals(1, model.content().displayDays.single().pendingSport.size)
 
@@ -250,7 +251,7 @@ class SchedulePendingSportTest {
         val friendResponse = CompletableDeferred<AppResult<Unit>>()
         official.refreshHandler = { friendResponse.await() }
         model.setSelectedUser(friend)
-        model.loadInitialSchedule()
+        model.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(ScheduleUiState.Loading(friend), model.uiState.value)
         friendResponse.complete(AppResult.Success(Unit))
@@ -260,7 +261,7 @@ class SchedulePendingSportTest {
         val ownResponse = CompletableDeferred<AppResult<Unit>>()
         official.refreshHandler = { ownResponse.await() }
         model.setSelectedUser(null)
-        model.loadInitialSchedule()
+        model.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(ScheduleUiState.Loading(null), model.uiState.value)
         ownResponse.complete(AppResult.Failure(AppError.Network))
@@ -275,11 +276,11 @@ class SchedulePendingSportTest {
             val preference = FakeSchedulePreferencesRepository(true)
             val pending = FakePendingSportBookingsRepository(booking())
             val model = model(official, preference, pending)
-            model.ensureDataLoaded()
+            model.refresh(RefreshMode.Silent)
             runCurrent()
             val refresh = CompletableDeferred<AppResult<Unit>>()
             official.refreshHandler = { refresh.await() }
-            model.loadInitialSchedule(forceRefresh = true)
+            model.refresh(RefreshMode.Pull)
             runCurrent()
             assertTrue(model.content().loadingMore)
 
@@ -300,7 +301,7 @@ class SchedulePendingSportTest {
         val nextPage = booking(id = 2, day = Today.today().plus(15, DateTimeUnit.DAY))
         val pending = FakePendingSportBookingsRepository(booking()).apply { values.value = AppResult.Success(listOf(near, nextPage)) }
         val model = model(official, FakeSchedulePreferencesRepository(true), pending)
-        model.ensureDataLoaded()
+        model.refresh(RefreshMode.Silent)
         runCurrent()
         assertTrue(model.content().schedule.isEmpty())
         assertEquals(listOf(near.localDate()), model.content().displayDays.map { it.date })

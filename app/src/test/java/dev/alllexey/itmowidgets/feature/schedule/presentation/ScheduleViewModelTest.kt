@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
@@ -53,7 +54,7 @@ class ScheduleViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val viewModel = createViewModel(FakeScheduleRepository())
 
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
 
             assertEquals(ScheduleUiState.Empty(null), viewModel.uiState.value)
@@ -67,7 +68,7 @@ class ScheduleViewModelTest {
             }
             val viewModel = createViewModel(repository)
 
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value as ScheduleUiState.Content
@@ -85,13 +86,13 @@ class ScheduleViewModelTest {
             }
             val viewModel = createViewModel(repository)
 
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
 
             val state = viewModel.uiState.value as ScheduleUiState.Content
             assertEquals(repository.days.value, state.schedule)
             assertFalse(state.loadingMore)
 
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
             assertTrue((viewModel.uiState.value as ScheduleUiState.Content).loadingMore)
         }
 
@@ -101,7 +102,7 @@ class ScheduleViewModelTest {
             val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule()) }
             val viewModel = createViewModel(repository)
 
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             assertEquals(ScheduleUiState.Loading(null), viewModel.uiState.value)
             runCurrent()
             assertTrue(viewModel.uiState.value is ScheduleUiState.Content)
@@ -115,7 +116,7 @@ class ScheduleViewModelTest {
             }
             val viewModel = createViewModel(repository)
 
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
 
             assertEquals(
@@ -133,22 +134,117 @@ class ScheduleViewModelTest {
             }
             val calendarSync = FakeCalendarSync()
             val viewModel = createViewModel(repository, calendarSync = calendarSync)
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
             assertEquals(0, calendarSync.syncRequests)
 
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
             advanceUntilIdle()
             assertEquals(1, calendarSync.syncRequests)
 
             repository.refreshResult = AppResult.Failure(AppError.Network)
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
             advanceUntilIdle()
             repository.refreshResult = AppResult.Success(Unit)
             viewModel.setSelectedUser(SelectedUser(123456, "Иван Иванов", null))
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Force)
+            advanceUntilIdle()
+            viewModel.refresh(RefreshMode.Pull)
             advanceUntilIdle()
             assertEquals(1, calendarSync.syncRequests)
+
+            viewModel.setSelectedUser(null)
+            viewModel.refresh(RefreshMode.Force)
+            advanceUntilIdle()
+            assertEquals(1, calendarSync.syncRequests)
+            viewModel.refresh(RefreshMode.Force)
+            advanceUntilIdle()
+            assertEquals(2, calendarSync.syncRequests)
+        }
+
+    @Test
+    fun `a silent refresh while the range is observed asks for nothing`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule()) }
+            val viewModel = createViewModel(repository)
+            viewModel.refresh(RefreshMode.Silent)
+            advanceUntilIdle()
+            val state = viewModel.uiState.value
+
+            viewModel.refresh(RefreshMode.Silent)
+            advanceUntilIdle()
+
+            assertEquals(listOf(initialRequest()), repository.refreshed)
+            assertEquals(listOf(initialRequest()), repository.observed)
+            assertEquals(state, viewModel.uiState.value)
+        }
+
+    @Test
+    fun `a forced retry after a failed first load shows progress and then the schedule`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val repository = FakeScheduleRepository().apply { refreshResult = AppResult.Failure(AppError.Network) }
+            val viewModel = createViewModel(repository)
+            viewModel.refresh(RefreshMode.Silent)
+            advanceUntilIdle()
+            assertEquals(ScheduleUiState.Error(AppError.Network, null), viewModel.uiState.value)
+
+            val retry = CompletableDeferred<AppResult<Unit>>()
+            repository.refreshHandler = { retry.await().also { repository.days.value = listOf(daySchedule()) } }
+            viewModel.refresh(RefreshMode.Force)
+            runCurrent()
+            assertEquals(ScheduleUiState.Loading(null), viewModel.uiState.value)
+
+            retry.complete(AppResult.Success(Unit))
+            advanceUntilIdle()
+            assertEquals(ScheduleUiState.Content(listOf(daySchedule()), false, null), viewModel.uiState.value)
+            assertEquals(listOf(initialRequest(), initialRequest()), repository.refreshed)
+        }
+
+    @Test
+    fun `a pull during the silent entry refresh replaces it and shows the indicator`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val entry = CompletableDeferred<AppResult<Unit>>()
+            val pull = CompletableDeferred<AppResult<Unit>>()
+            val repository = FakeScheduleRepository().apply {
+                days.value = listOf(daySchedule())
+                memorySnapshot = true
+                refreshHandler = { if (refreshed.size == 1) entry.await() else pull.await() }
+            }
+            val viewModel = createViewModel(repository)
+            viewModel.refresh(RefreshMode.Silent)
+            runCurrent()
+            assertFalse((viewModel.uiState.value as ScheduleUiState.Content).loadingMore)
+
+            viewModel.refresh(RefreshMode.Pull)
+            runCurrent()
+            assertTrue((viewModel.uiState.value as ScheduleUiState.Content).loadingMore)
+            entry.complete(AppResult.Failure(AppError.Network))
+            runCurrent()
+            assertTrue((viewModel.uiState.value as ScheduleUiState.Content).loadingMore)
+
+            pull.complete(AppResult.Success(Unit))
+            advanceUntilIdle()
+            assertFalse((viewModel.uiState.value as ScheduleUiState.Content).loadingMore)
+            assertEquals(2, repository.refreshed.size)
+        }
+
+    @Test
+    fun `a refresh error sent while nobody collects reaches the next collector once`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule()) }
+            val viewModel = createViewModel(repository)
+            viewModel.refresh(RefreshMode.Silent)
+            advanceUntilIdle()
+
+            repository.refreshResult = AppResult.Failure(AppError.Network)
+            viewModel.refresh(RefreshMode.Pull)
+            advanceUntilIdle()
+
+            assertEquals(ScheduleEvent.ShowError(AppError.Network), viewModel.events.first())
+            val again = async { viewModel.events.first() }
+            runCurrent()
+            assertFalse(again.isCompleted)
+            again.cancel()
         }
 
     @Test
@@ -158,13 +254,13 @@ class ScheduleViewModelTest {
                 days.value = listOf(daySchedule())
             }
             val viewModel = createViewModel(repository)
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
 
             val refresh = CompletableDeferred<AppResult<Unit>>()
             repository.refreshHandler = { refresh.await() }
             val event = async { viewModel.events.first() }
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
             runCurrent()
 
             val loadingState = viewModel.uiState.value as ScheduleUiState.Content
@@ -193,7 +289,7 @@ class ScheduleViewModelTest {
                 days.value = cached
             }
             val viewModel = createViewModel(repository)
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
 
             val refresh = CompletableDeferred<AppResult<Unit>>()
@@ -203,7 +299,7 @@ class ScheduleViewModelTest {
                     if (result is AppResult.Success) repository.days.value = updated
                 }
             }
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
             runCurrent()
 
             assertEquals(ScheduleUiState.Content(cached, true, null), viewModel.uiState.value)
@@ -226,12 +322,12 @@ class ScheduleViewModelTest {
             }
             val viewModel = createViewModel(repository)
             viewModel.setSelectedUser(user)
-            viewModel.loadInitialSchedule()
+            viewModel.refresh(RefreshMode.Force)
             advanceUntilIdle()
             assertTrue(viewModel.uiState.value is ScheduleUiState.Content)
 
             repository.refreshResult = AppResult.Failure(AppError.Forbidden)
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
             advanceUntilIdle()
             assertEquals(ScheduleUiState.Error(AppError.Forbidden, user), viewModel.uiState.value)
             repository.schedulesFor(user.isu).value = listOf(daySchedule().copy(note = "Late old cache"))
@@ -240,7 +336,7 @@ class ScheduleViewModelTest {
             assertEquals(ScheduleUiState.Error(AppError.Forbidden, user), viewModel.uiState.value)
 
             repository.refreshResult = AppResult.Success(Unit)
-            viewModel.loadInitialSchedule()
+            viewModel.refresh(RefreshMode.Force)
             advanceUntilIdle()
             assertTrue(viewModel.uiState.value is ScheduleUiState.Content)
         }
@@ -253,13 +349,13 @@ class ScheduleViewModelTest {
                 days.value = loadedDays
             }
             val viewModel = createViewModel(repository)
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
             viewModel.fetchNextDays()
             advanceUntilIdle()
             val observations = repository.observed.toList()
 
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
             advanceUntilIdle()
 
             assertEquals(
@@ -272,18 +368,19 @@ class ScheduleViewModelTest {
         }
 
     @Test
-    fun `initial reload resets the paginated range`() =
+    fun `selecting a user again resets the paginated range`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeScheduleRepository().apply {
                 days.value = daysIncludingNextPage()
             }
             val viewModel = createViewModel(repository)
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
             viewModel.fetchNextDays()
             advanceUntilIdle()
 
-            viewModel.loadInitialSchedule()
+            viewModel.setSelectedUser(null)
+            viewModel.refresh(RefreshMode.Force)
             advanceUntilIdle()
 
             assertEquals(initialRequest(), repository.refreshed.last())
@@ -302,13 +399,13 @@ class ScheduleViewModelTest {
                 schedulesFor(user.isu).value = friendDays
             }
             val viewModel = createViewModel(repository)
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
             viewModel.fetchNextDays()
             advanceUntilIdle()
 
             viewModel.setSelectedUser(user)
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
 
             assertEquals(ScheduleUiState.Loading(user), viewModel.uiState.value)
             advanceUntilIdle()
@@ -331,7 +428,7 @@ class ScheduleViewModelTest {
                 days.value = listOf(daySchedule())
             }
             val viewModel = createViewModel(repository)
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
 
             val oldRefresh = CompletableDeferred<AppResult<Unit>>()
@@ -343,10 +440,10 @@ class ScheduleViewModelTest {
                     newRefresh.await()
                 }
             }
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
             runCurrent()
             viewModel.setSelectedUser(user)
-            viewModel.loadInitialSchedule()
+            viewModel.refresh(RefreshMode.Force)
             runCurrent()
 
             oldRefresh.complete(AppResult.Failure(AppError.Forbidden))
@@ -396,7 +493,7 @@ class ScheduleViewModelTest {
             )
             val viewModel = createViewModel(repository, changesRepository = changes)
 
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
 
             assertEquals(mapOf(tomorrow to setOf(1L), later to emptySet()), viewModel.changedPairIdsByDay())
@@ -412,7 +509,7 @@ class ScheduleViewModelTest {
             )
             val viewModel = createViewModel(repository, changesRepository = changes)
 
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
 
             assertEquals(mapOf(day to setOf(2L)), viewModel.changedPairIdsByDay())
@@ -428,7 +525,7 @@ class ScheduleViewModelTest {
             val viewModel = createViewModel(repository, changesRepository = changes)
 
             viewModel.setSelectedUser(user)
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
             advanceUntilIdle()
 
             assertEquals(user, (viewModel.uiState.value as ScheduleUiState.Content).selectedUser)
@@ -442,7 +539,7 @@ class ScheduleViewModelTest {
             val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule(day)) }
             val changes = FakeScheduleChangesRepository(scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, day)))
             val viewModel = createViewModel(repository, changesRepository = changes)
-            viewModel.ensureDataLoaded()
+            viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
             val requests = repository.refreshed.size
             assertEquals(mapOf(day to setOf(1L)), viewModel.changedPairIdsByDay())

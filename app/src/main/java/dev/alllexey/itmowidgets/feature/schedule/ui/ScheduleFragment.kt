@@ -25,6 +25,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.navigation.ScheduleTodayRequest
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -104,7 +105,7 @@ class ScheduleFragment : Fragment() {
 
         restoreState(savedInstanceState)
 
-        viewModel.ensureDataLoaded()
+        viewModel.refresh(RefreshMode.Silent)
     }
 
     override fun onDestroyView() {
@@ -186,7 +187,7 @@ class ScheduleFragment : Fragment() {
     private fun setupListeners() {
 
         swipe.setOnRefreshListener {
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Pull)
         }
 
         fabTop.setOnClickListener {
@@ -206,7 +207,7 @@ class ScheduleFragment : Fragment() {
         }
 
         binding.scheduleStateAction.setOnClickListener {
-            viewModel.loadInitialSchedule(forceRefresh = true)
+            viewModel.refresh(RefreshMode.Force)
         }
 
         if (userIsu == null) {
@@ -246,7 +247,7 @@ class ScheduleFragment : Fragment() {
                     is ScheduleEvent.ShowError -> {
                         errorSnackbar?.dismiss()
                         errorSnackbar = Snackbar.make(binding.root, event.error.messageRes(), Snackbar.LENGTH_LONG)
-                            .setAction(R.string.common_retry) { viewModel.loadInitialSchedule(forceRefresh = true) }
+                            .setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }
                             .also(Snackbar::show)
                     }
                 }
@@ -301,7 +302,7 @@ class ScheduleFragment : Fragment() {
         anchorPagedThrough = null
         viewModel.setSelectedUser(user)
         swipe.isRefreshing = true
-        viewModel.loadInitialSchedule()
+        viewModel.refresh(RefreshMode.Force)
     }
 
     /** The «Сегодня» shortcut: the own schedule on today's day, whatever was read before. */
@@ -314,7 +315,7 @@ class ScheduleFragment : Fragment() {
             viewModel.setSelectedUser(null)
             swipe.isRefreshing = true
             // renderSchedule scrolls to today once the own schedule arrives.
-            viewModel.loadInitialSchedule()
+            viewModel.refresh(RefreshMode.Force)
         } else {
             (viewModel.uiState.value as? ScheduleUiState.Content)?.let { tryScrollToToday(it.displayDays) }
         }
