@@ -20,16 +20,16 @@ class CustomSpoilerViewModelTest {
         val repository = FakeCustomSpoilerRepository()
         val vm = CustomSpoilerViewModel(repository)
         advanceUntilIdle()
-        assertEquals(false, vm.state.value.configured)
+        assertEquals(false, vm.uiState.value.configured)
         vm.saveImage("content://test/image")
         vm.saveImage("content://test/duplicate")
         vm.resetImage()
         runCurrent()
-        assertTrue(vm.state.value.busy)
+        assertTrue(vm.uiState.value.busy)
         assertEquals(1, repository.saved.size)
         repository.result.complete(true)
         advanceUntilIdle()
-        assertEquals(CustomSpoilerUiState(configured = true), vm.state.value)
+        assertEquals(CustomSpoilerUiState(configured = true), vm.uiState.value)
         assertEquals(CustomSpoilerEvent.SAVED, vm.events.first())
     }
 
@@ -41,7 +41,7 @@ class CustomSpoilerViewModelTest {
         vm.saveImage("content://test/invalid")
         repository.result.complete(false)
         advanceUntilIdle()
-        assertEquals(CustomSpoilerUiState(configured = true), vm.state.value)
+        assertEquals(CustomSpoilerUiState(configured = true), vm.uiState.value)
         assertEquals(CustomSpoilerEvent.FAILED, vm.events.first())
     }
 
@@ -53,7 +53,7 @@ class CustomSpoilerViewModelTest {
         vm.resetImage()
         repository.result.complete(true)
         advanceUntilIdle()
-        assertEquals(CustomSpoilerUiState(configured = false), vm.state.value)
+        assertEquals(CustomSpoilerUiState(configured = false), vm.uiState.value)
         assertEquals(CustomSpoilerEvent.RESET, vm.events.first())
     }
 }

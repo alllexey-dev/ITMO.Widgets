@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
@@ -13,42 +13,16 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
-
-/** A row of the range choice: its title and the days it covers from today. */
-data class IcsRangeOption(val kind: IcsRangeKind, val title: UiText, val dates: UiText)
-
-enum class IcsRangeKind { WEEK, TWO_WEEKS, SEMESTER, CUSTOM }
-
-sealed interface IcsExportUiState {
-    data class Choose(val options: List<IcsRangeOption>) : IcsExportUiState
-
-    data object Preparing : IcsExportUiState
-
-    /** [dates] names the exported days, as «5–11 октября». */
-    data class Ready(val file: IcsFile, val dates: UiText) : IcsExportUiState
-
-    data object Empty : IcsExportUiState
-
-    data class Failed(val error: AppError) : IcsExportUiState
-}
-
-sealed interface IcsExportEvent {
-    /** Opens the date range picker; its answer comes back through `onDates`. */
-    data object PickDates : IcsExportEvent
-}
 
 /**
  * The «Выгрузить в .ics» sheet: a range is chosen, the file is written, then shared. The chosen range and a written
@@ -62,10 +36,10 @@ class IcsExportViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val mutableState = MutableStateFlow<IcsExportUiState>(choice())
-    val state: StateFlow<IcsExportUiState> = mutableState.asStateFlow()
+    val uiState: StateFlow<IcsExportUiState> = mutableState.asStateFlow()
 
-    private val eventChannel = Channel<IcsExportEvent>(Channel.BUFFERED)
-    val events: Flow<IcsExportEvent> = eventChannel.receiveAsFlow()
+    private val eventQueue = EventQueue<IcsExportEvent>()
+    val events: Flow<IcsExportEvent> = eventQueue.events
 
     private var job: Job? = null
 
@@ -84,7 +58,9 @@ class IcsExportViewModel @Inject constructor(
             IcsRangeKind.WEEK -> start(ScheduleExportRange.Week)
             IcsRangeKind.TWO_WEEKS -> start(ScheduleExportRange.TwoWeeks)
             IcsRangeKind.SEMESTER -> start(ScheduleExportRange.Semester)
-            IcsRangeKind.CUSTOM -> eventChannel.trySend(IcsExportEvent.PickDates)
+            IcsRangeKind.CUSTOM -> viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                eventQueue.send(IcsExportEvent.PickDates)
+            }
         }
     }
 
@@ -196,26 +172,5 @@ class IcsExportViewModel @Inject constructor(
         const val FILE_URI = "ics_file_uri"
         const val FILE_NAME = "ics_file_name"
         const val FILE_LESSONS = "ics_file_lessons"
-    }
-}
-
-/** Russian day ranges: «5 октября», «5–11 октября», «28 сентября – 4 октября», years only across a year's end. */
-object IcsDateLabels {
-    private val RUSSIAN: Locale = Locale.forLanguageTag("ru")
-    private val DAY: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM", RUSSIAN)
-    private val DAY_YEAR: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", RUSSIAN)
-
-    fun day(date: LocalDate): String = DAY.format(date)
-
-    fun range(dates: ClosedRange<LocalDate>): UiText {
-        val start = dates.start
-        val end = dates.endInclusive
-        val text = when {
-            start == end -> DAY.format(start)
-            start.year != end.year -> "${DAY_YEAR.format(start)} – ${DAY_YEAR.format(end)}"
-            start.month == end.month -> "${start.dayOfMonth}–${DAY.format(end)}"
-            else -> "${DAY.format(start)} – ${DAY.format(end)}"
-        }
-        return UiText.Dynamic(text)
     }
 }

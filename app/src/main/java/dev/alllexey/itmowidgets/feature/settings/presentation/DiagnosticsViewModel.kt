@@ -14,11 +14,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-sealed interface DiagnosticsUiState {
-    data object Loading : DiagnosticsUiState
-    data class Content(val entries: List<DiagnosticEntry>) : DiagnosticsUiState
-}
-
 @HiltViewModel
 class DiagnosticsViewModel @Inject constructor(
     private val diagnostics: AppDiagnostics,

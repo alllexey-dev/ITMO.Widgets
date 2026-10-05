@@ -47,14 +47,16 @@ import dev.alllexey.itmowidgets.databinding.FragmentSettingsBinding
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -136,12 +138,13 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         postponeEnterTransition()
-        if (viewModel.page == SettingsPage.ROOT) {
+        val page = viewModel.uiState.value.page
+        if (page == SettingsPage.ROOT) {
             previewFactory.preload(requireContext(), lifecycleScope)
         }
 
         previewState = savedInstanceState?.getBundle(PREVIEW_STATE) ?: previewState
-        binding.settingsTitle.text = viewModel.page.title.resolve(requireContext())
+        binding.settingsTitle.text = page.title.resolve(requireContext())
         binding.backButton.setOnClickListener { closeScreen() }
         val initialBottomPadding = binding.sectionsContainer.paddingBottom
         ViewCompat.setOnApplyWindowInsetsListener(binding.sectionsContainer) { content, insets ->
@@ -166,26 +169,27 @@ class SettingsFragment : Fragment() {
             onAction = viewModel::onAction
         )
 
-        viewModel.previewSettings
+        viewModel.uiState
+            .map { state -> state.previewSettings }
+            .distinctUntilChanged()
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach { settings -> settings?.let(::renderPreview) }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
-        if (viewModel.page == SettingsPage.QR_WIDGET) {
+        if (page == SettingsPage.QR_WIDGET) {
             observeCustomSpoiler()
         }
 
-        viewModel.sections
+        viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::renderSections)
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.localSettingsLoaded.first { it }
-            renderSections(viewModel.sections.value)
-            if (viewModel.page in setOf(SettingsPage.QR_WIDGET, SettingsPage.COMPACT_SCHEDULE_WIDGET, SettingsPage.FULL_SCHEDULE_WIDGET)) {
-                renderPreview(viewModel.previewSettings.filterNotNull().first()).awaitReady()
-            }
+            val loaded = viewModel.uiState.first { it.loaded }
+            renderSections(loaded)
+            // Widget pages build their preview in the same state as their first rows.
+            loaded.previewSettings?.let { renderPreview(it).awaitReady() }
             // Enter with final local values and an already drawn QR image, not a loading frame.
             view.doOnPreDraw {
                 startPostponedEnterTransition()
@@ -243,7 +247,7 @@ class SettingsFragment : Fragment() {
     }
 
     private fun observeCustomSpoiler() {
-        spoilerViewModel.state
+        spoilerViewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach { state ->
                 viewModel.onCustomSpoilerChanged(state.configured ?: false, busy = state.busy)
@@ -264,11 +268,11 @@ class SettingsFragment : Fragment() {
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    private fun renderSections(sections: List<SettingSection>) {
-        binding.settingsProgress.isVisible = viewModel.page == SettingsPage.PRIVACY &&
-            viewModel.localSettingsLoaded.value && sections.isEmpty()
-        binding.settingsScroll.isVisible = sections.isNotEmpty()
-        renderer?.render(sections)
+    private fun renderSections(state: SettingsUiState) {
+        binding.settingsProgress.isVisible = state.page == SettingsPage.PRIVACY &&
+            state.loaded && state.sections.isEmpty()
+        binding.settingsScroll.isVisible = state.sections.isNotEmpty()
+        renderer?.render(state.sections)
     }
 
     private fun renderPreview(settings: WidgetPreviewSettings): WidgetPreview {
@@ -313,9 +317,9 @@ class SettingsFragment : Fragment() {
         _binding = null
     }
 
-    private fun onToggleChanged(key: String, checked: Boolean) {
-        if (key != SettingsViewModel.KEY_CUSTOM_SERVICES || !checked) {
-            viewModel.onToggleChanged(key, checked)
+    private fun onToggleChanged(id: SettingRowId, checked: Boolean) {
+        if (id != SettingRowId.CUSTOM_SERVICES || !checked) {
+            viewModel.onToggleChanged(id, checked)
             return
         }
 
@@ -324,7 +328,7 @@ class SettingsFragment : Fragment() {
             .setMessage(R.string.settings_custom_services_consent_message)
             .setNegativeButton(R.string.common_cancel) { _, _ -> restoreRenderedValues() }
             .setPositiveButton(R.string.settings_custom_services_enable) { _, _ ->
-                viewModel.onToggleChanged(key, true)
+                viewModel.onToggleChanged(id, true)
             }
             .setOnCancelListener { restoreRenderedValues() }
             .show()
@@ -340,7 +344,7 @@ class SettingsFragment : Fragment() {
     }
 
     private fun restoreRenderedValues() {
-        renderer?.render(viewModel.sections.value)
+        renderer?.render(viewModel.uiState.value.sections)
     }
 
     private fun showChoiceDialog(item: SettingItem.Choice) {
@@ -353,7 +357,7 @@ class SettingsFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(item.title.resolve(requireContext()))
             .setSingleChoiceItems(labels, selectedIndex) { dialog, index ->
-                viewModel.onChoiceChanged(item.key, item.options[index].key)
+                viewModel.onChoiceChanged(item.id, item.options[index].key)
                 dialog.dismiss()
             }
             .setNegativeButton(R.string.common_cancel, null)
@@ -361,7 +365,7 @@ class SettingsFragment : Fragment() {
     }
 
     private fun chooseCustomSpoiler() {
-        if (spoilerViewModel.state.value.busy) return
+        if (spoilerViewModel.uiState.value.busy) return
         spoilerImagePicker.launch()
     }
 

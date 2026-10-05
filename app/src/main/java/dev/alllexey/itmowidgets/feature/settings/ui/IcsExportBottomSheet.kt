@@ -55,7 +55,7 @@ class IcsExportBottomSheet : BottomSheetDialogFragment() {
         }
         binding.state.stateAction.isVisible = true
         listenToIcsDatePicker(viewModel::onDates)
-        viewModel.state.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
+        viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
         viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
             when (event) {
