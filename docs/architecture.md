@@ -16,8 +16,9 @@ visual language in [`design.md`](design.md).
    types inside a `domain` package; `UserSummary` is the one shared identity model.
 4. **Minimum ceremony.** A use case exists only for real orchestration, never as
    a one-line passthrough.
-5. **Boundaries are held by tests, not modules.** The app is a single Gradle
-   module by decision ([0001](decisions/0001-single-module.md)).
+5. **Boundaries are held by tests and modules.** The Konsist suite holds the
+   package rules; the shared modules ([Modules](#modules)) hold the feature and
+   platform boundaries ([0018](decisions/0018-module-graph-and-toolchain.md)).
 
 ## Package structure
 
@@ -92,6 +93,53 @@ Placement rules:
 - `*RepositoryImpl` lives in a `data` package and implements the matching
   contract. *Enforced.* Non-repository helpers use the `Default*` prefix.
 - Models move to `core` only once two features genuinely share them.
+
+### Modules
+
+`settings.gradle.kts` includes these projects; `build-logic/` is an included
+build with the conventions (`itmowidgets.kmp.library`, `itmowidgets.cmp.ui`,
+`itmowidgets.testing`, `itmowidgets.strings`, the Android app convention).
+Pins and the toolchain live in [ADR 0018](decisions/0018-module-graph-and-toolchain.md)
+and the version catalog.
+
+| Module | Convention | Holds | Depends on |
+|---|---|---|---|
+| `:app` | Android app | what stays Android-only (below), Hilt | every shared module; `:shared:testing` in tests |
+| `:shared:core` | kmp-library | the `core/*` contracts and models, common strings | nothing |
+| `:shared:designsystem` | cmp-ui | theme, tokens, component kit, icons | `:shared:core` |
+| `:shared:testing` | cmp-ui | test kit, fake `Clock`, preview and screenshot harness | nothing (core-free) |
+| `:shared:backend-client` | kmp-library | the typed Backend client ([0026](decisions/0026-core-2-backend-client.md)) | nothing |
+| `:shared:feature-<x>` | cmp-ui | one feature's `domain`, `presentation`, `ui`, `data` | `:shared:core`, `:shared:designsystem`; `:shared:testing` in `commonTest` |
+| `:shared:ios` | Kotlin Multiplatform | the static framework `Shared` for the iOS app | every shared module but `:shared:testing` |
+| `:konsist` | Kotlin JVM | the architecture rules over the sources of `app/` and `shared/` | nothing (reads sources) |
+
+The ten feature modules are `:shared:feature-qr`, `:shared:feature-home`,
+`:shared:feature-schedule`, `:shared:feature-sport`, `:shared:feature-recordbook`,
+`:shared:feature-social` (with `friendselector`), `:shared:feature-settings`,
+`:shared:feature-resources`, `:shared:feature-reviews` and
+`:shared:feature-account` (`auth`, `onboarding`, `me`, `weblogin`, `web`,
+`update`). The `debug` feature stays in `app/`.
+
+- **Targets and source sets.** Shared modules target `android`, `iosArm64`
+  and `iosSimulatorArm64`: `commonMain`, `androidMain`, `iosMain`, `commonTest`,
+  `androidHostTest` (Robolectric and Roborazzi, [0022](decisions/0022-jvm-screenshot-tests.md))
+  and `iosSimulatorArm64Test`. `:shared:core` and the features also compile the
+  core test fakes from `shared/core/src/testFixtures/kotlin` into `commonTest`.
+- **Allowed dependencies.** Only the edges in the table. A feature never
+  depends on another feature; `commonMain` has no `android.*`, `java.*`, `R`,
+  Hilt or `javax.inject`. The `Res` class of a cmp-ui module lives in its
+  namespace (`dev.alllexey.itmowidgets.shared.<path>`) and is public only in
+  `:shared:core` and `:shared:designsystem`.
+- **Packages are preserved.** Moving a class into a module is a `git mv`
+  without a package change, so the package structure above stays valid in every
+  module and the stable identifiers keep their names.
+- **What stays in `app/`.** Activities and WebView screens, the RemoteViews
+  widgets and `ScheduleWidgetRemoteViewsService`, workers and schedulers, FCM
+  (`MyFirebaseMessagingService`, `DefaultFcmTokenSync`, the Android notifier),
+  `QrTileService`, shortcuts and channel creation, the Keystore cipher,
+  calendar sync, the Play code scanner, the `github` and `play` update actions,
+  debug tools, the exported `strings_platform.xml`, and Hilt until it leaves
+  ([0019](decisions/0019-koin-per-lane.md)).
 
 ## Layers
 
