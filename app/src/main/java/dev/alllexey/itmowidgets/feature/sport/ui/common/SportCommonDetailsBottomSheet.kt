@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.sport.ui.common
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,7 +20,6 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.text.DateTexts
-import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
@@ -37,18 +35,23 @@ import dev.alllexey.itmowidgets.databinding.ItemSportHistoryFactBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportConditionBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingObstacle
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportOccupancy
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportDetailsCondition
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportDetailsPresenter
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportFriendRegistration
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportQueueFact
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportQueueFactKind
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportShareTarget
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingAction
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.titleRes
-import java.io.Serializable
-import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalTime
+import kotlin.time.toJavaInstant
 
 /** Details of the selected snapshot. Does not manufacture capacity for booking-only responses. */
 @AndroidEntryPoint
@@ -63,8 +66,12 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     @Inject lateinit var shareLinks: ShareLinkFactory
 
     private val item: SportCommonDetailsArgs by lazy {
-        requireNotNull(requireArguments().serializable(ARG_COMMON, SportCommonDetailsArgs::class.java))
+        SportCommonDetailsArgs.fromJson(requireNotNull(requireArguments().getString(ARG_COMMON)))
     }
+
+    private val actionsEnabled: Boolean get() = requireArguments().getBoolean(ARG_ACTIONS)
+
+    private val busy: Boolean get() = requireArguments().getBoolean(ARG_BUSY)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentSportCommonDetailsBinding.inflate(inflater, container, false)
@@ -112,10 +119,14 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun bindAction(): Unit = with(binding) {
-        val action = item.bookingAction(timeProvider.javaNow())
-        bookingAction.isVisible = requireArguments().getBoolean(ARG_ACTIONS) && action != SportBookingAction.NONE
-        bookingAction.isEnabled = !actionSubmitted && !requireArguments().getBoolean(ARG_BUSY)
-        bookingAction.setText(when (action) {
+        val offer = SportDetailsPresenter.action(item, timeProvider.now(), actionsEnabled, busy, actionSubmitted)
+        bookingAction.isVisible = offer != null
+        bookingAction.isEnabled = offer?.enabled == true
+        if (offer == null) {
+            bookingAction.setOnClickListener(null)
+            return@with
+        }
+        bookingAction.setText(when (offer.action) {
             SportBookingAction.SIGN -> R.string.sport_lesson_sign_up
             SportBookingAction.CANCEL -> R.string.sport_lesson_sign_out
             SportBookingAction.AUTO -> R.string.sport_auto_sign_title
@@ -123,9 +134,9 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
             SportBookingAction.NONE -> R.string.sport_lesson_unavailable
         })
         bookingAction.setOnClickListener {
-            if (actionSubmitted || requireArguments().getBoolean(ARG_BUSY)) return@setOnClickListener
+            if (actionSubmitted || busy) return@setOnClickListener
             // Time can move on while details are open. Never dispatch the earlier offer.
-            if (item.bookingAction(timeProvider.javaNow()) != action) {
+            if (item.bookingAction(timeProvider.now()) != offer.action) {
                 bindAction()
                 bindConditions()
                 return@setOnClickListener
@@ -133,15 +144,18 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
             actionSubmitted = true
             bookingAction.isEnabled = false
             parentFragmentManager.setFragmentResult(ACTION_REQUEST, bundleOf(
-                RESULT_LESSON_ID to item.lessonId, RESULT_ACTION to action.name
+                RESULT_LESSON_ID to item.lessonId, RESULT_ACTION to offer.action.name
             ))
             dismiss()
         }
     }
 
-    /** Upcoming catalog lessons, bookings and predictions can be shared; a predicted one by its prototype. */
     private fun bindShare(timing: SportSessionTiming) = with(binding.toolbar) {
-        val link = shareLink() ?: return@with
+        val link = when (val target = SportDetailsPresenter.share(item, timeProvider.now())) {
+            is SportShareTarget.Lesson -> shareLinks.sportLesson(target.lessonId)
+            is SportShareTarget.Prediction -> shareLinks.predictedSportLesson(target.prototypeLessonId)
+            null -> return@with
+        }
         inflateMenu(R.menu.sport_details)
         menu.findItem(R.id.action_share).isVisible = true
         setOnMenuItemClickListener { menuItem ->
@@ -154,27 +168,18 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    private fun shareLink(): String? {
-        if (!OffsetDateTime.parse(item.end).isAfter(timeProvider.javaNow())) return null
-        val prototypeLessonId = item.prototypeLessonId
-        return when {
-            item.isReal && item.lessonId > 0 -> shareLinks.sportLesson(item.lessonId)
-            !item.isReal && prototypeLessonId != null -> shareLinks.predictedSportLesson(prototypeLessonId)
-            else -> null
-        }
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putBoolean(STATE_SUBMITTED, actionSubmitted)
         super.onSaveInstanceState(outState)
     }
 
     private fun bindRegistration() = with(binding) {
-        bindSportStatus(item.registrationStatus, status)
-        status.isVisible = item.signed || item.signEntry != null
-        val occupancy = SportOccupancy.from(item.isReal, item.available, item.limit)
+        val registration = SportDetailsPresenter.registration(item)
+        registration.status?.let { bindSportStatus(it, status) }
+        status.isVisible = registration.status != null
+        val occupancy = registration.occupancy
         capacityGroup.isVisible = occupancy != null
-        registrationCard.isVisible = status.isVisible || occupancy != null
+        registrationCard.isVisible = registration.visible
         capacityProgress.max = occupancy?.limit ?: 1
         capacityProgress.setProgressCompat(occupancy?.occupied ?: 0, false)
         occupancy?.let {
@@ -188,80 +193,74 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
             capacityLabel.text = resources.getQuantityString(R.plurals.sport_capacity_free_label, it.available)
             capacityGroup.contentDescription = getString(R.string.sport_capacity_description, it.occupied, it.limit, it.available)
         }
-        queueGroup.isVisible = item.signEntry != null
+        queueGroup.isVisible = registration.queue != null
         historyContainer.removeAllViews()
-        item.signEntry?.let { entry ->
-            queueDescription.setText(if (entry.isAutoSign) R.string.sport_queue_future_hint else R.string.sport_queue_free_hint)
-            queueDescription.isVisible = item.registrationStatus == SportRegistrationStatus.WAITING ||
-                item.registrationStatus == SportRegistrationStatus.NOTIFIED
-            positionGroup.isVisible = queueDescription.isVisible && entry.position > 0 && entry.total > 0
-            position.text = getString(R.string.sport_ratio, entry.position, entry.total)
+        registration.queue?.let { queue ->
+            queueDescription.setText(if (queue.autoSign) R.string.sport_queue_future_hint else R.string.sport_queue_free_hint)
+            queueDescription.isVisible = queue.waiting
+            positionGroup.isVisible = queue.positionVisible
+            position.text = getString(R.string.sport_ratio, queue.position, queue.total)
             position.setTextColor(requireContext().color.onSurface)
             attempts.setTextColor(requireContext().color.onSurface)
-            attempts.text = getString(R.string.sport_ratio, entry.notificationAttempts, entry.maxNotificationAttempts)
-            addFact(historyContainer, R.string.sport_queue_created, entry.createdAt)
-            addFact(historyContainer, R.string.sport_queue_last_request, entry.lastNotifiedAt)
-            addFact(historyContainer, R.string.sport_queue_completed, entry.satisfiedAt)
-            addFact(historyContainer, R.string.sport_queue_cancelled, entry.cancelledAt)
-            addFact(historyContainer, R.string.sport_queue_expired, entry.expiredAt)
+            attempts.text = getString(R.string.sport_ratio, queue.notificationAttempts, queue.maxNotificationAttempts)
+            queue.history.forEach { addFact(historyContainer, it) }
         }
     }
 
     /** Queue history is a label/value table: a clock icon repeated on every row carries nothing. */
-    private fun addFact(parent: LinearLayout, title: Int, timestamp: String?) {
-        if (timestamp == null) return
+    private fun addFact(parent: LinearLayout, fact: SportQueueFact) {
         val row = ItemSportHistoryFactBinding.inflate(layoutInflater, parent, false)
-        row.historyLabel.setText(title)
-        row.historyValue.text = OffsetDateTime.parse(timestamp).atZoneSameInstant(timeProvider.javaZone())
+        row.historyLabel.setText(when (fact.kind) {
+            SportQueueFactKind.CREATED -> R.string.sport_queue_created
+            SportQueueFactKind.LAST_REQUEST -> R.string.sport_queue_last_request
+            SportQueueFactKind.COMPLETED -> R.string.sport_queue_completed
+            SportQueueFactKind.CANCELLED -> R.string.sport_queue_cancelled
+            SportQueueFactKind.EXPIRED -> R.string.sport_queue_expired
+        })
+        row.historyValue.text = fact.at.toJavaInstant().atZone(timeProvider.javaZone())
             .format(DateTimeFormatter.ofPattern("d MMM, HH:mm", Locale.forLanguageTag("ru")))
         parent.addView(row.root)
     }
 
     private fun bindConditions() = with(binding) {
         attentionContainer.removeAllViews()
-        val availability = item.bookingConditions?.evaluate(timeProvider.now())
-        attentionCard.isVisible = (!item.signed && availability != null) || item.intersectsSchedule || !item.isReal
-        val prerequisites = buildList {
-            add(getString(R.string.sport_booking_auto_checks))
-            if (!item.isReal) add(getString(R.string.sport_booking_future_checks))
-        }.joinToString("\n")
-        if (!item.signed && availability != null) {
-            when {
-                availability.manual -> conditionCard(ConditionTone.ALLOWED, R.string.sport_booking_allowed,
-                    icon = R.drawable.ic_check)
-                availability.mayWait -> conditionCard(ConditionTone.WAITING,
-                    if (item.isReal) R.string.sport_booking_wait else R.string.sport_prediction_waiting,
-                    getString(if (item.isReal) R.string.sport_booking_wait_place else R.string.sport_prediction_hint),
-                    prerequisites, R.drawable.ic_schedule)
-                availability.restrictions.any { it.kind == SportBookingObstacle.STARTED } ->
-                    conditionCard(ConditionTone.BLOCKED, R.string.sport_rule_started,
-                        icon = R.drawable.ic_error)
-                availability.restrictions.isNotEmpty() -> {
-                    val unknown = availability.restrictions.all { it.kind == SportBookingObstacle.UNKNOWN }
-                    val reasons = availability.restrictions.map { restriction ->
-                        restriction.detail?.takeIf { it.isNotBlank() } ?: getString(restriction.kind.titleRes())
-                    }.distinct().joinToString("\n")
-                    conditionCard(if (unknown) ConditionTone.WARNING else ConditionTone.BLOCKED,
-                        if (unknown) R.string.sport_booking_uncertain else R.string.sport_booking_no_bypass,
-                        reasons.takeUnless { unknown },
-                        if (unknown) null else getString(R.string.sport_booking_no_bypass_hint),
-                        R.drawable.ic_error)
-                }
-            }
+        val conditions = SportDetailsPresenter.conditions(item, timeProvider.now())
+        attentionCard.isVisible = conditions.isNotEmpty()
+        conditions.forEach(::addCondition)
+    }
+
+    private fun addCondition(condition: SportDetailsCondition) = when (condition) {
+        SportDetailsCondition.Allowed -> conditionCard(ConditionTone.ALLOWED, R.string.sport_booking_allowed,
+            icon = R.drawable.ic_check)
+        is SportDetailsCondition.Waiting -> {
+            val prerequisites = buildList {
+                add(getString(R.string.sport_booking_auto_checks))
+                if (condition.predicted) add(getString(R.string.sport_booking_future_checks))
+            }.joinToString("\n")
+            conditionCard(ConditionTone.WAITING,
+                if (condition.predicted) R.string.sport_prediction_waiting else R.string.sport_booking_wait,
+                getString(if (condition.predicted) R.string.sport_prediction_hint else R.string.sport_booking_wait_place),
+                prerequisites, R.drawable.ic_schedule)
         }
-        if (availability?.mayWait == true && item.isReal && !item.signed &&
-            !timeProvider.javaNow().isBefore(OffsetDateTime.parse(item.start).minusHours(1))) {
-            conditionCard(ConditionTone.WARNING, R.string.sport_booking_late_auto,
-                getString(R.string.sport_booking_late_auto_hint), icon = R.drawable.ic_schedule)
+        SportDetailsCondition.Started -> conditionCard(ConditionTone.BLOCKED, R.string.sport_rule_started,
+            icon = R.drawable.ic_error)
+        SportDetailsCondition.Uncertain -> conditionCard(ConditionTone.WARNING, R.string.sport_booking_uncertain,
+            icon = R.drawable.ic_error)
+        is SportDetailsCondition.Restricted -> {
+            val reasons = condition.restrictions.map { restriction ->
+                restriction.detail?.takeIf { it.isNotBlank() } ?: getString(restriction.kind.titleRes())
+            }.distinct().joinToString("\n")
+            conditionCard(ConditionTone.BLOCKED, R.string.sport_booking_no_bypass, reasons,
+                getString(R.string.sport_booking_no_bypass_hint), R.drawable.ic_error)
         }
-        if (item.intersectsSchedule) conditionCard(ConditionTone.WARNING, R.string.sport_booking_warning,
+        SportDetailsCondition.LateAuto -> conditionCard(ConditionTone.WARNING, R.string.sport_booking_late_auto,
+            getString(R.string.sport_booking_late_auto_hint), icon = R.drawable.ic_schedule)
+        SportDetailsCondition.ScheduleOverlap -> conditionCard(ConditionTone.WARNING, R.string.sport_booking_warning,
             getString(R.string.sport_booking_warning_hint), icon = R.drawable.ic_error)
-        if (!item.isReal && availability?.mayWait != true) {
-            conditionCard(ConditionTone.WAITING, R.string.sport_prediction_matching,
-                getString(R.string.sport_prediction_hint),
-                if (availability?.restrictions?.isNotEmpty() == true) getString(R.string.sport_booking_prediction_rules) else null,
-                R.drawable.ic_schedule)
-        }
+        is SportDetailsCondition.PredictionMatching -> conditionCard(ConditionTone.WAITING,
+            R.string.sport_prediction_matching, getString(R.string.sport_prediction_hint),
+            if (condition.withRules) getString(R.string.sport_booking_prediction_rules) else null,
+            R.drawable.ic_schedule)
     }
 
     private fun conditionCard(tone: ConditionTone, title: Int, description: String? = null,
@@ -282,20 +281,20 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun bindFriends() = with(binding) {
+        val friends = SportDetailsPresenter.friends(item)
         friendsContainer.removeAllViews()
-        friendsCard.isVisible = item.friends.isNotEmpty()
-        friendsTitle.text = getString(R.string.sport_friends_count_label, item.friends.size)
-        item.friends.forEach { friend ->
+        friendsCard.isVisible = friends.isNotEmpty()
+        friendsTitle.text = getString(R.string.sport_friends_count_label, friends.size)
+        friends.forEach { friend ->
             val row = ItemSportBookingFriendStatusBinding.inflate(layoutInflater, friendsContainer, false)
             row.friendAvatar.setUser(friend.name, friend.pictureUrl)
             row.friendNameTextView.text = friend.name
             row.friendNameTextView.setTextColor(requireContext().color.onSurface)
-            row.friendStatusTextView.text = when (friend.registrationStatus) {
-                SportRegistrationStatus.SIGNED, SportRegistrationStatus.AUTO_SIGNED -> getString(R.string.sport_friend_signed)
-                SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED -> friend.entry?.let {
-                    getString(R.string.sport_card_queue, it.position, it.total)
-                }
-                else -> getString(R.string.sport_friend_not_signed)
+            row.friendStatusTextView.text = when (val registration = friend.registration) {
+                SportFriendRegistration.Signed -> getString(R.string.sport_friend_signed)
+                is SportFriendRegistration.Queued -> getString(R.string.sport_card_queue, registration.position, registration.total)
+                SportFriendRegistration.NotSigned -> getString(R.string.sport_friend_not_signed)
+                null -> null
             }
             row.root.setOnClickListener { openProfile(friend.isu) }
             friendsContainer.addView(row.root)
@@ -336,15 +335,10 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         fun newInstance(item: SportCommon, actionsEnabled: Boolean = false, busy: Boolean = false): SportCommonDetailsBottomSheet =
             SportCommonDetailsBottomSheet().apply {
                 arguments = Bundle().apply {
-                    putSerializable(ARG_COMMON, item.toDetailsArgs())
+                    putString(ARG_COMMON, item.toDetailsArgs().toJson())
                     putBoolean(ARG_ACTIONS, actionsEnabled)
                     putBoolean(ARG_BUSY, busy)
                 }
             }
-
-        @Suppress("DEPRECATION", "UNCHECKED_CAST")
-        private fun <T : Serializable> Bundle.serializable(key: String, type: Class<T>): T? =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) getSerializable(key, type)
-            else getSerializable(key) as? T
     }
 }

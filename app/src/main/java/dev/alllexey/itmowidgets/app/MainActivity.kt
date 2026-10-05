@@ -30,11 +30,8 @@ import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.from
 import dev.alllexey.itmowidgets.core.navigation.toBundle
-import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
@@ -43,24 +40,15 @@ import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGate
 import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGateViewModel
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateGateViewModel
-import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
-import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
-import dev.alllexey.itmowidgets.feature.sport.presentation.my.SportMyViewModel
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import dev.alllexey.itmowidgets.feature.sport.ui.common.SportCommonDetailsBottomSheet
-import dev.alllexey.itmowidgets.feature.sport.ui.common.bookingAction
-import dev.alllexey.itmowidgets.feature.sport.ui.common.toDetailsArgs
 import dev.alllexey.itmowidgets.feature.update.ui.InstallStateWatcher
 import dev.alllexey.itmowidgets.feature.update.ui.toScreenArguments
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import java.time.LocalDate
-import java.time.LocalTime
-import kotlin.time.toJavaInstant
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -71,19 +59,14 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     @Inject
     lateinit var sessionRepository: SessionRepository
 
+    /** Shared with the sport tab, so a cancellation from the feed or the schedule goes the same way. */
     @Inject
-    lateinit var sportBookings: SportBookingRepository
-
-    @Inject
-    lateinit var timeProvider: AcademicTimeProvider
+    lateinit var sportBookingsHolder: SportBookingsHolder
 
     /** Google Play's flexible update; the GitHub build never reports. */
     @Inject
     lateinit var installState: InstallStateWatcher
     private var updateDownloaded: Snackbar? = null
-
-    /** Shared with the sport tab, so a cancellation from the feed or the schedule goes the same way. */
-    private val sportMy: SportMyViewModel by viewModels()
 
     private val updateGate: AppUpdateGateViewModel by viewModels()
     private val onboardingGate: OnboardingGateViewModel by viewModels()
@@ -222,7 +205,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
             return
         }
         lifecycleScope.launch {
-            val booking = findSportBookingAt(LocalDate.parse(args.date), LocalTime.parse(args.start), args.subjectName)
+            val booking = sportBookingsHolder.findSportBookingAt(LocalDate.parse(args.date), LocalTime.parse(args.start), args.subjectName)
             if (booking != null) navigation.openSportDetails(booking) else navigation.openLessonDetails(args)
         }
     }
@@ -232,51 +215,18 @@ class MainActivity : AppCompatActivity(), AppNavigator {
         if (sessionRepository.state.value !is SessionState.SignedIn) return
         if (!onboardingPassed()) return
         lifecycleScope.launch {
-            val item = findSportBooking(args.lessonId)
+            val item = sportBookingsHolder.findSportBooking(args.lessonId)
             if (item != null) navigation.openSportDetails(item) else navigation.openPendingSportDetails(args)
         }
     }
 
-    /**
-     * The sport tab's merged bookings. Every source behind them is a replay flow
-     * that only emits after its own refresh, so the first caller loads the tab's
-     * data exactly as opening the tab would; afterwards the answer is immediate.
-     */
-    private suspend fun sportBookingsSnapshot(): List<SportBooking>? {
-        sportMy.ensureDataLoaded()
-        val state = withTimeoutOrNull(BOOKINGS_WAIT_MILLIS) { sportBookings.observeSportBookings().first() }
-        return state?.valueOrNull()
-    }
-
-    private suspend fun findSportBooking(lessonId: Long): SportBooking? =
-        sportBookingsSnapshot()?.firstOrNull { it.lessonId == lessonId }
-
-    /**
-     * Several items can share a slot: a confirmed booking and a queue for another
-     * section. The confirmed one wins, and the section name breaks the remaining ties.
-     */
-    private suspend fun findSportBookingAt(date: LocalDate, start: LocalTime, subject: String): SportBooking? {
-        val candidates = sportBookingsSnapshot()?.filter { booking ->
-            val local = booking.start.toJavaInstant().atZone(timeProvider.javaZone())
-            local.toLocalDate() == date && local.toLocalTime() == start
-        }.orEmpty()
-        val wanted = subject.trim().lowercase()
-        fun SportBooking.named() = wanted.isNotEmpty() && sectionName.raw.trim().lowercase().let { it in wanted || wanted in it }
-        return candidates.firstOrNull { it.signed && it.named() }
-            ?: candidates.firstOrNull { it.signed }
-            ?: candidates.firstOrNull { it.named() }
-            ?: candidates.firstOrNull()
-    }
-
     private fun onSportSheetAction(lessonId: Long, action: String?) {
         lifecycleScope.launch {
-            val booking = findSportBooking(lessonId) ?: return@launch
-            val expected = booking.toDetailsArgs().bookingAction(timeProvider.javaNow())
-            if (expected == SportBookingAction.NONE || expected.name != action) return@launch
+            val booking = sportBookingsHolder.cancelCandidate(lessonId, action) ?: return@launch
             MaterialAlertDialogBuilder(this@MainActivity)
                 .setMessage(R.string.sport_cancel_booking_question)
                 .setNegativeButton(R.string.common_back, null)
-                .setPositiveButton(R.string.sport_cancel_booking_action) { _, _ -> sportMy.cancelBooking(booking) }
+                .setPositiveButton(R.string.sport_cancel_booking_action) { _, _ -> sportBookingsHolder.cancel(booking) }
                 .show()
         }
     }
@@ -459,7 +409,6 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     }
 
     companion object {
-        private const val BOOKINGS_WAIT_MILLIS = 8_000L
         private const val SPORT_TYPE_ID = 11
         private const val PENDING_USER = "pending_user_isu"
         private const val PENDING_ROOT = "pending_root_destination"

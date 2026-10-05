@@ -1,21 +1,20 @@
-package dev.alllexey.itmowidgets.feature.sport.ui.common
+package dev.alllexey.itmowidgets.feature.sport.presentation.common
 
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLessonKind
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingConditions
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
-import java.io.Serializable
-import java.time.OffsetDateTime
-import kotlin.time.toKotlinInstant
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
+import kotlin.time.Instant
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
+/** The details sheet's snapshot of a lesson or a booking; the sheet's arguments carry it as JSON. */
+@Serializable
 data class SportCommonDetailsArgs(
     val lessonId: Long,
     val sectionName: String,
+    /** ISO offset date-time, `Instant.toString()`. */
     val start: String,
     val end: String,
     val teacherFio: String,
@@ -36,8 +35,15 @@ data class SportCommonDetailsArgs(
     val registrationStatus: SportRegistrationStatus,
     /** For a predicted lesson, the catalog lesson it repeats; a shared link names the prediction by it. */
     val prototypeLessonId: Long? = null
-) : Serializable
+) {
+    fun toJson(): String = DetailsJson.encodeToString(serializer(), this)
 
+    companion object {
+        fun fromJson(json: String): SportCommonDetailsArgs = DetailsJson.decodeFromString(serializer(), json)
+    }
+}
+
+@Serializable
 data class SportQueueEntryArgs(
     val position: Int,
     val total: Int,
@@ -50,15 +56,18 @@ data class SportQueueEntryArgs(
     val createdAt: String,
     val lastNotifiedAt: String?,
     val cancelledAt: String?
-) : Serializable
+)
 
+@Serializable
 data class SportFriendDetailsArgs(
     val isu: Int,
     val name: String,
     val pictureUrl: String?,
     val entry: SportQueueEntryArgs?,
     val registrationStatus: SportRegistrationStatus
-) : Serializable
+)
+
+private val DetailsJson = Json { ignoreUnknownKeys = true }
 
 fun SportCommon.toDetailsArgs(): SportCommonDetailsArgs {
     val lesson = this as? SportLesson
@@ -124,8 +133,8 @@ private fun SportQueueEntry.toDetailsArgs(): SportQueueEntryArgs {
 }
 
 /** Booking-only responses can cancel an existing registration, never invent a new offer. */
-fun SportCommonDetailsArgs.bookingAction(now: OffsetDateTime): SportBookingAction =
-    bookingConditions?.evaluate(now.toInstant().toKotlinInstant())?.action ?: when {
+fun SportCommonDetailsArgs.bookingAction(now: Instant): SportBookingAction =
+    bookingConditions?.evaluate(now)?.action ?: when {
         signed -> SportBookingAction.CANCEL
         registrationStatus in setOf(SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED) -> SportBookingAction.CANCEL_AUTO
         else -> SportBookingAction.NONE

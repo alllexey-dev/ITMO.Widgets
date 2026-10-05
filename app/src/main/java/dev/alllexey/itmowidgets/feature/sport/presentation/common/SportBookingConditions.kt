@@ -3,8 +3,8 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.common
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
-import java.io.Serializable
 import kotlin.time.Instant
+import kotlinx.serialization.Serializable
 
 /** Local offer policy, not a claim that Backend rejects creating queues for MyITMO restrictions. */
 enum class SportBookingAction { SIGN, CANCEL, AUTO, CANCEL_AUTO, NONE }
@@ -12,8 +12,10 @@ enum class SportBookingObstacle {
     TIME_CONFLICT, DAILY_LIMIT, WEEKLY_LIMIT, CREDIT, SELECTION, EXTERNAT, DEBT_ONLY, HEALTH, STARTED, DENIED, UNKNOWN
 }
 
-data class SportBookingRestriction(val kind: SportBookingObstacle, val detail: String? = null) : Serializable
+@Serializable
+data class SportBookingRestriction(val kind: SportBookingObstacle, val detail: String? = null)
 
+@Serializable
 data class SportBookingConditions(
     val isReal: Boolean,
     val signed: Boolean,
@@ -24,7 +26,7 @@ data class SportBookingConditions(
     /** ISO offset date-time, `Instant.toString()`; read back with [DateTexts.parseOffsetInstant]. */
     val start: String,
     val restrictions: List<SportBookingRestriction>
-) : Serializable {
+) {
     fun evaluate(now: Instant): SportBookingAvailability {
         val started = DateTexts.parseOffsetInstant(start) <= now
         val blockers = buildList {

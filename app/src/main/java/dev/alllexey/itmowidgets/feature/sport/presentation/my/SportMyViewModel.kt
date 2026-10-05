@@ -3,9 +3,7 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.my
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.result.errorOrNull
@@ -15,86 +13,42 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
-import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** The `Мой спорт` screen over [SportBookingsHolder], which the feed and the schedule share. */
 @HiltViewModel
 class SportMyViewModel @Inject constructor(
-    private val sportBookingRepository: SportBookingRepository,
-    private val sportDataRepository: SportDataRepository,
-    private val bookingDelegate: SportBookingDelegate
+    sportBookingRepository: SportBookingRepository,
+    sportDataRepository: SportDataRepository,
+    private val holder: SportBookingsHolder
 ) : ViewModel() {
 
-    private val refreshes = RefreshTracker(viewModelScope)
-    private val eventQueue = EventQueue<SportMyEvent>()
-
-    /** Refreshes and cancellations in flight, silent ones included: `Loading` waits for them instead of an error. */
-    private val operations = MutableStateFlow(0)
     private var lastContent: SportMyUiState.Content? = null
 
     val uiState: StateFlow<SportMyUiState> = combine(
         sportDataRepository.observeSportAttempts(),
         sportDataRepository.observeSportScore(),
         sportBookingRepository.observeSportBookings(),
-        operations,
-        refreshes.refreshing,
+        holder.operations,
+        holder.refreshing,
         ::toUiState
     ).stateIn(viewModelScope, SharingStarted.Eagerly, SportMyUiState.Loading)
 
-    val events: Flow<SportMyEvent> = eventQueue.events
+    val events: Flow<SportMyEvent> = holder.events
 
-    /**
-     * Loads the tab only while nothing is shown and nothing is in flight, so re-entering the tab with content
-     * loaded starts no request. A guard, not a refresh: `refresh(Silent)` would reload loaded content.
-     */
-    fun ensureDataLoaded() {
-        if (uiState.value is SportMyUiState.Loading && operations.value == 0) refresh(RefreshMode.Silent)
-    }
+    /** See [SportBookingsHolder.ensureDataLoaded]. */
+    fun ensureDataLoaded() = holder.ensureDataLoaded()
 
     /** A pull or a retry shows the indicator; the first load and background reloads stay silent. */
-    fun refresh(mode: RefreshMode) {
-        refreshes.launch(mode) { tracked { refreshAll() } }
-    }
+    fun refresh(mode: RefreshMode) = holder.refresh(mode)
 
-    fun cancelBooking(booking: SportBooking) {
-        viewModelScope.launch {
-            val result = tracked { bookingDelegate.cancel(booking) }
-            if (result is AppResult.Failure) eventQueue.send(SportMyEvent.ShowError(result.error))
-        }
-    }
-
-    private suspend fun refreshAll() {
-        coroutineScope {
-            awaitAll(
-                async { sportDataRepository.refreshSportAttempts() },
-                async { sportDataRepository.refreshSportScore() },
-                async { sportBookingRepository.refreshSportBookings() },
-                async { sportDataRepository.refreshSportAutoSignLimits() },
-                async { sportDataRepository.refreshSportQueueEntries() },
-                async { sportDataRepository.refreshFriendsBookings() }
-            )
-        }
-    }
-
-    private suspend fun <T> tracked(operation: suspend () -> T): T {
-        operations.update { it + 1 }
-        try {
-            return operation()
-        } finally {
-            operations.update { it - 1 }
-        }
-    }
+    fun cancelBooking(booking: SportBooking) = holder.cancel(booking)
 
     private fun toUiState(
         attemptsState: AppResult<SportAttempts>,
