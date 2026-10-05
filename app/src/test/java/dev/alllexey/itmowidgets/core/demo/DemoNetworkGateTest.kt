@@ -2,7 +2,11 @@ package dev.alllexey.itmowidgets.core.demo
 
 import android.content.Context
 import android.content.ContextWrapper
+import dev.alllexey.itmoapi.itmoid.TokenSet
+import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -28,6 +32,7 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
+import io.ktor.client.engine.mock.MockEngine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -59,7 +64,7 @@ class DemoNetworkGateTest {
 
     @Test
     fun `the pass is a code no turnstile accepts`() = runTest {
-        assertEquals(DemoQr.HEX, QrCodeRemoteDataSourceImpl(unreachableMyItmo(), demo, dispatchers).getQrHex())
+        assertEquals(DemoQr.HEX, QrCodeRemoteDataSourceImpl(unreachableMyItmoClient(), demo, dispatchers).getQrHex())
         assertTrue(DemoQr.HEX.startsWith("DEMO"))
     }
 
@@ -146,6 +151,17 @@ class DemoNetworkGateTest {
         backend,
         demo,
         dispatchers
+    )
+
+    /** MyItmoApi 2.x whose every request, token read included, fails the test. */
+    private fun unreachableMyItmoClient(): MyItmoClient = MyItmoClientFactory.create(
+        storage = object : TokenStorage {
+            override suspend fun read(): TokenSet? = throw AssertionError("The demo session read the ITMO session")
+
+            override suspend fun write(tokens: TokenSet?) = throw AssertionError("The demo session wrote the ITMO session")
+        },
+        engine = MockEngine { request -> throw AssertionError("The demo session asked ${request.url.host}${request.url.encodedPath}") },
+        clock = Clock.System
     )
 
     /** A context nobody may touch: allocated without Android's stub constructor, any call on it fails. */
