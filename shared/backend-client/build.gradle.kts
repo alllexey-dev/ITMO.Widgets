@@ -30,6 +30,12 @@ val generateTestResourcesDir = tasks.register("generateTestResourcesDir") {
     }
 }
 
+// AGP's host-test lint tasks read the commonTest source dirs as plain files, so the srcDir provider's task dependency
+// below never reaches them; :app:lintGithubDebug (checkDependencies) runs them, and Gradle rejects the implicit use.
+tasks.named { it.contains("AndroidHostTest") && it.contains("Lint", ignoreCase = true) }.configureEach {
+    dependsOn(generateTestResourcesDir)
+}
+
 kotlin {
     sourceSets {
         // No Ktor engine artifact: the caller passes the engine (OkHttp on Android, Darwin on iOS, ADR 0026).
