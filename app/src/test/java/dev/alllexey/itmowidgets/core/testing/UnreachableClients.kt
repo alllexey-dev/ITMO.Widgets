@@ -1,22 +1,9 @@
 package dev.alllexey.itmowidgets.core.testing
 
 import api.myitmo.MyItmo
-import dev.alllexey.itmowidgets.core.demo.DemoMode
 import java.lang.reflect.Proxy
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 
-/** The demo switch of one test; off unless the test turns it on. */
-class FakeDemoMode(active: Boolean = false) : DemoMode {
-    val active = MutableStateFlow(active)
-
-    override suspend fun isActive(): Boolean = active.value
-
-    override fun observeActive(): Flow<Boolean> = active
-}
-
-/** A session that is not the demo. */
-fun noDemo(): DemoMode = FakeDemoMode()
+// JVM-only demo-gate helpers; FakeDemoMode and noDemo() live in shared/core/src/testFixtures.
 
 /** A client interface every call of which fails the test: the demo session must not reach it. */
 inline fun <reified T : Any> unreachable(): T = Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java)) { _, method, _ ->

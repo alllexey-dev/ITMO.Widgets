@@ -116,7 +116,10 @@ class StableIdentifiersTest {
 
     @Test
     fun `notification channels stay and the legacy channel is still deleted`() {
-        NOTIFICATION_CHANNELS.forEach { assertLiteral("notification channel", it, context = "NotificationChannel(") }
+        // The ids are constants of :shared:core's AppNotificationChannels; the app creates the channels from them.
+        NOTIFICATION_CHANNELS.forEach {
+            assertLiteral("notification channel", it, context = "object AppNotificationChannels")
+        }
         assertTrue(
             "Stable identifier: the deletion of \"$LEGACY_CHANNEL\" at start is gone",
             sources.any { "deleteNotificationChannel(\"$LEGACY_CHANNEL\")" in it.second }

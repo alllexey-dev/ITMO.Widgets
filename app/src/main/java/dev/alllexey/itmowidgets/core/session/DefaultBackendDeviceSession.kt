@@ -9,13 +9,6 @@ import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import kotlinx.coroutines.withContext
 
-interface BackendDeviceSession {
-
-    suspend fun registerCurrentDevice()
-
-    suspend fun unregisterCurrentDevice()
-}
-
 class DefaultBackendDeviceSession(
     private val gate: BackendGate,
     private val utilityStorage: UtilityStorage,

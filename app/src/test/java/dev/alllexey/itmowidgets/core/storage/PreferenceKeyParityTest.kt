@@ -24,7 +24,10 @@ class PreferenceKeyParityTest {
 
     @Test
     fun `the app preferences keep their 40 key names, each declared once`() {
-        val declared = File("src/main/java").walk()
+        // The stores live in :app and in the main source sets of the shared modules (KM-06 moved core's there).
+        val sharedMain = File("../shared").walk()
+            .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
+        val declared = (File("src/main/java").walk() + sharedMain)
             .filter { it.isFile && it.extension == "kt" }
             .flatMap(::declaredKeys)
             .sortedWith(compareBy({ it.file }, { it.name }))

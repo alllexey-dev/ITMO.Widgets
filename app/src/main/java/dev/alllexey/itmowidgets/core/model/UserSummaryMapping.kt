@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.core.model
 
+// Core 1.x's Backend model; the summary types it maps to live in :shared:core under the same package.
+import dev.alllexey.itmowidgets.core.model.UserData
+
 /** Backend identity to the app's viewer-scoped summary; shared by every feature that lists people. */
 fun UserData.toUserSummary(): UserSummary = UserSummary(
     isu = isu,
