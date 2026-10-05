@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -22,6 +21,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /** The two sizes of the empty, error and loading family. */
@@ -89,14 +89,17 @@ fun ContentState(
     }
 }
 
-/** The loading member of the family: an indeterminate indicator in `primary`, centred in the same area. */
+/**
+ * The loading member of the family: an indeterminate indicator in `primary` ([ItmoLoadingIndicator], the expressive
+ * one when the theme's switch is on), centred in the same area.
+ */
 @Composable
 fun ContentStateLoading(
     modifier: Modifier = Modifier,
     size: ContentStateSize = ContentStateSize.Full,
 ) {
     Box(modifier.stateArea(size).padding(ItmoTheme.spacing.statePadding), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = ItmoTheme.colorScheme.primary)
+        ItmoLoadingIndicator()
     }
 }
 

@@ -58,6 +58,23 @@ class AppRefreshBoxTest {
         onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate)).assertExists()
     }
 
+    @Test
+    fun expressiveIndicatorAlsoShowsOnlyWhileRefreshing() = runComposeUiTest {
+        var refreshing by mutableStateOf(false)
+        setContent {
+            ItmoTheme(expressive = true) {
+                AppRefreshBox(refreshing = refreshing, onRefresh = {}) {
+                    Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()))
+                }
+            }
+        }
+        onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate)).assertDoesNotExist()
+
+        refreshing = true
+
+        onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate)).assertExists()
+    }
+
     private companion object {
         const val TAG = "refresh"
     }
