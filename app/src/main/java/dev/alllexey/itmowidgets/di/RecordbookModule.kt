@@ -15,6 +15,9 @@ import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
+import dev.alllexey.itmowidgets.core.work.BackgroundCheck
+import dev.alllexey.itmowidgets.core.work.CheckScheduler
+import dev.alllexey.itmowidgets.core.work.PeriodicCheckScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsSessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
@@ -46,8 +49,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.work.AndroidMarksNotifier
+import dev.alllexey.itmowidgets.feature.recordbook.work.MARKS_SPEC
 import dev.alllexey.itmowidgets.feature.recordbook.work.WorkManagerBarsSessionProbe
-import dev.alllexey.itmowidgets.feature.recordbook.work.WorkManagerMarksScheduler
 import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -124,9 +127,6 @@ abstract class RecordbookModule {
     abstract fun bindBarsMarkSource(impl: BarsMarkReader): BarsMarkSource
 
     @Binds
-    abstract fun bindMarksScheduler(impl: WorkManagerMarksScheduler): MarksScheduler
-
-    @Binds
     abstract fun bindMarksNotifier(impl: AndroidMarksNotifier): MarksNotifier
 
     @Binds
@@ -135,6 +135,10 @@ abstract class RecordbookModule {
     @Binds
     @Singleton
     abstract fun bindMarkTracking(impl: DefaultMarkTracking): MarkTracking
+
+    @Binds
+    @IntoSet
+    abstract fun bindMarksBackgroundCheck(impl: DefaultMarkTracking): BackgroundCheck
 
     @Binds
     @IntoSet
@@ -157,6 +161,10 @@ abstract class RecordbookModule {
             okHttpClient = okHttpClient.newBuilder()
                 .connectTimeout(20, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build()
         }
+
+        @Provides
+        fun marksScheduler(@ApplicationContext context: Context): MarksScheduler =
+            object : MarksScheduler, CheckScheduler by PeriodicCheckScheduler(context, MARKS_SPEC) {}
 
         @Provides
         fun barsAuthHelper(bars: Bars): BarsAuthHelper = bars.authHelper
