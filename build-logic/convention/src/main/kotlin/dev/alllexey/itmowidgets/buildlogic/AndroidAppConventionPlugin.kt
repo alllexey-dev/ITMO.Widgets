@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 /**
  * `:app`: AGP with built-in Kotlin, the SDK levels from the catalog, JVM 17 and the Compose compiler for the
  * `ComposeView` hosts. Identity, flavors, signing and BuildConfig stay in `app/build.gradle.kts`. JVM tests also
- * compile the core test fixtures.
+ * compile the core test fixtures. Lint fails on errors and also analyses the shared modules (checkDependencies).
  */
 class AndroidAppConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
@@ -41,6 +41,14 @@ class AndroidAppConventionPlugin : Plugin<Project> {
             testOptions {
                 // Lets JVM tests exercise classes that log through android.util.Log.
                 unitTests.isReturnDefaultValues = true
+            }
+            lint {
+                lintConfig = lintConfigFile
+                abortOnError = true
+                // Shared modules are linted here, with their own lintConfig, instead of by per-module lint tasks.
+                checkDependencies = true
+                xmlReport = true
+                sarifReport = true
             }
             sourceSets.named("test") {
                 kotlin.directories.add(coreTestFixturesDir.asFile.path)

@@ -9,6 +9,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.getByType
+import java.io.File
 
 internal const val BASE_PACKAGE = "dev.alllexey.itmowidgets"
 
@@ -22,6 +23,10 @@ internal const val VERIFY_QUICK_TASK = "itmoVerifyQuick"
  */
 internal val Project.coreTestFixturesDir: Directory
     get() = isolated.rootProject.projectDirectory.dir("shared/core/src/testFixtures/kotlin")
+
+/** The one lint configuration of `:app` and every shared module (L04 TC-06). */
+internal val Project.lintConfigFile: File
+    get() = isolated.rootProject.projectDirectory.file("app/lint.xml").asFile
 
 /** Whether this module's tests compile [coreTestFixturesDir]. */
 internal val Project.usesCoreTestFixtures: Boolean
