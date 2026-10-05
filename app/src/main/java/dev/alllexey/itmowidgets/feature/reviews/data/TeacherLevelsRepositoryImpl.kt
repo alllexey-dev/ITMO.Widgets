@@ -8,9 +8,6 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import dev.alllexey.itmowidgets.core.time.WallClock
-import java.time.Clock
-import java.time.Duration
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,6 +15,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 
 /**
  * One file of Backend's answers, each fresh for [TTL]. Calls are serialized, so screens asking for the same teachers
@@ -28,7 +28,7 @@ class TeacherLevelsRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
     private val widgetsApi: ItmoWidgetsApi,
     private val store: TeacherLevelsFileStore,
-    @param:WallClock private val clock: Clock,
+    private val clock: Clock,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers,
 ) : TeacherLevelsRepository, SessionDataCleaner {
@@ -43,8 +43,8 @@ class TeacherLevelsRepositoryImpl @Inject constructor(
                 return@withContext emptyMap()
             }
             val wanted = isus.filter { it in BACKEND_ISU }.toSet()
-            val now = clock.millis()
-            val fresh = readOrClear().filterValues { now - it.fetchedAt in 0 until TTL.toMillis() }
+            val now = clock.now().toEpochMilliseconds()
+            val fresh = readOrClear().filterValues { now - it.fetchedAt in 0 until TTL.inWholeMilliseconds }
             val missing = wanted - fresh.keys
             val fetched = try {
                 fetch(missing, now)
@@ -85,7 +85,7 @@ class TeacherLevelsRepositoryImpl @Inject constructor(
     }
 
     private companion object {
-        val TTL: Duration = Duration.ofDays(1)
+        val TTL: Duration = 1.days
         const val BATCH = 50
 
         /** Backend rejects a whole request with an ISU outside this range, and no summary exists for one. */

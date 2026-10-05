@@ -13,14 +13,21 @@ import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 
 /** 2 since links name one schedule flow; 1 held GROUP/FLOW audiences in its cached answers. */
 private const val FORMAT = 2
 
 /** A PRIVATE link saved without the opt-in; [request] is what the first refresh with the opt-in sends. */
 internal data class LocalLink(val id: String, val request: SaveSubjectLinkRequest, val updatedAt: OffsetDateTime) {
+    // The one java.time edge left until KM-05c: Gson writes `updatedAt` as OffsetDateTime text at UTC, as v2.2 did.
+    constructor(id: String, request: SaveSubjectLinkRequest, savedAt: Instant) :
+        this(id, request, OffsetDateTime.ofInstant(savedAt.toJavaInstant(), ZoneOffset.UTC))
+
     val scope: ResourceScope get() = ResourceScope(request.subjectId, request.subjectName, request.periodKey)
 }
 

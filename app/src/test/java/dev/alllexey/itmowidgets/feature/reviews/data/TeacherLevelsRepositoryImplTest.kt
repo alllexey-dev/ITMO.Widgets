@@ -15,11 +15,6 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import java.io.File
 import java.io.IOException
 import java.lang.reflect.Proxy
-import java.time.Clock
-import java.time.Duration
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZoneOffset
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -28,6 +23,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 class TeacherLevelsRepositoryImplTest {
 
@@ -79,14 +81,30 @@ class TeacherLevelsRepositoryImplTest {
         val repository = repository()
 
         assertEquals(mapOf(100001 to TeacherLevel.POSITIVE), repository.levels(setOf(100001)))
-        clock.advance(Duration.ofHours(23).plusMinutes(59))
+        clock.advance(23.hours + 59.minutes)
         assertEquals(mapOf(100001 to TeacherLevel.POSITIVE), repository.levels(setOf(100001)))
         assertEquals(1, api.requests.size)
 
         api.levels[100001] = SummaryLevel.MIXED
-        clock.advance(Duration.ofMinutes(2))
+        clock.advance(2.minutes)
         assertEquals(mapOf(100001 to TeacherLevel.MIXED), repository.levels(setOf(100001)))
         assertEquals(listOf(listOf(100001), listOf(100001)), api.requests)
+    }
+
+    @Test
+    fun `an answer is fresh until 1 ms before a day and asked again at exactly a day`() = runTest {
+        api.levels[100001] = SummaryLevel.POSITIVE
+        val repository = repository()
+        repository.levels(setOf(100001))
+
+        clock.advance(1.days - 1.milliseconds)
+        assertEquals(mapOf(100001 to TeacherLevel.POSITIVE), repository.levels(setOf(100001)))
+        assertEquals(1, api.requests.size)
+
+        api.levels[100001] = SummaryLevel.MIXED
+        clock.advance(1.milliseconds)
+        assertEquals(mapOf(100001 to TeacherLevel.MIXED), repository.levels(setOf(100001)))
+        assertEquals(2, api.requests.size)
     }
 
     @Test
@@ -143,7 +161,7 @@ class TeacherLevelsRepositoryImplTest {
         assertEquals(mapOf(100001 to TeacherLevel.POSITIVE), repository.levels(setOf(100001, 100002)))
         assertEquals(written, file.readText())
 
-        clock.advance(Duration.ofDays(2))
+        clock.advance(2.days)
         assertEquals(emptyMap<Int, TeacherLevel>(), repository.levels(setOf(100001)))
         assertEquals(written, file.readText())
     }
@@ -181,11 +199,9 @@ class TeacherLevelsRepositoryImplTest {
         assertFalse(file.exists())
     }
 
-    private class MutableClock(private var now: Instant) : Clock() {
-        fun advance(duration: Duration) { now = now.plus(duration) }
-        override fun getZone(): ZoneId = ZoneOffset.UTC
-        override fun withZone(zone: ZoneId): Clock = this
-        override fun instant(): Instant = now
+    private class MutableClock(private var now: Instant) : Clock {
+        fun advance(duration: Duration) { now += duration }
+        override fun now(): Instant = now
     }
 
     private class FakeTeacherLevelsApi {
