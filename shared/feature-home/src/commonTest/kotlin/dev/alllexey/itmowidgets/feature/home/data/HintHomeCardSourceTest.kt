@@ -5,15 +5,13 @@ import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
-import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStatus
-import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import dev.alllexey.itmowidgets.feature.home.FakeHomeHintStatus
+import dev.alllexey.itmowidgets.feature.home.FakeHomeHintStore
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class HintHomeCardSourceTest {
     private val status = FakeHomeHintStatus()
@@ -22,7 +20,7 @@ class HintHomeCardSourceTest {
     private val source = HintHomeCardSource(status, store, services)
 
     @Test
-    fun `every reason is a hint in feed order`() = runTest {
+    fun everyReasonIsAHintInFeedOrder() = runTest {
         status.widgetPlaced = false
         status.notifications = false
         services.enabled.value = false
@@ -34,12 +32,12 @@ class HintHomeCardSourceTest {
     }
 
     @Test
-    fun `nothing to nudge means no cards`() = runTest {
+    fun nothingToNudgeMeansNoCards() = runTest {
         assertTrue(source.observe().first().isEmpty())
     }
 
     @Test
-    fun `a closed hint stays closed and the opt-in removes its own`() = runTest {
+    fun aClosedHintStaysClosedAndTheOptInRemovesItsOwn() = runTest {
         status.notifications = false
         services.enabled.value = false
         store.dismiss(HomeHint.NOTIFICATIONS)
@@ -51,28 +49,12 @@ class HintHomeCardSourceTest {
     }
 
     @Test
-    fun `revalidation re-reads the device state`() = runTest {
+    fun revalidationReReadsTheDeviceState() = runTest {
         status.widgetPlaced = false
         assertEquals(1, source.observe().first().size)
 
         status.widgetPlaced = true
         assertEquals(AppResult.Success(Unit), source.refresh())
         assertTrue(source.observe().first().isEmpty())
-    }
-
-    /** `HomeFakes` sit in `:shared:feature-home`'s commonTest, which `:app` cannot see, until this source moves. */
-    private class FakeHomeHintStatus : HomeHintStatus {
-        var widgetPlaced = true
-        var notifications = true
-        override suspend fun anyWidgetPlaced() = widgetPlaced
-        override suspend fun notificationsEnabled() = notifications
-    }
-
-    private class FakeHomeHintStore : HomeHintStore {
-        private val dismissed = MutableStateFlow<Set<HomeHint>>(emptySet())
-        override fun observeDismissed(): Flow<Set<HomeHint>> = dismissed
-        override suspend fun dismiss(hint: HomeHint) {
-            dismissed.value = dismissed.value + hint
-        }
     }
 }
