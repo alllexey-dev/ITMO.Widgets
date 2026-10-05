@@ -11,7 +11,8 @@ import javax.xml.parsers.DocumentBuilderFactory
 /**
  * The string catalog is split by owner, not by prefix (ADR 0028): `strings_<unit>.xml` per v2.3 module,
  * `strings_common.xml` for ids of two or more units or of `core/`, `strings_platform.xml` for every id a system
- * surface reaches. `scripts/strings-owners.py --where <id|path>` names the file for a new string.
+ * surface reaches. `scripts/strings-owners.py --where <id|path>` names the file for a new string. Frozen keys,
+ * placeholders, plural forms and cross-module uniqueness are `checkStringCatalog`'s (build-logic/strings).
  */
 class StringOwnershipTest {
 
@@ -20,8 +21,13 @@ class StringOwnershipTest {
         .first { File(it, "src/main/AndroidManifest.xml").isFile }
     private val sources = File(module, "src")
     private val resources = File(sources, "main/res")
+    // A file moved to a shared module's composeResources keeps its name and owner (TC-16a androidExport).
     private val catalog by lazy {
-        File(resources, "values").listFiles { file -> file.name.startsWith("strings") }.orEmpty().sortedBy { it.name }
+        val moved = File(module.parentFile, "shared").listFiles().orEmpty()
+            .map { File(it, "src/commonMain/composeResources/values") }
+        (listOf(File(resources, "values")) + moved)
+            .flatMap { dir -> dir.listFiles { file -> file.name.startsWith("strings") }.orEmpty().toList() }
+            .sortedBy { it.name }
     }
     private val fileOf by lazy {
         catalog.flatMap { file -> entries(file).map { it.getAttribute("name") to unitOfCatalog(file) } }.toMap()
@@ -59,13 +65,6 @@ class StringOwnershipTest {
             .flatMap { dir -> dir.listFiles { file -> file.extension == "xml" }.orEmpty().toList() }
             .flatMap { file -> entries(file).map { it.getAttribute("name") } }
         assertEquals(emptyList<String>(), names.groupBy { it }.filterValues { it.size > 1 }.keys.sorted())
-    }
-
-    @Test
-    fun `platform file holds every frozen key`() {
-        val frozen = File(module.parentFile, "scripts/strings-frozen-keys.txt").readLines().filter { it.isNotBlank() }
-        assertEquals("strings-frozen-keys.txt is sorted and unique", frozen.distinct().sorted(), frozen)
-        assertEquals(emptyList<String>(), frozen.filter { fileOf[it] != PLATFORM })
     }
 
     @Test

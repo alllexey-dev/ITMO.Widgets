@@ -1,0 +1,7 @@
+<resources>
+    <plurals name="points_left">
+        <item quantity="one">Ещё %1$d балл</item>
+        <item quantity="few">Ещё %1$d балла</item>
+        <item quantity="other">Ещё %1$d балла</item>
+    </plurals>
+</resources>
