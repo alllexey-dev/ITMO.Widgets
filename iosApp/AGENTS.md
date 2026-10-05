@@ -7,6 +7,8 @@
 - `Sources/`: the SwiftUI app shell `ITMOWidgets`, the only target that links the Kotlin framework `Shared`.
 - `Extensions/Widgets/`, `Extensions/NotificationService/`: Swift-only extensions (no Kotlin).
 - `Tests/UnitTests/`: `ITMOWidgetsTests`, hosted in the app.
+- `Tests/SnapshotTests/`: `SnapshotTests` (swift-snapshot-testing), hosted in the app; references in `__Snapshots__/`.
+- `Tests/UITests/`: `UITests` (XCUITest), smoke tests and review screenshots.
 
 ## Depends on
 - `shared/ios` (`Shared`, static), built by the app's Run Script through `scripts/slot.sh kn`.
@@ -15,7 +17,8 @@
   process's `Bundle.main`.
 
 ## Verify
-`scripts/ios/test.sh` (or `--only <Target>/<Class>`); `scripts/ios/test.sh --cleanup` at the end of a card.
+`scripts/ios/test.sh` (or `--only <Target>/<Class>`, `--record`); `scripts/ios/test.sh ui [<Class>...]` for
+`UITests`; `scripts/ios/screenshots.sh` for review screenshots; `scripts/ios/test.sh --cleanup` at the end of a card.
 
 ## Hot files
 - Every file here: lane L18 (single writer).

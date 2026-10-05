@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# test.sh [--ci]                           checks, xcodegen, xcodebuild build test of the ITMOWidgets scheme
-# test.sh [--ci] --only <Target>/<Class>   the same, one test class (xcodebuild -only-testing)
-# test.sh [--ci] kn <module>...            iosSimulatorArm64Test of shared modules (`core` or `:shared:core`)
-# test.sh --cleanup                        delete this worktree's simulator
+# test.sh [--ci] [--record]                           checks, xcodegen, build test of the scheme without UITests
+# test.sh [--ci] [--record] --only <Target>/<Class>   the same, one test class (xcodebuild -only-testing)
+# test.sh [--ci] ui [<Class>...]                      the XCUITest target UITests, or only the listed classes
+# test.sh [--ci] kn <module>...                       iosSimulatorArm64Test of shared modules (`core` or `:shared:core`)
+# test.sh sim                                         print this worktree's simulator UDID, creating it if needed
+# test.sh --cleanup                                   delete this worktree's simulator
 #
 # The one iOS build entry point for agents and CI (L18 IO-02, docs/ios.md, Build and test).
 #
@@ -13,9 +15,14 @@
 #   Run Script builds the Kotlin framework through a nested slot.sh, which runs directly because the slot is held.
 # - One simulator per worktree, `itmo-<worktree directory>` (`itmo-ci` with --ci), created from the pinned device
 #   type and runtime on first use; --cleanup (and the end of a --ci run) deletes it. No other simulator is touched.
+# - The default run and --only skip the UITests target; `ui` runs only it (XCUITest launches the app, so it is slower).
+# - Snapshots (swift-snapshot-testing, IO-17): the test process gets SNAPSHOT_TESTING_RECORD (all with --record, never
+#   with --ci, else unset: the library records a missing reference and fails the test) and SNAPSHOT_ARTIFACTS =
+#   iosApp/build/snapshot-artifacts (failure images, emptied before each run) through xcodebuild's TEST_RUNNER_ prefix.
 # - kn: Gradle with the worktree's MyItmoApi pin (as scripts/verify.sh passes it) on the same simulator.
+# - sim: the simulator scripts/ios/screenshots.sh drives between runs; prints only the UDID on stdout.
 # - --ci: CI=true, so slot.sh runs commands directly; deletes the simulator at the end.
-# - The last line of a finished run is `VERIFY A ios[-only|-kn] PASS|FAIL <secs>s <sha7>[+dirty]`.
+# - The last line of a finished run is `VERIFY A ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha7>[+dirty]`.
 # - Exit code: 0 pass, 1 fail, 2 refused (usage, toolchain off its pins).
 
 set -u
@@ -31,17 +38,18 @@ root=$(cd "$script_dir/../.." && pwd -P) || refuse "cannot resolve the repositor
 cd "$root" || refuse "cannot enter $root"
 
 usage() {
-  sed -n '2,5p' "$self" | sed 's/^# //' >&2
+  sed -n '2,7p' "$self" | sed 's/^# //' >&2
   exit 2
 }
 
 # ---- arguments -----------------------------------------------------------------------------------------------
 
-ci=0 mode=all only="" modules=()
+ci=0 record=0 mode=all only="" modules=() classes=()
 while [ $# -gt 0 ]; do
   case "$1" in
     -h | --help) usage ;;
     --ci) ci=1; shift ;;
+    --record) record=1; shift ;;
     --only)
       [ $# -ge 2 ] || refuse "--only needs <Target>/<Class>"
       [[ $2 =~ ^[A-Za-z_][A-Za-z0-9_]*/[A-Za-z_][A-Za-z0-9_]*(/[A-Za-z_][A-Za-z0-9_]*)?$ ]] ||
@@ -50,6 +58,17 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --cleanup) mode=cleanup; shift ;;
+    sim) mode=sim; shift ;;
+    ui)
+      mode=ui
+      shift
+      while [ $# -gt 0 ]; do
+        case "$1" in --*) break ;; esac
+        [[ $1 =~ ^[A-Za-z_][A-Za-z0-9_]*(/[A-Za-z_][A-Za-z0-9_]*)?$ ]] || refuse "ui: '$1' is not <Class>[/<method>]"
+        classes+=("$1")
+        shift
+      done
+      ;;
     kn)
       mode=kn
       shift
@@ -68,6 +87,7 @@ while [ $# -gt 0 ]; do
 done
 
 [ "$ci" -eq 1 ] && export CI=true
+case "$mode" in all | only) ;; *) [ "$record" -eq 0 ] || refuse "--record applies to the default run and --only" ;; esac
 
 # shellcheck source=scripts/ios/env.sh
 source "$script_dir/env.sh" || refuse "toolchain off its pins (scripts/ios/env.sh)"
@@ -125,6 +145,12 @@ if [ "$mode" = cleanup ]; then
   exit 0
 fi
 
+if [ "$mode" = sim ]; then
+  ensure_sim
+  printf '%s\n' "$udid"
+  exit 0
+fi
+
 # ---- checks --------------------------------------------------------------------------------------------------
 
 run_checks() {
@@ -138,14 +164,28 @@ run_checks() {
 
 # ---- runs ----------------------------------------------------------------------------------------------------
 
-run_xcode() {
-  local results="iosApp/build/test-results" bundle label
+run_xcode() { # label
+  local results="iosApp/build/test-results" artifacts="$root/iosApp/build/snapshot-artifacts" bundle label=$1 class
   local -a test_args=()
-  label=ios
-  if [ "$mode" = only ]; then
-    label=ios-only
-    test_args=("-only-testing:$only")
+  case "$mode" in
+    all) test_args=("-skip-testing:UITests") ;;
+    only) test_args=("-only-testing:$only") ;;
+    ui)
+      test_args=("-only-testing:UITests")
+      if [ ${#classes[@]} -gt 0 ]; then
+        test_args=()
+        for class in "${classes[@]}"; do test_args+=("-only-testing:UITests/$class"); done
+      fi
+      ;;
+  esac
+  if [ "$record" -eq 1 ]; then
+    export TEST_RUNNER_SNAPSHOT_TESTING_RECORD=all
+  elif [ "$ci" -eq 1 ]; then
+    export TEST_RUNNER_SNAPSHOT_TESTING_RECORD=never
   fi
+  rm -rf "$artifacts"
+  mkdir -p "$artifacts"
+  export TEST_RUNNER_SNAPSHOT_ARTIFACTS="$artifacts"
   run_checks || return 1
   note "xcodegen generate"
   xcodegen generate --quiet --spec iosApp/project.yml || return 1
@@ -187,11 +227,13 @@ EOF
 }
 
 case "$mode" in
-  all | only)
-    run_xcode
+  all | only | ui)
+    label=ios
+    [ "$mode" = all ] || label="ios-$mode"
+    run_xcode "$label"
     rc=$?
     [ "$ci" -eq 1 ] && delete_sim
-    finish "$([ "$mode" = only ] && echo ios-only || echo ios)" "$rc"
+    finish "$label" "$rc"
     ;;
   kn)
     run_kn
