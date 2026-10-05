@@ -12,6 +12,9 @@
 #
 # - Every Gradle part runs in its own scripts/slot.sh call (android, or kn for iOS tasks), one after another and
 #   never nested, with --max-workers=$ITMO_MAX_WORKERS from the slot. ITMO_SLOT_SH overrides the slot script.
+# - kn parts (klibs, the klibs of full, run with an iOS task) pass -Dorg.gradle.jvmargs with KN_HEAP instead of the
+#   -Xmx of gradle.properties, so K/N builds get a daemon of their own and Android daemons keep theirs (TC-15).
+#   A run that passes its own -Dorg.gradle.jvmargs keeps it.
 # - JAVA_HOME defaults to JDK 21 and ANDROID_HOME to ~/Library/Android/sdk on macOS; the Gradle daemon JDK comes
 #   from gradle/gradle-daemon-jvm.properties either way.
 # - Every Gradle part gets -PmyItmoApiDir=<the worktree's MyItmoApi pin> (ADR 0024), read from
@@ -29,6 +32,9 @@ set -u
 
 me=verify.sh
 REPO_LETTER=A
+# K/N daemon heap (TC-15): the release framework link of :shared:ios peaks at about 2.3 GB of heap (5.4 GB
+# footprint with LLVM); -Xmx2g slowed it down, -Xmx6g did not speed it up.
+KN_HEAP=3g
 
 refuse() { printf '%s: %s\n' "$me" "$*" >&2; exit 2; }
 note() { printf '%s: %s\n' "$me" "$*" >&2; }
@@ -86,11 +92,26 @@ slot_part() { # kind cmd...
   "$slot_sh" "$kind" -- "$@"
 }
 
+# gradle.properties' org.gradle.jvmargs with its -Xmx replaced by KN_HEAP.
+kn_jvmargs() {
+  local base
+  base=$(sed -n 's/^org\.gradle\.jvmargs=//p' "$root/gradle.properties" | tail -n 1 |
+    sed -E 's/(^| )-Xmx[^ ]*//g; s/^ +//')
+  printf '%s' "-Xmx$KN_HEAP${base:+ $base}"
+}
+
 gradle_part() { # kind gradle-args...
-  local kind=$1
+  local kind=$1 arg
+  local -a jvm=()
   shift
-  note "[$kind slot] ./gradlew $*${pin_arg:+ $pin_arg}"
-  "$slot_sh" "$kind" -- "$self" __gradle "$@" ${pin_arg:+"$pin_arg"}
+  if [ "$kind" = kn ]; then
+    jvm=("-Dorg.gradle.jvmargs=$(kn_jvmargs)")
+    for arg in "$@"; do
+      case "$arg" in -Dorg.gradle.jvmargs=*) jvm=() ;; esac
+    done
+  fi
+  note "[$kind slot] ./gradlew${jvm[*]:+ ${jvm[*]}} $*${pin_arg:+ $pin_arg}"
+  "$slot_sh" "$kind" -- "$self" __gradle ${jvm[@]+"${jvm[@]}"} "$@" ${pin_arg:+"$pin_arg"}
 }
 
 # ---- MyItmoApi pin (ADR 0024, L04 TC-05) -----------------------------------------------------------------
