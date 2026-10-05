@@ -20,7 +20,7 @@ import dev.alllexey.itmowidgets.core.resources.blocks
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.core.ui.toUiText
+import dev.alllexey.itmowidgets.core.text.toUiText
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow

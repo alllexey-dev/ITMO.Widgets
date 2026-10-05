@@ -12,7 +12,7 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviewLimits
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.core.ui.toUiText
+import dev.alllexey.itmowidgets.core.text.toUiText
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow

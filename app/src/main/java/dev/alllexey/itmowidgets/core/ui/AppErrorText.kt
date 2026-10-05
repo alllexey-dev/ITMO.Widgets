@@ -1,20 +1,9 @@
 package dev.alllexey.itmowidgets.core.ui
 
 import androidx.annotation.StringRes
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.textResource
 
+/** The Android id of [textResource] for Views; presentation uses `core.text.toUiText()`. */
 @StringRes
-fun AppError.messageRes(): Int = when (this) {
-    AppError.Network -> R.string.common_error_network
-    AppError.Unauthorized -> R.string.common_error_unauthorized
-    AppError.Restricted -> R.string.common_error_restricted
-    AppError.Forbidden -> R.string.common_error_forbidden
-    AppError.NotFound -> R.string.common_error_not_found
-    AppError.CustomServicesDisabled -> R.string.common_error_services_disabled
-    AppError.DemoUnavailable -> R.string.error_demo_unavailable
-    is AppError.Unknown -> R.string.common_error_unknown
-}
-
-fun AppError.toUiText(): UiText = UiText.Resource(messageRes())
+fun AppError.messageRes(): Int = ExportedStringIds.string(textResource().key)

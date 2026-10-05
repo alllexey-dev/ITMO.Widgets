@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs.Step
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.core.ui.toUiText
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.RowSearch
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetHeaders

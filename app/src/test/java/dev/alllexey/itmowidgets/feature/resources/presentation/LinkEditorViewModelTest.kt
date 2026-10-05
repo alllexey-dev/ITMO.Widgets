@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.linksSnapshot
 import dev.alllexey.itmowidgets.core.testing.subjectLink
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.toUiText
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -142,7 +143,7 @@ class LinkEditorViewModelTest {
 
         vm.save(); runCurrent()
 
-        assertEquals(LinkEvent.Failed(UiText.Resource(R.string.common_error_network)), vm.events.first())
+        assertEquals(LinkEvent.Failed(AppError.Network.toUiText()), vm.events.first())
         assertEquals("https://github.com/itmo/labs", vm.uiState.value.url)
         assertTrue(vm.uiState.value.canSave)
     }

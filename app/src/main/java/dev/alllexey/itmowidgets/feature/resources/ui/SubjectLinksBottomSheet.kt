@@ -13,10 +13,10 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkActions
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
 import dev.alllexey.itmowidgets.core.ui.resolve
-import dev.alllexey.itmowidgets.core.ui.toUiText
 import dev.alllexey.itmowidgets.databinding.SheetSubjectLinksBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState

@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.testing.ownReview
 import dev.alllexey.itmowidgets.core.testing.teacherReviews
+import dev.alllexey.itmowidgets.core.text.toUiText
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -174,7 +175,7 @@ class ReviewEditorViewModelTest {
         vm.save(); runCurrent()
         gate.complete(Unit); runCurrent()
 
-        assertEquals(ReviewEditorEvent.Failed(UiText.Resource(R.string.common_error_restricted)), vm.events.first())
+        assertEquals(ReviewEditorEvent.Failed(AppError.Restricted.toUiText()), vm.events.first())
         assertFalse(vm.uiState.value.saving)
         assertEquals(1, repository.actions.size)
     }
