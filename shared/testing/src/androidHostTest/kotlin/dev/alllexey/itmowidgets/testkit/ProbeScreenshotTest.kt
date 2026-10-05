@@ -12,6 +12,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.takahirom.roborazzi.captureRoboImage
+import dev.alllexey.itmowidgets.testkit.screenshot.ShotsCompare
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -24,7 +25,7 @@ import org.robolectric.RobolectricTestRunner
 class ProbeScreenshotTest {
     @Test
     fun probeSwatch() {
-        captureRoboImage("ProbeSwatch.png") {
+        captureRoboImage("ProbeSwatch.png", ShotsCompare.options) {
             Row(Modifier.background(Color.White).padding(8.dp)) {
                 Box(Modifier.size(24.dp).background(Color(0xFF6750A4)))
                 BasicText("Проба 1.3", Modifier.padding(start = 8.dp), style = TextStyle(fontSize = 16.sp))

@@ -1,0 +1,15 @@
+# XML references recorded by :app (XmlReferenceCapture) under the name of a future preview.
+# The port that adds the preview re-records the files and deletes its line and the reference test.
+LinkActionsSheetContent_others-sheet
+LinkActionsSheetContent_own-private
+LinkActionsSheetContent_own-rejected
+LinkActionsSheetContent_own-shared
+LinkEditorSheetContent_edit
+LinkEditorSheetContent_new
+LinkEditorSheetContent_offline
+LinkEditorSheetContent_url-error
+ReportLinkDialog_reason
+SubjectLinksSheetContent_content
+SubjectLinksSheetContent_empty
+SubjectLinksSheetContent_error
+SubjectLinksSheetContent_restricted
