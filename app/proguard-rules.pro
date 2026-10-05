@@ -1,21 +1,36 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+# R8 rules of the app. Hilt, Koin, WorkManager, Retrofit 2.11, Gson 2.11, OkHttp, Firebase and
+# kotlinx.serialization ship their own; @JavascriptInterface methods are kept by proguard-android-optimize.txt.
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# What is left is Gson reflection: field names are the JSON keys (of the wire and of files written on the
+# device by builds without R8), fields are written only by Gson, and enums are read through their constants.
+# Each class Gson reads or writes therefore keeps its name, fields, constructors and enum constants.
+# Drop a line when its class moves to kotlinx JSON (KM-05a-c) and when Core 1.x and MyItmoApi 1.x leave (KM-10i).
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Generic field types (List<...>, Map<String, ...>) are read from the Signature attribute.
+-keepattributes Signature
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Core 1.x: Backend DTOs and the type adapters and factories registered on WidgetsClient.gson.
+-keep class dev.alllexey.itmowidgets.core.model.** { *; }
+-keep class dev.alllexey.itmowidgets.core.utils.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# MyItmoApi 1.x: MyITMO and BARS DTOs and adapters.
+-keep class api.myitmo.model.** { *; }
+-keep class api.myitmo.adapters.** { *; }
+-keep class api.bars.model.** { *; }
+
+# Gson stores of the app, with the shared types they embed.
+-keep class dev.alllexey.itmowidgets.feature.schedule.domain.widget.** { *; }
+-keep class dev.alllexey.itmowidgets.feature.resources.data.LocalLink { *; }
+-keep class dev.alllexey.itmowidgets.feature.resources.data.LocalPin { *; }
+-keep class dev.alllexey.itmowidgets.feature.resources.data.CachedLinks { *; }
+-keep class dev.alllexey.itmowidgets.feature.resources.data.StoredLinks { *; }
+-keep class dev.alllexey.itmowidgets.feature.reviews.data.StoredLevel { *; }
+-keep class dev.alllexey.itmowidgets.feature.reviews.data.StoredLevels { *; }
+-keep class dev.alllexey.itmowidgets.core.resources.ResourceScope { *; }
+-keep class dev.alllexey.itmowidgets.core.settings.LessonStyle { *; }
+-keep class dev.alllexey.itmowidgets.core.settings.WidgetTextSize { *; }
+-keep class dev.alllexey.itmowidgets.core.network.OffsetDateTimeAdapter { *; }
+
+# Readable stack traces in Play vitals; the mapping file restores the names.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

@@ -51,7 +51,8 @@ android {
         }
         release {
             signingConfig = signingConfigs.findByName("release")
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             buildConfigField(
                 "String",
                 "WIDGETS_BASE_URL",
@@ -60,6 +61,18 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
+            )
+        }
+        // The release R8 and resource shrinking, debug-signed and pointed at dev, so a smoke run of the shrunk
+        // app on an emulator reaches no production data.
+        create("minifiedSmoke") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += "release"
+            buildConfigField(
+                "String",
+                "WIDGETS_BASE_URL",
+                "\"https://dev.widgets.alllexey.dev\""
             )
         }
     }
