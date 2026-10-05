@@ -1,12 +1,21 @@
-# The sport fixtures SportModelFixturesTest checks (scripts/sync-backend-contract.sh vendors them): every answer
-# that carries a sport model. CO-04b adds the Unit answers and the request bodies with the routes. Not mirrored:
-# http/sport-*-sign/mark*EntrySatisfied.json (by entry ID, no app caller).
+# The sport fixtures SportVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them). Not
+# mirrored: http/sport-*-sign/mark*EntrySatisfied.json (by entry ID, no app caller).
+http/sport-auto-sign/cancelSportAutoSignEntry.json
+http/sport-auto-sign/cancelSportAutoSignEntryByLesson.json
 http/sport-auto-sign/createSportAutoSignEntry.json
 http/sport-auto-sign/currentSportAutoSignQueues.json
+http/sport-auto-sign/markSportAutoSignEntrySatisfiedByLesson.json
 http/sport-auto-sign/mySportAutoSignEntries.json
 http/sport-auto-sign/sportAutoSignLimits.json
+http/sport-free-sign/cancelSportFreeSignEntry.json
+http/sport-free-sign/cancelSportFreeSignEntryByLesson.json
 http/sport-free-sign/createSportFreeSignEntry.json
 http/sport-free-sign/currentSportFreeSignQueues.json
+http/sport-free-sign/markSportFreeSignEntrySatisfiedByLesson.json
 http/sport-free-sign/mySportFreeSignEntries.json
 http/sport/friendsSportBookings.json
+http/sport/syncSportLessons.json
 http/sport/userSportBookings.json
+requests/SportAutoSignRequest.json
+requests/SportFreeSignRequest.json
+requests/SportLessonIds.json
