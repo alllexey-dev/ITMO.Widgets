@@ -18,7 +18,8 @@ import org.gradle.kotlin.dsl.register
  * - A shared module publishes the declared files (and its drawables after `androidExportDrawables()`) as its
  *   `itmowidgetsAndroidStringsElements` variant.
  * - `:app` runs `checkStringCatalog` before every build (`preBuild`) and merges the exports of its project
- *   dependencies into a generated `res` directory of each variant.
+ *   dependencies into a generated `res` directory of each variant, with the `core.ui.ExportedStringIds` table
+ *   ([AndroidStringIds]) that resolves `UiText.Res`/`UiText.Plural` keys to `R` ids.
  * - `:app:exportAppleStrings` writes the committed `iosApp/Shared` tables and `AppSymbol.swift` ([AppleExport]).
  */
 class StringsConventionPlugin : Plugin<Project> {
@@ -110,6 +111,16 @@ class StringsConventionPlugin : Plugin<Project> {
                 outputDir.set(layout.buildDirectory.dir("generated/itmowidgets/androidStrings/${variant.name}"))
             }
             variant.sources.res?.addGeneratedSourceDirectory(collect, CollectAndroidStrings::outputDir)
+            val ids = tasks.register<GenerateAndroidStringIds>(
+                "generate${variant.name.replaceFirstChar { it.uppercase() }}AndroidStringIds",
+            ) {
+                description = "Writes the key -> R.string/R.plurals table of the exported strings (UiText.Res)."
+                exportedRes.set(collect.flatMap { it.outputDir })
+                appNamespace.set(variant.namespace)
+                packageName.set(variant.namespace.map { "$it.$STRING_IDS_PACKAGE" })
+                outputDir.set(layout.buildDirectory.dir("generated/itmowidgets/androidStringIds/${variant.name}"))
+            }
+            variant.sources.java?.addGeneratedSourceDirectory(ids, GenerateAndroidStringIds::outputDir)
         }
     }
 
@@ -119,5 +130,6 @@ class StringsConventionPlugin : Plugin<Project> {
         const val USAGE = "itmowidgets-android-strings"
         const val COMPOSE_RESOURCES = "src/commonMain/composeResources"
         const val APPLE_SHARED = "iosApp/Shared"
+        const val STRING_IDS_PACKAGE = "core.ui"
     }
 }

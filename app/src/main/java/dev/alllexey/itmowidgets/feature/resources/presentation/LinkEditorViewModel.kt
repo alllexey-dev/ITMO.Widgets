@@ -15,7 +15,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.core.ui.toUiText
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.url.StrictUri
 import dev.alllexey.itmowidgets.feature.resources.domain.guessCategory
 import javax.inject.Inject

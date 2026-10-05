@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.resources.presentation
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
@@ -17,7 +16,7 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.linkTime
 import dev.alllexey.itmowidgets.core.testing.linksSnapshot
 import dev.alllexey.itmowidgets.core.testing.subjectLink
-import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.toUiText
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
@@ -129,7 +128,7 @@ class SubjectLinksViewModelTest {
 
         vm.vote("shared", up = true); runCurrent()
 
-        assertEquals(LinkEvent.Failed(UiText.Resource(R.string.common_error_network)), vm.events.first())
+        assertEquals(LinkEvent.Failed(AppError.Network.toUiText()), vm.events.first())
         assertEquals(before, vm.uiState.value)
     }
 
@@ -193,7 +192,7 @@ class SubjectLinksViewModelTest {
 
         vm.refresh(); runCurrent()
 
-        assertEquals(listOf(LinkEvent.Failed(UiText.Resource(R.string.common_error_network))), events)
+        assertEquals(listOf(LinkEvent.Failed(AppError.Network.toUiText())), events)
         assertEquals(2, repository.restrictionRefreshes)
         assertFalse(vm.uiState.value.refreshing)
     }

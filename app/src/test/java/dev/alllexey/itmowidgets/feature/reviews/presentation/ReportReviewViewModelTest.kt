@@ -1,15 +1,14 @@
 package dev.alllexey.itmowidgets.feature.reviews.presentation
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.testing.teacherReviews
+import dev.alllexey.itmowidgets.core.text.toUiText
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -50,7 +49,7 @@ class ReportReviewViewModelTest {
         val vm = model()
 
         vm.send(ReviewReportReason.SPAM, null); runCurrent()
-        assertEquals(ReportReviewEvent.Failed(UiText.Resource(R.string.common_error_network)), vm.events.first())
+        assertEquals(ReportReviewEvent.Failed(AppError.Network.toUiText()), vm.events.first())
         assertFalse(vm.sending.value)
 
         repository.reportResult = AppResult.Success(teacherReviews(TEACHER))

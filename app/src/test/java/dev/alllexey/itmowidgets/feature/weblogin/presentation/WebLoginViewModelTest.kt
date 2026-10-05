@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import kotlinx.coroutines.CompletableDeferred
@@ -132,7 +133,7 @@ class WebLoginViewModelTest {
         val vm = model()
         vm.onScanned("ABCD2345")
         runCurrent()
-        assertEquals(WebLoginUiState.Error(UiText.Resource(R.string.common_error_network), "ABCD2345"), vm.uiState.value)
+        assertEquals(WebLoginUiState.Error(AppError.Network.toUiText(), "ABCD2345"), vm.uiState.value)
 
         repository.previews["ABCD2345"] = AppResult.Success(preview.copy(userAgent = null))
         vm.retry()
