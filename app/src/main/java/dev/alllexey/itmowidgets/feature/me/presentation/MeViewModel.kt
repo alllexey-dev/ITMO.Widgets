@@ -4,39 +4,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.model.UserProfile
-import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
-import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
-/** What the social card can say about friends before or after Backend answered. */
-sealed interface MeFriendsSummary {
-    data object Disabled : MeFriendsSummary
-    data object Loading : MeFriendsSummary
-    data object Error : MeFriendsSummary
-    data class Content(val friends: Int, val incomingRequests: Int) : MeFriendsSummary
-}
-
-data class MeUiState(
-    val user: CurrentUser? = null,
-    /** Backend's view of the same account; carries the study group. */
-    val backendUser: UserSummary? = null,
-    val friends: MeFriendsSummary = MeFriendsSummary.Loading,
-    val signOutInProgress: Boolean = false,
-    /** Sign-in to the web version goes through Backend, so it needs the ITMO.Widgets connection. */
-    val webLoginAvailable: Boolean = false
-)
 
 @HiltViewModel
 class MeViewModel @Inject constructor(
@@ -46,35 +31,36 @@ class MeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val signOutInProgress = MutableStateFlow(false)
+    private val refreshes = RefreshTracker(viewModelScope)
 
-    private val mutableUiState = MutableStateFlow(MeUiState())
-    val uiState: StateFlow<MeUiState> = mutableUiState
+    val uiState: StateFlow<MeUiState> = combine(
+        combine(sessionRepository.state, customServices.observeEnabled(), ::Pair),
+        socialRepository.observeCurrentUser(),
+        socialRepository.observeFriends(),
+        socialRepository.observeRequests(),
+        signOutInProgress
+    ) { (session, servicesEnabled), backendUser, friends, requests, signingOut ->
+        MeUiState(
+            user = (session as? SessionState.SignedIn)?.user,
+            backendUser = backendUser,
+            friends = summarize(friends, requests),
+            signOutInProgress = signingOut,
+            webLoginAvailable = servicesEnabled
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, MeUiState())
 
     init {
-        combine(
-            combine(sessionRepository.state, customServices.observeEnabled(), ::Pair),
-            socialRepository.observeCurrentUser(),
-            socialRepository.observeFriends(),
-            socialRepository.observeRequests(),
-            signOutInProgress
-        ) { (session, servicesEnabled), backendUser, friends, requests, signingOut ->
-            MeUiState(
-                user = (session as? SessionState.SignedIn)?.user,
-                backendUser = backendUser,
-                friends = summarize(friends, requests),
-                signOutInProgress = signingOut,
-                webLoginAvailable = servicesEnabled
-            )
-        }.onEach { mutableUiState.value = it }.launchIn(viewModelScope)
-
-        // Re-enabling services from settings must fill the card without reopening the tab.
+        refresh(RefreshMode.Silent)
+        // Re-enabling services from settings must fill the card without reopening the tab; a refresh still in
+        // flight began under the old setting, so this one replaces it instead of joining it.
         customServices.observeEnabled()
-            .onEach { refresh() }
+            .drop(1)
+            .onEach { refresh(RefreshMode.Force) }
             .launchIn(viewModelScope)
     }
 
-    fun refresh() {
-        viewModelScope.launch { socialRepository.refresh() }
+    fun refresh(mode: RefreshMode) {
+        refreshes.launch(mode) { socialRepository.refresh() }
     }
 
     fun signOut() {

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
@@ -12,14 +13,12 @@ import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -41,10 +40,10 @@ class OnboardingViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val mutableState = MutableStateFlow(OnboardingUiState(step = restoredStep()))
-    val state: StateFlow<OnboardingUiState> = mutableState.asStateFlow()
+    val uiState: StateFlow<OnboardingUiState> = mutableState.asStateFlow()
 
-    private val eventChannel = Channel<OnboardingEvent>(Channel.BUFFERED)
-    val events: Flow<OnboardingEvent> = eventChannel.receiveAsFlow()
+    private val eventQueue = EventQueue<OnboardingEvent>()
+    val events: Flow<OnboardingEvent> = eventQueue.events
 
     init {
         customServicesRepository.observeEnabled()
@@ -101,7 +100,7 @@ class OnboardingViewModel @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {
-                eventChannel.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
+                eventQueue.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
             }
         }
     }
@@ -117,7 +116,7 @@ class OnboardingViewModel @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {
-                eventChannel.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
+                eventQueue.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
             }
         }
     }
@@ -149,7 +148,7 @@ class OnboardingViewModel @Inject constructor(
                     it.copy(spoilerBusy = false)
                 }
             }
-            if (!changed) eventChannel.send(OnboardingEvent.SpoilerImageFailed)
+            if (!changed) eventQueue.send(OnboardingEvent.SpoilerImageFailed)
         }
     }
 
@@ -163,7 +162,7 @@ class OnboardingViewModel @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {
-                eventChannel.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
+                eventQueue.send(OnboardingEvent.ShowError(AppError.Unknown(error)))
             } finally {
                 mutableState.update { it.copy(servicesBusy = false) }
             }
@@ -172,7 +171,7 @@ class OnboardingViewModel @Inject constructor(
 
     fun pinWidget(kind: WidgetKind) {
         if (kind in mutableState.value.pinnedWidgets) return
-        eventChannel.trySend(OnboardingEvent.RequestPinWidget(kind))
+        send(OnboardingEvent.RequestPinWidget(kind))
     }
 
     fun onWidgetPinned(kind: WidgetKind) {
@@ -190,15 +189,19 @@ class OnboardingViewModel @Inject constructor(
     fun requestNotifications() {
         val current = mutableState.value
         if (current.notificationsGranted || current.notificationsAsked) {
-            eventChannel.trySend(OnboardingEvent.OpenNotificationSettings)
+            send(OnboardingEvent.OpenNotificationSettings)
             return
         }
         mutableState.update { it.copy(notificationsAsked = true) }
-        eventChannel.trySend(OnboardingEvent.RequestNotificationPermission)
+        send(OnboardingEvent.RequestNotificationPermission)
     }
 
     fun onNotificationPermission(granted: Boolean) {
         mutableState.update { it.copy(notificationsGranted = granted) }
+    }
+
+    private fun send(event: OnboardingEvent) {
+        viewModelScope.launch { eventQueue.send(event) }
     }
 
     private fun complete() {

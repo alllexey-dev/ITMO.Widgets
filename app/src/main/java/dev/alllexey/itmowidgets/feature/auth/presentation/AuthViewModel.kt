@@ -4,93 +4,76 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.text.UiText
 import javax.inject.Inject
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-data class AuthUiState(
-    val initializing: Boolean = true,
-    val sessionTransitionInProgress: Boolean = false,
-    val reauthenticationRequired: Boolean = false,
-    val manualLoginInProgress: Boolean = false,
-    val error: UiText? = null
-)
-
-sealed interface AuthEvent {
-    data object DemoStarted : AuthEvent
-}
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val sessionRepository: SessionRepository
 ) : ViewModel() {
 
-    private val mutableUiState = MutableStateFlow(
-        AuthUiState().withSessionState(sessionRepository.state.value)
-    )
-    val uiState: StateFlow<AuthUiState> = mutableUiState.asStateFlow()
-
+    private val manualLogin = MutableStateFlow(ManualLogin())
     private val demoTaps = DemoEntryTaps()
-    private val mutableEvents = Channel<AuthEvent>(Channel.BUFFERED)
-    val events: Flow<AuthEvent> = mutableEvents.receiveAsFlow()
+    private val eventQueue = EventQueue<AuthEvent>()
 
-    init {
-        viewModelScope.launch {
-            sessionRepository.state.collectLatest { sessionState ->
-                mutableUiState.value = mutableUiState.value.withSessionState(sessionState)
-            }
-        }
-    }
+    val uiState: StateFlow<AuthUiState> = combine(sessionRepository.state, manualLogin, ::toUiState)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            toUiState(sessionRepository.state.value, manualLogin.value)
+        )
+
+    val events: Flow<AuthEvent> = eventQueue.events
 
     fun signInWithRefreshToken(refreshToken: String) {
-        if (mutableUiState.value.manualLoginInProgress) return
+        if (manualLogin.value.inProgress) return
 
-        mutableUiState.value = mutableUiState.value.copy(
-            manualLoginInProgress = true,
-            error = null
-        )
+        manualLogin.value = ManualLogin(inProgress = true)
         viewModelScope.launch {
             val result = sessionRepository.signInWithRefreshToken(refreshToken)
-            mutableUiState.value = mutableUiState.value.copy(
-                manualLoginInProgress = false,
-                error = (result as? AppResult.Failure)?.error?.toAuthText()
-            )
+            manualLogin.value = ManualLogin(error = (result as? AppResult.Failure)?.error?.toAuthText())
         }
     }
 
     /** [atMillis] is a monotonic time of the tap on the logo. */
     fun onLogoTap(atMillis: Long) {
         if (!demoTaps.tap(atMillis)) return
-        val state = mutableUiState.value
-        if (state.manualLoginInProgress || state.sessionTransitionInProgress) return
+        if (manualLogin.value.inProgress || sessionRepository.state.value is SessionState.SigningOut) return
         viewModelScope.launch {
             // The confirmation goes first: the demo session replaces this screen.
-            mutableEvents.send(AuthEvent.DemoStarted)
+            eventQueue.send(AuthEvent.DemoStarted)
             sessionRepository.startDemo()
         }
     }
 
     fun clearError() {
-        mutableUiState.value = mutableUiState.value.copy(error = null)
+        manualLogin.update { it.copy(error = null) }
     }
-}
 
-private fun AuthUiState.withSessionState(sessionState: SessionState): AuthUiState = copy(
-    initializing = sessionState is SessionState.Initializing,
-    sessionTransitionInProgress = sessionState is SessionState.SigningOut,
-    reauthenticationRequired = sessionState is SessionState.ReauthenticationRequired
-)
+    private fun toUiState(sessionState: SessionState, login: ManualLogin) = AuthUiState(
+        initializing = sessionState is SessionState.Initializing,
+        sessionTransitionInProgress = sessionState is SessionState.SigningOut,
+        reauthenticationRequired = sessionState is SessionState.ReauthenticationRequired,
+        manualLoginInProgress = login.inProgress,
+        error = login.error
+    )
+
+    /** The refresh-token sign-in this screen runs itself, beside the session it observes. */
+    private data class ManualLogin(val inProgress: Boolean = false, val error: UiText? = null)
+}
 
 internal fun AppError.toAuthText(): UiText = when (this) {
     AppError.Network -> UiText.Resource(R.string.auth_error_network)

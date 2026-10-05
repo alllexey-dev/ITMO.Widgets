@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.ProjectLinks
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.ui.shareText
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
@@ -95,7 +96,7 @@ class MeFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         // Returning from a contextual screen may have changed friends or requests.
-        viewModel.refresh()
+        viewModel.refresh(RefreshMode.Silent)
     }
 
     override fun onDestroyView() {

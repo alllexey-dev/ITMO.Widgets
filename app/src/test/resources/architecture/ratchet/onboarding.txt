@@ -2,4 +2,3 @@
 # (a stale line fails its rule) and never add one. Format and rules: vibe/v2.3/recipes/konsist-rule.md.
 
 viewmodel-shape dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGateViewModel
-viewmodel-shape dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel

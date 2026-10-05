@@ -36,6 +36,31 @@ class AuthViewModelTest {
         }
 
     @Test
+    fun `follows the session it observes`() = runTest(mainDispatcherRule.dispatcher) {
+        val repository = FakeSessionRepository(SessionState.Initializing)
+        val viewModel = AuthViewModel(repository)
+        assertTrue(viewModel.uiState.value.initializing)
+
+        repository.mutableState.value = SessionState.ReauthenticationRequired
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.initializing)
+        assertTrue(viewModel.uiState.value.reauthenticationRequired)
+        assertFalse(viewModel.uiState.value.sessionTransitionInProgress)
+    }
+
+    @Test
+    fun `logo taps during a sign out never start the demo`() = runTest(mainDispatcherRule.dispatcher) {
+        val repository = FakeSessionRepository(SessionState.SigningOut)
+        val viewModel = AuthViewModel(repository)
+
+        repeat(5) { viewModel.onLogoTap(atMillis = 1_000L + it * 300L) }
+        advanceUntilIdle()
+
+        assertEquals(0, repository.demoStarts)
+    }
+
+    @Test
     fun `the fifth quick tap on the logo starts the demo once`() =
         runTest(mainDispatcherRule.dispatcher) {
             val repository = FakeSessionRepository(SessionState.SignedOut)

@@ -22,11 +22,13 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.ActivityLoginBinding
 import dev.alllexey.itmowidgets.feature.auth.domain.ItmoAuthUrlPolicy
 import dev.alllexey.itmowidgets.feature.auth.presentation.InteractiveLoginEvent
 import dev.alllexey.itmowidgets.feature.auth.presentation.InteractiveLoginUiState
 import dev.alllexey.itmowidgets.feature.auth.presentation.InteractiveLoginViewModel
+import dev.alllexey.itmowidgets.feature.auth.presentation.LoginPage
 import dev.alllexey.itmowidgets.core.ui.resolve
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -64,7 +66,7 @@ class LoginActivity : AppCompatActivity() {
             binding.loginWebView.scrollY > 0
         }
         binding.loginRetryButton.setOnClickListener {
-            viewModel.clearError()
+            viewModel.retry()
             loadCleanLogin()
         }
 
@@ -120,10 +122,10 @@ class LoginActivity : AppCompatActivity() {
                 val uri = url?.let(Uri::parse)
                 if (uri == null || !ItmoAuthUrlPolicy.isNavigable(uri.toString())) {
                     view.stopLoading()
-                    showBrowserError()
+                    viewModel.onMainFrameError()
                     return
                 }
-                showPageLoading(true)
+                viewModel.onPageStarted()
                 if (ItmoAuthUrlPolicy.isTokenCallback(uri.toString())) {
                     view.evaluateJavascript(interceptorScript, null)
                 }
@@ -131,7 +133,7 @@ class LoginActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView, url: String?) {
                 super.onPageFinished(view, url)
-                showPageLoading(false)
+                viewModel.onPageFinished()
             }
 
             override fun onReceivedError(
@@ -140,7 +142,7 @@ class LoginActivity : AppCompatActivity() {
                 error: WebResourceError
             ) {
                 super.onReceivedError(view, request, error)
-                if (request.isForMainFrame) showBrowserError()
+                if (request.isForMainFrame) viewModel.onMainFrameError()
             }
         }
     }
@@ -162,9 +164,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun loadCleanLogin() {
-        binding.loginErrorContainer.isVisible = false
-        binding.loginWebView.isVisible = true
-        showPageLoading(true)
         binding.loginWebView.clearHistory()
         binding.loginWebView.clearCache(true)
         WebStorage.getInstance().deleteAllData()
@@ -179,21 +178,10 @@ class LoginActivity : AppCompatActivity() {
 
     private fun render(state: InteractiveLoginUiState) {
         binding.loginCompletingProgress.isVisible = state.completingLogin
-        state.error?.let { error ->
-            binding.loginErrorText.text = error.resolve(this)
-            binding.loginErrorContainer.isVisible = true
-            binding.loginWebView.isVisible = false
-        }
-    }
-
-    private fun showPageLoading(loading: Boolean) {
-        binding.loginSwipeRefresh.isRefreshing = loading
-    }
-
-    private fun showBrowserError() {
-        showPageLoading(false)
-        binding.loginWebView.isVisible = false
-        binding.loginErrorContainer.isVisible = true
+        binding.loginSwipeRefresh.isRefreshing = state.page == LoginPage.Loading
+        binding.loginErrorText.text = state.error?.resolve(this) ?: getString(R.string.auth_web_error)
+        binding.loginErrorContainer.isVisible = state.showsError
+        binding.loginWebView.isVisible = !state.showsError
     }
 
     private fun openExternal(uri: Uri) {
@@ -206,13 +194,7 @@ class LoginActivity : AppCompatActivity() {
         @JavascriptInterface
         fun postTokens(tokenResponseJson: String) {
             runOnUiThread {
-                val currentUri = binding.loginWebView.url?.let(Uri::parse)
-                if (
-                    currentUri != null &&
-                    ItmoAuthUrlPolicy.isTokenCallback(currentUri.toString())
-                ) {
-                    viewModel.completeLogin(tokenResponseJson)
-                }
+                viewModel.onTokensPosted(binding.loginWebView.url.orEmpty(), tokenResponseJson)
             }
         }
     }
