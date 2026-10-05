@@ -3,7 +3,9 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.feature.qr.data.repository.QrAppearancePreferencesImpl
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
+import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -32,6 +34,13 @@ class QrBridgeTest {
 
         assertSame(hilt.qrCodeRepository(), koin.get<QrCodeRepository>())
         assertSame(koin.get<QrCodeRepository>(), koin.get<QrCodeRepository>())
+    }
+
+    @Test
+    fun `the QR colour setting resolves in Koin to the Hilt implementation the widget reads`() {
+        bootApplication()
+
+        assertTrue(GlobalContext.get().get<QrAppearancePreferences>() is QrAppearancePreferencesImpl)
     }
 
     @Test
