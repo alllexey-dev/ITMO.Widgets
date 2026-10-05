@@ -1,0 +1,4 @@
+// The widget extension ITMOWidgetsWidgets (WidgetKit and Controls, no Kotlin).
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_ID).widgets
+INFOPLIST_FILE = Resources/Info/ITMOWidgetsWidgets-Info.plist
+CODE_SIGN_ENTITLEMENTS = Resources/ITMOWidgetsWidgets$(ITMO_ENTITLEMENTS_VARIANT).entitlements

@@ -1,5 +1,6 @@
 // The iOS umbrella: the static framework `Shared` that the Xcode project links. Exports and SKIE come with
-// L18 IO-05; linking needs Xcode (T10), compiling the klibs does not.
+// L18 IO-05; linking needs Xcode (T10), compiling the klibs does not. Xcode builds it through the app target's
+// Run Script (`embedAndSignAppleFrameworkForXcode`, iosApp/project.yml); see docs/ios.md.
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
 }
@@ -9,6 +10,8 @@ kotlin {
         target.binaries.framework {
             baseName = "Shared"
             isStatic = true
+            // Without it K/N warns that it cannot infer a bundle ID (T10).
+            binaryOption("bundleId", "dev.alllexey.itmowidgets.shared")
         }
     }
 
