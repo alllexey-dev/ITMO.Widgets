@@ -167,6 +167,10 @@ and every push to `v2.3/next` and `master`, and on `workflow_dispatch`.
 - The build is `scripts/ios/test.sh --ci` with MyItmoApi checked out at `gradle/myitmoapi.ref` (`MYITMOAPI_DIR`, as
   in `android-ci.yml`), one Gradle worker (`ITMO_MAX_WORKERS=1`, no parallel K/N), the Gradle cache and `~/.konan`
   cached; only `v2.3/next` writes the caches. No secrets and no signing.
+- No toolchain download inside `xcodebuild`: `setup-java` installs JetBrains 21, the JDK
+  `gradle/gradle-daemon-jvm.properties` asks for, and the job turns Gradle's toolchain auto-download off, so a
+  criteria mismatch fails instead of reaching api.foojay.io. A step before `test.sh` runs `./gradlew help` with
+  up to three attempts to fetch the wrapper distribution and the settings plugins.
 - On failure the `.xcresult` from `iosApp/build/test-results/` and the snapshot diffs from
   `iosApp/build/snapshot-artifacts/` (`SNAPSHOT_ARTIFACTS` for the test runner) are uploaded as `ios-check-results`.
 - The step summary records the duration of `test.sh --ci` and the peak used memory (active, wired and compressed

@@ -111,12 +111,12 @@ jobs:
           xcodegen --version
           xcrun simctl list runtimes | grep -i ios
 
-      # JDK for the Gradle client; the daemon JDK (JetBrains 21) is provisioned from
-      # gradle/gradle-daemon-jvm.properties.
+      # The JDK gradle/gradle-daemon-jvm.properties asks for (JetBrains 21), installed up front so the daemon
+      # never auto-provisions it from api.foojay.io inside xcodebuild.
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         if: steps.paths.outputs.run == 'true'
         with:
-          distribution: temurin
+          distribution: jetbrains
           java-version: 21
 
       # Basic (MIT) cache provider; only `v2.3/next` writes the cache, everything else reads it.
@@ -125,6 +125,17 @@ jobs:
         with:
           cache-provider: basic
           cache-read-only: ${{ github.ref != 'refs/heads/v2.3/next' }}
+
+      # Gradle uses only the JDK above: a criteria mismatch fails loudly instead of downloading a toolchain.
+      - name: Gradle toolchain without auto-download
+        if: steps.paths.outputs.run == 'true'
+        run: |
+          mkdir -p "$GRADLE_USER_HOME"
+          {
+            echo "org.gradle.java.installations.auto-download=false"
+            echo "org.gradle.java.installations.paths=$JAVA_HOME"
+          } >> "$GRADLE_USER_HOME/gradle.properties"
+          "$JAVA_HOME/bin/java" -version
 
       # MyItmoApi 2.x at gradle/myitmoapi.ref as the composite build (ADR 0024, TC-05), as in android-ci.yml.
       - name: MyItmoApi ref
@@ -159,6 +170,19 @@ jobs:
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ runner.arch }}-${{ steps.kotlin-native.outputs.version }}
+
+      # Resolves the wrapper distribution and the settings and build plugins (foojay-resolver-convention among
+      # them) before xcodebuild, with retries: on a Gradle cache miss a plugin portal hiccup costs a retry, not
+      # the job. The daemon it starts is reused by the framework build inside xcodebuild.
+      - name: Resolve Gradle plugins
+        if: steps.paths.outputs.run == 'true'
+        run: |
+          for attempt in 1 2 3; do
+            ./gradlew --quiet help && exit 0
+            echo "::warning::Gradle plugin resolution failed (attempt $attempt of 3)"
+            sleep $((attempt * 20))
+          done
+          exit 1
 
       # The runner is below the local K/N estimate, so Gradle runs one worker (no parallel K/N) and a sampler
       # records the peak of used memory (active + wired + compressed) every 5 s. No secrets, no signing.
