@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import javax.inject.Inject
 
@@ -36,7 +37,7 @@ class RootPageProvider @Inject constructor() : SettingsPageProvider {
                             null -> R.string.settings_notifications_checking
                         }
                     ),
-                    trailingIconRes = R.drawable.ic_chevron_right
+                    trailingIcon = AppIcon.CHEVRON_RIGHT
                 )
             )
         ),

@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
@@ -226,7 +227,7 @@ class WidgetsPageProvider @Inject constructor(
                                 R.string.settings_qr_custom_image_default
                             }
                         ),
-                        trailingIconRes = R.drawable.ic_chevron_right,
+                        trailingIcon = AppIcon.CHEVRON_RIGHT,
                         enabled = qr.spoilerEnabled && !state.imageBusy
                     ),
                     SettingItem.Action(

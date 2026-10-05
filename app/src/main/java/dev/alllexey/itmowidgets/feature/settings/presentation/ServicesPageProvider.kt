@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
@@ -98,7 +99,7 @@ class ServicesPageProvider @Inject constructor(
                     id = SettingRowId.DELETE_ACCOUNT,
                     title = UiText.Resource(R.string.settings_delete_account_title),
                     description = UiText.Resource(R.string.settings_delete_account_description),
-                    trailingIconRes = R.drawable.ic_open_in_new
+                    trailingIcon = AppIcon.OPEN_IN_NEW
                 )
             )
         )

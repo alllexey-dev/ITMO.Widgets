@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import javax.inject.Inject
@@ -127,7 +128,7 @@ class SchedulePageProvider @Inject constructor(
                 id = SettingRowId.ICS_EXPORT,
                 title = UiText.Resource(R.string.settings_ics_export_title),
                 description = UiText.Resource(R.string.settings_ics_export_description),
-                trailingIconRes = R.drawable.ic_download
+                trailingIcon = AppIcon.DOWNLOAD
             )
         )
     )

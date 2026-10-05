@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import javax.inject.Inject
@@ -42,24 +43,24 @@ class MaintenancePageProvider @Inject constructor(
                 SettingItem.Action(
                     id = SettingRowId.REFRESH_WIDGETS,
                     title = UiText.Resource(R.string.settings_refresh_widgets_title),
-                    trailingIconRes = R.drawable.ic_refresh
+                    trailingIcon = AppIcon.REFRESH
                 ),
                 SettingItem.Action(
                     id = SettingRowId.RESTART_ONBOARDING,
                     title = UiText.Resource(R.string.settings_restart_onboarding_title),
                     description = UiText.Resource(R.string.settings_restart_onboarding_description),
-                    trailingIconRes = R.drawable.ic_refresh
+                    trailingIcon = AppIcon.REFRESH
                 ),
                 SettingItem.Action(
                     id = SettingRowId.DIAGNOSTICS,
                     title = UiText.Resource(R.string.settings_diagnostics_title),
                     value = UiText.Resource(R.string.settings_diagnostics_count, listOf(state.diagnosticsCount)),
-                    trailingIconRes = R.drawable.ic_chevron_right
+                    trailingIcon = AppIcon.CHEVRON_RIGHT
                 ),
                 SettingItem.Action(
                     id = SettingRowId.PRIVACY_POLICY,
                     title = UiText.Resource(R.string.settings_privacy_policy_title),
-                    trailingIconRes = R.drawable.ic_open_in_new
+                    trailingIcon = AppIcon.OPEN_IN_NEW
                 ),
                 SettingItem.Info(
                     id = SettingRowId.VERSION,

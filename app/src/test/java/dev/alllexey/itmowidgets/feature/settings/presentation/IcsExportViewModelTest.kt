@@ -11,7 +11,6 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,6 +18,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -78,10 +80,10 @@ class IcsExportViewModelTest {
 
         viewModel.choose(IcsRangeKind.CUSTOM)
         assertEquals(IcsExportEvent.PickDates, viewModel.events.first())
-        viewModel.onDates(LocalDate.of(2026, 9, 28), LocalDate.of(2026, 10, 4))
+        viewModel.onDates(LocalDate(2026, 9, 28), LocalDate(2026, 10, 4))
         advanceUntilIdle()
 
-        assertEquals(listOf<ScheduleExportRange>(ScheduleExportRange.Custom(kotlinx.datetime.LocalDate(2026, 9, 28), kotlinx.datetime.LocalDate(2026, 10, 4))), export.ranges)
+        assertEquals(listOf<ScheduleExportRange>(ScheduleExportRange.Custom(LocalDate(2026, 9, 28), LocalDate(2026, 10, 4))), export.ranges)
         assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("28 сентября – 4 октября")), viewModel.uiState.value)
     }
 
@@ -141,13 +143,13 @@ class IcsExportViewModelTest {
 
     @Test
     fun `date labels name one day, a month, two months and two years`() {
-        val day = LocalDate.of(2026, 10, 5)
+        val day = LocalDate(2026, 10, 5)
         assertEquals(UiText.Dynamic("5 октября"), IcsDateLabels.range(day..day))
-        assertEquals(UiText.Dynamic("5–11 октября"), IcsDateLabels.range(day..day.plusDays(6)))
-        assertEquals(UiText.Dynamic("28 сентября – 4 октября"), IcsDateLabels.range(LocalDate.of(2026, 9, 28)..LocalDate.of(2026, 10, 4)))
+        assertEquals(UiText.Dynamic("5–11 октября"), IcsDateLabels.range(day..day.plus(6, DateTimeUnit.DAY)))
+        assertEquals(UiText.Dynamic("28 сентября – 4 октября"), IcsDateLabels.range(LocalDate(2026, 9, 28)..LocalDate(2026, 10, 4)))
         assertEquals(
             UiText.Dynamic("28 декабря 2026 – 3 января 2027"),
-            IcsDateLabels.range(LocalDate.of(2026, 12, 28)..LocalDate.of(2027, 1, 3))
+            IcsDateLabels.range(LocalDate(2026, 12, 28)..LocalDate(2027, 1, 3))
         )
     }
 

@@ -14,6 +14,7 @@ import androidx.core.view.updateLayoutParams
 import com.google.android.material.card.MaterialCardView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.ui.drawableRes
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.ItemSettingRowBinding
 import dev.alllexey.itmowidgets.databinding.ItemSettingToggleBinding
@@ -190,8 +191,8 @@ class SettingsRenderer(
         val binding = ItemSettingRowBinding.inflate(inflater, parent, false)
         rowBindings[item.id] = binding
 
-        binding.settingChevron.isVisible = item.trailingIconRes != null
-        item.trailingIconRes?.let(binding.settingChevron::setImageResource)
+        binding.settingChevron.isVisible = item.trailingIcon != null
+        item.trailingIcon?.let { binding.settingChevron.setImageResource(it.drawableRes()) }
         binding.root.isClickable = true
         binding.root.setBackgroundResource(selectableItemBackground())
 
@@ -222,8 +223,8 @@ class SettingsRenderer(
                 binding.settingTitle.text = item.title.resolve(container.context)
                 bindOptionalText(binding.settingDescription, item.description)
                 bindOptionalText(binding.settingValue, item.value)
-                binding.settingChevron.isVisible = item.trailingIconRes != null
-                item.trailingIconRes?.let(binding.settingChevron::setImageResource)
+                binding.settingChevron.isVisible = item.trailingIcon != null
+                item.trailingIcon?.let { binding.settingChevron.setImageResource(it.drawableRes()) }
                 binding.root.setOnClickListener { if (item.enabled) onAction(item.id) }
                 setRowEnabled(binding.root, item.enabled)
             }
