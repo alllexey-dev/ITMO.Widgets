@@ -11,6 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
@@ -52,6 +53,13 @@ abstract class StorageModule {
     abstract fun bindMyItmoStorage(
         impl: MyItmoStorage
     ): Storage
+
+    /** The same instance as [Storage]: one writer of `myitmo_tokens.enc` for MyItmoApi 1.x and 2.x. */
+    @Binds
+    @Singleton
+    abstract fun bindTokenStorage(
+        impl: MyItmoStorage
+    ): TokenStorage
 
     @Binds
     @Singleton

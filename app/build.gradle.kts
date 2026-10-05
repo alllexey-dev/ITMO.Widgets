@@ -127,6 +127,8 @@ dependencies {
     implementation(libs.android.image.cropper)
     implementation(libs.itmo.widgets.core)
     implementation(libs.my.itmo.api)
+    // MyItmoApi 2.x beside 1.x (KM-10a1): auth and the token storage moved; 1.x serves the unswapped areas until KM-10i.
+    implementation(libs.my.itmo.api.kmp)
     implementation(libs.androidx.navigation.ui)
     implementation(libs.androidx.datastore.preferences)
     // Storage foundation (KM-04): okio files, DataStore by okio path, the common lock of AtomicTextFile.

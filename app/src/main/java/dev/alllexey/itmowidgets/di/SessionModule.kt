@@ -28,8 +28,6 @@ import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.app.AndroidSessionLifecycleEffects
 import dev.alllexey.itmowidgets.feature.auth.data.DataStoreDemoMode
-import dev.alllexey.itmowidgets.feature.auth.data.DefaultRefreshTokenAuthenticator
-import dev.alllexey.itmowidgets.feature.auth.data.RefreshTokenAuthenticator
 import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
 import javax.inject.Singleton
 
@@ -104,12 +102,6 @@ object SessionModule {
             .joinToString(" ")
             .ifBlank { "Android" }
     )
-
-    @Provides
-    @Singleton
-    fun provideRefreshTokenAuthenticator(
-        impl: DefaultRefreshTokenAuthenticator
-    ): RefreshTokenAuthenticator = impl
 
     @Provides
     @Singleton
