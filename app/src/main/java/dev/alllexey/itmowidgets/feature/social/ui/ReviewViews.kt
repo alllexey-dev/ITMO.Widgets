@@ -17,9 +17,10 @@ import dev.alllexey.itmowidgets.core.ui.bindGroupPosition
 import dev.alllexey.itmowidgets.core.ui.bindVotes
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.shortPersonName
-import dev.alllexey.itmowidgets.core.ui.userDisplayName
+import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.ItemOwnTeacherReviewBinding
 import dev.alllexey.itmowidgets.databinding.ItemTeacherReviewBinding
+import dev.alllexey.itmowidgets.feature.social.presentation.displayName
 
 /**
  * Another viewer's or a copied review as a row of the others' group. The top line is the caption with ⋮ for
@@ -40,8 +41,8 @@ internal fun ItemTeacherReviewBinding.bind(item: ProfileItem.Review, actions: Pr
     val author = community?.author
     this.author.isVisible = author != null
     // «Фамилия И. О.» keeps the row short; TalkBack still reads the full name.
-    this.author.text = author?.let { if (it.name.isBlank()) context.userDisplayName(it.name, it.isu) else shortPersonName(it.name) }
-    this.author.contentDescription = author?.let { context.userDisplayName(it.name, it.isu) }
+    this.author.text = author?.let { if (it.name.isBlank()) it.displayName().resolve(context) else shortPersonName(it.name) }
+    this.author.contentDescription = author?.displayName()?.resolve(context)
     this.author.setOnClickListener(author?.let { View.OnClickListener { actions.onAuthor(author.isu) } })
     anonymous.isVisible = community != null && author == null
     origin.isVisible = this.author.isVisible || anonymous.isVisible || copy != null

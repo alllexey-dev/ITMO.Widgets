@@ -7,6 +7,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.presentation.StableOrder
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -19,8 +22,7 @@ import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -32,18 +34,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-
-sealed interface UserProfileEvent {
-    data class ActionFailed(val error: AppError) : UserProfileEvent
-    data class ConfirmRemove(val name: String) : UserProfileEvent
-    data object LoadFailed : UserProfileEvent
-    data object ConfirmDeleteReview : UserProfileEvent
-}
 
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
@@ -54,25 +48,29 @@ class UserProfileViewModel @Inject constructor(
     private val currentUserProvider: CurrentUserProvider
 ) : ViewModel() {
 
-    val isu: Int = checkNotNull(savedStateHandle.get<Int>(UserScreenArgs.ISU)) { "Profile needs an ISU" }
+    private val isu: Int = checkNotNull(savedStateHandle.get<Int>(UserScreenArgs.ISU)) { "Profile needs an ISU" }
     private val personPart = MutableStateFlow<ProfilePart<Person>>(ProfilePart.Loading)
     private val socialPart = MutableStateFlow<ProfilePart<SocialBlock>>(ProfilePart.Loading)
     private val reviewsPart = MutableStateFlow<ProfilePart<TeacherReviews>>(ProfilePart.Loading)
-    private val inFlight = MutableStateFlow(true)
+    private val refreshes = RefreshTracker(viewModelScope)
+    /**
+     * A load of any mode is running. Unlike `refreshes.refreshing` it covers the silent load on entry too: while
+     * it is set, a page on screen is not replaced by a skeleton or an error before the load has its answers.
+     */
+    private val loading = MutableStateFlow(true)
     /** The review whose vote or deletion is in flight; one at a time. */
     private val reviewBusy = MutableStateFlow<String?>(null)
     /** Whether the summary shows its scales; kept across configuration changes and process death. */
     private val summaryExpanded = savedStateHandle.getStateFlow(SUMMARY_EXPANDED, false)
     private val reviewsView = combine(reviewBusy, summaryExpanded, ::Pair)
-    val uiState: StateFlow<UserProfileUiState> = combine(personPart, socialPart, reviewsPart, inFlight, reviewsView) { person, block, reviews, loading, (busy, expanded) ->
+    val uiState: StateFlow<UserProfileUiState> = combine(personPart, socialPart, reviewsPart, loading, reviewsView) { person, block, reviews, loading, (busy, expanded) ->
         userProfileUiState(isu, person, block, reviews, busy, expanded) to loading
     }.scan(partsState()) { previous, (next, loading) ->
         if (loading && next !is UserProfileUiState.Content && previous is UserProfileUiState.Content) previous else next
     }.stateIn(viewModelScope, SharingStarted.Eagerly, partsState())
 
-    private val events = Channel<UserProfileEvent>(Channel.BUFFERED)
-    val eventFlow: Flow<UserProfileEvent> = events.receiveAsFlow()
-    private var loadJob: Job? = null
+    private val eventQueue = EventQueue<UserProfileEvent>()
+    val events: Flow<UserProfileEvent> = eventQueue.events
     private var isSelf = false
     private val lateParts = mutableSetOf<Part>()
     /** The order of the shown reviews: a vote must not move a review under the finger. */
@@ -85,15 +83,22 @@ class UserProfileViewModel @Inject constructor(
                 reviewsPart.value = shown(it)
             }
         }
-        load()
+        refresh(RefreshMode.Silent)
     }
 
-    /** A load on entry or an explicit retry ranks the reviews afresh; votes and updates in between keep the order. */
-    fun load() {
-        loadJob?.cancel()
+    /**
+     * The load on entry is [RefreshMode.Silent]; a retry is [RefreshMode.Force], which cancels a load in flight and
+     * accepts neither its answers nor its failure. Each load ranks the reviews afresh; votes and updates in between
+     * keep the order.
+     */
+    fun refresh(mode: RefreshMode) {
+        refreshes.launch(mode) { load() }
+    }
+
+    private suspend fun load(): Unit = coroutineScope {
         reviewOrder.reset()
         val hadContent = partsState() is UserProfileUiState.Content
-        inFlight.value = true
+        loading.value = true
         val previouslyLate = lateParts.toSet()
         lateParts.clear()
         if (!hadContent) {
@@ -101,38 +106,34 @@ class UserProfileViewModel @Inject constructor(
             if (reviewsPart.value !is ProfilePart.Ready) reviewsPart.value = reviews.cachedReviews(isu)?.let(::shown) ?: ProfilePart.Loading
             if (socialPart.value !is ProfilePart.Ready) socialPart.value = ProfilePart.Loading
         }
-        loadJob = viewModelScope.launch {
-            isSelf = currentUserProvider.getCurrentUser()?.isu == isu
-            currentCoroutineContext().ensureActive()
-            if (socialPart.value is ProfilePart.Loading || Part.SOCIAL in previouslyLate) {
-                social.cachedProfile(isu)?.let { socialPart.value = ProfilePart.Ready(SocialBlock(it, isSelf, busy = false)) }
-            }
-            if (Part.PERSON in previouslyLate) {
-                people.cachedPerson(isu)?.let { personPart.value = ProfilePart.Ready(it) }
-            }
-            val attempt = LoadAttempt()
-            val deadline = if (hadContent) null else launch {
-                combine(personPart, socialPart, uiState) { person, block, state ->
-                    (person is ProfilePart.Ready || block is ProfilePart.Ready) && state is UserProfileUiState.Loading
-                }.distinctUntilChanged().collectLatest { waiting ->
-                    if (waiting) {
-                        delay(PART_DEADLINE)
-                        expireLoadingParts()
-                    }
+        isSelf = currentUserProvider.getCurrentUser()?.isu == isu
+        currentCoroutineContext().ensureActive()
+        if (socialPart.value is ProfilePart.Loading || Part.SOCIAL in previouslyLate) {
+            social.cachedProfile(isu)?.let { socialPart.value = ProfilePart.Ready(SocialBlock(it, isSelf, busy = false)) }
+        }
+        if (Part.PERSON in previouslyLate) {
+            people.cachedPerson(isu)?.let { personPart.value = ProfilePart.Ready(it) }
+        }
+        val attempt = LoadAttempt()
+        val deadline = if (hadContent) null else launch {
+            combine(personPart, socialPart, uiState) { person, block, state ->
+                (person is ProfilePart.Ready || block is ProfilePart.Ready) && state is UserProfileUiState.Loading
+            }.distinctUntilChanged().collectLatest { waiting ->
+                if (waiting) {
+                    delay(PART_DEADLINE)
+                    expireLoadingParts()
                 }
             }
-            listOf(
-                launch { val result = people.person(isu); currentCoroutineContext().ensureActive(); attempt.onPerson(result) },
-                launch { val result = social.profile(isu); currentCoroutineContext().ensureActive(); attempt.onSocial(result) },
-                launch { val result = reviews.reviews(isu); currentCoroutineContext().ensureActive(); attempt.onReviews(result) }
-            ).joinAll()
-            deadline?.cancel()
-            inFlight.value = false
-            if (partsState() is UserProfileUiState.Content && attempt.hasFailures()) events.send(UserProfileEvent.LoadFailed)
         }
+        listOf(
+            launch { val result = people.person(isu); currentCoroutineContext().ensureActive(); attempt.onPerson(result) },
+            launch { val result = social.profile(isu); currentCoroutineContext().ensureActive(); attempt.onSocial(result) },
+            launch { val result = reviews.reviews(isu); currentCoroutineContext().ensureActive(); attempt.onReviews(result) }
+        ).joinAll()
+        deadline?.cancel()
+        loading.value = false
+        if (partsState() is UserProfileUiState.Content && attempt.hasFailures()) eventQueue.send(UserProfileEvent.LoadFailed)
     }
-
-    fun retry() = load()
 
     private fun expireLoadingParts() {
         if (personPart.value !is ProfilePart.Ready && socialPart.value !is ProfilePart.Ready) return
@@ -212,7 +213,7 @@ class UserProfileViewModel @Inject constructor(
             RelationshipState.OUTGOING -> act { social.cancelRequest(isu) }
             RelationshipState.INCOMING -> act { social.acceptRequest(isu) }
             RelationshipState.FRIENDS -> (uiState.value as? UserProfileUiState.Content)?.let { content ->
-                viewModelScope.launch { events.send(UserProfileEvent.ConfirmRemove(content.name)) }
+                viewModelScope.launch { eventQueue.send(UserProfileEvent.ConfirmRemove(content.displayName)) }
             }
             RelationshipState.BLOCKED -> Unit
         }
@@ -242,7 +243,7 @@ class UserProfileViewModel @Inject constructor(
 
     fun requestDeleteOwnReview() {
         if (readyReviews()?.mine == null) return
-        viewModelScope.launch { events.send(UserProfileEvent.ConfirmDeleteReview) }
+        viewModelScope.launch { eventQueue.send(UserProfileEvent.ConfirmDeleteReview) }
     }
 
     fun deleteOwnReview() {
@@ -257,7 +258,7 @@ class UserProfileViewModel @Inject constructor(
             try {
                 when (val result = action()) {
                     is AppResult.Success -> reviewsPart.value = shown(result.value)
-                    is AppResult.Failure -> events.send(UserProfileEvent.ActionFailed(result.error))
+                    is AppResult.Failure -> eventQueue.send(UserProfileEvent.ActionFailed(result.error))
                 }
             } finally {
                 reviewBusy.value = null
@@ -273,7 +274,7 @@ class UserProfileViewModel @Inject constructor(
             when (val result = action()) {
                 is AppResult.Success -> socialPart.value = ProfilePart.Ready(SocialBlock(result.value, isSelf, busy = false))
                 is AppResult.Failure -> {
-                    events.send(UserProfileEvent.ActionFailed(result.error))
+                    eventQueue.send(UserProfileEvent.ActionFailed(result.error))
                     socialBlock()?.let { socialPart.value = ProfilePart.Ready(it.copy(busy = false)) }
                 }
             }

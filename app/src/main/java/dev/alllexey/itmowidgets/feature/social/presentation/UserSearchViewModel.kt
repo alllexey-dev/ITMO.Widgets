@@ -5,6 +5,10 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.UserProfile
+import dev.alllexey.itmowidgets.core.presentation.BusyKeys
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
@@ -14,33 +18,17 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import javax.inject.Inject
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-sealed interface UserSearchUiState {
-    /** Nothing typed yet. */
-    data object Idle : UserSearchUiState
-    data object Loading : UserSearchUiState
-    data object Empty : UserSearchUiState
-    data class Error(val error: AppError) : UserSearchUiState
-    data class Content(
-        val items: List<UserListItem>,
-        val loadingMore: Boolean
-    ) : UserSearchUiState
-}
-
-sealed interface UserSearchEvent {
-    data class ActionFailed(val error: AppError) : UserSearchEvent
-    data class Invite(val name: String) : UserSearchEvent
-}
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -50,18 +38,28 @@ class UserSearchViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")
+    private val phase = MutableStateFlow<SearchPhase>(SearchPhase.Idle)
     private val results = MutableStateFlow<List<PersonSearchResult>>(emptyList())
     private val nextOffset = MutableStateFlow<Int?>(null)
-    private val busy = MutableStateFlow<Set<Int>>(emptySet())
-    private val events = Channel<UserSearchEvent>(Channel.BUFFERED)
+    /** The next page; its `refreshing` is the list footer and never the first page's progress. */
+    private val pages = RefreshTracker(viewModelScope)
+    private val busyRows = BusyKeys<Int>(viewModelScope)
+    private val eventQueue = EventQueue<UserSearchEvent>()
 
-    private val _uiState = MutableStateFlow<UserSearchUiState>(UserSearchUiState.Idle)
-    val uiState: StateFlow<UserSearchUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<UserSearchUiState> = combine(
+        phase,
+        results,
+        nextOffset,
+        busyRows.busy,
+        pages.refreshing,
+        ::toUiState
+    ).stateIn(viewModelScope, SharingStarted.Eagerly, UserSearchUiState.Idle)
 
-    val eventFlow: Flow<UserSearchEvent> = events.receiveAsFlow()
+    val events: Flow<UserSearchEvent> = eventQueue.events
 
+    // A new query replaces the search and the page in flight, which a refresh would join instead.
     private var searchJob: Job? = null
-    private var loadMoreJob: Job? = null
+    private var pageJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -76,36 +74,30 @@ class UserSearchViewModel @Inject constructor(
         query.value = text
         if (text.isBlank()) {
             // Clearing the field resets immediately instead of after the debounce.
-            searchJob?.cancel()
-            loadMoreJob?.cancel()
+            cancelSearch()
             results.value = emptyList()
             nextOffset.value = null
-            _uiState.value = UserSearchUiState.Idle
+            phase.value = SearchPhase.Idle
         }
+    }
+
+    /** Searches the current query again; every mode does the same, the screen only offers it as a retry. */
+    fun refresh(mode: RefreshMode) {
+        startSearch(query.value.trim())
     }
 
     fun loadMore() {
         val offset = nextOffset.value ?: return
-        if (loadMoreJob?.isActive == true) return
         val current = query.value.trim()
-        loadMoreJob = viewModelScope.launch {
-            publish(loadingMore = true)
+        pageJob = pages.launch(RefreshMode.Pull) {
             when (val page = search.search(current, offset)) {
                 is AppResult.Success -> {
-                    results.value = results.value + page.value.results
+                    results.update { it + page.value.results }
                     nextOffset.value = page.value.nextOffset
-                    publish(loadingMore = false)
                 }
-                is AppResult.Failure -> {
-                    events.send(UserSearchEvent.ActionFailed(page.error))
-                    publish(loadingMore = false)
-                }
+                is AppResult.Failure -> eventQueue.send(UserSearchEvent.ActionFailed(page.error))
             }
         }
-    }
-
-    fun retry() {
-        startSearch(query.value.trim())
     }
 
     fun onAction(row: UserRowUi, action: UserAction) {
@@ -113,75 +105,78 @@ class UserSearchViewModel @Inject constructor(
             UserAction.ADD -> act(row.isu) { social.sendRequest(row.isu) }
             UserAction.ACCEPT -> act(row.isu) { social.acceptRequest(row.isu) }
             UserAction.CANCEL -> act(row.isu) { social.cancelRequest(row.isu) }
-            UserAction.INVITE -> viewModelScope.launch { events.send(UserSearchEvent.Invite(row.name)) }
+            UserAction.INVITE -> viewModelScope.launch { eventQueue.send(UserSearchEvent.Invite(row.name)) }
             UserAction.REJECT, UserAction.REMOVE -> Unit
         }
     }
 
     private fun startSearch(normalized: String) {
-        searchJob?.cancel()
-        loadMoreJob?.cancel()
+        cancelSearch()
         if (normalized.isEmpty()) {
-            _uiState.value = UserSearchUiState.Idle
+            phase.value = SearchPhase.Idle
             return
         }
         searchJob = viewModelScope.launch {
-            _uiState.value = UserSearchUiState.Loading
+            phase.value = SearchPhase.Searching
             when (val page = search.search(normalized)) {
                 is AppResult.Success -> {
                     results.value = page.value.results
                     nextOffset.value = page.value.nextOffset
-                    publish(loadingMore = false)
+                    phase.value = SearchPhase.Done
                 }
-                is AppResult.Failure -> _uiState.value = UserSearchUiState.Error(page.error)
+                is AppResult.Failure -> phase.value = SearchPhase.Failed(page.error)
             }
         }
+    }
+
+    private fun cancelSearch() {
+        searchJob?.cancel()
+        pageJob?.cancel()
     }
 
     private fun act(isu: Int, action: suspend () -> AppResult<UserProfile>) {
-        if (isu in busy.value) return
-        busy.value = busy.value + isu
-        publish(loadingMore = loadingMore())
-        viewModelScope.launch {
-            try {
-                when (val result = action()) {
-                    is AppResult.Success -> results.value = results.value.map { person ->
-                        if (person.isu == isu) person.copy(registered = result.value) else person
-                    }
-                    is AppResult.Failure -> events.send(UserSearchEvent.ActionFailed(result.error))
+        busyRows.launch(isu) {
+            when (val result = action()) {
+                is AppResult.Success -> results.update { people ->
+                    people.map { person -> if (person.isu == isu) person.copy(registered = result.value) else person }
                 }
-            } finally {
-                busy.value = busy.value - isu
-                if (_uiState.value is UserSearchUiState.Content) publish(loadingMore = loadingMore())
+                is AppResult.Failure -> eventQueue.send(UserSearchEvent.ActionFailed(result.error))
             }
         }
     }
 
-    private fun loadingMore() = (_uiState.value as? UserSearchUiState.Content)?.loadingMore == true
-
-    private fun publish(loadingMore: Boolean) {
-        val people = results.value
-        if (people.isEmpty()) {
-            _uiState.value = UserSearchUiState.Empty
-            return
+    private fun toUiState(
+        phase: SearchPhase,
+        people: List<PersonSearchResult>,
+        nextOffset: Int?,
+        busy: Set<Int>,
+        loadingMore: Boolean
+    ): UserSearchUiState = when (phase) {
+        SearchPhase.Idle -> UserSearchUiState.Idle
+        SearchPhase.Searching -> UserSearchUiState.Loading
+        is SearchPhase.Failed -> UserSearchUiState.Error(phase.error)
+        SearchPhase.Done -> if (people.isEmpty()) UserSearchUiState.Empty else {
+            UserSearchUiState.Content(items(people, nextOffset != null && !loadingMore, busy), loadingMore)
         }
+    }
+
+    private fun items(people: List<PersonSearchResult>, offersMore: Boolean, busy: Set<Int>): List<UserListItem> {
         val registered = people.filter { it.registered != null }
         val others = people.filter { it.registered == null }
-        val items = buildList {
+        return buildList {
             if (registered.isNotEmpty()) {
                 add(UserListItem.Header(UiText.Resource(R.string.user_search_section_registered)))
-                registered.forEach { add(UserListItem.User(it.toRow())) }
+                registered.forEach { add(UserListItem.User(it.toRow(busy))) }
             }
             if (others.isNotEmpty()) {
                 add(UserListItem.Header(UiText.Resource(R.string.user_search_section_others)))
-                others.forEach { add(UserListItem.User(it.toRow())) }
+                others.forEach { add(UserListItem.User(it.toRow(busy))) }
             }
-            if (nextOffset.value != null && !loadingMore) add(UserListItem.LoadMore)
+            if (offersMore) add(UserListItem.LoadMore)
         }
-        _uiState.value = UserSearchUiState.Content(items, loadingMore)
     }
 
-    private fun PersonSearchResult.toRow(): UserRowUi {
+    private fun PersonSearchResult.toRow(busy: Set<Int>): UserRowUi {
         val profile = registered
         return if (profile != null) {
             UserRowUi(
@@ -191,7 +186,7 @@ class UserSearchViewModel @Inject constructor(
                 subtitle = profile.user.subtitleText(),
                 status = profile.relationship.statusText(),
                 primary = profile.relationship.primaryAction(),
-                busy = isu in busy.value,
+                busy = isu in busy,
                 opensProfile = true
             )
         } else {
@@ -206,6 +201,14 @@ class UserSearchViewModel @Inject constructor(
                 opensProfile = true
             )
         }
+    }
+
+    /** Where the first page of the current query is; rows and later pages live beside it. */
+    private sealed interface SearchPhase {
+        data object Idle : SearchPhase
+        data object Searching : SearchPhase
+        data object Done : SearchPhase
+        data class Failed(val error: AppError) : SearchPhase
     }
 
     private companion object {

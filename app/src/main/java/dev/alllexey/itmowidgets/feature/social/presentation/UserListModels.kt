@@ -4,6 +4,8 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.shared.core.Res
+import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
 
 enum class UserAction { ADD, ACCEPT, REJECT, CANCEL, REMOVE, INVITE }
 
@@ -19,13 +21,21 @@ data class UserRowUi(
     /** An action for this person is in flight; buttons are disabled meanwhile. */
     val busy: Boolean = false,
     val opensProfile: Boolean = true
-)
+) {
+    val displayName: UiText get() = userDisplayName(name, isu)
+}
 
 sealed interface UserListItem {
     data class Header(val title: UiText) : UserListItem
     data class User(val row: UserRowUi) : UserListItem
     data object LoadMore : UserListItem
 }
+
+/** Backend sends an empty name until the owner's identity is published; a screen never shows it raw. */
+fun userDisplayName(name: String, isu: Int): UiText =
+    name.trim().takeIf { it.isNotEmpty() }?.let(UiText::Dynamic) ?: UiText.Res(Res.string.user_name_placeholder, listOf(isu))
+
+fun UserSummary.displayName(): UiText = userDisplayName(name, isu)
 
 fun UserSummary.subtitleText(): UiText {
     if (groups.isEmpty()) return UiText.Resource(R.string.user_subtitle_isu, listOf(isu))

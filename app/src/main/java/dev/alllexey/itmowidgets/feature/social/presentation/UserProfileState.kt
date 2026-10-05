@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 
 sealed interface ProfilePart<out T> {
@@ -27,7 +28,17 @@ sealed interface UserProfileUiState {
         val facts: List<ProfileFact>,
         val social: SocialBlock?,
         val reviews: ProfileReviews?
-    ) : UserProfileUiState
+    ) : UserProfileUiState {
+        /** [name] for the hero, the share text and the remove confirmation; an empty one becomes the placeholder. */
+        val displayName: UiText get() = userDisplayName(name, isu)
+    }
+}
+
+sealed interface UserProfileEvent {
+    data class ActionFailed(val error: AppError) : UserProfileEvent
+    data class ConfirmRemove(val name: UiText) : UserProfileEvent
+    data object LoadFailed : UserProfileEvent
+    data object ConfirmDeleteReview : UserProfileEvent
 }
 
 fun userProfileUiState(
