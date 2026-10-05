@@ -1,9 +1,12 @@
 package dev.alllexey.itmowidgets.feature.auth.data
 
+import dev.alllexey.itmoapi.core.MyItmoException
+import dev.alllexey.itmoapi.itmoid.TokenSet
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
+import dev.alllexey.itmowidgets.core.network.asAppError
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
-import api.myitmo.MyItmo
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -16,7 +19,6 @@ import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
-import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -26,12 +28,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import kotlin.time.Clock
 
+/**
+ * The ITMO.ID session on MyItmoApi 2.x. Every token write goes through [myItmo]'s `tokens`, which serialises it with
+ * any refresh in flight; [tokenStore] only tells a signed-out device from one whose session has ended.
+ */
 class SessionRepositoryImpl @Inject constructor(
     private val tokenStore: SessionTokenStore,
-    private val myItmo: MyItmo,
+    private val myItmo: MyItmoClient,
+    private val clock: Clock,
     private val currentUserProvider: CurrentUserProvider,
-    private val refreshTokenAuthenticator: RefreshTokenAuthenticator,
     private val dataCleaners: Set<@JvmSuppressWildcards SessionDataCleaner>,
     private val lifecycleEffects: SessionLifecycleEffects,
     private val backendIdentitySync: BackendIdentitySync,
@@ -57,7 +64,7 @@ class SessionRepositoryImpl @Inject constructor(
             mutableState.value = SessionState.SignedOut
             return
         }
-        if (myItmo.isRefreshTokenExpired) {
+        if (withContext(dispatchers.io) { myItmo.tokens.isRefreshTokenExpired() }) {
             mutableState.value = SessionState.ReauthenticationRequired
             return
         }
@@ -74,7 +81,7 @@ class SessionRepositoryImpl @Inject constructor(
         }
 
         val tokens = try {
-            ItmoIdTokenResponse.parse(tokenResponseJson).toSessionTokens()
+            ItmoIdTokenResponse.parse(tokenResponseJson).toTokenSet(clock.now().toEpochMilliseconds())
         } catch (_: Exception) {
             return AppResult.Failure(AppError.Unauthorized)
         }
@@ -89,18 +96,15 @@ class SessionRepositoryImpl @Inject constructor(
             return AppResult.Failure(AppError.Unauthorized)
         }
 
+        // One stateless refresh validates the token; the current session stays until it succeeds.
         val tokens = try {
-            refreshTokenAuthenticator.authenticate(normalizedToken)
+            withContext(dispatchers.io) { myItmo.identity.refresh(normalizedToken) }
         } catch (cancellation: CancellationException) {
             throw cancellation
+        } catch (error: MyItmoException) {
+            return AppResult.Failure(error.asAppError())
         } catch (error: Exception) {
-            return AppResult.Failure(
-                if (error.isCausedByNetworkFailure()) {
-                    AppError.Network
-                } else {
-                    AppError.Unauthorized
-                }
-            )
+            return AppResult.Failure(if (error.isCausedByNetworkFailure()) AppError.Network else AppError.Unknown(error))
         }
         return replaceSession(tokens)
     }
@@ -111,7 +115,7 @@ class SessionRepositoryImpl @Inject constructor(
             runCatching { lifecycleEffects.prepareForSessionChange() }
             clearSessionDataIgnoringFailures()
             // An expired session must not stay behind the demo: widgets would keep refreshing it.
-            withContext(dispatchers.io) { tokenStore.clearTokens() }
+            clearTokens()
             demoPreferences.setDemoActive(true)
             // No Backend identity, FCM token, device or background work: the demo stays on the device.
             mutableState.value = DEMO_SESSION
@@ -137,7 +141,7 @@ class SessionRepositoryImpl @Inject constructor(
             runCatching { backendDeviceSession.unregisterCurrentDevice() }
             runCatching { lifecycleEffects.prepareForSessionChange() }
             clearSessionDataIgnoringFailures()
-            withContext(dispatchers.io) { tokenStore.clearTokens() }
+            clearTokens()
             runCatching { lifecycleEffects.onSignedOut() }
             mutableState.value = SessionState.SignedOut
         }
@@ -153,12 +157,12 @@ class SessionRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun replaceSession(tokens: SessionTokens): AppResult<Unit> {
+    private suspend fun replaceSession(tokens: TokenSet): AppResult<Unit> {
         return try {
             lifecycleEffects.prepareForSessionChange()
             clearSessionData()
             demoPreferences.setDemoActive(false)
-            withContext(dispatchers.io) { tokenStore.replaceWithTokens(tokens) }
+            withContext(dispatchers.io) { myItmo.tokens.replaceTokens(tokens) }
             mutableState.value = SessionState.SignedIn(currentUserProvider.getCurrentUser())
             runCatching { lifecycleEffects.onSignedIn() }
             synchronizeSignedInSession()
@@ -166,7 +170,7 @@ class SessionRepositoryImpl @Inject constructor(
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (_: Exception) {
-            withContext(dispatchers.io) { tokenStore.clearTokens() }
+            clearTokens()
             clearSessionDataIgnoringFailures()
             runCatching { lifecycleEffects.onSignedOut() }
             mutableState.value = SessionState.SignedOut
@@ -180,6 +184,10 @@ class SessionRepositoryImpl @Inject constructor(
         runCatching { fcmTokenSync.sync() }
         runCatching { backendDeviceSession.registerCurrentDevice() }
             .onFailure { diagnostics.warn("Session", "Device registration after sign-in failed", it) }
+    }
+
+    private suspend fun clearTokens() {
+        withContext(dispatchers.io) { myItmo.tokens.replaceTokens(null) }
     }
 
     private suspend fun clearSessionData() {

@@ -18,6 +18,10 @@ kotlin {
             api(libs.kotlinx.serialization.json)
             // StringResource and PluralStringResource are in UiText's public signature (L07 KM-07).
             api(libs.compose.components.resources)
+            // MyItmoClientFactory builds the MyItmoApi 2.x client from an engine, a TokenStorage and a Clock, so the
+            // client, its storage and Ktor's engine type are in core's public signatures (L07 KM-10a1).
+            api(libs.my.itmo.api.kmp)
+            api(libs.ktor.client.core)
             // kotlinx.atomicfu.locks.SynchronizedObject of AtomicTextFile (L07 KM-04); library only, no plugin.
             implementation(libs.kotlinx.atomicfu)
         }

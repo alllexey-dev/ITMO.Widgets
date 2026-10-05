@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.network
 
 import api.myitmo.utils.ApiException
 import api.myitmo.utils.TokenRefreshException
+import dev.alllexey.itmoapi.core.MyItmoException
 import dev.alllexey.itmowidgets.core.result.AppError
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
@@ -33,6 +34,20 @@ class AppErrorMapperTest {
         assertEquals(AppError.Network, IOException(TokenRefreshException("Expired")).toAppError())
         assertEquals(AppError.Network, ApiException("Network error", SocketTimeoutException()).toAppError())
         assertEquals(AppError.Unauthorized, TokenRefreshException("Expired").toAppError())
+    }
+
+    @Test
+    fun `maps MyItmoApi 2_x failures with the released semantics`() {
+        assertEquals(AppError.Network, MyItmoException.Network(IOException()).toAppError())
+        assertEquals(AppError.Network, RuntimeException(MyItmoException.Network(UnknownHostException())).toAppError())
+        assertEquals(AppError.Unauthorized, MyItmoException.Auth(400).toAppError())
+        assertEquals(AppError.Unauthorized, MyItmoException.Api(200, 401).toAppError())
+        assertEquals(AppError.Forbidden, MyItmoException.Http(403).toAppError())
+        assertEquals(AppError.NotFound, MyItmoException.Http(404).toAppError())
+        // ITMO.ID failing to answer a refresh keeps the session: retriable, never a request to sign in again.
+        for (failure in listOf(MyItmoException.Http(401), MyItmoException.Http(503), MyItmoException.Decode())) {
+            assertSame(failure, (failure.toAppError() as AppError.Unknown).cause)
+        }
     }
 
     @Test
