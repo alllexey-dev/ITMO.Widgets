@@ -27,3 +27,9 @@ keystore.properties
 *.jks
 *.keystore
 .env*
+# Xcode (iosApp/project.yml generates the project; scripts/ios/test.sh builds into iosApp/build/)
+iosApp/*.xcodeproj
+iosApp/build/
+xcuserdata/
+*.xcuserstate
+Signing.local.xcconfig

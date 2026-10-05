@@ -1,0 +1,9 @@
+// The app target ITMOWidgets.
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_ID)
+INFOPLIST_FILE = Resources/Info/ITMOWidgets-Info.plist
+CODE_SIGN_ENTITLEMENTS = Resources/ITMOWidgets$(ITMO_ENTITLEMENTS_VARIANT).entitlements
+ASSETCATALOG_COMPILER_APPICON_NAME =
+
+// The Kotlin umbrella framework `Shared` (static), placed here by :shared:ios:embedAndSignAppleFrameworkForXcode.
+FRAMEWORK_SEARCH_PATHS = $(inherited) $(SRCROOT)/../shared/ios/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+OTHER_LDFLAGS = $(inherited) -framework Shared

@@ -1,0 +1,4 @@
+// The notification service extension ITMOWidgetsNotificationService (Swift micro-client, no Kotlin; ADR 0023).
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_ID).notification-service
+INFOPLIST_FILE = Resources/Info/ITMOWidgetsNotificationService-Info.plist
+CODE_SIGN_ENTITLEMENTS = Resources/ITMOWidgetsNotificationService$(ITMO_ENTITLEMENTS_VARIANT).entitlements

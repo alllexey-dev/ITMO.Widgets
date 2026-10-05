@@ -1,0 +1,92 @@
+# The iOS project (ADR 0023, docs/ios.md). XcodeGen generates the ignored ITMOWidgets.xcodeproj from this file;
+# build and test through scripts/ios/test.sh. Identifiers and signing live in Config/*.xcconfig, never here.
+name: ITMOWidgets
+options:
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  developmentLanguage: ru
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+
+settingGroups:
+  # Target presets set CODE_SIGN_IDENTITY at target level, above any xcconfig (SP-23); route it back to Base.xcconfig.
+  signing:
+    CODE_SIGN_IDENTITY: $(ITMO_CODE_SIGN_IDENTITY)
+
+targets:
+  ITMOWidgets:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    configFiles:
+      Debug: Config/App.xcconfig
+      Release: Config/App.xcconfig
+    settings:
+      groups: [signing]
+    dependencies:
+      - target: ITMOWidgetsWidgets
+      - target: ITMOWidgetsNotificationService
+    preBuildScripts:
+      # Builds the Kotlin framework `Shared` before Compile Sources (direct integration). Gradle runs in the `kn`
+      # build slot with the worktree's MyItmoApi pin; inside scripts/ios/test.sh the slot is already held, so the
+      # nested slot.sh runs Gradle directly.
+      - name: Build Kotlin framework
+        basedOnDependencyAnalysis: false
+        shell: /bin/bash
+        script: |
+          set -euo pipefail
+          source "$SRCROOT/../scripts/ios/env.sh"
+          cd "$ITMO_ROOT"
+          pin_args=$(itmo_ios_pin_args)
+          scripts/slot.sh kn -- /bin/bash -c './gradlew ${ITMO_MAX_WORKERS:+--max-workers=$ITMO_MAX_WORKERS} "$@"' gradle \
+            :shared:ios:embedAndSignAppleFrameworkForXcode $pin_args
+
+  ITMOWidgetsWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Extensions/Widgets
+    configFiles:
+      Debug: Config/Widgets.xcconfig
+      Release: Config/Widgets.xcconfig
+    settings:
+      groups: [signing]
+
+  ITMOWidgetsNotificationService:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Extensions/NotificationService
+    configFiles:
+      Debug: Config/NotificationService.xcconfig
+      Release: Config/NotificationService.xcconfig
+    settings:
+      groups: [signing]
+
+  ITMOWidgetsTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/UnitTests
+    configFiles:
+      Debug: Config/UnitTests.xcconfig
+      Release: Config/UnitTests.xcconfig
+    settings:
+      groups: [signing]
+    dependencies:
+      - target: ITMOWidgets
+
+schemes:
+  ITMOWidgets:
+    build:
+      targets:
+        ITMOWidgets: all
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - name: ITMOWidgetsTests
+          parallelizable: false
