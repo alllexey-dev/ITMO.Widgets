@@ -71,10 +71,12 @@ class AppScreenshotRule(testInstance: Any) : TestRule {
             check(File(it, "settings.gradle.kts").isFile) { "$it is not the repository root" }
         }
 
-        /** `app/screenshots`: `:app`'s own baselines (the shell, the harness proofs). */
-        val appBaselines: BaselineDirectory get() = BaselineDirectory(File(root, "app/screenshots"))
+        /** `app/screenshots`: `:app`'s own baselines (the shell, the harness proofs); `<gallery>/app` in a gallery. */
+        val appBaselines: BaselineDirectory
+            get() = BaselineDirectory(ShotsRun.gallery?.let { File(it, "app") } ?: File(root, "app/screenshots"))
 
-        /** `shared/<module>/screenshots`, where XML references wait for their port. */
-        fun moduleBaselines(module: String): BaselineDirectory = BaselineDirectory.ofModule(root, module)
+        /** `shared/<module>/screenshots`, where XML references wait for their port; `<gallery>/<module>` there. */
+        fun moduleBaselines(module: String): BaselineDirectory =
+            ShotsRun.gallery?.let { BaselineDirectory(File(it, module)) } ?: BaselineDirectory.ofModule(root, module)
     }
 }

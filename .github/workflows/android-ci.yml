@@ -66,6 +66,29 @@ jobs:
           CI: "true"
         run: scripts/verify.sh quick
 
+      # Roborazzi on the JVM (ADR 0022): every module's baselines, compared, never recorded here.
+      - name: verify.sh shots all
+        id: shots
+        env:
+          CI: "true"
+        run: scripts/verify.sh shots all
+
+      # Only a failed comparison uploads: <name>_compare.png (reference, diff, new), <name>_actual.png, the report.
+      - name: Upload screenshot diffs
+        if: failure() && steps.shots.outcome == 'failure'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: screenshot-diffs
+          path: |
+            app/build/outputs/roborazzi/
+            app/build/reports/roborazzi/
+            app/build/test-results/roborazzi/
+            shared/*/build/outputs/roborazzi/
+            shared/*/build/reports/roborazzi/
+            shared/*/build/test-results/roborazzi/
+          if-no-files-found: ignore
+          retention-days: 14
+
       # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version; only `v2.3/next` writes the cache.
       - name: Kotlin/Native version
         id: kotlin-native
