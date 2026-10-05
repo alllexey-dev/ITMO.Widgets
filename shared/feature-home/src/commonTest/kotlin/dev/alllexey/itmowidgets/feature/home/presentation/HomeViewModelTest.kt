@@ -3,57 +3,59 @@ package dev.alllexey.itmowidgets.feature.home.presentation
 import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeHint
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.FakeHomeCardSource
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.feature.home.FakeHomeCardPreferences
-import dev.alllexey.itmowidgets.core.testing.FakeHomeCardSource
 import dev.alllexey.itmowidgets.feature.home.FakeHomeHintStore
 import dev.alllexey.itmowidgets.feature.home.homeScheduleCard
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import dev.alllexey.itmowidgets.testkit.FakeClock
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
-    @get:Rule val mainDispatcherRule = MainDispatcherRule()
-
+    private val main = TestMainDispatcher()
     private val schedule = FakeHomeCardSource(homeScheduleCard())
     private val hints = FakeHomeCardSource(HomeCard.Hint(HomeHint.WIDGETS))
     private val sport = FakeHomeCardSource(HomeCard.Sport(null, emptyList()))
     private val preferences = FakeHomeCardPreferences()
     private val hintStore = FakeHomeHintStore()
-    private var nowMillis = 1_000_000L
-    private val clock = object : Clock() {
-        override fun getZone() = ZoneOffset.UTC
-        override fun withZone(zone: java.time.ZoneId) = this
-        override fun instant(): Instant = Instant.ofEpochMilli(nowMillis)
-    }
+    private val clock = FakeClock(Instant.fromEpochMilliseconds(1_000_000))
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     private fun model(vararg sources: FakeHomeCardSource = arrayOf(hints, sport, schedule)) =
-        HomeViewModel(sources.toSet(), preferences, hintStore, clock)
+        HomeViewModel(sources.toList(), preferences, hintStore, clock)
 
-    private fun kotlinx.coroutines.test.TestScope.subscribe(vm: HomeViewModel): Job =
+    private fun TestScope.subscribe(vm: HomeViewModel): Job =
         vm.uiState.onEach { }.launchIn(backgroundScope)
 
     private fun HomeViewModel.content() = uiState.value as HomeUiState.Content
 
     @Test
-    fun `cards sort by kind whatever the source order`() = runTest {
+    fun cardsSortByKindWhateverTheSourceOrder() = runTest(main.dispatcher) {
         val vm = model()
         subscribe(vm)
         advanceUntilIdle()
@@ -65,7 +67,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `state is loading until every source has spoken`() = runTest {
+    fun stateIsLoadingUntilEverySourceHasSpoken() = runTest(main.dispatcher) {
         val vm = model()
         assertEquals(HomeUiState.Loading, vm.uiState.value)
 
@@ -75,7 +77,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `hidden kinds drop out and return with the preference`() = runTest {
+    fun hiddenKindsDropOutAndReturnWithThePreference() = runTest(main.dispatcher) {
         val vm = model()
         subscribe(vm)
         preferences.hidden.value = setOf(HomeCardKind.SPORT)
@@ -88,7 +90,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `schedule changes sit right after the schedule and hide by their own kind`() = runTest {
+    fun scheduleChangesSitRightAfterTheScheduleAndHideByTheirOwnKind() = runTest(main.dispatcher) {
         val changes = FakeHomeCardSource(HomeCard.ScheduleChanges(unread = 2, latest = scheduleChange()))
         val vm = model(hints, sport, changes, schedule)
         subscribe(vm)
@@ -107,7 +109,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `new marks sit right after schedule changes and hide by their own kind`() = runTest {
+    fun newMarksSitRightAfterScheduleChangesAndHideByTheirOwnKind() = runTest(main.dispatcher) {
         val changes = FakeHomeCardSource(HomeCard.ScheduleChanges(unread = 2, latest = scheduleChange()))
         val marks = FakeHomeCardSource(HomeCard.Marks(listOf("Тестовый предмет")))
         val vm = model(marks, hints, sport, changes, schedule)
@@ -130,7 +132,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `dismissing new marks reaches every source`() = runTest {
+    fun dismissingNewMarksReachesEverySource() = runTest(main.dispatcher) {
         val marks = FakeHomeCardSource(HomeCard.Marks(listOf("Тестовый предмет")))
         val vm = model(marks, hints, sport, schedule)
 
@@ -144,7 +146,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `dismissing a card reaches every source`() = runTest {
+    fun dismissingACardReachesEverySource() = runTest(main.dispatcher) {
         val vm = model()
 
         vm.dismissCard(HomeCardKind.SCHEDULE_CHANGES)
@@ -157,7 +159,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `an empty feed is content not loading`() = runTest {
+    fun anEmptyFeedIsContentNotLoading() = runTest(main.dispatcher) {
         schedule.cards.value = emptyList()
         hints.cards.value = emptyList()
         sport.cards.value = emptyList()
@@ -169,7 +171,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `refresh asks every source and reports one failure for two`() = runTest {
+    fun refreshAsksEverySourceAndReportsOneFailureForTwo() = runTest(main.dispatcher) {
         schedule.refreshResult = AppResult.Failure(AppError.Network)
         sport.refreshResult = AppResult.Failure(AppError.Unauthorized)
         val vm = model()
@@ -177,7 +179,7 @@ class HomeViewModelTest {
         val events = mutableListOf<HomeEvent>()
         vm.events.onEach(events::add).launchIn(backgroundScope)
 
-        vm.refresh()
+        vm.refresh(RefreshMode.Pull)
         advanceUntilIdle()
 
         assertEquals(listOf(1, 1, 1), listOf(schedule.refreshes, sport.refreshes, hints.refreshes))
@@ -187,7 +189,19 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `the first load and a stale resume refresh silently`() = runTest {
+    fun aFailureReportedWhileNobodyCollectsReachesTheNextCollector() = runTest(main.dispatcher) {
+        schedule.refreshResult = AppResult.Failure(AppError.Network)
+        val vm = model()
+        subscribe(vm)
+
+        vm.refresh(RefreshMode.Pull)
+        advanceUntilIdle()
+
+        assertEquals(HomeEvent.RefreshFailed(AppError.Network), vm.events.first())
+    }
+
+    @Test
+    fun theFirstLoadAndAStaleResumeRefreshSilently() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<AppResult<Unit>>()
         schedule.pendingRefresh = gate
         val vm = model()
@@ -202,16 +216,38 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `refreshing shows while sources answer and a second call waits`() = runTest {
+    fun onlyPullShowsTheIndicator() = runTest(main.dispatcher) {
+        val vm = model()
+        subscribe(vm)
+        advanceUntilIdle()
+
+        val shown = listOf(RefreshMode.Silent, RefreshMode.Pull, RefreshMode.Force).associateWith { mode ->
+            val gate = CompletableDeferred<AppResult<Unit>>()
+            schedule.pendingRefresh = gate
+            vm.refresh(mode)
+            advanceUntilIdle()
+            val refreshing = vm.content().refreshing
+            gate.complete(AppResult.Success(Unit))
+            advanceUntilIdle()
+            assertFalse(vm.content().refreshing)
+            refreshing
+        }
+
+        assertEquals(mapOf(RefreshMode.Silent to false, RefreshMode.Pull to true, RefreshMode.Force to false), shown)
+        assertEquals(3, schedule.refreshes)
+    }
+
+    @Test
+    fun refreshingShowsWhileSourcesAnswerAndASecondCallWaits() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<AppResult<Unit>>()
         schedule.pendingRefresh = gate
         val vm = model()
         subscribe(vm)
 
-        vm.refresh()
+        vm.refresh(RefreshMode.Pull)
         advanceUntilIdle()
         assertTrue(vm.content().refreshing)
-        vm.refresh()
+        vm.refresh(RefreshMode.Pull)
         assertEquals(1, schedule.refreshes)
 
         gate.complete(AppResult.Success(Unit))
@@ -220,7 +256,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `ensureDataLoaded refreshes only once`() = runTest {
+    fun ensureDataLoadedRefreshesOnlyOnce() = runTest(main.dispatcher) {
         val vm = model()
         subscribe(vm)
 
@@ -233,19 +269,19 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `returning to the screen revalidates always and refreshes only when stale`() = runTest {
+    fun returningToTheScreenRevalidatesAlwaysAndRefreshesOnlyWhenStale() = runTest(main.dispatcher) {
         val vm = model()
         subscribe(vm)
         vm.ensureDataLoaded()
         advanceUntilIdle()
 
-        nowMillis += 60_000
+        clock.advanceBy(60_000.milliseconds)
         vm.onScreenResumed()
         advanceUntilIdle()
         assertEquals(1, schedule.revalidations)
         assertEquals(1, schedule.refreshes)
 
-        nowMillis += 5 * 60_000
+        clock.advanceBy((5 * 60_000).milliseconds)
         vm.onScreenResumed()
         advanceUntilIdle()
         assertEquals(2, schedule.revalidations)
@@ -253,7 +289,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `dismissing a hint writes to the store`() = runTest {
+    fun dismissingAHintWritesToTheStore() = runTest(main.dispatcher) {
         val vm = model()
 
         vm.dismissHint(HomeHint.WIDGETS)
