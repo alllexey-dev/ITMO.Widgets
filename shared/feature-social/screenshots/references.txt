@@ -1,0 +1,22 @@
+# XML references recorded by :app (XmlReferenceCapture) under the name of a future preview.
+# The port that adds the preview re-records the files and deletes its line and the reference test.
+FriendSelectorSheetContent_empty-filter
+FriendSelectorSheetContent_friends
+FriendSelectorSheetContent_locked
+FriendSelectorSheetContent_people
+FriendsScreen_content
+FriendsScreen_disabled
+FriendsScreen_empty
+FriendsScreen_requests
+UserFriendsScreen_content
+UserFriendsScreen_denied
+UserFriendsScreen_empty
+UserProfileScreen_friend
+UserProfileScreen_not-found
+UserProfileScreen_self
+UserProfileScreen_skeleton
+UserProfileScreen_teacher-summary
+UserSearchScreen_empty
+UserSearchScreen_error
+UserSearchScreen_idle
+UserSearchScreen_results
