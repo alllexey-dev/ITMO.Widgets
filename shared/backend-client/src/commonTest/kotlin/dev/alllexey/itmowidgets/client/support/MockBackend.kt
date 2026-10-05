@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.client.support
 
 import dev.alllexey.itmowidgets.client.AccessTokenSource
+import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.http.BackendHttp
 import dev.alllexey.itmowidgets.client.http.BackendRoute
 import io.ktor.client.engine.mock.MockEngine
@@ -16,7 +17,7 @@ import kotlinx.serialization.Serializable
 
 const val TEST_BASE_URL = "https://backend.test"
 
-/** A [BackendHttp] over a [MockEngine]; [requests] records what reached the engine. */
+/** A [BackendHttp] and a [BackendClient] over one [MockEngine]; [requests] records what reached the engine. */
 class MockBackend(
     tokens: AccessTokenSource = AccessTokenSource { null },
     baseUrl: String = TEST_BASE_URL,
@@ -27,6 +28,8 @@ class MockBackend(
     val engine = MockEngine { request -> handler(request) }
 
     internal val http = BackendHttp(baseUrl, tokens, engine)
+
+    val client = BackendClient(baseUrl, tokens, engine)
 
     val requests: List<HttpRequestData> get() = engine.requestHistory
 

@@ -1,0 +1,9 @@
+{
+  "isu": 100001,
+  "name": "Тестовый Студент",
+  "pictureUrl": null,
+  "groups": [
+    { "name": "T3100", "course": 2, "facultyShortName": "ФТФ" }
+  ],
+  "capabilities": { "canViewSchedule": true, "canViewSport": false, "canViewFriends": true }
+}
