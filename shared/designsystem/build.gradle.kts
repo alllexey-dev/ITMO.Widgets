@@ -27,6 +27,9 @@ kotlin {
             }
             // Fragment.itmoComposeView (host/); the app's own Fragment version, nothing newer.
             implementation(libs.androidx.fragment.ktx)
+            // ItmoBottomSheetFragment (host/) extends the MDC sheet shell (SP-05a/b); compile-only, so the kit draws
+            // nothing with MDC and :app's own MDC is the one at runtime.
+            compileOnly(libs.material)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
