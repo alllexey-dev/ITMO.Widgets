@@ -6,5 +6,3 @@ viewmodel-shape dev.alllexey.itmowidgets.feature.resources.presentation.SubjectL
 
 presentation-imports-r dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
 presentation-imports-r dev.alllexey.itmowidgets.feature.resources.presentation.LinkStatusText
-
-domain-imports-java dev.alllexey.itmowidgets.feature.resources.domain.LinkCategoryGuess

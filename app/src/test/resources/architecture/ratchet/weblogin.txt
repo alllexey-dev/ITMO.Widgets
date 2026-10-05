@@ -4,5 +4,3 @@
 viewmodel-shape dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
 
 presentation-imports-r dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
-
-domain-imports-java dev.alllexey.itmowidgets.feature.weblogin.domain.WebLoginCode
