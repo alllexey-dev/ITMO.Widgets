@@ -92,7 +92,8 @@ android {
 
 dependencies {
     implementation(platform(libs.kotlinx.coroutines.bom))
-    implementation(libs.glide)
+    implementation(libs.coil)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.android.image.cropper)
     implementation(libs.itmo.widgets.core)
     implementation(libs.my.itmo.api)
@@ -117,7 +118,7 @@ dependencies {
     implementation(libs.androidx.viewpager2)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp)
-    implementation(libs.jsoup)
+    implementation(libs.ksoup)
     implementation(libs.hilt.android)
     "playImplementation"(libs.play.app.update.ktx)
     ksp(libs.hilt.compiler)

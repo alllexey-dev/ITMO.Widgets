@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
+import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.nodes.Element
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetGrid
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
 
 /**
  * The cells of a tab from its HTML view, as the CSV export would give them: `td` cells of the sheet table (`th`
@@ -12,7 +12,7 @@ import org.jsoup.nodes.Element
 internal object SheetHtmlGrid {
 
     fun parse(html: String): SheetGrid {
-        val document = Jsoup.parse(html)
+        val document = Ksoup.parse(html)
         val table = document.selectFirst("table.waffle") ?: document.selectFirst("table") ?: return SheetGrid(emptyList())
         val rows = table.select("tbody > tr").ifEmpty { table.select("tr") }
         val grid = mutableListOf<MutableList<String?>>()
