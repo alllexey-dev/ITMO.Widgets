@@ -3,8 +3,11 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.my
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
@@ -13,38 +16,18 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-sealed class SportMyUiState {
-
-    object Loading : SportMyUiState()
-
-    data class Content(
-        val attempts: SportAttempts,
-        val score: SportScore,
-        val bookings: List<SportBooking>,
-        val hasPartialError: Boolean = false,
-        /** A refresh is running behind content that stays on screen. */
-        val refreshing: Boolean = false
-    ) : SportMyUiState()
-
-    data class Error(val error: AppError) : SportMyUiState()
-}
-
-sealed interface SportMyEvent {
-    data class ShowError(val error: AppError) : SportMyEvent
-}
 
 @HiltViewModel
 class SportMyViewModel @Inject constructor(
@@ -53,141 +36,94 @@ class SportMyViewModel @Inject constructor(
     private val bookingDelegate: SportBookingDelegate
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<SportMyUiState>(SportMyUiState.Loading)
-    val uiState: StateFlow<SportMyUiState> = _uiState.asStateFlow()
+    private val refreshes = RefreshTracker(viewModelScope)
+    private val eventQueue = EventQueue<SportMyEvent>()
 
-    private val eventChannel = Channel<SportMyEvent>(Channel.BUFFERED)
-    val events: Flow<SportMyEvent> = eventChannel.receiveAsFlow()
-
-    /** Any refresh in flight (keeps `Loading` from turning into an error before the first snapshot). */
-    private val isRefreshing = MutableStateFlow(false)
-    /** Only a user-initiated refresh; drives `Content.refreshing`. */
-    private val userRefreshing = MutableStateFlow(false)
-
-    private var observeJob: Job? = null
+    /** Refreshes and cancellations in flight, silent ones included: `Loading` waits for them instead of an error. */
+    private val operations = MutableStateFlow(0)
     private var lastContent: SportMyUiState.Content? = null
 
-    init {
-        observeData()
-    }
+    val uiState: StateFlow<SportMyUiState> = combine(
+        sportDataRepository.observeSportAttempts(),
+        sportDataRepository.observeSportScore(),
+        sportBookingRepository.observeSportBookings(),
+        operations,
+        refreshes.refreshing,
+        ::toUiState
+    ).stateIn(viewModelScope, SharingStarted.Eagerly, SportMyUiState.Loading)
 
+    val events: Flow<SportMyEvent> = eventQueue.events
+
+    /**
+     * Loads the tab only while nothing is shown and nothing is in flight, so re-entering the tab with content
+     * loaded starts no request. A guard, not a refresh: `refresh(Silent)` would reload loaded content.
+     */
     fun ensureDataLoaded() {
-        if (_uiState.value is SportMyUiState.Loading && !isRefreshing.value) {
-            refreshAllData(silent = true)
-        }
+        if (uiState.value is SportMyUiState.Loading && operations.value == 0) refresh(RefreshMode.Silent)
     }
 
-    /** A pull shows the indicator; the first load and background reloads stay silent. */
-    fun refreshAllData(silent: Boolean = false) {
-        viewModelScope.launch {
-            isRefreshing.value = true
-            if (!silent) userRefreshing.value = true
-            try {
-                awaitAll(
-                    async { sportDataRepository.refreshSportAttempts() },
-                    async { sportDataRepository.refreshSportScore() },
-                    async { sportBookingRepository.refreshSportBookings() },
-                    async { sportDataRepository.refreshSportAutoSignLimits() },
-                    async { sportDataRepository.refreshSportQueueEntries() },
-                    async { sportDataRepository.refreshFriendsBookings() }
-                )
-            } finally {
-                isRefreshing.value = false
-                userRefreshing.value = false
-            }
-        }
-    }
-
-    fun refreshMyItmoData() {
-        viewModelScope.launch {
-            isRefreshing.value = true
-            try {
-                awaitAll(
-                    async { sportDataRepository.refreshSportAttempts() },
-                    async { sportDataRepository.refreshSportScore() },
-                    async { sportBookingRepository.refreshSportBookings() }
-                )
-            } finally {
-                isRefreshing.value = false
-            }
-        }
-    }
-
-    fun refreshCustomData() {
-        viewModelScope.launch {
-            isRefreshing.value = true
-            try {
-                awaitAll(
-                    async { sportDataRepository.refreshSportAutoSignLimits() },
-                    async { sportDataRepository.refreshSportQueueEntries() },
-                    async { sportDataRepository.refreshFriendsBookings() }
-                )
-            } finally {
-                isRefreshing.value = false
-            }
-        }
+    /** A pull or a retry shows the indicator; the first load and background reloads stay silent. */
+    fun refresh(mode: RefreshMode) {
+        refreshes.launch(mode) { tracked { refreshAll() } }
     }
 
     fun cancelBooking(booking: SportBooking) {
         viewModelScope.launch {
-            isRefreshing.value = true
-            try {
-                when (val result = bookingDelegate.cancel(booking)) {
-                    is AppResult.Success -> Unit
-                    is AppResult.Failure -> {
-                        eventChannel.send(SportMyEvent.ShowError(result.error))
-                    }
-                }
-            } finally {
-                isRefreshing.value = false
-            }
+            val result = tracked { bookingDelegate.cancel(booking) }
+            if (result is AppResult.Failure) eventQueue.send(SportMyEvent.ShowError(result.error))
         }
     }
 
-    private fun observeData() {
-        observeJob?.cancel()
-
-        observeJob = viewModelScope.launch {
-            combine(
-                sportDataRepository.observeSportAttempts(),
-                sportDataRepository.observeSportScore(),
-                sportBookingRepository.observeSportBookings(),
-                isRefreshing,
-                userRefreshing
-            ) { attemptsState, scoreState, bookingsState, refreshing, byUser ->
-                val attempts = attemptsState.valueOrNull()
-                val score = scoreState.valueOrNull()
-                val bookings = bookingsState.valueOrNull()
-
-                val errors = listOfNotNull(
-                    attemptsState.errorOrNull(),
-                    scoreState.errorOrNull(),
-                    bookingsState.errorOrNull()
-                )
-
-                when {
-                    attempts == null || score == null || bookings == null -> when {
-                        // Sources that failed keep the last content on screen with a snackbar.
-                        refreshing -> lastContent?.copy(refreshing = byUser) ?: SportMyUiState.Loading
-                        lastContent != null -> lastContent!!.copy(hasPartialError = true, refreshing = false)
-                        errors.isNotEmpty() -> SportMyUiState.Error(errors.first())
-                        else -> SportMyUiState.Loading
-                    }
-
-                    else -> {
-                        SportMyUiState.Content(
-                            attempts = attempts,
-                            score = score,
-                            bookings = bookings,
-                            hasPartialError = errors.isNotEmpty(),
-                            refreshing = byUser
-                        ).also { lastContent = it }
-                    }
-                }
-            }
-                .collect {
-                    _uiState.value = it
-                }
+    private suspend fun refreshAll() {
+        coroutineScope {
+            awaitAll(
+                async { sportDataRepository.refreshSportAttempts() },
+                async { sportDataRepository.refreshSportScore() },
+                async { sportBookingRepository.refreshSportBookings() },
+                async { sportDataRepository.refreshSportAutoSignLimits() },
+                async { sportDataRepository.refreshSportQueueEntries() },
+                async { sportDataRepository.refreshFriendsBookings() }
+            )
         }
+    }
+
+    private suspend fun <T> tracked(operation: suspend () -> T): T {
+        operations.update { it + 1 }
+        try {
+            return operation()
+        } finally {
+            operations.update { it - 1 }
+        }
+    }
+
+    private fun toUiState(
+        attemptsState: AppResult<SportAttempts>,
+        scoreState: AppResult<SportScore>,
+        bookingsState: LoadState<List<SportBooking>>,
+        operationCount: Int,
+        byUser: Boolean
+    ): SportMyUiState {
+        val attempts = attemptsState.valueOrNull()
+        val score = scoreState.valueOrNull()
+        val bookings = bookingsState.valueOrNull()
+        val errors = listOfNotNull(attemptsState.errorOrNull(), scoreState.errorOrNull(), bookingsState.errorOrNull())
+        val previous = lastContent
+
+        if (attempts == null || score == null || bookings == null) {
+            return when {
+                // Sources that failed keep the last content on screen with a snackbar.
+                operationCount > 0 -> previous?.copy(refreshing = byUser) ?: SportMyUiState.Loading
+                previous != null -> previous.copy(hasPartialError = true, refreshing = false)
+                errors.isNotEmpty() -> SportMyUiState.Error(errors.first())
+                else -> SportMyUiState.Loading
+            }
+        }
+        return SportMyUiState.Content(
+            attempts = attempts,
+            score = score,
+            bookings = bookings,
+            hasPartialError = errors.isNotEmpty(),
+            refreshing = byUser
+        ).also { lastContent = it }
     }
 }

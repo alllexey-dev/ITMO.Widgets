@@ -8,8 +8,9 @@ content while they refresh: `SportMyUiState.Content.refreshing` and
 (`skeleton` in `Мой спорт`, `SkeletonListAdapter` under the filter header in
 `Запись`), and a refresh whose sources fail keeps the last snapshot with
 `hasPartialError` and its snackbar instead of an error screen. The first load
-and background reloads are silent (`refreshAllData(silent = true)`); only a
-pull or `Повторить` sets `refreshing`. In `Запись` the header and the week
+and background reloads are silent (`refresh(RefreshMode.Silent)`); only a
+pull (`Pull`) or `Повторить` (`Force`) sets `refreshing`. Re-entering
+`Мой спорт` with content loaded starts no request (`ensureDataLoaded()`). In `Запись` the header and the week
 calendar are deterministic, so while the catalogue has not answered the state
 is `Content(initialLoading = true)` with an empty list: the filters and days
 render at once and only the list area is a placeholder. Official data comes

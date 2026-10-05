@@ -26,6 +26,7 @@ import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SportLessonRequest
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -145,7 +146,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
             listener = this
         )
         lessonsAdapter = SportLessonsAdapter(this, timeProvider)
-        contentStateAdapter = ContentStateAdapter { viewModel.refreshAllData() }
+        contentStateAdapter = ContentStateAdapter { viewModel.refresh(RefreshMode.Force) }
         concatAdapter = ConcatAdapter(headerAdapter, skeletonAdapter, lessonsAdapter, contentStateAdapter)
 
         binding.mainRecyclerView.apply {
@@ -157,7 +158,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
 
     private fun setupUIListeners() {
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.refreshAllData()
+            viewModel.refresh(RefreshMode.Pull)
         }
     }
 
@@ -278,7 +279,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     private fun showFeedback(@androidx.annotation.StringRes message: Int, retry: Boolean = false) {
         feedbackSnackbar?.dismiss()
         feedbackSnackbar = Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).apply {
-            if (retry) setAction(R.string.common_retry) { viewModel.refreshAllData() }
+            if (retry) setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }
             show()
         }
     }
@@ -348,15 +349,18 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
     }
 
     private fun showMultiSelectSearchableDialog() {
-        val selectableItems = viewModel.sportSections.map { sport ->
+        val content = viewModel.uiState.value as? SportSignUiState.Content
+        val selectedSports = content?.selectedSportNames.orEmpty()
+        val usedSports = content?.usedSportNames.orEmpty()
+        val selectableItems = content?.availableSports.orEmpty().map { sport ->
             SelectableItem(
                 name = sport.shorten(),
-                isSelected = viewModel.userFiltersFlow.value.selectedSportNames.contains(sport)
+                isSelected = sport in selectedSports
             )
         }.sortedWith(
             compareBy<SelectableItem> { !it.isSelected }
                 .thenBy { item ->
-                    SectionName.deshorten(item.name) !in viewModel.usedSportNames
+                    SectionName.deshorten(item.name) !in usedSports
                 }
                 .thenBy { it.name }
         )

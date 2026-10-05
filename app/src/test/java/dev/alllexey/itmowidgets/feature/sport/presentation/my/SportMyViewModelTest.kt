@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.my
 
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
@@ -7,12 +8,14 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
+import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -31,9 +34,10 @@ class SportMyViewModelTest {
 
     private val bookings = FakeSportBookingRepository()
     private val data = FakeSportDataRepository()
+    private val actions = FakeSportActionRepository()
 
     private fun TestScope.viewModel() = SportMyViewModel(
-        bookings, data, bookingDelegate(bookings, FakeSportScheduleRepository(), data, this)
+        bookings, data, bookingDelegate(bookings, FakeSportScheduleRepository(), data, this, actions)
     )
 
     private suspend fun emitSnapshot() {
@@ -51,7 +55,7 @@ class SportMyViewModelTest {
         assertFalse(before.refreshing)
 
         bookings.gate = CompletableDeferred()
-        viewModel.refreshAllData()
+        viewModel.refresh(RefreshMode.Pull)
         runCurrent()
         val during = viewModel.uiState.value as SportMyUiState.Content
         assertTrue(during.refreshing)
@@ -69,7 +73,7 @@ class SportMyViewModelTest {
         val viewModel = viewModel()
         advanceUntilIdle()
         bookings.gate = CompletableDeferred()
-        viewModel.refreshAllData(silent = true)
+        viewModel.refresh(RefreshMode.Silent)
         runCurrent()
         assertFalse((viewModel.uiState.value as SportMyUiState.Content).refreshing)
         bookings.gate.complete(Unit)
@@ -113,5 +117,57 @@ class SportMyViewModelTest {
         bookings.merged.emit(LoadState.Error(AppError.Network))
         advanceUntilIdle()
         assertEquals(SportMyUiState.Error(AppError.Network), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `a second entry with content loaded starts no request`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = viewModel()
+        bookings.gate = CompletableDeferred()
+        viewModel.ensureDataLoaded()
+        viewModel.ensureDataLoaded()
+        runCurrent()
+        assertEquals("an entry while the first load runs joins it", 1, bookings.refreshCount)
+
+        emitSnapshot()
+        bookings.gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value is SportMyUiState.Content)
+
+        viewModel.ensureDataLoaded()
+        runCurrent()
+        assertEquals(1, bookings.refreshCount)
+    }
+
+    @Test
+    fun `a retry over an error shows progress and reaches the repositories`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = viewModel()
+        data.score.emit(AppResult.Failure(AppError.Network))
+        data.attempts.emit(AppResult.Failure(AppError.Network))
+        bookings.merged.emit(LoadState.Error(AppError.Network))
+        advanceUntilIdle()
+        assertEquals(SportMyUiState.Error(AppError.Network), viewModel.uiState.value)
+
+        bookings.gate = CompletableDeferred()
+        viewModel.refresh(RefreshMode.Force)
+        runCurrent()
+        assertEquals(SportMyUiState.Loading, viewModel.uiState.value)
+        assertEquals(1, bookings.refreshCount)
+
+        bookings.gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(SportMyUiState.Error(AppError.Network), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `a failed cancellation waits for the view`() = runTest(mainDispatcherRule.dispatcher) {
+        emitSnapshot()
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        actions.result = AppResult.Failure(AppError.Network)
+
+        viewModel.cancelBooking(SportCardFixtures.booking(7))
+        advanceUntilIdle()
+
+        assertEquals(SportMyEvent.ShowError(AppError.Network), viewModel.events.first())
     }
 }
