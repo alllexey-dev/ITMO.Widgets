@@ -43,7 +43,7 @@ class NotificationsStepFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.notificationsButton.setOnClickListener { viewModel.requestNotifications() }
 
-        viewModel.state
+        viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)

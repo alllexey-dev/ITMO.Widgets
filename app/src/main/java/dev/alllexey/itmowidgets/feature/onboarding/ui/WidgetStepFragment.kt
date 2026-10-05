@@ -120,7 +120,7 @@ class WidgetStepFragment : Fragment() {
 
         binding.pinButton.setOnClickListener { viewModel.pinWidget(kind) }
 
-        viewModel.state
+        viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
@@ -144,7 +144,7 @@ class WidgetStepFragment : Fragment() {
 
     /** A custom image offers a replacement or the default; otherwise straight to the picker. */
     private fun chooseSpoilerImage() {
-        val state = viewModel.state.value
+        val state = viewModel.uiState.value
         if (state.spoilerBusy) return
         if (state.customSpoiler != true) {
             spoilerImagePicker.launch()

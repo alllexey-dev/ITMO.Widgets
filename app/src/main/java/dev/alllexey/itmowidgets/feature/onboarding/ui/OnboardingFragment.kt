@@ -35,8 +35,8 @@ import kotlinx.coroutines.flow.onEach
 /**
  * Host of the first-run flow: the step dots, the pager and the footer.
  *
- * Every event of the shared ViewModel is handled here. The steps are pages of one
- * `Channel`; a second collector inside a page would take events away from this one.
+ * Every event of the shared ViewModel is handled here. Each event is delivered once,
+ * to one collector; a second collector inside a page would take events away from this one.
  */
 @AndroidEntryPoint
 class OnboardingFragment : Fragment() {
@@ -104,7 +104,7 @@ class OnboardingFragment : Fragment() {
             requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, it)
         }
 
-        viewModel.state
+        viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)

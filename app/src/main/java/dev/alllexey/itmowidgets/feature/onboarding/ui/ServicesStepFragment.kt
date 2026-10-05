@@ -53,7 +53,7 @@ class ServicesStepFragment : Fragment() {
         }
         binding.servicesSourceButton.setOnClickListener { openSourceCode() }
 
-        viewModel.state
+        viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)

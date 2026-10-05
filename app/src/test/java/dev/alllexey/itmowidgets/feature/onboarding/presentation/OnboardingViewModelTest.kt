@@ -34,21 +34,21 @@ class OnboardingViewModelTest {
         val fixture = createFixture()
         advanceUntilIdle()
 
-        val walked = mutableListOf(fixture.viewModel.state.value.step)
-        repeat(3) { fixture.viewModel.next(); walked += fixture.viewModel.state.value.step }
+        val walked = mutableListOf(fixture.viewModel.uiState.value.step)
+        repeat(3) { fixture.viewModel.next(); walked += fixture.viewModel.uiState.value.step }
 
         assertEquals(
             listOf(OnboardingStep.COMPACT_WIDGET, OnboardingStep.FULL_WIDGET, OnboardingStep.QR_WIDGET, OnboardingStep.SERVICES),
             walked
         )
-        assertTrue(fixture.viewModel.state.value.isLastStep)
+        assertTrue(fixture.viewModel.uiState.value.isLastStep)
         assertFalse(fixture.onboarding.observeCompleted().first())
 
         fixture.viewModel.next()
         advanceUntilIdle()
 
         assertTrue(fixture.onboarding.observeCompleted().first())
-        assertTrue(fixture.viewModel.state.value.finished)
+        assertTrue(fixture.viewModel.uiState.value.finished)
     }
 
     @Test
@@ -57,22 +57,22 @@ class OnboardingViewModelTest {
             val fixture = createFixture()
             advanceUntilIdle()
             repeat(3) { fixture.viewModel.next() }
-            assertEquals(4, fixture.viewModel.state.value.steps.size)
+            assertEquals(4, fixture.viewModel.uiState.value.steps.size)
 
             fixture.viewModel.setServicesEnabled(true)
             advanceUntilIdle()
-            assertEquals(5, fixture.viewModel.state.value.steps.size)
-            assertFalse(fixture.viewModel.state.value.isLastStep)
+            assertEquals(5, fixture.viewModel.uiState.value.steps.size)
+            assertFalse(fixture.viewModel.uiState.value.isLastStep)
 
             fixture.viewModel.next()
-            assertEquals(OnboardingStep.NOTIFICATIONS, fixture.viewModel.state.value.step)
-            assertTrue(fixture.viewModel.state.value.isLastStep)
+            assertEquals(OnboardingStep.NOTIFICATIONS, fixture.viewModel.uiState.value.step)
+            assertTrue(fixture.viewModel.uiState.value.isLastStep)
 
             fixture.services.enabled.value = false
             advanceUntilIdle()
 
-            assertEquals(OnboardingStep.SERVICES, fixture.viewModel.state.value.step)
-            assertEquals(4, fixture.viewModel.state.value.steps.size)
+            assertEquals(OnboardingStep.SERVICES, fixture.viewModel.uiState.value.step)
+            assertEquals(4, fixture.viewModel.uiState.value.steps.size)
         }
 
     @Test
@@ -80,14 +80,14 @@ class OnboardingViewModelTest {
         val fixture = createFixture()
         advanceUntilIdle()
         repeat(2) { fixture.viewModel.next() }
-        assertEquals(OnboardingStep.QR_WIDGET, fixture.viewModel.state.value.step)
+        assertEquals(OnboardingStep.QR_WIDGET, fixture.viewModel.uiState.value.step)
 
         fixture.viewModel.back()
-        assertEquals(OnboardingStep.FULL_WIDGET, fixture.viewModel.state.value.step)
+        assertEquals(OnboardingStep.FULL_WIDGET, fixture.viewModel.uiState.value.step)
         fixture.viewModel.back()
         fixture.viewModel.back()
-        assertEquals(OnboardingStep.COMPACT_WIDGET, fixture.viewModel.state.value.step)
-        assertEquals(0, fixture.viewModel.state.value.stepIndex)
+        assertEquals(OnboardingStep.COMPACT_WIDGET, fixture.viewModel.uiState.value.step)
+        assertEquals(0, fixture.viewModel.uiState.value.stepIndex)
     }
 
     @Test
@@ -98,7 +98,7 @@ class OnboardingViewModelTest {
 
         val restored = createFixture(savedStateHandle = handle).viewModel
 
-        assertEquals(OnboardingStep.FULL_WIDGET, restored.state.value.step)
+        assertEquals(OnboardingStep.FULL_WIDGET, restored.uiState.value.step)
     }
 
     @Test
@@ -110,7 +110,7 @@ class OnboardingViewModelTest {
         advanceUntilIdle()
 
         assertTrue(fixture.onboarding.observeCompleted().first())
-        assertTrue(fixture.viewModel.state.value.finished)
+        assertTrue(fixture.viewModel.uiState.value.finished)
     }
 
     @Test
@@ -120,12 +120,12 @@ class OnboardingViewModelTest {
 
         fixture.viewModel.setServicesEnabled(true)
         advanceUntilIdle()
-        assertTrue(fixture.viewModel.state.value.servicesEnabled)
-        assertFalse(fixture.viewModel.state.value.servicesBusy)
+        assertTrue(fixture.viewModel.uiState.value.servicesEnabled)
+        assertFalse(fixture.viewModel.uiState.value.servicesBusy)
 
         fixture.viewModel.setServicesEnabled(false)
         advanceUntilIdle()
-        assertFalse(fixture.viewModel.state.value.servicesEnabled)
+        assertFalse(fixture.viewModel.uiState.value.servicesEnabled)
         assertEquals(listOf(true, false), fixture.services.requests)
     }
 
@@ -138,8 +138,8 @@ class OnboardingViewModelTest {
         fixture.viewModel.setServicesEnabled(true)
         advanceUntilIdle()
 
-        assertFalse(fixture.viewModel.state.value.servicesEnabled)
-        assertFalse(fixture.viewModel.state.value.servicesBusy)
+        assertFalse(fixture.viewModel.uiState.value.servicesEnabled)
+        assertFalse(fixture.viewModel.uiState.value.servicesBusy)
         assertTrue(fixture.viewModel.events.first() is OnboardingEvent.ShowError)
     }
 
@@ -147,14 +147,14 @@ class OnboardingViewModelTest {
     fun `every widget option writes through and the preview follows`() = runTest(mainDispatcherRule.dispatcher) {
         val fixture = createFixture()
         advanceUntilIdle()
-        val before = checkNotNull(fixture.viewModel.state.value.appearance)
+        val before = checkNotNull(fixture.viewModel.uiState.value.appearance)
 
         WidgetOption.entries.forEach { option ->
             fixture.viewModel.setOption(option, !option.isEnabled(before))
         }
         advanceUntilIdle()
 
-        val after = checkNotNull(fixture.viewModel.state.value.appearance)
+        val after = checkNotNull(fixture.viewModel.uiState.value.appearance)
         WidgetOption.entries.forEach { option ->
             assertEquals(option.name, !option.isEnabled(before), option.isEnabled(after))
         }
@@ -169,36 +169,36 @@ class OnboardingViewModelTest {
         fixture.viewModel.setTextSize(WidgetKind.QR, WidgetTextSize.LARGE)
         advanceUntilIdle()
 
-        val appearance = checkNotNull(fixture.viewModel.state.value.appearance)
+        val appearance = checkNotNull(fixture.viewModel.uiState.value.appearance)
         assertEquals(WidgetTextSize.EXTRA_LARGE, WidgetKind.SINGLE_LESSON.textSize(appearance))
         assertEquals(WidgetTextSize.NORMAL, WidgetKind.DAY_SCHEDULE.textSize(appearance))
         assertEquals(null, WidgetKind.QR.textSize(appearance))
 
         fixture.viewModel.setTextSize(WidgetKind.DAY_SCHEDULE, WidgetTextSize.LARGE)
         advanceUntilIdle()
-        assertEquals(WidgetTextSize.LARGE, checkNotNull(fixture.viewModel.state.value.appearance).schedule.full.textSize)
+        assertEquals(WidgetTextSize.LARGE, checkNotNull(fixture.viewModel.uiState.value.appearance).schedule.full.textSize)
     }
 
     @Test
     fun `the stored spoiler image is read once and a save marks it for the preview`() =
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture()
-            assertEquals(null, fixture.viewModel.state.value.customSpoiler)
+            assertEquals(null, fixture.viewModel.uiState.value.customSpoiler)
             advanceUntilIdle()
-            assertEquals(false, fixture.viewModel.state.value.customSpoiler)
-            assertEquals(0, fixture.viewModel.state.value.spoilerRevision)
+            assertEquals(false, fixture.viewModel.uiState.value.customSpoiler)
+            assertEquals(0, fixture.viewModel.uiState.value.spoilerRevision)
 
             fixture.viewModel.saveSpoilerImage("content://test/image")
             fixture.viewModel.saveSpoilerImage("content://test/duplicate")
             fixture.viewModel.resetSpoilerImage()
             runCurrent()
-            assertTrue(fixture.viewModel.state.value.spoilerBusy)
+            assertTrue(fixture.viewModel.uiState.value.spoilerBusy)
             assertEquals(listOf("content://test/image"), fixture.spoiler.saved)
 
             fixture.spoiler.result.complete(true)
             advanceUntilIdle()
 
-            val state = fixture.viewModel.state.value
+            val state = fixture.viewModel.uiState.value
             assertEquals(true, state.customSpoiler)
             assertFalse(state.spoilerBusy)
             assertEquals(1, state.spoilerRevision)
@@ -214,7 +214,7 @@ class OnboardingViewModelTest {
         fixture.spoiler.result.complete(false)
         advanceUntilIdle()
 
-        val state = fixture.viewModel.state.value
+        val state = fixture.viewModel.uiState.value
         assertEquals(true, state.customSpoiler)
         assertFalse(state.spoilerBusy)
         assertEquals(0, state.spoilerRevision)
@@ -225,15 +225,15 @@ class OnboardingViewModelTest {
     fun `a reset returns to the default image`() = runTest(mainDispatcherRule.dispatcher) {
         val fixture = createFixture(spoiler = FakeCustomSpoilerRepository(hasImage = true))
         advanceUntilIdle()
-        assertEquals(true, fixture.viewModel.state.value.customSpoiler)
+        assertEquals(true, fixture.viewModel.uiState.value.customSpoiler)
 
         fixture.viewModel.resetSpoilerImage()
         fixture.spoiler.result.complete(true)
         advanceUntilIdle()
 
-        assertEquals(false, fixture.viewModel.state.value.customSpoiler)
+        assertEquals(false, fixture.viewModel.uiState.value.customSpoiler)
         assertEquals(1, fixture.spoiler.resets)
-        assertEquals(1, fixture.viewModel.state.value.spoilerRevision)
+        assertEquals(1, fixture.viewModel.uiState.value.spoilerRevision)
     }
 
     @Test
@@ -256,7 +256,7 @@ class OnboardingViewModelTest {
 
         fixture.viewModel.onWidgetPinned(WidgetKind.QR)
 
-        assertEquals(setOf(WidgetKind.QR), fixture.viewModel.state.value.pinnedWidgets)
+        assertEquals(setOf(WidgetKind.QR), fixture.viewModel.uiState.value.pinnedWidgets)
     }
 
     @Test
@@ -267,7 +267,7 @@ class OnboardingViewModelTest {
 
             fixture.viewModel.requestNotifications()
             assertEquals(OnboardingEvent.RequestNotificationPermission, fixture.viewModel.events.first())
-            assertTrue(fixture.viewModel.state.value.notificationsAsked)
+            assertTrue(fixture.viewModel.uiState.value.notificationsAsked)
 
             fixture.viewModel.onNotificationPermission(granted = false)
             fixture.viewModel.requestNotifications()

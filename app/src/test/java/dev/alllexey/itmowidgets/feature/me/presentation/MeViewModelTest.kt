@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.session.CurrentUser
@@ -80,6 +81,21 @@ class MeViewModelTest {
 
         assertEquals(2, social.refreshes)
     }
+
+    @Test
+    fun `a silent refresh on return joins the one in flight and a later one reaches the repository`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val social = FakeSocialRepository()
+            val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true))
+
+            viewModel.refresh(RefreshMode.Silent)
+            advanceUntilIdle()
+            assertEquals(1, social.refreshes)
+
+            viewModel.refresh(RefreshMode.Silent)
+            advanceUntilIdle()
+            assertEquals(2, social.refreshes)
+        }
 
     @Test
     fun `web sign-in is offered only with the connection`() = runTest(mainDispatcherRule.dispatcher) {
