@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.model
 
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 enum class SportQueueEntryStatus {
     WAITING,
@@ -23,8 +23,8 @@ data class SportQueueLesson(
     val typeId: Long,
     val buildingId: Long?,
     val roomName: String,
-    val start: OffsetDateTime,
-    val end: OffsetDateTime,
+    val start: Instant,
+    val end: Instant,
     val timeSlotId: Long,
     val teacherIsu: Long,
     val teacherFio: String
@@ -37,12 +37,12 @@ sealed interface SportQueueEntry {
     val total: Int
     val isCancelled: Boolean
     val status: SportQueueEntryStatus
-    val createdAt: OffsetDateTime
-    val firstNotifiedAt: OffsetDateTime?
-    val lastNotifiedAt: OffsetDateTime?
-    val cancelledAt: OffsetDateTime?
-    val satisfiedAt: OffsetDateTime?
-    val expiredAt: OffsetDateTime?
+    val createdAt: Instant
+    val firstNotifiedAt: Instant?
+    val lastNotifiedAt: Instant?
+    val cancelledAt: Instant?
+    val satisfiedAt: Instant?
+    val expiredAt: Instant?
     val notificationAttempts: Int
     val maxNotificationAttempts: Int
     val targetLesson: SportQueueLesson
@@ -55,12 +55,12 @@ data class SportFreeSignEntry(
     override val total: Int,
     override val isCancelled: Boolean,
     override val status: SportQueueEntryStatus,
-    override val createdAt: OffsetDateTime,
-    override val firstNotifiedAt: OffsetDateTime?,
-    override val lastNotifiedAt: OffsetDateTime?,
-    override val cancelledAt: OffsetDateTime?,
-    override val satisfiedAt: OffsetDateTime?,
-    override val expiredAt: OffsetDateTime?,
+    override val createdAt: Instant,
+    override val firstNotifiedAt: Instant?,
+    override val lastNotifiedAt: Instant?,
+    override val cancelledAt: Instant?,
+    override val satisfiedAt: Instant?,
+    override val expiredAt: Instant?,
     override val notificationAttempts: Int,
     override val maxNotificationAttempts: Int,
     override val targetLesson: SportQueueLesson,
@@ -77,12 +77,12 @@ data class SportAutoSignEntry(
     override val total: Int,
     override val isCancelled: Boolean,
     override val status: SportQueueEntryStatus,
-    override val createdAt: OffsetDateTime,
-    override val firstNotifiedAt: OffsetDateTime?,
-    override val lastNotifiedAt: OffsetDateTime?,
-    override val cancelledAt: OffsetDateTime?,
-    override val satisfiedAt: OffsetDateTime?,
-    override val expiredAt: OffsetDateTime?,
+    override val createdAt: Instant,
+    override val firstNotifiedAt: Instant?,
+    override val lastNotifiedAt: Instant?,
+    override val cancelledAt: Instant?,
+    override val satisfiedAt: Instant?,
+    override val expiredAt: Instant?,
     override val notificationAttempts: Int,
     override val maxNotificationAttempts: Int,
     override val targetLesson: SportQueueLesson,
@@ -115,5 +115,5 @@ data class SportAutoSignQueue(
 data class SportAutoSignLimits(
     val limit: Int,
     val available: Int,
-    val nextAvailableAt: OffsetDateTime
+    val nextAvailableAt: Instant
 )

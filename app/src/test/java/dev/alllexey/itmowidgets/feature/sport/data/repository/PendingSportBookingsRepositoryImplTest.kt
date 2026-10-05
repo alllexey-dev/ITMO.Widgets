@@ -8,13 +8,13 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.*
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import java.time.LocalDateTime
-import kotlin.time.toKotlinInstant
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -53,10 +53,10 @@ class PendingSportBookingsRepositoryImplTest {
 
     @Test fun `future prediction shifts once while bound real and free lessons use actual dates`() = runTest {
         val prototype = SportCardFixtures.entry().targetLesson.copy(
-            id = 20, start = SportCardFixtures.start.minusWeeks(2), end = SportCardFixtures.start.minusWeeks(2).plusMinutes(90),
+            id = 20, start = SportCardFixtures.start - 14.days, end = SportCardFixtures.start - 14.days + 90.minutes,
             sectionName = "  Секция  ", teacherFio = " Преподаватель ", roomName = " Зал ", teacherIsu = 300001
         )
-        val real = prototype.copy(id = 30, start = SportCardFixtures.start.plusDays(1), end = SportCardFixtures.start.plusDays(1).plusMinutes(90), teacherIsu = 300002)
+        val real = prototype.copy(id = 30, start = SportCardFixtures.start + 1.days, end = SportCardFixtures.start + 1.days + 90.minutes, teacherIsu = 300002)
         data.entries.value = LoadState.Content(listOf(
             auto(prototype = prototype),
             auto(id = 3, prototype = prototype.copy(id = 21), real = real),
@@ -65,7 +65,7 @@ class PendingSportBookingsRepositoryImplTest {
 
         val pending = repository.observePendingBookings().first { it is AppResult.Success && it.value.size == 3 } as AppResult.Success
         val predicted = pending.value.first { it.isPrediction }
-        assertEquals(SportCardFixtures.start.toInstant().toKotlinInstant(), predicted.start)
+        assertEquals(SportCardFixtures.start, predicted.start)
         assertEquals(-20L, predicted.lessonId)
         assertEquals("Секция", predicted.sectionName)
         assertEquals("Преподаватель", predicted.teacherFio)
@@ -76,11 +76,11 @@ class PendingSportBookingsRepositoryImplTest {
         assertFalse(bound.isPrediction)
         assertEquals(300002, bound.teacherIsu)
         assertEquals(300002, bound.toDetailsArgs(MOSCOW).teacherIsu)
-        assertEquals(real.start.toInstant().toKotlinInstant(), bound.start)
-        assertEquals(real.end.toInstant().toKotlinInstant(), bound.end)
+        assertEquals(real.start, bound.start)
+        assertEquals(real.end, bound.end)
         assertEquals(PendingSportBooking.QueueKind.AUTO, bound.queueKind)
         val free = pending.value.first { it.queueKind == PendingSportBooking.QueueKind.FREE }
-        assertEquals(SportCardFixtures.start.toInstant().toKotlinInstant(), free.start)
+        assertEquals(SportCardFixtures.start, free.start)
         assertEquals(SportCardFixtures.entry().targetLesson.teacherIsu.toInt(), free.teacherIsu)
         assertEquals(free.teacherIsu, free.toDetailsArgs(MOSCOW).teacherIsu)
     }
@@ -94,7 +94,7 @@ class PendingSportBookingsRepositoryImplTest {
                 base.copy(id = index + 10L, status = status, targetLesson = base.targetLesson.copy(id = index + 10L))
             } + listOf(
                 base.copy(isCancelled = true),
-                base.copy(targetLesson = base.targetLesson.copy(start = FixedTime.javaNow(), end = FixedTime.javaNow().plusMinutes(90))),
+                base.copy(targetLesson = base.targetLesson.copy(start = FixedTime.now(), end = FixedTime.now() + 90.minutes)),
                 signed,
                 auto(real = signed.targetLesson),
                 base.copy(id = 99, targetLesson = base.targetLesson.copy(id = 10))
@@ -169,7 +169,7 @@ class PendingSportBookingsRepositoryImplTest {
         val pending = (snapshot as AppResult.Success).value.single()
         assertEquals(entry.id, pending.queueId)
         assertEquals(entry.lessonId, pending.lessonId)
-        assertEquals(entry.targetLesson.start.toInstant().toKotlinInstant(), pending.start)
+        assertEquals(entry.targetLesson.start, pending.start)
         assertEquals(PendingSportBooking.QueueKind.FREE, pending.queueKind)
         assertEquals(1, bookings.refreshes)
         assertEquals(1, data.refreshes)
@@ -265,7 +265,7 @@ class PendingSportBookingsRepositoryImplTest {
     ) = SportAutoSignEntry(
         id = id, prototypeLessonId = prototype.id, realLessonId = real?.id,
         position = 1, total = 1, isCancelled = false, status = SportQueueEntryStatus.WAITING,
-        createdAt = FixedTime.javaNow(), firstNotifiedAt = null, lastNotifiedAt = null,
+        createdAt = FixedTime.now(), firstNotifiedAt = null, lastNotifiedAt = null,
         cancelledAt = null, satisfiedAt = null, expiredAt = null, notificationAttempts = 0,
         maxNotificationAttempts = 10, targetLesson = prototype, realLesson = real
     )

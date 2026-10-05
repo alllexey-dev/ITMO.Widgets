@@ -12,7 +12,7 @@ import androidx.viewpager2.widget.ViewPager2
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.databinding.ItemSportFiltersHeaderBinding
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignUiState
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 interface FilterActionsListener {
     fun onSportClick()

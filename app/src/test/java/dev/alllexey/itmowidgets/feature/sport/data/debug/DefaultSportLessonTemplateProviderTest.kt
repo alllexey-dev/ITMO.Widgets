@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.sport.data.debug
 
 import dev.alllexey.itmowidgets.core.testing.FakeSportLessonTemplateController
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.time.javaNow
 import java.time.LocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -28,7 +27,7 @@ class DefaultSportLessonTemplateProviderTest {
 
         assertEquals(6, lessons.size)
         assertTrue(lessons.all { it.lessonId < 0 })
-        assertTrue(lessons.all { it.end > timeProvider.javaNow() })
+        assertTrue(lessons.all { it.end > timeProvider.now() })
         assertTrue(lessons.any { it.available == 0 })
         assertTrue(lessons.any { it.available > 0 })
     }

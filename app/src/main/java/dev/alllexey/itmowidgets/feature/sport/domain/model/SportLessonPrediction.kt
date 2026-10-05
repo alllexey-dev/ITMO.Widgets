@@ -1,13 +1,14 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.model
 
-import java.time.OffsetDateTime
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 /** A catalog lesson, the prototype, repeats this many days later; until the repeat appears it is predicted. */
 const val PREDICTION_OFFSET_DAYS = 14L
 
-fun SportLesson.predictedStart(): OffsetDateTime = start.plusDays(PREDICTION_OFFSET_DAYS)
+fun SportLesson.predictedStart(): Instant = start + PREDICTION_OFFSET_DAYS.days
 
-fun SportLesson.predictedEnd(): OffsetDateTime = end.plusDays(PREDICTION_OFFSET_DAYS)
+fun SportLesson.predictedEnd(): Instant = end + PREDICTION_OFFSET_DAYS.days
 
 /** Whether this real lesson is the repeat of [prototype]: the same section, teacher, levels, type and slot. */
 fun SportLesson.repeats(prototype: SportLesson): Boolean =

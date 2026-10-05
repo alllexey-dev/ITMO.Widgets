@@ -57,6 +57,7 @@ import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import java.time.LocalDate
 import java.time.LocalTime
+import kotlin.time.toJavaInstant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
@@ -256,7 +257,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
      */
     private suspend fun findSportBookingAt(date: LocalDate, start: LocalTime, subject: String): SportBooking? {
         val candidates = sportBookingsSnapshot()?.filter { booking ->
-            val local = booking.start.atZoneSameInstant(timeProvider.javaZone())
+            val local = booking.start.toJavaInstant().atZone(timeProvider.javaZone())
             local.toLocalDate() == date && local.toLocalTime() == start
         }.orEmpty()
         val wanted = subject.trim().lowercase()

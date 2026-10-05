@@ -6,11 +6,14 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAc
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingObstacle
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
 import org.junit.Assert.*
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.nanoseconds
 import org.junit.Test
 
 class SportBookingConditionsTest {
     private val lesson = SportCardFixtures.lesson()
-    private val now = lesson.start.minusDays(1)
+    private val now = lesson.start - 1.days
 
     @Test fun `academic schedule overlap warns but does not block official permission`() {
         val result = lesson.copy(intersection = true).bookingConditions().evaluate(now)
@@ -57,9 +60,9 @@ class SportBookingConditionsTest {
     }
 
     @Test fun `starting instant blocks stale snapshot but does not trap existing queue`() {
-        assertEquals(SportBookingAction.SIGN, lesson.bookingConditions().evaluate(lesson.start.minusNanos(1)).action)
+        assertEquals(SportBookingAction.SIGN, lesson.bookingConditions().evaluate(lesson.start - 1.nanoseconds).action)
         assertEquals(SportBookingAction.NONE, lesson.bookingConditions().evaluate(lesson.start).action)
-        assertEquals(SportBookingAction.NONE, lesson.bookingConditions().evaluate(lesson.start.plusMinutes(1)).action)
+        assertEquals(SportBookingAction.NONE, lesson.bookingConditions().evaluate(lesson.start + 1.minutes).action)
         val queued = lesson.copy(signEntry = SportCardFixtures.entry(), canSignIn = false,
             unavailableReasons = listOf(UnavailableReason.HealthGroupMismatch))
         assertEquals(SportBookingAction.CANCEL_AUTO, queued.bookingConditions().evaluate(lesson.start).action)

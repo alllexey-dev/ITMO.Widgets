@@ -1,14 +1,14 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.model
 
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 data class SportBooking(
     override val type: String = "booking",
     override val isLessonReal: Boolean,
     override val lessonId: Long,
     override val sectionName: SectionName,
-    override val start: OffsetDateTime,
-    override val end: OffsetDateTime,
+    override val start: Instant,
+    override val end: Instant,
     override val roomName: String,
     override val teacherFio: String,
     override val teacherIsu: Int,

@@ -1,16 +1,15 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
-import java.time.DayOfWeek
-import java.time.format.TextStyle
-import java.time.temporal.ChronoUnit
-import java.util.Locale
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 
 class SportSignStateFactory @Inject constructor(
@@ -24,7 +23,7 @@ class SportSignStateFactory @Inject constructor(
         userFilters: SportSignFilters,
         hasPartialError: Boolean
     ): SportSignUiState.Content = with(userFilters) {
-        val today = timeProvider.javaToday()
+        val today = timeProvider.today()
         val buildingsById = catalog.buildings.associate { it.id to it.value }
         val teachersByIsu = catalog.teachers.associate { it.id to it.value }
         val timeSlotsById = timeSlots.associate { it.id to it.displayName }
@@ -83,7 +82,7 @@ class SportSignStateFactory @Inject constructor(
             .sorted()
         val availableTeachers = validTeacherNames.sorted()
 
-        val now = timeProvider.javaNow()
+        val now = timeProvider.now()
         val visibleLessons = filteredLessons
             .asSequence()
             .filter { it.end > now }
@@ -106,34 +105,30 @@ class SportSignStateFactory @Inject constructor(
             )
             .toList()
 
+        fun SportLesson.startDate(): LocalDate = start.toLocalDateTime(timeProvider.timeZone).date
+
         val displayedLessons = visibleLessons.filter {
-            it.start.toLocalDate() == selectedDate
+            it.startDate() == selectedDate
         }
 
-        val currentMonday = today.with(DayOfWeek.MONDAY)
-        val selectedMonday = selectedDate.with(DayOfWeek.MONDAY)
-        val weekOffset = ChronoUnit.WEEKS
-            .between(currentMonday, selectedMonday)
-            .toInt()
+        val currentMonday = today.weekMonday()
+        val weekOffset = today.weeksUntil(selectedDate)
         val datesWithLessons = visibleLessons
-            .map { it.start.toLocalDate() }
+            .map { it.startDate() }
             .toSet()
         val datesWithAvailableLessons = visibleLessons
             .filter(SportLesson::canSignIn)
-            .map { it.start.toLocalDate() }
+            .map { it.startDate() }
             .toSet()
 
         val calendarWeeks = (0..MAX_WEEKS_FORWARD).map { weekIndex ->
-            val weekStart = currentMonday.plusWeeks(weekIndex.toLong())
+            val weekStart = currentMonday.plus(weekIndex, DateTimeUnit.WEEK)
             (0..6).map { dayOffset ->
-                val date = weekStart.plusDays(dayOffset.toLong())
+                val date = weekStart.plus(dayOffset, DateTimeUnit.DAY)
                 CalendarDay(
                     date = date,
-                    dayOfWeek = date.dayOfWeek.getDisplayName(
-                        TextStyle.SHORT,
-                        RUSSIAN
-                    ),
-                    dayOfMonth = date.dayOfMonth.toString(),
+                    dayOfWeek = DateTexts.shortWeekday(date.dayOfWeek),
+                    dayOfMonth = date.day.toString(),
                     hasLessons = date in datesWithLessons,
                     hasAvailableLessons = date in datesWithAvailableLessons,
                     isSelected = date == selectedDate,
@@ -143,15 +138,8 @@ class SportSignStateFactory @Inject constructor(
         }
         val selectedWeekIndex = weekOffset.coerceIn(0, MAX_WEEKS_FORWARD)
         val displayedWeek = calendarWeeks[selectedWeekIndex]
-        val currentMonthName = displayedWeek[3].date.month
-            .getDisplayName(TextStyle.FULL_STANDALONE, RUSSIAN)
-            .replaceFirstChar { character ->
-                if (character.isLowerCase()) {
-                    character.titlecase(RUSSIAN)
-                } else {
-                    character.toString()
-                }
-            }
+        val currentMonthName = DateTexts.standaloneMonth(displayedWeek[3].date.month)
+            .replaceFirstChar { it.titlecase() }
 
         SportSignUiState.Content(
             availableSports = availableSports,
@@ -187,6 +175,3 @@ class SportSignStateFactory @Inject constructor(
         )
     }
 }
-
-/** The app speaks Russian only: the calendar must not follow an English system locale. */
-private val RUSSIAN: Locale = Locale.forLanguageTag("ru")

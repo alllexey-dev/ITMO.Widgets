@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.core.time.javaZone
@@ -21,6 +22,8 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -103,9 +106,9 @@ class DemoContentTest {
         assertTrue(sport.all { it.toKotlinLocalDate() in DemoSportSlots.annaBookedDates(today.toKotlinLocalDate()) })
         assertTrue(DemoSchedule.changes(today, time.javaNow().toInstant()).all { change -> listOfNotNull(change.before, change.after).all { it.date.toJavaLocalDate() in ahead } })
         assertTrue(DemoSport.schedule(time).keys.all { it in ahead })
-        assertTrue(DemoSport.bookings(time).all { it.start.toLocalDate() in ahead })
-        assertTrue(DemoSport.queueEntries(time).all { it.targetLesson.start.toLocalDate() in ahead })
-        assertTrue(DemoSport.score(time).attendancesData.all { !it.dateTime.toLocalDate().isAfter(today) })
+        assertTrue(DemoSport.bookings(time).all { it.start.academicDate(time) in ahead })
+        assertTrue(DemoSport.queueEntries(time).all { it.targetLesson.start.academicDate(time) in ahead })
+        assertTrue(DemoSport.score(time).attendancesData.all { !it.dateTime.academicDate(time).isAfter(today) })
     }
 
     @Test
@@ -118,11 +121,11 @@ class DemoContentTest {
             LocalDateTime.of(2026, 10, 11, 12, 0)
         )
         moments.map(::FixedAcademicTime).forEach { time ->
-            val now = time.javaNow()
+            val now = time.now()
             val today = DemoSport.schedule(time).getValue(time.javaToday())
 
-            assertTrue("Nothing to sign up for at $now", today.any { it.start.isAfter(now) && it.canSignIn && it.available > 0 })
-            assertTrue(today.all { it.start.toLocalDate() == time.javaToday() && it.end.isAfter(it.start) })
+            assertTrue("Nothing to sign up for at $now", today.any { it.start > now && it.canSignIn && it.available > 0 })
+            assertTrue(today.all { it.start.academicDate(time) == time.javaToday() && it.end > it.start })
             assertEquals(today.size, today.map { it.lessonId }.toSet().size)
         }
     }
@@ -150,4 +153,7 @@ class DemoContentTest {
         const val TEST_SESSION_ISU = 123456
         const val SPORT = 11
     }
+
+    private fun Instant.academicDate(time: AcademicTimeProvider): LocalDate =
+        toJavaInstant().atZone(time.javaZone()).toLocalDate()
 }

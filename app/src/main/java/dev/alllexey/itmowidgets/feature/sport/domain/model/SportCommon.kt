@@ -1,14 +1,14 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.model
 
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 sealed interface SportCommon {
     val type: String
     val isLessonReal: Boolean
     val lessonId: Long
     val sectionName: SectionName
-    val start: OffsetDateTime
-    val end: OffsetDateTime
+    val start: Instant
+    val end: Instant
     val teacherFio: String
     val teacherIsu: Int
     val sectionLevel: Int

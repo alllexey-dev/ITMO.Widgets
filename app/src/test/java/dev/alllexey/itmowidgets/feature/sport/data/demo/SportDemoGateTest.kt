@@ -17,7 +17,6 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.core.testing.unreachableMyItmo
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
@@ -28,6 +27,7 @@ import dev.alllexey.itmowidgets.feature.sport.data.repository.UserSportRepositor
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFreeSignEntry
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -67,7 +67,7 @@ class SportDemoGateTest {
         assertTrue(lessons.any { it.isLessonReal && it.available == 0 && it.signEntry is SportFreeSignEntry })
         assertTrue(lessons.any { !it.isLessonReal && it.signEntry is SportAutoSignEntry })
         assertTrue(lessons.any { lesson -> lesson.friendsBookings.any { it.friend.isu == DemoPeople.IVAN.isu } })
-        assertTrue(lessons.all { !it.start.toLocalDate().isBefore(time.javaToday()) })
+        assertTrue(lessons.all { it.start.toLocalDateTime(time.timeZone).date >= time.today() })
     }
 
     @Test

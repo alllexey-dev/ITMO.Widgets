@@ -6,11 +6,3 @@ viewmodel-shape dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSi
 viewmodel-shape dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportViewModel
 
 presentation-imports-r dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignViewModel
-
-domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttendance
-domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutomation
-domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
-domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
-domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
-domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.SportLessonPrediction
-domain-imports-java dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason

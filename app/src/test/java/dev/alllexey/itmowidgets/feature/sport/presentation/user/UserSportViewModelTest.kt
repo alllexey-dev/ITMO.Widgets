@@ -14,7 +14,8 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportBookings
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
-import java.time.OffsetDateTime
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -77,8 +78,8 @@ class UserSportViewModelTest {
     private fun lesson(id: Long) = SportLesson(
         isLessonReal = true,
         lessonId = id,
-        start = OffsetDateTime.parse("2026-09-19T09:00:00+03:00").plusHours(id),
-        end = OffsetDateTime.parse("2026-09-19T10:30:00+03:00").plusHours(id),
+        start = Instant.parse("2026-09-19T09:00:00+03:00") + id.hours,
+        end = Instant.parse("2026-09-19T10:30:00+03:00") + id.hours,
         sectionId = 1,
         sectionName = SectionName("Фитнес"),
         sectionLevel = 1,
@@ -109,8 +110,8 @@ class UserSportViewModelTest {
         isLessonReal = true,
         lessonId = id,
         sectionName = SectionName("Фитнес"),
-        start = OffsetDateTime.parse("2026-09-19T09:00:00+03:00").plusHours(id),
-        end = OffsetDateTime.parse("2026-09-19T10:30:00+03:00").plusHours(id),
+        start = Instant.parse("2026-09-19T09:00:00+03:00") + id.hours,
+        end = Instant.parse("2026-09-19T10:30:00+03:00") + id.hours,
         roomName = "Зал",
         teacherFio = "Преподаватель",
         teacherIsu = 1,

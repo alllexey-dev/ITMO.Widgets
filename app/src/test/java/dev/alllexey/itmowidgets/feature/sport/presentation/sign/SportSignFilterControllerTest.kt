@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import java.time.LocalDateTime
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -19,25 +19,19 @@ class SportSignFilterControllerTest {
             controller.nextWeek()
         }
 
-        assertEquals(
-            timeProvider.javaToday().with(java.time.DayOfWeek.MONDAY)
-                .plusWeeks(MAX_WEEKS_FORWARD.toLong()),
-            controller.filters.value.selectedDate
-        )
+        // Wednesday 22 July: the Monday of its week, five weeks on.
+        assertEquals(LocalDate(2026, 8, 24), controller.filters.value.selectedDate)
 
         repeat(MAX_WEEKS_FORWARD + 2) {
             controller.previousWeek()
         }
 
-        assertEquals(
-            timeProvider.javaToday().with(java.time.DayOfWeek.MONDAY),
-            controller.filters.value.selectedDate
-        )
+        assertEquals(LocalDate(2026, 7, 20), controller.filters.value.selectedDate)
     }
 
     @Test
     fun `reset preserves date and restores filter defaults`() {
-        val selectedDate = timeProvider.javaToday().plusDays(8)
+        val selectedDate = LocalDate(2026, 7, 30)
         controller.selectDate(selectedDate)
         controller.selectSports(setOf(SectionName("Плавание")))
         controller.selectBuilding("Кронверкский")

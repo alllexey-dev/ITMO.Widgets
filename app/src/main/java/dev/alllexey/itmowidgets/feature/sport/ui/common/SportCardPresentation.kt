@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.ui.ConditionTone
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.fullDateText
@@ -14,7 +15,9 @@ import dev.alllexey.itmowidgets.databinding.ItemSportFriendsBinding
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.format
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalTime
 import java.util.Locale
 
 private val RUSSIAN_LOCALE: Locale = Locale.forLanguageTag("ru")
@@ -22,14 +25,14 @@ private val RUSSIAN_LOCALE: Locale = Locale.forLanguageTag("ru")
 /** `DateTimeFormatter` renders Russian weekday and month names in lower case. */
 private fun String.capitalizeFirst(): String = replaceFirstChar { it.uppercase(RUSSIAN_LOCALE) }
 
-fun SportSessionTiming.timeText(): String = timeRangeText(start.toLocalTime(), end.toLocalTime())
+fun SportSessionTiming.timeText(): String = timeRangeText(start.time.toJavaLocalTime(), end.time.toJavaLocalTime())
 
 fun SportSessionTiming.dateText(context: Context): String {
-    val date = start.format(DateTimeFormatter.ofPattern("d MMMM", RUSSIAN_LOCALE))
+    val date = start.date.format(DateTexts.DAY_MONTH)
     return when {
         isToday -> context.getString(R.string.sport_date_today, date)
         isTomorrow -> context.getString(R.string.sport_date_tomorrow, date)
-        else -> start.format(DateTimeFormatter.ofPattern("EEE, d MMMM", RUSSIAN_LOCALE)).capitalizeFirst()
+        else -> start.date.format(DateTexts.SHORT_WEEKDAY_DAY_MONTH).capitalizeFirst()
     }
 }
 
@@ -37,14 +40,14 @@ fun SportSessionTiming.dateText(context: Context): String {
 fun SportSessionTiming.weekdayText(context: Context): String = when {
     isToday -> context.getString(R.string.sport_card_today)
     isTomorrow -> context.getString(R.string.sport_card_tomorrow)
-    else -> start.format(DateTimeFormatter.ofPattern("EEEE", RUSSIAN_LOCALE)).capitalizeFirst()
+    else -> start.date.format(DateTexts.WEEKDAY).capitalizeFirst()
 }
 
-fun SportSessionTiming.fullDateText(): String = fullDateText(start.toLocalDate())
+fun SportSessionTiming.fullDateText(): String = fullDateText(start.date.toJavaLocalDate())
 
 /** «вторник, 8 сентября, 18:30–20:00»: absolute, because the recipient reads it on another day. */
 fun SportSessionTiming.shareDateText(): String =
-    "${start.format(DateTimeFormatter.ofPattern("EEEE, d MMMM", RUSSIAN_LOCALE))}, ${timeText()}"
+    "${start.date.format(DateTexts.WEEKDAY_DAY_MONTH)}, ${timeText()}"
 
 fun SportRegistrationStatus.label(context: Context): String = context.getString(when (this) {
     SportRegistrationStatus.SIGNED -> R.string.sport_status_signed

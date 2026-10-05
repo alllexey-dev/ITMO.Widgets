@@ -1,9 +1,12 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
@@ -28,7 +31,14 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
+import kotlinx.datetime.LocalDate
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SportSignViewModelTest {
@@ -132,11 +142,11 @@ class SportSignViewModelTest {
     }
 
     private fun lessonOn(id: Long, day: Int, hour: Int = 18) = SportCardFixtures.lesson(id).let { lesson ->
-        val start = lesson.start.withDayOfMonth(day).withHour(hour)
-        lesson.copy(start = start, end = start.plusMinutes(90))
+        val start = Instant.parse("2026-09-%02dT%02d:30:00+03:00".format(day, hour))
+        lesson.copy(start = start, end = start + 90.minutes)
     }
 
-    private fun SportLesson.predicted() = copy(isLessonReal = false, start = start.plusDays(14), end = end.plusDays(14))
+    private fun SportLesson.predicted() = copy(isLessonReal = false, start = start + 14.days, end = end + 14.days)
 
     @Test
     fun `a shared lesson hidden by the filters selects its day and opens its card`() = runTest(mainDispatcherRule.dispatcher) {
@@ -151,7 +161,7 @@ class SportSignViewModelTest {
         advanceUntilIdle()
 
         assertEquals(SportSignEvent.OpenLessonDetails(hidden), viewModel.events.first())
-        assertEquals(LocalDate.of(2026, 9, 10), viewModel.userFiltersFlow.value.selectedDate)
+        assertEquals(LocalDate(2026, 9, 10), viewModel.userFiltersFlow.value.selectedDate)
         assertTrue((viewModel.uiState.value as SportSignUiState.Content).displayedLessons.isEmpty())
         assertEquals(hidden, viewModel.linkedLesson(5))
         assertNull(viewModel.linkedLesson(1))
@@ -170,7 +180,7 @@ class SportSignViewModelTest {
         viewModel.openSharedLesson(404)
         advanceUntilIdle()
         assertEquals(SportSignEvent.ShowLinkUnavailable, viewModel.events.first())
-        assertEquals(LocalDate.of(2026, 9, 8), viewModel.userFiltersFlow.value.selectedDate)
+        assertEquals(LocalDate(2026, 9, 8), viewModel.userFiltersFlow.value.selectedDate)
     }
 
     @Test
@@ -208,7 +218,7 @@ class SportSignViewModelTest {
             viewModel.openSharedLesson(7, predicted = true)
             advanceUntilIdle()
             assertEquals(SportSignEvent.OpenLessonDetails(prototype.predicted()), viewModel.events.first())
-            assertEquals(LocalDate.of(2026, 9, 23), viewModel.userFiltersFlow.value.selectedDate)
+            assertEquals(LocalDate(2026, 9, 23), viewModel.userFiltersFlow.value.selectedDate)
             assertEquals(prototype.predicted(), viewModel.linkedLesson(7))
 
             viewModel.openSharedLesson(7)
@@ -241,5 +251,25 @@ class SportSignViewModelTest {
         advanceUntilIdle()
 
         assertEquals(SportSignEvent.ShowLinkUnavailable, viewModel.events.first())
+    }
+
+    @Test
+    fun `the auto-sign limit date reads as a Russian device showed it`() = runTest(mainDispatcherRule.dispatcher) {
+        val nextAvailable = "2026-09-12T09:00+03:00"
+        // What java.time wrote on a "ru" device before the port; CLDR 42+ puts U+202F before "г.".
+        val legacy = OffsetDateTime.parse(nextAvailable)
+            .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.forLanguageTag("ru")))
+            .replace('\u202F', ' ').replace('\u00A0', ' ')
+        assertEquals("12 сент. 2026 г., 09:00:00", legacy)
+        data.limits = SportAutoSignLimits(limit = 2, available = 0, nextAvailableAt = Instant.parse("2026-09-12T09:00:00+03:00"))
+        emitCatalog()
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.handleAutoSignClick(lessonOn(7, day = 9).predicted())
+        advanceUntilIdle()
+
+        val expected = UiText.Resource(R.string.sport_auto_sign_limit_reached, listOf(legacy))
+        assertEquals(SportSignEvent.ShowInfoDialog(message = expected), viewModel.events.first())
     }
 }

@@ -4,7 +4,11 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
-import java.time.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
 
 sealed interface SportSignUiState {
 
@@ -101,3 +105,9 @@ data class CalendarDay(
 )
 
 internal const val MAX_WEEKS_FORWARD = 5
+
+/** The Monday of this date's ISO week. */
+internal fun LocalDate.weekMonday(): LocalDate = minus(dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
+
+/** Whole weeks from this date's week to [other]'s, negative when [other] is earlier. */
+internal fun LocalDate.weeksUntil(other: LocalDate): Int = weekMonday().daysUntil(other.weekMonday()) / 7

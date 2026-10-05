@@ -1,14 +1,13 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import javax.inject.Inject
 
 class SportSignFilterController @Inject constructor(
@@ -16,7 +15,7 @@ class SportSignFilterController @Inject constructor(
 ) {
 
     private val mutableFilters = MutableStateFlow(
-        SportSignFilters(selectedDate = timeProvider.javaToday())
+        SportSignFilters(selectedDate = timeProvider.today())
     )
     val filters: StateFlow<SportSignFilters> = mutableFilters.asStateFlow()
 
@@ -67,17 +66,13 @@ class SportSignFilterController @Inject constructor(
     }
 
     private fun moveWeek(offset: Int) {
-        val today = timeProvider.javaToday()
-        val currentMonday = today.with(DayOfWeek.MONDAY)
-        val selectedMonday = mutableFilters.value.selectedDate.with(DayOfWeek.MONDAY)
-        val currentOffset = ChronoUnit.WEEKS
-            .between(currentMonday, selectedMonday)
-            .toInt()
+        val currentMonday = timeProvider.today().weekMonday()
+        val currentOffset = currentMonday.weeksUntil(mutableFilters.value.selectedDate)
         val targetOffset = (currentOffset + offset).coerceIn(0, MAX_WEEKS_FORWARD)
 
         if (targetOffset != currentOffset) {
             update {
-                copy(selectedDate = currentMonday.plusWeeks(targetOffset.toLong()))
+                copy(selectedDate = currentMonday.plus(targetOffset, DateTimeUnit.WEEK))
             }
         }
     }

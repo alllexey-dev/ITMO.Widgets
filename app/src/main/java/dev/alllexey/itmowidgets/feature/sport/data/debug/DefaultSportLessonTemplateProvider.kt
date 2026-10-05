@@ -11,6 +11,9 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 
 class DefaultSportLessonTemplateProvider @Inject constructor(
     private val timeProvider: AcademicTimeProvider,
@@ -95,7 +98,7 @@ class DefaultSportLessonTemplateProvider @Inject constructor(
                 available = 6
             )
         )
-        return lessons.groupBy { it.start.toLocalDate() }
+        return lessons.groupBy { it.start.toJavaInstant().atZone(timeProvider.javaZone()).toLocalDate() }
     }
 
     private fun createLesson(
@@ -110,12 +113,13 @@ class DefaultSportLessonTemplateProvider @Inject constructor(
         available: Int,
         unavailableReasons: List<UnavailableReason> = emptyList()
     ): SportLesson {
-        val start = date.atTime(startTime).atZone(timeProvider.javaZone()).toOffsetDateTime()
+        val zonedStart = date.atTime(startTime).atZone(timeProvider.javaZone())
+        val start = zonedStart.toInstant().toKotlinInstant()
         return SportLesson(
             isLessonReal = true,
             lessonId = id,
             start = start,
-            end = start.plusMinutes(durationMinutes),
+            end = start + durationMinutes.minutes,
             sectionId = id,
             sectionName = SectionName(sectionName),
             sectionLevel = 1,
@@ -130,7 +134,7 @@ class DefaultSportLessonTemplateProvider @Inject constructor(
             comment = "Шаблонное занятие для проверки интерфейса",
             timeSlotId = id,
             timeSlotStart = startTime.toString(),
-            timeSlotEnd = start.plusMinutes(durationMinutes).toLocalTime().toString(),
+            timeSlotEnd = zonedStart.plusMinutes(durationMinutes).toLocalTime().toString(),
             intersection = false,
             canSignIn = available > 0 && unavailableReasons.isEmpty(),
             unavailableReasons = unavailableReasons,

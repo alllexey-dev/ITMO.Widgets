@@ -8,9 +8,9 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
@@ -36,10 +36,11 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.format
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
+import kotlin.time.Instant
 
 @HiltViewModel
 class SportSignViewModel @Inject constructor(
@@ -142,13 +143,13 @@ class SportSignViewModel @Inject constructor(
                 state.errorOrNull()?.let { eventChannel.send(SportSignEvent.ShowError(it)) }
                 return@launch
             }
-            val lesson = lessons.findLinked(lessonId, predicted)?.takeIf { it.end > timeProvider.javaNow() }
+            val lesson = lessons.findLinked(lessonId, predicted)?.takeIf { it.end > timeProvider.now() }
             if (lesson == null) {
                 eventChannel.send(SportSignEvent.ShowLinkUnavailable)
                 return@launch
             }
             linkedLessonKey = lesson.lessonId to lesson.isLessonReal
-            selectDate(lesson.start.toLocalDate())
+            selectDate(lesson.start.academicDate())
             eventChannel.send(SportSignEvent.OpenLessonDetails(lesson))
         }
     }
@@ -418,7 +419,7 @@ class SportSignViewModel @Inject constructor(
                 val existingEntry = availability.entries
                     .filterIsInstance<SportAutoSignEntry>()
                     .find {
-                        it.targetLesson.start.toLocalDate() == lesson.start.toLocalDate()
+                        it.targetLesson.start.academicDate() == lesson.start.academicDate()
                     }
 
                 when {
@@ -451,9 +452,11 @@ class SportSignViewModel @Inject constructor(
                     }
 
                     else -> {
-                        val nextDate = availability.limits.nextAvailableAt.format(
-                            DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                        )
+                        // Pinned to Russian "1 сент. 2026 г., 09:30:00" in the academic zone; java.time followed the
+                        // device locale and the offset Backend sent.
+                        val nextDate = availability.limits.nextAvailableAt
+                            .toLocalDateTime(timeProvider.timeZone)
+                            .format(DateTexts.LOCALIZED_MEDIUM_DATE_TIME)
                         eventChannel.send(
                             SportSignEvent.ShowInfoDialog(
                                 message = UiText.Resource(
@@ -467,6 +470,8 @@ class SportSignViewModel @Inject constructor(
             }
         }
     }
+
+    private fun Instant.academicDate(): LocalDate = toLocalDateTime(timeProvider.timeZone).date
 
     private companion object {
         val EMPTY_CATALOG = SportFilterCatalog(emptyList(), emptyList(), emptyList(), emptyList())
