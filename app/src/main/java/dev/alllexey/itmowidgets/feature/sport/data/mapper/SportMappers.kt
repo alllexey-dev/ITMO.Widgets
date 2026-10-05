@@ -30,6 +30,9 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import java.time.OffsetDateTime
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 
 fun api.myitmo.model.sport.SportScore.toModel(): SportScore {
     return SportScore(
@@ -47,7 +50,7 @@ fun api.myitmo.model.sport.SportAttendance.toModel(): SportAttendance {
         evaluationName = evaluationName?.trim(),
         sectionLevel = sectionLevel,
         score = score,
-        dateTime = date,
+        dateTime = date.toKotlin(),
         isCompetition = isCompetition
     )
 }
@@ -61,10 +64,10 @@ fun api.myitmo.model.sport.SportAttempts.toModel(): SportAttempts {
     )
 }
 
-fun api.myitmo.model.sport.SportLesson.toModel(now: OffsetDateTime): SportLesson {
+fun api.myitmo.model.sport.SportLesson.toModel(now: Instant): SportLesson {
     val unavailableReasons = UnavailableReason.getSortedUnavailableReasons(
         signed = signed == true,
-        startsAt = date,
+        startsAt = date.toKotlin(),
         available = available?.toInt() ?: 0,
         serverReasons = canSignIn?.unavailableReasons.orEmpty(),
         now = now
@@ -72,8 +75,8 @@ fun api.myitmo.model.sport.SportLesson.toModel(now: OffsetDateTime): SportLesson
     return SportLesson(
         isLessonReal = true,
         lessonId = id,
-        start = date,
-        end = dateEnd,
+        start = date.toKotlin(),
+        end = dateEnd.toKotlin(),
         sectionId = sectionId,
         sectionName = SectionName(sectionName.trim()),
         sectionLevel = sectionLevel.toInt(),
@@ -109,8 +112,8 @@ fun ChosenSportSection.toBookings(): List<SportBooking> {
                 isLessonReal = true,
                 lessonId = lesson.id,
                 sectionName = SectionName(sectionName.trim()),
-                start = lesson.dateStart,
-                end = lesson.dateEnd,
+                start = lesson.dateStart.toKotlin(),
+                end = lesson.dateEnd.toKotlin(),
                 roomName = lesson.roomName.trim(),
                 teacherFio = lesson.teacherFio.trim(),
                 teacherIsu = lesson.teacherIsu.toInt(),
@@ -134,8 +137,8 @@ fun SportQueueEntry.toBooking(): SportBooking {
         isLessonReal = isReal,
         lessonId = if (isReal) lesson.id else -lesson.id,
         sectionName = SectionName(lesson.sectionName),
-        start = lesson.start.plusDays(if (!isReal) 14 else 0),
-        end = lesson.end.plusDays(if (!isReal) 14 else 0),
+        start = lesson.start + (if (!isReal) 14 else 0).days,
+        end = lesson.end + (if (!isReal) 14 else 0).days,
         roomName = lesson.roomName,
         teacherFio = lesson.teacherFio,
         teacherIsu = lesson.teacherIsu.toInt(),
@@ -168,7 +171,7 @@ fun SportAutoSignLimitsDto.toModel(): SportAutoSignLimits {
     return SportAutoSignLimits(
         limit = limit,
         available = available,
-        nextAvailableAt = nextAvailableAt
+        nextAvailableAt = nextAvailableAt.toKotlin()
     )
 }
 
@@ -181,12 +184,12 @@ fun SportQueueEntryDto.toModel(): SportQueueEntry {
             total = total,
             isCancelled = isCancelled,
             status = status.toModel(),
-            createdAt = createdAt,
-            firstNotifiedAt = firstNotifiedAt,
-            lastNotifiedAt = lastNotifiedAt,
-            cancelledAt = cancelledAt,
-            satisfiedAt = satisfiedAt,
-            expiredAt = expiredAt,
+            createdAt = createdAt.toKotlin(),
+            firstNotifiedAt = firstNotifiedAt?.toKotlin(),
+            lastNotifiedAt = lastNotifiedAt?.toKotlin(),
+            cancelledAt = cancelledAt?.toKotlin(),
+            satisfiedAt = satisfiedAt?.toKotlin(),
+            expiredAt = expiredAt?.toKotlin(),
             notificationAttempts = notificationAttempts,
             maxNotificationAttempts = maxNotificationAttempts,
             targetLesson = targetLesson.toModel(),
@@ -201,12 +204,12 @@ fun SportQueueEntryDto.toModel(): SportQueueEntry {
             total = total,
             isCancelled = isCancelled,
             status = status.toModel(),
-            createdAt = createdAt,
-            firstNotifiedAt = firstNotifiedAt,
-            lastNotifiedAt = lastNotifiedAt,
-            cancelledAt = cancelledAt,
-            satisfiedAt = satisfiedAt,
-            expiredAt = expiredAt,
+            createdAt = createdAt.toKotlin(),
+            firstNotifiedAt = firstNotifiedAt?.toKotlin(),
+            lastNotifiedAt = lastNotifiedAt?.toKotlin(),
+            cancelledAt = cancelledAt?.toKotlin(),
+            satisfiedAt = satisfiedAt?.toKotlin(),
+            expiredAt = expiredAt?.toKotlin(),
             notificationAttempts = notificationAttempts,
             maxNotificationAttempts = maxNotificationAttempts,
             targetLesson = targetLesson.toModel(),
@@ -244,10 +247,13 @@ private fun SportLessonDto.toModel(): SportQueueLesson {
         typeId = typeId,
         buildingId = buildingId,
         roomName = roomName.trim(),
-        start = start,
-        end = end,
+        start = start.toKotlin(),
+        end = end.toKotlin(),
         timeSlotId = timeSlotId,
         teacherIsu = teacherIsu,
         teacherFio = teacherFio.trim()
     )
 }
+
+/** MyItmoApi 1.x and Core 1.x DTOs keep java.time until KM-10c. */
+private fun OffsetDateTime.toKotlin(): Instant = toInstant().toKotlinInstant()

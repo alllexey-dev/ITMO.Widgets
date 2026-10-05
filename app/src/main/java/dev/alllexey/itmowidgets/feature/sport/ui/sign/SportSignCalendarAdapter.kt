@@ -12,7 +12,8 @@ import com.google.android.material.color.MaterialColors
 import dev.alllexey.itmowidgets.R as AppR
 import dev.alllexey.itmowidgets.databinding.ItemCalendarDayBinding
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.CalendarDay
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -95,7 +96,7 @@ class SportSignCalendarAdapter(
             binding.dayOfWeekText.text = day.dayOfWeek
             binding.dayOfMonthText.text = day.dayOfMonth
             itemView.isSelected = day.isSelected
-            val formattedDate = day.date.format(
+            val formattedDate = day.date.toJavaLocalDate().format(
                 DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
             )
             val dateDescription = if (day.isToday) {

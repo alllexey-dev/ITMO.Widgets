@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditi
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrationStatus
 import java.io.Serializable
 import java.time.OffsetDateTime
+import kotlin.time.toKotlinInstant
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 
 data class SportCommonDetailsArgs(
@@ -124,7 +125,7 @@ private fun SportQueueEntry.toDetailsArgs(): SportQueueEntryArgs {
 
 /** Booking-only responses can cancel an existing registration, never invent a new offer. */
 fun SportCommonDetailsArgs.bookingAction(now: OffsetDateTime): SportBookingAction =
-    bookingConditions?.evaluate(now)?.action ?: when {
+    bookingConditions?.evaluate(now.toInstant().toKotlinInstant())?.action ?: when {
         signed -> SportBookingAction.CANCEL
         registrationStatus in setOf(SportRegistrationStatus.WAITING, SportRegistrationStatus.NOTIFIED) -> SportBookingAction.CANCEL_AUTO
         else -> SportBookingAction.NONE

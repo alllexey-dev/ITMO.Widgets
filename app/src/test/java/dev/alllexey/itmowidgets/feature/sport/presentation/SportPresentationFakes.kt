@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
@@ -21,11 +22,12 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataReposit
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportScheduleRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSignPreferencesRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDelegate
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 
 /** Repositories whose refreshes can be held open, so a refresh is observable mid-flight. */
@@ -49,13 +51,14 @@ internal class FakeSportDataRepository : SportDataRepository {
     var gate: CompletableDeferred<Unit> = CompletableDeferred(Unit)
     var limitsRefreshCount = 0
     var entriesRefreshCount = 0
+    var limits = SportAutoSignLimits(3, 2, Instant.parse("2026-08-01T00:00:00+03:00"))
 
     override fun observeSportScore(): Flow<AppResult<SportScore>> = score
     override suspend fun refreshSportScore() = gate.await()
     override fun observeSportAttempts(): Flow<AppResult<SportAttempts>> = attempts
     override suspend fun refreshSportAttempts() = gate.await()
     override fun observeSportAutoSignLimits(): Flow<LoadState<SportAutoSignLimits>> =
-        flowOf(LoadState.Content(SportAutoSignLimits(3, 2, OffsetDateTime.parse("2026-08-01T00:00:00+03:00"))))
+        flow { emit(LoadState.Content(limits)) }
     override suspend fun refreshSportAutoSignLimits() {
         limitsRefreshCount += 1
     }
@@ -121,6 +124,7 @@ internal fun bookingDelegate(
     sportScheduleRepository = schedule,
     sportDataRepository = data,
     scheduleWidgetRefreshRequester = ScheduleWidgetRefreshRequester { },
+    timeProvider = FixedAcademicTime(),
     followUpScope = followUpScope,
 )
 

@@ -13,7 +13,13 @@ import dev.alllexey.itmowidgets.feature.sport.ui.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import java.io.*
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -28,10 +34,10 @@ class SportSessionPresentationTest {
 
     @Test fun `details expose the same lesson offer and only existing booking cancellation`() {
         val lesson = SportCardFixtures.lesson()
-        val now = lesson.start.minusHours(2)
+        val now = (lesson.start - 2.hours).inMoscow()
         assertEquals(lesson.lessonId, lesson.toDetailsArgs().lessonId)
         assertEquals(SportBookingAction.SIGN, lesson.toDetailsArgs().bookingAction(now))
-        assertEquals(SportBookingAction.NONE, lesson.toDetailsArgs().bookingAction(lesson.start))
+        assertEquals(SportBookingAction.NONE, lesson.toDetailsArgs().bookingAction(lesson.start.inMoscow()))
         assertEquals(SportBookingAction.CANCEL, lesson.copy(signed = true).toDetailsArgs().bookingAction(now))
         assertEquals(SportBookingAction.AUTO, lesson.copy(available = 0, canSignIn = false,
             unavailableReasons = listOf(UnavailableReason.Full)).toDetailsArgs().bookingAction(now))
@@ -73,19 +79,19 @@ class SportSessionPresentationTest {
 
     @Test fun `dates use academic zone on both sides of midnight`() {
         val time = FixedAcademicTime(LocalDate.of(2026, 9, 8))
-        val start = OffsetDateTime.parse("2026-09-07T22:30:00Z")
-        val timing = SportSessionTiming(start, start.plusMinutes(90), time)
+        val start = Instant.parse("2026-09-07T22:30:00Z")
+        val timing = SportSessionTiming(start, start + 90.minutes, time)
         assertTrue(timing.isToday)
         assertFalse(timing.isTomorrow)
-        assertEquals(8, timing.start.dayOfMonth)
+        assertEquals(8, timing.start.day)
         assertEquals(90L, timing.durationMinutes)
-        assertNull(SportSessionTiming(start, start.minusMinutes(1), time).durationMinutes)
+        assertNull(SportSessionTiming(start, start - 1.minutes, time).durationMinutes)
     }
 
     @Test fun `russian weekday and month names are capitalised for display`() {
         val time = FixedAcademicTime(LocalDate.of(2026, 9, 1))
-        val friday = OffsetDateTime.parse("2026-09-25T08:10:00+03:00")
-        assertEquals("Пятница, 25 сентября 2026", SportSessionTiming(friday, friday.plusMinutes(90), time).fullDateText())
+        val friday = Instant.parse("2026-09-25T08:10:00+03:00")
+        assertEquals("Пятница, 25 сентября 2026", SportSessionTiming(friday, friday + 90.minutes, time).fullDateText())
     }
 
     @Test fun `details preserve full title and available source fields through serialization`() {
@@ -124,7 +130,10 @@ class SportSessionPresentationTest {
 
     @Test fun `shared date names the weekday and the date, never today or tomorrow`() {
         val lesson = SportCardFixtures.lesson()
-        val time = FixedAcademicTime(lesson.start.minusHours(1).toLocalDateTime())
+        val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 8, 17, 30))
         assertEquals("вторник, 8 сентября, 18:30–20:00", SportSessionTiming(lesson.start, lesson.end, time).shareDateText())
     }
+
+    /** The details sheet still takes `javaNow()`, the academic offset. */
+    private fun Instant.inMoscow(): OffsetDateTime = toJavaInstant().atOffset(ZoneOffset.ofHours(3))
 }

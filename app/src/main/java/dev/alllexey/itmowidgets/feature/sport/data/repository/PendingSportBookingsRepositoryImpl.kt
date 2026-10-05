@@ -9,14 +9,12 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import javax.inject.Inject
-import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -67,11 +65,11 @@ class PendingSportBookingsRepositoryImpl @Inject constructor(
                 if (error != null) return@combine AppResult.Failure(error)
 
                 val signedIds = confirmed.valueOrNull().orEmpty().mapTo(mutableSetOf()) { it.lessonId }
-                val now = timeProvider.javaNow()
+                val now = timeProvider.now()
                 val pending = queues.valueOrNull().orEmpty()
                     .filter { !it.isCancelled && it.status in SportQueueEntryStatus.notifiableStatuses }
                     .map { it.toBooking() }
-                    .filter { it.lessonId !in signedIds && it.start.isAfter(now) }
+                    .filter { it.lessonId !in signedIds && it.start > now }
                     .distinctBy { it.lessonId }
                     .sortedBy { it.start }
                     .map { booking ->
@@ -82,8 +80,8 @@ class PendingSportBookingsRepositoryImpl @Inject constructor(
                                 else PendingSportBooking.QueueKind.FREE,
                             lessonId = booking.lessonId,
                             sectionName = booking.sectionName.raw.trim(),
-                            start = booking.start.toInstant().toKotlinInstant(),
-                            end = booking.end.toInstant().toKotlinInstant(),
+                            start = booking.start,
+                            end = booking.end,
                             teacherFio = booking.teacherFio.trim(),
                             roomName = booking.roomName.trim(),
                             isPrediction = !booking.isLessonReal,

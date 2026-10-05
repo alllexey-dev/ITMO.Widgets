@@ -34,7 +34,8 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportBooking
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.Month
-import java.time.OffsetDateTime
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 import kotlin.time.toKotlinInstant
 import kotlinx.datetime.toJavaDayOfWeek
 import kotlinx.datetime.toJavaLocalDate
@@ -109,7 +110,7 @@ object DemoSport {
     fun attempts(): SportAttempts = SportAttempts(total = 3, used = 1, free = 2, canSignIn = true)
 
     fun autoSignLimits(time: AcademicTimeProvider): SportAutoSignLimits =
-        SportAutoSignLimits(limit = 2, available = 1, nextAvailableAt = time.javaNow().plusDays(3).withHour(9).withMinute(0))
+        SportAutoSignLimits(limit = 2, available = 1, nextAvailableAt = time.javaNow().plusDays(3).withHour(9).withMinute(0).toInstant().toKotlinInstant())
 
     /** Points of the current period: eight volleyball visits, a tournament and the fitness standards. */
     fun score(time: AcademicTimeProvider): SportScore {
@@ -141,7 +142,7 @@ object DemoSport {
         val year = if (today.month >= Month.SEPTEMBER) today.year else today.year - 1
         val currentEnd = if (autumn) LocalDate.of(year + 1, Month.JANUARY, 31) else LocalDate.of(year + 1, Month.JUNE, 30)
         val current = SportScorePeriod(
-            CURRENT_PERIOD, label(autumn, year), currentEnd.at(LocalTime.of(23, 59), time).toInstant().toKotlinInstant(), current = true
+            CURRENT_PERIOD, label(autumn, year), currentEnd.at(LocalTime.of(23, 59), time), current = true
         )
         val previous = if (autumn) {
             listOf(SportScorePeriod(CURRENT_PERIOD - 1, label(false, year - 1)), SportScorePeriod(CURRENT_PERIOD - 2, label(true, year - 1)))
@@ -184,7 +185,7 @@ object DemoSport {
 
     private fun freeEntry(time: AcademicTimeProvider): SportFreeSignEntry {
         val lesson = queuedSwimming(time)
-        val created = time.javaNow().minusDays(1)
+        val created = time.now() - 1.days
         return SportFreeSignEntry(
             id = 1, lessonId = lesson.lessonId, position = 2, total = FREE_QUEUE_TOTAL, isCancelled = false,
             status = SportQueueEntryStatus.WAITING, createdAt = created, firstNotifiedAt = null, lastNotifiedAt = null,
@@ -199,7 +200,7 @@ object DemoSport {
         val prototype = autoPrototype(time)
         return SportAutoSignEntry(
             id = 2, prototypeLessonId = prototype.lessonId, realLessonId = null, position = 1, total = AUTO_QUEUE_TOTAL,
-            isCancelled = false, status = SportQueueEntryStatus.WAITING, createdAt = time.javaNow().minusDays(2),
+            isCancelled = false, status = SportQueueEntryStatus.WAITING, createdAt = time.now() - 2.days,
             firstNotifiedAt = null, lastNotifiedAt = null, cancelledAt = null, satisfiedAt = null, expiredAt = null,
             notificationAttempts = 0, maxNotificationAttempts = 5, targetLesson = prototype.queueLesson(time), realLesson = null
         )
@@ -217,7 +218,7 @@ object DemoSport {
 
     private fun DemoSportSlot.toLesson(date: LocalDate, time: AcademicTimeProvider, signed: Boolean, available: Int): SportLesson {
         val start = date.at(this.start.toJavaLocalTime(), time)
-        val reasons = UnavailableReason.getSortedUnavailableReasons(signed, start, available, emptyList(), time.javaNow())
+        val reasons = UnavailableReason.getSortedUnavailableReasons(signed, start, available, emptyList(), time.now())
         return SportLesson(
             isLessonReal = true,
             lessonId = idOn(date),
@@ -256,9 +257,9 @@ object DemoSport {
         signed = true, signEntry = null, friendsBookings = emptyList()
     )
 
-    private fun attendance(type: String, name: String, score: Int, at: OffsetDateTime, competition: Boolean) =
+    private fun attendance(type: String, name: String, score: Int, at: Instant, competition: Boolean) =
         SportAttendance(
-            type = type, name = SectionName(name), evaluationId = at.toEpochSecond(), evaluationName = null,
+            type = type, name = SectionName(name), evaluationId = at.epochSeconds, evaluationName = null,
             sectionLevel = 1, score = score, dateTime = at, isCompetition = competition
         )
 
@@ -274,8 +275,8 @@ object DemoSport {
 
     private fun DemoSportSlot.idOn(date: LocalDate): Long = lessonId(date.toKotlinLocalDate())
 
-    private fun LocalDate.at(time: LocalTime, provider: AcademicTimeProvider): OffsetDateTime =
-        atTime(time).atZone(provider.javaZone()).toOffsetDateTime()
+    private fun LocalDate.at(time: LocalTime, provider: AcademicTimeProvider): Instant =
+        atTime(time).atZone(provider.javaZone()).toInstant().toKotlinInstant()
 
     private fun label(autumn: Boolean, year: Int) = (if (autumn) "Осень" else "Весна") + " ${year}/${year + 1}"
 

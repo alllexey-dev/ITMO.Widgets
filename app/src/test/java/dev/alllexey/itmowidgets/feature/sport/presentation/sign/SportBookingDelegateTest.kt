@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
@@ -24,7 +25,9 @@ import org.junit.Assert.assertEquals
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.OffsetDateTime
+import kotlinx.datetime.LocalDate
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SportBookingDelegateTest {
@@ -44,6 +47,7 @@ class SportBookingDelegateTest {
         sportScheduleRepository = sportScheduleRepository,
         sportDataRepository = dataRepository,
         scheduleWidgetRefreshRequester = ScheduleWidgetRefreshRequester { widgetRefreshCount++ },
+        timeProvider = FixedAcademicTime(),
         followUpScope = followUpScope
     )
 
@@ -82,6 +86,14 @@ class SportBookingDelegateTest {
         assertEquals(1, scheduleRefreshGateway.requests.size)
         assertEquals(1, sportScheduleRepository.scheduleRefreshCount)
         assertEquals(1, widgetRefreshCount)
+    }
+
+    @Test
+    fun `the schedule refresh asks the lesson's academic dates, not its UTC ones`() = runTest {
+        delegate.signIn(lesson(start = Instant.parse("2026-07-21T21:30:00Z")))
+
+        val day = LocalDate(2026, 7, 22)
+        assertEquals(listOf(day to day), scheduleRefreshGateway.requests)
     }
 
     @Test
@@ -176,13 +188,12 @@ class SportBookingDelegateTest {
         assertEquals(2, (result as AppResult.Success).value.limits.available)
     }
 
-    private fun lesson(): SportLesson {
-        val start = OffsetDateTime.parse("2026-07-22T10:00:00+03:00")
+    private fun lesson(start: Instant = Instant.parse("2026-07-22T10:00:00+03:00")): SportLesson {
         return SportLesson(
             isLessonReal = true,
             lessonId = 1,
             start = start,
-            end = start.plusHours(1),
+            end = start + 1.hours,
             sectionId = 1,
             sectionName = SectionName("Плавание"),
             sectionLevel = 1,

@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
@@ -27,7 +28,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
 data class AutoSignAvailability(
     val limits: SportAutoSignLimits,
@@ -41,6 +44,7 @@ class SportBookingDelegate @Inject constructor(
     private val sportScheduleRepository: SportScheduleRepository,
     private val sportDataRepository: SportDataRepository,
     private val scheduleWidgetRefreshRequester: ScheduleWidgetRefreshRequester,
+    private val timeProvider: AcademicTimeProvider,
     @ApplicationScope private val followUpScope: CoroutineScope
 ) {
 
@@ -128,21 +132,21 @@ class SportBookingDelegate @Inject constructor(
 
     private suspend fun refreshMyItmoBookings(lesson: SportLesson) {
         refreshMyItmoBookings(
-            startDate = lesson.start.toLocalDate(),
-            endDate = lesson.end.toLocalDate()
+            startDate = lesson.start.academicDate(),
+            endDate = lesson.end.academicDate()
         )
     }
 
     private suspend fun refreshMyItmoBookings(booking: SportBooking) {
         refreshMyItmoBookings(
-            startDate = booking.start.toLocalDate(),
-            endDate = booking.end.toLocalDate()
+            startDate = booking.start.academicDate(),
+            endDate = booking.end.academicDate()
         )
     }
 
     private suspend fun refreshMyItmoBookings(
-        startDate: java.time.LocalDate,
-        endDate: java.time.LocalDate
+        startDate: LocalDate,
+        endDate: LocalDate
     ) {
         // The booking has succeeded. Enqueue before UI refreshes so their failure/cancellation
         // cannot leave installed widgets stale; the worker fetches its own fresh schedule.
@@ -151,7 +155,7 @@ class SportBookingDelegate @Inject constructor(
             awaitAll(
                 async { sportBookingRepository.refreshSportBookings() },
                 async {
-                    scheduleRefreshGateway.refreshOwnSchedule(startDate.toKotlinLocalDate(), endDate.toKotlinLocalDate())
+                    scheduleRefreshGateway.refreshOwnSchedule(startDate, endDate)
                 },
                 async { sportScheduleRepository.refreshSportSchedule() }
             )
@@ -164,7 +168,7 @@ class SportBookingDelegate @Inject constructor(
             coroutineScope {
                 awaitAll(
                     async { sportBookingRepository.refreshSportBookings() },
-                    async { scheduleRefreshGateway.refreshOwnSchedule(startDate.toKotlinLocalDate(), endDate.toKotlinLocalDate()) },
+                    async { scheduleRefreshGateway.refreshOwnSchedule(startDate, endDate) },
                     // The catalog's free places lag the same way; a full lesson stays full otherwise.
                     async { sportScheduleRepository.refreshSportSchedule() }
                 )
@@ -184,6 +188,8 @@ class SportBookingDelegate @Inject constructor(
             )
         }
     }
+
+    private fun Instant.academicDate(): LocalDate = toLocalDateTime(timeProvider.timeZone).date
 
     private companion object {
         val FOLLOW_UP_DELAY: Duration = 1.seconds

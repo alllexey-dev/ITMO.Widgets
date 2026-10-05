@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.sport.domain.model
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 class UnavailableReasonTest {
 
@@ -10,7 +10,7 @@ class UnavailableReasonTest {
     fun `builds ordered unique reasons from domain values`() {
         val reasons = UnavailableReason.getSortedUnavailableReasons(
             signed = true,
-            startsAt = OffsetDateTime.parse("2026-07-21T10:00:00+03:00"),
+            startsAt = Instant.parse("2026-07-21T10:00:00+03:00"),
             available = 0,
             serverReasons = listOf(
                 "Вы уже записаны",
@@ -18,7 +18,7 @@ class UnavailableReasonTest {
                 "Неизвестная причина",
                 "Неизвестная причина"
             ),
-            now = OffsetDateTime.parse("2026-07-22T10:00:00+03:00")
+            now = Instant.parse("2026-07-22T10:00:00+03:00")
         )
 
         assertEquals(

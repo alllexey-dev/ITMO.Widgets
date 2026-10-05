@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.databinding.ItemCalendarWeekBinding
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.CalendarDay
 
 class SportSignWeekPagerAdapter(
-    private val onDateClick: (java.time.LocalDate) -> Unit
+    private val onDateClick: (kotlinx.datetime.LocalDate) -> Unit
 ) : RecyclerView.Adapter<SportSignWeekPagerAdapter.WeekViewHolder>() {
 
     private var weeks: List<List<CalendarDay>> = emptyList()
@@ -38,7 +38,7 @@ class SportSignWeekPagerAdapter(
     override fun getItemCount(): Int = weeks.size
 
     override fun getItemId(position: Int): Long {
-        return weeks[position].firstOrNull()?.date?.toEpochDay() ?: RecyclerView.NO_ID
+        return weeks[position].firstOrNull()?.date?.toEpochDays()?.toLong() ?: RecyclerView.NO_ID
     }
 
     inner class WeekViewHolder(

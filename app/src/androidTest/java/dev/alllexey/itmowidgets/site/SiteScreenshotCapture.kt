@@ -49,7 +49,6 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.time.LocalDate
 import java.time.LocalDateTime
-import kotlin.time.toKotlinInstant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toKotlinLocalDate
@@ -152,8 +151,8 @@ class SiteScreenshotCapture {
             queueKind = if (entry is SportAutoSignEntry) PendingSportBooking.QueueKind.AUTO else PendingSportBooking.QueueKind.FREE,
             lessonId = booking.lessonId,
             sectionName = booking.sectionName.raw,
-            start = booking.start.toInstant().toKotlinInstant(),
-            end = booking.end.toInstant().toKotlinInstant(),
+            start = booking.start,
+            end = booking.end,
             teacherFio = booking.teacherFio,
             roomName = booking.roomName,
             isPrediction = !booking.isLessonReal,
@@ -215,7 +214,7 @@ class SiteScreenshotCapture {
     private fun catalog(): List<SportLesson> {
         val entries = DemoSport.queueEntries(TIME).filterIsInstance<SportFreeSignEntry>().associateBy { it.lessonId }
         val friends = DemoSport.friendsBookings(TIME).groupBy { it.lessonId }
-        return DemoSport.schedule(TIME).values.flatten().filter { it.start > TIME.javaNow() }.take(CATALOG_SIZE).map {
+        return DemoSport.schedule(TIME).values.flatten().filter { it.start > TIME.now() }.take(CATALOG_SIZE).map {
             it.copy(signEntry = entries[it.lessonId], friendsBookings = friends[it.lessonId].orEmpty())
         }
     }

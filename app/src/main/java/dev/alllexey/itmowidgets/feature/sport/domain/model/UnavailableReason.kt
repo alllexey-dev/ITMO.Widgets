@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.model
 
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 sealed class UnavailableReason(val weight: Int) {
     object Full : UnavailableReason(10)
@@ -19,10 +19,10 @@ sealed class UnavailableReason(val weight: Int) {
     companion object {
         fun getSortedUnavailableReasons(
             signed: Boolean,
-            startsAt: OffsetDateTime,
+            startsAt: Instant,
             available: Int,
             serverReasons: List<String>,
-            now: OffsetDateTime
+            now: Instant
         ): List<UnavailableReason> {
             val reasons = mutableSetOf<UnavailableReason>()
 
@@ -30,7 +30,7 @@ sealed class UnavailableReason(val weight: Int) {
                 reasons.add(AlreadyEnrolled)
             }
 
-            if (startsAt.isBefore(now)) {
+            if (startsAt < now) {
                 reasons.add(LessonInPast)
             }
 

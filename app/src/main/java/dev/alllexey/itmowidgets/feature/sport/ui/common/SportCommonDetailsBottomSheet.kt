@@ -20,6 +20,7 @@ import androidx.core.os.bundleOf
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.color
@@ -46,6 +47,8 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalTime
 
 /** Details of the selected snapshot. Does not manufacture capacity for booking-only responses. */
 @AndroidEntryPoint
@@ -85,16 +88,16 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         actionSubmitted = savedInstanceState?.getBoolean(STATE_SUBMITTED) == true
         bindAction()
         toolbar.setNavigationOnClickListener { dismiss() }
-        val timing = SportSessionTiming(OffsetDateTime.parse(item.start), OffsetDateTime.parse(item.end), timeProvider)
+        val timing = SportSessionTiming(DateTexts.parseOffsetInstant(item.start), DateTexts.parseOffsetInstant(item.end), timeProvider)
         bindShare(timing)
         val teacherIsu = UserScreenArgs.profileIsu(item.teacherIsu.toLong())
         header.bind(
             DetailsHeaderContent(
                 title = item.sectionName,
                 kind = item.kind?.let { getString(it.titleRes()) },
-                date = timing.start.toLocalDate(),
-                start = timing.start.toLocalTime(),
-                end = timing.end.toLocalTime(),
+                date = timing.start.date.toJavaLocalDate(),
+                start = timing.start.time.toJavaLocalTime(),
+                end = timing.end.time.toJavaLocalTime(),
                 teacher = item.teacherFio,
                 location = item.roomName,
                 mapAvailable = item.mapAddress != null
@@ -216,7 +219,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
 
     private fun bindConditions() = with(binding) {
         attentionContainer.removeAllViews()
-        val availability = item.bookingConditions?.evaluate(timeProvider.javaNow())
+        val availability = item.bookingConditions?.evaluate(timeProvider.now())
         attentionCard.isVisible = (!item.signed && availability != null) || item.intersectsSchedule || !item.isReal
         val prerequisites = buildList {
             add(getString(R.string.sport_booking_auto_checks))

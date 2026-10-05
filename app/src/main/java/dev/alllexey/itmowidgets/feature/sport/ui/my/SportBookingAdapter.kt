@@ -4,13 +4,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.databinding.ItemSportBookingBinding
@@ -23,6 +22,7 @@ import dev.alllexey.itmowidgets.feature.sport.ui.common.dateText
 import dev.alllexey.itmowidgets.feature.sport.ui.common.label
 import dev.alllexey.itmowidgets.feature.sport.ui.common.timeText
 import dev.alllexey.itmowidgets.feature.sport.ui.common.weekdayText
+import kotlinx.datetime.format
 
 interface SportBookingListener {
     fun onUnSign(booking: SportBooking)
@@ -52,8 +52,8 @@ class SportBookingAdapter(
             val timing = SportSessionTiming(item.start, item.end, timeProvider)
             dateTextView.text = timing.weekdayText(root.context)
             dateTextView.contentDescription = timing.dateText(root.context)
-            dateDayTextView.text = timing.start.format(DateTimeFormatter.ofPattern("d", Locale.forLanguageTag("ru")))
-            dateMonthTextView.text = timing.start.format(DateTimeFormatter.ofPattern("MMM", Locale.forLanguageTag("ru"))).trimEnd('.')
+            dateDayTextView.text = timing.start.date.format(DateTexts.DAY)
+            dateMonthTextView.text = timing.start.date.format(DateTexts.MONTH_SHORT).trimEnd('.')
             timeTextView.text = timing.timeText()
             titleTextView.text = item.sectionName.shorten()
             titleTextView.setTextColor(root.context.color.onSurface)

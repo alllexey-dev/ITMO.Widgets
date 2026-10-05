@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.domain.model
 
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 data class SportAttendance(
     // lesson, exercise, competition (and probably others?)
@@ -12,7 +12,7 @@ data class SportAttendance(
     val evaluationName: String?,
     val sectionLevel: Int,
     val score: Int,
-    val dateTime: OffsetDateTime,
+    val dateTime: Instant,
     // can be false even if type = "competition", lol
     val isCompetition: Boolean
 )
