@@ -1,7 +1,8 @@
 # ITMO.Widgets documentation
 
-Everything here describes the current state of the Android application. History
-is in [`CHANGELOG.md`](../CHANGELOG.md); rules for agents are in
+Everything here describes the current state of the apps. History is in
+[`CHANGELOG.md`](../CHANGELOG.md) and, until the next release, in
+[`changelog.d/`](../changelog.d/README.md); rules for agents are in
 [`AGENTS.md`](../AGENTS.md).
 
 ## Product
@@ -117,6 +118,8 @@ editing an old one when a decision changes.
 ## Sibling repositories
 
 - Backend: `../itmo-widgets-backend/docs/README.md`
-- Core: `../itmo-widgets-core/docs/contract.md`
-- MyItmoApi: `../MyItmoApi/README.md`
+- MyItmoApi: `../MyItmoApi/README.md`, the 2.x migration in
+  `../MyItmoApi/docs/migration.md`
 - Web version and landing: `../itmo-widgets-web/web/README.md`
+- Core 1.x, frozen at `1.7.0`: `../itmo-widgets-core/docs/contract.md`; Core 2.0
+  is `shared/backend-client` in this repository
