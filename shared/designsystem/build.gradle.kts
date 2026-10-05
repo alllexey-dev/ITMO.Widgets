@@ -13,6 +13,10 @@ kotlin {
             api(libs.compose.material3)
             // Seed -> scheme and harmonize in commonMain (SP-06 way (b)); moves with every material3 bump.
             implementation(libs.material.kolor)
+            // Avatar loads through the host's ImageLoader (LocalAvatarImageLoader); no network fetcher here.
+            api(libs.coil.compose)
+            // FakeImageLoaderEngine for the Avatar previews, which live in commonMain (coil-core only).
+            implementation(libs.coil.test)
         }
         androidMain.dependencies {
             // JetBrains 1.12.0-alpha03 only `requires` this mapping; a newer Jetpack material3 anywhere on the app
