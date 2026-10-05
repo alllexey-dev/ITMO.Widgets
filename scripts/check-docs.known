@@ -2,7 +2,6 @@
 # The list only shrinks: fix a finding and delete its line (a stale line fails --strict).
 # Only L02-governance edits this file; other lanes fix the doc or hand the text in.
 
-AGENTS.md:lines  # about 175 lines with the lane authorization section until the G-07 rewrite to at most 130
 AGENTS.md:path:plan.md  # user-global rule file under ~/.claude/rules/generated/, named to exclude it
 AGENTS.md:path:allsteps.md  # user-global rule file, named to exclude it
 AGENTS.md:path:local-ci-check-manual.md  # user-global rule file, named to exclude it
