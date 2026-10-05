@@ -1,43 +1,43 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
-import android.content.Context
-import com.google.gson.Gson
-import dagger.hilt.android.qualifiers.ApplicationContext
-import java.io.File
-import java.io.FileOutputStream
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
+import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleStoreJson
 import java.time.DayOfWeek
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.serialization.Serializable
+import okio.FileSystem
+import okio.Path
 
 /** 1: finished weeks keyed by their Monday, each with its academic lessons that name a teacher. */
 private const val FORMAT = 1
 
 /** One academic lesson of a week, newest first within it; [subject] is trimmed and may be empty when My ITMO sent none. */
+@Serializable
 internal data class WeekLesson(val teacherIsu: Long, val flowId: Long, val subject: String)
 
+@Serializable
 internal data class StoredWeeks(val format: Int = FORMAT, val weeks: Map<String, List<WeekLesson>> = emptyMap())
 
 /**
  * Finished weeks of the signed-in account's personal schedule in `filesDir`, cleared with the session. Caller owns IO
  * dispatch and serialization.
  */
-class TeacherWeeksFileStore internal constructor(private val directory: File, private val gson: Gson) {
-    @Inject constructor(@ApplicationContext context: Context, gson: Gson) : this(File(context.filesDir, "teacher_lessons"), gson)
+class TeacherWeeksFileStore internal constructor(private val directory: Path) {
+    @Inject constructor(directories: AppDirectories) : this(directories.files / "teacher_lessons")
 
-    private val file get() = File(directory, "weeks.json")
+    private val file = AtomicTextFile(directory / "weeks.json")
 
     /** Throws on a corrupt file or one of another format. */
     internal fun read(): Map<LocalDate, List<WeekLesson>> {
-        if (!file.exists()) return emptyMap()
-        val state = checkNotNull(gson.fromJson(file.readText(), StoredWeeks::class.java))
+        val text = file.read() ?: return emptyMap()
+        val state = ScheduleStoreJson.decodeFromString<StoredWeeks>(text)
         check(state.format == FORMAT) { "Unknown teacher weeks format ${state.format}" }
-        return checkNotNull(state.weeks).entries.associate { (key, lessons) ->
+        return state.weeks.entries.associate { (key, lessons) ->
             val monday = LocalDate.parse(key)
             check(monday.dayOfWeek == DayOfWeek.MONDAY) { "A stored week starts on $monday" }
-            checkNotNull(lessons).forEach { lesson ->
-                checkNotNull(lesson.subject)
+            lessons.forEach { lesson ->
                 check(lesson.teacherIsu > 0) { "A stored lesson has no teacher" }
             }
             monday to lessons
@@ -45,14 +45,9 @@ class TeacherWeeksFileStore internal constructor(private val directory: File, pr
     }
 
     internal fun write(weeks: Map<LocalDate, List<WeekLesson>>) {
-        check(directory.isDirectory || directory.mkdirs())
         val state = StoredWeeks(weeks = weeks.mapKeys { (monday, _) -> monday.toString() })
-        val temporary = File(directory, "weeks.json.tmp")
-        FileOutputStream(temporary).use { stream ->
-            stream.write(gson.toJson(state).toByteArray(Charsets.UTF_8)); stream.fd.sync()
-        }
-        Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        file.write(ScheduleStoreJson.encodeToString(state))
     }
 
-    internal fun clear() { check(!directory.exists() || directory.deleteRecursively()) }
+    internal fun clear() = FileSystem.SYSTEM.deleteRecursively(directory)
 }

@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.location.KnownBuilding
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -33,6 +32,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -64,7 +64,7 @@ class CalendarSyncRepositoryImplTest {
         failure?.let { throw it }
         days
     }
-    private val store get() = CalendarSyncFileStore(folder, Gson())
+    private val store get() = CalendarSyncFileStore(folder.toOkioPath())
     private val own get() = calendars.ownId!!
 
     @Test

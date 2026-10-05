@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.upgrade.stores
 
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
+import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.StoredCalendarSync
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.StoredCleanup
@@ -15,8 +16,12 @@ import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
 import java.time.Instant
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 
-/** `files/calendar_sync/state.json` (format 1): the switch, the app's calendar, its event and a pending sweep. */
+/**
+ * `files/calendar_sync/state.json` (format 1): the switch, the app's calendar, its event and a pending sweep. Gson
+ * wrote it; kotlinx reads it and writes format 1 back.
+ */
 object CalendarSyncFileStoreUpgrade {
 
     fun check(fixture: Upgrade22Fixture) {
@@ -40,8 +45,13 @@ object CalendarSyncFileStoreUpgrade {
             cleanups = listOf(StoredCleanup(calendarId = 8, until = AT_MS + 7 * DAY_MS))
         )
 
-        val stored = CalendarSyncFileStore(File(fixture.filesDir, "calendar_sync"), fixture.gson).read()
+        val store = CalendarSyncFileStore(AndroidAppDirectories(fixture.context))
+        val stored = store.read()
         assertEquals(expected, stored)
         assertEquals(CalendarSyncState(enabled = true, problem = CalendarSyncProblem.NO_PERMISSION), stored?.toModel())
+        store.write(expected)
+        val written = File(fixture.filesDir, "calendar_sync/state.json").readText()
+        assertTrue(written, written.startsWith("{\"format\":1,"))
+        assertEquals(expected, CalendarSyncFileStore(AndroidAppDirectories(fixture.context)).read())
     }
 }

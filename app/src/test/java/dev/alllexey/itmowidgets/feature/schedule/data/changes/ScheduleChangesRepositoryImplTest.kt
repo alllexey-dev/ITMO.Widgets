@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.testing.ClockAcademicTime
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -31,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -64,7 +64,7 @@ class ScheduleChangesRepositoryImplTest {
     }.api
     private val clock = MutableClock(Instant.parse("2026-09-07T09:00:00Z"))
     private val notifier = RecordingAppNotifier()
-    private val store get() = ScheduleChangesFileStore(folder, Gson())
+    private val store get() = ScheduleChangesFileStore(folder.toOkioPath())
     private val file get() = File(folder, "state.json")
 
     @Test

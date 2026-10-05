@@ -1,26 +1,26 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
-import android.content.Context
-import com.google.gson.Gson
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
+import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleStoreJson
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.SnapshotLesson
-import java.io.File
-import java.io.FileOutputStream
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlin.time.Instant
+import kotlinx.serialization.Serializable
+import okio.FileSystem
+import okio.Path
 
 /** 1: the last academic snapshot of today..today+7 and the changes found against it, newest last. */
 private const val FORMAT = 1
 
 /** Everything the change check keeps; the snapshot and the changes are written together. */
+@Serializable
 internal data class StoredScheduleChanges(
     val format: Int = FORMAT,
     val snapshot: StoredSnapshot? = null,
@@ -28,9 +28,11 @@ internal data class StoredScheduleChanges(
     val changes: List<StoredChange> = emptyList()
 )
 
+@Serializable
 internal data class StoredSnapshot(val start: String, val end: String, val lessons: List<StoredLesson>)
 
 /** A [SnapshotLesson] with ISO dates and times. */
+@Serializable
 internal data class StoredLesson(
     val pairId: Long,
     val date: String,
@@ -40,15 +42,16 @@ internal data class StoredLesson(
     val subjectName: String,
     val typeId: Int,
     val flowId: Long,
-    val flowName: String?,
-    val teacherIsu: Long?,
-    val teacherName: String?,
-    val room: String?,
-    val building: String?,
+    val flowName: String? = null,
+    val teacherIsu: Long? = null,
+    val teacherName: String? = null,
+    val room: String? = null,
+    val building: String? = null,
     val formatId: Int,
-    val format: String?
+    val format: String? = null
 )
 
+@Serializable
 internal data class StoredChange(
     val id: String,
     val detectedAt: Long,
@@ -56,9 +59,9 @@ internal data class StoredChange(
     val fields: List<String>,
     val subjectName: String,
     val typeId: Int,
-    val flowName: String?,
-    val before: StoredLesson?,
-    val after: StoredLesson?,
+    val flowName: String? = null,
+    val before: StoredLesson? = null,
+    val after: StoredLesson? = null,
     val read: Boolean,
     val notified: Boolean
 )
@@ -67,37 +70,30 @@ internal data class StoredChange(
  * The schedule change state in `filesDir`, cleared with the session and kept out of backups. Caller owns IO dispatch
  * and serialization.
  */
-class ScheduleChangesFileStore internal constructor(private val directory: File, private val gson: Gson) {
-    @Inject constructor(@ApplicationContext context: Context, gson: Gson) : this(File(context.filesDir, "schedule_changes"), gson)
+class ScheduleChangesFileStore internal constructor(private val directory: Path) {
+    @Inject constructor(directories: AppDirectories) : this(directories.files / "schedule_changes")
 
-    private val file get() = File(directory, "state.json")
+    private val file = AtomicTextFile(directory / "state.json")
 
     /** `null` without a file; throws on a corrupt file or one of another format. */
     internal fun read(): StoredScheduleChanges? {
-        if (!file.exists()) return null
-        val state = checkNotNull(gson.fromJson(file.readText(), StoredScheduleChanges::class.java))
+        val text = file.read() ?: return null
+        val state = ScheduleStoreJson.decodeFromString<StoredScheduleChanges>(text)
         check(state.format == FORMAT) { "Unknown schedule changes format ${state.format}" }
         state.snapshot?.toModel()
-        checkNotNull(state.changes).forEach { it.toModel() }
+        state.changes.forEach { it.toModel() }
         return state
     }
 
-    internal fun write(state: StoredScheduleChanges) {
-        check(directory.isDirectory || directory.mkdirs())
-        val temporary = File(directory, "state.json.tmp")
-        FileOutputStream(temporary).use { stream ->
-            stream.write(gson.toJson(state).toByteArray(Charsets.UTF_8)); stream.fd.sync()
-        }
-        Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-    }
+    internal fun write(state: StoredScheduleChanges) = file.write(ScheduleStoreJson.encodeToString(state))
 
-    internal fun clear() { check(!directory.exists() || directory.deleteRecursively()) }
+    internal fun clear() = FileSystem.SYSTEM.deleteRecursively(directory)
 }
 
 internal fun StoredSnapshot.toModel() = ScheduleSnapshot(
     start = LocalDate.parse(start),
     end = LocalDate.parse(end),
-    lessons = checkNotNull(lessons).map { it.toModel() }
+    lessons = lessons.map { it.toModel() }
 )
 
 internal fun ScheduleSnapshot.toStored() = StoredSnapshot(start.toString(), end.toString(), lessons.map { it.toStored() })
@@ -108,7 +104,7 @@ internal fun StoredLesson.toModel() = SnapshotLesson(
     start = LocalTime.parse(start),
     end = LocalTime.parse(end),
     subjectId = subjectId,
-    subjectName = checkNotNull(subjectName),
+    subjectName = subjectName,
     typeId = typeId,
     flowId = flowId,
     flowName = flowName,
@@ -139,11 +135,11 @@ internal fun SnapshotLesson.toStored() = StoredLesson(
 )
 
 internal fun StoredChange.toModel() = ScheduleChange(
-    id = checkNotNull(id),
+    id = id,
     detectedAt = Instant.fromEpochMilliseconds(detectedAt),
     kind = ScheduleChangeKind.valueOf(kind),
-    fields = checkNotNull(fields).mapTo(mutableSetOf(), ScheduleChangeField::valueOf),
-    subjectName = checkNotNull(subjectName),
+    fields = fields.mapTo(mutableSetOf(), ScheduleChangeField::valueOf),
+    subjectName = subjectName,
     typeId = typeId,
     flowName = flowName,
     before = before?.toModel()?.slot(),

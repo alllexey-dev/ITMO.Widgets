@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
-import com.google.gson.Gson
 import java.io.File
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -14,7 +14,7 @@ class ScheduleChangesFileStoreTest {
     @get:Rule val temporary = TemporaryFolder()
 
     private val directory get() = File(temporary.root, "schedule_changes")
-    private val store get() = ScheduleChangesFileStore(directory, Gson())
+    private val store get() = ScheduleChangesFileStore(directory.toOkioPath())
 
     @Test
     fun `the written state reads back and no temporary file is left`() {
@@ -36,7 +36,7 @@ class ScheduleChangesFileStoreTest {
         store.write(state)
 
         assertEquals(state, store.read())
-        assertFalse(File(directory, "state.json.tmp").exists())
+        assertFalse(File(directory, "state.json.new").exists())
     }
 
     @Test

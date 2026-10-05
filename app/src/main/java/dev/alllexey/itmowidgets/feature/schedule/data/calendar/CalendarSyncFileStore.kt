@@ -1,18 +1,17 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
-import android.content.Context
-import com.google.gson.Gson
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
+import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleStoreJson
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.SyncedEvent
-import java.io.File
-import java.io.FileOutputStream
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import java.time.Instant
 import javax.inject.Inject
+import kotlinx.serialization.Serializable
+import okio.FileSystem
+import okio.Path
 
 /** 1: the switch, the calendar in use and the app's events in it with the content they were given. */
 private const val FORMAT = 1
@@ -21,6 +20,7 @@ internal const val TARGET_APP = "app"
 internal const val TARGET_PHONE = "phone"
 
 /** Everything calendar synchronization keeps; calendar and event ids belong to this device only. */
+@Serializable
 internal data class StoredCalendarSync(
     val format: Int = FORMAT,
     val enabled: Boolean = false,
@@ -41,8 +41,10 @@ internal data class StoredCalendarSync(
 )
 
 /** A calendar to sweep for the app's events until [until] (epoch millis) has passed with nothing found. */
+@Serializable
 internal data class StoredCleanup(val calendarId: Long, val until: Long)
 
+@Serializable
 internal data class StoredEvent(
     val key: String,
     val eventId: Long,
@@ -51,36 +53,29 @@ internal data class StoredEvent(
     val start: Long,
     val end: Long,
     val title: String,
-    val location: String?,
-    val description: String?
+    val location: String? = null,
+    val description: String? = null
 )
 
 /** The synchronization state in `filesDir`, kept out of backups. Caller owns IO dispatch and serialization. */
-class CalendarSyncFileStore internal constructor(private val directory: File, private val gson: Gson) {
-    @Inject constructor(@ApplicationContext context: Context, gson: Gson) : this(File(context.filesDir, "calendar_sync"), gson)
+class CalendarSyncFileStore internal constructor(private val directory: Path) {
+    @Inject constructor(directories: AppDirectories) : this(directories.files / "calendar_sync")
 
-    private val file get() = File(directory, "state.json")
+    private val file = AtomicTextFile(directory / "state.json")
 
     /** `null` without a file; throws on a corrupt file or one of another format. */
     internal fun read(): StoredCalendarSync? {
-        if (!file.exists()) return null
-        val state = checkNotNull(gson.fromJson(file.readText(), StoredCalendarSync::class.java))
+        val text = file.read() ?: return null
+        val state = ScheduleStoreJson.decodeFromString<StoredCalendarSync>(text)
         check(state.format == FORMAT) { "Unknown calendar sync format ${state.format}" }
         state.toModel()
-        checkNotNull(state.events).forEach { it.toModel() }
+        state.events.forEach { it.toModel() }
         return state
     }
 
-    internal fun write(state: StoredCalendarSync) {
-        check(directory.isDirectory || directory.mkdirs())
-        val temporary = File(directory, "state.json.tmp")
-        FileOutputStream(temporary).use { stream ->
-            stream.write(gson.toJson(state).toByteArray(Charsets.UTF_8)); stream.fd.sync()
-        }
-        Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-    }
+    internal fun write(state: StoredCalendarSync) = file.write(ScheduleStoreJson.encodeToString(state))
 
-    internal fun clear() { check(!directory.exists() || directory.deleteRecursively()) }
+    internal fun clear() = FileSystem.SYSTEM.deleteRecursively(directory)
 }
 
 /** A Google calendar picked by an earlier build reads as off: the app no longer writes there. */
@@ -100,8 +95,8 @@ internal fun StoredCalendarSync.calendarOf(event: StoredEvent): Long? = event.ca
 internal fun StoredEvent.toModel() = SyncedEvent(
     eventId = eventId,
     event = CalendarEvent(
-        key = checkNotNull(key),
-        title = checkNotNull(title),
+        key = key,
+        title = title,
         start = Instant.ofEpochMilli(start),
         end = Instant.ofEpochMilli(end),
         location = location,

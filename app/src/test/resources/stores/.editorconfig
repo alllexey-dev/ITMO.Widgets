@@ -1,0 +1,6 @@
+# Captured bytes: editors must not touch whitespace here.
+[*]
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+end_of_line = unset
+charset = unset
