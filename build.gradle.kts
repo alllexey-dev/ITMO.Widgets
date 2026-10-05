@@ -1,7 +1,26 @@
+// Advisory only (TC-08): the dependency-analysis plugin reaches the classpath, and `buildHealth` exists, only with
+// -Pitmo.buildHealth=true, which android-nightly.yml passes. Its AGP 9.3 and Android-KMP support is unproven, so
+// no other build loads it and a failure there never reaches verify.sh or android-ci.yml. The buildscript block
+// is compiled apart from the script and cannot see the `buildHealth` value below.
+buildscript {
+    if (providers.gradleProperty("itmo.buildHealth").orNull == "true") {
+        repositories { gradlePluginPortal() }
+        val plugin = libs.plugins.dependency.analysis.get()
+        dependencies { classpath("${plugin.pluginId}:${plugin.pluginId}.gradle.plugin:${plugin.version}") }
+    }
+}
+
 // Loads build-logic once for every module: its dependencies are the only copy of AGP, Kotlin, CMP, KSP, Hilt,
 // google-services and Roborazzi on the build classpath, so no plugin here or in a module carries a version.
 plugins {
     id("itmowidgets.android.app") apply false
+}
+
+// Applied to every project: each analyses itself, the root aggregates the reports into buildHealth.
+val buildHealth = providers.gradleProperty("itmo.buildHealth").orNull == "true"
+if (buildHealth) {
+    val dependencyAnalysis = libs.plugins.dependency.analysis.get().pluginId
+    allprojects { apply(plugin = dependencyAnalysis) }
 }
 
 // The aggregates scripts/verify.sh runs (quick, full, klibs). Every convention registers `itmoVerifyQuick`;
