@@ -16,8 +16,9 @@ the test source sets decide only for an id that has no other user.
 Modes:
   --split <rev> [--diff]  write strings_<file>.xml from <rev>'s strings.xml, names, values and order kept, and
                           delete strings.xml; --diff prints what would change instead (nothing = in sync).
-  --where <id|path>       the file for an id, or for a new string used from that source file.
-  --report                id, file, users as TSV.
+  --where <id|path>       the file for an id, or for a new string used from that source file; a file moved to a
+                          shared module (scripts/strings-move.py) is named at its new place.
+  --report                id, file, users as TSV, for the files still in app/src/main/res/values.
 """
 
 import argparse
@@ -33,6 +34,7 @@ APP = ROOT / "app"
 SRC = APP / "src"
 RES = SRC / "main" / "res"
 VALUES = RES / "values"
+SHARED_VALUES = "*/src/commonMain/composeResources/values"
 CATALOG = "app/src/main/res/values/strings.xml"
 PACKAGE = "dev/alllexey/itmowidgets"
 
@@ -366,6 +368,12 @@ def target(file):
     return VALUES / f"strings_{file}.xml"
 
 
+def location(file):
+    """The file as it is now: in a shared module's composeResources once moved (scripts/strings-move.py)."""
+    moved = sorted((ROOT / "shared").glob(f"{SHARED_VALUES}/strings_{file}.xml"))
+    return moved[0] if moved else target(file)
+
+
 def render(entries):
     lines = ["<resources>"]
     for index, entry in enumerate(entries):
@@ -432,7 +440,7 @@ def main():
             file, _ = usage.owner(args.where)
             if file is None:
                 sys.exit(f"{args.where}: no user in app/src; use --where <source path> for a new string")
-        print(target(file).relative_to(ROOT))
+        print(location(file).relative_to(ROOT))
         return
     names = {entry.name: entry for entry in catalog_from_tree()}
     for name in names:

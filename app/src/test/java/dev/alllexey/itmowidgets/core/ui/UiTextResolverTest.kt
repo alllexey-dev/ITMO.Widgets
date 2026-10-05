@@ -86,15 +86,16 @@ class UiTextResolverTest {
         assertEquals("Тон отзывов: Смешанные", runBlocking { text.resolve() })
     }
 
-    /** Key -> text of each `<string>` or `<plurals>` (first item) of the core catalog file. */
+    /** Key -> text of each `<string>` or `<plurals>` (first item) of the core catalog files. */
     private fun catalogEntries(tag: String): Map<String, String> {
-        val file = listOf(File(".."), File("."))
+        val dir = listOf(File(".."), File("."))
             .map { File(it, CORE_CATALOG) }
-            .first { it.isFile }
-        val nodes = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).documentElement
-            .getElementsByTagName(tag)
-        return (0 until nodes.length).map { nodes.item(it) as Element }
-            .associate { it.getAttribute("name") to it.textContent }
+            .first { it.isDirectory }
+        return CORE_FILES.flatMap { name ->
+            val nodes = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(File(dir, name))
+                .documentElement.getElementsByTagName(tag)
+            (0 until nodes.length).map { nodes.item(it) as Element }
+        }.associate { it.getAttribute("name") to it.textContent }
     }
 
     /** An Int for each `%n$d`, a String for each `%n$s`, in position order. */
@@ -106,7 +107,8 @@ class UiTextResolverTest {
         .toList()
 
     private companion object {
-        const val CORE_CATALOG = "shared/core/src/commonMain/composeResources/values/strings_common.xml"
+        const val CORE_CATALOG = "shared/core/src/commonMain/composeResources/values"
+        val CORE_FILES = listOf("strings_common.xml", "strings_platform.xml")
         const val MIN_EXPORTED_STRINGS = 60
         val PLURAL_COUNTS = listOf(1, 2, 5, 11, 21)
         val PLACEHOLDER = Regex("""%(\d+)\$([ds])""")
