@@ -28,7 +28,6 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
-import java.time.Clock
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -37,6 +36,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 /**
@@ -113,7 +113,7 @@ class DemoNetworkGateTest {
 
     private fun update(gate: BackendGate, demo: DemoMode) = AppUpdateRepositoryImpl(
         backend, gate, UtilityStorage(InMemoryPreferencesDataStore(), appVersionName = "2.2"), AppVersionName("2.2"),
-        Clock.systemUTC(), RecordingDiagnostics(), demo,
+        Clock.System, RecordingDiagnostics(), demo,
         dispatchers = dispatchers
     )
 

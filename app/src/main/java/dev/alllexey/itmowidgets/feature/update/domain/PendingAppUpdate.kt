@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.feature.update.domain
 
-import dev.alllexey.itmowidgets.core.time.WallClock
-import java.time.Clock
-import java.time.Duration
 import javax.inject.Inject
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 
 /**
  * The update worth interrupting the user with, or null.
@@ -14,10 +14,13 @@ import javax.inject.Inject
  *
  * An unsupported build ignores both the skip and the interval — there is nothing
  * left to postpone it to.
+ *
+ * The interval runs on the wall [clock], not the academic time: a debug date
+ * override must not hold back or release an offer.
  */
 class PendingAppUpdate @Inject constructor(
     private val repository: AppUpdateRepository,
-    @param:WallClock private val clock: Clock
+    private val clock: Clock
 ) {
 
     suspend operator fun invoke(): AppUpdate? {
@@ -30,10 +33,10 @@ class PendingAppUpdate @Inject constructor(
     private suspend fun shouldOffer(update: AppUpdate): Boolean {
         val reminder = repository.reminder()
         if (update.latest <= reminder.skippedVersion) return false
-        return Duration.between(reminder.notifiedAt, clock.instant()) >= REMINDER_INTERVAL
+        return clock.now() - reminder.notifiedAt >= REMINDER_INTERVAL
     }
 
     private companion object {
-        val REMINDER_INTERVAL: Duration = Duration.ofDays(1)
+        val REMINDER_INTERVAL: Duration = 1.days
     }
 }

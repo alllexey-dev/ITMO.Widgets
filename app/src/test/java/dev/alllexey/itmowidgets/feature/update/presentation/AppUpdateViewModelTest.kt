@@ -6,7 +6,10 @@ import dev.alllexey.itmowidgets.feature.update.FakeAppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -24,7 +27,7 @@ class AppUpdateViewModelTest {
 
         assertEquals(
             AppUpdateUiState(installed = "2.1", latest = "2.2", note = "Новые виджеты", unsupported = true),
-            viewModel.uiState
+            viewModel.uiState.value
         )
     }
 
@@ -37,7 +40,35 @@ class AppUpdateViewModelTest {
         advanceUntilIdle()
 
         assertEquals(AppVersionName("2.2"), repository.skippedVersion)
-        assertEquals(Unit, viewModel.skipped.first())
+        assertEquals(AppUpdateEvent.Skipped, viewModel.events.first())
+    }
+
+    @Test
+    fun `a second skip tap closes the screen once`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+        val events = mutableListOf<AppUpdateEvent>()
+        backgroundScope.launch { viewModel.events.toList(events) }
+
+        viewModel.skipVersion()
+        viewModel.skipVersion()
+        advanceUntilIdle()
+        // advanceUntilIdle stops once only background work is left; the collector is background work.
+        runCurrent()
+
+        assertEquals(listOf(AppUpdateEvent.Skipped), events)
+    }
+
+    @Test
+    fun `a skip stored while nobody listens reaches the next collector`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+        val first = backgroundScope.launch { viewModel.events.collect {} }
+        runCurrent()
+        first.cancel()
+
+        viewModel.skipVersion()
+        advanceUntilIdle()
+
+        assertEquals(AppUpdateEvent.Skipped, viewModel.events.first())
     }
 
     private fun createViewModel(

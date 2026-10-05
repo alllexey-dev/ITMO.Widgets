@@ -6,9 +6,6 @@ import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -16,6 +13,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppUpdateGateViewModelTest {
@@ -38,7 +37,9 @@ class AppUpdateGateViewModelTest {
     }
 
     private fun createViewModel(repository: AppUpdateRepository) = AppUpdateGateViewModel(
-        PendingAppUpdate(repository, Clock.fixed(Instant.parse("2026-09-15T10:00:00Z"), ZoneOffset.UTC))
+        PendingAppUpdate(repository, object : Clock {
+            override fun now(): Instant = Instant.parse("2026-09-15T10:00:00Z")
+        })
     )
 
     private fun update() = AppUpdate(

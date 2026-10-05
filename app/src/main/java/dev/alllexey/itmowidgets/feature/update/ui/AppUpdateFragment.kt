@@ -14,6 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.databinding.FragmentAppUpdateBinding
+import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateEvent
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateUiState
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateViewModel
 import javax.inject.Inject
@@ -34,14 +35,18 @@ class AppUpdateFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        render(viewModel.uiState)
+        render(viewModel.uiState.value)
         binding.updateButton.setOnClickListener { startUpdate() }
         binding.laterButton.setOnClickListener { closeScreen() }
         binding.closeButton.setOnClickListener { closeScreen() }
         binding.skipButton.setOnClickListener { viewModel.skipVersion() }
-        viewModel.skipped
+        viewModel.events
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
-            .onEach { closeScreen() }
+            .onEach { event ->
+                when (event) {
+                    AppUpdateEvent.Skipped -> closeScreen()
+                }
+            }
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
@@ -68,7 +73,7 @@ class AppUpdateFragment : Fragment() {
     }
 
     private fun startUpdate() {
-        updateAction.start(requireActivity(), viewModel.uiState.unsupported) {
+        updateAction.start(requireActivity(), viewModel.uiState.value.unsupported) {
             _binding?.let { Snackbar.make(it.root, R.string.app_update_open_failed, Snackbar.LENGTH_LONG).show() }
         }
     }

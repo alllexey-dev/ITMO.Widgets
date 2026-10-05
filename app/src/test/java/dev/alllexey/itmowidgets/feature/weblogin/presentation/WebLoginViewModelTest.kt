@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
@@ -16,7 +17,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import kotlinx.datetime.TimeZone
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -174,7 +174,7 @@ class WebLoginViewModelTest {
     }
 
     private fun model(handle: SavedStateHandle = SavedStateHandle()) =
-        WebLoginViewModel(handle, repository, TimeZone.of("Europe/Moscow"))
+        WebLoginViewModel(handle, repository, FixedAcademicTime())
 
     private class FakeWebLoginRepository : WebLoginRepository {
         val previews = mutableMapOf<String, AppResult<WebLoginPreview>>()
