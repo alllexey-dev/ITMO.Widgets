@@ -41,7 +41,25 @@ jobs:
           cache-provider: basic
           cache-read-only: ${{ github.ref != 'refs/heads/v2.3/next' }}
 
-      # No secrets: google-services.json is tracked, release stays unsigned, Core and MyItmoApi
+      # MyItmoApi 2.x at gradle/myitmoapi.ref as the composite build (ADR 0024). checkout only writes
+      # inside the workspace, so the tree moves out of it: Konsist scans every source set under the root.
+      - name: MyItmoApi ref
+        id: myitmoapi
+        run: echo "ref=$(head -n 1 gradle/myitmoapi.ref | tr -d ' \t\r')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: alllexey-dev/my-itmo-api
+          ref: ${{ steps.myitmoapi.outputs.ref }}
+          path: myitmoapi
+          persist-credentials: false
+
+      - name: MyItmoApi out of the workspace
+        run: |
+          mv myitmoapi "$RUNNER_TEMP/myitmoapi"
+          echo "MYITMOAPI_DIR=$RUNNER_TEMP/myitmoapi" >> "$GITHUB_ENV"
+
+      # No secrets: google-services.json is tracked, release stays unsigned, Core and MyItmoApi 1.x
       # come from Maven Central. scripts/check-docs.sh runs first inside verify.sh once it exists.
       - name: verify.sh quick
         env:
