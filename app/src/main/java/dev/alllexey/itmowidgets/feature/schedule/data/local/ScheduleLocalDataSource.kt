@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.data.local
 
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 interface ScheduleLocalDataSource {
 

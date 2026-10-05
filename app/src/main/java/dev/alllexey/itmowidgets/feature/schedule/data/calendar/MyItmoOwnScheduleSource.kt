@@ -4,14 +4,17 @@ import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
 import retrofit2.HttpException
 
 /**
@@ -26,22 +29,22 @@ class MyItmoOwnScheduleSource @Inject constructor(
 ) : OwnScheduleSource {
 
     override suspend fun read(start: LocalDate, end: LocalDate): List<DaySchedule> = withContext(dispatchers.io) {
-        if (demo.isActive()) return@withContext DemoSchedule.ownDays(start, end, time.javaToday())
-        generateSequence(start) { it.plusDays(CHUNK_DAYS) }
-            .takeWhile { !it.isAfter(end) }
-            .flatMap { from -> request(from, minOf(end, from.plusDays(CHUNK_DAYS - 1))) }
+        if (demo.isActive()) return@withContext DemoSchedule.ownDays(start, end, time.today())
+        generateSequence(start) { it.plus(CHUNK_DAYS, DateTimeUnit.DAY) }
+            .takeWhile { it <= end }
+            .flatMap { from -> request(from, minOf(end, from.plus(CHUNK_DAYS - 1, DateTimeUnit.DAY))) }
             .toList()
     }
 
     private fun request(start: LocalDate, end: LocalDate): List<DaySchedule> {
-        val response = api.getPersonalSchedule(start, end).execute()
+        val response = api.getPersonalSchedule(start.toJavaLocalDate(), end.toJavaLocalDate()).execute()
         if (!response.isSuccessful) throw HttpException(response)
         val days = checkNotNull(response.body()?.data) { "My ITMO answered without a schedule" }
         return days.map { day ->
             DaySchedule(
                 dayNumber = day.dayNumber,
                 weekNumber = day.weekNumber,
-                date = day.date,
+                date = day.date.toKotlinLocalDate(),
                 note = day.note,
                 lessons = day.lessons.orEmpty().map { it.toModel() }
             )
@@ -49,6 +52,6 @@ class MyItmoOwnScheduleSource @Inject constructor(
     }
 
     private companion object {
-        const val CHUNK_DAYS = 31L
+        const val CHUNK_DAYS = 31
     }
 }

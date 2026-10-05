@@ -7,8 +7,8 @@ import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleStoreJson
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.SyncedEvent
-import java.time.Instant
 import javax.inject.Inject
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import okio.FileSystem
 import okio.Path
@@ -97,8 +97,8 @@ internal fun StoredEvent.toModel() = SyncedEvent(
     event = CalendarEvent(
         key = key,
         title = title,
-        start = Instant.ofEpochMilli(start),
-        end = Instant.ofEpochMilli(end),
+        start = Instant.fromEpochMilliseconds(start),
+        end = Instant.fromEpochMilliseconds(end),
         location = location,
         description = description
     )
@@ -108,8 +108,8 @@ internal fun SyncedEvent.toStored(calendarId: Long?) = StoredEvent(
     key = event.key,
     eventId = eventId,
     calendarId = calendarId,
-    start = event.start.toEpochMilli(),
-    end = event.end.toEpochMilli(),
+    start = event.start.toEpochMilliseconds(),
+    end = event.end.toEpochMilliseconds(),
     title = event.title,
     location = event.location,
     description = event.description

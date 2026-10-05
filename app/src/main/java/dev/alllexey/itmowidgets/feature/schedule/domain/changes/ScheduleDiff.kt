@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.changes
 
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 /** A difference between two snapshots before it is stored; [before] or [after] is empty for a cancel or an add. */
 data class DetectedChange(

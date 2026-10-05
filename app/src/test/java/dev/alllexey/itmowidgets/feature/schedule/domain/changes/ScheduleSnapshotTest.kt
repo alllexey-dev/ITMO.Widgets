@@ -4,8 +4,13 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import java.time.LocalDate
-import java.time.LocalTime
+import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -23,22 +28,22 @@ class ScheduleSnapshotTest {
     @Test
     fun `a repeated pair id is kept once at its earliest slot`() {
         val snapshot = listOf(
-            day(START.plusDays(1), lesson(1, start = LocalTime.of(8, 20))),
-            day(START, lesson(1, start = LocalTime.of(13, 30)), lesson(1, start = LocalTime.of(10, 0)))
+            day(START.plus(1, DateTimeUnit.DAY), lesson(1, start = LocalTime(8, 20))),
+            day(START, lesson(1, start = LocalTime(13, 30)), lesson(1, start = LocalTime(10, 0)))
         ).academicSnapshot(START, END)
 
         val kept = snapshot.lessons.single()
         assertEquals(START, kept.date)
-        assertEquals(LocalTime.of(10, 0), kept.start)
+        assertEquals(LocalTime(10, 0), kept.start)
     }
 
     @Test
     fun `days outside the window are left out and both ends are kept`() {
         val snapshot = listOf(
-            day(START.minusDays(1), lesson(1)),
+            day(START.minus(1, DateTimeUnit.DAY), lesson(1)),
             day(START, lesson(2)),
             day(END, lesson(3)),
-            day(END.plusDays(1), lesson(4))
+            day(END.plus(1, DateTimeUnit.DAY), lesson(4))
         ).academicSnapshot(START, END)
 
         assertEquals(listOf(2L, 3L), snapshot.lessons.map { it.pairId })
@@ -62,7 +67,7 @@ class ScheduleSnapshotTest {
 
         assertEquals(
             SnapshotLesson(
-                pairId = 7, date = START, start = LocalTime.of(8, 20), end = LocalTime.of(9, 50), subjectId = 70,
+                pairId = 7, date = START, start = LocalTime(8, 20), end = LocalTime(9, 50), subjectId = 70,
                 subjectName = "Физика", typeId = 1, flowId = 700, flowName = "ФИЗ ПИИКТ 3.2", teacherIsu = 300001,
                 teacherName = "Тестовый преподаватель", room = "1506", building = "Кронверкский проспект, 49",
                 formatId = 1, format = "Очный"
@@ -71,11 +76,11 @@ class ScheduleSnapshotTest {
         )
     }
 
-    private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.value, 1, date, null, lessons.toList())
+    private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, lessons.toList())
 
     private fun lesson(
         pairId: Long,
-        start: LocalTime = LocalTime.of(8, 20),
+        start: LocalTime = LocalTime(8, 20),
         flowTypeId: Int = ACADEMIC_FLOW,
         room: Room? = Room("1506"),
         building: Building? = Building("Кронверкский проспект, 49"),
@@ -89,7 +94,7 @@ class ScheduleSnapshotTest {
     )
 
     private companion object {
-        val START: LocalDate = LocalDate.of(2026, 9, 7)
-        val END: LocalDate = LocalDate.of(2026, 9, 14)
+        val START: LocalDate = LocalDate(2026, 9, 7)
+        val END: LocalDate = LocalDate(2026, 9, 14)
     }
 }

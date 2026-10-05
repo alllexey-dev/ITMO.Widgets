@@ -5,8 +5,6 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.io.File
 import java.time.Clock
-import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.zip.GZIPInputStream
@@ -20,6 +18,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
 import okio.Path
 import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
@@ -29,6 +31,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.time.Instant
 
 class ScheduleLocalDataSourceTest {
 
@@ -36,7 +39,7 @@ class ScheduleLocalDataSourceTest {
 
     @Test
     fun replacementPublishesOnlyTheCompleteRangeSnapshot() = withCache { fixture ->
-        val old = (0L..79L).map { day(DATE.plusDays(it), "old") }
+        val old = (0L..79L).map { day(DATE.plus(it, DateTimeUnit.DAY), "old") }
         val refreshed = old.map { it.copy(note = "refreshed") }
         val local = fixture.local()
         local.replaceRange(null, DATE, old.last().date, old)
@@ -57,25 +60,25 @@ class ScheduleLocalDataSourceTest {
     @Test
     fun rangeReplacementRemovesOmittedDaysAndPreservesOtherDatesAndUsersOnDisk() = withCache { fixture ->
         val local = fixture.local()
-        val own = (0L..4L).map { day(DATE.plusDays(it), "own") }
-        val peer = day(DATE.plusDays(2), "friend")
-        local.replaceRange(null, DATE, DATE.plusDays(4), own)
+        val own = (0L..4L).map { day(DATE.plus(it, DateTimeUnit.DAY), "own") }
+        val peer = day(DATE.plus(2, DateTimeUnit.DAY), "friend")
+        local.replaceRange(null, DATE, DATE.plus(4, DateTimeUnit.DAY), own)
         local.save(peer, 900001)
 
-        val replacement = day(DATE.plusDays(2), "new")
-        local.replaceRange(null, DATE.plusDays(1), DATE.plusDays(3), listOf(
+        val replacement = day(DATE.plus(2, DateTimeUnit.DAY), "new")
+        local.replaceRange(null, DATE.plus(1, DateTimeUnit.DAY), DATE.plus(3, DateTimeUnit.DAY), listOf(
             replacement,
             day(DATE, "out-of-range must not overwrite")
         ))
 
         val reopened = fixture.local()
-        assertEquals(listOf(own.first(), replacement, own.last()), reopened.observeRange(null, DATE, DATE.plusDays(4)).first())
-        assertEquals(listOf(peer), reopened.observeRange(900001, DATE, DATE.plusDays(4)).first())
-        assertNull(reopened.get(null, DATE.plusDays(1)))
-        assertNull(reopened.get(null, DATE.plusDays(3)))
+        assertEquals(listOf(own.first(), replacement, own.last()), reopened.observeRange(null, DATE, DATE.plus(4, DateTimeUnit.DAY)).first())
+        assertEquals(listOf(peer), reopened.observeRange(900001, DATE, DATE.plus(4, DateTimeUnit.DAY)).first())
+        assertNull(reopened.get(null, DATE.plus(1, DateTimeUnit.DAY)))
+        assertNull(reopened.get(null, DATE.plus(3, DateTimeUnit.DAY)))
 
-        local.replaceRange(null, DATE.plusDays(1), DATE.plusDays(3), emptyList())
-        assertEquals(listOf(own.first(), own.last()), fixture.local().observeRange(null, DATE, DATE.plusDays(4)).first())
+        local.replaceRange(null, DATE.plus(1, DateTimeUnit.DAY), DATE.plus(3, DateTimeUnit.DAY), emptyList())
+        assertEquals(listOf(own.first(), own.last()), fixture.local().observeRange(null, DATE, DATE.plus(4, DateTimeUnit.DAY)).first())
         assertNotNull(fixture.local().get(900001, peer.date))
     }
 
@@ -126,7 +129,7 @@ class ScheduleLocalDataSourceTest {
     @Test
     fun concurrentWritesToDifferentScopesDoNotLoseEitherSnapshot() = withCache { fixture ->
         val local = fixture.local()
-        val own = (0L..14L).map { day(DATE.plusDays(it), "own") }
+        val own = (0L..14L).map { day(DATE.plus(it, DateTimeUnit.DAY), "own") }
         val peer = own.map { it.copy(note = "friend") }
         val first = async { local.replaceRange(null, DATE, own.last().date, own) }
         val second = async { local.replaceRange(900001, DATE, peer.last().date, peer) }
@@ -142,20 +145,20 @@ class ScheduleLocalDataSourceTest {
     @Test
     fun revokedUserIsRemovedFromEveryDateAndDiskWithoutAffectingOthers() = withCache { fixture ->
         val local = fixture.local()
-        val days = listOf(day(DATE, "private"), day(DATE.plusDays(30), "later"))
+        val days = listOf(day(DATE, "private"), day(DATE.plus(30, DateTimeUnit.DAY), "later"))
         days.forEach { local.save(it, 900001) }
         val own = day(DATE, "own")
         val other = day(DATE, "other user with same ISU prefix")
         local.save(own, null)
         local.save(other, 9000012)
         val snapshots = Channel<List<DaySchedule>>(Channel.UNLIMITED)
-        val collector = launch { local.observeRange(900001, DATE, DATE.plusDays(30)).collect { snapshots.send(it) } }
+        val collector = launch { local.observeRange(900001, DATE, DATE.plus(30, DateTimeUnit.DAY)).collect { snapshots.send(it) } }
         try {
             assertEquals(days, withTimeout(5_000) { snapshots.receive() })
             local.clearUser(900001)
             assertEquals(emptyList<DaySchedule>(), withTimeout(5_000) { snapshots.receive() })
-            assertEquals(emptyList<DaySchedule>(), fixture.local().observeRange(900001, DATE, DATE.plusDays(30)).first())
-            assertNull(fixture.local().get(900001, DATE.plusDays(30)))
+            assertEquals(emptyList<DaySchedule>(), fixture.local().observeRange(900001, DATE, DATE.plus(30, DateTimeUnit.DAY)).first())
+            assertNull(fixture.local().get(900001, DATE.plus(30, DateTimeUnit.DAY)))
             assertEquals(listOf(own), fixture.local().observeRange(null, DATE, DATE).first())
             assertEquals(listOf(other), fixture.local().observeRange(9000012, DATE, DATE).first())
         } finally {
@@ -184,10 +187,10 @@ class ScheduleLocalDataSourceTest {
         override fun withZone(zone: ZoneId): Clock = fixed(now, zone)
     }
 
-    private fun day(date: LocalDate, note: String? = null) = DaySchedule(date.dayOfWeek.value, 1, date, note, emptyList())
+    private fun day(date: LocalDate, note: String? = null) = DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, note, emptyList())
 
     private companion object {
-        val DATE: LocalDate = LocalDate.of(2026, 9, 7)
+        val DATE: LocalDate = LocalDate(2026, 9, 7)
 
         /** Real threads, as on a device: the cache's mutex and flows are what is under test. */
         val RealDispatchers = AppDispatchers(io = Dispatchers.IO, default = Dispatchers.Default, main = Dispatchers.Unconfined)

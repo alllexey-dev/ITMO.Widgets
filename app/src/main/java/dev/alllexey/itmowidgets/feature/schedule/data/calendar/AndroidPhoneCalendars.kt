@@ -12,12 +12,11 @@ import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.MarkedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
-import java.time.Instant
 import javax.inject.Inject
+import kotlin.time.Instant
 
 /**
  * The phone's calendars through `CalendarContract`. The app's own calendar is a local one (`ACCOUNT_TYPE_LOCAL`),
@@ -56,7 +55,7 @@ class AndroidPhoneCalendars @Inject constructor(
             put(Calendars.CALENDAR_COLOR, ContextCompat.getColor(context, R.color.calendar_app))
             put(Calendars.CALENDAR_ACCESS_LEVEL, Calendars.CAL_ACCESS_OWNER)
             put(Calendars.OWNER_ACCOUNT, ACCOUNT_NAME)
-            put(Calendars.CALENDAR_TIME_ZONE, time.javaZone().id)
+            put(Calendars.CALENDAR_TIME_ZONE, time.timeZone.id)
             put(Calendars.VISIBLE, 1)
             put(Calendars.SYNC_EVENTS, 1)
         }
@@ -93,9 +92,9 @@ class AndroidPhoneCalendars @Inject constructor(
 
     private fun values(event: CalendarEvent) = ContentValues().apply {
         put(Events.TITLE, event.title)
-        put(Events.DTSTART, event.start.toEpochMilli())
-        put(Events.DTEND, event.end.toEpochMilli())
-        put(Events.EVENT_TIMEZONE, time.javaZone().id)
+        put(Events.DTSTART, event.start.toEpochMilliseconds())
+        put(Events.DTEND, event.end.toEpochMilliseconds())
+        put(Events.EVENT_TIMEZONE, time.timeZone.id)
         put(Events.EVENT_LOCATION, event.location.orEmpty())
         put(Events.DESCRIPTION, event.taggedDescription)
         put(Events.AVAILABILITY, Events.AVAILABILITY_BUSY)
@@ -112,7 +111,7 @@ class AndroidPhoneCalendars @Inject constructor(
         "${Events.CALENDAR_ID} = ? AND ${Events.DELETED} = 0 AND ${Events.DTSTART} >= ? AND ${Events.DTSTART} < ? AND " +
             "(${Events.DESCRIPTION} LIKE ? OR ${Events.CUSTOM_APP_PACKAGE} = ? OR ${Events.UID_2445} LIKE ?)",
         arrayOf(
-            calendarId.toString(), from.toEpochMilli().toString(), to.toEpochMilli().toString(),
+            calendarId.toString(), from.toEpochMilliseconds().toString(), to.toEpochMilliseconds().toString(),
             "%${CalendarEvent.TAG_PREFIX}lesson-%", context.packageName, "%@${CalendarEvent.UID_DOMAIN}"
         ),
         null
@@ -121,7 +120,7 @@ class AndroidPhoneCalendars @Inject constructor(
             while (cursor.moveToNext()) {
                 val key = CalendarEvent.keyOfDescription(cursor.getString(4))
                     ?: cursor.getString(1) ?: cursor.getString(3)?.substringBefore('@')
-                add(MarkedEvent(cursor.getLong(0), key, Instant.ofEpochMilli(cursor.getLong(2))))
+                add(MarkedEvent(cursor.getLong(0), key, Instant.fromEpochMilliseconds(cursor.getLong(2))))
             }
         }
     }.orEmpty()

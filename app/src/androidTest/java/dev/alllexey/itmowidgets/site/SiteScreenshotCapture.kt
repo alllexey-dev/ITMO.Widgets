@@ -53,7 +53,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
-import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -130,14 +129,14 @@ class SiteScreenshotCapture {
     }
 
     private fun homeCards(): List<HomeCard> {
-        val today = DemoSchedule.ownDays(TODAY, TODAY, TODAY).single()
+        val today = DemoSchedule.ownDays(TODAY.toKotlinLocalDate(), TODAY.toKotlinLocalDate(), TODAY.toKotlinLocalDate()).single()
         val rows = today.lessons.mapIndexed { index, lesson ->
             val state = if (index == 0) HomeLessonState.CURRENT else HomeLessonState.UPCOMING
-            HomeScheduleRow.Lesson(lesson.toDetailsArgs(TODAY), state, progress = if (index == 0) 0.45f else null)
+            HomeScheduleRow.Lesson(lesson.toDetailsArgs(TODAY.toKotlinLocalDate()), state, progress = if (index == 0) 0.45f else null)
         }
         return listOf(
             HomeCard.Schedule(date = TODAY.toKotlinLocalDate(), tomorrow = false, rows = rows, completed = 0),
-            HomeCard.ScheduleChanges(unread = 1, latest = DemoSchedule.changes(TODAY, TIME.javaNow().toInstant()).first()),
+            HomeCard.ScheduleChanges(unread = 1, latest = DemoSchedule.changes(TODAY.toKotlinLocalDate(), TIME.now()).first()),
             HomeCard.Marks(listOf(DemoStudy.DATABASES.name, DemoStudy.DISCRETE.name)),
             HomeCard.Sport(DemoSport.score(TIME).summary, pendingBookings()),
             HomeCard.FriendRequests(REQUESTS)
@@ -165,7 +164,7 @@ class SiteScreenshotCapture {
 
     private fun captureSchedule() {
         ScheduleLifecycleTestActivity.appearance = PreviewAppearance(dark = night)
-        ScheduleLifecycleTestActivity.days.value = DemoSchedule.ownDays(TODAY, TODAY.plusDays(2), TODAY)
+        ScheduleLifecycleTestActivity.days.value = DemoSchedule.ownDays(TODAY.toKotlinLocalDate(), TODAY.plusDays(2).toKotlinLocalDate(), TODAY.toKotlinLocalDate())
         ScheduleLifecycleTestActivity.showPendingSport.value = true
         ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(pendingBookings())
         try {
@@ -238,7 +237,7 @@ class SiteScreenshotCapture {
         }
         // The recordbook host's clock stands on 2026-06-01; the hub window starts there.
         RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons(
-            DemoSchedule.ownDays(RECORDBOOK_TODAY, RECORDBOOK_TODAY.plusDays(15), RECORDBOOK_TODAY).flatMap { day ->
+            DemoSchedule.ownDays(RECORDBOOK_TODAY.toKotlinLocalDate(), RECORDBOOK_TODAY.plusDays(15).toKotlinLocalDate(), RECORDBOOK_TODAY.toKotlinLocalDate()).flatMap { day ->
                 day.lessons.filter { it.subjectId == DemoStudy.ALGORITHMS.id }.map { it.toSubjectLesson(day.date) }
             }
         )
@@ -280,8 +279,8 @@ class SiteScreenshotCapture {
 
     // region Builders
 
-    private fun Lesson.toSubjectLesson(date: LocalDate) = SubjectLesson(
-        pairId = pairId, date = date.toKotlinLocalDate(), start = start.toKotlinLocalTime(), end = end.toKotlinLocalTime(),
+    private fun Lesson.toSubjectLesson(date: kotlinx.datetime.LocalDate) = SubjectLesson(
+        pairId = pairId, date = date, start = start, end = end,
         typeId = typeId.raw, type = type, subjectId = subjectId,
         subjectName = subjectName, flowId = flowId, teacherIsu = teacherIsu, teacherFio = teacherFio, room = room?.raw,
         building = building?.raw, formatId = formatId

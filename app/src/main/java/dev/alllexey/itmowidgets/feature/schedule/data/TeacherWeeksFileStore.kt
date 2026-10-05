@@ -3,9 +3,9 @@ package dev.alllexey.itmowidgets.feature.schedule.data
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleStoreJson
-import java.time.DayOfWeek
-import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import okio.FileSystem
 import okio.Path

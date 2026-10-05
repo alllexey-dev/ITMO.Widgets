@@ -7,12 +7,19 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import kotlin.time.toKotlinInstant
-import kotlinx.datetime.toJavaLocalDate
+import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.asTimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -27,10 +34,10 @@ class HomeScheduleSelectorTest {
         val card = selector.select(
             days = listOf(day(TODAY, lesson(1, "09:30"), lesson(2, "11:20"), lesson(3, "13:30"))),
             pending = emptyList(),
-            now = at("10:00")
+            now = at("10:00"), timeZone = ZONE
         )
 
-        assertEquals(TODAY, card.date.toJavaLocalDate())
+        assertEquals(TODAY, card.date)
         assertFalse(card.tomorrow)
         assertEquals(0, card.completed)
         assertEquals(
@@ -47,7 +54,7 @@ class HomeScheduleSelectorTest {
         val card = selector.select(
             days = listOf(day(TODAY, lesson(1, "09:30"), lesson(2, "11:20"))),
             pending = emptyList(),
-            now = at("11:05")
+            now = at("11:05"), timeZone = ZONE
         )
 
         assertEquals(1, card.completed)
@@ -62,7 +69,7 @@ class HomeScheduleSelectorTest {
         val card = selector.select(
             days = listOf(day(TODAY, lesson(1, "09:30"), lesson(2, "13:30"))),
             pending = listOf(booking(7, "12:00"), booking(7, "12:00"), booking(8, "08:00")),
-            now = at("10:00")
+            now = at("10:00"), timeZone = ZONE
         )
 
         assertEquals(listOf("lesson 1", "pending 7", "lesson 2"), card.rows.map(::label))
@@ -72,13 +79,13 @@ class HomeScheduleSelectorTest {
     @Test
     fun `once today is over tomorrow takes the card`() {
         val card = selector.select(
-            days = listOf(day(TODAY, lesson(1, "09:30")), day(TODAY.plusDays(1), lesson(5, "09:30"), lesson(6, "11:20"))),
-            pending = listOf(booking(9, "16:00", date = TODAY.plusDays(1))),
-            now = at("18:00")
+            days = listOf(day(TODAY, lesson(1, "09:30")), day(TODAY.plus(1, DateTimeUnit.DAY), lesson(5, "09:30"), lesson(6, "11:20"))),
+            pending = listOf(booking(9, "16:00", date = TODAY.plus(1, DateTimeUnit.DAY))),
+            now = at("18:00"), timeZone = ZONE
         )
 
         assertTrue(card.tomorrow)
-        assertEquals(TODAY.plusDays(1), card.date.toJavaLocalDate())
+        assertEquals(TODAY.plus(1, DateTimeUnit.DAY), card.date)
         assertEquals(1, card.completed)
         assertEquals(listOf("lesson 5", "lesson 6", "pending 9"), card.rows.map(::label))
         assertEquals(HomeLessonState.NEXT, (card.rows.first() as HomeScheduleRow.Lesson).state)
@@ -86,7 +93,7 @@ class HomeScheduleSelectorTest {
 
     @Test
     fun `a free day without lessons tomorrow is an empty card`() {
-        val card = selector.select(days = emptyList(), pending = emptyList(), now = at("10:00"))
+        val card = selector.select(days = emptyList(), pending = emptyList(), now = at("10:00"), timeZone = ZONE)
 
         assertFalse(card.tomorrow)
         assertTrue(card.rows.isEmpty())
@@ -98,17 +105,17 @@ class HomeScheduleSelectorTest {
         val card = selector.select(
             days = listOf(day(TODAY, lesson(1, "09:30"), lesson(2, "11:20"))),
             pending = emptyList(),
-            now = at("20:00")
+            now = at("20:00"), timeZone = ZONE
         )
 
-        assertEquals(TODAY, card.date.toJavaLocalDate())
+        assertEquals(TODAY, card.date)
         assertTrue(card.rows.isEmpty())
         assertEquals(2, card.completed)
     }
 
     @Test
     fun `a booking alone today still fills the card without a focus lesson`() {
-        val card = selector.select(days = emptyList(), pending = listOf(booking(1, "16:00")), now = at("10:00"))
+        val card = selector.select(days = emptyList(), pending = listOf(booking(1, "16:00")), now = at("10:00"), timeZone = ZONE)
 
         assertEquals(listOf("pending 1"), card.rows.map(::label))
     }
@@ -118,10 +125,10 @@ class HomeScheduleSelectorTest {
         is HomeScheduleRow.PendingSport -> "pending ${row.args.lessonId - 100}"
     }
 
-    private fun at(time: String): OffsetDateTime = OffsetDateTime.of(TODAY, LocalTime.parse(time), OFFSET)
+    private fun at(time: String): Instant = LocalDateTime(TODAY, LocalTime.parse(time)).toInstant(ZONE)
 
     private fun day(date: LocalDate, vararg lessons: Lesson) =
-        DaySchedule(date.dayOfWeek.value, 1, date, null, lessons.toList())
+        DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, lessons.toList())
 
     private fun lesson(pairId: Long, start: String) = Lesson(
         pairId = pairId, start = LocalTime.parse(start), end = LocalTime.parse(start).plusMinutes(90), type = "Лекция",
@@ -132,17 +139,17 @@ class HomeScheduleSelectorTest {
     )
 
     private fun booking(id: Long, start: String, date: LocalDate = TODAY): PendingSportBooking {
-        val startsAt = OffsetDateTime.of(date, LocalTime.parse(start), OFFSET)
+        val startsAt = LocalDateTime(date, LocalTime.parse(start)).toInstant(ZONE)
         return PendingSportBooking(
             queueId = id, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100 + id,
-            sectionName = "Бассейн", start = startsAt.toInstant().toKotlinInstant(),
-            end = startsAt.plusMinutes(90).toInstant().toKotlinInstant(),
+            sectionName = "Бассейн", start = startsAt,
+            end = startsAt + 90.minutes,
             teacherFio = "Тренер", roomName = "Бассейн", isPrediction = true
         )
     }
 
     private companion object {
-        val TODAY: LocalDate = LocalDate.of(2026, 9, 7)
-        val OFFSET: ZoneOffset = ZoneOffset.ofHours(3)
+        val TODAY: LocalDate = LocalDate(2026, 9, 7)
+        val ZONE: TimeZone = UtcOffset(hours = 3).asTimeZone()
     }
 }

@@ -1,7 +1,8 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.calendar
 
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 /** An event the app put into the phone's calendar, with the content it was given. */
 data class SyncedEvent(val eventId: Long, val event: CalendarEvent)
@@ -22,7 +23,7 @@ data class CalendarSyncPlan(
 object CalendarSyncPlanner {
 
     /** Events that ended longer ago are forgotten: they stay in the calendar but are no longer the app's. */
-    val RETENTION: Duration = Duration.ofDays(180)
+    val RETENTION: Duration = 180.days
 
     /**
      * [desired] is the schedule of [window], [synced] the app's events from earlier syncs. A key repeated in [desired]
@@ -40,7 +41,7 @@ object CalendarSyncPlanner {
         val updates = mutableListOf<SyncedEvent>()
         val deletes = mutableListOf<SyncedEvent>()
         val kept = mutableListOf<SyncedEvent>()
-        val forgetBefore = now.minus(RETENTION)
+        val forgetBefore = now - RETENTION
         existing.values.forEach { current ->
             val next = wanted[current.event.key]
             when {

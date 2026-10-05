@@ -7,15 +7,13 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.testing.slot
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinLocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -26,7 +24,7 @@ class ScheduleChangesViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
+    private val time = FixedAcademicTime(LocalDateTime(2026, 9, 7, 12, 0))
 
     @Test
     fun `the screen is blank until the file answers and says when there is nothing`() = runTest(mainDispatcherRule.dispatcher) {
@@ -44,8 +42,8 @@ class ScheduleChangesViewModelTest {
             // 23:30 UTC is already 02:30 of the next day in Moscow.
             read("late-night", "2026-09-06T23:30:00Z"),
             read("yesterday", "2026-09-06T10:00:00Z"),
-            read("today-later-lesson", "2026-09-07T08:00:00Z", start = LocalTime.of(15, 20)),
-            read("today-earlier-lesson", "2026-09-07T08:00:00Z", start = LocalTime.of(8, 20)),
+            read("today-later-lesson", "2026-09-07T08:00:00Z", start = LocalTime(15, 20)),
+            read("today-earlier-lesson", "2026-09-07T08:00:00Z", start = LocalTime(8, 20)),
             read("last-year", "2025-12-30T10:00:00Z")
         )
         val viewModel = ScheduleChangesViewModel(repository, time, SavedStateHandle())
@@ -54,10 +52,10 @@ class ScheduleChangesViewModelTest {
         val days = (viewModel.uiState.value as ScheduleChangesUiState.Content).days
         assertEquals(
             listOf(
-                LocalDate.of(2026, 9, 7) to RelativeDay.TODAY,
-                LocalDate.of(2026, 9, 6) to RelativeDay.YESTERDAY,
-                LocalDate.of(2026, 9, 3) to RelativeDay.OTHER,
-                LocalDate.of(2025, 12, 30) to RelativeDay.OTHER_YEAR
+                LocalDate(2026, 9, 7) to RelativeDay.TODAY,
+                LocalDate(2026, 9, 6) to RelativeDay.YESTERDAY,
+                LocalDate(2026, 9, 3) to RelativeDay.OTHER,
+                LocalDate(2025, 12, 30) to RelativeDay.OTHER_YEAR
             ),
             days.map { it.date to it.relative }
         )
@@ -114,10 +112,10 @@ class ScheduleChangesViewModelTest {
         assertEquals(setOf("2"), restored.newIds())
     }
 
-    private fun read(id: String, detectedAt: String, start: LocalTime = LocalTime.of(10, 0)) = scheduleChange(
+    private fun read(id: String, detectedAt: String, start: LocalTime = LocalTime(10, 0)) = scheduleChange(
         id = id,
         detectedAt = Instant.parse(detectedAt),
-        after = slot(1, LocalDate.of(2026, 9, 9).toKotlinLocalDate(), start = start.toKotlinLocalTime()),
+        after = slot(1, LocalDate(2026, 9, 9), start = start),
         read = true
     )
 

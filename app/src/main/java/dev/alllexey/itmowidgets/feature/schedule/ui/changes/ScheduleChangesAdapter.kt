@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleCh
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.datetime.toJavaLocalDate
 
 /** One history entry: a day title or a change found that day. */
 internal sealed interface ScheduleChangeItem {
@@ -38,7 +39,7 @@ internal sealed interface ScheduleChangeItem {
 }
 
 internal fun List<ScheduleChangeDay>.toItems(): List<ScheduleChangeItem> = flatMap { day ->
-    listOf(ScheduleChangeItem.Day(day.date, day.relative)) + day.rows.map(ScheduleChangeItem::Change)
+    listOf(ScheduleChangeItem.Day(day.date.toJavaLocalDate(), day.relative)) + day.rows.map(ScheduleChangeItem::Change)
 }
 
 /** The history rows are information only: nothing in them reacts to a tap. */

@@ -13,7 +13,6 @@ import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.AndroidPhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepositoryImpl
@@ -27,17 +26,22 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
+import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
 import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import java.io.File
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toKotlinLocalDate
 import okio.Path.Companion.toOkioPath
@@ -83,7 +87,7 @@ class CalendarSyncProviderTest {
 
     @Test
     fun turningOnCreatesAVisibleLocalCalendarAndTwoSyncsLeaveNoDuplicates() = runBlocking {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40), flowTypeId = 5)), day(MONDAY.plusDays(1), lesson(3)))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime(11, 40), flowTypeId = 5)), day(MONDAY.plus(1, DateTimeUnit.DAY), lesson(3)))
         val repository = repository()
 
         assertEquals(CalendarSyncResult.DONE, repository.enable())
@@ -107,8 +111,8 @@ class CalendarSyncProviderTest {
         assertEquals(listOf("lesson-1", "lesson-2", "lesson-3"), events.map { it.uid.substringBefore('@') })
         val first = events.first()
         assertEquals("Физика", first.title)
-        assertEquals(Instant.parse("2030-09-09T07:00:00Z").toEpochMilli(), first.start)
-        assertEquals(Instant.parse("2030-09-09T08:30:00Z").toEpochMilli(), first.end)
+        assertEquals(Instant.parse("2030-09-09T07:00:00Z").toEpochMilliseconds(), first.start)
+        assertEquals(Instant.parse("2030-09-09T08:30:00Z").toEpochMilliseconds(), first.end)
         assertEquals("Europe/Moscow", first.timeZone)
         assertEquals("1506, Кронверкский пр., 49", first.location)
         assertEquals("Лекция\nТестовый преподаватель\nФИЗ ПИИКТ 3.2\nITMO.Widgets · lesson-1", first.description)
@@ -129,19 +133,19 @@ class CalendarSyncProviderTest {
 
     @Test
     fun aChangedLessonUpdatesItsEventAndAVanishedOneIsDeleted() = runBlocking {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime(11, 40))))
         val repository = enabled()
         repository.sync()
         val own = calendars.findOwn()!!
         val before = events(own).associateBy { it.uid }
 
-        days = listOf(day(MONDAY, lesson(1, LocalTime.of(13, 30), room = Room("2304"))))
+        days = listOf(day(MONDAY, lesson(1, LocalTime(13, 30), room = Room("2304"))))
         repository.sync()
 
         val after = events(own)
         assertEquals(listOf("lesson-1@widgets.alllexey.dev"), after.map { it.uid })
         assertEquals(before.getValue("lesson-1@widgets.alllexey.dev").id, after.single().id)
-        assertEquals(Instant.parse("2030-09-09T10:30:00Z").toEpochMilli(), after.single().start)
+        assertEquals(Instant.parse("2030-09-09T10:30:00Z").toEpochMilliseconds(), after.single().start)
         assertEquals("2304, Кронверкский пр., 49", after.single().location)
     }
 
@@ -153,7 +157,7 @@ class CalendarSyncProviderTest {
      */
     @Test
     fun anEarlierGoogleTargetIsLeftWithoutInsertingAndSweptByTheTag() = runBlocking {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime(11, 40))))
         val other = createOtherCalendar()
         val foreign = insertForeignEvent(other)
         val written = listOf(event("lesson-1", 10), event("lesson-2", 11)).map { SyncedEvent(calendars.insert(other, it), it) }
@@ -180,8 +184,8 @@ class CalendarSyncProviderTest {
             ContentUris.parseId(resolver.insert(syncAdapter(Events.CONTENT_URI, OTHER_ACCOUNT), ContentValues().apply {
                 put(Events.CALENDAR_ID, other)
                 put(Events.TITLE, synced.event.title)
-                put(Events.DTSTART, synced.event.start.toEpochMilli())
-                put(Events.DTEND, synced.event.end.toEpochMilli())
+                put(Events.DTSTART, synced.event.start.toEpochMilliseconds())
+                put(Events.DTEND, synced.event.end.toEpochMilliseconds())
                 put(Events.EVENT_TIMEZONE, "Europe/Moscow")
                 put(Events.DESCRIPTION, synced.event.taggedDescription)
                 put(Events._SYNC_ID, "server-${synced.eventId}")
@@ -200,7 +204,7 @@ class CalendarSyncProviderTest {
 
     @Test
     fun eventsWhoseIdsWereLostAreReplacedNotDoubled() = runBlocking {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime(11, 40))))
         enabled().sync()
         val own = calendars.findOwn()!!
         val store = CalendarSyncFileStore(folder.toOkioPath())
@@ -216,7 +220,7 @@ class CalendarSyncProviderTest {
     @Test
     fun turningOffWhileTheFirstSyncInsertsLeavesNoLessonBehind() = runBlocking {
         days = (0L until 14L).map { offset ->
-            day(MONDAY.plusDays(offset), lesson(10 * offset + 1), lesson(10 * offset + 2, LocalTime.of(11, 40)), lesson(10 * offset + 3, LocalTime.of(13, 30)))
+            day(MONDAY.plus(offset, DateTimeUnit.DAY), lesson(10 * offset + 1), lesson(10 * offset + 2, LocalTime(11, 40)), lesson(10 * offset + 3, LocalTime(13, 30)))
         }
         val repository = enabled()
         val own = calendars.findOwn()!!
@@ -285,8 +289,8 @@ class CalendarSyncProviderTest {
         resolver.insert(Events.CONTENT_URI, ContentValues().apply {
             put(Events.CALENDAR_ID, calendarId)
             put(Events.TITLE, "Встреча")
-            put(Events.DTSTART, Instant.parse("2030-09-09T15:00:00Z").toEpochMilli())
-            put(Events.DTEND, Instant.parse("2030-09-09T16:00:00Z").toEpochMilli())
+            put(Events.DTSTART, Instant.parse("2030-09-09T15:00:00Z").toEpochMilliseconds())
+            put(Events.DTEND, Instant.parse("2030-09-09T16:00:00Z").toEpochMilliseconds())
             put(Events.EVENT_TIMEZONE, "Europe/Moscow")
         })!!
     )
@@ -295,8 +299,8 @@ class CalendarSyncProviderTest {
     private fun event(key: String, hour: Int) = CalendarEvent(
         key = key,
         title = "Физика",
-        start = MONDAY.atTime(hour, 0).atZone(Time.javaZone()).toInstant(),
-        end = MONDAY.atTime(hour, 0).atZone(Time.javaZone()).toInstant().plusSeconds(5400),
+        start = MONDAY.atTime(hour, 0).toInstant(Time.timeZone),
+        end = MONDAY.atTime(hour, 0).toInstant(Time.timeZone) + 5400.seconds,
         location = null,
         description = "Лекция"
     )
@@ -339,11 +343,11 @@ class CalendarSyncProviderTest {
         .appendQueryParameter(Calendars.ACCOUNT_TYPE, CalendarContract.ACCOUNT_TYPE_LOCAL)
         .build()
 
-    private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.value, 1, date, null, lessons.toList())
+    private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, lessons.toList())
 
     private fun lesson(
         pairId: Long,
-        start: LocalTime = LocalTime.of(10, 0),
+        start: LocalTime = LocalTime(10, 0),
         room: Room? = Room("1506"),
         flowTypeId: Int = 2
     ) = Lesson(
@@ -370,12 +374,12 @@ class CalendarSyncProviderTest {
     /** Monday 2030-09-09, 08:00 in Moscow: every lesson of the tests is ahead. */
     private object Time : AcademicTimeProvider {
         override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
-        override fun today() = MONDAY.toKotlinLocalDate()
+        override fun today() = MONDAY
         override fun now() = today().atTime(8, 0).toInstant(timeZone)
     }
 
     private companion object {
-        val MONDAY: LocalDate = LocalDate.of(2030, 9, 9)
+        val MONDAY: LocalDate = LocalDate(2030, 9, 9)
         const val OTHER_ACCOUNT = "ITMO.Widgets test"
     }
 }

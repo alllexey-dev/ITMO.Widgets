@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.schedule.ui
 
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import java.time.LocalTime
+import kotlinx.datetime.LocalTime
 
 sealed interface ScheduleItem {
     /** [changed]: a schedule change of the last 30 days touches this lesson. */

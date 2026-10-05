@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.model.LessonSyncRequest
 import dev.alllexey.itmowidgets.core.schedule.ScheduleUtil
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.core.utils.toDto
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
@@ -17,8 +16,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import retrofit2.awaitResponse
-import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
 
@@ -38,7 +38,7 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
     ): List<DaySchedule> = withContext(dispatchers.io) {
         if (demo.isActive()) {
             return@withContext if (userIsu == null) {
-                DemoSchedule.ownDays(start, end, time.javaToday())
+                DemoSchedule.ownDays(start, end, time.today())
             } else {
                 DemoSchedule.userDays(userIsu, start, end)
             }
@@ -46,7 +46,7 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
 
         return@withContext if (userIsu == null) {
             val response = api
-                .getPersonalSchedule(start, end)
+                .getPersonalSchedule(start.toJavaLocalDate(), end.toJavaLocalDate())
                 .awaitResponse()
 
             if (!response.isSuccessful) {
@@ -62,8 +62,8 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
                             lessons = days.flatMap { day ->
                                 day.lessons.map { lesson -> lesson.toDto(day.date) }
                             },
-                            from = start,
-                            to = end
+                            from = start.toJavaLocalDate(),
+                            to = end.toJavaLocalDate()
                         )
                     )
                 } catch (cancellation: CancellationException) {
@@ -77,7 +77,7 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
                 DaySchedule(
                     dayNumber = it.dayNumber,
                     weekNumber = it.weekNumber,
-                    date = it.date,
+                    date = it.date.toKotlinLocalDate(),
                     note = it.note,
                     lessons = it.lessons.map { it.toModel() }
                 )
@@ -86,16 +86,15 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
         } else {
             val response = widgetsApi.userLessons(
                 userIsu,
-                start,
-                end
+                start.toJavaLocalDate(),
+                end.toJavaLocalDate()
             )
 
-            val days = response.data?.groupBy { it.date } ?: return@withContext emptyList()
+            val days = response.data?.groupBy { it.date.toKotlinLocalDate() } ?: return@withContext emptyList()
 
-            val dates = ScheduleUtil.generateDates(start.toKotlinLocalDate(), end.toKotlinLocalDate()).map { it.toJavaLocalDate() }
-            dates.map {
+            ScheduleUtil.generateDates(start, end).map {
                 DaySchedule(
-                    dayNumber = it.dayOfWeek.value,
+                    dayNumber = it.dayOfWeek.isoDayNumber,
                     weekNumber = -1,
                     date = it,
                     note = null,

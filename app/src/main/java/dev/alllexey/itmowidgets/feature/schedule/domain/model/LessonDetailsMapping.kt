@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.model
 
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 fun Lesson.toDetailsArgs(date: LocalDate) = LessonDetailsArgs(
     pairId = pairId,

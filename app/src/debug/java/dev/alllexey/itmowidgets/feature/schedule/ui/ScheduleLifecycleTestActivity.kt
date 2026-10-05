@@ -37,13 +37,12 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.PendingSportDetailsBottomSheet
-import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.toKotlinLocalDate
 
 /** Real Fragment/FragmentManager lifecycle, with no session, network, or persistent fixtures. */
 @AndroidEntryPoint
@@ -134,7 +133,7 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator by NoOpA
         override fun observeScheduleForRange(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) =
             (if (userIsu == null) days else friendDays).let { source ->
                 if (restrictToRequestedRange) source.map { values ->
-                    values.filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) }
+                    values.filter { it.date in startDate..endDate }
                 } else source
             }
         override suspend fun refreshSchedule(userIsu: Int?, startDate: LocalDate, endDate: LocalDate) = refreshOutcome()
@@ -154,7 +153,7 @@ class ScheduleLifecycleTestActivity : AppCompatActivity(), AppNavigator by NoOpA
 
     private object FixedTime : AcademicTimeProvider {
         override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
-        override fun today() = LocalDate.of(2026, 9, 7).toKotlinLocalDate()
+        override fun today() = LocalDate(2026, 9, 7)
         override fun now() = today().atTime(12, 0).toInstant(timeZone)
     }
 

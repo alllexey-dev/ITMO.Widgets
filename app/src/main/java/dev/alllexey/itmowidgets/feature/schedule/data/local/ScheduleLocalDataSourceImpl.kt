@@ -15,19 +15,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDate
 import java.io.File
 import java.time.Clock
-import java.time.LocalDate
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 import javax.inject.Inject
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinLocalDate
 
 private const val SCHEDULE_CACHE_EXPIRATION_MS = 24 * 60 * 60 * 1000L
 
-private fun datesBetween(start: LocalDate, end: LocalDate): List<LocalDate> =
-    ScheduleUtil.generateDates(start.toKotlinLocalDate(), end.toKotlinLocalDate()).map { it.toJavaLocalDate() }
+private fun datesBetween(start: LocalDate, end: LocalDate): List<LocalDate> = ScheduleUtil.generateDates(start, end)
 
 class ScheduleLocalDataSourceImpl @Inject constructor(
     @param:WallClock private val clock: Clock,
@@ -106,7 +103,7 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
             cacheMutex.withLock {
                 val timestamp = clock.millis()
                 val replacement = schedules
-                    .filter { !it.date.isBefore(start) && !it.date.isAfter(end) }
+                    .filter { it.date in start..end }
                     .associate { key(userIsu, it.date) to cacheEntry(it, userIsu, timestamp) }
                 val updated = memoryCache.value.toMutableMap()
                 dates.forEach { date ->

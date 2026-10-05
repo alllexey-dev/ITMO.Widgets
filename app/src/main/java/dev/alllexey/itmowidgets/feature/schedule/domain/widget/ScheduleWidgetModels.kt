@@ -3,8 +3,8 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 data class ScheduleWidgetPreferences(
     val smartScheduling: Boolean,

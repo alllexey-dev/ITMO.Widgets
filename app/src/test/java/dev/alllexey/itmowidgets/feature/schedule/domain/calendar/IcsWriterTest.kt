@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.calendar
 
-import java.time.Instant
+import kotlin.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

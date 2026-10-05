@@ -8,16 +8,16 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.OffsetDateTime
 import javax.inject.Inject
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
-import kotlinx.datetime.asTimeZone
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinUtcOffset
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Instant
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Picks what the home schedule card shows: the rest of today, or tomorrow once
@@ -29,36 +29,40 @@ class HomeScheduleSelector @Inject constructor() {
     fun select(
         days: List<DaySchedule>,
         pending: List<PendingSportBooking>,
-        now: OffsetDateTime
+        now: Instant,
+        timeZone: TimeZone
     ): HomeCard.Schedule {
-        val today = now.toLocalDate()
-        val time = now.toLocalTime()
+        val wallTime = now.toLocalDateTime(timeZone)
+        val today = wallTime.date
+        val time = wallTime.time
         val todayLessons = days.firstOrNull { it.date == today }?.lessons.orEmpty()
         val completed = todayLessons.count { it.end <= time }
         val bookings = pending
             .distinctBy { it.queueKind to it.queueId }
-            .filter { it.start > now.toInstant().toKotlinInstant() }
-            .map { it to OffsetDateTime.ofInstant(it.start.toJavaInstant(), now.offset) }
+            .filter { it.start > now }
+            .map { it to it.start.toLocalDateTime(timeZone) }
 
         val todayRows = rows(
             date = today,
             lessons = todayLessons.filter { it.end > time },
-            pending = bookings.filter { (_, local) -> local.toLocalDate() == today },
-            time = time
+            pending = bookings.filter { (_, local) -> local.date == today },
+            time = time,
+            timeZone = timeZone
         )
-        if (todayRows.isNotEmpty()) return HomeCard.Schedule(today.toKotlinLocalDate(), tomorrow = false, todayRows, completed)
+        if (todayRows.isNotEmpty()) return HomeCard.Schedule(today, tomorrow = false, todayRows, completed)
 
-        val tomorrow = today.plusDays(1)
+        val tomorrow = today.plus(1, DateTimeUnit.DAY)
         val tomorrowRows = rows(
             date = tomorrow,
             lessons = days.firstOrNull { it.date == tomorrow }?.lessons.orEmpty(),
-            pending = bookings.filter { (_, local) -> local.toLocalDate() == tomorrow },
-            time = LocalTime.MIN
+            pending = bookings.filter { (_, local) -> local.date == tomorrow },
+            time = MIDNIGHT,
+            timeZone = timeZone
         )
         return if (tomorrowRows.isNotEmpty()) {
-            HomeCard.Schedule(tomorrow.toKotlinLocalDate(), tomorrow = true, tomorrowRows, completed)
+            HomeCard.Schedule(tomorrow, tomorrow = true, tomorrowRows, completed)
         } else {
-            HomeCard.Schedule(today.toKotlinLocalDate(), tomorrow = false, emptyList(), completed)
+            HomeCard.Schedule(today, tomorrow = false, emptyList(), completed)
         }
     }
 
@@ -66,16 +70,17 @@ class HomeScheduleSelector @Inject constructor() {
     private fun rows(
         date: LocalDate,
         lessons: List<Lesson>,
-        pending: List<Pair<PendingSportBooking, OffsetDateTime>>,
-        time: LocalTime
+        pending: List<Pair<PendingSportBooking, LocalDateTime>>,
+        time: LocalTime,
+        timeZone: TimeZone
     ): List<HomeScheduleRow> {
         val timeline = buildList {
             lessons.forEach { lesson ->
                 add(lesson.start to HomeScheduleRow.Lesson(lesson.toDetailsArgs(date), HomeLessonState.UPCOMING))
             }
             pending.forEach { (booking, local) ->
-                val args = booking.toDetailsArgs(local.offset.toKotlinUtcOffset().asTimeZone())
-                add(local.toLocalTime() to HomeScheduleRow.PendingSport(args, booking.isPrediction))
+                val args = booking.toDetailsArgs(timeZone)
+                add(local.time to HomeScheduleRow.PendingSport(args, booking.isPrediction))
             }
         }.sortedBy { it.first }.map { it.second }
         val focus = timeline.indexOfFirst { it is HomeScheduleRow.Lesson }
@@ -84,12 +89,20 @@ class HomeScheduleSelector @Inject constructor() {
         val source = lessons.first { it.pairId == lesson.args.pairId }
         val started = source.start <= time
         val focused = if (started) {
-            val total = Duration.between(source.start, source.end).toMinutes().coerceAtLeast(1)
-            val elapsed = Duration.between(source.start, time).toMinutes().coerceIn(0, total)
+            val total = minutesBetween(source.start, source.end).coerceAtLeast(1)
+            val elapsed = minutesBetween(source.start, time).coerceIn(0, total)
             lesson.copy(state = HomeLessonState.CURRENT, progress = elapsed.toFloat() / total)
         } else {
             lesson.copy(state = HomeLessonState.NEXT)
         }
         return timeline.toMutableList().apply { set(focus, focused) }
+    }
+
+    /** Whole minutes from [from] to [to], truncated toward zero. */
+    private fun minutesBetween(from: LocalTime, to: LocalTime): Long =
+        (to.toNanosecondOfDay() - from.toNanosecondOfDay()).nanoseconds.inWholeMinutes
+
+    private companion object {
+        val MIDNIGHT = LocalTime(0, 0)
     }
 }

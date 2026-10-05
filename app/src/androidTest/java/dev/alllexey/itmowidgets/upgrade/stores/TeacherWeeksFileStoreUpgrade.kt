@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.feature.schedule.data.WeekLesson
 import dev.alllexey.itmowidgets.upgrade.Captured22.SUBJECT
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 

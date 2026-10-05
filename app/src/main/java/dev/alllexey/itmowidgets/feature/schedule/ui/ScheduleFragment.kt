@@ -20,8 +20,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
@@ -43,7 +41,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 import kotlin.getValue
 
@@ -227,8 +225,8 @@ class ScheduleFragment : Fragment() {
                     // Time changes presentation only: do not reload data or reset the list.
                     viewModel.updateTimeState()
                     scheduleAdapter?.updateLessonStates()
-                    val now = timeProvider.javaNow()
-                    delay(60_000L - now.second * 1_000L - now.nano / 1_000_000L)
+                    val now = timeProvider.localNow()
+                    delay(60_000L - now.second * 1_000L - now.nanosecond / 1_000_000L)
                 }
             }
         }
@@ -431,7 +429,7 @@ class ScheduleFragment : Fragment() {
         val schedule = state.displayDays
         // A day without lessons is missing from another user's list: the next
         // day it does have is the closest thing to the same place in the term.
-        val index = schedule.indexOfFirst { !it.date.isBefore(anchor.date) }
+        val index = schedule.indexOfFirst { it.date >= anchor.date }
 
         if (index != -1) {
             (recycler.layoutManager as LinearLayoutManager)
@@ -463,7 +461,7 @@ class ScheduleFragment : Fragment() {
 
         if (hasScrolledToToday) return
 
-        val today = timeProvider.javaToday()
+        val today = timeProvider.today()
         val index = schedule.indexOfFirst { it.date >= today }
 
         if (index != -1) {

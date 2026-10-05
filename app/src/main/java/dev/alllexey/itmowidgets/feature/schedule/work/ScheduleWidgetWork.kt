@@ -11,9 +11,10 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProviders
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 object ScheduleWidgetWork {
 
@@ -23,7 +24,7 @@ object ScheduleWidgetWork {
     private const val MIN_ENQUEUE_INTERVAL_MILLIS = 60_000L
     private const val NEVER = Long.MIN_VALUE
     private const val PERIODIC_UPDATE_HOURS = 1L
-    private val FOLLOW_UP_DELAY: Duration = Duration.ofSeconds(1)
+    private val FOLLOW_UP_DELAY: Duration = 1.seconds
 
     private val lastEnqueuedAt = AtomicLong(NEVER)
 
@@ -62,13 +63,13 @@ object ScheduleWidgetWork {
             FOLLOW_UP_WORK,
             ExistingWorkPolicy.REPLACE,
             OneTimeWorkRequestBuilder<ScheduleWidgetUpdateWorker>()
-                .setInitialDelay(delay.toMillis(), TimeUnit.MILLISECONDS)
+                .setInitialDelay(delay.inWholeMilliseconds, TimeUnit.MILLISECONDS)
                 .build()
         )
     }
 
     fun scheduleNext(context: Context, delay: Duration) {
-        val delayMillis = delay.toMillis().coerceAtLeast(0L)
+        val delayMillis = delay.inWholeMilliseconds.coerceAtLeast(0L)
         alarmManager(context).setAndAllowWhileIdle(
             AlarmManager.ELAPSED_REALTIME_WAKEUP,
             SystemClock.elapsedRealtime() + delayMillis,

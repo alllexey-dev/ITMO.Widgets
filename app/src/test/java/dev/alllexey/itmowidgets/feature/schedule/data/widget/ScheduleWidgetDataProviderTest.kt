@@ -13,13 +13,11 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPendingStatus
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind
-import java.time.LocalDateTime
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -28,13 +26,16 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.plus
 import org.junit.Assert.*
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleWidgetDataProviderTest {
     private val stores = PreferenceStores(MemoryPreferences())
-    private val official = FakeScheduleRepository(listOf(DaySchedule(1, 1, Time.javaToday(), null, emptyList())))
+    private val official = FakeScheduleRepository(listOf(DaySchedule(1, 1, Time.today(), null, emptyList())))
     private val pending = SnapshotPendingRepository()
     private val tokens = FakeSessionTokenStore()
     private val demo = FakeDemoMode()
@@ -85,7 +86,7 @@ class ScheduleWidgetDataProviderTest {
         val result = available()
         assertEquals(ScheduleWidgetPendingStatus.PREDICTED, result.snapshot.singleLesson.lesson?.pendingStatus)
         assertEquals(listOf("refresh", "snapshot"), pending.calls)
-        assertEquals(Time.javaToday() to Time.javaToday().plusDays(1), official.refreshed.map { it.startDate to it.endDate }.single())
+        assertEquals(Time.today() to Time.today().plus(1, DateTimeUnit.DAY), official.refreshed.map { it.startDate to it.endDate }.single())
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, result.snapshot.withoutPendingSport().singleLesson.kind)
         assertEquals(ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY, result.nextUpdateDelay)
         assertEquals(0, official.clears)
@@ -187,5 +188,5 @@ class ScheduleWidgetDataProviderTest {
             transform(data.value).also { data.value = it }
     }
 
-    private object Time : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 8, 10, 0))
+    private object Time : AcademicTimeProvider by FixedAcademicTime(LocalDateTime(2026, 9, 8, 10, 0))
 }

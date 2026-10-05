@@ -12,9 +12,10 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 
 class LessonFriendsRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
@@ -27,7 +28,7 @@ class LessonFriendsRepositoryImpl @Inject constructor(
         if (demo.isActive()) return AppResult.Success(DemoSchedule.friendsOnLesson(pairId, date))
         // Without the opt-in the access token never leaves the device.
         if (!backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
-        return call { widgetsApi.friendsOnLesson(pairId, date) }.map { profiles ->
+        return call { widgetsApi.friendsOnLesson(pairId, date.toJavaLocalDate()) }.map { profiles ->
             profiles.map { it.user.toUserSummary() }
         }
     }

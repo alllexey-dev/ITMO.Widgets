@@ -5,7 +5,9 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.toKotlinLocalTime
 
 fun api.myitmo.model.schedule.Lesson.toModel(): Lesson {
     return Lesson(
@@ -37,8 +39,8 @@ fun api.myitmo.model.schedule.Lesson.toModel(): Lesson {
 fun LessonDto.toModel(): Lesson {
     return Lesson(
         pairId = pairId,
-        start = start,
-        end = end,
+        start = start.toKotlinLocalTime(),
+        end = end.toKotlinLocalTime(),
         type = type,
         typeId = Lesson.TypeId(typeId),
         note = note?.trim(),
@@ -65,8 +67,8 @@ fun Lesson.toDto(date: LocalDate): LessonDto {
     return LessonDto(
         pairId = pairId,
         date = date,
-        start = start,
-        end = end,
+        start = start.toJavaLocalTime(),
+        end = end.toJavaLocalTime(),
         type = type,
         typeId = typeId.raw,
         note = note,

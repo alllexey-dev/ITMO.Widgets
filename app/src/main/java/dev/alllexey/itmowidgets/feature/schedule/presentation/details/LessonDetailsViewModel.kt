@@ -13,7 +13,6 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * Friends on one lesson occurrence, the tone of its teacher's reviews and its latest schedule change. The lesson
@@ -50,7 +49,7 @@ class LessonDetailsViewModel @Inject constructor(
     /** The newest change of the last 30 days that touches this occurrence, from the local store only. */
     val change: StateFlow<ScheduleChange?> = changesRepository.observeChanges()
         .map { changes ->
-            val occurrence = LessonOccurrence(pairId, date.toKotlinLocalDate())
+            val occurrence = LessonOccurrence(pairId, date)
             changes.filter { occurrence in it.occurrences() }.maxByOrNull(ScheduleChange::detectedAt)
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)

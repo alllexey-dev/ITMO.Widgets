@@ -13,7 +13,6 @@ import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.testing.myItmoResponses
 import dev.alllexey.itmowidgets.feature.schedule.domain.StudyWeeks
 import java.io.File
-import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
@@ -23,6 +22,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.atTime
 import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -130,7 +131,7 @@ class TeacherLessonsGatewayImplTest {
 
     @Test
     fun `the disk keeps only the minimal lessons of finished weeks still sampled`() = runTest {
-        TeacherWeeksFileStore(folder.toOkioPath()).write(mapOf(LocalDate.of(2022, 9, 19) to listOf(WeekLesson(TEACHER.toLong(), 1, "Старое"))))
+        TeacherWeeksFileStore(folder.toOkioPath()).write(mapOf(LocalDate(2022, 9, 19) to listOf(WeekLesson(TEACHER.toLong(), 1, "Старое"))))
         days[WEEKS[1].start] = listOf(day("2026-09-22", lesson(21, "Алгебра", TEACHER), lesson(22, "Спорт", TEACHER, flowType = 3)))
         days[WEEKS[0].start] = listOf(day("2026-10-13", lesson(11, "Физика", TEACHER)))
 
@@ -241,7 +242,7 @@ class TeacherLessonsGatewayImplTest {
     private companion object {
         const val TEACHER = 100001
         const val WAIT_SECONDS = 10L
-        val TODAY: LocalDate = LocalDate.of(2026, 10, 15)
+        val TODAY: LocalDate = LocalDate(2026, 10, 15)
         /** The current week 12–18 October 2026 first, then 13 finished weeks down to 25 September 2023. */
         val WEEKS = StudyWeeks.sampled(TODAY)
     }

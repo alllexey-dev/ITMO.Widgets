@@ -6,11 +6,16 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import javax.inject.Inject
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.asTimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 
 data class SchedulePreviewLabels(
     val history: String,
@@ -30,13 +35,14 @@ class SchedulePreviewScenario @Inject constructor(private val selector: Schedule
             lesson(3, "13:30", "15:00", labels.programming, labels.teacher)
         )
         val tomorrow = day(
-            DATE.plusDays(1),
+            DATE.plus(1, DateTimeUnit.DAY),
             lesson(4, "10:00", "11:30", labels.physics, labels.teacher),
             lesson(5, "11:40", "13:10", labels.programming, labels.teacher)
         )
         return selector.select(
             schedule = listOf(today, tomorrow),
-            now = OffsetDateTime.of(DATE, LocalTime.of(if (evening) 18 else 12, if (evening) 0 else 50), ZoneOffset.ofHours(3)),
+            now = DATE.atTime(if (evening) 18 else 12, if (evening) 0 else 50).toInstant(ZONE),
+            timeZone = ZONE,
             preferences = ScheduleWidgetPreferences(
                 smartScheduling = true,
                 display = settings,
@@ -47,7 +53,7 @@ class SchedulePreviewScenario @Inject constructor(private val selector: Schedule
     }
 
     private fun day(date: LocalDate, vararg lessons: Lesson) =
-        DaySchedule(date.dayOfWeek.value, 1, date, null, lessons.toList())
+        DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, lessons.toList())
 
     private fun lesson(id: Long, start: String, end: String, title: String, teacher: String) = Lesson(
         pairId = id,
@@ -75,6 +81,7 @@ class SchedulePreviewScenario @Inject constructor(private val selector: Schedule
     )
 
     private companion object {
-        val DATE: LocalDate = LocalDate.of(2026, 9, 7)
+        val DATE: LocalDate = LocalDate(2026, 9, 7)
+        val ZONE = UtcOffset(hours = 3).asTimeZone()
     }
 }

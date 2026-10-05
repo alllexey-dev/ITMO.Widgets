@@ -22,8 +22,6 @@ import androidx.test.runner.lifecycle.Stage
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaToday
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
@@ -43,11 +41,15 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
-import java.time.LocalDate
-import java.time.LocalTime
-import kotlin.time.toKotlinInstant
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toKotlinLocalDate
 import org.junit.Assert.*
@@ -132,12 +134,12 @@ class ScheduleCardsVisualTest {
             preview(spec) { scenario ->
                 lateinit var adapter: DayScheduleAdapter
                 lateinit var holder: DayScheduleAdapter.DayViewHolder
-                val date = FixedTime.javaToday().plusDays(1)
-                val day = DaySchedule(date.dayOfWeek.value, 1, date, null, listOf(
+                val date = FixedTime.today().plus(1, DateTimeUnit.DAY)
+                val day = DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, listOf(
                     lesson(),
-                    lesson().copy(pairId = 2, start = LocalTime.of(10, 0), end = LocalTime.of(11, 30),
+                    lesson().copy(pairId = 2, start = LocalTime(10, 0), end = LocalTime(11, 30),
                         subjectName = "Физика", zoomUrl = "https://example.invalid/meeting"),
-                    lesson().copy(pairId = 3, start = LocalTime.of(11, 40), end = LocalTime.of(13, 10), subjectName = "Программирование")
+                    lesson().copy(pairId = 3, start = LocalTime(11, 40), end = LocalTime(13, 10), subjectName = "Программирование")
                 ))
                 fun indicators() = holder.lessonList.descendants().filter { it.id == R.id.change_indicator }.toList()
                 scenario.onActivity { activity ->
@@ -198,8 +200,8 @@ class ScheduleCardsVisualTest {
             scenario.onActivity { activity ->
                 adapter = DayScheduleAdapter(FixedTime)
                 adapter.submitList(listOf(-1L, 0L, 1L).map { offset ->
-                    val date = FixedTime.javaToday().plusDays(offset)
-                    ScheduleDisplayDay(date, DaySchedule(date.dayOfWeek.value, 1, date, null, listOf(lesson())))
+                    val date = FixedTime.today().plus(offset, DateTimeUnit.DAY)
+                    ScheduleDisplayDay(date, DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, listOf(lesson())))
                 })
                 val frame = FrameLayout(activity)
                 holder = adapter.onCreateViewHolder(frame, 0)
@@ -262,20 +264,20 @@ class ScheduleCardsVisualTest {
                         }
                     }
                     scenario.onActivity { activity ->
-                        val date = FixedTime.javaToday().plusDays(if (pendingOnly) 1 else 0)
-                        val start = date.atTime(16, 0).atZone(FixedTime.javaZone()).toOffsetDateTime()
+                        val date = FixedTime.today().plus(if (pendingOnly) 1 else 0, DateTimeUnit.DAY)
+                        val start = date.atTime(16, 0).toInstant(FixedTime.timeZone)
                         val waiting = PendingSportBooking(
                             queueId = 1, queueKind = PendingSportBooking.QueueKind.FREE, lessonId = 100,
                             sectionName = "Современные танцы — тестовая секция с длинным названием",
-                            start = start.toInstant().toKotlinInstant(), end = start.plusMinutes(90).toInstant().toKotlinInstant(),
+                            start = start, end = start + 90.minutes,
                             teacherFio = "Тестовый преподаватель с длинным именем",
                             roomName = "Тестовый корпус на Кронверкском проспекте, 49, спортивный зал", isPrediction = false
                         )
                         val prediction = waiting.copy(queueId = 2, queueKind = PendingSportBooking.QueueKind.AUTO,
-                            lessonId = 200, start = start.plusHours(2).toInstant().toKotlinInstant(),
-                            end = start.plusHours(3).toInstant().toKotlinInstant(), isPrediction = true)
-                        val official = if (pendingOnly) null else DaySchedule(date.dayOfWeek.value, 1, date, null,
-                            listOf(lesson(), lesson().copy(pairId = 2, start = LocalTime.of(20, 0), end = LocalTime.of(21, 30))))
+                            lessonId = 200, start = start + 2.hours,
+                            end = start + 3.hours, isPrediction = true)
+                        val official = if (pendingOnly) null else DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null,
+                            listOf(lesson(), lesson().copy(pairId = 2, start = LocalTime(20, 0), end = LocalTime(21, 30))))
                         val adapter = DayScheduleAdapter(FixedTime)
                         adapter.submitList(listOf(ScheduleDisplayDay(date, official, listOf(waiting, prediction))))
                         val frame = FrameLayout(activity).apply { setBackgroundColor(activity.color.surface) }
@@ -327,12 +329,12 @@ class ScheduleCardsVisualTest {
                     lateinit var holder: DayScheduleAdapter.DayViewHolder
                     lateinit var scroll: ScrollView
                     scenario.onActivity { activity ->
-                        val date = FixedTime.javaToday().plusDays(offset)
+                        val date = FixedTime.today().plus(offset, DateTimeUnit.DAY)
                         val adapter = DayScheduleAdapter(FixedTime)
-                        adapter.submitList(listOf(DaySchedule(date.dayOfWeek.value, 1, date, null, listOf(
+                        adapter.submitList(listOf(DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, listOf(
                             lesson(),
-                            lesson().copy(pairId = 2, start = LocalTime.of(11, 40), end = LocalTime.of(13, 10)),
-                            lesson().copy(pairId = 3, start = LocalTime.of(15, 20), end = LocalTime.of(16, 50))
+                            lesson().copy(pairId = 2, start = LocalTime(11, 40), end = LocalTime(13, 10)),
+                            lesson().copy(pairId = 3, start = LocalTime(15, 20), end = LocalTime(16, 50))
                         ))).map { ScheduleDisplayDay(it.date, it) })
                         val frame = FrameLayout(activity).apply { setBackgroundColor(activity.color.surface) }
                         scroll = ScrollView(activity)
@@ -437,7 +439,7 @@ class ScheduleCardsVisualTest {
     }
 
     private fun lesson() = Lesson(
-        pairId = 1, start = LocalTime.of(8, 20), end = LocalTime.of(9, 50), type = "Лекция", typeId = Lesson.TypeId(1),
+        pairId = 1, start = LocalTime(8, 20), end = LocalTime(9, 50), type = "Лекция", typeId = Lesson.TypeId(1),
         note = "Организационная информация о занятии", subjectName = "Математический анализ (продвинутый уровень)",
         subjectId = 1, groupName = "Тестовая группа", flowId = 1, flowTypeId = 2, teacherIsu = null,
         teacherFio = "Тестовый преподаватель с длинным именем", room = Room("1506"),
@@ -447,7 +449,7 @@ class ScheduleCardsVisualTest {
 
     private object FixedTime : AcademicTimeProvider {
         override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
-        override fun today() = LocalDate.of(2026, 9, 7).toKotlinLocalDate()
+        override fun today() = LocalDate(2026, 9, 7)
         override fun now() = today().atTime(12, 0).toInstant(timeZone)
     }
 }

@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.model
 
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 data class DaySchedule(
     val dayNumber: Int,

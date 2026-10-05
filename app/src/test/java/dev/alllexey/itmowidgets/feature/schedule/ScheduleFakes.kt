@@ -3,10 +3,10 @@ package dev.alllexey.itmowidgets.feature.schedule
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDate
 
 internal data class ScheduleRequest(val userIsu: Int?, val startDate: LocalDate, val endDate: LocalDate)
 
@@ -53,5 +53,5 @@ internal class FakeScheduleRepository(days: List<DaySchedule> = emptyList()) : S
     }
 
     private fun List<DaySchedule>.inRange(startDate: LocalDate, endDate: LocalDate) =
-        filter { !it.date.isBefore(startDate) && !it.date.isAfter(endDate) }
+        filter { it.date in startDate..endDate }
 }

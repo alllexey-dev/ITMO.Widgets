@@ -9,11 +9,17 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem.LessonState.COM
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem.LessonState.CURRENT
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem.LessonState.NEXT
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleItem.LessonState.UPCOMING
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneOffset
-import kotlin.time.toKotlinInstant
+import kotlin.time.Duration.Companion.hours
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.atTime
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -40,9 +46,9 @@ class ScheduleTimelineResolverTest {
     @Test
     fun `next uses the earliest full datetime without reordering unsorted days or lessons`() {
         val days = listOf(
-            day(TODAY.plusDays(1), lesson(1, "08:00", "09:30"), lesson(2, "12:00", "13:30")),
+            day(TODAY.plus(1, DateTimeUnit.DAY), lesson(1, "08:00", "09:30"), lesson(2, "12:00", "13:30")),
             day(TODAY, lesson(3, "16:00", "17:30"), lesson(4, "13:00", "14:30")),
-            day(TODAY.minusDays(1), lesson(5, "19:00", "20:30"))
+            day(TODAY.minus(1, DateTimeUnit.DAY), lesson(5, "19:00", "20:30"))
         )
 
         assertEquals(
@@ -68,18 +74,18 @@ class ScheduleTimelineResolverTest {
         )
         assertEquals(
             listOf(listOf(COMPLETED, COMPLETED, CURRENT)),
-            resolveScheduleTimeline(days, NOW.plusHours(1))
+            resolveScheduleTimeline(days, TODAY.atTime(11, 0))
         )
         assertEquals(
             listOf(listOf(COMPLETED, COMPLETED, COMPLETED)),
-            resolveScheduleTimeline(days, NOW.plusHours(2))
+            resolveScheduleTimeline(days, TODAY.atTime(12, 0))
         )
     }
 
     @Test
     fun `there is no next lesson when only completed and current lessons remain`() {
         val days = listOf(
-            day(TODAY.minusDays(1), lesson(1, "18:00", "19:00")),
+            day(TODAY.minus(1, DateTimeUnit.DAY), lesson(1, "18:00", "19:00")),
             day(TODAY, lesson(2, "09:30", "11:00"), lesson(3, "08:00", "09:00"))
         )
 
@@ -93,7 +99,7 @@ class ScheduleTimelineResolverTest {
     fun `duplicate lesson ids cannot mark more than one next position`() {
         val days = listOf(
             day(TODAY, lesson(7, "15:00", "16:00"), lesson(7, "11:00", "12:00")),
-            day(TODAY.plusDays(1), lesson(7, "08:00", "09:00"))
+            day(TODAY.plus(1, DateTimeUnit.DAY), lesson(7, "08:00", "09:00"))
         )
 
         assertEquals(
@@ -135,10 +141,10 @@ class ScheduleTimelineResolverTest {
                 officialDay = null,
                 pendingSport = listOf(pendingSport(TODAY, "10:30"))
             ),
-            day(TODAY.plusDays(1), lesson(1, "12:00", "13:30")).copy(
-                pendingSport = listOf(pendingSport(TODAY.plusDays(1), "11:00"))
+            day(TODAY.plus(1, DateTimeUnit.DAY), lesson(1, "12:00", "13:30")).copy(
+                pendingSport = listOf(pendingSport(TODAY.plus(1, DateTimeUnit.DAY), "11:00"))
             ),
-            day(TODAY.plusDays(2))
+            day(TODAY.plus(2, DateTimeUnit.DAY))
         )
 
         assertEquals(
@@ -152,13 +158,13 @@ class ScheduleTimelineResolverTest {
         assertEquals(emptyList<List<LessonState>>(), resolveScheduleTimeline(emptyList(), NOW))
         assertEquals(
             listOf(emptyList<LessonState>(), emptyList()),
-            resolveScheduleTimeline(listOf(day(TODAY), ScheduleDisplayDay(TODAY.plusDays(1), null)), NOW)
+            resolveScheduleTimeline(listOf(day(TODAY), ScheduleDisplayDay(TODAY.plus(1, DateTimeUnit.DAY), null)), NOW)
         )
     }
 
     @Test
     fun `recomputing after an earlier day arrives moves next away from the existing day`() {
-        val existingDay = day(TODAY.plusDays(1), lesson(1, "08:00", "09:30"))
+        val existingDay = day(TODAY.plus(1, DateTimeUnit.DAY), lesson(1, "08:00", "09:30"))
         assertEquals(listOf(listOf(NEXT)), resolveScheduleTimeline(listOf(existingDay), NOW))
 
         val earlierDay = day(TODAY, lesson(2, "11:00", "12:30"))
@@ -171,7 +177,7 @@ class ScheduleTimelineResolverTest {
     private fun day(date: LocalDate, vararg lessons: Lesson) = ScheduleDisplayDay(
         date = date,
         officialDay = DaySchedule(
-            dayNumber = date.dayOfWeek.value,
+            dayNumber = date.dayOfWeek.isoDayNumber,
             weekNumber = 1,
             date = date,
             note = null,
@@ -205,14 +211,14 @@ class ScheduleTimelineResolverTest {
     )
 
     private fun pendingSport(date: LocalDate, start: String): PendingSportBooking {
-        val startsAt = date.atTime(LocalTime.parse(start)).atOffset(ZoneOffset.ofHours(3))
+        val startsAt = date.atTime(LocalTime.parse(start)).toInstant(UtcOffset(hours = 3))
         return PendingSportBooking(
             queueId = 1,
             queueKind = PendingSportBooking.QueueKind.AUTO,
             lessonId = 101,
             sectionName = "Тестовая секция",
-            start = startsAt.toInstant().toKotlinInstant(),
-            end = startsAt.plusHours(1).toInstant().toKotlinInstant(),
+            start = startsAt,
+            end = startsAt + 1.hours,
             teacherFio = "Тестовый преподаватель",
             roomName = "Тестовый корпус",
             isPrediction = true
@@ -220,7 +226,7 @@ class ScheduleTimelineResolverTest {
     }
 
     private companion object {
-        val TODAY: LocalDate = LocalDate.of(2026, 9, 8)
+        val TODAY: LocalDate = LocalDate(2026, 9, 8)
         val NOW: LocalDateTime = TODAY.atTime(10, 0)
     }
 }

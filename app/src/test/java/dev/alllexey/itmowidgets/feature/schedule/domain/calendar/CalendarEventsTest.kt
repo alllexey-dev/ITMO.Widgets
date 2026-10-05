@@ -4,10 +4,14 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
+import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
+import kotlin.time.Instant
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -28,8 +32,8 @@ class CalendarEventsTest {
     fun `a repeated lesson id is one event at its first slot`() {
         val events = CalendarEvents.from(
             listOf(
-                day(MONDAY.plusDays(1), lesson(1, start = LocalTime.of(8, 20))),
-                day(MONDAY, lesson(1, start = LocalTime.of(13, 30)), lesson(1, start = LocalTime.of(10, 0)))
+                day(MONDAY.plus(1, DateTimeUnit.DAY), lesson(1, start = LocalTime(8, 20))),
+                day(MONDAY, lesson(1, start = LocalTime(13, 30)), lesson(1, start = LocalTime(10, 0)))
             ),
             MOSCOW
         ) { null }
@@ -40,7 +44,7 @@ class CalendarEventsTest {
     @Test
     fun `lessons without an id are named by their slot`() {
         val events = CalendarEvents.from(
-            listOf(day(MONDAY, lesson(0, start = LocalTime.of(10, 0)), lesson(-1, start = LocalTime.of(11, 40)))),
+            listOf(day(MONDAY, lesson(0, start = LocalTime(10, 0)), lesson(-1, start = LocalTime(11, 40)))),
             MOSCOW
         ) { null }
 
@@ -50,7 +54,7 @@ class CalendarEventsTest {
     @Test
     fun `times are Moscow wall times and events are in time order`() {
         val events = CalendarEvents.from(
-            listOf(day(MONDAY, lesson(2, start = LocalTime.of(13, 30)), lesson(1, start = LocalTime.of(8, 20)))),
+            listOf(day(MONDAY, lesson(2, start = LocalTime(13, 30)), lesson(1, start = LocalTime(8, 20)))),
             MOSCOW
         ) { null }
 
@@ -94,11 +98,11 @@ class CalendarEventsTest {
         assertNull(CalendarEvent.keyOfDescription(null))
     }
 
-    private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.value, 1, date, null, lessons.toList())
+    private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, lessons.toList())
 
     private fun lesson(
         pairId: Long,
-        start: LocalTime = LocalTime.of(8, 20),
+        start: LocalTime = LocalTime(8, 20),
         flowTypeId: Int = 2,
         room: Room? = Room("1506"),
         building: Building? = Building("Кронверкский пр., 49"),
@@ -113,7 +117,7 @@ class CalendarEventsTest {
     )
 
     private companion object {
-        val MONDAY: LocalDate = LocalDate.of(2026, 9, 7)
-        val MOSCOW: ZoneId = ZoneId.of("Europe/Moscow")
+        val MONDAY: LocalDate = LocalDate(2026, 9, 7)
+        val MOSCOW: TimeZone = TimeZone.of("Europe/Moscow")
     }
 }

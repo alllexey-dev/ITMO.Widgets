@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.presentation.changes
 
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** The history of the last 30 days. There is no error: a broken file is reset by the store. */
 sealed interface ScheduleChangesUiState {

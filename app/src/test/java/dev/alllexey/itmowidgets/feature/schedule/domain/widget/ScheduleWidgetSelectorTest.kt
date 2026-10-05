@@ -7,12 +7,17 @@ import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.OffsetDateTime
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import kotlin.time.toKotlinInstant
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.asTimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -30,6 +35,7 @@ class ScheduleWidgetSelectorTest {
         val result = selector.select(
             schedule = listOf(day(TODAY, first, second)),
             now = at("10:00"),
+            timeZone = ZONE,
             preferences = preferences(forwardScheduling = true)
         )
 
@@ -39,7 +45,7 @@ class ScheduleWidgetSelectorTest {
             result.snapshot.singleLesson.lesson?.state
         )
         assertEquals(1, result.snapshot.singleLesson.remainingLessons)
-        assertEquals(Duration.ofMinutes(45), result.nextUpdateDelay)
+        assertEquals(45.minutes, result.nextUpdateDelay)
     }
 
     @Test
@@ -50,6 +56,7 @@ class ScheduleWidgetSelectorTest {
         val result = selector.select(
             schedule = listOf(day(TODAY, first, second)),
             now = at("10:50"),
+            timeZone = ZONE,
             preferences = preferences(forwardScheduling = true)
         )
 
@@ -59,7 +66,7 @@ class ScheduleWidgetSelectorTest {
             result.snapshot.singleLesson.lesson?.state
         )
         assertEquals(0, result.snapshot.singleLesson.remainingLessons)
-        assertEquals(Duration.ofMinutes(10), result.nextUpdateDelay)
+        assertEquals(10.minutes, result.nextUpdateDelay)
     }
 
     @Test
@@ -70,9 +77,10 @@ class ScheduleWidgetSelectorTest {
         val result = selector.select(
             schedule = listOf(
                 day(TODAY, todayLesson),
-                day(TODAY.plusDays(1), tomorrowLesson)
+                day(TODAY.plus(1, DateTimeUnit.DAY), tomorrowLesson)
             ),
             now = at("18:00"),
+            timeZone = ZONE,
             preferences = preferences(showTomorrowWhenFinished = true)
         )
 
@@ -101,6 +109,7 @@ class ScheduleWidgetSelectorTest {
         val result = selector.select(
             schedule = listOf(day(TODAY, completed, current, upcoming)),
             now = at("10:30"),
+            timeZone = ZONE,
             preferences = preferences(hidePreviousLessons = true)
         )
 
@@ -115,6 +124,7 @@ class ScheduleWidgetSelectorTest {
         val result = selector.select(
             schedule = emptyList(),
             now = at("10:30"),
+            timeZone = ZONE,
             preferences = preferences(
                 hideTeacher = true,
                 showTomorrowWhenFinished = true
@@ -137,10 +147,11 @@ class ScheduleWidgetSelectorTest {
         val result = selector.select(
             schedule = listOf(day(TODAY, lesson(1, "08:20", "19:50", "Практика"))),
             now = at("10:30"),
+            timeZone = ZONE,
             preferences = preferences(smartScheduling = false)
         )
 
-        assertEquals(Duration.ofMinutes(7), result.nextUpdateDelay)
+        assertEquals(7.minutes, result.nextUpdateDelay)
     }
 
     @Test
@@ -159,6 +170,7 @@ class ScheduleWidgetSelectorTest {
                 )
             ),
             now = at("10:30"),
+            timeZone = ZONE,
             preferences = preferences(hideTeacher = true)
         )
 
@@ -171,6 +183,7 @@ class ScheduleWidgetSelectorTest {
         val result = selector.select(
             schedule = emptyList(),
             now = at("10:00"),
+            timeZone = ZONE,
             preferences = preferences(),
             pendingSport = listOf(
                 pending(2, "13:00", prediction = true),
@@ -195,10 +208,11 @@ class ScheduleWidgetSelectorTest {
 
     @Test
     fun `pending only tomorrow appears in tomorrow list without becoming todays next lesson`() {
-        val tomorrow = pending(1, "11:00", prediction = true, date = TODAY.plusDays(1))
+        val tomorrow = pending(1, "11:00", prediction = true, date = TODAY.plus(1, DateTimeUnit.DAY))
         val result = selector.select(
             schedule = emptyList(),
             now = at("18:00"),
+            timeZone = ZONE,
             preferences = preferences(showTomorrowWhenFinished = true),
             pendingSport = listOf(tomorrow)
         )
@@ -209,12 +223,12 @@ class ScheduleWidgetSelectorTest {
             listOf(ScheduleListWidgetItemKind.HEADER, ScheduleListWidgetItemKind.LESSON, ScheduleListWidgetItemKind.END),
             result.snapshot.lessonList.map { it.kind }
         )
-        assertEquals(TODAY.plusDays(1).toString(), result.snapshot.lessonList.first().dateIso)
+        assertEquals(TODAY.plus(1, DateTimeUnit.DAY).toString(), result.snapshot.lessonList.first().dateIso)
         assertTrue(result.snapshot.lessonList.first().tomorrow)
         assertTrue(result.snapshot.lessonList.last().tomorrow)
         assertEquals(ScheduleWidgetPendingStatus.PREDICTED, result.snapshot.lessonList[1].lesson?.pendingStatus)
 
-        val todayOnly = selector.select(emptyList(), at("18:00"), preferences(), listOf(tomorrow))
+        val todayOnly = selector.select(emptyList(), at("18:00"), ZONE, preferences(), listOf(tomorrow))
         assertEquals(ScheduleListWidgetItemKind.EMPTY_TODAY, todayOnly.snapshot.lessonList.single().kind)
     }
 
@@ -227,6 +241,7 @@ class ScheduleWidgetSelectorTest {
                 lesson(1, "09:30", "10:30", "Математика", "Преподаватель математики")
             )),
             now = at("10:00"),
+            timeZone = ZONE,
             preferences = preferences(hideTeacher = true),
             pendingSport = listOf(pending(2, "13:00", prediction = true), pending(1, "11:00"))
         )
@@ -255,13 +270,14 @@ class ScheduleWidgetSelectorTest {
         val result = selector.select(
             schedule = emptyList(),
             now = at("10:00"),
+            timeZone = ZONE,
             preferences = preferences(),
             pendingSport = listOf(
                 future,
                 pending(2, "10:00"),
                 pending(3, "08:00"),
                 pending(4, "12:00").let { it.copy(end = it.start) },
-                pending(5, "11:00", date = TODAY.plusDays(2))
+                pending(5, "11:00", date = TODAY.plus(2, DateTimeUnit.DAY))
             )
         )
 
@@ -279,12 +295,12 @@ class ScheduleWidgetSelectorTest {
     fun `smart refresh reaches pending start before current official lesson ends`() {
         val official = listOf(day(TODAY, lesson(1, "09:30", "11:30", "Математика")))
         val waiting = pending(1, "10:05")
-        val result = selector.select(official, at("10:00"), preferences(), listOf(waiting))
+        val result = selector.select(official, at("10:00"), ZONE, preferences(), listOf(waiting))
 
-        assertEquals(Duration.ofMinutes(5), result.nextUpdateDelay)
-        assertEquals(at("10:05").toInstant().toString(), result.snapshot.pendingValidUntil)
+        assertEquals(5.minutes, result.nextUpdateDelay)
+        assertEquals(at("10:05").toString(), result.snapshot.pendingValidUntil)
 
-        val started = selector.select(official, at("10:05"), preferences(), listOf(waiting))
+        val started = selector.select(official, at("10:05"), ZONE, preferences(), listOf(waiting))
         assertEquals(listOf("Математика"), started.snapshot.lessonList.mapNotNull { it.lesson?.subject })
         assertNull(started.snapshot.officialFallback)
         assertNull(started.snapshot.pendingValidUntil)
@@ -293,13 +309,13 @@ class ScheduleWidgetSelectorTest {
     @Test
     fun `pending replay validity is capped at seven minutes or its earliest start`() {
         val now = at("10:00")
-        val later = selector.select(emptyList(), now, preferences(), listOf(pending(1, "11:00")))
-        assertEquals(now.plusMinutes(7).toInstant().toString(), later.snapshot.pendingValidUntil)
+        val later = selector.select(emptyList(), now, ZONE, preferences(), listOf(pending(1, "11:00")))
+        assertEquals((now + 7.minutes).toString(), later.snapshot.pendingValidUntil)
 
         val sooner = selector.select(
-            emptyList(), now, preferences(), listOf(pending(1, "11:00"), pending(2, "10:03"))
+            emptyList(), now, ZONE, preferences(), listOf(pending(1, "11:00"), pending(2, "10:03"))
         )
-        assertEquals(now.plusMinutes(3).toInstant().toString(), sooner.snapshot.pendingValidUntil)
+        assertEquals((now + 3.minutes).toString(), sooner.snapshot.pendingValidUntil)
     }
 
     @Test
@@ -309,9 +325,9 @@ class ScheduleWidgetSelectorTest {
             lesson(2, "14:00", "15:30", "Физика"),
             lesson(1, "12:00", "13:30", "Математика")
         ))
-        val official = selector.select(schedule, at("10:00"), preferences()).snapshot
+        val official = selector.select(schedule, at("10:00"), ZONE, preferences()).snapshot
         val mixed = selector.select(
-            schedule, at("10:00"), preferences(), listOf(pending(1, "11:00"), pending(2, "13:45"))
+            schedule, at("10:00"), ZONE, preferences(), listOf(pending(1, "11:00"), pending(2, "13:45"))
         ).snapshot
 
         assertEquals("Секция 1", mixed.singleLesson.lesson?.subject)
@@ -336,7 +352,7 @@ class ScheduleWidgetSelectorTest {
         ))
         val selection = selector.select(
             listOf(day(TODAY, lesson(1, "14:00", "15:30", "Official", "Teacher"))),
-            at("10:00"), options, listOf(pending(1, "11:00"))
+            at("10:00"), ZONE, options, listOf(pending(1, "11:00"))
         ).snapshot
         assertNull(selection.singleLesson.lesson?.teacher)
         assertTrue(selection.lessonList.mapNotNull { it.lesson }.all { it.teacher != null })
@@ -350,14 +366,14 @@ class ScheduleWidgetSelectorTest {
         prediction: Boolean = false,
         date: LocalDate = TODAY,
     ): PendingSportBooking {
-        val startsAt = OffsetDateTime.of(date, LocalTime.parse(start), OFFSET)
+        val startsAt = LocalDateTime(date, LocalTime.parse(start)).toInstant(ZONE)
         return PendingSportBooking(
             queueId = id,
             queueKind = if (prediction) PendingSportBooking.QueueKind.AUTO else PendingSportBooking.QueueKind.FREE,
             lessonId = if (prediction) -id else id,
             sectionName = "Секция $id",
-            start = startsAt.toInstant().toKotlinInstant(),
-            end = startsAt.plusMinutes(90).toInstant().toKotlinInstant(),
+            start = startsAt,
+            end = startsAt + 90.minutes,
             teacherFio = "Тестовый преподаватель",
             roomName = "Тестовый корпус",
             isPrediction = prediction
@@ -380,13 +396,11 @@ class ScheduleWidgetSelectorTest {
         lessonListStyle = LessonStyle.DOT
     )
 
-    private fun at(time: String): OffsetDateTime {
-        return OffsetDateTime.of(TODAY, LocalTime.parse(time), OFFSET)
-    }
+    private fun at(time: String): Instant = LocalDateTime(TODAY, LocalTime.parse(time)).toInstant(ZONE)
 
     private fun day(date: LocalDate, vararg lessons: Lesson): DaySchedule {
         return DaySchedule(
-            dayNumber = date.dayOfWeek.value,
+            dayNumber = date.dayOfWeek.isoDayNumber,
             weekNumber = 1,
             date = date,
             note = null,
@@ -428,7 +442,7 @@ class ScheduleWidgetSelectorTest {
     }
 
     private companion object {
-        val TODAY: LocalDate = LocalDate.of(2026, 8, 10)
-        val OFFSET = java.time.ZoneOffset.ofHours(3)
+        val TODAY: LocalDate = LocalDate(2026, 8, 10)
+        val ZONE = UtcOffset(hours = 3).asTimeZone()
     }
 }

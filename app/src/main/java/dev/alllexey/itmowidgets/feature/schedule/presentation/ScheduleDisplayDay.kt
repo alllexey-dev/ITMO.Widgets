@@ -3,12 +3,9 @@ package dev.alllexey.itmowidgets.feature.schedule.presentation
 import dev.alllexey.itmowidgets.core.schedule.LessonOccurrence
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import kotlin.time.toKotlinInstant
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinTimeZone
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 /** Screen projection; widgets have their own projection, and neither changes the official cache. */
@@ -25,18 +22,16 @@ fun buildScheduleDisplayDays(
     pending: List<PendingSportBooking>,
     start: LocalDate,
     end: LocalDate,
-    zoneId: ZoneId,
-    now: OffsetDateTime,
+    timeZone: TimeZone,
+    now: Instant,
     changed: Set<LessonOccurrence> = emptySet()
 ): List<ScheduleDisplayDay> {
-    val zone = zoneId.toKotlinTimeZone()
-    val upcomingFrom = now.toInstant().toKotlinInstant()
     val pendingByDate = pending.distinctBy { it.queueKind to it.queueId }
-        .filter { it.start > upcomingFrom }
-        .groupBy { it.start.toLocalDateTime(zone).date.toJavaLocalDate() }
-        .filterKeys { !it.isBefore(start) && !it.isAfter(end) }
+        .filter { it.start > now }
+        .groupBy { it.start.toLocalDateTime(timeZone).date }
+        .filterKeys { it in start..end }
     val officialByDate = official.associateBy { it.date }
-    val changedByDate = changed.groupBy({ it.date.toJavaLocalDate() }) { it.pairId }
+    val changedByDate = changed.groupBy({ it.date }) { it.pairId }
     return (officialByDate.keys + pendingByDate.keys).sorted().map { date ->
         ScheduleDisplayDay(
             date,

@@ -3,42 +3,52 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.widget
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.OffsetDateTime
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 
 class ScheduleWidgetSelector @Inject constructor() {
 
     fun select(
         schedule: List<DaySchedule>,
-        now: OffsetDateTime,
+        now: Instant,
+        timeZone: TimeZone,
         preferences: ScheduleWidgetPreferences,
         pendingSport: List<PendingSportBooking> = emptyList(),
     ): ScheduleWidgetSelection {
-        val today = now.toLocalDate()
+        val wall = WallNow(now, timeZone)
+        val today = wall.today
+        val tomorrow = today.plus(1, DateTimeUnit.DAY)
         // Widget-only projection: pending queues never enter the official Lesson/cache model.
         val official = schedule.flatMap { day ->
             day.lessons.map { lesson ->
                 TimelineLesson(day.date, lesson.start, lesson.end,
-                    lesson.toWidgetLesson(day.date, now))
+                    lesson.toWidgetLesson(day.date, wall))
             }
         }
         val pending = pendingSport.distinctBy { it.queueKind to it.queueId }
-            .filter { it.start > now.toInstant().toKotlinInstant() && it.end > it.start }
-            .filter { it.start.atOffsetOf(now).toLocalDate() in today..today.plusDays(1) }
+            .filter { it.start > now && it.end > it.start }
+            .filter { it.start.toLocalDateTime(timeZone).date in today..tomorrow }
             .map { booking ->
-                val start = booking.start.atOffsetOf(now)
-                val end = booking.end.atOffsetOf(now)
-                TimelineLesson(start.toLocalDate(), start.toLocalTime(), end.toLocalTime(),
+                val start = booking.start.toLocalDateTime(timeZone)
+                val end = booking.end.toLocalDateTime(timeZone)
+                TimelineLesson(start.date, start.time, end.time,
                     ScheduleWidgetLesson(
                         subject = booking.sectionName.trim(),
-                        start = start.toLocalTime().toString(),
-                        end = end.toLocalTime().toString(),
+                        start = start.time.toString(),
+                        end = end.time.toString(),
                         typeId = 11,
                         teacher = booking.teacherFio.trim().takeUnless { it.isEmpty() },
                         room = booking.roomName.trim().takeIf(String::isNotEmpty),
@@ -50,8 +60,8 @@ class ScheduleWidgetSelector @Inject constructor() {
             }
         val days = (official + pending).groupBy(TimelineLesson::date)
         val todayLessons = days[today].orEmpty().sortedBy(TimelineLesson::start)
-        val tomorrowLessons = days[today.plusDays(1)].orEmpty().sortedBy(TimelineLesson::start)
-        val lessonToShow = lessonToShow(todayLessons, now, preferences.display.compact.showNextLessonEarly)
+        val tomorrowLessons = days[tomorrow].orEmpty().sortedBy(TimelineLesson::start)
+        val lessonToShow = lessonToShow(todayLessons, wall, preferences.display.compact.showNextLessonEarly)
 
         val singleLesson = selectSingleLesson(
             lessons = todayLessons,
@@ -61,7 +71,7 @@ class ScheduleWidgetSelector @Inject constructor() {
         val list = selectLessonList(
             todayLessons = todayLessons,
             tomorrowLessons = tomorrowLessons,
-            now = now,
+            wall = wall,
             preferences = preferences
         )
 
@@ -71,10 +81,9 @@ class ScheduleWidgetSelector @Inject constructor() {
                 lessonList = list,
                 singleLessonStyle = preferences.singleLessonStyle,
                 lessonListStyle = preferences.lessonListStyle,
-                officialFallback = if (pending.isEmpty()) null else select(schedule, now, preferences).snapshot,
+                officialFallback = if (pending.isEmpty()) null else select(schedule, now, timeZone, preferences).snapshot,
                 pendingValidUntil = pending.minOfOrNull {
-                    minOf(OffsetDateTime.of(it.date, it.start, now.offset).toInstant(),
-                        now.toInstant().plus(PERIODIC_UPDATE_DELAY))
+                    minOf(wall.instantOf(it.date, it.start), now + PERIODIC_UPDATE_DELAY)
                 }?.toString(),
                 compactTextSize = preferences.display.compact.textSize,
                 fullTextSize = preferences.display.full.textSize
@@ -82,7 +91,7 @@ class ScheduleWidgetSelector @Inject constructor() {
             nextUpdateDelay = nextUpdateDelay(
                 lessons = todayLessons,
                 lessonToShow = lessonToShow,
-                now = now,
+                wall = wall,
                 preferences = preferences
             )
         )
@@ -111,13 +120,13 @@ class ScheduleWidgetSelector @Inject constructor() {
     private fun selectLessonList(
         todayLessons: List<TimelineLesson>,
         tomorrowLessons: List<TimelineLesson>,
-        now: OffsetDateTime,
+        wall: WallNow,
         preferences: ScheduleWidgetPreferences,
     ): List<ScheduleListWidgetItem> {
         val full = preferences.display.full
-        val remainingToday = todayLessons.filter { it.end > now.toLocalTime() }
+        val remainingToday = todayLessons.filter { it.end > wall.time }
         val showTomorrow = full.showTomorrowWhenTodayIsOver && remainingToday.isEmpty()
-        val selectedDate = if (showTomorrow) now.toLocalDate().plusDays(1) else now.toLocalDate()
+        val selectedDate = if (showTomorrow) wall.today.plus(1, DateTimeUnit.DAY) else wall.today
         val selectedLessons = if (showTomorrow) {
             tomorrowLessons
         } else if (full.hidePastLessons) {
@@ -159,16 +168,13 @@ class ScheduleWidgetSelector @Inject constructor() {
     private fun nextUpdateDelay(
         lessons: List<TimelineLesson>,
         lessonToShow: TimelineLesson?,
-        now: OffsetDateTime,
+        wall: WallNow,
         preferences: ScheduleWidgetPreferences,
     ): Duration {
         if (!preferences.smartScheduling) return PERIODIC_UPDATE_DELAY
 
         val target = if (lessonToShow == null) {
-            now.toLocalDate()
-                .plusDays(1)
-                .atStartOfDay()
-                .atOffset(now.offset)
+            wall.today.plus(1, DateTimeUnit.DAY).atStartOfDayIn(wall.timeZone)
         } else {
             val isLast = lessonToShow == lessons.lastOrNull()
             val targetTime = if (preferences.display.compact.showNextLessonEarly && !isLast) {
@@ -176,37 +182,37 @@ class ScheduleWidgetSelector @Inject constructor() {
             } else {
                 lessonToShow.end
             }
-            OffsetDateTime.of(now.toLocalDate(), targetTime, now.offset)
+            wall.instantOf(wall.today, targetTime)
         }
 
-        val pendingStart = lessons.filter { it.display.pendingStatus != null && it.start > now.toLocalTime() }
-            .minOfOrNull { OffsetDateTime.of(it.date, it.start, now.offset) }
+        val pendingStart = lessons.filter { it.display.pendingStatus != null && it.start > wall.time }
+            .minOfOrNull { wall.instantOf(it.date, it.start) }
         // A compact early switch does not advance the full widget. Its current/past
         // states still change at actual starts/ends, so shared work takes the earliest boundary.
         val fullBoundary = lessons.flatMap { listOf(it.start, it.end) }
-            .filter { it > now.toLocalTime() }
-            .minOrNull()?.let { OffsetDateTime.of(now.toLocalDate(), it, now.offset) }
+            .filter { it > wall.time }
+            .minOrNull()?.let { wall.instantOf(wall.today, it) }
         val nextTarget = listOfNotNull(target, pendingStart, fullBoundary).min()
-        val delay = Duration.between(now, nextTarget)
+        val delay = nextTarget - wall.now
         return if (delay < MINIMUM_UPDATE_DELAY) MINIMUM_UPDATE_DELAY else delay
     }
 
     private fun lessonToShow(
         lessons: List<TimelineLesson>,
-        now: OffsetDateTime,
+        wall: WallNow,
         forwardScheduling: Boolean,
     ): TimelineLesson? {
-        val regular = lessons.firstOrNull { lesson -> lesson.end > now.toLocalTime() }
+        val regular = lessons.firstOrNull { lesson -> lesson.end > wall.time }
         if (!forwardScheduling || regular == null) return regular
 
-        val forwardedNow = now.plusMinutes(FORWARD_MINUTES)
-        if (forwardedNow.toLocalDate() != now.toLocalDate()) return regular
-        return lessons.firstOrNull { lesson -> lesson.end > forwardedNow.toLocalTime() } ?: regular
+        val forwardedNow = (wall.now + FORWARD_MINUTES.minutes).toLocalDateTime(wall.timeZone)
+        if (forwardedNow.date != wall.today) return regular
+        return lessons.firstOrNull { lesson -> lesson.end > forwardedNow.time } ?: regular
     }
 
     private fun Lesson.toWidgetLesson(
         date: LocalDate,
-        now: OffsetDateTime,
+        wall: WallNow,
     ): ScheduleWidgetLesson {
         return ScheduleWidgetLesson(
             subject = subjectName.trim(),
@@ -216,12 +222,9 @@ class ScheduleWidgetSelector @Inject constructor() {
             teacher = teacherFio?.trim()?.takeIf(String::isNotEmpty),
             room = room?.raw?.trim()?.takeIf(String::isNotEmpty),
             building = building?.raw?.trim()?.takeIf(String::isNotEmpty),
-            state = stateAt(date, start, end, now)
+            state = stateAt(date, start, end, wall)
         )
     }
-
-    private fun Instant.atOffsetOf(now: OffsetDateTime): OffsetDateTime =
-        OffsetDateTime.ofInstant(toJavaInstant(), now.offset)
 
     private fun ScheduleWidgetLesson.withTeacherHidden(hidden: Boolean) =
         if (hidden) copy(teacher = null) else this
@@ -230,12 +233,12 @@ class ScheduleWidgetSelector @Inject constructor() {
         date: LocalDate,
         start: LocalTime,
         end: LocalTime,
-        now: OffsetDateTime,
+        wall: WallNow,
     ): ScheduleWidgetLessonState {
-        if (date < now.toLocalDate() || (date == now.toLocalDate() && end <= now.toLocalTime())) {
+        if (date < wall.today || (date == wall.today && end <= wall.time)) {
             return ScheduleWidgetLessonState.COMPLETED
         }
-        if (date == now.toLocalDate() && start <= now.toLocalTime() && end > now.toLocalTime()) {
+        if (date == wall.today && start <= wall.time && end > wall.time) {
             return ScheduleWidgetLessonState.CURRENT
         }
         return ScheduleWidgetLessonState.UPCOMING
@@ -248,9 +251,23 @@ class ScheduleWidgetSelector @Inject constructor() {
         val display: ScheduleWidgetLesson,
     )
 
+    /** [now] read once on the wall of [timeZone]. */
+    private class WallNow(val now: Instant, val timeZone: TimeZone) {
+        private val local: LocalDateTime = now.toLocalDateTime(timeZone)
+        val today: LocalDate get() = local.date
+        val time: LocalTime get() = local.time
+
+        fun instantOf(date: LocalDate, time: LocalTime): Instant = LocalDateTime(date, time).toInstant(timeZone)
+    }
+
+    /** [minutes] earlier on the 24-hour dial: 00:05 minus 15 is 23:50. */
+    private fun LocalTime.minusMinutes(minutes: Long): LocalTime = LocalTime.fromNanosecondOfDay(
+        (toNanosecondOfDay() - minutes.minutes.inWholeNanoseconds).mod(1.days.inWholeNanoseconds)
+    )
+
     companion object {
         const val FORWARD_MINUTES = 15L
-        val PERIODIC_UPDATE_DELAY: Duration = Duration.ofMinutes(7)
-        private val MINIMUM_UPDATE_DELAY: Duration = Duration.ofSeconds(5)
+        val PERIODIC_UPDATE_DELAY: Duration = 7.minutes
+        private val MINIMUM_UPDATE_DELAY: Duration = 5.seconds
     }
 }

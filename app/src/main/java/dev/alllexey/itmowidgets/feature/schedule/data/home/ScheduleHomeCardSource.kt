@@ -8,8 +8,6 @@ import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.home.HomeScheduleSelector
 import javax.inject.Inject
@@ -24,6 +22,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
 
 /** Today and tomorrow from the schedule cache, re-evaluated every minute so the current lesson moves. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -37,16 +37,16 @@ class ScheduleHomeCardSource @Inject constructor(
 ) : HomeCardSource {
 
     override fun observe(): Flow<List<HomeCard>> = ticker().flatMapLatest {
-        val today = timeProvider.javaToday()
+        val today = timeProvider.today()
         combine(
-            repository.observeScheduleForRange(null, today, today.plusDays(1)),
+            repository.observeScheduleForRange(null, today, today.plus(1, DateTimeUnit.DAY)),
             pendingRows()
-        ) { days, bookings -> listOf(selector.select(days, bookings, timeProvider.javaNow())) }
+        ) { days, bookings -> listOf(selector.select(days, bookings, timeProvider.now(), timeProvider.timeZone)) }
     }
 
     override suspend fun refresh(): AppResult<Unit> = coroutineScope {
-        val today = timeProvider.javaToday()
-        val schedule = async { repository.refreshSchedule(null, today, today.plusDays(1)) }
+        val today = timeProvider.today()
+        val schedule = async { repository.refreshSchedule(null, today, today.plus(1, DateTimeUnit.DAY)) }
         val bookings = async { pending.refresh() }
         bookings.await()
         schedule.await()

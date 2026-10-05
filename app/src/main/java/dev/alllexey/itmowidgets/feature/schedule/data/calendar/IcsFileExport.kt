@@ -11,8 +11,6 @@ import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvents
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.IcsWriter
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
@@ -20,7 +18,6 @@ import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.toJavaLocalDate
 
 /**
  * The own schedule of a range as a `.ics` file in `cacheDir/ics`, shared through the app's `FileProvider`. Only the
@@ -47,8 +44,8 @@ class IcsFileExport internal constructor(
 
     override suspend fun export(range: ScheduleExportRange): AppResult<IcsFile?> = try {
         val dates = range.dates(time.today())
-        val days = schedule.read(dates.start.toJavaLocalDate(), dates.endInclusive.toJavaLocalDate())
-        val events = CalendarEvents.from(days, time.javaZone()) { lesson ->
+        val days = schedule.read(dates.start, dates.endInclusive)
+        val events = CalendarEvents.from(days, time.timeZone) { lesson ->
             buildings.find(lesson.buildingId, lesson.mainBuildingId, lesson.building?.raw)?.address
         }
         if (events.isEmpty()) {
@@ -58,7 +55,7 @@ class IcsFileExport internal constructor(
             val file = withContext(dispatchers.io) {
                 check(directory.isDirectory || directory.mkdirs())
                 directory.listFiles()?.forEach(File::delete)
-                File(directory, name).apply { writeText(IcsWriter.write(events, time.javaNow().toInstant()), Charsets.UTF_8) }
+                File(directory, name).apply { writeText(IcsWriter.write(events, time.now()), Charsets.UTF_8) }
             }
             AppResult.Success(IcsFile(uriOf(file), name, events.size))
         }

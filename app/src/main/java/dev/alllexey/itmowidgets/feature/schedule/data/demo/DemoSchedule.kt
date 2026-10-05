@@ -14,18 +14,17 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import java.time.DayOfWeek
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.Month
-import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalAdjusters
-import kotlin.time.toKotlinInstant
-import kotlinx.datetime.toJavaLocalTime
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinLocalTime
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.Month
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 
 /**
  * Anna's personal schedule in the demo session: one weekly template of the autumn semester, her Thursday volleyball
@@ -39,7 +38,7 @@ object DemoSchedule {
         dates(start, end).map { date ->
             val lessons = ANNA_WEEK.filter { it.day == date.dayOfWeek }.map { it.toLesson(date, ME_GROUP_SUFFIX) }
                 .map { it.withChange(date, today) } + sportLessons(date, today)
-            DaySchedule(date.dayOfWeek.value, weekNumber(date), date, null, lessons.sortedBy(Lesson::start))
+            DaySchedule(date.dayOfWeek.isoDayNumber, weekNumber(date), date, null, lessons.sortedBy(Lesson::start))
         }
 
     /** Another user's schedule as Backend would answer: no week numbers, no sport. */
@@ -53,13 +52,13 @@ object DemoSchedule {
         val suffix = if (isu == DemoPeople.POLINA.isu) NEIGHBOUR_GROUP_SUFFIX else ME_GROUP_SUFFIX
         return dates(start, end).map { date ->
             val lessons = week.filter { it.day == date.dayOfWeek }.map { it.toLesson(date, suffix) }
-            DaySchedule(date.dayOfWeek.value, -1, date, null, lessons)
+            DaySchedule(date.dayOfWeek.isoDayNumber, -1, date, null, lessons)
         }
     }
 
     /** Friends who have the same lesson: the whole stream at a lecture, the group otherwise. */
     fun friendsOnLesson(pairId: Long, date: LocalDate): List<UserSummary> {
-        if (DemoSportSlots.ANNA_WEEKLY.lessonId(date.toKotlinLocalDate()) == pairId) return listOf(DemoPeople.IVAN.summary())
+        if (DemoSportSlots.ANNA_WEEKLY.lessonId(date) == pairId) return listOf(DemoPeople.IVAN.summary())
         val template = ANNA_WEEK.firstOrNull { it.day == date.dayOfWeek && it.pairId(date) == pairId }
             ?: return emptyList()
         val people = when {
@@ -79,7 +78,7 @@ object DemoSchedule {
         return listOf(
             ScheduleChange(
                 id = "demo-room-${labDate}",
-                detectedAt = now.minus(Duration.ofHours(3)).toKotlinInstant(),
+                detectedAt = now - 3.hours,
                 kind = ScheduleChangeKind.UPDATED,
                 fields = setOf(ScheduleChangeField.PLACE),
                 subjectName = lab.subjectName,
@@ -92,7 +91,7 @@ object DemoSchedule {
             ),
             ScheduleChange(
                 id = "demo-time-${englishDate}",
-                detectedAt = now.minus(Duration.ofHours(27)).toKotlinInstant(),
+                detectedAt = now - 27.hours,
                 kind = ScheduleChangeKind.UPDATED,
                 fields = setOf(ScheduleChangeField.TIME),
                 subjectName = english.subjectName,
@@ -100,8 +99,8 @@ object DemoSchedule {
                 flowName = english.groupName,
                 before = english.slot(englishDate),
                 after = english.slot(englishDate).copy(
-                    start = MOVED_ENGLISH_START.toKotlinLocalTime(),
-                    end = MOVED_ENGLISH_START.plusMinutes(90).toKotlinLocalTime()
+                    start = MOVED_ENGLISH_START,
+                    end = MOVED_ENGLISH_START.plusMinutes(90)
                 ),
                 read = true,
                 notified = true
@@ -117,19 +116,23 @@ object DemoSchedule {
         else -> this
     }
 
-    private fun labChangeDate(today: LocalDate) = today.with(TemporalAdjusters.next(DATABASES_LAB.day))
+    private fun labChangeDate(today: LocalDate) = today.next(DATABASES_LAB.day)
 
-    private fun englishChangeDate(today: LocalDate) = today.with(TemporalAdjusters.next(ENGLISH_FRIDAY.day))
+    private fun englishChangeDate(today: LocalDate) = today.next(ENGLISH_FRIDAY.day)
+
+    /** The first [day] strictly after this date. */
+    private fun LocalDate.next(day: DayOfWeek): LocalDate =
+        plus((day.isoDayNumber - dayOfWeek.isoDayNumber + 6) % 7 + 1, DateTimeUnit.DAY)
 
     private fun sportLessons(date: LocalDate, today: LocalDate): List<Lesson> {
         val slot = DemoSportSlots.ANNA_WEEKLY
-        val day = date.toKotlinLocalDate()
-        if (day !in DemoSportSlots.annaBookedDates(today.toKotlinLocalDate())) return emptyList()
+        val day = date
+        if (day !in DemoSportSlots.annaBookedDates(today)) return emptyList()
         return listOf(
             Lesson(
                 pairId = slot.lessonId(day),
-                start = slot.start.toJavaLocalTime(),
-                end = slot.end.toJavaLocalTime(),
+                start = slot.start,
+                end = slot.end,
                 type = "Физическая культура",
                 typeId = Lesson.TypeId(SPORT),
                 note = null,
@@ -155,9 +158,9 @@ object DemoSchedule {
 
     private fun Lesson.slot(date: LocalDate) = LessonSlot(
         pairId = pairId,
-        date = date.toKotlinLocalDate(),
-        start = start.toKotlinLocalTime(),
-        end = end.toKotlinLocalTime(),
+        date = date,
+        start = start,
+        end = end,
         room = room?.raw,
         building = building?.raw,
         formatId = formatId,
@@ -167,15 +170,15 @@ object DemoSchedule {
     )
 
     private fun dates(start: LocalDate, end: LocalDate): List<LocalDate> =
-        generateSequence(start) { it.plusDays(1) }.takeWhile { !it.isAfter(end) }.toList()
+        generateSequence(start) { it.plus(1, DateTimeUnit.DAY) }.takeWhile { it <= end }.toList()
 
     /** Weeks of the half-year: autumn from 1 September, spring from the second Monday of February. */
     private fun weekNumber(date: LocalDate): Int {
         val autumn = date.month >= Month.SEPTEMBER || date.month == Month.JANUARY
         val year = if (date.month == Month.JANUARY) date.year - 1 else date.year
-        val first = if (autumn) LocalDate.of(year, Month.SEPTEMBER, 1) else LocalDate.of(year, Month.FEBRUARY, 9)
-        val monday = { day: LocalDate -> day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)) }
-        return (ChronoUnit.WEEKS.between(monday(first), monday(date)) + 1).toInt().coerceAtLeast(1)
+        val first = if (autumn) LocalDate(year, Month.SEPTEMBER, 1) else LocalDate(year, Month.FEBRUARY, 9)
+        val monday = { day: LocalDate -> day.minus(day.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY) }
+        return (monday(first).daysUntil(monday(date)) / 7 + 1).coerceAtLeast(1)
     }
 
     private data class Place(val id: Int?, val name: String)
@@ -190,7 +193,7 @@ object DemoSchedule {
         val teacher: DemoPerson = subject.teacher,
         val note: String? = null
     ) {
-        fun pairId(date: LocalDate): Long = date.toEpochDay() * 1000 + (start.hour * 60 + start.minute) / 10
+        fun pairId(date: LocalDate): Long = date.toEpochDays().toLong() * 1000 + (start.hour * 60 + start.minute) / 10
 
         fun toLesson(date: LocalDate, groupSuffix: String) = Lesson(
             pairId = pairId(date),
@@ -235,17 +238,20 @@ object DemoSchedule {
     private const val CHANGED_LAB_ROOM = "405"
 
     private val TYPE_NAMES = mapOf(LECTURE to "Лекции", LAB to "Лабораторные занятия", PRACTICE to "Практические занятия")
-    private val MOVED_ENGLISH_START: LocalTime = LocalTime.of(13, 30)
+    private val MOVED_ENGLISH_START: LocalTime = LocalTime(13, 30)
 
     private val KRONVA = Place(13, "Кронверкский пр., д.49, лит.А")
     private val LOMO = Place(273, "ул. Ломоносова, д.9, лит.М")
     private val BIRZHA = Place(null, "Биржевая линия, д.14-16, лит.А")
 
-    private val PAIR_1: LocalTime = LocalTime.of(8, 20)
-    private val PAIR_2: LocalTime = LocalTime.of(10, 0)
-    private val PAIR_3: LocalTime = LocalTime.of(11, 40)
-    private val PAIR_4: LocalTime = LocalTime.of(13, 30)
-    private val PAIR_5: LocalTime = LocalTime.of(15, 20)
+    private val PAIR_1: LocalTime = LocalTime(8, 20)
+    private val PAIR_2: LocalTime = LocalTime(10, 0)
+    private val PAIR_3: LocalTime = LocalTime(11, 40)
+    private val PAIR_4: LocalTime = LocalTime(13, 30)
+    private val PAIR_5: LocalTime = LocalTime(15, 20)
+
+    /** Lessons here never cross midnight. */
+    private fun LocalTime.plusMinutes(minutes: Int): LocalTime = LocalTime.fromSecondOfDay(toSecondOfDay() + minutes * 60)
 
     private val DATABASES_LAB = WeeklyLesson(DayOfWeek.WEDNESDAY, PAIR_4, DemoStudy.DATABASES, LAB, "402", BIRZHA)
     private val ENGLISH_FRIDAY = WeeklyLesson(DayOfWeek.FRIDAY, PAIR_3, DemoStudy.ENGLISH, PRACTICE, "1206", LOMO)

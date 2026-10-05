@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.model
 
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -35,7 +35,7 @@ class LessonDetailsMappingTest {
     )
 
     private fun lesson(groupName: String) = Lesson(
-        pairId = 42, start = LocalTime.of(8, 20), end = LocalTime.of(9, 50), type = "Лекция",
+        pairId = 42, start = LocalTime(8, 20), end = LocalTime(9, 50), type = "Лекция",
         typeId = Lesson.TypeId(1), note = "Примечание", subjectName = "Физика", subjectId = 7,
         groupName = groupName, flowId = 11, flowTypeId = 2, teacherIsu = 300001,
         teacherFio = "Тестовый преподаватель", room = Room("1506"), building = Building("Кронверкский проспект, 49"),
@@ -44,6 +44,6 @@ class LessonDetailsMappingTest {
     )
 
     private companion object {
-        val DATE: LocalDate = LocalDate.of(2026, 9, 7)
+        val DATE: LocalDate = LocalDate(2026, 9, 7)
     }
 }

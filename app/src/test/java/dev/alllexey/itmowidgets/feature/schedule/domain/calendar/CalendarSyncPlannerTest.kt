@@ -1,7 +1,9 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.calendar
 
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -109,8 +111,8 @@ class CalendarSyncPlannerTest {
     private fun event(key: String, day: Long = 0, hour: Long = 10) = CalendarEvent(
         key = key,
         title = "Физика",
-        start = TODAY.plus(Duration.ofDays(day)).plus(Duration.ofHours(hour)),
-        end = TODAY.plus(Duration.ofDays(day)).plus(Duration.ofHours(hour)).plus(Duration.ofMinutes(90)),
+        start = TODAY.plus(day.days).plus(hour.hours),
+        end = TODAY.plus(day.days).plus(hour.hours).plus(90.minutes),
         location = "1506",
         description = "Лекция"
     )
@@ -119,7 +121,7 @@ class CalendarSyncPlannerTest {
         /** Midnight of today in Moscow. */
         val TODAY: Instant = Instant.parse("2026-09-06T21:00:00Z")
         /** 09:00 in Moscow. */
-        val NOW: Instant = TODAY.plus(Duration.ofHours(9))
-        val WINDOW = TODAY..<TODAY.plus(Duration.ofDays(29))
+        val NOW: Instant = TODAY.plus(9.hours)
+        val WINDOW = TODAY..<TODAY.plus(29.days)
     }
 }
