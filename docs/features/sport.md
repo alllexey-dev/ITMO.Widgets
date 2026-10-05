@@ -134,7 +134,10 @@ waiting silently; network and auth failures only log. See
 
 ## Tests
 
-`SportCardsVisualTest` runs the real adapters and sheet in an isolated debug host
+`SportDetailsSheetVisualTest`, `SportLessonCardsVisualTest` and `SportBookingCardsVisualTest` run the real sheet
+and adapters in an isolated debug host
 across both themes, two dynamic palettes, 320 dp width, font scale 1.0 and 1.3,
 queue states, busy-action protection, rebinding, recreation and where the share
-action shows. `SportSignViewModelTest` covers opening a shared lesson.
+action shows. `SportSignViewModelTest` covers opening a shared lesson. The `*ReferenceScreenshotTest` classes under
+`feature/sport/reference/` capture `Мой спорт`, `Запись`, the details sheet and another user's sport in the demo
+session on the JVM, into `shared/feature-sport/screenshots/`, under the names of the Compose previews that replace them.

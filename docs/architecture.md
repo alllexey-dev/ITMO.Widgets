@@ -472,7 +472,7 @@ relying on review.
   tests, instrumented tests and the debug hosts. Prefer extracting a small
   collaborator over faking six repositories.
 - Instrumented tests cover what needs a device: Keystore, file storage, real
-  layouts in an isolated debug host (`SportCardsVisualTest`,
+  layouts in an isolated debug host (`SportDetailsSheetVisualTest`,
   `RecordbookVisualTest`, `SelectionRowsTest`, `SportScoreCollapseTest`).
 - One instrumented run is one app process, so Hilt singletons outlive a test
   class. `SessionRepositoryImpl.initialize()` reads the token store once and
