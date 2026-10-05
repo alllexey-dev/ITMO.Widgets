@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.core.schedule
 
+import dev.alllexey.itmowidgets.core.work.BackgroundCheck
 import kotlinx.coroutines.flow.Flow
 
 /** Why synchronization turned itself off. */
@@ -19,7 +20,7 @@ data class CalendarSyncState(
  * the schedule feature. Calendar apps that read the phone's calendars (Xiaomi, Samsung, Yandex) show it, Google
  * Calendar does not. Google-account calendars are never written: Google brings back events the app deletes in bulk.
  */
-interface CalendarSync {
+interface CalendarSync : BackgroundCheck {
     fun observeState(): Flow<CalendarSyncState>
 
     /** Turns synchronization on into the app's own calendar and syncs soon. */
@@ -29,9 +30,9 @@ interface CalendarSync {
     suspend fun disable()
 
     /** Makes the periodic work match the switch and the session; safe to repeat. */
-    suspend fun syncWork()
+    override suspend fun syncWork()
 
-    fun stopWork()
+    override fun stopWork()
 
     /** One sync as soon as the network allows when synchronization is on, as after a manual refresh. */
     suspend fun requestSync()

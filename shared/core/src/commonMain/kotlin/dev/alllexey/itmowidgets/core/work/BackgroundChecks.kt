@@ -1,12 +1,12 @@
 package dev.alllexey.itmowidgets.core.work
 
-import androidx.work.ListenableWorker.Result
 import dev.alllexey.itmowidgets.core.result.AppError
 import kotlinx.datetime.LocalTime
 
 /*
  * Rules shared by the background checks that run on the device (schedule changes, marks): when they stay
- * silent and how one run's outcome becomes a WorkManager result. Features use these instead of their own copies.
+ * silent and what one run's outcome is. Features use these instead of their own copies; the platform turns an
+ * outcome into its scheduler's result (`workResultOf` on Android).
  */
 
 /** Moscow's quiet hours: from midnight up to, not including, [UNTIL]; they never cross midnight. */
@@ -30,7 +30,3 @@ fun outcomeOf(errors: Collection<AppError>): CheckOutcome =
 
 /** Retries of one failed run; after them the next period tries again. */
 const val MAX_RETRIES = 2
-
-/** A failed check is retried [MAX_RETRIES] times with backoff; after that the next period tries again. */
-fun workResultOf(outcome: CheckOutcome, attempt: Int): Result =
-    if (outcome == CheckOutcome.RETRY && attempt < MAX_RETRIES) Result.retry() else Result.success()

@@ -1,9 +1,12 @@
 package dev.alllexey.itmowidgets.di
 
+import android.content.Context
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
@@ -15,6 +18,9 @@ import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.app.WidgetRefreshCoordinator
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.core.work.BackgroundCheck
+import dev.alllexey.itmowidgets.core.work.CheckScheduler
+import dev.alllexey.itmowidgets.core.work.PeriodicCheckScheduler
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
@@ -44,8 +50,8 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesR
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.schedule.work.AndroidScheduleChangeNotifier
-import dev.alllexey.itmowidgets.feature.schedule.work.WorkManagerCalendarSyncScheduler
-import dev.alllexey.itmowidgets.feature.schedule.work.WorkManagerScheduleChangesScheduler
+import dev.alllexey.itmowidgets.feature.schedule.work.CALENDAR_SYNC_SPEC
+import dev.alllexey.itmowidgets.feature.schedule.work.SCHEDULE_CHANGES_SPEC
 import javax.inject.Singleton
 
 @Module
@@ -140,11 +146,6 @@ abstract class ScheduleModule {
     ): SessionDataCleaner
 
     @Binds
-    abstract fun bindScheduleChangesScheduler(
-        impl: WorkManagerScheduleChangesScheduler
-    ): ScheduleChangesScheduler
-
-    @Binds
     abstract fun bindScheduleChangeNotifier(
         impl: AndroidScheduleChangeNotifier
     ): ScheduleChangeNotifier
@@ -154,6 +155,12 @@ abstract class ScheduleModule {
     abstract fun bindScheduleChangeTracking(
         impl: DefaultScheduleChangeTracking
     ): ScheduleChangeTracking
+
+    @Binds
+    @IntoSet
+    abstract fun bindScheduleChangesBackgroundCheck(
+        impl: DefaultScheduleChangeTracking
+    ): BackgroundCheck
 
     @Binds
     @Singleton
@@ -192,18 +199,29 @@ abstract class ScheduleModule {
     ): SessionDataCleaner
 
     @Binds
-    abstract fun bindCalendarSyncScheduler(
-        impl: WorkManagerCalendarSyncScheduler
-    ): CalendarSyncScheduler
-
-    @Binds
     @Singleton
     abstract fun bindCalendarSync(
         impl: DefaultCalendarSync
     ): CalendarSync
 
     @Binds
+    @IntoSet
+    abstract fun bindCalendarSyncBackgroundCheck(
+        impl: DefaultCalendarSync
+    ): BackgroundCheck
+
+    @Binds
     abstract fun bindScheduleIcsExport(
         impl: IcsFileExport
     ): ScheduleIcsExport
+
+    companion object {
+        @Provides
+        fun scheduleChangesScheduler(@ApplicationContext context: Context): ScheduleChangesScheduler =
+            object : ScheduleChangesScheduler, CheckScheduler by PeriodicCheckScheduler(context, SCHEDULE_CHANGES_SPEC) {}
+
+        @Provides
+        fun calendarSyncScheduler(@ApplicationContext context: Context): CalendarSyncScheduler =
+            object : CalendarSyncScheduler, CheckScheduler by PeriodicCheckScheduler(context, CALENDAR_SYNC_SPEC) {}
+    }
 }

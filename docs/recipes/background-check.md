@@ -10,12 +10,16 @@ examples below; the [notifications](../features/notifications.md) and
 | Check | Files | Shape |
 |---|---|---|
 | QR widget refresh | `feature/qr/work/QrWidgetWork.kt`, `feature/qr/work/QrWidgetUpdateWorker.kt`, `feature/qr/work/QrWidgetEntryPoint.kt` | one-off `REPLACE`, rate limited on `SystemClock.elapsedRealtime()`, no network constraint on purpose: offline the worker still shows the cached pass |
-| Marks | `feature/recordbook/work/MarksWorker.kt`, `feature/recordbook/work/WorkManagerMarksScheduler.kt`, `feature/recordbook/data/marks/MarksCheck.kt`, `feature/recordbook/data/marks/DefaultMarkTracking.kt` | periodic 3 h plus a one-off, `CONNECTED`, exponential backoff |
-| Schedule changes | `feature/schedule/work/ScheduleChangesWorker.kt`, `feature/schedule/work/WorkManagerScheduleChangesScheduler.kt`, `feature/schedule/data/changes/ScheduleChangesCheck.kt`, `feature/schedule/data/changes/DefaultScheduleChangeTracking.kt` | periodic 2 h plus a one-off, `CONNECTED`, exponential backoff |
+| Marks | `feature/recordbook/work/MarksWorker.kt` (with `MARKS_SPEC`), `feature/recordbook/data/marks/MarksCheck.kt`, `feature/recordbook/data/marks/DefaultMarkTracking.kt` | periodic 3 h plus a one-off, `CONNECTED`, exponential backoff |
+| Schedule changes | `feature/schedule/work/ScheduleChangesWorker.kt` (with `SCHEDULE_CHANGES_SPEC`), `feature/schedule/data/changes/ScheduleChangesCheck.kt`, `feature/schedule/data/changes/DefaultScheduleChangeTracking.kt` | periodic 2 h plus a one-off, `CONNECTED`, exponential backoff |
 
-Shared rules live in `core/work/BackgroundChecks.kt` (`QuietHours`,
-`CheckOutcome`, `outcomeOf`, `MAX_RETRIES`, `workResultOf`), tested by
-`core/work/BackgroundChecksTest.kt`. Use them instead of a feature copy.
+Shared rules live in `:shared:core`'s `core/work/BackgroundChecks.kt`
+(`QuietHours`, `CheckOutcome`, `outcomeOf`, `MAX_RETRIES`, tested by its
+`commonTest` `BackgroundChecksTest`) and `core/work/BackgroundCheck.kt` (the
+`BackgroundCheck` and `CheckScheduler` contracts). The Android parts stay in
+the app's `core/work`: `WorkResults.kt` (`workResultOf`, `WorkResultsTest`)
+and `PeriodicCheckScheduler.kt` (`PeriodicCheckSpec`, `PeriodicCheckScheduler`,
+pinned by `PeriodicCheckSpecTest`). Use them instead of a feature copy.
 
 ## Pieces
 
@@ -23,31 +27,41 @@ Shared rules live in `core/work/BackgroundChecks.kt` (`QuietHours`,
    feature's `<X>Check` and returns `workResultOf(check.run(), runAttemptCount)`.
    `CancellationException` propagates. The class name is stable once shipped:
    add it to `WORKERS` in `architecture/StableIdentifiersTest.kt`.
-2. **Unique work names** as `const val` literals (`PERIODIC_WORK`,
-   `ONE_OFF_WORK`, `TAG`) in the scheduler's companion, and in `WORK_NAMES` of
-   `StableIdentifiersTest`. WorkManager keeps them across updates; a rename
-   needs an ADR and a cancel of the old name.
+2. **Unique work names** as string literals in the worker file's
+   `PeriodicCheckSpec` (`periodicWork`, `oneOffWork`, `tag`, next to the
+   period and the backoff), whose KDoc names `enqueueUniquePeriodicWork`
+   (the context `StableIdentifiersTest` looks for), and in `WORK_NAMES` of
+   `StableIdentifiersTest` and in `PeriodicCheckSpecTest`. WorkManager keeps
+   them across updates; a rename needs an ADR and a cancel of the old name.
 3. **Check** in `feature/<x>/data`: one run. It returns `CheckOutcome.SKIPPED`
    without a refresh token or with the switch off, collects `AppError`s, always
    delivers what waits (quiet hours hold notifications, not checks) and ends
    with `outcomeOf(errors)`: `Unauthorized` alone does not retry. Time comes
    from `AcademicTimeProvider` (`TimeRulesTest`); the decision of what to post
    is a pure `domain` object (`MarkDigests`, `ScheduleChangeDigests`).
-4. **Scheduler**: a port in `domain` (`MarksScheduler`: `ensurePeriodic`,
-   `runOnce`, `cancel`) and its WorkManager implementation in `work`, bound in
-   the feature's Hilt module. `ensurePeriodic` uses
-   `ExistingPeriodicWorkPolicy.UPDATE`, so calling it on every start keeps the
-   enrolment time; `runOnce` uses `ExistingWorkPolicy.REPLACE`.
+4. **Scheduler**: an empty port in `domain` that extends `CheckScheduler`
+   (`interface MarksScheduler : CheckScheduler`: `ensurePeriodic`, `runOnce`,
+   `cancel`), so fakes and test entry points name the feature's type. There is
+   no per-feature WorkManager class: the feature's Hilt module binds the port
+   with an unscoped delegating `@Provides`,
+   `object : MarksScheduler, CheckScheduler by PeriodicCheckScheduler(context, MARKS_SPEC) {}`
+   (a `PeriodicCheckScheduler` is not a `MarksScheduler`). `ensurePeriodic`
+   uses `ExistingPeriodicWorkPolicy.UPDATE`, so calling it on every start
+   keeps the enrolment time; `runOnce` uses `ExistingWorkPolicy.REPLACE`;
+   both require `CONNECTED`, the periodic one backs off exponentially.
 5. **Switch and tracking**: a DataStore key in the concern's
    `core/storage/*Preferences` store, and a `core/<area>` contract
-   (`MarkTracking`, `ScheduleChangeTracking`) with `setEnabled`, `syncWork`,
-   `stopWork` and `checkNow`, implemented as a `@Singleton` `Default*` in
-   `data`. `syncWork` enrols the work only with a session and the switch on,
-   otherwise cancels it; turning the switch off also forgets the snapshot, so
-   the next run is a baseline. Callers: the settings ViewModel (the switch),
-   `app/ItmoWidgetsApplication.kt` (after an update or a restore) and
-   `app/AndroidSessionLifecycleEffects.kt` (`stopWork` before a session change,
-   `syncWork` after sign-in). Document the switch in
+   (`MarkTracking`, `ScheduleChangeTracking`) that extends `BackgroundCheck`
+   (`syncWork`, `stopWork`) and adds `setEnabled` and `checkNow`, implemented
+   as a `@Singleton` `Default*` in `data`. `syncWork` enrols the work only with
+   a session and the switch on, otherwise cancels it; turning the switch off
+   also forgets the snapshot, so the next run is a baseline. Bind the impl
+   `@Binds @IntoSet` as a `BackgroundCheck` in the feature's Hilt module
+   (`BackgroundCheckGraphTest` counts the set). Callers: the settings
+   ViewModel (the switch); `app/ItmoWidgetsApplication.kt` (after an update or
+   a restore) and `app/AndroidSessionLifecycleEffects.kt` (`stopWork` before a
+   session change, `syncWork` after sign-in) iterate the injected
+   `Set<BackgroundCheck>` and need no edit. Document the switch in
    [settings](../settings.md) and the dialog in
    [Background work](../settings.md#background-work).
 6. **`SessionDataCleaner`**: the repository that stores the snapshot
