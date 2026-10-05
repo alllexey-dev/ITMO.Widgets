@@ -768,6 +768,14 @@
     "minCore": "1.7.0"
   },
   {
+    "id": "unauthorized",
+    "kind": "error",
+    "method": null,
+    "path": null,
+    "file": "errors/unauthorized.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "unregisterCurrentDevice",
     "kind": "http",
     "method": "DELETE",

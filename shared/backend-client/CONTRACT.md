@@ -123,9 +123,42 @@ and an OpenAPI snapshot (`B/docs/openapi.json`). This module tests against a ven
   `contract/`-relative path per line, `#` comments allowed. The area's `<Area>VendoredFixturesTest` checks exactly
   the claimed paths: a route answer decodes through the area API and re-encodes to the fixture's `data` (a field
   the model lacks or misnames fails), a request body decodes and encodes back to the same JSON.
-- `VendoredContractTest` checks that `BACKEND_COMMIT` starts with a 40-hex SHA, every JSON file parses, every
-  claimed path exists and no path is claimed twice. Unclaimed fixtures under `http/`, `requests/` and `fcm/` are
-  printed as pending.
+- `VendoredContractTest` checks that `BACKEND_COMMIT` starts with a 40-hex SHA, every JSON file parses,
+  `index.json` lists every fixture and every file under `contract/` is claimed exactly once: by an area, by
+  `NotMirrored`, or by the test itself (`BACKEND_COMMIT`, `README.md`, `index.json`, `openapi.json` and the error
+  bodies under `errors/`, which it maps through the client). An unclaimed file fails.
+
+### Conformance
+
+`ContractConformanceTest` compares the client with the OpenAPI snapshot at the recorded commit:
+
+- Routes: every area's `RouteCases` (aggregated in `AllRouteCases`) runs against the recording mock engine; each
+  request must be one OpenAPI operation (path templates as patterns) with the same query parameter names. Every
+  operation is either mirrored or covered by exactly one `NotMirrored` entry, never both, and every entry still
+  matches an operation.
+- Models: every type in `WireModels` matches the component schema of the same name: the same property names, a
+  non-null property without a default is `required`, a property Backend may send as `null` is nullable, enum
+  constants except `UNKNOWN` equal the schema's `enum`, a nested model names the same schema, and the sealed sport
+  types have the schema's `oneOf` with the `type` values `free` and `auto`. A model that reaches an unlisted model
+  or enum fails, so a new top-level request or answer type joins `WireModels`.
+- `PendingBackendFields` lists the client fields Backend has not shipped yet, each with its Backend card
+  (`RegisterDeviceRequest.platform`, `alertsAllowed` and `appVersion`: BK-16b). An entry the snapshot already has
+  fails, so the list cannot go stale.
+- Seeded-drift tests (a renamed field, an extra enum value, an unknown route, an unlisted operation, an unclaimed
+  fixture and others) prove that each check fails.
+
+### Not mirrored
+
+These Backend operations have no client function, on purpose; `NotMirrored` holds the same list with its fixtures.
+
+| Operations | Why |
+|---|---|
+| Every route under `/api/moderation` | CO-02, ADR 0026: the moderation API is not ported. No Kotlin consumer; moderators work in Web, which uses `/api/admin` |
+| Every route under `/api/admin` | Web only: the admin pages |
+| Every route under `/api/web` | Web only: the browser sign-in and its session cookie; the apps approve a sign-in through `/api/users/me/web-login` |
+| `GET /api/app/version` | The latest Android version as a bare string, kept for 2.0.x; the apps read `/api/app/version-info` |
+| `GET /api/users/me/roles` | Web only: the apps have no role-dependent screen |
+| `POST /api/sport/free-sign/entry/{id}/mark-satisfied` and its auto-sign twin | By entry ID, kept for released clients; the apps mark entries satisfied by lesson |
 
 ### Using the contract from other modules
 
