@@ -17,7 +17,7 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
-import dev.alllexey.itmowidgets.core.util.HttpsNavigationPolicy
+import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
 import java.time.YearMonth
 import dev.alllexey.itmowidgets.core.model.reviews.OwnTeacherReview as WireOwnReview
 import dev.alllexey.itmowidgets.core.model.reviews.TeacherReview as WireReview

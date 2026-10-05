@@ -29,10 +29,9 @@ import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.WallClock
-import java.net.URI
+import dev.alllexey.itmowidgets.core.url.StrictUri
 import java.time.Clock
 import java.time.OffsetDateTime
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
@@ -55,6 +54,8 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
 import dev.alllexey.itmowidgets.core.model.resources.SubjectLink as WireLink
 
 /**
@@ -149,7 +150,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
             return@attempt link.toModel()
         }
         networkLock.withLock {
-            val answer = restricted(generation) { request(generation) { api.saveSubjectLink(UUID.fromString(id), request) } }
+            val answer = restricted(generation) { request(generation) { api.saveSubjectLink(id.toWireId(), request) } }
             mutate(generation) { it.copy(local = it.local - id).withMine(scope, answer) }
             if (current().scopes[scope.key] == null) {
                 try { fetch(generation, scope) } catch (_: Failure) { /* The saved link comes with the next refresh. */ }
@@ -166,7 +167,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
             return@attempt
         }
         networkLock.withLock {
-            call(generation) { api.deleteSubjectLink(UUID.fromString(id)) }
+            call(generation) { api.deleteSubjectLink(id.toWireId()) }
             mutate(generation) { it.withoutMine(scope, id) }
         }
     }
@@ -185,7 +186,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         }
         networkLock.withLock {
             val answer = request(generation) {
-                api.pinSubjectLink(scope.subjectId, PinSubjectLinkRequest(scope.periodKey, id?.let(UUID::fromString)))
+                api.pinSubjectLink(scope.subjectId, PinSubjectLinkRequest(scope.periodKey, id?.toWireId()))
             }
             mutate(generation) { it.copy(localPins = it.localPins - scope.key).withResponse(scope, answer) }
         }
@@ -194,12 +195,12 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     override suspend fun vote(scope: ResourceScope, id: String, value: Int): AppResult<Unit> {
         require(value in -1..1)
         if (demo.isActive()) return DEMO_REFUSAL
-        return linkAction(scope) { api.voteSubjectLink(UUID.fromString(id), ResourceVoteRequest(value)) }
+        return linkAction(scope) { api.voteSubjectLink(id.toWireId(), ResourceVoteRequest(value)) }
     }
 
     override suspend fun report(scope: ResourceScope, id: String, reason: ResourceReportReason, comment: String?): AppResult<Unit> =
         if (demo.isActive()) DEMO_REFUSAL else linkAction(scope) {
-            api.reportSubjectLink(UUID.fromString(id), ModerationReportRequest(reason.toWire(), comment?.trim()?.takeIf { it.isNotEmpty() }))
+            api.reportSubjectLink(id.toWireId(), ModerationReportRequest(reason.toWire(), comment?.trim()?.takeIf { it.isNotEmpty() }))
         }
 
     override fun observeRestrictions(): Flow<List<UserRestriction>> = combine(restrictions, backend.observeConnected(), flow {
@@ -246,7 +247,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     private suspend fun upload(generation: Long) {
         for (link in current().local.values.toList()) {
             val answer = try {
-                request(generation) { api.saveSubjectLink(UUID.fromString(link.id), link.request) }
+                request(generation) { api.saveSubjectLink(link.id.toWireId(), link.request) }
             } catch (failure: Failure) {
                 if (failure.error.refusesItem) continue else throw failure
             }
@@ -260,7 +261,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
             if (pin.linkId in current().local) continue
             val answer = try {
                 request(generation) {
-                    api.pinSubjectLink(pin.scope.subjectId, PinSubjectLinkRequest(pin.scope.periodKey, UUID.fromString(pin.linkId)))
+                    api.pinSubjectLink(pin.scope.subjectId, PinSubjectLinkRequest(pin.scope.periodKey, pin.linkId.toWireId()))
                 }
             } catch (failure: Failure) {
                 if (failure.error.refusesItem) null else throw failure
@@ -397,10 +398,10 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         visibility: LinkVisibility,
         flowId: Long?,
     ): SaveSubjectLinkRequest {
-        UUID.fromString(id)
+        Uuid.parse(id)
         val cleanUrl = url.trim()
         val cleanTitle = title?.trim()?.takeIf { it.isNotEmpty() }
-        val uri = URI(cleanUrl)
+        val uri = requireNotNull(StrictUri.parse(cleanUrl))
         require(uri.scheme.equals("https", ignoreCase = true) && !uri.host.isNullOrBlank() && uri.rawUserInfo == null)
         require(cleanUrl.length <= MAX_URL_LENGTH && (cleanTitle?.length ?: 0) <= MAX_TITLE_LENGTH)
         require(scope.subjectId > 0 && scope.subjectName.isNotBlank() && scope.periodKey.matches(PERIOD_KEY))
@@ -436,6 +437,8 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     /** The server refused this one link; the others are still worth sending. */
     private val AppError.refusesItem: Boolean
         get() = this == AppError.Forbidden || this == AppError.NotFound || this is AppError.Unknown
+
+    private fun String.toWireId() = Uuid.parse(this).toJavaUuid()
 
     private fun Exception.appError(): AppError = (this as? Failure)?.error ?: toAppError()
 

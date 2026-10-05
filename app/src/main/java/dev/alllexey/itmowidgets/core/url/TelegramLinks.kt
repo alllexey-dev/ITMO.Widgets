@@ -1,7 +1,4 @@
-package dev.alllexey.itmowidgets.core.util
-
-import java.net.URI
-import java.net.URLEncoder
+package dev.alllexey.itmowidgets.core.url
 
 /**
  * Translates a public t.me link into the tg:// scheme the Telegram client handles itself;
@@ -12,7 +9,7 @@ object TelegramLinks {
     private val username = Regex("[A-Za-z][A-Za-z0-9_]{3,31}")
 
     fun deepLink(url: String): String? {
-        val uri = runCatching { URI(url.trim()) }.getOrNull() ?: return null
+        val uri = StrictUri.parse(url.trim()) ?: return null
         if (uri.scheme?.lowercase() != "https" || uri.host?.lowercase()?.removePrefix("www.") !in hosts) return null
         val parts = uri.rawPath.orEmpty().split('/').filter(String::isNotEmpty)
         val first = parts.firstOrNull() ?: return null
@@ -28,5 +25,5 @@ object TelegramLinks {
         }
     }
 
-    private fun encode(value: String) = URLEncoder.encode(value, "UTF-8")
+    private fun encode(value: String) = UrlEncoding.formEncode(value)
 }

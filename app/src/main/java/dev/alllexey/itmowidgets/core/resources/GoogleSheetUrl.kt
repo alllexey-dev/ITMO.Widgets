@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.core.resources
 
-import java.net.URI
+import dev.alllexey.itmowidgets.core.url.StrictUri
 
 /**
  * The address of a Google Sheet: [spreadsheetId] and the tab [gid] the link points at, if it does. Used by the link
@@ -19,7 +19,7 @@ data class GoogleSheetUrl(val spreadsheetId: String, val gid: Long?) {
 
         /** Null for anything but an `https://docs.google.com/spreadsheets/d/<id>` address. */
         fun parse(url: String): GoogleSheetUrl? {
-            val uri = runCatching { URI(url.trim()) }.getOrNull() ?: return null
+            val uri = StrictUri.parse(url.trim()) ?: return null
             if (!uri.scheme.equals("https", ignoreCase = true)) return null
             if (!uri.host.equals(HOST, ignoreCase = true)) return null
             val id = PATH.matchEntire(uri.rawPath.orEmpty())?.groupValues?.get(1) ?: return null

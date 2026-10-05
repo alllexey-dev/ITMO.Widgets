@@ -10,9 +10,11 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
-import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.withContext
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 import dev.alllexey.itmowidgets.core.model.WebLoginPreview as WirePreview
 
 class WebLoginRepositoryImpl @Inject constructor(
@@ -31,7 +33,7 @@ class WebLoginRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun approve(challengeId: UUID): AppResult<Unit> = when (val result = call { widgetsApi.approveWebLogin(challengeId) }) {
+    override suspend fun approve(challengeId: Uuid): AppResult<Unit> = when (val result = call { widgetsApi.approveWebLogin(challengeId.toJavaUuid()) }) {
         is AppResult.Success -> AppResult.Success(Unit)
         is AppResult.Failure -> result
     }
@@ -54,5 +56,5 @@ class WebLoginRepositoryImpl @Inject constructor(
         else -> AppError.Unknown()
     }
 
-    private fun WirePreview.toModel() = WebLoginPreview(challengeId, userAgent?.trim()?.ifEmpty { null }, createdAt, expiresAt)
+    private fun WirePreview.toModel() = WebLoginPreview(challengeId.toKotlinUuid(), userAgent?.trim()?.ifEmpty { null }, createdAt, expiresAt)
 }

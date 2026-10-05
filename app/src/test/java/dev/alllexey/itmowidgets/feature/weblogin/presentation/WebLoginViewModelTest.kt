@@ -12,7 +12,6 @@ import java.time.Clock
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.util.UUID
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
@@ -21,12 +20,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WebLoginViewModelTest {
     @get:Rule val main = MainDispatcherRule()
     private val repository = FakeWebLoginRepository()
-    private val challenge = UUID.fromString("00000000-0000-0000-0000-000000000042")
+    private val challenge = Uuid.parse("00000000-0000-0000-0000-000000000042")
     private val preview = WebLoginPreview(
         challengeId = challenge,
         userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
@@ -189,7 +189,7 @@ class WebLoginViewModelTest {
             return previews[code] ?: AppResult.Failure(AppError.NotFound)
         }
 
-        override suspend fun approve(challengeId: UUID): AppResult<Unit> {
+        override suspend fun approve(challengeId: Uuid): AppResult<Unit> {
             calls += "approve:$challengeId"
             return pendingApproval?.await() ?: approval
         }

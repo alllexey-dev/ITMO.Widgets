@@ -26,8 +26,8 @@ import java.time.Clock
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.util.UUID
 import kotlinx.coroutines.CompletableDeferred
+import kotlin.uuid.Uuid
 
 /**
  * The real «Вход на сайт» sheet over an empty window, fed by [repository]; nothing reaches Backend
@@ -80,14 +80,14 @@ class WebLoginPreviewActivity : AppCompatActivity() {
         @Volatile var approval: AppResult<Unit> = AppResult.Success(Unit)
         /** When set, answers wait for it, so a test can look at the in-button progress. */
         @Volatile var gate: CompletableDeferred<Unit>? = null
-        val approved = mutableListOf<UUID>()
+        val approved = mutableListOf<Uuid>()
 
         override suspend fun preview(code: String): AppResult<WebLoginPreview> {
             gate?.await()
             return previews[code] ?: AppResult.Failure(AppError.NotFound)
         }
 
-        override suspend fun approve(challengeId: UUID): AppResult<Unit> {
+        override suspend fun approve(challengeId: Uuid): AppResult<Unit> {
             gate?.await()
             approved += challengeId
             return approval
@@ -96,7 +96,7 @@ class WebLoginPreviewActivity : AppCompatActivity() {
 
     companion object {
         val SYNTHETIC_PREVIEW = WebLoginPreview(
-            challengeId = UUID.fromString("00000000-0000-0000-0000-000000000042"),
+            challengeId = Uuid.parse("00000000-0000-0000-0000-000000000042"),
             userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
             createdAt = OffsetDateTime.parse("2026-09-24T09:04:30Z"),
             expiresAt = OffsetDateTime.parse("2026-09-24T09:06:30Z"),

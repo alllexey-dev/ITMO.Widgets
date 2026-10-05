@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.util.HttpsNavigationPolicy
+import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
 import java.util.UUID
 import javax.inject.Inject

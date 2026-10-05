@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.weblogin.domain
 
-import java.net.URI
-import java.net.URLDecoder
+import dev.alllexey.itmowidgets.core.url.StrictUri
+import dev.alllexey.itmowidgets.core.url.UrlEncoding
 
 /**
  * The sign-in code a browser shows: eight characters without the look-alikes `0 O 1 I L`.
@@ -28,13 +28,13 @@ object WebLoginCode {
     }
 
     private fun fromLink(text: String): String? {
-        val uri = runCatching { URI(text) }.getOrNull() ?: return null
+        val uri = StrictUri.parse(text) ?: return null
         if (!uri.scheme.equals("https", ignoreCase = true) || uri.host.isNullOrBlank() || uri.rawUserInfo != null) return null
         if (uri.path?.trimEnd('/') != LOGIN_PATH) return null
         val value = uri.rawQuery.orEmpty().split('&')
             .map { it.substringBefore('=') to it.substringAfter('=', "") }
             .singleOrNull { it.first == "code" }?.second ?: return null
-        val decoded = runCatching { URLDecoder.decode(value, Charsets.UTF_8.name()) }.getOrNull() ?: return null
+        val decoded = UrlEncoding.formDecode(value) ?: return null
         return normalize(decoded)
     }
 }
