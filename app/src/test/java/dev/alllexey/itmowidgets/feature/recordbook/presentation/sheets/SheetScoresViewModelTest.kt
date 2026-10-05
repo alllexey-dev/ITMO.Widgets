@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs.Step
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -58,7 +59,7 @@ class SheetScoresViewModelTest {
 
     private fun only(file: String, tab: SheetTab = grades) = testWorkbook(tab to file)
 
-    private fun SheetScoresViewModel.pickTotal() = state.value as SheetScoresUiState.PickTotal
+    private fun SheetScoresViewModel.pickTotal() = uiState.value as SheetScoresUiState.PickTotal
 
     @Test fun `a total found by its header is connected at once`() = runTest(main.dispatcher) {
         repository.inspections += ready(testWorkbook())
@@ -66,7 +67,7 @@ class SheetScoresViewModelTest {
         val vm = model()
         runCurrent()
 
-        assertEquals(SheetScoresUiState.Done, vm.state.value)
+        assertEquals(SheetScoresUiState.Done, vm.uiState.value)
         val connected = repository.connected.single()
         assertEquals(scope, connected.scope)
         assertEquals(TEST_SHEET_URL, connected.url)
@@ -87,7 +88,7 @@ class SheetScoresViewModelTest {
         assertEquals(listOf(2 to "8", 4 to "9"), picker.cells.map { it.column to it.value })
         vm.pickTotal(picker.cells.last())
         runCurrent()
-        assertEquals(SheetScoresUiState.Done, vm.state.value)
+        assertEquals(SheetScoresUiState.Done, vm.uiState.value)
         assertEquals("9", repository.connected.single().total.value)
     }
 
@@ -97,7 +98,7 @@ class SheetScoresViewModelTest {
         val vm = model()
         runCurrent()
 
-        val candidates = (vm.state.value as SheetScoresUiState.PickRow).candidates
+        val candidates = (vm.uiState.value as SheetScoresUiState.PickRow).candidates
         assertEquals(listOf(1, 3), candidates.map { it.row })
         vm.pickRow(candidates[1])
         runCurrent()
@@ -115,9 +116,9 @@ class SheetScoresViewModelTest {
         val vm = model()
         runCurrent()
 
-        assertEquals(SheetScoresUiState.PickTab(listOf(grades)), vm.state.value)
+        assertEquals(SheetScoresUiState.PickTab(listOf(grades)), vm.uiState.value)
         vm.pickTab(grades)
-        val rows = (vm.state.value as SheetScoresUiState.PickTabRow).rows
+        val rows = (vm.uiState.value as SheetScoresUiState.PickTabRow).rows
         assertEquals(4, rows.size)
         vm.pickRow(rows[1])
         runCurrent()
@@ -130,23 +131,23 @@ class SheetScoresViewModelTest {
             repository.inspections += SheetInspection.Failed(status)
             val vm = model()
             runCurrent()
-            assertEquals(SheetScoresUiState.Failed(status), vm.state.value)
+            assertEquals(SheetScoresUiState.Failed(status), vm.uiState.value)
         }
 
         repository.inspections += SheetInspection.Failed(SheetStatus.NETWORK)
         val vm = model()
         runCurrent()
-        assertEquals(SheetScoresUiState.Failed(SheetStatus.NETWORK), vm.state.value)
+        assertEquals(SheetScoresUiState.Failed(SheetStatus.NETWORK), vm.uiState.value)
 
         val gate = CompletableDeferred<Unit>()
         repository.inspectGate = gate
         repository.inspections += ready(only("no_total.csv"))
-        vm.retry()
+        vm.refresh(RefreshMode.Force)
         runCurrent()
-        assertEquals(SheetScoresUiState.Loading, vm.state.value)
+        assertEquals(SheetScoresUiState.Loading, vm.uiState.value)
         gate.complete(Unit)
         runCurrent()
-        assertTrue(vm.state.value is SheetScoresUiState.PickTotal)
+        assertTrue(vm.uiState.value is SheetScoresUiState.PickTotal)
     }
 
     @Test fun `another total marks the current one and is saved as a change`() = runTest(main.dispatcher) {
@@ -162,7 +163,7 @@ class SheetScoresViewModelTest {
         val grade = picker.cells.single { it.tab == grades && it.column == 12 }
         vm.pickTotal(grade)
         runCurrent()
-        assertEquals(SheetScoresUiState.Done, vm.state.value)
+        assertEquals(SheetScoresUiState.Done, vm.uiState.value)
         assertEquals(grade, repository.totals.single().total)
         assertTrue(repository.connected.isEmpty())
     }
@@ -174,7 +175,7 @@ class SheetScoresViewModelTest {
         val vm = model(Step.TOTAL)
         runCurrent()
 
-        assertEquals(SheetScoresUiState.Failed(SheetStatus.ROW_NOT_FOUND), vm.state.value)
+        assertEquals(SheetScoresUiState.Failed(SheetStatus.ROW_NOT_FOUND), vm.uiState.value)
     }
 
     @Test fun `a failed save keeps the picker and a second tap while saving is ignored`() = runTest(main.dispatcher) {
@@ -187,7 +188,7 @@ class SheetScoresViewModelTest {
         vm.pickTotal(picker.cells.first())
         runCurrent()
         assertEquals(SheetScoresEvent.SaveFailed(AppError.Unknown().toUiText()), vm.events.first())
-        assertEquals(picker, vm.state.value)
+        assertEquals(picker, vm.uiState.value)
 
         repository.connectResult = AppResult.Success(Unit)
         val gate = CompletableDeferred<Unit>()
@@ -199,7 +200,7 @@ class SheetScoresViewModelTest {
         runCurrent()
         assertEquals(2, repository.connected.size)
         assertEquals(picker.cells.first(), repository.connected.last().total)
-        assertEquals(SheetScoresUiState.Done, vm.state.value)
+        assertEquals(SheetScoresUiState.Done, vm.uiState.value)
     }
 
 }

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
@@ -65,10 +66,16 @@ class RecordbookSubjectViewModelTest {
     private val resources = FakeSubjectLinksRepository()
     private val levels = FakeTeacherLevelsRepository()
     private val marks = FakeMarkTrackingRepository()
-    private fun model(withBars: Boolean = false, sheets: FakeSheetScoresRepository = FakeSheetScoresRepository()) = RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
+    private fun model(withBars: Boolean = false, sheets: FakeSheetScoresRepository = FakeSheetScoresRepository()) = subjectModel(SavedStateHandle(buildMap {
         put("entry_id", 42L); put("program_id", 1L); put("semester", 2); put("study_year", "2025/2026")
         if (withBars) { put("bars_plan", 8L); put("bars_type", "flow"); put("bars_identifier", "7") }
-    }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(LocalDate.of(2026, 9, 7)), resources, levels, marks, sheets)
+    }), sheets)
+    private fun subjectModel(handle: SavedStateHandle, sheets: FakeSheetScoresRepository): RecordbookSubjectViewModel {
+        val time = FixedAcademicTime(LocalDate.of(2026, 9, 7))
+        return RecordbookSubjectViewModel(repository, bars, handle, RecordbookSportResolver(FakeSportScoreRepository()), time, marks,
+            SubjectLessonsLoader(lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), time),
+            SubjectLinksLoader(resources), SubjectSheetLoader(sheets, time), SubjectTeacherLevelsLoader(levels))
+    }
     private val lessons = FakeSubjectLessonsGateway()
     private val scheduleRefresh = FakeScheduleRefreshGateway()
     private val bindingStore = FakeSubjectBindingStore()
@@ -78,7 +85,7 @@ class RecordbookSubjectViewModelTest {
         assertTrue(vm.uiState.value is RecordbookSubjectUiState.Content)
         assertEquals(listOf(StudyHalf(2025, 2) to subjectNameKey("Тестовый предмет")), marks.read)
 
-        vm.refresh(); advanceUntilIdle()
+        vm.refresh(RefreshMode.Pull); advanceUntilIdle()
         assertEquals(1, marks.read.size)
     }
 
@@ -163,7 +170,7 @@ class RecordbookSubjectViewModelTest {
         val vm = model(); advanceUntilIdle()
         val updated = recordbookSubject().copy(rate = "5/A", score = 96.0)
         repository.subjects = AppResult.Success(listOf(updated))
-        vm.refresh(); advanceUntilIdle()
+        vm.refresh(RefreshMode.Pull); advanceUntilIdle()
         assertEquals(updated, (vm.uiState.value as RecordbookSubjectUiState.Content).subject)
     }
 
@@ -177,7 +184,7 @@ class RecordbookSubjectViewModelTest {
     @Test fun `failed refresh preserves content and stops spinner`() = runTest {
         val vm = model(); advanceUntilIdle()
         repository.subjects = AppResult.Failure(AppError.Network)
-        vm.refresh(); vm.refresh(); advanceUntilIdle()
+        vm.refresh(RefreshMode.Pull); vm.refresh(RefreshMode.Pull); advanceUntilIdle()
         val state = vm.uiState.value as RecordbookSubjectUiState.Content
         assertEquals(recordbookSubject(), state.subject)
         assertEquals(AppError.Network, state.refreshError)
@@ -194,9 +201,9 @@ class RecordbookSubjectViewModelTest {
     ): RecordbookSubjectViewModel {
         // FixedAcademicTime is 2026-09-07: autumn of 2026/2027, semester 3 for a second-year student.
         repository.subjects = AppResult.Success(listOf(subject))
-        return RecordbookSubjectViewModel(repository, bars, SavedStateHandle(buildMap {
+        return subjectModel(SavedStateHandle(buildMap {
             put("entry_id", 42L); put("program_id", 1L); put("semester", 3); put("study_year", "2026/2027")
-        }), RecordbookSportResolver(FakeSportScoreRepository()), lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedAcademicTime(LocalDate.of(2026, 9, 7)), resources, levels, marks, sheets)
+        }), sheets)
     }
 
     @Test fun `an exact discipline id shows the upcoming lessons and their teachers without asking`() = runTest {
@@ -390,7 +397,7 @@ class RecordbookSubjectViewModelTest {
         resources.result = AppResult.Failure(AppError.Network)
         val vm = model(); advanceUntilIdle()
         val errors = mutableListOf<AppError>()
-        val collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.linkErrors.collect(errors::add) }
+        val collector = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.events.collect { errors += (it as RecordbookSubjectEvent.VoteFailed).error } }
         vm.voteLink("notes", up = false); advanceUntilIdle()
         assertEquals(listOf<AppError>(AppError.Network), errors)
         collector.cancel()
@@ -412,7 +419,7 @@ class RecordbookSubjectViewModelTest {
         advanceUntilIdle()
         assertEquals(listOf("a", "b", "c"), shown())
 
-        vm.refresh()
+        vm.refresh(RefreshMode.Pull)
         advanceUntilIdle()
         resources.state.value = SubjectLinksState.Content(linksSnapshot(shared = links.dropLast(1) + links.last().copy(score = 10, myVote = 1)))
         advanceUntilIdle()
@@ -453,7 +460,7 @@ class RecordbookSubjectViewModelTest {
         assertEquals(LocalDateTime(2026, 9, 7, 12, 0), connected.updatedAt)
         assertEquals(listOf(scope), sheets.refreshes)
 
-        vm.refresh(); advanceUntilIdle()
+        vm.refresh(RefreshMode.Pull); advanceUntilIdle()
         assertEquals(listOf(scope, scope), sheets.refreshes)
     }
 
@@ -580,7 +587,7 @@ class RecordbookSubjectViewModelTest {
         assertEquals((1L..5L).toList(), model.hub().visibleLessons.map { it.pairId })
         assertEquals(0, model.hub().allLessonsCount)
 
-        model.refresh(); advanceUntilIdle()
+        model.refresh(RefreshMode.Pull); advanceUntilIdle()
         assertTrue(model.hub().lessonsExpanded)
     }
 

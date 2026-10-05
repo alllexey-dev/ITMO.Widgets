@@ -4,8 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
-import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
@@ -22,7 +22,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.studyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import javax.inject.Inject
@@ -32,42 +31,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-data class RecordbookSelection(val program: RecordbookProgram, val period: RecordbookPeriod)
-
-sealed interface RecordbookUiState {
-    data class Loading(
-        val programs: List<RecordbookProgram> = emptyList(),
-        val selection: RecordbookSelection? = null
-    ) : RecordbookUiState
-    data class Content(
-        val programs: List<RecordbookProgram>,
-        val selection: RecordbookSelection,
-        val subjects: List<RecordbookSubject>,
-        val sport: RecordbookSportState? = null,
-        val refreshing: Boolean = false,
-        val refreshError: AppError? = null,
-        /** BARS overlay failed; the list still holds MyITMO values. */
-        val barsError: AppError? = null,
-        /** BARS answered for this period, so subjects without a journal are genuinely absent there. */
-        val barsApplied: Boolean = false,
-        /** Subjects for «Требуют внимания» by `entryId`; everything else is the regular list. */
-        val attention: Map<Long, RecordbookAttentionReason> = emptyMap(),
-        /** `subjectNameKey`s of unread new or changed marks in the selected period's half-year. */
-        val newSubjects: Set<String> = emptySet(),
-        /** Totals of connected sheets in the selected period by `disciplineId`; the list never downloads them. */
-        val sheetTotals: Map<Long, String> = emptyMap()
-    ) : RecordbookUiState {
-        /** The pass count means something only once a final grade or credit exists. */
-        val showSummary: Boolean get() = subjects.any { it.normalizedRate != RecordbookRate.InProgress }
-    }
-    data object Empty : RecordbookUiState
-    data class Error(
-        val error: AppError,
-        val programs: List<RecordbookProgram> = emptyList(),
-        val selection: RecordbookSelection? = null
-    ) : RecordbookUiState
-}
 
 @HiltViewModel
 class RecordbookViewModel @Inject constructor(
@@ -82,8 +45,11 @@ class RecordbookViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<RecordbookUiState>(RecordbookUiState.Loading())
     val uiState: StateFlow<RecordbookUiState> = _uiState.asStateFlow()
-    private val _barsEnabled = MutableStateFlow(false)
-    val barsEnabled: StateFlow<Boolean> = _barsEnabled.asStateFlow()
+    /** Every state written here carries the current [barsEnabled]. */
+    private var state: RecordbookUiState
+        get() = _uiState.value
+        set(value) { _uiState.value = value.withBarsEnabled(barsEnabled) }
+    private var barsEnabled = false
     private var barsLoaded = false
     private var programs: List<RecordbookProgram> = emptyList()
     private var selection: RecordbookSelection? = null
@@ -97,8 +63,8 @@ class RecordbookViewModel @Inject constructor(
         viewModelScope.launch {
             marks.observeNews().collect { news ->
                 newsByHalf = news.groupBy({ it.half }, { it.nameKey }).mapValues { it.value.toSet() }
-                (_uiState.value as? RecordbookUiState.Content)?.let { content ->
-                    _uiState.value = content.copy(newSubjects = newSubjectsIn(content.selection.period))
+                (state as? RecordbookUiState.Content)?.let { content ->
+                    state = content.copy(newSubjects = newSubjectsIn(content.selection.period))
                 }
             }
         }
@@ -106,23 +72,31 @@ class RecordbookViewModel @Inject constructor(
         viewModelScope.launch {
             sheets.observe().collect { scores ->
                 sheetValues = scores.mapNotNull { score -> score.value?.takeIf(String::isNotBlank)?.let { score.scope.key to it } }.toMap()
-                (_uiState.value as? RecordbookUiState.Content)?.let { content ->
-                    _uiState.value = content.copy(sheetTotals = sheetTotalsIn(content.selection.period, content.subjects))
+                (state as? RecordbookUiState.Content)?.let { content ->
+                    state = content.copy(sheetTotals = sheetTotalsIn(content.selection.period, content.subjects))
                 }
             }
         }
     }
 
-    fun ensureDataLoaded() {
-        if (_uiState.value is RecordbookUiState.Loading && loadJob?.isActive != true) refresh(silent = true)
+    /**
+     * [RefreshMode.Silent] is the entry: it loads the list once and does nothing while that load runs or after it
+     * ended, so coming back to the list does not reload it. A pull or a retry shows the indicator and replaces a load
+     * in flight.
+     */
+    fun refresh(mode: RefreshMode) {
+        when {
+            mode.showsIndicator -> load(silent = false)
+            state is RecordbookUiState.Loading && loadJob?.isActive != true -> load(silent = true)
+        }
     }
 
     fun setBarsEnabled(enabled: Boolean) {
-        if (barsLoaded && enabled == _barsEnabled.value) return
+        if (barsLoaded && enabled == barsEnabled) return
         barsLoaded = true
-        _barsEnabled.value = enabled
+        showBarsEnabled(enabled)
         viewModelScope.launch { barsPreference.setEnabled(enabled) }
-        refresh(silent = true)
+        load(silent = true)
     }
 
     fun selectPeriod(programId: Long, semester: Int) {
@@ -133,29 +107,29 @@ class RecordbookViewModel @Inject constructor(
         selection = selected
         savedStateHandle[KEY_PROGRAM_ID] = programId
         savedStateHandle[KEY_SEMESTER] = semester
-        refresh(silent = true)
+        load(silent = true)
     }
 
     /** A pull shows the indicator; loads on entry, period change and the BARS switch stay silent behind the list. */
-    fun refresh(silent: Boolean = false) {
+    private fun load(silent: Boolean) {
         loadJob?.cancel()
-        val previous = (_uiState.value as? RecordbookUiState.Content)
+        val previous = (state as? RecordbookUiState.Content)
             ?.takeIf { it.selection == selection }?.copy(refreshing = false)
             ?: seedFromCache()
-        _uiState.value = previous?.copy(refreshing = !silent, refreshError = null)
+        state = previous?.copy(refreshing = !silent, refreshError = null)
             ?: RecordbookUiState.Loading(programs, selection)
         // Taken before any request: a background check written meanwhile makes this answer stale.
         val stamp = marks.readStarted()
         loadJob = viewModelScope.launch {
             if (!barsLoaded) {
-                _barsEnabled.value = barsPreference.isEnabled()
+                showBarsEnabled(barsPreference.isEnabled())
                 barsLoaded = true
             }
             // Refresh the catalog as well: MyITMO's actual flag and available periods can change.
             when (val result = repository.getPrograms()) {
                 is AppResult.Success -> programs = result.value
                 is AppResult.Failure -> {
-                    _uiState.value = previous?.copy(refreshError = result.error)
+                    state = previous?.copy(refreshError = result.error)
                         ?: RecordbookUiState.Error(result.error, programs, selection)
                     return@launch
                 }
@@ -167,11 +141,11 @@ class RecordbookViewModel @Inject constructor(
                 }
             } ?: restoreSelection() ?: defaultSelection()
             if (selected == null) {
-                _uiState.value = RecordbookUiState.Empty
+                state = RecordbookUiState.Empty()
                 return@launch
             }
             selection = selected
-            val journals = if (_barsEnabled.value) async { bars.getSubjects(selected.period) } else null
+            val journals = if (barsEnabled) async { bars.getSubjects(selected.period) } else null
             when (val result = repository.getSubjects(selected.program.id, selected.period.semester)) {
                 is AppResult.Success -> {
                     val official = result.value
@@ -182,12 +156,12 @@ class RecordbookViewModel @Inject constructor(
                     }
                     val sport = sportResolver.resolve(selected.period, official)
                     if (journals == null) {
-                        _uiState.value = content(selected, official, sport)
+                        state = content(selected, official, sport)
                         return@launch
                     }
                     // MyITMO is on screen at once; a pull keeps its indicator until BARS answers.
-                    _uiState.value = content(selected, official, sport).copy(refreshing = !silent)
-                    _uiState.value = when (val overlay = journals.await()) {
+                    state = content(selected, official, sport).copy(refreshing = !silent)
+                    state = when (val overlay = journals.await()) {
                         is AppResult.Success -> {
                             if (half != null) launch { marks.recordBarsSeen(stamp, half, barsPlans(overlay.value)) }
                             content(selected, RecordbookBarsMerge.apply(official, overlay.value), sport).copy(barsApplied = true)
@@ -197,7 +171,7 @@ class RecordbookViewModel @Inject constructor(
                 }
                 is AppResult.Failure -> {
                     journals?.cancel()
-                    _uiState.value = previous?.takeIf { it.selection == selected }
+                    state = previous?.takeIf { it.selection == selected }
                         ?.copy(refreshError = result.error)
                         ?: RecordbookUiState.Error(result.error, programs, selected)
                 }
@@ -257,6 +231,18 @@ class RecordbookViewModel @Inject constructor(
         return options.firstOrNull { it.period.studyHalf() == half }
             ?: options.firstOrNull { it.period.actual }
             ?: options.minByOrNull { it.period.semester }
+    }
+
+    private fun showBarsEnabled(enabled: Boolean) {
+        barsEnabled = enabled
+        _uiState.value = _uiState.value.withBarsEnabled(enabled)
+    }
+
+    private fun RecordbookUiState.withBarsEnabled(enabled: Boolean): RecordbookUiState = when (this) {
+        is RecordbookUiState.Loading -> copy(barsEnabled = enabled)
+        is RecordbookUiState.Content -> copy(barsEnabled = enabled)
+        is RecordbookUiState.Empty -> copy(barsEnabled = enabled)
+        is RecordbookUiState.Error -> copy(barsEnabled = enabled)
     }
 
     private companion object {

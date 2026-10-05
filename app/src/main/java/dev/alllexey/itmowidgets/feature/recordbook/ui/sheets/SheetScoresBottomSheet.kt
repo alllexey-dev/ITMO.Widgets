@@ -15,6 +15,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.toBundle
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.ui.expandToContent
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.SheetScoresSetupBinding
@@ -57,8 +58,8 @@ class SheetScoresBottomSheet : BottomSheetDialogFragment() {
         binding.state.stateIcon.setImageResource(R.drawable.ic_error)
         binding.state.stateDescription.isVisible = false
         binding.state.stateAction.setText(R.string.common_retry)
-        binding.state.stateAction.setOnClickListener { viewModel.retry() }
-        viewModel.state.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
+        binding.state.stateAction.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
+        viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
         viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
             when (event) {

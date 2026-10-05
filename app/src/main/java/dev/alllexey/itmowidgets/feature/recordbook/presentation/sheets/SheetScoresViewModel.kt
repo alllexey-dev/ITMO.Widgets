@@ -6,9 +6,10 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs.Step
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.RowSearch
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
@@ -25,31 +26,12 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotals
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
 import javax.inject.Inject
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-
-sealed interface SheetScoresUiState {
-    data object Loading : SheetScoresUiState
-    /** Several rows look like the viewer's. */
-    data class PickRow(val candidates: List<SheetRowMatch>) : SheetScoresUiState
-    /** No row was found: the tabs with students to look in. */
-    data class PickTab(val tabs: List<SheetTab>) : SheetScoresUiState
-    data class PickTabRow(val tab: SheetTab, val rows: List<SheetRowMatch>) : SheetScoresUiState
-    /** The cells of the own row by tab; [selected] is the current total. */
-    data class PickTotal(val cells: List<SheetCell>, val selected: SheetCell?) : SheetScoresUiState
-    data class Failed(val status: SheetStatus) : SheetScoresUiState
-    data object Done : SheetScoresUiState
-}
-
-sealed interface SheetScoresEvent {
-    data class SaveFailed(val text: UiText) : SheetScoresEvent
-}
 
 /**
  * Connects the own total of a public Google Sheet, or picks another total of the connected one. The downloaded
@@ -69,9 +51,9 @@ class SheetScoresViewModel @Inject constructor(
     val step: Step = Step.valueOf(checkNotNull(handle[SheetScoresArgs.STEP]))
 
     private val _state = MutableStateFlow<SheetScoresUiState>(SheetScoresUiState.Loading)
-    val state: StateFlow<SheetScoresUiState> = _state.asStateFlow()
-    private val channel = Channel<SheetScoresEvent>(Channel.BUFFERED)
-    val events: Flow<SheetScoresEvent> = channel.receiveAsFlow()
+    val uiState: StateFlow<SheetScoresUiState> = _state.asStateFlow()
+    private val eventQueue = EventQueue<SheetScoresEvent>()
+    val events: Flow<SheetScoresEvent> = eventQueue.events
 
     private var workbook: SheetWorkbook? = null
     /** The own row in every tab where it is, for the cells being picked from. */
@@ -83,7 +65,11 @@ class SheetScoresViewModel @Inject constructor(
         start()
     }
 
-    fun retry() {
+    /**
+     * Downloads the sheet again (the retry button; every mode does the same). Ignored while an action runs: sheet
+     * actions go one at a time, so a refresh never replaces a pick or a save in flight.
+     */
+    fun refresh(mode: RefreshMode) {
         if (job?.isActive == true) return
         start()
     }
@@ -172,7 +158,7 @@ class SheetScoresViewModel @Inject constructor(
             is AppResult.Success -> _state.value = SheetScoresUiState.Done
             is AppResult.Failure -> {
                 _state.value = fallback
-                channel.send(SheetScoresEvent.SaveFailed(result.error.toUiText()))
+                eventQueue.send(SheetScoresEvent.SaveFailed(result.error.toUiText()))
             }
         }
     }

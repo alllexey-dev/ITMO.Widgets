@@ -31,6 +31,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
@@ -599,7 +600,7 @@ class RecordbookVisualTest {
             screenshot("sport-recovered")
             repository.hasSportPeriod = false
             scenario.onActivity {
-                ViewModelProvider(it.supportFragmentManager.findFragmentByTag("detail")!!)[RecordbookSubjectViewModel::class.java].refresh()
+                ViewModelProvider(it.supportFragmentManager.findFragmentByTag("detail")!!)[RecordbookSubjectViewModel::class.java].refresh(RefreshMode.Pull)
             }
             settle()
             scenario.onActivity {

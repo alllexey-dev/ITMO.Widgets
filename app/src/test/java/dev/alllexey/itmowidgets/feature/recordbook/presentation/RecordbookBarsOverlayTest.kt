@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
@@ -42,11 +43,11 @@ class RecordbookBarsOverlayTest {
     private val marks = FakeMarkTrackingRepository()
     private fun model(state: SavedStateHandle = SavedStateHandle()) = RecordbookViewModel(myItmo, bars, preference, state,
         RecordbookSportResolver(FakeSportScoreRepository()), FixedAcademicTime(LocalDate.of(2026, 9, 7)), marks, sheets = FakeSheetScoresRepository())
-    private val content get() = model().let { it.ensureDataLoaded(); it }
+    private val content get() = model().let { it.refresh(RefreshMode.Silent); it }
 
     @Test fun `disabled overlay never asks BARS`() = runTest {
         val vm = content; advanceUntilIdle()
-        assertFalse(vm.barsEnabled.value)
+        assertFalse(vm.uiState.value.barsEnabled)
         assertTrue(bars.periodRequests.isEmpty())
         assertEquals(75.0, (vm.uiState.value as RecordbookUiState.Content).subjects.first().score!!, 0.0)
     }
@@ -65,8 +66,8 @@ class RecordbookBarsOverlayTest {
         assertNull(state.subjects[1].barsJournal)
         assertEquals(recordbookSubject(id = 43L, name = "Физическая культура и спорт (элективная)"), state.subjects[1])
         assertTrue(preference.enabled)
-        val restored = model(); restored.ensureDataLoaded(); advanceUntilIdle()
-        assertTrue(restored.barsEnabled.value)
+        val restored = model(); restored.refresh(RefreshMode.Silent); advanceUntilIdle()
+        assertTrue(restored.uiState.value.barsEnabled)
         assertEquals(91.5, (restored.uiState.value as RecordbookUiState.Content).subjects[0].score!!, 0.0)
     }
     @Test fun `BARS failure keeps MyITMO values and reports it separately`() = runTest {
@@ -79,7 +80,7 @@ class RecordbookBarsOverlayTest {
         assertNull(state.refreshError)
         assertEquals(75.0, state.subjects[0].score!!, 0.0)
         bars.subjects = AppResult.Success(listOf(barsSubject()))
-        vm.refresh(); advanceUntilIdle()
+        vm.refresh(RefreshMode.Pull); advanceUntilIdle()
         assertNull((vm.uiState.value as RecordbookUiState.Content).barsError)
     }
     @Test fun `disabling drops the overlay without waiting for a slow BARS reply`() = runTest {
@@ -132,7 +133,7 @@ class RecordbookBarsOverlayTest {
     @Test fun `toggle before the first load wins over the stored value`() = runTest {
         preference.enabled = true
         val vm = model(); vm.setBarsEnabled(false); advanceUntilIdle()
-        assertFalse(vm.barsEnabled.value)
+        assertFalse(vm.uiState.value.barsEnabled)
         assertTrue(bars.periodRequests.isEmpty())
     }
 

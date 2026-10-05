@@ -17,8 +17,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -30,6 +32,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openSubjectLinks
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.openLink
 import dev.alllexey.itmowidgets.databinding.FragmentRecordbookSubjectBinding
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectEvent
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SheetLinkOption
@@ -45,7 +48,7 @@ class RecordbookSubjectFragment : Fragment() {
     private val viewModel: RecordbookSubjectViewModel by viewModels()
     private lateinit var adapter: SubjectHubAdapter
     private val barsLogin = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (it.resultCode == Activity.RESULT_OK) viewModel.refresh()
+        if (it.resultCode == Activity.RESULT_OK) viewModel.refresh(RefreshMode.Force)
     }
     private var lastRefreshError: AppError? = null
     private var lastBarsError: AppError? = null
@@ -59,8 +62,8 @@ class RecordbookSubjectFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.toolbar.setNavigationOnClickListener { closeScreen() }
         ViewCompat.setAccessibilityHeading(binding.title, true)
-        binding.stateAction.setOnClickListener { viewModel.refresh() }
-        adapter = SubjectHubAdapter({ viewModel.refresh() }, SubjectHubActions(
+        binding.stateAction.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
+        adapter = SubjectHubAdapter({ viewModel.refresh(RefreshMode.Force) }, SubjectHubActions(
             onConfirmBinding = viewModel::confirmBinding,
             onRejectProposal = viewModel::rejectProposal,
             onRetryLessons = viewModel::retryLessons,
@@ -79,11 +82,14 @@ class RecordbookSubjectFragment : Fragment() {
         binding.recyclerView.adapter = adapter
         binding.recyclerView.itemAnimator = null
         binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh() })
+        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh(RefreshMode.Pull) })
         viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.linkErrors.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { error ->
-            Snackbar.make(binding.root, error.messageRes(), Snackbar.LENGTH_SHORT).show()
+        viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
+            when (event) {
+                is RecordbookSubjectEvent.VoteFailed ->
+                    Snackbar.make(binding.root, event.error.messageRes(), Snackbar.LENGTH_SHORT).show()
+            }
         }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
@@ -138,16 +144,16 @@ class RecordbookSubjectFragment : Fragment() {
             errorSnackbar?.dismiss()
             errorSnackbar = refreshError?.let {
                 Snackbar.make(binding.root, getString(R.string.recordbook_refresh_error, getString(it.messageRes())), Snackbar.LENGTH_LONG)
-                    .setAction(R.string.common_retry) { viewModel.refresh() }.also(Snackbar::show)
+                    .setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }.also(Snackbar::show)
             } ?: barsError?.let { error ->
-                recordbookBarsSnackbar(binding.root, error, { viewModel.refresh() }) {
+                recordbookBarsSnackbar(binding.root, error, { viewModel.refresh(RefreshMode.Force) }) {
                     barsLogin.launch(Intent(requireContext(), BarsLoginActivity::class.java))
                 }
             }
             lastRefreshError = refreshError
             lastBarsError = barsError
         }
-        val semester = requireArguments().getInt(RecordbookSubjectViewModel.ARG_SEMESTER)
+        val semester = requireArguments().getInt(RecordbookSubjectArgs.SEMESTER)
         when (state) {
             RecordbookSubjectUiState.Loading -> {
                 binding.title.text = null

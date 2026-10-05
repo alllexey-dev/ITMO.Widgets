@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -52,7 +53,7 @@ class RecordbookViewModelTest {
         FixedAcademicTime(LocalDate.parse(date)), marks, sheets)
 
     @Test fun `loads current academic period without asking sport for regular subjects`() = runTest {
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertEquals(3, (vm.uiState.value as RecordbookUiState.Content).selection.period.semester)
         assertEquals(0, sport.periodRequests)
     }
@@ -67,14 +68,14 @@ class RecordbookViewModelTest {
             recordbookSubject(), recordbookSubject(id = 43, name = "Тестовый предмет 2").copy(disciplineId = 2),
             recordbookSubject(id = 44, name = "Тестовый предмет 3").copy(disciplineId = 3),
         ))
-        val vm = model(sheets = sheets); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(sheets = sheets); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
 
         assertEquals(mapOf(1L to "66,3"), (vm.uiState.value as RecordbookUiState.Content).sheetTotals)
     }
 
     @Test fun `a new sheet total reaches the open list without a request or a download`() = runTest {
         val sheets = FakeSheetScoresRepository()
-        val vm = model(sheets = sheets); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(sheets = sheets); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         val requests = repository.subjectRequests.size
         assertEquals(emptyMap<Long, String>(), (vm.uiState.value as RecordbookUiState.Content).sheetTotals)
 
@@ -88,25 +89,25 @@ class RecordbookViewModelTest {
     }
 
     @Test fun `academic override selects spring even when server actual is autumn`() = runTest {
-        val vm = model(date = "2026-06-01"); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(date = "2026-06-01"); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertEquals(2, (vm.uiState.value as RecordbookUiState.Content).selection.period.semester)
     }
 
     @Test fun `restores explicitly selected historical period`() = runTest {
         val vm = model(SavedStateHandle(mapOf<String, Any>("recordbook_program_id" to 1L, "recordbook_semester" to 1)))
-        vm.ensureDataLoaded(); advanceUntilIdle()
+        vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertEquals(1, (vm.uiState.value as RecordbookUiState.Content).selection.period.semester)
     }
 
     @Test fun `renders real empty catalog instead of not found error`() = runTest {
         repository.programs = AppResult.Success(emptyList())
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
-        assertEquals(RecordbookUiState.Empty, vm.uiState.value)
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+        assertEquals(RecordbookUiState.Empty(), vm.uiState.value)
     }
 
     @Test fun `catalog failure is retryable`() = runTest {
         repository.programs = AppResult.Failure(AppError.Network)
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertEquals(RecordbookUiState.Error(AppError.Network), vm.uiState.value)
     }
 
@@ -115,7 +116,7 @@ class RecordbookViewModelTest {
         repository.cachedSubjects = listOf(recordbookSubject(name = "Из кэша"))
         val gate = CompletableDeferred<AppResult<List<RecordbookProgram>>>()
         repository.programLoader = { gate.await() }
-        val vm = model(); vm.ensureDataLoaded(); runCurrent()
+        val vm = model(); vm.refresh(RefreshMode.Silent); runCurrent()
         val seeded = vm.uiState.value as RecordbookUiState.Content
         assertFalse(seeded.refreshing)
         assertEquals("Из кэша", seeded.subjects.single().name)
@@ -128,14 +129,14 @@ class RecordbookViewModelTest {
 
     @Test fun `a cached catalog without the selected period still starts loading`() = runTest {
         repository.cachedPrograms = listOf(recordbookProgram())
-        val vm = model(); vm.ensureDataLoaded()
+        val vm = model(); vm.refresh(RefreshMode.Silent)
         assertTrue(vm.uiState.value is RecordbookUiState.Loading)
     }
 
     @Test fun `refresh keeps content and ends spinner even when identical result arrives`() = runTest {
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         val before = vm.uiState.value
-        vm.refresh()
+        vm.refresh(RefreshMode.Pull)
         assertTrue((vm.uiState.value as RecordbookUiState.Content).refreshing)
         advanceUntilIdle()
         assertEquals(before, vm.uiState.value)
@@ -143,9 +144,9 @@ class RecordbookViewModelTest {
     }
 
     @Test fun `repeated failed refresh keeps previous values and clears spinner`() = runTest {
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         repository.subjects = AppResult.Failure(AppError.Network)
-        vm.refresh(); vm.refresh(); advanceUntilIdle()
+        vm.refresh(RefreshMode.Pull); vm.refresh(RefreshMode.Pull); advanceUntilIdle()
         val state = vm.uiState.value as RecordbookUiState.Content
         assertFalse(state.refreshing)
         assertEquals(AppError.Network, state.refreshError)
@@ -153,7 +154,7 @@ class RecordbookViewModelTest {
     }
 
     @Test fun `rapid period selection cancels old result and cannot mix periods`() = runTest {
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         val oldRequest = CompletableDeferred<AppResult<List<dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject>>>()
         repository.subjectLoader = { semester -> if (semester == 1) oldRequest.await() else AppResult.Success(listOf(recordbookSubject(semester.toLong()))) }
         vm.selectPeriod(1, 1); runCurrent()
@@ -168,14 +169,14 @@ class RecordbookViewModelTest {
     @Test fun `sport failure does not hide official grades or mark PE passed`() = runTest {
         repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Физическая культура и спорт (элективная)").copy(rate = null)))
         sport.periods = AppResult.Failure(AppError.Network)
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         val state = vm.uiState.value as RecordbookUiState.Content
         assertEquals(RecordbookSportState.Error, state.sport)
         assertNull(state.subjects.single().rate)
     }
 
     @Test fun `same period does not trigger another request`() = runTest {
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         vm.selectPeriod(1, 3); advanceUntilIdle()
         assertEquals(listOf(3), repository.subjectRequests)
     }
@@ -192,14 +193,14 @@ class RecordbookViewModelTest {
     @Test fun `physical education short of points early in the semester stays in the regular list`() = runTest {
         repository.subjects = AppResult.Success(listOf(recordbookSubject(), pe))
         sportPeriodEndingOn("2026-12-28")
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertTrue((vm.uiState.value as RecordbookUiState.Content).attention.isEmpty())
     }
 
     @Test fun `physical education four weeks before the end needs attention with the missing points`() = runTest {
         repository.subjects = AppResult.Success(listOf(recordbookSubject(), pe))
         sportPeriodEndingOn("2026-12-28")
-        val vm = model(date = "2026-12-01"); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(date = "2026-12-01"); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         val state = vm.uiState.value as RecordbookUiState.Content
         assertEquals(mapOf(7L to RecordbookAttentionReason.SportShort(60)), state.attention)
     }
@@ -207,7 +208,7 @@ class RecordbookViewModelTest {
     @Test fun `a credited physical education never needs attention`() = runTest {
         repository.subjects = AppResult.Success(listOf(pe.copy(rate = "зачет")))
         sportPeriodEndingOn("2026-12-28")
-        val vm = model(date = "2026-12-01"); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(date = "2026-12-01"); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertTrue((vm.uiState.value as RecordbookUiState.Content).attention.isEmpty())
     }
 
@@ -217,7 +218,7 @@ class RecordbookViewModelTest {
             RecordbookControl(1, "Лабораторная 1", 8.0, 5.0, 10.0, true, null, null),
             RecordbookControl(2, "КР 1", 3.0, 6.0, 15.0, true, null, null)
         )
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertEquals(mapOf(42L to RecordbookAttentionReason.BelowMinimum("КР 1")),
             (vm.uiState.value as RecordbookUiState.Content).attention)
     }
@@ -228,7 +229,7 @@ class RecordbookViewModelTest {
             recordbookSubject(id = 2).copy(rate = null, absent = true),
             recordbookSubject(id = 3)
         ))
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertEquals(mapOf(1L to RecordbookAttentionReason.Failed, 2L to RecordbookAttentionReason.Absent),
             (vm.uiState.value as RecordbookUiState.Content).attention)
     }
@@ -236,7 +237,7 @@ class RecordbookViewModelTest {
     @Test fun `unread marks of the listed half-year mark their subjects whatever the case and ё`() = runTest {
         repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Тестовый предмет по химии")))
         marks.news.value = listOf(markNews("ТЕСТОВЫЙ ПРЕДМЁТ ПО ХИМИИ"), markNews("Другой предмет", half = StudyHalf(2025, 2)))
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertEquals(setOf(subjectNameKey("Тестовый предмет по химии")), (vm.uiState.value as RecordbookUiState.Content).newSubjects)
 
         repository.subjects = AppResult.Success(listOf(recordbookSubject(name = "Тестовый предмет по химии")))
@@ -247,7 +248,7 @@ class RecordbookViewModelTest {
     }
 
     @Test fun `a new unread mark reaches the open list without a request`() = runTest {
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         val requests = repository.programRequests to repository.subjectRequests.size
         assertTrue((vm.uiState.value as RecordbookUiState.Content).newSubjects.isEmpty())
 
@@ -258,7 +259,7 @@ class RecordbookViewModelTest {
     }
 
     @Test fun `only a loaded list of the current half-year advances the My ITMO snapshot`() = runTest {
-        val vm = model(); vm.ensureDataLoaded(); advanceUntilIdle()
+        val vm = model(); vm.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertEquals(listOf(FakeMarkTrackingRepository.SeenMyItmo(TEST_HALF, 1L, 3, listOf(recordbookSubject()))), marks.seenMyItmo)
 
         vm.selectPeriod(1L, 2); advanceUntilIdle()
@@ -268,18 +269,18 @@ class RecordbookViewModelTest {
         repository.subjects = AppResult.Failure(AppError.Network)
         val failed = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), SavedStateHandle(),
             RecordbookSportResolver(sport), FixedAcademicTime(LocalDate.of(2026, 9, 7)), failing, FakeSheetScoresRepository())
-        failed.ensureDataLoaded(); advanceUntilIdle()
+        failed.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertTrue(failed.uiState.value is RecordbookUiState.Error)
         assertTrue(failing.seenMyItmo.isEmpty())
     }
 
     @Test fun `the summary waits for the first final grade or credit`() = runTest {
         repository.subjects = AppResult.Success(listOf(recordbookSubject(id = 1).copy(rate = null), recordbookSubject(id = 2).copy(rate = null, score = null)))
-        val midSemester = model(); midSemester.ensureDataLoaded(); advanceUntilIdle()
+        val midSemester = model(); midSemester.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertFalse((midSemester.uiState.value as RecordbookUiState.Content).showSummary)
 
         repository.subjects = AppResult.Success(listOf(recordbookSubject(id = 1).copy(rate = "зачет"), recordbookSubject(id = 2).copy(rate = null)))
-        val session = model(); session.ensureDataLoaded(); advanceUntilIdle()
+        val session = model(); session.refresh(RefreshMode.Silent); advanceUntilIdle()
         assertTrue((session.uiState.value as RecordbookUiState.Content).showSummary)
     }
 }
