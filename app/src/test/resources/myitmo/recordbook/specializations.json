@@ -1,0 +1,24 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "main_plan": 50001,
+      "specialization_name": "Синтетическая программа",
+      "semesters": [
+        {
+          "study_year": "2025/2026",
+          "semester": 3,
+          "course": 2,
+          "actual": true
+        },
+        {
+          "study_year": "2024/2025",
+          "semester": 2,
+          "course": 1,
+          "actual": false
+        }
+      ]
+    }
+  ]
+}

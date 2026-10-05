@@ -1,0 +1,31 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "name": " Тестовая дисциплина ",
+      "discipline_id": 70001,
+      "est_id": 60001,
+      "current_score": 71.5,
+      "rate": "4/C",
+      "attempt": 1,
+      "control_type": "Экзамен",
+      "control_type_id": 2,
+      "exam_date": "2026-01-15T10:00:00+03:00",
+      "have_tree": true,
+      "lms_link": null,
+      "teacher": { "surname": "Тестовый", "name": "Преподаватель", "patronymic": "Синтетический" }
+    },
+    {
+      "name": "Вторая дисциплина",
+      "discipline_id": 70002,
+      "est_id": 60002,
+      "current_score": null,
+      "rate": null,
+      "attempt": 0,
+      "control_type": "Зачёт",
+      "control_type_id": 1,
+      "have_tree": false
+    }
+  ]
+}

@@ -1,12 +1,17 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.demo
 
+import dev.alllexey.itmoapi.itmoid.TokenSet
+import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
+import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.unreachableMyItmo
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
+import io.ktor.client.engine.mock.MockEngine
+import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -22,7 +27,7 @@ class RecordbookDemoGateTest {
 
     @Test
     fun `the program, subjects and control points come from the demo set`() = runTest {
-        val repository = RecordbookRepositoryImpl(unreachableMyItmo(), FixedAcademicTime(), FakeDemoMode(active = true), dispatchers = dispatchers)
+        val repository = RecordbookRepositoryImpl(unreachableMyItmoClient(), FixedAcademicTime(), FakeDemoMode(active = true), dispatchers = dispatchers)
 
         val program = (repository.getPrograms() as AppResult.Success).value.single()
         val current = program.periods.single { it.actual }
@@ -37,4 +42,15 @@ class RecordbookDemoGateTest {
         assertTrue(controls.any { it.parentId != null })
         assertEquals(algorithms.score!!, controls.filter { it.parentId == null }.sumOf { it.score ?: 0.0 }, 0.001)
     }
+
+    /** MyItmoApi 2.x whose every request, token read included, fails the test. */
+    private fun unreachableMyItmoClient(): MyItmoClient = MyItmoClientFactory.create(
+        storage = object : TokenStorage {
+            override suspend fun read(): TokenSet? = throw AssertionError("The demo recordbook read the ITMO session")
+
+            override suspend fun write(tokens: TokenSet?) = throw AssertionError("The demo recordbook wrote the ITMO session")
+        },
+        engine = MockEngine { request -> throw AssertionError("The demo recordbook asked ${request.url.host}${request.url.encodedPath}") },
+        clock = Clock.System
+    )
 }

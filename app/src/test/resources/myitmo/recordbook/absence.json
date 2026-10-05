@@ -1,0 +1,17 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "name": "Синтетическая дисциплина без результата",
+      "discipline_id": 70003,
+      "est_id": 60003,
+      "current_score": null,
+      "rate": null,
+      "attempt": 0,
+      "control_type": "Экзамен",
+      "control_type_id": 2,
+      "have_tree": false
+    }
+  ]
+}
