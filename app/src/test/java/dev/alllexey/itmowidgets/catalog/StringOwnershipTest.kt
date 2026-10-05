@@ -21,10 +21,11 @@ class StringOwnershipTest {
         .first { File(it, "src/main/AndroidManifest.xml").isFile }
     private val sources = File(module, "src")
     private val resources = File(sources, "main/res")
+    private val sharedModules = File(module.parentFile, "shared").listFiles { file -> file.isDirectory }.orEmpty()
+        .sortedBy { it.name }
     // A file moved to a shared module's composeResources keeps its name and owner (TC-16a androidExport).
     private val catalog by lazy {
-        val moved = File(module.parentFile, "shared").listFiles().orEmpty()
-            .map { File(it, "src/commonMain/composeResources/values") }
+        val moved = sharedModules.map { File(it, "src/commonMain/composeResources/values") }
         (listOf(File(resources, "values")) + moved)
             .flatMap { dir -> dir.listFiles { file -> file.name.startsWith("strings") }.orEmpty().toList() }
             .sortedBy { it.name }
@@ -37,6 +38,14 @@ class StringOwnershipTest {
     private val kotlinUsers by lazy {
         PRODUCTION_SETS.flatMap { set -> File(sources, "$set/java").walkTopDown().filter { it.extension == "kt" } }
             .map { it to it.readText() }
+    }
+    // Kotlin of the shared modules reads its strings through the module's generated Res (KM-09b).
+    private val sharedKotlinUsers by lazy {
+        sharedModules.flatMap { shared ->
+            File(shared, "src").listFiles { set -> set.name.endsWith("Main") }.orEmpty()
+                .flatMap { set -> File(set, "kotlin").walkTopDown().filter { it.extension == "kt" }.toList() }
+                .map { Triple(it, sharedUnits(shared.name), it.readText()) }
+        }
     }
     private val layoutUnits by lazy {
         val bindings = layouts.keys.associateBy { binding(it) }
@@ -56,12 +65,19 @@ class StringOwnershipTest {
     fun `strings xml is split into owner files`() {
         assertFalse("strings.xml is split; add strings to strings_<file>.xml", File(resources, "values/strings.xml").exists())
         assertEquals(CATALOG_FILES.map { "strings_$it.xml" }.toSet(), catalog.map { it.name }.toSet())
+        val core = File(module.parentFile, "shared/core/src/commonMain/composeResources/values")
+        assertEquals(
+            SHARED_FILES.map { File(core, "strings_$it.xml") }.toSet(),
+            catalog.filter { unitOfCatalog(it) in SHARED_FILES }.toSet()
+        )
     }
 
     @Test
     fun `every string id is defined once`() {
-        val names = sources.listFiles().orEmpty()
-            .flatMap { set -> File(set, "res").listFiles { dir -> dir.name.startsWith("values") }.orEmpty().toList() }
+        val resourceDirs = sources.listFiles().orEmpty().map { File(it, "res") } +
+            sharedModules.map { File(it, "src/commonMain/composeResources") }
+        val names = resourceDirs
+            .flatMap { res -> res.listFiles { dir -> dir.name.startsWith("values") }.orEmpty().toList() }
             .flatMap { dir -> dir.listFiles { file -> file.extension == "xml" }.orEmpty().toList() }
             .flatMap { file -> entries(file).map { it.getAttribute("name") } }
         assertEquals(emptyList<String>(), names.groupBy { it }.filterValues { it.size > 1 }.keys.sorted())
@@ -86,6 +102,14 @@ class StringOwnershipTest {
             (references(text, "string") + references(text, "plurals")).forEach { id ->
                 val owner = fileOf[id]
                 if (owner != null && owner !in SHARED_FILES && owner != unit) misuse += "${file.name} ($unit): $id of $owner"
+            }
+        }
+        sharedKotlinUsers.forEach { (file, units, text) ->
+            (resReferences(text, "string") + resReferences(text, "plurals")).forEach { id ->
+                val owner = fileOf[id]
+                if (owner != null && owner !in SHARED_FILES && owner !in units) {
+                    misuse += "${file.name} ($units): $id of $owner"
+                }
             }
         }
         layouts.forEach { (name, file) ->
@@ -148,6 +172,12 @@ class StringOwnershipTest {
         }
     }
 
+    /** `feature-<unit>` owns `strings_<unit>.xml`, feature-account the six account files; core and the kit none. */
+    private fun sharedUnits(module: String): Set<String> = when (module) {
+        "feature-account" -> ACCOUNT_FILES
+        else -> setOfNotNull(module.removePrefix("feature-").takeIf { module.startsWith("feature-") })
+    }
+
     private fun unitOfCatalog(file: File): String = file.nameWithoutExtension.removePrefix("strings_")
 
     private fun resourceFiles(type: String): Map<String, File> =
@@ -158,6 +188,9 @@ class StringOwnershipTest {
         return Regex("""(?:(?<![\w.])|(?<=itmowidgets\.))$alias\.$kind\.(\w+)""").findAll(text)
             .map { it.groupValues[1] }.toSet()
     }
+
+    private fun resReferences(text: String, kind: String): Set<String> =
+        Regex("""(?<![\w.])Res\.$kind\.(\w+)""").findAll(text).map { it.groupValues[1] }.toSet()
 
     private fun xmlReferences(text: String, kind: String): Set<String> =
         Regex("""([\w:]+)\s*=\s*"@$kind/(\w+)"""").findAll(text)
@@ -192,6 +225,7 @@ class StringOwnershipTest {
         )
         // The v2.3 modules; src/debug previews and the test source sets may show any module's screens.
         val PRODUCTION_SETS = listOf("main", "github", "play")
+        val ACCOUNT_FILES = setOf("auth", "onboarding", "me", "weblogin", "web", "update")
         val FEATURE_UNITS = CATALOG_FILES.associateWith { it } + mapOf("friendselector" to "social")
         val APP_LAYOUTS = setOf("activity_main")
         val APP_MENUS = setOf("bottom_nav")

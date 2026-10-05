@@ -27,8 +27,10 @@ kotlin {
     }
 }
 
-// The cross-feature strings stay Android resources of :app for its Views and the generated key -> R table; KM-09b
-// joins the rest of app/src/main/res/values/strings_common.xml to this file.
+// :app reads both files as Android resources: the platform strings for good (manifest, shortcuts, widget
+// descriptors and layouts, RemoteViews, notifications), the cross-feature strings until their last View or R.string
+// user goes; the generated key -> R table covers both (L05 KM-09b).
 itmowidgetsStrings {
     androidExport("values/strings_common.xml")
+    androidExport("values/strings_platform.xml")
 }
