@@ -85,8 +85,8 @@ jobs:
           retention-days: 14
 
   # L04 TC-14: the platform instrumentation list under Android Test Orchestrator on a Gradle Managed Device
-  # (ciAtd, the newest ATD image), which only CI creates. A scheduled run uses the default branch's copy of this
-  # file, so it checks out v2.3/next explicitly; a PR run tests the PR.
+  # (ciDevice, AOSP API 36; ATD has no quick settings tiles), which only CI creates. A scheduled run uses the
+  # default branch's copy of this file, so it checks out v2.3/next explicitly; a PR run tests the PR.
   platform-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 60

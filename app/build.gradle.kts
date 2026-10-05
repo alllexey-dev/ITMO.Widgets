@@ -39,13 +39,14 @@ android {
     testOptions {
         if (orchestrated) execution = "ANDROIDX_TEST_ORCHESTRATOR"
         // CI only (android-nightly.yml through `verify.sh ui @platform --managed-device`): a local run would create
-        // an AVD. The newest ATD image; aosp-atd has no Play services, which no listed platform test needs.
+        // an AVD. The full AOSP image, not ATD: QrTileFlowTest needs SystemUI's quick settings tile host, which the
+        // ATD image lacks (the tile is never added there). No listed platform test needs Play services.
         managedDevices {
             localDevices {
-                create("ciAtd") {
+                create("ciDevice") {
                     device = "Pixel 2"
                     apiLevel = 36
-                    systemImageSource = "aosp-atd"
+                    systemImageSource = "aosp"
                 }
             }
         }

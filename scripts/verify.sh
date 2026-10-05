@@ -30,7 +30,7 @@
 #   #method. It refuses unless ANDROID_SERIAL is emulator-<port> and the device reports ro.boot.qemu (or
 #   ro.kernel.qemu) = 1; emulator-5554 only from a worktree whose itmo-lane marker reads `integrator`.
 # - ui @platform runs the FQCNs of app/src/androidTest/platform-tests.txt with -Pitmo.orchestrator=true (Android
-#   Test Orchestrator, clearPackageData; L04 TC-14). --managed-device runs them on the Gradle Managed Device ciAtd
+#   Test Orchestrator, clearPackageData; L04 TC-14). --managed-device runs them on the Gradle Managed Device ciDevice
 #   instead of ANDROID_SERIAL and only with CI=true: locally it would create an AVD.
 # - Never runs --stop, publishToMavenLocal, connected* outside ui, or install*/uninstall* tasks.
 # - The last line of a finished run is `VERIFY A <mode> PASS|FAIL <secs>s <sha7>[+dirty]`.
@@ -45,7 +45,7 @@ REPO_LETTER=A
 KN_HEAP=3g
 # TC-14: the platform instrumentation list and the CI-only Gradle Managed Device of app/build.gradle.kts.
 PLATFORM_LIST=app/src/androidTest/platform-tests.txt
-MANAGED_DEVICE=ciAtd
+MANAGED_DEVICE=ciDevice
 
 refuse() { printf '%s: %s\n' "$me" "$*" >&2; exit 2; }
 note() { printf '%s: %s\n' "$me" "$*" >&2; }
