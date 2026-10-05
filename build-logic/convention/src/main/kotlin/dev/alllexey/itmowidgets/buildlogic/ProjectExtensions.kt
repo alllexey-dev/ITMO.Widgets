@@ -32,6 +32,10 @@ internal val Project.lintConfigFile: File
 internal val Project.usesCoreTestFixtures: Boolean
     get() = path == ":shared:core" || path.startsWith(":shared:feature-")
 
+/** Whether this module has a test source set of its own, besides [coreTestFixturesDir]. */
+internal val Project.hasOwnTestSources: Boolean
+    get() = listOf("commonTest", "androidHostTest").any { layout.projectDirectory.dir("src/$it").asFile.isDirectory }
+
 internal val Project.libs: VersionCatalog
     get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
 

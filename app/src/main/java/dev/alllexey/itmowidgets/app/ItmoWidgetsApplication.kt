@@ -5,6 +5,7 @@ import dagger.hilt.android.HiltAndroidApp
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticsCrashHandler
 import dev.alllexey.itmowidgets.core.diagnostics.FileAppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
+import dev.alllexey.itmowidgets.core.notification.create
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.notification.FcmWork
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking

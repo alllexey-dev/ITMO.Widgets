@@ -1,12 +1,11 @@
 package dev.alllexey.itmowidgets.core.storage
 
-import java.io.File
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 import okio.FileSystem
 import okio.IOException
 import okio.Path
-import okio.Path.Companion.toOkioPath
+import okio.use
 
 /**
  * A UTF-8 text file replaced as a whole: a write goes to `<name>.new`, is synced and then moved over the file.
@@ -18,10 +17,8 @@ import okio.Path.Companion.toOkioPath
  */
 class AtomicTextFile(
     private val path: Path,
-    private val fileSystem: FileSystem = FileSystem.SYSTEM
+    private val fileSystem: FileSystem = SystemFileSystem
 ) {
-
-    constructor(file: File) : this(file.toOkioPath())
 
     private val newPath = path.withSuffix(NEW_SUFFIX)
     private val legacyBackupPath = path.withSuffix(LEGACY_BACKUP_SUFFIX)

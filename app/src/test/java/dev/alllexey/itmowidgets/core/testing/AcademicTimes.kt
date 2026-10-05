@@ -9,25 +9,16 @@ import kotlinx.datetime.toLocalDateTime
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import kotlin.time.Instant
 import kotlin.time.toKotlinInstant
 
 private val MOSCOW: TimeZone = TimeZone.of("Europe/Moscow")
 
-/** An academic clock standing still at [at] in Moscow. */
-class FixedAcademicTime(
-    private val at: LocalDateTime = LocalDateTime.of(LocalDate.of(2026, 10, 7), LocalTime.NOON)
-) : AcademicTimeProvider {
-    /** The start of [date]. */
-    constructor(date: LocalDate) : this(date.atStartOfDay())
+/** [FixedAcademicTime] at a java.time [at], for tests not yet on kotlinx-datetime. */
+fun FixedAcademicTime(at: LocalDateTime): FixedAcademicTime = FixedAcademicTime(at.toKotlinLocalDateTime())
 
-    override val timeZone: TimeZone = MOSCOW
-
-    override fun today(): kotlinx.datetime.LocalDate = at.toLocalDate().toKotlinLocalDate()
-
-    override fun now(): Instant = at.toKotlinLocalDateTime().toInstant(timeZone)
-}
+/** [FixedAcademicTime] at the start of a java.time [date]. */
+fun FixedAcademicTime(date: LocalDate): FixedAcademicTime = FixedAcademicTime(date.toKotlinLocalDate())
 
 /** An academic clock in Moscow that a test moves by setting [current]. */
 class MutableAcademicTime(var current: LocalDateTime) : AcademicTimeProvider {

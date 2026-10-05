@@ -15,10 +15,6 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import javax.inject.Inject
 
-fun interface FcmTokenSync {
-    suspend fun sync()
-}
-
 fun interface FirebaseTokenProvider {
     suspend fun currentToken(): String
 }

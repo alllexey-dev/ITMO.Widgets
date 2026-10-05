@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.home.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.view.LayoutInflater
@@ -317,6 +318,8 @@ class HomeFeedAdapter(
 
     private object Diff : DiffUtil.ItemCallback<HomeCard>() {
         override fun areItemsTheSame(oldItem: HomeCard, newItem: HomeCard) = oldItem.kind == newItem.kind
+        // Every HomeCard is a data class; lint cannot see that since HomeCard comes from :shared:core.
+        @SuppressLint("DiffUtilEquals")
         override fun areContentsTheSame(oldItem: HomeCard, newItem: HomeCard) = oldItem == newItem
     }
 
