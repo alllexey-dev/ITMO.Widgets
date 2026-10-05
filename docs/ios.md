@@ -70,6 +70,55 @@ The ignored `iosApp/Config/Signing.local.xcconfig`, written by the integrator af
 last switches every target to its `.signed` entitlements, the only place for push and associated domains. No
 team ID is committed.
 
+## Data sharing
+
+The iOS platform classes live in `shared/core/src/iosMain/` and run only in the app process (and, per SP-16, the
+notification service's `SharedPush`); the widget extension reads files and never links Kotlin.
+
+| Store | Where | Class |
+|---|---|---|
+| App files (`AppDirectories.files`), DataStore `app_preferences` included | `Library/Application Support/files` in the app container, backed up | `IosAppDirectories` |
+| Cache (`AppDirectories.cache`) | `Library/Caches`, cleared by the system | `IosAppDirectories` |
+| No-backup files (`AppDirectories.noBackup`) | `Library/Application Support/no-backup`, excluded from backup | `IosAppDirectories` |
+| Files the extensions read | the App Group container | `AppGroupDirectory` |
+| Secrets | the Keychain | `KeychainSecureStore` |
+
+DataStore stays in the app container: it is single-process, so no extension opens it.
+
+App Group container. `AppGroupDirectory.resolve` uses the group in `AppGroupID`, then any group AltStore lists in
+`ALTAppGroups` (SP-23). When none resolves (an unsigned build) it falls back to `no-backup/app-group` in the app
+container, logs one warning per process and carries on; the extensions then see nothing.
+
+| File | Written by | Read by | Notes |
+|---|---|---|---|
+| `locks/<name>.lock` | `FileCrossProcessLock` | app, notification service | `flock(2)`; empty files, never deleted |
+| `<name>-v<N>.json` | `AppGroupSnapshotWriter` | widget extension, notification service | none yet; each card that adds a snapshot adds its row |
+
+- Snapshots hold `{"version": N, "value": ...}`. A write goes to a temporary file of its own and is renamed over
+  the old one, so a reader sees the old or the new snapshot, never a partial one; then the writer asks WidgetKit to
+  reload the given kinds through `WidgetReloader`, which Swift implements (WidgetKit has no Objective-C API). A
+  reader rejects a `version` above its own.
+- Lock trap (0xdead10cc): iOS kills a suspended process that holds a lock on a file in a shared container. A
+  `FileCrossProcessLock` is held only around the guarded call; a snapshot write takes no lock.
+
+Keychain. `KeychainSecureStore` keeps one generic-password item per `SecureStore` name: service
+`dev.alllexey.itmowidgets`, account = the name, access group = `KeychainGroup` from the process's own Info.plist,
+`kSecAttrAccessibleAfterFirstUnlock` (the notification service and background refresh read while the device is
+locked), never synchronised. Without the access-group entitlement the Keychain answers `errSecMissingEntitlement`
+(-34018); the store then uses the process's default group and logs that once. A Kotlin/Native test binary has no
+entitlements, so Keychain tests are the hosted `ITMOWidgetsTests/KeychainTests`.
+
+| Item (account) | Written by | Read by |
+|---|---|---|
+| none yet | | |
+
+Each card that stores a secret adds its row. Values are never logged.
+
+Network and log. `darwinHttpEngine()` is the Ktor engine of every iOS client: no cookie storage, no cookie
+handling, no URL cache (SP-15a, SP-15b); clients read cookies with Ktor's `setCookie()` and set
+`followRedirects = false` where a redirect must surface. `OsLogAppLog` writes `AppLog` to unified logging, subsystem
+= the bundle ID, category = the tag.
+
 ## Build and test
 
 Gradle and `xcodebuild` run only through `scripts/ios/test.sh` (or `scripts/verify.sh run|klibs`), which hold the
