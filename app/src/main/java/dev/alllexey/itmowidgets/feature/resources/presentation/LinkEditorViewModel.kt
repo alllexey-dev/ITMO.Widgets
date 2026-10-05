@@ -16,9 +16,8 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.ui.toUiText
+import dev.alllexey.itmowidgets.core.url.StrictUri
 import dev.alllexey.itmowidgets.feature.resources.domain.guessCategory
-import java.net.URI
-import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.uuid.Uuid
 
 /** One row of «Кто видит»: only me, one schedule flow of the viewer, or everybody. */
 sealed interface LinkAudienceOption {
@@ -78,7 +78,7 @@ class LinkEditorViewModel @Inject constructor(
         checkNotNull(handle[SubjectLinksArgs.SUBJECT_NAME]), checkNotNull(handle[SubjectLinksArgs.PERIOD_KEY]))
     private val editedId: String? = handle[SubjectLinksArgs.LINK_ID]
     /** Kept across process death so a retried save reaches the same link. */
-    private val id: String = editedId ?: handle.get<String>(KEY_NEW_ID) ?: UUID.randomUUID().toString().also { handle[KEY_NEW_ID] = it }
+    private val id: String = editedId ?: handle.get<String>(KEY_NEW_ID) ?: Uuid.random().toString().also { handle[KEY_NEW_ID] = it }
     private var categoryChosen = editedId != null
     private var prefilled = editedId == null
     private val _uiState = MutableStateFlow(LinkEditorUiState(editing = editedId != null))
@@ -153,7 +153,7 @@ class LinkEditorViewModel @Inject constructor(
     }
 
     private fun isHttpsLink(url: String): Boolean {
-        val uri = runCatching { URI(url) }.getOrNull() ?: return false
+        val uri = StrictUri.parse(url) ?: return false
         return uri.scheme.equals("https", ignoreCase = true) && !uri.host.isNullOrBlank() && uri.rawUserInfo == null
     }
 

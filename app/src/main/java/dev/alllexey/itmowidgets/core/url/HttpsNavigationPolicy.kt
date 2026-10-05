@@ -1,6 +1,4 @@
-package dev.alllexey.itmowidgets.core.util
-
-import java.net.URI
+package dev.alllexey.itmowidgets.core.url
 
 /**
  * What a sign-in WebView may navigate to: any https page, so that ITMO.ID can
@@ -10,7 +8,7 @@ import java.net.URI
 object HttpsNavigationPolicy {
 
     fun isNavigable(url: String): Boolean {
-        val uri = runCatching { URI(url) }.getOrNull() ?: return false
+        val uri = StrictUri.parse(url) ?: return false
         return uri.scheme.equals("https", ignoreCase = true) && !uri.host.isNullOrBlank()
     }
 }

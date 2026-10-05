@@ -29,7 +29,6 @@ import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
 import java.time.Clock
-import java.util.UUID
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -38,6 +37,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import kotlin.uuid.Uuid
 
 /**
  * Single-call clients of the demo session: the pass, the update offer, web sign-in, privacy and Backend sessions.
@@ -75,7 +75,7 @@ class DemoNetworkGateTest {
 
         assertNull(update.loadUpdate())
         assertEquals(AppResult.Failure(AppError.DemoUnavailable), webLogin.preview("ABCD2345"))
-        assertEquals(AppResult.Failure(AppError.DemoUnavailable), webLogin.approve(UUID.randomUUID()))
+        assertEquals(AppResult.Failure(AppError.DemoUnavailable), webLogin.approve(Uuid.random()))
     }
 
     @Test
@@ -103,7 +103,7 @@ class DemoNetworkGateTest {
 
         assertNull(update(optedOut, noDemo).loadUpdate())
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), webLogin.preview("ABCD2345"))
-        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), webLogin.approve(UUID.randomUUID()))
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), webLogin.approve(Uuid.random()))
         privacy.refreshSharingSettings()
         assertEquals(SharingSettingsState.Disabled, privacy.observeSharingSettings().first())
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), privacy.setScheduleVisibility(SharingVisibility.ALL))

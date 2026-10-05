@@ -21,7 +21,6 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +30,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
 
 @Singleton
 class TeacherReviewsRepositoryImpl @Inject constructor(
@@ -83,7 +84,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
     override suspend fun delete(isu: Int): AppResult<TeacherReviews> = mutate { widgetsApi.deleteMyTeacherReview(isu) }
 
     override suspend fun vote(isu: Int, reviewId: String, value: Int): AppResult<TeacherReviews> {
-        val id = reviewId.toUuid()
+        val id = reviewId.toWireId()
         if (id == null || value !in -1..1) return invalidInput()
         return mutate { widgetsApi.voteTeacherReview(id, ResourceVoteRequest(value)) }
     }
@@ -94,7 +95,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
         reason: ReviewReportReason,
         comment: String?,
     ): AppResult<TeacherReviews> {
-        val id = reviewId.toUuid() ?: return invalidInput()
+        val id = reviewId.toWireId() ?: return invalidInput()
         val note = comment?.trim()?.takeIf(String::isNotEmpty)
         if (note != null && TeacherReviewLimits.length(note) > TeacherReviewLimits.MAX_COMMENT) return invalidInput()
         return mutate { widgetsApi.reportTeacherReview(id, ModerationReportRequest(reason.toWire(), note)) }
@@ -171,7 +172,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun String.toUuid(): UUID? = runCatching { UUID.fromString(this) }.getOrNull()
+    private fun String.toWireId() = Uuid.parseOrNull(this)?.toJavaUuid()
 
     private fun invalidInput(): AppResult<TeacherReviews> = AppResult.Failure(AppError.Unknown())
 }

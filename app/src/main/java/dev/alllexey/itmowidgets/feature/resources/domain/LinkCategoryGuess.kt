@@ -1,14 +1,13 @@
 package dev.alllexey.itmowidgets.feature.resources.domain
 
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
-import java.net.URI
-import java.util.Locale
+import dev.alllexey.itmowidgets.core.url.StrictUri
 
 /** The category a pasted link most likely has, by its site; null when the site says nothing. */
 fun guessCategory(url: String): LinkCategory? {
     val text = url.trim().let { if ("://" in it) it else "https://$it" }
-    val uri = runCatching { URI(text) }.getOrNull() ?: return null
-    val host = uri.host?.lowercase(Locale.ROOT)?.removePrefix("www.") ?: return null
+    val uri = StrictUri.parse(text) ?: return null
+    val host = uri.host?.lowercase()?.removePrefix("www.") ?: return null
     val path = uri.path.orEmpty()
     fun on(domain: String) = host == domain || host.endsWith(".$domain")
     return when {

@@ -7,8 +7,8 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.util.HttpsNavigationPolicy
-import dev.alllexey.itmowidgets.core.util.TelegramLinks
+import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
+import dev.alllexey.itmowidgets.core.url.TelegramLinks
 
 /** Opens an https link outside the app (t.me in Telegram); without a handler a snackbar on [anchor] says so. */
 fun Fragment.openLink(url: String, anchor: View) {

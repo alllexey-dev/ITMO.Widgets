@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.core.location
 
-import java.net.URLEncoder
+import dev.alllexey.itmowidgets.core.url.UrlEncoding
 
 /** A place to show in any map app through a generic `geo:` URI; no provider is preferred. */
 data class MapDestination(
@@ -17,5 +17,5 @@ data class MapDestination(
         return "geo:0,0?q=${encode(address)}"
     }
 
-    private fun encode(value: String): String = URLEncoder.encode(value, Charsets.UTF_8.name()).replace("+", "%20")
+    private fun encode(value: String): String = UrlEncoding.percentEncode(value)
 }

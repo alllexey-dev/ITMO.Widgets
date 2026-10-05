@@ -11,7 +11,6 @@ import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import java.io.IOException
 import java.lang.reflect.Proxy
 import java.time.OffsetDateTime
-import java.util.UUID
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
@@ -20,6 +19,8 @@ import org.junit.Rule
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
 import dev.alllexey.itmowidgets.core.model.WebLoginPreview as WirePreview
 
 class WebLoginRepositoryImplTest {
@@ -29,7 +30,8 @@ class WebLoginRepositoryImplTest {
 
     private val dispatchers = mainDispatcherRule.appDispatchers
 
-    private val challenge = UUID.fromString("00000000-0000-0000-0000-000000000042")
+    private val challengeId = Uuid.parse("00000000-0000-0000-0000-000000000042")
+    private val challenge = challengeId.toJavaUuid()
     private val createdAt = OffsetDateTime.parse("2026-09-24T09:04:30Z")
     private val expiresAt = OffsetDateTime.parse("2026-09-24T09:06:30Z")
 
@@ -37,8 +39,8 @@ class WebLoginRepositoryImplTest {
         val api = FakeWebLoginApi().apply { preview = ApiResponse.success(WirePreview(challenge, " Chrome ", createdAt, expiresAt)) }
         val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
 
-        assertEquals(AppResult.Success(WebLoginPreview(challenge, "Chrome", createdAt, expiresAt)), repository.preview("ABCD2345"))
-        assertEquals(AppResult.Success(Unit), repository.approve(challenge))
+        assertEquals(AppResult.Success(WebLoginPreview(challengeId, "Chrome", createdAt, expiresAt)), repository.preview("ABCD2345"))
+        assertEquals(AppResult.Success(Unit), repository.approve(challengeId))
         assertEquals(listOf("webLoginPreview:ABCD2345", "approveWebLogin:$challenge"), api.calls)
     }
 
@@ -55,7 +57,7 @@ class WebLoginRepositoryImplTest {
         val repository = WebLoginRepositoryImpl(services(enabled = false), api.instance, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.preview("ABCD2345"))
-        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.approve(challenge))
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), repository.approve(challengeId))
         assertTrue(api.calls.isEmpty())
     }
 
@@ -65,7 +67,7 @@ class WebLoginRepositoryImplTest {
         val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
 
         assertEquals(AppResult.Failure(AppError.NotFound), repository.preview("ABCD2345"))
-        assertEquals(AppResult.Failure(AppError.NotFound), repository.approve(challenge))
+        assertEquals(AppResult.Failure(AppError.NotFound), repository.approve(challengeId))
     }
 
     @Test fun `network failures and error bodies are typed`() = runTest {

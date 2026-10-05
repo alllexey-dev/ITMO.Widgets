@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.auth.domain
 
-import dev.alllexey.itmowidgets.core.util.HttpsNavigationPolicy
-import java.net.URI
+import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
+import dev.alllexey.itmowidgets.core.url.StrictUri
 
 object ItmoAuthUrlPolicy {
 
@@ -11,14 +11,10 @@ object ItmoAuthUrlPolicy {
     fun isNavigable(url: String): Boolean = HttpsNavigationPolicy.isNavigable(url)
 
     fun isTokenCallback(url: String): Boolean {
-        val uri = parse(url) ?: return false
+        val uri = StrictUri.parse(url) ?: return false
         return uri.scheme.equals(HTTPS_SCHEME, ignoreCase = true) &&
             uri.host.equals(MY_ITMO_HOST, ignoreCase = true) &&
             uri.path == CALLBACK_PATH
-    }
-
-    private fun parse(url: String): URI? {
-        return runCatching { URI(url) }.getOrNull()
     }
 
     private const val HTTPS_SCHEME = "https"

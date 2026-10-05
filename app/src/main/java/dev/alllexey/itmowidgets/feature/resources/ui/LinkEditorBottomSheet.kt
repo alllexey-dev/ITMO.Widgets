@@ -26,7 +26,7 @@ import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.ui.clipboardText
 import dev.alllexey.itmowidgets.core.ui.lessonTypeNameRes
 import dev.alllexey.itmowidgets.core.ui.resolve
-import dev.alllexey.itmowidgets.core.util.HttpsNavigationPolicy
+import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
 import dev.alllexey.itmowidgets.databinding.ItemLinkAudienceOptionBinding
 import dev.alllexey.itmowidgets.databinding.SheetLinkEditorBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkAudienceOption

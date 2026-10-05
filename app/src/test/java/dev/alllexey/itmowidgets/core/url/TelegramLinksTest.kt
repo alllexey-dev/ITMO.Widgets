@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.core.util
+package dev.alllexey.itmowidgets.core.url
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
