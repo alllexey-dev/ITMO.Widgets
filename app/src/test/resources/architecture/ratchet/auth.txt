@@ -5,5 +5,3 @@ viewmodel-shape dev.alllexey.itmowidgets.feature.auth.presentation.AuthViewModel
 viewmodel-shape dev.alllexey.itmowidgets.feature.auth.presentation.InteractiveLoginViewModel
 
 presentation-imports-r dev.alllexey.itmowidgets.feature.auth.presentation.AuthViewModel
-
-domain-imports-java dev.alllexey.itmowidgets.feature.auth.domain.ItmoAuthUrlPolicy
