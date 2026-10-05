@@ -14,8 +14,8 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
-import java.time.LocalDate
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.minus
 
@@ -25,7 +25,7 @@ object DemoReviews {
     fun reviews(isu: Int, today: LocalDate): TeacherReviews {
         val teacher = DemoPeople.TEACHERS.firstOrNull { it.isu == isu }
             ?: return TeacherReviews(isu, emptyList(), null, canWrite = false, canVote = false, canReport = false, knownTeacher = false)
-        val month = YearMonth(today.year, today.monthValue)
+        val month = YearMonth(today.year, today.month)
         return TeacherReviews(
             isu = isu,
             reviews = REVIEWS[isu].orEmpty().mapIndexed { index, review -> review.toModel(teacher, index, month) },

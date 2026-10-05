@@ -29,9 +29,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import java.io.File
 import java.io.IOException
 import java.lang.reflect.Proxy
-import java.time.Clock
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -47,6 +45,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import kotlin.time.Clock
+import kotlin.time.toKotlinInstant
 import dev.alllexey.itmowidgets.core.model.resources.LinkCategory as WireCategory
 import dev.alllexey.itmowidgets.core.model.resources.LinkVisibility as WireVisibility
 import dev.alllexey.itmowidgets.core.model.resources.SubjectLink as WireLink
@@ -65,7 +65,7 @@ class SubjectLinksRepositoryImplTest {
     private val scope = ResourceScope(42, "Предмет", "2026-1")
     private val gson = ItmoWidgetsImpl(MyItmo()).gson
     private val now = OffsetDateTime.parse("2026-09-22T09:00:00Z")
-    private val clock = Clock.fixed(now.toInstant(), ZoneOffset.UTC)
+    private val clock = object : Clock { override fun now() = this@SubjectLinksRepositoryImplTest.now.toInstant().toKotlinInstant() }
     private val id = UUID.randomUUID().toString()
     private val url = "https://github.com/example"
 
@@ -81,6 +81,8 @@ class SubjectLinksRepositoryImplTest {
         assertEquals(id, restored.id)
         assertEquals("Лабы", restored.title)
         assertTrue(restored.local)
+        assertEquals(now.toInstant().toKotlinInstant(), restored.updatedAt)
+        assertTrue(File(folder, "cache.json").readText().contains("\"updatedAt\":${gson.toJson(now)}"))
     }
 
     @Test fun `without the opt-in shared actions and non-private visibility need the connection`() = runTest {

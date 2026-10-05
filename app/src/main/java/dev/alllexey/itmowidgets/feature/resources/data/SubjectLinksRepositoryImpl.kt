@@ -28,10 +28,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
-import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.core.url.StrictUri
-import java.time.Clock
-import java.time.OffsetDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
@@ -54,7 +51,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlin.time.toKotlinInstant
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import dev.alllexey.itmowidgets.core.model.resources.SubjectLink as WireLink
@@ -68,7 +65,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     private val storage: SubjectLinksFileStore,
     private val api: ItmoWidgetsApi,
     private val backend: BackendGate,
-    @param:WallClock private val clock: Clock,
+    private val clock: Clock,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers,
 ) : SubjectLinksRepository, SessionDataCleaner {
@@ -93,7 +90,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     }
 
     private fun demoSnapshot(scope: ResourceScope) =
-        DemoSubjectLinks.snapshot(scope, clock.instant().toKotlinInstant())
+        DemoSubjectLinks.snapshot(scope, clock.now())
 
     private fun observeStored(scope: ResourceScope): Flow<SubjectLinksState> = combine(
         state, backend.observeConnected().onEach { enabled = it }, loadError, scopeErrors, refreshing,
@@ -146,7 +143,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         if (!isEnabled()) {
             val onServer = current().scopes.values.any { cached -> cached.response.mine.any { it.id.toString() == id } }
             if (visibility != LinkVisibility.PRIVATE || onServer) throw Failure(AppError.CustomServicesDisabled)
-            val link = LocalLink(id, request, OffsetDateTime.ofInstant(clock.instant(), clock.zone))
+            val link = LocalLink(id, request, clock.now())
             mutate(generation) { it.copy(local = it.local + (id to link)) }
             return@attempt link.toModel()
         }
@@ -205,7 +202,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         }
 
     override fun observeRestrictions(): Flow<List<UserRestriction>> = combine(restrictions, backend.observeConnected(), flow {
-        while (true) { emit(clock.instant().toKotlinInstant()); delay(RESTRICTION_TICK_MILLIS) }
+        while (true) { emit(clock.now()); delay(RESTRICTION_TICK_MILLIS) }
     }) { rows, on, now -> if (!on) emptyList() else rows.filter { it.expiresAt.let { at -> at == null || at > now } } }
         .distinctUntilChanged()
 
