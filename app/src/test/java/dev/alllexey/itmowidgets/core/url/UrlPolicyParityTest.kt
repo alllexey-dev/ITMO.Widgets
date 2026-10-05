@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.core.url
 
+import dev.alllexey.itmowidgets.core.navigation.AppLink
+import dev.alllexey.itmowidgets.core.navigation.AppLinks
 import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.feature.auth.domain.ItmoAuthUrlPolicy
@@ -10,12 +12,13 @@ import java.net.URI
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.Locale
+import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
  * Every policy that gates a WebView or a link decides on the corpus exactly as its `java.net.URI` version did
- * ([Released], copied from 2.2 unchanged). SH-1a1 adds `AppLinks.parse` here when it moves onto [StrictUri].
+ * ([Released], copied from 2.2 unchanged).
  */
 class UrlPolicyParityTest {
 
@@ -43,8 +46,35 @@ class UrlPolicyParityTest {
 
     @Test fun `link category guesses`() = assertParity(Released::guessCategory, ::guessCategory)
 
-    private fun <T> assertParity(released: (String) -> T, common: (String) -> T) {
-        for (input in inputs) assertEquals(input, released(input), common(input))
+    @Test fun `app links`() = assertParity(Released::appLink, AppLinks::parse, inputs + appLinkInputs())
+
+    private fun <T> assertParity(released: (String) -> T, common: (String) -> T, cases: List<String> = inputs) {
+        for (input in cases) assertEquals(input, released(input), common(input))
+    }
+
+    /** Links under the app prefixes, which the shared corpus rarely reaches, with the corpus traps around them. */
+    private fun appLinkInputs(): List<String> {
+        val schemes = listOf("https://", "HTTPS://", "Https://", "http://", "https:/", "https:\\\\")
+        val authorities = listOf(
+            "widgets.alllexey.dev", "dev.widgets.alllexey.dev", "WIDGETS.ALLLEXEY.DEV", "Dev.Widgets.Alllexey.Dev",
+            "widgets.alllexey.dev.", "user@widgets.alllexey.dev", "@widgets.alllexey.dev", "widgets.alllexey.dev:443",
+            "widgets.alllexey.dev:", "widgets.alllexey.dev:99999999999", "widgets.alllexey.dev%2F@evil.invalid",
+            "widgets.alllexey.dev\\@evil.invalid", "wіdgets.alllexey.dev", "widgets_alllexey.dev", "[::1]",
+            "widgets.alllexey.dev.example.com", "example.com",
+        )
+        val paths = listOf(
+            "/u/123456", "/u/123456/", "/u/123456//", "/u/0", "/u/012", "/u/-1", "/u/+1", "/u/2147483647",
+            "/u/2147483648", "/u/%31", "/u/1%2F", "/u%2F1", "/U/1", "/u/１", "/u/1;x", "/u/ 1", "/u/1\\", "/u/",
+            "/u", "/sport/9223372036854775807", "/sport/9223372036854775808", "/sport/1/", "/sport/0", "/sport/x",
+            "/sport/p/1", "/sport/p/1/", "/sport/p/", "/sport/p", "/sport/P/1", "/sport/p/%31", "/sport//1",
+            "/sport/p/1/2", "/sports/1", "//u/1", "/app/x", "/", "",
+        )
+        val tails = listOf("", "", "?utm=tg", "#top", "?a=1#b", "?", "#", "#a#b", "?a b", "?a=[b]")
+        val grid = schemes.flatMap { scheme ->
+            authorities.flatMap { authority -> paths.map { path -> scheme + authority + path } }
+        }
+        val random = Random(17)
+        return grid.map { it + tails.random(random) } + grid.map { it + tails.random(random) }
     }
 
     /** The 2.2 policies on `java.net.URI`, `URLEncoder` and `URLDecoder`. */
@@ -134,6 +164,27 @@ class UrlPolicyParityTest {
             }
             if (text.contains("://")) return null
             return normalize(text)
+        }
+
+        private val isu = Regex("[1-9][0-9]{0,9}")
+        private val lessonId = Regex("[1-9][0-9]{0,18}")
+
+        fun appLink(url: String): AppLink? {
+            val uri = parse(url) ?: return null
+            if (!uri.scheme.equals("https", ignoreCase = true)) return null
+            if (uri.host?.lowercase() !in setOf("widgets.alllexey.dev", "dev.widgets.alllexey.dev")) return null
+            val path = uri.rawPath.orEmpty()
+            fun identifier(prefix: String, format: Regex): String? =
+                path.removePrefix(prefix).removeSuffix("/").takeIf(format::matches)
+            return when {
+                path.startsWith("/u/") -> identifier("/u/", isu)
+                    ?.toIntOrNull()?.let(AppLink::Profile) ?: AppLink.Malformed
+                path.startsWith("/sport/p/") -> identifier("/sport/p/", lessonId)
+                    ?.toLongOrNull()?.let(AppLink::PredictedSportLesson) ?: AppLink.Malformed
+                path.startsWith("/sport/") -> identifier("/sport/", lessonId)
+                    ?.toLongOrNull()?.let(AppLink::SportLesson) ?: AppLink.Malformed
+                else -> null
+            }
         }
 
         fun guessCategory(url: String): LinkCategory? {
