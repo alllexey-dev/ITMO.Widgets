@@ -9,6 +9,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmowidgets.BuildConfig
+import dev.alllexey.itmowidgets.core.debug.DebugBuild
 import dev.alllexey.itmowidgets.core.debug.DefaultSportLessonTemplateController
 import dev.alllexey.itmowidgets.core.debug.DefaultSportScoreOverrideProvider
 import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
@@ -28,6 +30,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DebugModule {
+
+    @Provides
+    @Singleton
+    fun provideDebugBuild(): DebugBuild = DebugBuild(isDebug = BuildConfig.DEBUG)
 
     @Provides
     @Singleton

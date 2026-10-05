@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.upgrade.stores
 import dev.alllexey.itmowidgets.core.debug.FileSportLessonTemplateStore
 import dev.alllexey.itmowidgets.core.debug.FileSportScoreOverrideStore
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
+import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.core.time.FileAcademicTimeOverrideStore
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
@@ -15,7 +16,7 @@ import org.junit.Assert.assertTrue
 object DebugOverrideUpgrade {
 
     fun check(fixture: Upgrade22Fixture) {
-        val debug = File(fixture.noBackupFilesDir, "debug")
+        val debug = File(AndroidAppDirectories(fixture.context).noBackup.toFile(), "debug")
         assertTrue(FileSportLessonTemplateStore(File(debug, "sport_lesson_templates")).isEnabled())
         assertEquals(
             SportScoreOverride(attendances = 7, bonus = 3),
