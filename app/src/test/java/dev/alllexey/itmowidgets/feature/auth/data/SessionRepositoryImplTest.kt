@@ -316,20 +316,25 @@ class SessionRepositoryImplTest {
         val deviceSession = FakeDeviceSession(order, unregisterError)
         val settings = DemoPreferences(InMemoryPreferencesDataStore())
         val tokenSync = FakeTokenSync()
+        val transitions = SessionTransitions(
+            myItmo = client,
+            currentUserProvider = object : CurrentUserProvider {
+                override suspend fun getCurrentUser(): CurrentUser? = currentUser
+            },
+            dataCleaners = { setOf(cleaner) },
+            lifecycleEffects = effects,
+            backendIdentitySync = identitySync,
+            backendDeviceSession = deviceSession,
+            fcmTokenSync = tokenSync,
+            diagnostics = RecordingDiagnostics(),
+            demoPreferences = settings,
+            dispatchers = dispatchers
+        )
         val repository = SessionRepositoryImpl(
             tokenStore = storage,
             myItmo = client,
             clock = clock,
-            currentUserProvider = object : CurrentUserProvider {
-                override suspend fun getCurrentUser(): CurrentUser? = currentUser
-            },
-            dataCleaners = setOf(cleaner),
-            lifecycleEffects = effects,
-            backendIdentitySync = identitySync,
-            fcmTokenSync = tokenSync,
-            backendDeviceSession = deviceSession,
-            diagnostics = RecordingDiagnostics(),
-            demoPreferences = settings,
+            transitions = transitions,
             demo = DataStoreDemoMode(settings),
             dispatchers = dispatchers
         )
