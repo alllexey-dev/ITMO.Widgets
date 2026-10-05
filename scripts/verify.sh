@@ -13,6 +13,10 @@
 #   never nested, with --max-workers=$ITMO_MAX_WORKERS from the slot. ITMO_SLOT_SH overrides the slot script.
 # - JAVA_HOME defaults to JDK 21 and ANDROID_HOME to ~/Library/Android/sdk on macOS; the Gradle daemon JDK comes
 #   from gradle/gradle-daemon-jvm.properties either way.
+# - Every Gradle part gets -PmyItmoApiDir=<the worktree's MyItmoApi pin> (ADR 0024), read from
+#   $(git rev-parse --absolute-git-dir)/itmo-myitmoapi-dir, which `lane new|pin` writes. A missing pin or one off
+#   gradle/myitmoapi.ref warns with the `lane pin` command and builds on. Skipped when MYITMOAPI_DIR is set (CI) or a
+#   run passes its own -PmyItmoApiDir or -PmyItmoApiFromCentral.
 # - ui accepts FQCNs or bare class names (resolved to the one file under app/src/androidTest*/), optionally with
 #   #method. It refuses unless ANDROID_SERIAL is emulator-<port> and the device reports ro.boot.qemu (or
 #   ro.kernel.qemu) = 1; emulator-5554 only from a worktree whose itmo-lane marker reads `integrator`.
@@ -84,8 +88,37 @@ slot_part() { # kind cmd...
 gradle_part() { # kind gradle-args...
   local kind=$1
   shift
-  note "[$kind slot] ./gradlew $*"
-  "$slot_sh" "$kind" -- "$self" __gradle "$@"
+  note "[$kind slot] ./gradlew $*${pin_arg:+ $pin_arg}"
+  "$slot_sh" "$kind" -- "$self" __gradle "$@" ${pin_arg:+"$pin_arg"}
+}
+
+# ---- MyItmoApi pin (ADR 0024, L04 TC-05) -----------------------------------------------------------------
+
+# Sets pin_arg to -PmyItmoApiDir=<pin> for the worktree's pin; warns and leaves it empty when there is none.
+pin_arg=""
+resolve_pin() { # gradle-args of a run...
+  local ref_file="$root/gradle/myitmoapi.ref" ref git_dir record pin pin_head arg fix
+  [ -f "$ref_file" ] || return 0
+  [ -z "${MYITMOAPI_DIR:-}" ] || return 0
+  for arg in "$@"; do
+    case "$arg" in -PmyItmoApiDir=* | -PmyItmoApiFromCentral=*) return 0 ;; esac
+  done
+  ref=$(head -n 1 "$ref_file" | tr -d ' \t\r')
+  fix="run \`~/proj/.wt/bin/lane pin $root\` to build against MyItmoApi ${ref:0:7}"
+  if ! git_dir=$(git rev-parse --absolute-git-dir 2> /dev/null); then
+    note "warning: not a git worktree, building without a MyItmoApi pin"
+    return 0
+  fi
+  record="$git_dir/itmo-myitmoapi-dir"
+  pin=$(head -n 1 "$record" 2> /dev/null | tr -d '\r')
+  if [ -z "$pin" ] || [ ! -d "$pin" ]; then
+    note "warning: no MyItmoApi pin for this worktree (${pin:-no $record}); building without one. $fix"
+    return 0
+  fi
+  pin_head=$(git -C "$pin" rev-parse HEAD 2> /dev/null)
+  [ "$pin_head" = "$ref" ] ||
+    note "warning: MyItmoApi pin $pin is at ${pin_head:-an unknown commit}, not at the ref. $fix"
+  pin_arg="-PmyItmoApiDir=$pin"
 }
 
 no_args() { [ $# -eq 0 ] || refuse "$mode takes no arguments (got: $*)"; }
@@ -262,6 +295,8 @@ run_run() {
 }
 
 # ---- main ------------------------------------------------------------------------------------------------
+
+if [ "$mode" = run ]; then resolve_pin "$@"; else resolve_pin; fi
 
 case "$mode" in
   quick) no_args "$@"; run_quick ;;
