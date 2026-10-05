@@ -13,6 +13,78 @@
         }
       }
     },
+    "ios_background_refresh_off" : {
+      "comment" : "Generated from strings_ios.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выключено в настройках iOS. Без него проверки не приходят вовремя."
+          }
+        }
+      }
+    },
+    "ios_background_refresh_restricted" : {
+      "comment" : "Generated from strings_ios.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запрещено ограничениями устройства"
+          }
+        }
+      }
+    },
+    "ios_background_refresh_title" : {
+      "comment" : "Generated from strings_ios.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновление контента"
+          }
+        }
+      }
+    },
+    "ios_control_qr_description" : {
+      "comment" : "Generated from strings_ios.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открывает QR-пропуск"
+          }
+        }
+      }
+    },
+    "ios_widget_qr_expired" : {
+      "comment" : "Generated from strings_ios.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите, чтобы обновить"
+          }
+        }
+      }
+    },
+    "ios_widget_qr_reveal" : {
+      "comment" : "Generated from strings_ios.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите, чтобы показать"
+          }
+        }
+      }
+    },
     "marks_bars_login_text" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",

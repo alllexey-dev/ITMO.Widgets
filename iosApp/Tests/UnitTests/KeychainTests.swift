@@ -7,7 +7,7 @@ import XCTest
 final class KeychainTests: XCTestCase {
     private let service = "dev.alllexey.itmowidgets"
     private let itemName = "keychain-tests-item"
-    private var store: CoreSecureStore!
+    private var store: SecureStore!
 
     override func setUp() {
         super.setUp()

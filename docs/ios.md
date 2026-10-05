@@ -38,14 +38,51 @@ xcodegen --version
 | `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI) |
 | `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin) |
 | `iosApp/Extensions/NotificationService/` | the notification service extension `ITMOWidgetsNotificationService` (no Kotlin) |
+| `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images |
+| `iosApp/Strings/` | `strings_ios*.xml`: catalog files with copy only iOS shows |
 | `iosApp/Tests/UnitTests/` | `ITMOWidgetsTests`, hosted in the app |
 | `iosApp/Tests/SnapshotTests/` | `SnapshotTests`, hosted in the app: SwiftUI and widget entry view snapshots (swift-snapshot-testing), references in `__Snapshots__/` |
 | `iosApp/Tests/UITests/` | `UITests` (XCUITest): smoke tests and review screenshots |
-| `shared/ios/` | the umbrella framework `Shared` (static) over every shared module |
-| `scripts/ios/` | `env.sh` (pins), `test.sh` (build and test), `screenshots.sh` (review screenshots) |
+| `shared/ios/` | the umbrella framework `Shared` (static) over every shared module; it exports `:shared:core` |
+| `scripts/ios/` | `env.sh` (pins), `test.sh` (build and test), `check-*.sh` (source checks), `screenshots.sh` (review screenshots) |
 
 Targets use directory globs: a new Swift file in a target directory needs no `project.yml` edit. Only the app links
 `Shared`; the extensions stay Swift-only (memory limits, ADR 0023).
+
+## Strings and icons
+
+The catalog is the Android resource files ([ADR 0028](decisions/0028-strings-and-icons.md)); iOS reads generated
+copies and never holds Russian text in Swift.
+
+- Tables. `scripts/verify.sh run -- :app:exportAppleStrings` writes `iosApp/Shared/Strings/*.xcstrings`, one per
+  catalog file name; `strings_platform.xml` and `iosApp/Strings/strings_ios*.xml` go to `Localizable` (APNs resolves a
+  `loc-key` only there), `InfoPlist` and `AppShortcuts` rows come from `build-logic/strings/apple-tables.properties`.
+  Run it after changing a catalog file and commit the result; never edit a table by hand.
+- iOS-only copy (widget and Control texts, the Background App Refresh row, usage descriptions) lives in
+  `iosApp/Strings/strings_ios.xml`, Android syntax; later cards add `strings_ios_<area>.xml`. An Info.plist value
+  is an `InfoPlist.<key>` row, a shortcut phrase an `AppShortcuts.<phrase>` row.
+- Language. Every bundle has only the `ru` localization (`CFBundleDevelopmentRegion = ru`; XcodeGen also lists
+  `Base` in `knownRegions`, which holds no files), so tables, Info.plist values and plural rules are Russian on an
+  English iPhone. Compose Multiplatform instead takes plural rules from `NSLocale.preferredLanguages` ("5 пары"):
+  `App.init` calls `IosStrings.installAppLocale()` first, which puts `ru` first in the process's `AppleLanguages`,
+  launch arguments included (`designsystem/locale/AppLocale.kt`). Extensions link no Kotlin and need no override.
+- Swift. `STRING_CATALOG_GENERATE_SYMBOLS` gives each table typed symbols:
+  `Text(.StringsCommon.scheduleLessonCount(5))`, `.iosWidgetQrReveal` for `Localizable`. A shared `UiText` resolves
+  with `text.resolved` (`Sources/Support/UiText+Resolve.swift`): `Localizable` first, then the file tables; a plural
+  takes its count as argument 1, `%lld` an `Int64`, `%@` a `String`, a nested `UiText` is resolved first, and the
+  Russian locale formats. `AppStrings.string`/`plural` do the same for a key.
+- Compose resources. The Compose plugins on `shared/ios` copy every module's `composeResources` into
+  `ITMOWidgets.app/compose-resources` during `embedAndSignAppleFrameworkForXcode`.
+- Icons. `iosApp/Shared/Symbols/AppSymbol.swift` (generated from `docs/design/icons.tsv`) names an SF Symbol per
+  `shared` row; a `custom.*` name is a symbol image in `Brands.xcassets`, drawn from the Android brand vector into
+  an SF Symbols 3.0 template (Regular-M only). `AppIcon.symbol` maps the Kotlin icon, `AppSymbol.image` gives the
+  SwiftUI `Image`.
+- `scripts/ios/check-sources.sh` (run by `test.sh`) fails on Cyrillic in the Swift of `Sources`, `Extensions` and
+  `Shared`, on an App Group or team ID literal in that Swift or in `shared/**/src/iosMain`, and on tables or
+  `AppSymbol.swift` whose keys or cases differ from the catalog; `checkStringCatalog` compares the texts byte for
+  byte in every Android build.
+- `ITMOWidgetsTests/StringsTests` checks all of it on the English simulator: the tables and the Swift resolver with
+  English preferred again, the CMP resolvers after the override, every `AppSymbol` image.
 
 ## Identifiers
 

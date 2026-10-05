@@ -9,6 +9,11 @@ options:
 configFiles:
   Debug: Config/Base.xcconfig
   Release: Config/Base.xcconfig
+settings:
+  base:
+    # String catalogs (IO-20): the generated tables under Shared/Strings become `LocalizedStringResource` symbols.
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    STRING_CATALOG_GENERATE_SYMBOLS: YES
 
 # Swift packages, each at an exact version (lane L18 Pins).
 packages:
@@ -27,6 +32,8 @@ targets:
     platform: iOS
     sources:
       - path: Sources
+      # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20).
+      - path: Shared
     configFiles:
       Debug: Config/App.xcconfig
       Release: Config/App.xcconfig
@@ -55,6 +62,8 @@ targets:
     platform: iOS
     sources:
       - path: Extensions/Widgets
+      # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20).
+      - path: Shared
     configFiles:
       Debug: Config/Widgets.xcconfig
       Release: Config/Widgets.xcconfig
@@ -66,6 +75,8 @@ targets:
     platform: iOS
     sources:
       - path: Extensions/NotificationService
+      # The generated string tables and AppSymbol.swift, and the custom symbol images (IO-20).
+      - path: Shared
     configFiles:
       Debug: Config/NotificationService.xcconfig
       Release: Config/NotificationService.xcconfig

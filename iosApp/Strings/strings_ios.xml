@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy only iOS shows (ADR 0028): exported to Localizable.xcstrings, never to Android. Later L18 cards add
+     strings_ios_<area>.xml beside this file. -->
+<resources>
+    <!-- QR widget states the Android widget shows without text (IO-10a). -->
+    <string name="ios_widget_qr_reveal">Нажмите, чтобы показать</string>
+    <string name="ios_widget_qr_expired">Нажмите, чтобы обновить</string>
+    <!-- QR Control in Control Center and on the Lock Screen (IO-11). -->
+    <string name="ios_control_qr_description">Открывает QR-пропуск</string>
+    <!-- Background App Refresh row in settings (IO-08a). -->
+    <string name="ios_background_refresh_title">Обновление контента</string>
+    <string name="ios_background_refresh_off">Выключено в настройках iOS. Без него проверки не приходят вовремя.</string>
+    <string name="ios_background_refresh_restricted">Запрещено ограничениями устройства</string>
+</resources>
