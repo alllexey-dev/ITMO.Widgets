@@ -9,7 +9,6 @@ import android.provider.CalendarContract.Events
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
@@ -41,6 +40,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toKotlinLocalDate
+import okio.Path.Companion.toOkioPath
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -158,7 +158,7 @@ class CalendarSyncProviderTest {
         val foreign = insertForeignEvent(other)
         val written = listOf(event("lesson-1", 10), event("lesson-2", 11)).map { SyncedEvent(calendars.insert(other, it), it) }
         written.forEach { asAdapter(it.eventId, ContentValues().apply { put(Events._SYNC_ID, "server-${it.eventId}") }) }
-        val store = CalendarSyncFileStore(folder, Gson())
+        val store = CalendarSyncFileStore(folder.toOkioPath())
         folder.mkdirs()
         store.write(
             StoredCalendarSync(
@@ -203,7 +203,7 @@ class CalendarSyncProviderTest {
         days = listOf(day(MONDAY, lesson(1), lesson(2, LocalTime.of(11, 40))))
         enabled().sync()
         val own = calendars.findOwn()!!
-        val store = CalendarSyncFileStore(folder, Gson())
+        val store = CalendarSyncFileStore(folder.toOkioPath())
         // The file forgets the ids, as after a process death between an insert and its write.
         store.write(store.read()!!.copy(events = emptyList()))
 
@@ -229,7 +229,7 @@ class CalendarSyncProviderTest {
         assertNull(calendars.findOwn())
         assertTrue(events(own).isEmpty())
         assertFalse(repository.isEnabled())
-        assertTrue(CalendarSyncFileStore(folder, Gson()).read()!!.events.isEmpty())
+        assertTrue(CalendarSyncFileStore(folder.toOkioPath()).read()!!.events.isEmpty())
     }
 
     @Test
@@ -261,7 +261,7 @@ class CalendarSyncProviderTest {
     private fun repository() = CalendarSyncRepositoryImpl(
         calendars,
         OwnScheduleSource { _, _ -> days },
-        CalendarSyncFileStore(folder, Gson()),
+        CalendarSyncFileStore(folder.toOkioPath()),
         Time,
         BuildingDirectory(emptyList()),
         DeviceDispatchers

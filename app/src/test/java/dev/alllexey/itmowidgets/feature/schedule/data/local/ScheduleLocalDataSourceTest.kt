@@ -1,22 +1,17 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.local
 
-import android.content.Context
-import android.content.ContextWrapper
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.gson.GsonBuilder
-import dev.alllexey.itmowidgets.core.utils.LocalDateTypeAdapter
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import java.io.File
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.util.UUID
 import java.util.zip.GZIPInputStream
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -25,15 +20,19 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import okio.Path
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.rules.TemporaryFolder
 
-@RunWith(AndroidJUnit4::class)
 class ScheduleLocalDataSourceTest {
+
+    @get:Rule val temporary = TemporaryFolder()
 
     @Test
     fun replacementPublishesOnlyTheCompleteRangeSnapshot() = withCache { fixture ->
@@ -91,12 +90,13 @@ class ScheduleLocalDataSourceTest {
             local.save(schedule, null)
             assertEquals(listOf(schedule), withTimeout(5_000) { snapshots.receive() })
             val diskEntry = GZIPInputStream(File(local.cacheDir, "default_$DATE.json").inputStream()).use {
-                fixture.gson.fromJson(String(it.readBytes()), CacheEntry::class.java)
+                ScheduleStoreJson.decodeFromString<StoredCacheEntry>(String(it.readBytes()))
             }
-            assertEquals(DATE, diskEntry.date)
+            assertNull(diskEntry.userIsu)
+            assertEquals(DATE.toString(), diskEntry.date)
             assertEquals(fixture.clock.millis(), diskEntry.timestamp)
-            assertEquals(schedule, fixture.gson.fromJson(diskEntry.data, DaySchedule::class.java))
-            assertEquals(diskEntry, local.get(null, DATE))
+            assertEquals(schedule, ScheduleStoreJson.decodeFromString<StoredDaySchedule>(diskEntry.data).toModel())
+            assertEquals(diskEntry.toEntry(), local.get(null, DATE))
 
             local.clear()
             assertEquals(emptyList<DaySchedule>(), withTimeout(5_000) { snapshots.receive() })
@@ -164,23 +164,17 @@ class ScheduleLocalDataSourceTest {
     }
 
     private fun withCache(block: suspend CoroutineScope.(Fixture) -> Unit) = runBlocking {
-        val application = ApplicationProvider.getApplicationContext<Context>()
-        val directory = File(application.cacheDir, "schedule-local-test-${UUID.randomUUID()}")
-        assertTrue(directory.mkdirs())
-        val isolatedContext = object : ContextWrapper(application) {
-            override fun getCacheDir(): File = directory
-        }
-        try {
-            block(Fixture(isolatedContext))
-        } finally {
-            directory.deleteRecursively()
-        }
+        block(Fixture(temporary.root.toOkioPath()))
     }
 
-    private class Fixture(val context: Context) {
-        val gson = GsonBuilder().registerTypeAdapter(LocalDate::class.java, LocalDateTypeAdapter()).create()
+    private class Fixture(root: Path) {
         val clock = MutableClock()
-        fun local() = ScheduleLocalDataSourceImpl(gson, clock, context, DeviceDispatchers)
+        val directories = object : AppDirectories {
+            override val files = root / "files"
+            override val cache = root / "cache"
+            override val noBackup = root / "no_backup"
+        }
+        fun local() = ScheduleLocalDataSourceImpl(clock, directories, RealDispatchers)
     }
 
     private class MutableClock : Clock() {
@@ -194,5 +188,8 @@ class ScheduleLocalDataSourceTest {
 
     private companion object {
         val DATE: LocalDate = LocalDate.of(2026, 9, 7)
+
+        /** Real threads, as on a device: the cache's mutex and flows are what is under test. */
+        val RealDispatchers = AppDispatchers(io = Dispatchers.IO, default = Dispatchers.Default, main = Dispatchers.Unconfined)
     }
 }

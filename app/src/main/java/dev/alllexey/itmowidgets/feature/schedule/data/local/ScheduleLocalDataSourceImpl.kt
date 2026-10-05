@@ -1,10 +1,8 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.local
 
-import android.content.Context
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.schedule.ScheduleUtil
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.flow.Flow
@@ -32,13 +30,12 @@ private fun datesBetween(start: LocalDate, end: LocalDate): List<LocalDate> =
     ScheduleUtil.generateDates(start.toKotlinLocalDate(), end.toKotlinLocalDate()).map { it.toJavaLocalDate() }
 
 class ScheduleLocalDataSourceImpl @Inject constructor(
-    private val gson: Gson,
     @param:WallClock private val clock: Clock,
-    @ApplicationContext context: Context,
+    directories: AppDirectories,
     private val dispatchers: AppDispatchers
 ) : ScheduleLocalDataSource {
 
-    val cacheDir = File(context.cacheDir, "schedule_cache")
+    val cacheDir: File = (directories.cache / "schedule_cache").toFile()
 
     // A map is published only after a complete mutation. Null remembers a cache miss.
     private val memoryCache = MutableStateFlow<Map<String, CacheEntry?>>(emptyMap())
@@ -161,39 +158,39 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
     private fun key(userIsu: Int?, date: LocalDate) =
         "${userIsu ?: "default"}_$date"
 
-    private fun deserialize(entry: CacheEntry): DaySchedule {
-        return gson.fromJson(entry.data, DaySchedule::class.java)
-    }
+    private fun deserialize(entry: CacheEntry): DaySchedule =
+        ScheduleStoreJson.decodeFromString<StoredDaySchedule>(entry.data).toModel()
 
     private fun cacheEntry(schedule: DaySchedule, userIsu: Int?, timestamp: Long) = CacheEntry(
         userIsu = userIsu,
         date = schedule.date,
         timestamp = timestamp,
-        data = gson.toJson(schedule)
+        data = ScheduleStoreJson.encodeToString(schedule.toStored())
     )
 
     private fun file(key: String) = File(cacheDir, "$key.json")
 
     private fun writeToDisk(key: String, entry: CacheEntry) {
         try {
-            val json = gson.toJson(entry)
+            val json = ScheduleStoreJson.encodeToString(entry.toStored())
             GZIPOutputStream(file(key).outputStream()).use {
                 it.write(json.toByteArray())
             }
         } catch (_: Exception) {}
     }
 
+    /** A missing, unreadable or undecodable entry is a miss, so [deserialize] never sees one it cannot read. */
     private fun readFromDisk(key: String): CacheEntry? {
         return try {
-            GZIPInputStream(file(key).inputStream()).use {
-                gson.fromJson(String(it.readBytes()), CacheEntry::class.java)
-            }
+            val json = GZIPInputStream(file(key).inputStream()).use { String(it.readBytes()) }
+            ScheduleStoreJson.decodeFromString<StoredCacheEntry>(json).toEntry().also(::deserialize)
         } catch (_: Exception) {
             null
         }
     }
 }
 
+/** A cached day in memory; [data] is the JSON of a [StoredDaySchedule]. */
 data class CacheEntry(
     val userIsu: Int?,
     val date: LocalDate,

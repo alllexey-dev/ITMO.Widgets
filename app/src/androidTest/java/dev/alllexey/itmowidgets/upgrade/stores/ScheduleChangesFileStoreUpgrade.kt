@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.upgrade.stores
 
+import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.StoredChange
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.StoredLesson
@@ -11,8 +12,12 @@ import dev.alllexey.itmowidgets.upgrade.Captured22.SUBJECT_ID
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 
-/** `files/schedule_changes/state.json` (format 1): the snapshot and the found change. */
+/**
+ * `files/schedule_changes/state.json` (format 1): the snapshot and the found change. Gson wrote it; kotlinx reads it
+ * and writes format 1 back.
+ */
 object ScheduleChangesFileStoreUpgrade {
 
     fun check(fixture: Upgrade22Fixture) {
@@ -53,7 +58,11 @@ object ScheduleChangesFileStoreUpgrade {
             )
         )
 
-        val store = ScheduleChangesFileStore(File(fixture.filesDir, "schedule_changes"), fixture.gson)
+        val store = ScheduleChangesFileStore(AndroidAppDirectories(fixture.context))
         assertEquals(expected, store.read())
+        store.write(expected)
+        val written = File(fixture.filesDir, "schedule_changes/state.json").readText()
+        assertTrue(written, written.startsWith("{\"format\":1,"))
+        assertEquals(expected, ScheduleChangesFileStore(AndroidAppDirectories(fixture.context)).read())
     }
 }

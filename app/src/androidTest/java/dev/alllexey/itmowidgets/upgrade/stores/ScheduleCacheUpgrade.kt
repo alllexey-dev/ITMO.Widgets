@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.upgrade.stores
 
+import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSourceImpl
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
@@ -12,9 +13,13 @@ import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 
-/** Cache `cache/schedule_cache/123456_2026-10-05.json` (gzip): read or ignored, never a crash. */
+/**
+ * Cache `cache/schedule_cache/123456_2026-10-05.json` (gzip, Gson): read or ignored, never a crash. kotlinx writes the
+ * same shape back, which a new instance reads.
+ */
 object ScheduleCacheUpgrade {
 
     fun check(fixture: Upgrade22Fixture): Unit = runBlocking {
@@ -52,8 +57,13 @@ object ScheduleCacheUpgrade {
             )
         )
 
-        val cache = ScheduleLocalDataSourceImpl(fixture.gson, fixture.clock, fixture.context, DeviceDispatchers)
+        val directories = AndroidAppDirectories(fixture.context)
+        val cache = ScheduleLocalDataSourceImpl(fixture.clock, directories, DeviceDispatchers)
         val days = cache.observeRange(Captured22.ISU, date, date).first()
         assertTrue("schedule_cache read as $days", days.isEmpty() || days == listOf(expected))
+
+        cache.save(expected, Captured22.ISU)
+        val reopened = ScheduleLocalDataSourceImpl(fixture.clock, directories, DeviceDispatchers)
+        assertEquals(listOf(expected), reopened.observeRange(Captured22.ISU, date, date).first())
     }
 }

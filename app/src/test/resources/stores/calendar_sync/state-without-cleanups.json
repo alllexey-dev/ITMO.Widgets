@@ -1,0 +1,1 @@
+{"format":1,"enabled":true,"target":"phone","calendarId":12,"calendarName":"Учёба","calendarAccount":"student@example.org","events":[{"key":"lesson-1","eventId":501,"start":1791180000000,"end":1791185400000,"title":"Тестовый предмет","location":"1506"}]}

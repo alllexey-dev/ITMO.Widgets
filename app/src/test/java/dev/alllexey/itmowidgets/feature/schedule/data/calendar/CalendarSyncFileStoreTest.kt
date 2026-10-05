@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import java.io.File
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -16,7 +16,7 @@ class CalendarSyncFileStoreTest {
     @get:Rule val temporary = TemporaryFolder()
 
     private val directory get() = File(temporary.root, "calendar_sync")
-    private val store get() = CalendarSyncFileStore(directory, Gson())
+    private val store get() = CalendarSyncFileStore(directory.toOkioPath())
 
     @Test
     fun `the written state reads back and no temporary file is left`() {
@@ -31,7 +31,7 @@ class CalendarSyncFileStoreTest {
         store.write(state)
 
         assertEquals(state, store.read())
-        assertFalse(File(directory, "state.json.tmp").exists())
+        assertFalse(File(directory, "state.json.new").exists())
         assertEquals(
             CalendarSyncState(enabled = true),
             state.toModel()
