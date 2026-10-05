@@ -6,63 +6,19 @@ import dagger.Provides
 import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSource
-import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSourceImpl
-import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSource
-import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSourceImpl
-import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
-import dev.alllexey.itmowidgets.feature.qr.data.repository.QrAppearancePreferencesImpl
-import dev.alllexey.itmowidgets.feature.qr.data.repository.QrTilePreferencesImpl
-import dev.alllexey.itmowidgets.feature.qr.data.QrWidgetStateStoreImpl
-import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
-import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
-import dev.alllexey.itmowidgets.feature.qr.domain.QrTilePreferences
-import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCache
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCacheImpl
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import javax.inject.Singleton
 
+/**
+ * The QR pass's Android rendering. The pass data is Koin's (`qrModule` in `:shared:feature-qr`); the widget, the
+ * tile and the worker read it through `di/bridge/QrBridge.kt`.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class QrModule {
-
-    @Binds
-    @Singleton
-    abstract fun bindQrCodeLocalDataSource(
-        impl: QrCodeLocalDataSourceImpl
-    ): QrCodeLocalDataSource
-
-    @Binds
-    @Singleton
-    abstract fun bindQrCodeRemoteDataSource(
-        impl: QrCodeRemoteDataSourceImpl
-    ): QrCodeRemoteDataSource
-
-    @Binds
-    @Singleton
-    abstract fun bindQrCodeRepository(
-        impl: QrCodeRepositoryImpl
-    ): QrCodeRepository
-
-    @Binds
-    @IntoSet
-    @Singleton
-    abstract fun bindQrSessionDataCleaner(
-        impl: QrCodeRepositoryImpl
-    ): SessionDataCleaner
-
-    @Binds
-    @Singleton
-    abstract fun bindQrAppearancePreferences(
-        impl: QrAppearancePreferencesImpl
-    ): QrAppearancePreferences
-
-    @Binds
-    abstract fun bindQrTilePreferences(
-        impl: QrTilePreferencesImpl
-    ): QrTilePreferences
 
     @Binds
     @Singleton
@@ -76,12 +32,6 @@ abstract class QrModule {
     abstract fun bindQrBitmapSessionDataCleaner(
         impl: QrBitmapCacheImpl
     ): SessionDataCleaner
-
-    @Binds
-    @Singleton
-    abstract fun bindQrWidgetStateStore(
-        impl: QrWidgetStateStoreImpl
-    ): QrWidgetStateStore
 
     companion object {
         /** The generator lives in `:shared:feature-qr` `commonMain`, which has no `@Inject`. */

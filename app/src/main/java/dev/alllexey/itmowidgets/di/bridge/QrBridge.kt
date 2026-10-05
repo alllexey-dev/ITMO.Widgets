@@ -1,35 +1,40 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
-import dagger.hilt.EntryPoint
+import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
-import org.koin.android.ext.koin.androidContext
-import org.koin.dsl.module
+import dev.alllexey.itmowidgets.feature.qr.domain.QrTilePreferences
+import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
 
 /**
- * Hilt to Koin for the QR pass screen. Hilt constructs the one `@Singleton` repository that the widget, the worker
- * and its `SessionDataCleaner` contribution also hold, so the screen's Koin ViewModel shares it (one graph per
- * binding); the colour setting is the one the widget reads. The data moves to `:shared:feature-qr` in KM-11g1.
+ * Koin to Hilt for the QR pass data, which `qrModule` constructs: `QrWidgetEntryPoint`, `QrToolkit`,
+ * `QrColorResolver`, `QrTileController`, `QrWidgetUpdateWorker` and the session effects still take them from Hilt.
+ * Unscoped on purpose: Koin owns the lifetime and returns its single every time, so the widget and the screen share
+ * one repository and one cached pass. `ensureStarted`, because a worker or a widget broadcast can run before
+ * `Application.onCreate()`.
  */
-@EntryPoint
+@Module
 @InstallIn(SingletonComponent::class)
-interface QrBridgeEntryPoint {
-    fun qrCodeRepository(): QrCodeRepository
+object QrBridge {
 
-    fun qrAppearancePreferences(): QrAppearancePreferences
+    @Provides
+    fun qrCodeRepository(@ApplicationContext context: Context): QrCodeRepository =
+        KoinStarter.ensureStarted(context).get()
 
-    companion object {
-        fun from(context: Context): QrBridgeEntryPoint =
-            EntryPointAccessors.fromApplication(context.applicationContext, QrBridgeEntryPoint::class.java)
-    }
-}
+    @Provides
+    fun qrWidgetStateStore(@ApplicationContext context: Context): QrWidgetStateStore =
+        KoinStarter.ensureStarted(context).get()
 
-/** Lazy singles: Koin starts before Hilt builds its component, so they read Hilt on first use. */
-val qrBridgeModule = module {
-    single<QrCodeRepository> { QrBridgeEntryPoint.from(androidContext()).qrCodeRepository() }
-    single<QrAppearancePreferences> { QrBridgeEntryPoint.from(androidContext()).qrAppearancePreferences() }
+    @Provides
+    fun qrAppearancePreferences(@ApplicationContext context: Context): QrAppearancePreferences =
+        KoinStarter.ensureStarted(context).get()
+
+    @Provides
+    fun qrTilePreferences(@ApplicationContext context: Context): QrTilePreferences =
+        KoinStarter.ensureStarted(context).get()
 }

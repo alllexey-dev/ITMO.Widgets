@@ -11,10 +11,14 @@ class StorageRulesTest {
 
     @Test
     fun `session-cleared repositories are singletons`() {
+        // Hilt builds a repository once through @Singleton; a repository moved to a shared module is a Koin single.
+        val koinSingles = productionFiles
+            .flatMap { file -> KOIN_SINGLE.findAll(file.text).map { it.groupValues[1] }.toList() }
+            .toSet()
         productionClasses
             .filter { it.name.endsWith("RepositoryImpl") && it.hasParentWithName("SessionDataCleaner") }
             .requireNonEmpty("session-cleared repositories")
-            .assertTrue { it.hasAnnotationWithName("Singleton") }
+            .assertTrue { it.hasAnnotationWithName("Singleton") || it.name in koinSingles }
     }
 
     @Test
@@ -39,6 +43,8 @@ class StorageRulesTest {
     }
 
     private companion object {
+        val KOIN_SINGLE = Regex("""\bsingleOf\(::(\w+)\)""")
+
         /** The per-concern settings stores AA-07 split from AppSettingsStorage, over one `app_preferences` DataStore. */
         val SETTINGS_STORE_FILES = setOf(
             "DataStorePreferences.kt",

@@ -3,9 +3,8 @@ package dev.alllexey.itmowidgets.feature.qr.data.repository
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
-import javax.inject.Inject
 
-class QrAppearancePreferencesImpl @Inject constructor(
+class QrAppearancePreferencesImpl(
     private val qrSettings: QrSettingsPreferences
 ) : QrAppearancePreferences {
 

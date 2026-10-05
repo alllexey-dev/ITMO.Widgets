@@ -65,6 +65,13 @@ is picked through the photo picker, cropped square and stored as a bounded
 preview and the widget renderer.
 Expiry is passive: an expired code stops being emitted (known gap).
 
+The widget, its worker and its renderer stay in `:app`; the pass, the cache and
+the per-widget reveal state (`qr_widget_state_<appWidgetId>`) are the shared
+`QrCodeRepository` and `QrWidgetStateStore` of `:shared:feature-qr`, which the
+widget reads through `QrWidgetEntryPoint` and `di/bridge/QrBridge.kt`. The
+widget and the pass screen share one repository and one cached pass; see
+[QR pass](qr.md#data).
+
 ## Launcher picker previews
 
 The picker shows the real widgets. On Android 12+ each descriptor names a

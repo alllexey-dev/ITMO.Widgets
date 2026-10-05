@@ -2,11 +2,11 @@ package dev.alllexey.itmowidgets.feature.qr.data.remote
 
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.qr.data.demo.DemoQr
 import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSource
 import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
@@ -20,23 +20,20 @@ import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 /** The pass through `QrCodeRepositoryImpl` and the 2.x client, with a MockEngine for qr.itmo.su and ITMO.ID. */
 class QrCodeRemoteDataSourceImplTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
-    private val dispatchers = mainDispatcherRule.appDispatchers
     private val clock = FakeClock(Instant.parse("2026-07-24T00:00:00Z"))
     private val storage = InMemoryTokenStorage(
         TokenSet(
@@ -51,7 +48,7 @@ class QrCodeRemoteDataSourceImplTest {
     private val local = FakeQrCodeLocalDataSource()
 
     @Test
-    fun `a pass is saved after one request with the stored token`() = runTest {
+    fun aPassIsSavedAfterOneRequestWithTheStoredToken() = runTest {
         val result = repository(passes = listOf(QrRemoteFixtures.PASS)).refreshQrHex(force = true)
 
         assertEquals(AppResult.Success(Unit), result)
@@ -62,7 +59,7 @@ class QrCodeRemoteDataSourceImplTest {
     }
 
     @Test
-    fun `a pass without qr_hex is asked again once after one forced refresh`() = runTest {
+    fun aPassWithoutQrHexIsAskedAgainOnceAfterOneForcedRefresh() = runTest {
         val repository = repository(passes = listOf(QrRemoteFixtures.PASS_WITHOUT_HEX, QrRemoteFixtures.PASS))
 
         val result = repository.refreshQrHex(force = true)
@@ -74,18 +71,18 @@ class QrCodeRemoteDataSourceImplTest {
     }
 
     @Test
-    fun `a second answer without a pass fails after the one refresh`() = runTest {
+    fun aSecondAnswerWithoutAPassFailsAfterTheOneRefresh() = runTest {
         val repository = repository(passes = listOf(QrRemoteFixtures.PASS_NULL, QrRemoteFixtures.PASS_WITHOUT_HEX))
 
         val result = repository.refreshQrHex(force = true)
 
-        assertTrue(result.toString(), (result as AppResult.Failure).error is AppError.Unknown)
+        assertIs<AppError.Unknown>(assertIs<AppResult.Failure>(result).error)
         assertEquals(listOf(QR_HOST, ID_HOST, QR_HOST), hosts())
         assertEquals(emptyList<String>(), local.savedValues)
     }
 
     @Test
-    fun `a 401 is refreshed once by the client and a pass then arrives`() = runTest {
+    fun a401IsRefreshedOnceByTheClientAndAPassThenArrives() = runTest {
         val repository = repository(passes = listOf(UNAUTHORIZED, QrRemoteFixtures.PASS))
 
         val result = repository.refreshQrHex(force = true)
@@ -95,7 +92,7 @@ class QrCodeRemoteDataSourceImplTest {
     }
 
     @Test
-    fun `a 401 after the refresh needs a new sign-in with one refresh in total`() = runTest {
+    fun a401AfterTheRefreshNeedsANewSignInWithOneRefreshInTotal() = runTest {
         val repository = repository(passes = listOf(UNAUTHORIZED, UNAUTHORIZED))
 
         val result = repository.refreshQrHex(force = true)
@@ -106,20 +103,20 @@ class QrCodeRemoteDataSourceImplTest {
     }
 
     @Test
-    fun `a 5xx fails at once without a refresh and keeps the cached pass`() = runTest {
+    fun a5xxFailsAtOnceWithoutARefreshAndKeepsTheCachedPass() = runTest {
         local.save("cached")
         local.savedValues.clear()
         val repository = repository(passes = listOf(BAD_GATEWAY))
 
         val result = repository.refreshQrHex(force = true)
 
-        assertTrue(result.toString(), (result as AppResult.Failure).error is AppError.Unknown)
+        assertIs<AppError.Unknown>(assertIs<AppResult.Failure>(result).error)
         assertEquals(listOf(QR_HOST), hosts())
         assertEquals("cached", local.get())
     }
 
     @Test
-    fun `the demo pass costs no request`() = runTest {
+    fun theDemoPassCostsNoRequest() = runTest {
         val repository = repository(passes = emptyList(), demo = true)
 
         val result = repository.refreshQrHex(force = true)
@@ -130,7 +127,7 @@ class QrCodeRemoteDataSourceImplTest {
     }
 
     /** qr.itmo.su answers [passes] in order; ITMO.ID answers every refresh with a new token pair. */
-    private fun repository(passes: List<String>, demo: Boolean = false): QrCodeRepositoryImpl {
+    private fun TestScope.repository(passes: List<String>, demo: Boolean = false): QrCodeRepositoryImpl {
         val queue = ArrayDeque(passes)
         val engine = MockEngine { request ->
             requests += request
@@ -141,6 +138,7 @@ class QrCodeRemoteDataSourceImplTest {
             }
         }
         val client = MyItmoClientFactory.create(storage = storage, engine = engine, clock = clock)
+        val dispatchers = StandardTestDispatcher(testScheduler).let { AppDispatchers(io = it, default = it, main = it) }
         val remote = QrCodeRemoteDataSourceImpl(client, FakeDemoMode(active = demo), dispatchers)
         return QrCodeRepositoryImpl(local, remote, dispatchers)
     }

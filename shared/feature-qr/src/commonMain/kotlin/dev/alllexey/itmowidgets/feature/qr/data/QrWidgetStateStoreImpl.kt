@@ -5,17 +5,16 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.safeEnumOf
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
-import java.io.IOException
-import javax.inject.Inject
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import okio.IOException
 
-class QrWidgetStateStoreImpl @Inject constructor(
-    @param:AppPreferences private val dataStore: DataStore<Preferences>
+/** Each placed widget's reveal state under `qr_widget_state_<appWidgetId>` in the shared `app_preferences` file. */
+class QrWidgetStateStoreImpl(
+    private val dataStore: DataStore<Preferences>
 ) : QrWidgetStateStore {
 
     override suspend fun getState(appWidgetId: Int): QrWidgetState {

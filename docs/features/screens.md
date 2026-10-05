@@ -77,11 +77,11 @@ Feature doc: [Home and quick actions](home.md).
 
 ## QR pass
 
-Feature docs: [Home and quick actions](home.md), [Widgets](widgets.md).
+Feature docs: [QR pass](qr.md), [Widgets](widgets.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/qr/ui/QrCodeFragment.kt` | Fragment | `QrCodeViewModel` | `qr_pass`, `AppScreen.QR_PASS` | `app/SettingsNavigationTestActivity.kt` | `feature/home/HomeQrVisualTest.kt` |
+| `feature/qr/ui/QrCodeFragment.kt` hosting `QrPassRoute` (`:shared:feature-qr`) | Fragment | `QrCodeViewModel` (Koin) | `qr_pass`, `AppScreen.QR_PASS` | `app/SettingsNavigationTestActivity.kt` (`QrDebugFixtures`) | `QrScreenshotTest` (`:shared:feature-qr`), `feature/home/HomeQrVisualTest.kt` |
 
 ## My ITMO web
 

@@ -1,17 +1,24 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
+import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
+import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import kotlin.time.Clock
@@ -39,6 +46,17 @@ interface CoreBridgeEntryPoint {
     /** The wall clock; academic logic reads [AcademicTimeProvider] instead. */
     fun clock(): Clock
 
+    /** The one MyItmoApi 2.x client of the process; its token manager is the only refresher. */
+    fun myItmoClient(): MyItmoClient
+
+    /** The one `app_preferences` DataStore of the process; a second instance over the file would throw. */
+    @AppPreferences
+    fun appPreferences(): DataStore<Preferences>
+
+    fun appDirectories(): AppDirectories
+    fun qrSettingsPreferences(): QrSettingsPreferences
+    fun deviceHintPreferences(): DeviceHintPreferences
+
     companion object {
         fun from(context: Context): CoreBridgeEntryPoint =
             EntryPointAccessors.fromApplication(context.applicationContext, CoreBridgeEntryPoint::class.java)
@@ -60,4 +78,10 @@ val coreBridgeModule = module {
     single<CrossProcessLock> { CoreBridgeEntryPoint.from(androidContext()).crossProcessLock() }
     single<PlatformCapabilities> { CoreBridgeEntryPoint.from(androidContext()).platformCapabilities() }
     single<Clock> { CoreBridgeEntryPoint.from(androidContext()).clock() }
+    single<MyItmoClient> { CoreBridgeEntryPoint.from(androidContext()).myItmoClient() }
+    // Unqualified in Koin: `app_preferences` is the only preferences DataStore of the app.
+    single<DataStore<Preferences>> { CoreBridgeEntryPoint.from(androidContext()).appPreferences() }
+    single<AppDirectories> { CoreBridgeEntryPoint.from(androidContext()).appDirectories() }
+    single<QrSettingsPreferences> { CoreBridgeEntryPoint.from(androidContext()).qrSettingsPreferences() }
+    single<DeviceHintPreferences> { CoreBridgeEntryPoint.from(androidContext()).deviceHintPreferences() }
 }

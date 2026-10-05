@@ -3,10 +3,12 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
-import dev.alllexey.itmowidgets.feature.qr.data.repository.QrAppearancePreferencesImpl
+import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
+import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
+import dev.alllexey.itmowidgets.feature.qr.work.QrWidgetEntryPoint
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -27,20 +29,24 @@ class QrBridgeTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the QR pass repository resolves in Koin to the instance Hilt builds`() {
+    fun `the widget reads the one repository Koin builds`() {
         val application = bootApplication()
-        val hilt = QrBridgeEntryPoint.from(application)
         val koin = GlobalContext.get()
+        val widget = QrWidgetEntryPoint.from(application)
 
-        assertSame(hilt.qrCodeRepository(), koin.get<QrCodeRepository>())
-        assertSame(koin.get<QrCodeRepository>(), koin.get<QrCodeRepository>())
+        assertSame(koin.get<QrCodeRepositoryImpl>(), koin.get<QrCodeRepository>())
+        assertSame(koin.get<QrCodeRepository>(), widget.qrCodeRepository())
+        assertSame(widget.qrCodeRepository(), widget.qrCodeRepository())
     }
 
     @Test
-    fun `the QR colour setting resolves in Koin to the Hilt implementation the widget reads`() {
-        bootApplication()
+    fun `the widget reads the state store and the colour setting Koin builds`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+        val widget = QrWidgetEntryPoint.from(application)
 
-        assertTrue(GlobalContext.get().get<QrAppearancePreferences>() is QrAppearancePreferencesImpl)
+        assertSame(koin.get<QrWidgetStateStore>(), widget.qrWidgetStateStore())
+        assertSame(koin.get<QrAppearancePreferences>(), widget.qrAppearancePreferences())
     }
 
     @Test

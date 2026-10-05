@@ -6,14 +6,13 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.qr.data.demo.DemoQr
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 /**
  * The pass from qr.itmo.su through MyItmoApi 2.x. The client's auth plugin already answers a 401 with one refresh
  * and one retry, so the retry here covers only a successful answer without a pass: one forced refresh, one more
  * request, then [MyItmoException.Decode]. Every other failure is thrown at once and mapped by the repository.
  */
-class QrCodeRemoteDataSourceImpl @Inject constructor(
+class QrCodeRemoteDataSourceImpl(
     private val client: MyItmoClient,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers

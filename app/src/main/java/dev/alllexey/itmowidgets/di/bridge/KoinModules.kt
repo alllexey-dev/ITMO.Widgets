@@ -18,7 +18,6 @@ object KoinModules {
         coreBridgeModule,
         resourcesBridgeModule,
         reviewsBridgeModule,
-        qrBridgeModule,
         homeBridgeModule,
     )
 
