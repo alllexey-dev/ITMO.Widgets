@@ -6,8 +6,19 @@ package dev.alllexey.itmowidgets.core.text
  * Symbol. Add a constant when presentation first needs the icon.
  */
 enum class AppIcon(val id: String) {
+    ASSIGNMENT("assignment"),
+    BRAND_TELEGRAM("brand_telegram"),
+    BRAND_VK("brand_vk"),
+    CHAT("chat"),
     CHEVRON_RIGHT("chevron_right"),
     DOWNLOAD("download"),
+    EDIT_NOTE("edit_note"),
+    FOLDER("folder"),
+    FORMAT_LIST_NUMBERED("format_list_numbered"),
+    LINK("link"),
     OPEN_IN_NEW("open_in_new"),
-    REFRESH("refresh")
+    REFRESH("refresh"),
+    SCHOOL("school"),
+    TABLE("table"),
+    VIDEOCAM("videocam")
 }
