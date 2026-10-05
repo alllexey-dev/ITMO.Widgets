@@ -39,11 +39,20 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import dev.alllexey.itmowidgets.feature.settings.presentation.ChoiceOption
+import dev.alllexey.itmowidgets.feature.settings.presentation.HomePageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.RecordbookPageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.SchedulePageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.ServicesPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPages
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.SportPageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetsPageProvider
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsRenderer
 import dev.alllexey.itmowidgets.testing.Appearances
@@ -392,30 +401,44 @@ class SettingsRendererTest {
         scenario.onActivity { activity ->
             viewModel = ViewModelProvider(activity, object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T = SettingsViewModel(
-                    repository,
-                    object : CustomServicesRepository {
-                        override fun observeEnabled() = MutableStateFlow(true)
-                        override suspend fun isEnabled() = true
-                        override suspend fun setEnabled(enabled: Boolean) = Unit
-                    },
-                    object : OnboardingRepository {
-                        override fun observeCompleted() = MutableStateFlow(true)
-                        override suspend fun complete() = Unit
-                        override suspend fun reset() = Unit
-                    },
-                    object : WidgetRefreshRequester {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T = run {
+                    val refresher = object : WidgetRefreshRequester {
                         override fun refreshAll() = Unit
-                    },
-                    AppVersion(activity.getString(R.string.app_version)),
-                    RendererScheduleChangeTracking,
-                    RendererMarkTracking,
-                    RendererBackgroundWork,
-                    RendererQuickSettingsTile,
-                    MemoryCalendarSync(),
-                    NoDiagnostics,
-                    SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
-                ) as T
+                    }
+                    SettingsViewModel(
+                        SettingsPages(
+                            RootPageProvider(),
+                            ServicesPageProvider(
+                                repository,
+                                object : CustomServicesRepository {
+                                    override fun observeEnabled() = MutableStateFlow(true)
+                                    override suspend fun isEnabled() = true
+                                    override suspend fun setEnabled(enabled: Boolean) = Unit
+                                },
+                                refresher
+                            ),
+                            WidgetsPageProvider(repository, RendererQuickSettingsTile),
+                            HomePageProvider(repository),
+                            SchedulePageProvider(repository, RendererScheduleChangeTracking, MemoryCalendarSync()),
+                            RecordbookPageProvider(RendererMarkTracking),
+                            SportPageProvider(repository),
+                            MaintenancePageProvider(
+                                refresher,
+                                object : OnboardingRepository {
+                                    override fun observeCompleted() = MutableStateFlow(true)
+                                    override suspend fun complete() = Unit
+                                    override suspend fun reset() = Unit
+                                },
+                                AppVersion(activity.getString(R.string.app_version)),
+                                NoDiagnostics
+                            )
+                        ),
+                        repository,
+                        refresher,
+                        RendererBackgroundWork,
+                        SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
+                    )
+                } as T
             })[page.name, SettingsViewModel::class.java]
             viewModel.onNotificationPermissionChanged(true)
             activity.findViewById<TextView>(R.id.settings_title).text = page.title.resolve(activity)
