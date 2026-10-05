@@ -56,6 +56,8 @@ internal const val MIN_VIEW_MODELS = 34
 internal const val MIN_DOMAIN_FILES = 95
 internal const val MIN_DEBUG_ONLY_CLASSES = 5
 internal const val MIN_BACKEND_GATED_CLASSES = 16
+internal const val MIN_KMP_SOURCE_FILES = 250
+internal const val MIN_SHARED_FEATURE_MODULES = 10
 
 /** The feature a package or import belongs to, or null outside `feature.*`. */
 internal fun featureOf(name: String): String? = name

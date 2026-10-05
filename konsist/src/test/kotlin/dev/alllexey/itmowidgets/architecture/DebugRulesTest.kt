@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.architecture
 
+import com.lemonappdev.konsist.api.declaration.KoClassDeclaration
 import com.lemonappdev.konsist.api.verify.assertTrue
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionClasses
 import org.junit.Test
@@ -28,10 +29,18 @@ class DebugRulesTest {
         productionClasses
             .filter { it.hasAnnotationWithName(DEBUG_ONLY) }
             .requireAtLeast(MIN_DEBUG_ONLY_CLASSES, "@$DEBUG_ONLY classes")
-            .assertTrue { "BuildConfig.DEBUG" in it.text }
+            .assertTrue { "BuildConfig.DEBUG" in it.text || it.isShared && it.checksDebugBuild }
     }
 
+    private val KoClassDeclaration.isShared: Boolean get() = containingFile.projectPath.startsWith("/shared/")
+
+    /** Shared code has no BuildConfig; it takes KM-04's injected `core.debug.DebugBuild` and reads its flag instead. */
+    private val KoClassDeclaration.checksDebugBuild: Boolean
+        get() = ".isDebug" in text &&
+            constructors.any { constructor -> constructor.parameters.any { it.type.name == DEBUG_BUILD } }
+
     private companion object {
+        const val DEBUG_BUILD = "DebugBuild"
         const val CORE_DEBUG_PACKAGE = "dev.alllexey.itmowidgets.core.debug"
         const val FEATURE_DEBUG_PACKAGE = "dev.alllexey.itmowidgets.feature.debug"
         const val DEBUG_ONLY = "DebugOnly"
