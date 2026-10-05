@@ -1,7 +1,10 @@
 package dev.alllexey.itmowidgets.feature.social
 
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.Rect
+import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -19,6 +22,7 @@ import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.R as MaterialR
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
@@ -44,6 +48,7 @@ import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
 import dev.alllexey.itmowidgets.core.reviews.SummaryTag
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
+import dev.alllexey.itmowidgets.core.ui.AvatarView
 import dev.alllexey.itmowidgets.core.ui.GroupPosition
 import dev.alllexey.itmowidgets.core.ui.TeacherLevelTone
 import dev.alllexey.itmowidgets.core.ui.color
@@ -69,6 +74,7 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
+import java.io.File
 import java.time.YearMonth
 import org.junit.Assert.*
 import org.junit.Test
@@ -774,6 +780,57 @@ class UserProfileVisualTest {
             frame(scenario, "photo-fallback-${spec.name}")
         }
     }
+
+    @Test fun loadedPhotoReplacesTheInitialsAndARecycledAvatarShowsTheLatestUser() = appearances { spec ->
+        val photo = localPhoto()
+        preview(spec, { UserProfilePreviewActivity.person = AppResult.Success(teacher().copy(photoUrl = photo)) }) { scenario ->
+            content(scenario)
+            assertPhoto(scenario)
+            frame(scenario, "photo-loaded-${spec.name}")
+
+            // A failing request superseded by a loading one must not bring the initials back.
+            scenario.onActivity {
+                val avatar = it.findViewById<AvatarView>(R.id.avatar)
+                avatar.setUser("Другой Человек", "https://invalid.test/p.jpg")
+                avatar.setUser(LONG_NAME, photo)
+            }
+            TestUi.settle(300)
+            assertPhoto(scenario)
+
+            scenario.onActivity { it.findViewById<AvatarView>(R.id.avatar).setUser("Другой Человек", "https://invalid.test/p.jpg") }
+            assertInitials(scenario, "ДЧ")
+            scenario.onActivity { it.findViewById<AvatarView>(R.id.avatar).setUser("Без Фото", null) }
+            assertInitials(scenario, "БФ")
+            scenario.onActivity { assertNull(it.findViewById<ImageView>(R.id.avatar_image).drawable) }
+        }
+    }
+
+    private fun localPhoto(): String {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val file = File(context.cacheDir, "avatar-photo.png")
+        val bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.rgb(0x3F, 0x51, 0xB5)) }
+        file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        return Uri.fromFile(file).toString()
+    }
+
+    private fun assertPhoto(scenario: ActivityScenario<UserProfilePreviewActivity>) = TestUi.eventually(attempts = 200) {
+        scenario.onActivity {
+            val image = it.findViewById<ImageView>(R.id.avatar_image)
+            assertTrue(image.isShown)
+            assertNotNull(image.drawable)
+            assertEquals(View.GONE, it.findViewById<View>(R.id.avatar_text).visibility)
+        }
+    }
+
+    private fun assertInitials(scenario: ActivityScenario<UserProfilePreviewActivity>, initials: String) =
+        TestUi.eventually(attempts = 200) {
+            scenario.onActivity {
+                val text = it.findViewById<TextView>(R.id.avatar_text)
+                assertTrue(text.isShown)
+                assertEquals(initials, text.text.toString())
+                assertEquals(View.GONE, it.findViewById<View>(R.id.avatar_image).visibility)
+            }
+        }
 
     @Test fun recreatingTeacherPageDoesNotShowASkeleton() = appearances { spec ->
         preview(spec, {

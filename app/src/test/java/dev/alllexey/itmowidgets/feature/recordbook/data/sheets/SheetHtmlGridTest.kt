@@ -53,5 +53,42 @@ class SheetHtmlGridTest {
 
     @Test fun `a page without a table is an empty grid`() {
         assertEquals(0, SheetHtmlGrid.parse(SheetFixtures.text("login.html")).height)
+        assertEquals(0, SheetHtmlGrid.parse(SheetFixtures.text("tabs_htmlview.html")).height)
+    }
+
+    // The grids below were recorded with jsoup 1.21.1 before the switch to Ksoup and must stay equal.
+
+    @Test fun `the html tab equals the csv export but for a line break`() {
+        val expected = csv.rows.mapIndexed { row, cells ->
+            cells.mapIndexed { column, text -> if (row == 6 && column == 6) "7 доп" else text }
+        }
+        assertEquals("7\nдоп", csv.cell(6, 6))
+        assertEquals(expected, html.rows)
+    }
+
+    @Test fun `spans, freeze bars and header cells of a waffle table`() {
+        assertEquals(
+            listOf(
+                listOf("Блок & итог", "", "Тест пробелы", "Ряд", "", "", ""),
+                listOf("", "", "Б2", "", "", "", ""),
+                listOf("1", "в div", "широкая", "", "", "", ""),
+                listOf("", "7 доп", "ноль", "плохой", "хвост", "", ""),
+            ),
+            SheetHtmlGrid.parse(SheetFixtures.text("spans_htmlview.html")).rows,
+        )
+    }
+
+    @Test fun `a plain table without tbody`() {
+        assertEquals(
+            listOf(
+                listOf("100001", "Тестова Анна Сергеевна", "81,5"),
+                listOf("123456", "Тестов Тест Тестович", ""),
+                listOf("Комментарий жирный курсив", "", "вложенная"),
+                listOf("вложенная", "", ""),
+                listOf("100002", "Примеров Пример", "-"),
+                listOf("100003", "", "0"),
+            ),
+            SheetHtmlGrid.parse(SheetFixtures.text("plain_table.html")).rows,
+        )
     }
 }
