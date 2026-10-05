@@ -21,6 +21,8 @@ kotlin {
             implementation(jetpackMaterial3.module.toString()) {
                 version { strictly(jetpackMaterial3.versionConstraint.requiredVersion) }
             }
+            // Fragment.itmoComposeView (host/); the app's own Fragment version, nothing newer.
+            implementation(libs.androidx.fragment.ktx)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
@@ -29,5 +31,27 @@ kotlin {
             // The View theme the parity tests compare against; never on a main classpath of this module.
             implementation(libs.material)
         }
+    }
+}
+
+// exportDesignTokens rewrites tokens/itmo-tokens.json (iOS and Web read it) from the Kotlin tokens through
+// DesignTokensExportTest; every other host-test run compares the file and fails while it is stale.
+val designTokensFile = layout.projectDirectory.file("tokens/itmo-tokens.json")
+val exportDesignTokens = tasks.register("exportDesignTokens") {
+    group = "build"
+    description = "Rewrites tokens/itmo-tokens.json from the design system's Kotlin tokens."
+    dependsOn("testAndroidHostTest")
+}
+tasks.withType<Test>().matching { it.name == "testAndroidHostTest" }.configureEach {
+    // A file collection, so the first export runs before the file exists.
+    inputs.files(designTokensFile).withPathSensitivity(PathSensitivity.RELATIVE)
+}
+gradle.taskGraph.whenReady {
+    if (!hasTask(exportDesignTokens.get())) return@whenReady
+    tasks.named<Test>("testAndroidHostTest").configure {
+        filter.includeTestsMatching("*DesignTokensExportTest")
+        systemProperty("designTokens.write", "true")
+        outputs.upToDateWhen { false }
+        outputs.cacheIf { false }
     }
 }

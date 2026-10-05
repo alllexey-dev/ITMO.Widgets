@@ -1,7 +1,10 @@
 package dev.alllexey.itmowidgets.designsystem
 
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.Dp
 import dev.alllexey.itmowidgets.designsystem.theme.ExtendedColorTokens
+import dev.alllexey.itmowidgets.designsystem.tokens.ItmoSpacing
+import dev.alllexey.itmowidgets.designsystem.tokens.ShapeTokens
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.w3c.dom.Element
@@ -9,9 +12,10 @@ import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 
 /**
- * The Compose kit's [ExtendedColorTokens] equal the View screens' `res/values{,-night}/colors.xml`, so a colour
- * changed on one side only fails here. The widget palette, `shortcut_icon_background` and `calendar_app` are
- * resource-only.
+ * The Compose kit's [ExtendedColorTokens], [ShapeTokens] and [ItmoSpacing] equal the View screens'
+ * `res/values{,-night}/colors.xml` and the `design_*` dimens of `res/values/dimens.xml`, so a value changed on one
+ * side only fails here. The widget palette, `shortcut_icon_background` and `calendar_app` are resource-only;
+ * feature dimens (no `design_` prefix) stay with their layouts.
  */
 class DesignTokensParityTest {
 
@@ -23,6 +27,40 @@ class DesignTokensParityTest {
     @Test
     fun `dark tokens equal values-night colors over values`() =
         assertParity(ExtendedColorTokens.Dark, colors("values") + colors("values-night"))
+
+    @Test
+    fun `shape and spacing tokens equal the design dimens`() {
+        val dimens = elements("values", "dimens", "dimen").filterKeys { it.startsWith("design_") }
+        assertEquals("design_* dimens without a token slot", dimens.keys.toSortedSet(), dimenSlots.keys.toSortedSet())
+        dimenSlots.forEach { (name, token) -> assertEquals(name, dimens.getValue(name), token.resource()) }
+    }
+
+    private val dimenSlots: Map<String, Dp> = with(ItmoSpacing.Default) {
+        mapOf(
+            "design_spacing_related" to related,
+            "design_spacing_compact" to compact,
+            "design_spacing_content" to content,
+            "design_spacing_group" to group,
+            "design_spacing_section" to section,
+            "design_screen_margin" to screenMargin,
+            "design_card_padding" to cardPadding,
+            "design_summary_padding" to summaryPadding,
+            "design_touch_target" to touchTarget,
+            "design_fab_stack_clearance" to fabStackClearance,
+            "design_state_padding" to statePadding,
+            "design_state_icon" to stateIcon,
+            "design_state_inline_icon" to stateInlineIcon,
+            "design_card_radius_day" to ShapeTokens.ScheduleDay,
+            "design_card_radius_content" to ShapeTokens.CardContent,
+            "design_card_radius_summary" to ShapeTokens.CardSummary,
+            "design_card_radius_hero" to ShapeTokens.CardHero,
+            "design_card_elevation" to ShapeTokens.CardElevation,
+            "design_card_stroke" to ShapeTokens.CardStroke,
+            "design_group_radius_outer" to ShapeTokens.GroupOuter,
+            "design_group_radius_inner" to ShapeTokens.GroupInner,
+            "design_group_gap" to ShapeTokens.GroupGap,
+        )
+    }
 
     private fun assertParity(tokens: ExtendedColorTokens, colors: Map<String, String>) {
         val shared = colors.keys.filterNot(::isResourceOnly).toSortedSet()
@@ -61,18 +99,21 @@ class DesignTokensParityTest {
         name.startsWith("widget_") || name == "shortcut_icon_background" || name == "calendar_app"
 
     /** `name -> value` of every `<color>` in `<directory>/colors.xml`; a missing file has none. */
-    private fun colors(directory: String): Map<String, String> {
-        val file = File(resources, "$directory/colors.xml")
-        if (!file.isFile) return emptyMap()
+    private fun colors(directory: String): Map<String, String> = elements(directory, "colors", "color")
+
+    /** `name -> text` of every `<tag>` in `<directory>/<file>.xml`; a missing file has none. */
+    private fun elements(directory: String, file: String, tag: String): Map<String, String> {
+        val xml = File(resources, "$directory/$file.xml")
+        if (!xml.isFile) return emptyMap()
         val root = DocumentBuilderFactory.newInstance()
             .apply { setFeature("http://apache.org/xml/features/disallow-doctype-decl", true) }
             .newDocumentBuilder()
-            .parse(file)
+            .parse(xml)
             .documentElement
-        val nodes = root.getElementsByTagName("color")
+        val nodes = root.getElementsByTagName(tag)
         return (0 until nodes.length).associate { index ->
-            val color = nodes.item(index) as Element
-            color.getAttribute("name") to color.textContent.trim()
+            val element = nodes.item(index) as Element
+            element.getAttribute("name") to element.textContent.trim()
         }
     }
 
@@ -87,4 +128,7 @@ class DesignTokensParityTest {
     }
 
     private fun Int.hex() = "%08X".format(this)
+
+    /** `16dp`, or `0.5dp` for a fractional token, as a dimen resource writes it. */
+    private fun Dp.resource(): String = if (value % 1f == 0f) "${value.toInt()}dp" else "${value}dp"
 }
