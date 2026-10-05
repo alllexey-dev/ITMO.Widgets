@@ -204,7 +204,7 @@ Every other review is a row in three zones (`item_teacher_review.xml`):
 Votes show arrows only with `canVote`; the score turns to the accent once the
 viewer voted, and without arrows a zero score is left out. While the profile is open
 the others' reviews keep the order they were first shown in
-(`core/util/StableOrder` in `UserProfileViewModel`): Backend's answer to a vote
+(`core/presentation/StableOrder` in `UserProfileViewModel`): Backend's answer to a vote
 or an update from the editor changes the scores in place, a review not shown
 yet follows the shown ones, and a new screen or `Повторить` takes Backend's
 order again. Tapping the arrow of

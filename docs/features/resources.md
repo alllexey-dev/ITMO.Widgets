@@ -77,7 +77,7 @@ pinned link, the MyITMO LMS page (`lms_link`, shown as `LMS` with its host),
 then every other non-chat link of the period, own and shared alike, by
 `SubjectLinkRanking`: the higher score first, of equal scores the newer link.
 A link is shown once. While the page is open the order it has shown stays
-(`core/util/StableOrder`): a vote changes a score in place but neither moves a
+(`core/presentation/StableOrder`): a vote changes a score in place but neither moves a
 row nor changes which three are shown; a new screen or a pull ranks afresh, and
 a link seen for the first time follows the shown ones. A row (`item_subject_link.xml`, bound by
 `core/ui/SubjectLinkRow.kt`) has the category symbol, the title (or the

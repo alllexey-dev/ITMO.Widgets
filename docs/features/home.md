@@ -86,7 +86,7 @@ versions with the `Intent` overload, which throws on Android 14+ for apps
 targeting it (`qrTileLaunchFor`). The icon `ic_tile_qr.xml` is white without a
 theme tint; SystemUI colours it.
 
-The device flag `qr_tile_added` (`AppSettingsStorage`, kept on sign-out)
+The device flag `qr_tile_added` (`DeviceHintPreferences`, kept on sign-out)
 remembers whether the tile is in the quick settings: `onTileAdded` and
 `onTileRemoved` write it in the application scope, and so does the answer to
 the add request. Android has no public way to ask whether a tile is added. On

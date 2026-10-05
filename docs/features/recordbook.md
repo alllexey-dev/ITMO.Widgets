@@ -411,7 +411,7 @@ keeps the state in memory:
 - When a write fails outside a check, the new state stays in memory and reaches
   the file with the next write.
 
-The switches and the sign-in prompt live in DataStore (`AppSettingsStorage`),
+The switches and the sign-in prompt live in DataStore (`MarkSourcePreferences`),
 not in the file: `BarsClient`'s listener reads them, and a dependency on the
 repository would be a cycle `BarsClient → repository → BARS read → BarsClient`.
 
