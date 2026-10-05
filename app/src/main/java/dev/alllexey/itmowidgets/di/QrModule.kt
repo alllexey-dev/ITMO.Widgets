@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.di
 
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.multibindings.IntoSet
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -19,6 +20,7 @@ import dev.alllexey.itmowidgets.feature.qr.domain.QrTilePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetStateStore
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCache
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrBitmapCacheImpl
+import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import javax.inject.Singleton
 
@@ -80,4 +82,10 @@ abstract class QrModule {
     abstract fun bindQrWidgetStateStore(
         impl: QrWidgetStateStoreImpl
     ): QrWidgetStateStore
+
+    companion object {
+        /** The generator lives in `:shared:feature-qr` `commonMain`, which has no `@Inject`. */
+        @Provides
+        fun provideQrCodeGenerator(): QrCodeGenerator = QrCodeGenerator()
+    }
 }

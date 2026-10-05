@@ -24,10 +24,10 @@
 
 package dev.alllexey.itmowidgets.feature.qr.ui.rendering
 
-import javax.inject.Inject
 import kotlin.math.abs
 
-class QrCodeGenerator @Inject constructor() {
+/** Stateless; `:app` provides it in `di/QrModule.kt`. */
+class QrCodeGenerator {
 
     /**
      * Encodes [hex] one byte per char (ISO-8859-1) into the version 1 code the pass screen, widgets and tiles draw.

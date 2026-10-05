@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.qr.ui.rendering
 
-import dev.alllexey.itmowidgets.feature.qr.data.demo.DemoQr
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -27,9 +26,10 @@ class QrCodeGeneratorGoldenTest {
         }
     }
 
+    /** `DemoQr.HEX` of `:app`, which `DemoNetworkGateTest` pins to a version 1 code. */
     @Test
     fun `the demo golden is the demo pass`() {
-        assertEquals(DemoQr.HEX, Golden.load("demo-hex").input)
+        assertEquals("DEMO" + "0".repeat(12), Golden.load("demo-hex").input)
     }
 
     @Test
