@@ -121,5 +121,6 @@ and every push to `v2.3/next` and `master`, and on `workflow_dispatch`.
   module with the testing convention, and `test.sh --ci ui` once `test.sh` has a `ui` mode. It is never a required
   check.
 
-Measured on the first runs (no caches): the job takes about 18.5 minutes, `test.sh --ci` 1076 s, with a peak of
-6.3 GB used of 7 GB. If the build runs out of memory, split it into a framework job and an `xcodebuild` job.
+Measured on the first runs (no caches yet): the job takes 18.5 to 20 minutes, `test.sh --ci` 1076 to 1157 s, with
+a peak of 6.3 to 6.4 GB used of 7 GB. If the build runs out of memory, split it into a framework job and an
+`xcodebuild` job.
