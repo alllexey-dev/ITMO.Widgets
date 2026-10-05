@@ -1,0 +1,32 @@
+# XML references recorded by :app (XmlReferenceCapture) under the name of a future preview.
+# The port that adds the preview re-records the files and deletes its line and the reference test.
+AppUpdateScreen_supported
+AppUpdateScreen_unsupported
+AuthScreen_error
+AuthScreen_initial
+AuthScreen_reauthentication
+AuthScreen_signing-in
+AuthScreen_token-dialog
+LoginScreen_error
+MeScreen_friends-error
+MeScreen_friends-loading
+MeScreen_group-requests
+MeScreen_long-name
+MeScreen_services-off
+MyItmoWebScreen_error
+OnboardingScreen_notifications-ask
+OnboardingScreen_notifications-denied
+OnboardingScreen_notifications-granted
+OnboardingScreen_services-busy
+OnboardingScreen_services-off
+OnboardingScreen_services-on
+OnboardingScreen_widget-day-schedule
+OnboardingScreen_widget-no-pinning
+OnboardingScreen_widget-qr
+OnboardingScreen_widget-single-lesson
+WebLoginSheetContent_approving
+WebLoginSheetContent_checking
+WebLoginSheetContent_confirm
+WebLoginSheetContent_done
+WebLoginSheetContent_error
+WebLoginSheetContent_input-error
