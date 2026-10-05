@@ -22,6 +22,10 @@ import java.time.LocalTime
 import java.time.Month
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
+import kotlin.time.toKotlinInstant
+import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalTime
 
 /**
  * Anna's personal schedule in the demo session: one weekly template of the autumn semester, her Thursday volleyball
@@ -55,7 +59,7 @@ object DemoSchedule {
 
     /** Friends who have the same lesson: the whole stream at a lecture, the group otherwise. */
     fun friendsOnLesson(pairId: Long, date: LocalDate): List<UserSummary> {
-        if (DemoSportSlots.ANNA_WEEKLY.lessonId(date) == pairId) return listOf(DemoPeople.IVAN.summary())
+        if (DemoSportSlots.ANNA_WEEKLY.lessonId(date.toKotlinLocalDate()) == pairId) return listOf(DemoPeople.IVAN.summary())
         val template = ANNA_WEEK.firstOrNull { it.day == date.dayOfWeek && it.pairId(date) == pairId }
             ?: return emptyList()
         val people = when {
@@ -75,7 +79,7 @@ object DemoSchedule {
         return listOf(
             ScheduleChange(
                 id = "demo-room-${labDate}",
-                detectedAt = now.minus(Duration.ofHours(3)),
+                detectedAt = now.minus(Duration.ofHours(3)).toKotlinInstant(),
                 kind = ScheduleChangeKind.UPDATED,
                 fields = setOf(ScheduleChangeField.PLACE),
                 subjectName = lab.subjectName,
@@ -88,14 +92,17 @@ object DemoSchedule {
             ),
             ScheduleChange(
                 id = "demo-time-${englishDate}",
-                detectedAt = now.minus(Duration.ofHours(27)),
+                detectedAt = now.minus(Duration.ofHours(27)).toKotlinInstant(),
                 kind = ScheduleChangeKind.UPDATED,
                 fields = setOf(ScheduleChangeField.TIME),
                 subjectName = english.subjectName,
                 typeId = english.typeId.raw,
                 flowName = english.groupName,
                 before = english.slot(englishDate),
-                after = english.slot(englishDate).copy(start = MOVED_ENGLISH_START, end = MOVED_ENGLISH_START.plusMinutes(90)),
+                after = english.slot(englishDate).copy(
+                    start = MOVED_ENGLISH_START.toKotlinLocalTime(),
+                    end = MOVED_ENGLISH_START.plusMinutes(90).toKotlinLocalTime()
+                ),
                 read = true,
                 notified = true
             )
@@ -116,19 +123,20 @@ object DemoSchedule {
 
     private fun sportLessons(date: LocalDate, today: LocalDate): List<Lesson> {
         val slot = DemoSportSlots.ANNA_WEEKLY
-        if (date !in DemoSportSlots.annaBookedDates(today)) return emptyList()
+        val day = date.toKotlinLocalDate()
+        if (day !in DemoSportSlots.annaBookedDates(today.toKotlinLocalDate())) return emptyList()
         return listOf(
             Lesson(
-                pairId = slot.lessonId(date),
-                start = slot.start,
-                end = slot.end,
+                pairId = slot.lessonId(day),
+                start = slot.start.toJavaLocalTime(),
+                end = slot.end.toJavaLocalTime(),
                 type = "Физическая культура",
                 typeId = Lesson.TypeId(SPORT),
                 note = null,
                 subjectName = slot.section,
                 subjectId = DemoStudy.PHYSICAL_EDUCATION.id,
                 groupName = "",
-                flowId = slot.lessonId(date),
+                flowId = slot.lessonId(day),
                 flowTypeId = SPORT_FLOW,
                 teacherIsu = slot.coach.isu.toLong(),
                 teacherFio = slot.coach.name,
@@ -147,9 +155,9 @@ object DemoSchedule {
 
     private fun Lesson.slot(date: LocalDate) = LessonSlot(
         pairId = pairId,
-        date = date,
-        start = start,
-        end = end,
+        date = date.toKotlinLocalDate(),
+        start = start.toKotlinLocalTime(),
+        end = end.toKotlinLocalTime(),
         room = room?.raw,
         building = building?.raw,
         formatId = formatId,

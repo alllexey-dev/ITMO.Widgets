@@ -1,9 +1,10 @@
 package dev.alllexey.itmowidgets.core.schedule
 
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.atTime
+import kotlin.time.Instant
 
 /** One occurrence of a lesson: My ITMO's `pair_id` on one date. */
 data class LessonOccurrence(val pairId: Long, val date: LocalDate)
@@ -26,8 +27,8 @@ data class LessonSlot(
     val teacherIsu: Long?,
     val teacherName: String?
 ) {
-    val startsAt: LocalDateTime get() = LocalDateTime.of(date, start)
-    val endsAt: LocalDateTime get() = LocalDateTime.of(date, end)
+    val startsAt: LocalDateTime get() = date.atTime(start)
+    val endsAt: LocalDateTime get() = date.atTime(end)
 
     fun occurrence() = LessonOccurrence(pairId, date)
 }

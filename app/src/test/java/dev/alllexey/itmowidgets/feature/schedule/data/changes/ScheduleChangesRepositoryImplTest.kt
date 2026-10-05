@@ -109,9 +109,9 @@ class ScheduleChangesRepositoryImplTest {
         assertEquals(listOf("$millis-0", "$millis-1"), changes.map { it.id })
         assertEquals(listOf(ScheduleChangeKind.UPDATED, ScheduleChangeKind.CANCELLED), changes.map { it.kind })
         assertEquals(setOf(ScheduleChangeField.TIME), changes[0].fields)
-        assertEquals(LocalDate.parse("2026-09-10"), changes[0].after!!.date)
-        assertEquals(LocalDate.parse("2026-09-09"), changes[1].before!!.date)
-        assertTrue(changes.all { !it.read && !it.notified && it.detectedAt == Instant.ofEpochMilli(millis) })
+        assertEquals(kotlinx.datetime.LocalDate.parse("2026-09-10"), changes[0].after!!.date)
+        assertEquals(kotlinx.datetime.LocalDate.parse("2026-09-09"), changes[1].before!!.date)
+        assertTrue(changes.all { !it.read && !it.notified && it.detectedAt == kotlin.time.Instant.fromEpochMilliseconds(millis) })
         assertEquals("Физика 2", changes[0].subjectName)
         assertEquals("Поток 2", changes[0].flowName)
     }

@@ -19,6 +19,8 @@ import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -98,8 +100,8 @@ class DemoContentTest {
 
         assertTrue(schedule.all { it.date in window })
         assertTrue(schedule.count { it.lessons.isNotEmpty() } >= 16)
-        assertTrue(sport.all { it in DemoSportSlots.annaBookedDates(today) })
-        assertTrue(DemoSchedule.changes(today, time.javaNow().toInstant()).all { change -> listOfNotNull(change.before, change.after).all { it.date in ahead } })
+        assertTrue(sport.all { it.toKotlinLocalDate() in DemoSportSlots.annaBookedDates(today.toKotlinLocalDate()) })
+        assertTrue(DemoSchedule.changes(today, time.javaNow().toInstant()).all { change -> listOfNotNull(change.before, change.after).all { it.date.toJavaLocalDate() in ahead } })
         assertTrue(DemoSport.schedule(time).keys.all { it in ahead })
         assertTrue(DemoSport.bookings(time).all { it.start.toLocalDate() in ahead })
         assertTrue(DemoSport.queueEntries(time).all { it.targetLesson.start.toLocalDate() in ahead })
@@ -129,7 +131,7 @@ class DemoContentTest {
     fun `the template's own lessons need no extra ones`() {
         val wednesdayNoon = FixedAcademicTime(LocalDateTime.of(LocalDate.of(2026, 10, 7), LocalTime.NOON))
 
-        assertTrue(DemoSportSlots.extraSlots(wednesdayNoon.javaNow().toLocalDateTime()).isEmpty())
+        assertTrue(DemoSportSlots.extraSlots(wednesdayNoon.localNow()).isEmpty())
     }
 
     @Test

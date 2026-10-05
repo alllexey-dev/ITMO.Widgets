@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
+import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.LessonSlot
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
@@ -22,15 +23,19 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinLocalDate
 
 /** The whole feed from one in-memory source; a test replaces the cards and watches the same flows. */
 data class HomeFixture(
@@ -54,17 +59,13 @@ data class HomeFixture(
 
         fun booking(id: Long = 1, hour: Int = 16, prediction: Boolean = false) = PendingSportBooking(
             queueId = id, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100 + id, sectionName = "Плавание",
-            start = OffsetDateTime.of(DATE, java.time.LocalTime.of(hour, 0), java.time.ZoneOffset.ofHours(3)),
-            end = OffsetDateTime.of(DATE, java.time.LocalTime.of(hour + 1, 30), java.time.ZoneOffset.ofHours(3)),
+            start = OffsetDateTime.of(DATE, LocalTime.of(hour, 0), ZoneOffset.ofHours(3)).toInstant().toKotlinInstant(),
+            end = OffsetDateTime.of(DATE, LocalTime.of(hour + 1, 30), ZoneOffset.ofHours(3)).toInstant().toKotlinInstant(),
             teacherFio = DemoPeople.SWIMMING_COACH.name, roomName = "Бассейн", isPrediction = prediction
         )
 
-        fun pending(id: Long = 1, hour: Int = 12, prediction: Boolean = false) = booking(id, hour, prediction).let {
-            PendingSportDetailsArgs(
-                lessonId = it.lessonId, sectionName = it.sectionName, autoSign = true, isPrediction = prediction,
-                start = it.start.toString(), end = it.end.toString(), teacherFio = it.teacherFio, roomName = it.roomName
-            )
-        }
+        fun pending(id: Long = 1, hour: Int = 12, prediction: Boolean = false): PendingSportDetailsArgs =
+            booking(id, hour, prediction).toDetailsArgs(TimeZone.of("Europe/Moscow"))
 
         fun user(isu: Int, name: String) = UserSummary(
             isu = isu, name = name, pictureUrl = null,
@@ -72,7 +73,7 @@ data class HomeFixture(
         )
 
         fun schedule() = HomeCard.Schedule(
-            date = DATE,
+            date = DATE.toKotlinLocalDate(),
             tomorrow = false,
             rows = listOf(
                 HomeScheduleRow.Lesson(lesson(1, "09:30", "11:00", DemoStudy.MATH.name), HomeLessonState.CURRENT, progress = 0.55f),
@@ -99,7 +100,8 @@ data class HomeFixture(
         )
 
         private fun changeSlot(date: LocalDate) = LessonSlot(
-            pairId = 1, date = date, start = LocalTime.of(10, 0), end = LocalTime.of(11, 30), room = "1506",
+            pairId = 1, date = date.toKotlinLocalDate(), start = kotlinx.datetime.LocalTime(10, 0),
+            end = kotlinx.datetime.LocalTime(11, 30), room = "1506",
             building = "Кронверкский проспект, 49", formatId = 1, format = "Очный", teacherIsu = 300001,
             teacherName = DemoPeople.MATH_TEACHER.name
         )

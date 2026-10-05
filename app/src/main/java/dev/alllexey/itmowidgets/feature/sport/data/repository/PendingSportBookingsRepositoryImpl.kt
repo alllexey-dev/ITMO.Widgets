@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import javax.inject.Inject
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -81,8 +82,8 @@ class PendingSportBookingsRepositoryImpl @Inject constructor(
                                 else PendingSportBooking.QueueKind.FREE,
                             lessonId = booking.lessonId,
                             sectionName = booking.sectionName.raw.trim(),
-                            start = booking.start,
-                            end = booking.end,
+                            start = booking.start.toInstant().toKotlinInstant(),
+                            end = booking.end.toInstant().toKotlinInstant(),
                             teacherFio = booking.teacherFio.trim(),
                             roomName = booking.roomName.trim(),
                             isPrediction = !booking.isLessonReal,

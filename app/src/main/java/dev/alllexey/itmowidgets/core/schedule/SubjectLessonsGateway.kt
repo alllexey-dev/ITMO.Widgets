@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.core.schedule
 
-import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
 
 /**
  * The viewer's academic lessons from the schedule cache, for screens outside the

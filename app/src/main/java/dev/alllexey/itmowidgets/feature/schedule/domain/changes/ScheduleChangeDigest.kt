@@ -3,6 +3,9 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.changes
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.work.QuietHours
 import java.time.LocalDateTime
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
+import kotlinx.datetime.toKotlinLocalDateTime
 
 /** One summary notification: how many changes are unread, which one it names and whether it makes a sound. */
 data class ScheduleChangeDigest(val unread: Int, val first: ScheduleChange, val audible: Boolean)
@@ -18,13 +21,14 @@ object ScheduleChangeDigests {
         if (QuietHours.isQuiet(now.toLocalTime())) return DigestDecision(null, emptySet())
         val pending = changes.filter { !it.read && !it.notified }
         val handled = pending.mapTo(mutableSetOf()) { it.id }
-        val fresh = pending.filterNot { it.isOver(now) }
+        val wallTime = now.toKotlinLocalDateTime()
+        val fresh = pending.filterNot { it.isOver(wallTime) }
         if (fresh.isEmpty()) return DigestDecision(null, handled)
 
-        val today = now.toLocalDate()
-        val tomorrow = today.plusDays(1)
+        val today = wallTime.date
+        val tomorrow = today.plus(1, DateTimeUnit.DAY)
         val digest = ScheduleChangeDigest(
-            unread = changes.count { !it.read && !it.isOver(now) },
+            unread = changes.count { !it.read && !it.isOver(wallTime) },
             first = fresh.minWith(compareBy<ScheduleChange>({ it.soonestStart() }, { it.subjectName }, { it.id })),
             audible = fresh.any { it.touches(today) || it.touches(tomorrow) }
         )

@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStatus
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -24,7 +24,7 @@ fun homeLessonRow(pairId: Long = 1, state: HomeLessonState = HomeLessonState.NEX
 )
 
 fun homeScheduleCard(vararg rows: HomeScheduleRow = arrayOf(homeLessonRow())) =
-    HomeCard.Schedule(LocalDate.of(2026, 9, 7), tomorrow = false, rows.toList(), completed = 0)
+    HomeCard.Schedule(LocalDate(2026, 9, 7), tomorrow = false, rows.toList(), completed = 0)
 
 class FakeHomeCardPreferences : HomeCardPreferences {
     val hidden = MutableStateFlow<Set<HomeCardKind>>(emptySet())

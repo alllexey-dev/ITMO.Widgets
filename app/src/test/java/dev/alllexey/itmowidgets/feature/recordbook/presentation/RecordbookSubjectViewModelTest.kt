@@ -214,7 +214,7 @@ class RecordbookSubjectViewModelTest {
         assertEquals(SubjectLessonsState.Content(lessons.lessons.value.take(3), SubjectContext.Source.EXACT), hub.lessons)
         // Teachers keep the order the schedule shows them in; roles are their lesson types.
         assertEquals(listOf(SubjectTeacher("Лектор Л. Л.", 1, listOf(1)), SubjectTeacher("Практик П. П.", 2, listOf(3))), hub.teachers)
-        assertEquals(listOf(LocalDate.parse("2026-09-07") to LocalDate.parse("2026-10-05")), scheduleRefresh.requests)
+        assertEquals(listOf(kotlinx.datetime.LocalDate(2026, 9, 7) to kotlinx.datetime.LocalDate(2026, 10, 5)), scheduleRefresh.requests)
         assertTrue(hub.chips.visible.none { it is SubjectLinkChip.Lms })
     }
 

@@ -9,8 +9,6 @@ viewmodel-shape dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.
 domain-imports-javax-inject dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 domain-imports-javax-inject dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
 
-domain-imports-java dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportBehind
-domain-imports-java dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 domain-imports-java dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkDigest
 domain-imports-java dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNews
 domain-imports-java dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf

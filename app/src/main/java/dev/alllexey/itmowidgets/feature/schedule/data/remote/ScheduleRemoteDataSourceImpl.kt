@@ -19,6 +19,8 @@ import retrofit2.HttpException
 import retrofit2.awaitResponse
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
 
 class ScheduleRemoteDataSourceImpl @Inject constructor(
     private val backend: BackendGate,
@@ -90,7 +92,7 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
 
             val days = response.data?.groupBy { it.date } ?: return@withContext emptyList()
 
-            val dates = ScheduleUtil.generateDates(start, end)
+            val dates = ScheduleUtil.generateDates(start.toKotlinLocalDate(), end.toKotlinLocalDate()).map { it.toJavaLocalDate() }
             dates.map {
                 DaySchedule(
                     dayNumber = it.dayOfWeek.value,

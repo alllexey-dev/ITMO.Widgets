@@ -66,6 +66,8 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
 
 sealed interface RecordbookSubjectUiState {
     data object Loading : RecordbookSubjectUiState
@@ -241,8 +243,8 @@ class RecordbookSubjectViewModel @Inject constructor(
         }
         updateHub { copy(lessons = SubjectLessonsState.Loading, teachers = fallbackTeachers) }
         hubJob = viewModelScope.launch {
-            val today = time.javaToday()
-            val end = today.plusDays(WINDOW_DAYS)
+            val today = time.today()
+            val end = today.plus(WINDOW_DAYS, DateTimeUnit.DAY)
             val refresh = scheduleRefresh.refreshOwnSchedule(today, end)
             combine(lessonsGateway.observeOwnLessons(today, end), bindingVersion) { lessons, _ -> lessons }
                 .collectLatest { lessons ->
@@ -411,7 +413,7 @@ class RecordbookSubjectViewModel @Inject constructor(
         if (subject.hasDetails) repository.getControls(entryId) else AppResult.Success(emptyList())
 
     companion object {
-        private const val WINDOW_DAYS = 28L
+        private const val WINDOW_DAYS = 28
         private val EMPTY_LINKS = SubjectLinksSnapshot(emptyList(), emptyList(), emptyList(), null, emptyList(),
             premoderation = false, servicesEnabled = false)
         const val ARG_ENTRY_ID = RecordbookSubjectArgs.ENTRY_ID

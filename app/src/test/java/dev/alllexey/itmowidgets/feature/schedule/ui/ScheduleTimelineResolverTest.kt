@@ -13,6 +13,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
+import kotlin.time.toKotlinInstant
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -210,8 +211,8 @@ class ScheduleTimelineResolverTest {
             queueKind = PendingSportBooking.QueueKind.AUTO,
             lessonId = 101,
             sectionName = "Тестовая секция",
-            start = startsAt,
-            end = startsAt.plusHours(1),
+            start = startsAt.toInstant().toKotlinInstant(),
+            end = startsAt.plusHours(1).toInstant().toKotlinInstant(),
             teacherFio = "Тестовый преподаватель",
             roomName = "Тестовый корпус",
             isPrediction = true

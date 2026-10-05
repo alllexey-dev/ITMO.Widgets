@@ -49,10 +49,12 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.time.toKotlinInstant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
+import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -135,7 +137,7 @@ class SiteScreenshotCapture {
             HomeScheduleRow.Lesson(lesson.toDetailsArgs(TODAY), state, progress = if (index == 0) 0.45f else null)
         }
         return listOf(
-            HomeCard.Schedule(date = TODAY, tomorrow = false, rows = rows, completed = 0),
+            HomeCard.Schedule(date = TODAY.toKotlinLocalDate(), tomorrow = false, rows = rows, completed = 0),
             HomeCard.ScheduleChanges(unread = 1, latest = DemoSchedule.changes(TODAY, TIME.javaNow().toInstant()).first()),
             HomeCard.Marks(listOf(DemoStudy.DATABASES.name, DemoStudy.DISCRETE.name)),
             HomeCard.Sport(DemoSport.score(TIME).summary, pendingBookings()),
@@ -150,8 +152,8 @@ class SiteScreenshotCapture {
             queueKind = if (entry is SportAutoSignEntry) PendingSportBooking.QueueKind.AUTO else PendingSportBooking.QueueKind.FREE,
             lessonId = booking.lessonId,
             sectionName = booking.sectionName.raw,
-            start = booking.start,
-            end = booking.end,
+            start = booking.start.toInstant().toKotlinInstant(),
+            end = booking.end.toInstant().toKotlinInstant(),
             teacherFio = booking.teacherFio,
             roomName = booking.roomName,
             isPrediction = !booking.isLessonReal,
@@ -280,7 +282,8 @@ class SiteScreenshotCapture {
     // region Builders
 
     private fun Lesson.toSubjectLesson(date: LocalDate) = SubjectLesson(
-        pairId = pairId, date = date, start = start, end = end, typeId = typeId.raw, type = type, subjectId = subjectId,
+        pairId = pairId, date = date.toKotlinLocalDate(), start = start.toKotlinLocalTime(), end = end.toKotlinLocalTime(),
+        typeId = typeId.raw, type = type, subjectId = subjectId,
         subjectName = subjectName, flowId = flowId, teacherIsu = teacherIsu, teacherFio = teacherFio, room = room?.raw,
         building = building?.raw, formatId = formatId
     )

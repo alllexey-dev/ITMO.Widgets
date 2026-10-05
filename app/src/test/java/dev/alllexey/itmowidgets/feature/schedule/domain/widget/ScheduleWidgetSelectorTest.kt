@@ -11,6 +11,8 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -244,8 +246,8 @@ class ScheduleWidgetSelectorTest {
     @Test
     fun `pending times normalize to widget offset while started expired and invalid entries are excluded`() {
         val future = pending(1, "11:00").copy(
-            start = OffsetDateTime.parse("2026-08-10T08:00:00Z"),
-            end = OffsetDateTime.parse("2026-08-10T09:30:00Z"),
+            start = Instant.parse("2026-08-10T08:00:00Z"),
+            end = Instant.parse("2026-08-10T09:30:00Z"),
             sectionName = "  Плавание  ",
             teacherFio = "  Тестовый преподаватель  ",
             roomName = "  Бассейн  "
@@ -354,8 +356,8 @@ class ScheduleWidgetSelectorTest {
             queueKind = if (prediction) PendingSportBooking.QueueKind.AUTO else PendingSportBooking.QueueKind.FREE,
             lessonId = if (prediction) -id else id,
             sectionName = "Секция $id",
-            start = startsAt,
-            end = startsAt.plusMinutes(90),
+            start = startsAt.toInstant().toKotlinInstant(),
+            end = startsAt.plusMinutes(90).toInstant().toKotlinInstant(),
             teacherFio = "Тестовый преподаватель",
             roomName = "Тестовый корпус",
             isPrediction = prediction

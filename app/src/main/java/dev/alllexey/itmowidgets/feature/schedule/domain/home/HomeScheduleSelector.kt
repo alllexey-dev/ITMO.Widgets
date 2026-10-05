@@ -13,6 +13,11 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import javax.inject.Inject
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
+import kotlinx.datetime.asTimeZone
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinUtcOffset
 
 /**
  * Picks what the home schedule card shows: the rest of today, or tomorrow once
@@ -32,8 +37,8 @@ class HomeScheduleSelector @Inject constructor() {
         val completed = todayLessons.count { it.end <= time }
         val bookings = pending
             .distinctBy { it.queueKind to it.queueId }
-            .filter { it.start.isAfter(now) }
-            .map { it to it.start.withOffsetSameInstant(now.offset) }
+            .filter { it.start > now.toInstant().toKotlinInstant() }
+            .map { it to OffsetDateTime.ofInstant(it.start.toJavaInstant(), now.offset) }
 
         val todayRows = rows(
             date = today,
@@ -41,7 +46,7 @@ class HomeScheduleSelector @Inject constructor() {
             pending = bookings.filter { (_, local) -> local.toLocalDate() == today },
             time = time
         )
-        if (todayRows.isNotEmpty()) return HomeCard.Schedule(today, tomorrow = false, todayRows, completed)
+        if (todayRows.isNotEmpty()) return HomeCard.Schedule(today.toKotlinLocalDate(), tomorrow = false, todayRows, completed)
 
         val tomorrow = today.plusDays(1)
         val tomorrowRows = rows(
@@ -50,8 +55,11 @@ class HomeScheduleSelector @Inject constructor() {
             pending = bookings.filter { (_, local) -> local.toLocalDate() == tomorrow },
             time = LocalTime.MIN
         )
-        return if (tomorrowRows.isNotEmpty()) HomeCard.Schedule(tomorrow, tomorrow = true, tomorrowRows, completed)
-        else HomeCard.Schedule(today, tomorrow = false, emptyList(), completed)
+        return if (tomorrowRows.isNotEmpty()) {
+            HomeCard.Schedule(tomorrow.toKotlinLocalDate(), tomorrow = true, tomorrowRows, completed)
+        } else {
+            HomeCard.Schedule(today.toKotlinLocalDate(), tomorrow = false, emptyList(), completed)
+        }
     }
 
     /** Lessons and bookings on one timeline; the first lesson is the one in focus. */
@@ -66,7 +74,8 @@ class HomeScheduleSelector @Inject constructor() {
                 add(lesson.start to HomeScheduleRow.Lesson(lesson.toDetailsArgs(date), HomeLessonState.UPCOMING))
             }
             pending.forEach { (booking, local) ->
-                add(local.toLocalTime() to HomeScheduleRow.PendingSport(booking.toDetailsArgs(), booking.isPrediction))
+                val args = booking.toDetailsArgs(local.offset.toKotlinUtcOffset().asTimeZone())
+                add(local.toLocalTime() to HomeScheduleRow.PendingSport(args, booking.isPrediction))
             }
         }.sortedBy { it.first }.map { it.second }
         val focus = timeline.indexOfFirst { it is HomeScheduleRow.Lesson }

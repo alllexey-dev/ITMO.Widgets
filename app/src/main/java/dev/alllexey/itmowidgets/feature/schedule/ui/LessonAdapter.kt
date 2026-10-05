@@ -86,7 +86,7 @@ class LessonAdapter(
                     .findViewById<TextView>(R.id.time_start)
             val widestTime = scheduleList.flatMap { item -> when (item) {
                 is ScheduleItem.LessonItem -> listOf(item.lesson.start, item.lesson.end)
-                is ScheduleItem.PendingSportItem -> listOf(item.booking.start.toLocalTime(), item.booking.end.toLocalTime())
+                is ScheduleItem.PendingSportItem -> listOf(item.start, item.end)
                 else -> emptyList()
             } }
                 .maxOfOrNull { ceil(timeLabel.paint.measureText(it.format(TIME_FORMATTER))).toInt() } ?: 0
@@ -215,8 +215,8 @@ class LessonAdapter(
             itemView.findViewById<View>(R.id.link_indicator).visibility = View.GONE
             itemView.findViewById<View>(R.id.change_indicator).visibility = View.GONE
             title.text = booking.sectionName
-            start.text = booking.start.format(TIME_FORMATTER)
-            end.text = booking.end.format(TIME_FORMATTER)
+            start.text = item.start.format(TIME_FORMATTER)
+            end.text = item.end.format(TIME_FORMATTER)
             title.setTextColor(itemView.context.color.onSurface)
             start.setTextColor(itemView.context.color.onSurface)
             end.setTextColor(itemView.context.color.onSurfaceVariant)

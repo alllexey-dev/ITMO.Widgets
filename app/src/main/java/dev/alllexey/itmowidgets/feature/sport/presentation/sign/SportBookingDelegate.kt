@@ -27,6 +27,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.datetime.toKotlinLocalDate
 
 data class AutoSignAvailability(
     val limits: SportAutoSignLimits,
@@ -150,7 +151,7 @@ class SportBookingDelegate @Inject constructor(
             awaitAll(
                 async { sportBookingRepository.refreshSportBookings() },
                 async {
-                    scheduleRefreshGateway.refreshOwnSchedule(startDate, endDate)
+                    scheduleRefreshGateway.refreshOwnSchedule(startDate.toKotlinLocalDate(), endDate.toKotlinLocalDate())
                 },
                 async { sportScheduleRepository.refreshSportSchedule() }
             )
@@ -163,7 +164,7 @@ class SportBookingDelegate @Inject constructor(
             coroutineScope {
                 awaitAll(
                     async { sportBookingRepository.refreshSportBookings() },
-                    async { scheduleRefreshGateway.refreshOwnSchedule(startDate, endDate) },
+                    async { scheduleRefreshGateway.refreshOwnSchedule(startDate.toKotlinLocalDate(), endDate.toKotlinLocalDate()) },
                     // The catalog's free places lag the same way; a full lesson stays full otherwise.
                     async { sportScheduleRepository.refreshSportSchedule() }
                 )

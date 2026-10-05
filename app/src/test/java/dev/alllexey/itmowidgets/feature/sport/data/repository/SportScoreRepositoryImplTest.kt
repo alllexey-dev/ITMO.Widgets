@@ -9,7 +9,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Rule
@@ -55,7 +55,7 @@ class SportScoreRepositoryImplTest {
         val periods = (repository.getScorePeriods() as AppResult.Success).value
         assertEquals(listOf(false, true), periods.map { it.current })
         assertNull(periods[0].endsAt)
-        assertEquals(OffsetDateTime.parse("2026-12-27T00:00:00+03:00"), periods[1].endsAt)
+        assertEquals(Instant.parse("2026-12-27T00:00:00+03:00"), periods[1].endsAt)
     }
 
     @Test fun `periods survive a failed current semester without an end date`() = runTest {

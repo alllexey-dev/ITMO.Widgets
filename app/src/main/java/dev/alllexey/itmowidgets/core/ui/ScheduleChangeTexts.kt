@@ -6,8 +6,10 @@ import dev.alllexey.itmowidgets.core.schedule.LessonSlot
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
-import java.time.format.DateTimeFormatter
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import java.util.Locale
+import kotlinx.datetime.format
+import kotlinx.datetime.toJavaLocalTime
 
 /** "Перенесена на ср, 9 сентября, 10:00": what happened, by the first changed field for an updated lesson. */
 fun ScheduleChange.summary(context: Context): String = when (kind) {
@@ -52,7 +54,7 @@ fun ScheduleChange.detailLines(context: Context): List<String> {
     return ScheduleChangeField.entries.filter { it in fields }.map { field ->
         val (from, to) = when (field) {
             ScheduleChangeField.TIME ->
-                if (old.date == new.date) timeRangeText(old.start, old.end) to timeRangeText(new.start, new.end)
+                if (old.date == new.date) timeRange(old) to timeRange(new)
                 else startText(old) to startText(new)
             ScheduleChangeField.FORMAT -> value(context, old.format) to value(context, new.format)
             ScheduleChangeField.PLACE -> placeText(context, old) to placeText(context, new)
@@ -70,7 +72,9 @@ private fun ScheduleChangeField.titleRes(): Int = when (this) {
 }
 
 /** "ср, 9 сентября, 10:00". */
-private fun startText(slot: LessonSlot): String = slot.startsAt.format(START)
+private fun startText(slot: LessonSlot): String = slot.startsAt.format(DateTexts.SHORT_WEEKDAY_DAY_MONTH_TIME)
+
+private fun timeRange(slot: LessonSlot): String = timeRangeText(slot.start.toJavaLocalTime(), slot.end.toJavaLocalTime())
 
 /** "1506 · Кронва"; a missing half is left out, a missing place reads as "—". */
 private fun placeText(context: Context, slot: LessonSlot): String {
@@ -83,4 +87,3 @@ private fun value(context: Context, raw: String?): String =
     raw?.trim()?.takeIf(String::isNotEmpty) ?: context.getString(R.string.schedule_change_value_none)
 
 private val RUSSIAN: Locale = Locale.forLanguageTag("ru")
-private val START: DateTimeFormatter = DateTimeFormatter.ofPattern("EE, d MMMM, HH:mm", RUSSIAN)

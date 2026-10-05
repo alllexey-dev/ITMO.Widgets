@@ -35,6 +35,11 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.Month
 import java.time.OffsetDateTime
+import kotlin.time.toKotlinInstant
+import kotlinx.datetime.toJavaDayOfWeek
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.toKotlinLocalDate
 
 /**
  * The demo sport catalog for the next two weeks, Anna's volleyball, a queue for a full swimming lesson, an auto-sign
@@ -48,11 +53,11 @@ object DemoSport {
      */
     fun schedule(time: AcademicTimeProvider): Map<LocalDate, List<SportLesson>> {
         val today = time.javaToday()
-        val booked = DemoSportSlots.annaBookedDates(today)
+        val booked = annaBookedDates(today)
         val queued = queuedSwimming(time)
-        val extra = DemoSportSlots.extraSlots(time.javaNow().toLocalDateTime())
+        val extra = DemoSportSlots.extraSlots(time.localNow())
         return (0 until CATALOG_DAYS).map(today::plusDays).associateWith { date ->
-            val slots = DemoSportSlots.ALL.filter { it.day == date.dayOfWeek } + if (date == today) extra else emptyList()
+            val slots = DemoSportSlots.ALL.filter { it.day.toJavaDayOfWeek() == date.dayOfWeek } + if (date == today) extra else emptyList()
             slots.map { slot ->
                 val signed = slot == DemoSportSlots.ANNA_WEEKLY && date in booked
                 val available = if (slot == queued.slot && date == queued.date) 0 else availableSeats(slot, date)
@@ -63,7 +68,7 @@ object DemoSport {
 
     /** Anna's confirmed visits that have not passed yet. */
     fun bookings(time: AcademicTimeProvider): List<SportBooking> =
-        DemoSportSlots.annaBookedDates(time.javaToday())
+        annaBookedDates(time.javaToday())
             .filter { !it.isBefore(time.javaToday()) }
             .map { date -> DemoSportSlots.ANNA_WEEKLY.toLesson(date, time, signed = true, available = 0).toBookingOfLesson() }
 
@@ -76,11 +81,11 @@ object DemoSport {
 
     fun friendsBookings(time: AcademicTimeProvider): List<FriendSportBooking> {
         val today = time.javaToday()
-        val volleyball = DemoSportSlots.annaBookedDates(today).filter { !it.isBefore(today) }
-            .map { DemoSportSlots.ANNA_WEEKLY.lessonId(it) }
+        val volleyball = annaBookedDates(today).filter { !it.isBefore(today) }
+            .map { DemoSportSlots.ANNA_WEEKLY.idOn(it) }
         val tennis = DemoSportSlots.TABLE_TENNIS_WEDNESDAY.nextDate(today)
         return volleyball.map { FriendSportBooking(DemoPeople.IVAN.summary(), it, null) } +
-            FriendSportBooking(DemoPeople.MARIA.summary(), DemoSportSlots.TABLE_TENNIS_WEDNESDAY.lessonId(tennis), null) +
+            FriendSportBooking(DemoPeople.MARIA.summary(), DemoSportSlots.TABLE_TENNIS_WEDNESDAY.idOn(tennis), null) +
             FriendSportBooking(DemoPeople.POLINA.summary(), queuedSwimming(time).lessonId, polinaEntry(time))
     }
 
@@ -88,11 +93,11 @@ object DemoSport {
         val today = time.javaToday()
         return when (isu) {
             DemoPeople.IVAN.isu -> UserSportBookings(
-                DemoSportSlots.annaBookedDates(today).filter { !it.isBefore(today) }.map(DemoSportSlots.ANNA_WEEKLY::lessonId),
+                annaBookedDates(today).filter { !it.isBefore(today) }.map { DemoSportSlots.ANNA_WEEKLY.idOn(it) },
                 emptyList()
             )
             DemoPeople.MARIA.isu -> UserSportBookings(
-                listOf(DemoSportSlots.TABLE_TENNIS_WEDNESDAY.lessonId(DemoSportSlots.TABLE_TENNIS_WEDNESDAY.nextDate(today))),
+                listOf(DemoSportSlots.TABLE_TENNIS_WEDNESDAY.idOn(DemoSportSlots.TABLE_TENNIS_WEDNESDAY.nextDate(today))),
                 emptyList()
             )
             DemoPeople.POLINA.isu -> UserSportBookings(emptyList(), listOf(polinaEntry(time).toBooking()))
@@ -111,7 +116,7 @@ object DemoSport {
         val today = time.javaToday()
         val visits = (1..VISITS).map { week ->
             val date = DemoSportSlots.ANNA_WEEKLY.nextDate(today).minusWeeks(week.toLong())
-            attendance("lesson", "Волейбол", 2, date.at(DemoSportSlots.ANNA_WEEKLY.start, time), competition = false)
+            attendance("lesson", "Волейбол", 2, date.at(DemoSportSlots.ANNA_WEEKLY.start.toJavaLocalTime(), time), competition = false)
         }
         val tournament = attendance(
             "competition", "Межфакультетский турнир по волейболу", 10,
@@ -136,7 +141,7 @@ object DemoSport {
         val year = if (today.month >= Month.SEPTEMBER) today.year else today.year - 1
         val currentEnd = if (autumn) LocalDate.of(year + 1, Month.JANUARY, 31) else LocalDate.of(year + 1, Month.JUNE, 30)
         val current = SportScorePeriod(
-            CURRENT_PERIOD, label(autumn, year), currentEnd.at(LocalTime.of(23, 59), time), current = true
+            CURRENT_PERIOD, label(autumn, year), currentEnd.at(LocalTime.of(23, 59), time).toInstant().toKotlinInstant(), current = true
         )
         val previous = if (autumn) {
             listOf(SportScorePeriod(CURRENT_PERIOD - 1, label(false, year - 1)), SportScorePeriod(CURRENT_PERIOD - 2, label(true, year - 1)))
@@ -166,7 +171,7 @@ object DemoSport {
         .map { (start, end) -> SportTimeSlot(timeSlotId(start), start.toString(), end.toString()) }
 
     private data class QueuedLesson(val slot: DemoSportSlot, val date: LocalDate) {
-        val lessonId: Long get() = slot.lessonId(date)
+        val lessonId: Long get() = slot.idOn(date)
     }
 
     /** The next Tuesday's swimming: full, Anna waits in the queue for a free seat. */
@@ -201,23 +206,23 @@ object DemoSport {
     }
 
     private fun QueuedLesson.queueLesson(time: AcademicTimeProvider): SportQueueLesson {
-        val start = date.at(slot.start, time)
+        val start = date.at(slot.start.toJavaLocalTime(), time)
         return SportQueueLesson(
             id = lessonId, sectionId = sectionId(slot), sectionName = slot.section, sectionLevel = 1, level = 1,
             typeId = FREE_ATTENDANCE.toLong(), buildingId = buildingId(slot), roomName = slot.room, start = start,
-            end = date.at(slot.end, time), timeSlotId = timeSlotId(slot.start), teacherIsu = slot.coach.isu.toLong(),
+            end = date.at(slot.end.toJavaLocalTime(), time), timeSlotId = timeSlotId(slot.start), teacherIsu = slot.coach.isu.toLong(),
             teacherFio = slot.coach.name
         )
     }
 
     private fun DemoSportSlot.toLesson(date: LocalDate, time: AcademicTimeProvider, signed: Boolean, available: Int): SportLesson {
-        val start = date.at(this.start, time)
+        val start = date.at(this.start.toJavaLocalTime(), time)
         val reasons = UnavailableReason.getSortedUnavailableReasons(signed, start, available, emptyList(), time.javaNow())
         return SportLesson(
             isLessonReal = true,
-            lessonId = lessonId(date),
+            lessonId = idOn(date),
             start = start,
-            end = (if (end.isAfter(this.start)) date else date.plusDays(1)).at(end, time),
+            end = (if (end > this.start) date else date.plusDays(1)).at(end.toJavaLocalTime(), time),
             sectionId = sectionId(this),
             sectionName = SectionName(section),
             sectionLevel = 1,
@@ -262,7 +267,12 @@ object DemoSport {
         ((date.dayOfMonth * 7 + slot.index * 5) % (slot.limit / 2)) + 1
 
     private fun DemoSportSlot.nextDate(from: LocalDate): LocalDate =
-        generateSequence(from) { it.plusDays(1) }.first { it.dayOfWeek == day }
+        generateSequence(from) { it.plusDays(1) }.first { it.dayOfWeek == day.toJavaDayOfWeek() }
+
+    private fun annaBookedDates(today: LocalDate): List<LocalDate> =
+        DemoSportSlots.annaBookedDates(today.toKotlinLocalDate()).map { it.toJavaLocalDate() }
+
+    private fun DemoSportSlot.idOn(date: LocalDate): Long = lessonId(date.toKotlinLocalDate())
 
     private fun LocalDate.at(time: LocalTime, provider: AcademicTimeProvider): OffsetDateTime =
         atTime(time).atZone(provider.javaZone()).toOffsetDateTime()
@@ -277,7 +287,7 @@ object DemoSport {
         else -> 5
     }
 
-    private fun timeSlotId(start: LocalTime): Long = (start.hour * 60L + start.minute) / 10
+    private fun timeSlotId(start: kotlinx.datetime.LocalTime): Long = (start.hour * 60L + start.minute) / 10
 
     private const val CATALOG_DAYS = 14L
     private const val FREE_ATTENDANCE = 2

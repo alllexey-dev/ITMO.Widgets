@@ -5,14 +5,14 @@ import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import java.time.OffsetDateTime
 import javax.inject.Inject
+import kotlin.time.Instant
 
 sealed interface RecordbookSportState {
     data class Content(
         val periodLabel: String,
         val score: SportScoreSummary,
-        val endsAt: OffsetDateTime?,
+        val endsAt: Instant?,
         val current: Boolean
     ) : RecordbookSportState
     data object Unavailable : RecordbookSportState

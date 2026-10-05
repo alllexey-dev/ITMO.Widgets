@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
@@ -24,7 +24,7 @@ class RecordbookSportResolverTest {
     }
 
     @Test fun `end date and current flag come from the matched period`() = runTest {
-        val endsAt = OffsetDateTime.parse("2026-06-28T00:00:00+03:00")
+        val endsAt = Instant.parse("2026-06-28T00:00:00+03:00")
         sport.periods = AppResult.Success(listOf(SportScorePeriod(9, "Осень 2025/2026"), SportScorePeriod(10, "Весна 2025/2026", endsAt, current = true)))
         val current = resolver.resolve(period(), listOf(pe)) as RecordbookSportState.Content
         assertEquals(endsAt, current.endsAt)

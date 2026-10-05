@@ -12,7 +12,6 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaToday
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -25,6 +24,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
 
 /** A row of the range choice: its title and the days it covers from today. */
 data class IcsRangeOption(val kind: IcsRangeKind, val title: UiText, val dates: UiText)
@@ -88,7 +89,9 @@ class IcsExportViewModel @Inject constructor(
     }
 
     fun onDates(start: LocalDate, end: LocalDate) {
-        if (mutableState.value is IcsExportUiState.Choose) start(ScheduleExportRange.Custom(start, end))
+        if (mutableState.value is IcsExportUiState.Choose) {
+            start(ScheduleExportRange.Custom(start.toKotlinLocalDate(), end.toKotlinLocalDate()))
+        }
     }
 
     fun retry() {
@@ -124,9 +127,9 @@ class IcsExportViewModel @Inject constructor(
     }
 
     private fun choice(): IcsExportUiState.Choose {
-        val today = time.javaToday()
+        val today = time.today()
         fun option(kind: IcsRangeKind, title: Int, range: ScheduleExportRange) =
-            IcsRangeOption(kind, UiText.Resource(title), IcsDateLabels.range(range.dates(today)))
+            IcsRangeOption(kind, UiText.Resource(title), IcsDateLabels.range(range.javaDates(today)))
         return IcsExportUiState.Choose(
             listOf(
                 option(IcsRangeKind.WEEK, R.string.ics_range_week, ScheduleExportRange.Week),
@@ -136,7 +139,7 @@ class IcsExportViewModel @Inject constructor(
                     UiText.Resource(R.string.ics_range_semester),
                     UiText.Resource(
                         R.string.ics_range_until,
-                        listOf(IcsDateLabels.day(ScheduleExportRange.Semester.dates(today).endInclusive))
+                        listOf(IcsDateLabels.day(ScheduleExportRange.Semester.javaDates(today).endInclusive))
                     )
                 ),
                 IcsRangeOption(
@@ -148,7 +151,10 @@ class IcsExportViewModel @Inject constructor(
         )
     }
 
-    private fun label(range: ScheduleExportRange): UiText = IcsDateLabels.range(range.dates(time.javaToday()))
+    private fun label(range: ScheduleExportRange): UiText = IcsDateLabels.range(range.javaDates(time.today()))
+
+    private fun ScheduleExportRange.javaDates(today: kotlinx.datetime.LocalDate): ClosedRange<LocalDate> =
+        dates(today).let { it.start.toJavaLocalDate()..it.endInclusive.toJavaLocalDate() }
 
     private fun saveRange(range: ScheduleExportRange) {
         saved[RANGE] = when (range) {
@@ -165,7 +171,7 @@ class IcsExportViewModel @Inject constructor(
         "two_weeks" -> ScheduleExportRange.TwoWeeks
         "semester" -> ScheduleExportRange.Semester
         else -> value.split('/').takeIf { it.size == 2 }
-            ?.let { (start, end) -> ScheduleExportRange.Custom(LocalDate.parse(start), LocalDate.parse(end)) }
+            ?.let { (start, end) -> ScheduleExportRange.Custom(kotlinx.datetime.LocalDate.parse(start), kotlinx.datetime.LocalDate.parse(end)) }
     }
 
     private fun saveFile(file: IcsFile) {
