@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.copyToClipboard
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -28,8 +29,8 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openReviewReport
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.openLink
+import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.shareText
-import dev.alllexey.itmowidgets.core.ui.userDisplayName
 import dev.alllexey.itmowidgets.databinding.FragmentUserProfileBinding
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileEvent
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
@@ -61,7 +62,7 @@ class UserProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.backButton.setOnClickListener { closeScreen() }
-        binding.stateAction.setOnClickListener { viewModel.retry() }
+        binding.stateAction.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
         binding.shareButton.setOnClickListener { shareProfile() }
         adapter = UserProfileAdapter(ProfileActions(
             onPrimary = viewModel::onPrimaryAction,
@@ -87,7 +88,7 @@ class UserProfileFragment : Fragment() {
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.eventFlow
+        viewModel.events
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::handle)
             .launchIn(viewLifecycleOwner.lifecycleScope)
@@ -142,13 +143,13 @@ class UserProfileFragment : Fragment() {
         val content = viewModel.uiState.value as? UserProfileUiState.Content ?: return
         openScreen(screen, bundleOf(
             UserScreenArgs.ISU to content.isu,
-            UserScreenArgs.NAME to requireContext().userDisplayName(content.name, content.isu)
+            UserScreenArgs.NAME to content.displayName.resolve(requireContext())
         ))
     }
 
     private fun shareProfile() {
         val content = viewModel.uiState.value as? UserProfileUiState.Content ?: return
-        val name = requireContext().userDisplayName(content.name, content.isu)
+        val name = content.displayName.resolve(requireContext())
         shareText(getString(R.string.share_profile_title), getString(R.string.share_profile_text, name, shareLinks.profile(content.isu)))
     }
 
@@ -173,7 +174,7 @@ class UserProfileFragment : Fragment() {
             ).show()
             is UserProfileEvent.ConfirmRemove -> MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.friends_remove_confirm_title)
-                .setMessage(getString(R.string.friends_remove_confirm_message, requireContext().userDisplayName(event.name, viewModel.isu)))
+                .setMessage(getString(R.string.friends_remove_confirm_message, event.name.resolve(requireContext())))
                 .setNegativeButton(R.string.common_cancel, null)
                 .setPositiveButton(R.string.user_action_remove) { _, _ -> viewModel.removeFriend() }
                 .show()
@@ -186,7 +187,7 @@ class UserProfileFragment : Fragment() {
                 binding.root,
                 R.string.common_partial_load_error,
                 Snackbar.LENGTH_LONG
-            ).setAction(R.string.common_retry) { viewModel.retry() }.show()
+            ).setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }.show()
         }
     }
 }

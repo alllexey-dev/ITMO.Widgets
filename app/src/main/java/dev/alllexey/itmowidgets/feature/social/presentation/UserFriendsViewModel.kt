@@ -6,59 +6,75 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import javax.inject.Inject
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
-
-sealed interface UserFriendsUiState {
-    data object Loading : UserFriendsUiState
-    data class Error(val error: AppError) : UserFriendsUiState
-    data class Content(val items: List<UserListItem>, val refreshing: Boolean = false) : UserFriendsUiState
-}
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class UserFriendsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: SocialRepository
 ) : ViewModel() {
-    val isu: Int = checkNotNull(savedStateHandle[UserScreenArgs.ISU])
+    private val isu: Int = checkNotNull(savedStateHandle[UserScreenArgs.ISU])
     val name: String = savedStateHandle[UserScreenArgs.NAME] ?: ""
-    private val state = MutableStateFlow<UserFriendsUiState>(UserFriendsUiState.Loading)
-    val uiState = state.asStateFlow()
-    private val errors = Channel<AppError>(Channel.BUFFERED)
-    val refreshErrors = errors.receiveAsFlow()
-    private var request: Job? = null
+    private val refreshes = RefreshTracker(viewModelScope)
+    private val eventQueue = EventQueue<UserFriendsEvent>()
 
-    init { load(silent = true) }
+    /** The last answer for this person renders at once; the network only updates the list. */
+    private val friends = MutableStateFlow(cachedFriends() ?: LoadState.Loading)
 
-    /** A pull shows the indicator; the load on entry stays silent behind the cached list. */
-    fun load(silent: Boolean = false) {
-        if (request?.isActive == true) return
-        // The last answer for this person renders at once; the network only updates the list.
-        val previous = state.value as? UserFriendsUiState.Content
-            ?: repository.cachedUserFriends(isu)?.let { UserFriendsUiState.Content(it.toItems()) }
-        state.value = previous?.copy(refreshing = !silent) ?: UserFriendsUiState.Loading
-        request = viewModelScope.launch {
-            when (val result = repository.userFriends(isu)) {
-                is AppResult.Success -> state.value = UserFriendsUiState.Content(result.value.toItems())
-                is AppResult.Failure -> {
-                    // A revoked permission or session must discard content, not keep a private stale list.
-                    if (previous != null && result.error !in setOf(
-                            AppError.Forbidden, AppError.Unauthorized, AppError.CustomServicesDisabled, AppError.NotFound
-                        )) {
-                        state.value = previous.copy(refreshing = false)
-                        errors.send(result.error)
-                    } else state.value = UserFriendsUiState.Error(result.error)
+    val uiState: StateFlow<UserFriendsUiState> = combine(friends, refreshes.refreshing, ::toUiState)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, toUiState(friends.value, refreshing = false))
+
+    val events: Flow<UserFriendsEvent> = eventQueue.events
+
+    init {
+        refresh(RefreshMode.Silent)
+    }
+
+    /** A pull or a retry shows the indicator; the load on entry stays silent behind the cached list. */
+    fun refresh(mode: RefreshMode) {
+        refreshes.launch(mode) { load() }
+    }
+
+    private suspend fun load() {
+        if (friends.value !is LoadState.Content) cachedFriends()?.let { friends.value = it }
+        when (val result = repository.userFriends(isu)) {
+            is AppResult.Success -> friends.value = LoadState.Content(result.value)
+            is AppResult.Failure -> {
+                // A revoked permission or session must discard content, not keep a private stale list.
+                if (friends.value is LoadState.Content && result.error !in REVOKING) {
+                    eventQueue.send(UserFriendsEvent.RefreshFailed(result.error))
+                } else {
+                    friends.value = LoadState.Error(result.error)
                 }
             }
         }
+    }
+
+    private fun cachedFriends(): LoadState<List<UserProfile>>? = repository.cachedUserFriends(isu)?.let { LoadState.Content(it) }
+
+    private fun toUiState(friends: LoadState<List<UserProfile>>, refreshing: Boolean): UserFriendsUiState = when (friends) {
+        LoadState.Loading -> UserFriendsUiState.Loading
+        LoadState.Disabled -> UserFriendsUiState.Disabled
+        // A retry over a failure shows progress, not the failure it may replace.
+        is LoadState.Error -> if (refreshing) UserFriendsUiState.Loading else when (friends.error) {
+            AppError.Forbidden -> UserFriendsUiState.Hidden
+            AppError.CustomServicesDisabled -> UserFriendsUiState.Disabled
+            else -> UserFriendsUiState.Error(friends.error)
+        }
+        is LoadState.Content -> UserFriendsUiState.Content(friends.value.toItems(), refreshing)
     }
 
     private fun List<UserProfile>.toItems(): List<UserListItem> = map { profile ->
@@ -69,5 +85,9 @@ class UserFriendsViewModel @Inject constructor(
             subtitle = profile.user.subtitleText(),
             status = profile.relationship.statusText()
         ))
+    }
+
+    private companion object {
+        val REVOKING = setOf(AppError.Forbidden, AppError.Unauthorized, AppError.CustomServicesDisabled, AppError.NotFound)
     }
 }

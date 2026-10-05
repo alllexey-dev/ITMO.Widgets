@@ -15,12 +15,15 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
+import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.databinding.FragmentFriendsBinding
+import dev.alllexey.itmowidgets.feature.social.presentation.FriendsEmpty
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsEvent
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsTab
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsUiState
@@ -28,7 +31,6 @@ import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import dev.alllexey.itmowidgets.core.ui.userDisplayName
 
 @AndroidEntryPoint
 class FriendsFragment : Fragment() {
@@ -56,7 +58,7 @@ class FriendsFragment : Fragment() {
         )
         binding.recyclerView.adapter = adapter
         binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh() })
+        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh(RefreshMode.Pull) })
         binding.backButton.setOnClickListener { closeScreen() }
         binding.searchButton.setOnClickListener { openScreen(AppScreen.USER_SEARCH) }
         binding.tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -72,7 +74,7 @@ class FriendsFragment : Fragment() {
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.eventFlow
+        viewModel.events
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::handle)
             .launchIn(viewLifecycleOwner.lifecycleScope)
@@ -106,7 +108,7 @@ class FriendsFragment : Fragment() {
                 title = getString(R.string.common_load_error_title),
                 description = getString(state.error.messageRes()),
                 action = getString(R.string.common_retry)
-            ) { viewModel.refresh() }
+            ) { viewModel.refresh(RefreshMode.Force) }
             is FriendsUiState.Content -> renderContent(state)
         }
     }
@@ -128,8 +130,9 @@ class FriendsFragment : Fragment() {
         if (tabs.selectedTabPosition != selected) tabs.getTabAt(selected)?.select()
 
         adapter.submitList(state.items)
-        if (state.items.isEmpty()) {
-            val friends = state.tab == FriendsTab.FRIENDS
+        val empty = state.empty
+        if (empty != null) {
+            val friends = empty == FriendsEmpty.NO_FRIENDS
             showState(
                 icon = if (friends) R.drawable.ic_group else R.drawable.ic_how_to_reg,
                 title = getString(if (friends) R.string.friends_empty_title else R.string.friends_requests_empty_title),
@@ -169,7 +172,7 @@ class FriendsFragment : Fragment() {
             ).show()
             is FriendsEvent.ConfirmRemove -> MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.friends_remove_confirm_title)
-                .setMessage(getString(R.string.friends_remove_confirm_message, requireContext().userDisplayName(event.name, event.isu)))
+                .setMessage(getString(R.string.friends_remove_confirm_message, event.name.resolve(requireContext())))
                 .setNegativeButton(R.string.common_cancel, null)
                 .setPositiveButton(R.string.user_action_remove) { _, _ -> viewModel.removeFriend(event.isu) }
                 .show()

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.presentation
 
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
@@ -10,10 +11,14 @@ import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.shared.core.Res
+import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -100,7 +105,7 @@ class UserSearchViewModelTest {
 
             social.actionError = AppError.Forbidden
             viewModel.onAction(updated, UserAction.CANCEL)
-            assertEquals(UserSearchEvent.ActionFailed(AppError.Forbidden), viewModel.eventFlow.first())
+            assertEquals(UserSearchEvent.ActionFailed(AppError.Forbidden), viewModel.events.first())
         }
 
     @Test
@@ -114,6 +119,7 @@ class UserSearchViewModelTest {
             assertEquals(UserSearchUiState.Error(AppError.Network), viewModel.uiState.value)
 
             viewModel.onQueryChanged("")
+            runCurrent()
             assertEquals(UserSearchUiState.Idle, viewModel.uiState.value)
             advanceUntilIdle()
             assertEquals(listOf("а"), search.queries)
@@ -131,19 +137,89 @@ class UserSearchViewModelTest {
 
         viewModel.onAction(row, UserAction.INVITE)
 
-        assertEquals(UserSearchEvent.Invite("Посторонний"), viewModel.eventFlow.first())
+        assertEquals(UserSearchEvent.Invite("Посторонний"), viewModel.events.first())
+    }
+
+    @Test
+    fun `a retry searches the current query again after an error`() = runTest(mainDispatcherRule.dispatcher) {
+        val search = PagedPeopleSearch(
+            pages = mapOf(0 to PeopleSearchPage(listOf(PersonSearchResult(2, "Посторонний", null, null)), 1, null)),
+            error = AppError.Network
+        )
+        val viewModel = UserSearchViewModel(search, FakeSocialRepository())
+        viewModel.onQueryChanged("пос")
+        advanceUntilIdle()
+        assertEquals(UserSearchUiState.Error(AppError.Network), viewModel.uiState.value)
+
+        search.error = null
+        viewModel.refresh(RefreshMode.Force)
+        advanceUntilIdle()
+
+        assertEquals(listOf("пос", "пос"), search.queries)
+        assertEquals(1, (viewModel.uiState.value as UserSearchUiState.Content).items.count { it is UserListItem.User })
+    }
+
+    @Test
+    fun `nobody found is the empty state`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = UserSearchViewModel(PagedPeopleSearch(), FakeSocialRepository())
+        viewModel.onQueryChanged("никто")
+        advanceUntilIdle()
+        assertEquals(UserSearchUiState.Empty, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `the next page shows the footer, ignores more taps and a new query drops it`() = runTest(mainDispatcherRule.dispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        val search = PagedPeopleSearch(
+            pages = mapOf(
+                0 to PeopleSearchPage(listOf(PersonSearchResult(2, "Посторонний", null, null)), 2, 1),
+                1 to PeopleSearchPage(listOf(PersonSearchResult(3, "Третий", null, null)), 2, null)
+            )
+        )
+        val viewModel = UserSearchViewModel(search, FakeSocialRepository())
+        viewModel.onQueryChanged("пос")
+        advanceUntilIdle()
+        search.pageGate = { gate.await() }
+
+        viewModel.loadMore()
+        viewModel.loadMore()
+        runCurrent()
+        val loading = viewModel.uiState.value as UserSearchUiState.Content
+        assertEquals(true, loading.loadingMore)
+        assertEquals(false, loading.items.contains(UserListItem.LoadMore))
+        assertEquals(listOf(0, 1), search.offsets)
+
+        viewModel.onQueryChanged("тре")
+        advanceUntilIdle()
+        assertEquals(listOf(0, 1, 0), search.offsets)
+        assertEquals(false, (viewModel.uiState.value as UserSearchUiState.Content).loadingMore)
+    }
+
+    @Test
+    fun `an unregistered person without a name falls back to the placeholder`() = runTest(mainDispatcherRule.dispatcher) {
+        val search = PagedPeopleSearch(
+            pages = mapOf(0 to PeopleSearchPage(listOf(PersonSearchResult(9, "", null, null)), 1, null))
+        )
+        val viewModel = UserSearchViewModel(search, FakeSocialRepository())
+        viewModel.onQueryChanged("9")
+        advanceUntilIdle()
+        val row = ((viewModel.uiState.value as UserSearchUiState.Content).items[1] as UserListItem.User).row
+        assertEquals(UiText.Res(Res.string.user_name_placeholder, listOf(9)), row.displayName)
     }
 
     private class PagedPeopleSearch(
         private val pages: Map<Int, PeopleSearchPage> = emptyMap(),
-        private val error: AppError? = null
+        var error: AppError? = null
     ) : PeopleSearchRepository {
         val queries = mutableListOf<String>()
         val offsets = mutableListOf<Int>()
+        /** Awaited by pages after the first one. */
+        var pageGate: (suspend () -> Unit)? = null
 
         override suspend fun search(query: String, offset: Int): AppResult<PeopleSearchPage> {
             queries += query
             offsets += offset
+            if (offset > 0) pageGate?.invoke()
             error?.let { return AppResult.Failure(it) }
             return AppResult.Success(pages[offset] ?: PeopleSearchPage.EMPTY)
         }

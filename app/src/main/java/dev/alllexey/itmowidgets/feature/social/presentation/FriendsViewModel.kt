@@ -5,41 +5,23 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.UserProfile
-import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.presentation.BusyKeys
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.text.UiText
 import javax.inject.Inject
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
-
-enum class FriendsTab { FRIENDS, REQUESTS }
-
-sealed interface FriendsUiState {
-    data object Loading : FriendsUiState
-    data object Disabled : FriendsUiState
-    data class Error(val error: AppError) : FriendsUiState
-    data class Content(
-        val tab: FriendsTab,
-        val items: List<UserListItem>,
-        val incomingCount: Int,
-        val refreshing: Boolean
-    ) : FriendsUiState
-}
-
-sealed interface FriendsEvent {
-    data class ActionFailed(val error: AppError) : FriendsEvent
-    data class ConfirmRemove(val isu: Int, val name: String) : FriendsEvent
-}
 
 @HiltViewModel
 class FriendsViewModel @Inject constructor(
@@ -47,44 +29,32 @@ class FriendsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val tab = MutableStateFlow(FriendsTab.FRIENDS)
-    private val refreshing = MutableStateFlow(false)
-    private var inFlight = false
-    private val busy = MutableStateFlow<Set<Int>>(emptySet())
-    private val events = Channel<FriendsEvent>(Channel.BUFFERED)
+    private val refreshes = RefreshTracker(viewModelScope)
+    private val busyRows = BusyKeys<Int>(viewModelScope)
+    private val eventQueue = EventQueue<FriendsEvent>()
 
     val uiState: StateFlow<FriendsUiState> = combine(
         repository.observeFriends(),
         repository.observeRequests(),
         tab,
-        refreshing,
-        busy
-    ) { friends, requests, tab, refreshing, busy ->
-        toUiState(friends, requests, tab, refreshing, busy)
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, FriendsUiState.Loading)
+        refreshes.refreshing,
+        busyRows.busy,
+        ::toUiState
+    ).stateIn(viewModelScope, SharingStarted.Eagerly, FriendsUiState.Loading)
 
-    val eventFlow: Flow<FriendsEvent> = events.receiveAsFlow()
+    val events: Flow<FriendsEvent> = eventQueue.events
 
     init {
-        refresh(silent = true)
+        refresh(RefreshMode.Silent)
     }
 
     fun selectTab(selected: FriendsTab) {
         tab.value = selected
     }
 
-    /** A pull shows the indicator; the automatic refresh on entry stays silent behind the list. */
-    fun refresh(silent: Boolean = false) {
-        if (inFlight) return
-        inFlight = true
-        if (!silent) refreshing.value = true
-        viewModelScope.launch {
-            try {
-                repository.refresh()
-            } finally {
-                inFlight = false
-                refreshing.value = false
-            }
-        }
+    /** A pull or a retry shows the indicator; the refresh on entry stays silent behind the list. */
+    fun refresh(mode: RefreshMode) {
+        refreshes.launch(mode) { repository.refresh() }
     }
 
     fun onAction(row: UserRowUi, action: UserAction) {
@@ -93,24 +63,20 @@ class FriendsViewModel @Inject constructor(
             UserAction.REJECT -> act(row.isu) { repository.rejectRequest(row.isu) }
             UserAction.CANCEL -> act(row.isu) { repository.cancelRequest(row.isu) }
             UserAction.REMOVE -> viewModelScope.launch {
-                events.send(FriendsEvent.ConfirmRemove(row.isu, row.name))
+                eventQueue.send(FriendsEvent.ConfirmRemove(row.isu, row.displayName))
             }
             UserAction.ADD, UserAction.INVITE -> Unit
         }
     }
 
-    fun removeFriend(isu: Int) = act(isu) { repository.removeFriend(isu) }
+    fun removeFriend(isu: Int) {
+        act(isu) { repository.removeFriend(isu) }
+    }
 
     private fun act(isu: Int, action: suspend () -> AppResult<UserProfile>) {
-        if (isu in busy.value) return
-        busy.value = busy.value + isu
-        viewModelScope.launch {
-            try {
-                val result = action()
-                if (result is AppResult.Failure) events.send(FriendsEvent.ActionFailed(result.error))
-            } finally {
-                busy.value = busy.value - isu
-            }
+        busyRows.launch(isu) {
+            val result = action()
+            if (result is AppResult.Failure) eventQueue.send(FriendsEvent.ActionFailed(result.error))
         }
     }
 
@@ -152,7 +118,12 @@ class FriendsViewModel @Inject constructor(
             tab = tab,
             items = items,
             incomingCount = requestList.incoming.size,
-            refreshing = refreshing
+            refreshing = refreshing,
+            empty = when {
+                items.isNotEmpty() -> null
+                tab == FriendsTab.FRIENDS -> FriendsEmpty.NO_FRIENDS
+                else -> FriendsEmpty.NO_REQUESTS
+            }
         )
     }
 

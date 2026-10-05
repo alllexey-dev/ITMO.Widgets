@@ -12,12 +12,14 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
 import dev.alllexey.itmowidgets.databinding.FragmentUserFriendsBinding
+import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsEvent
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -40,13 +42,15 @@ class UserFriendsFragment : Fragment() {
         val adapter = UserListAdapter(onAction = { _, _ -> }, onOpen = { openUserProfile(it.isu) })
         binding.recyclerView.adapter = adapter
         binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.load() })
-        val renderer = UserFriendsRenderer(binding, adapter, { viewModel.load() }) { openScreen(AppScreen.SETTINGS) }
+        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh(RefreshMode.Pull) })
+        val renderer = UserFriendsRenderer(binding, adapter, { viewModel.refresh(RefreshMode.Force) }) { openScreen(AppScreen.SETTINGS) }
         viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(renderer::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.refreshErrors.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { error ->
-            Snackbar.make(binding.root, error.messageRes(), Snackbar.LENGTH_LONG)
-                .setAction(R.string.common_retry) { viewModel.load() }.show()
+        viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
+            when (event) {
+                is UserFriendsEvent.RefreshFailed -> Snackbar.make(binding.root, event.error.messageRes(), Snackbar.LENGTH_LONG)
+                    .setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }.show()
+            }
         }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 

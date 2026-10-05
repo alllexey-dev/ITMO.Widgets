@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.social.ui
 
 import androidx.core.view.isVisible
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.databinding.FragmentUserFriendsBinding
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsUiState
@@ -25,29 +24,18 @@ class UserFriendsRenderer(
                 swipeRefreshLayout.isVisible = false
                 stateContainer.isVisible = false
             }
+            UserFriendsUiState.Hidden -> {
+                adapter.submitList(emptyList())
+                showState(R.drawable.ic_lock, R.string.user_friends_hidden_title, R.string.user_friends_hidden_description, null, onRetry)
+            }
+            UserFriendsUiState.Disabled -> {
+                adapter.submitList(emptyList())
+                showState(R.drawable.ic_lock, R.string.friends_disabled_title, R.string.friends_disabled_description,
+                    R.string.settings_title, onSettings)
+            }
             is UserFriendsUiState.Error -> {
                 adapter.submitList(emptyList())
-                val disabled = state.error == AppError.CustomServicesDisabled
-                val hidden = state.error == AppError.Forbidden
-                showState(
-                    if (hidden || disabled) R.drawable.ic_lock else R.drawable.ic_error,
-                    when {
-                        hidden -> R.string.user_friends_hidden_title
-                        disabled -> R.string.friends_disabled_title
-                        else -> R.string.common_load_error_title
-                    },
-                    when {
-                        hidden -> R.string.user_friends_hidden_description
-                        disabled -> R.string.friends_disabled_description
-                        else -> state.error.messageRes()
-                    },
-                    when {
-                        hidden -> null
-                        disabled -> R.string.settings_title
-                        else -> R.string.common_retry
-                    },
-                    if (disabled) onSettings else onRetry
-                )
+                showState(R.drawable.ic_error, R.string.common_load_error_title, state.error.messageRes(), R.string.common_retry, onRetry)
             }
             is UserFriendsUiState.Content -> adapter.submitList(state.items) {
                 if (revision != generation) return@submitList

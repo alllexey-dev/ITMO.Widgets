@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
@@ -23,6 +24,9 @@ import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.shared.core.Res
+import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
@@ -108,7 +112,7 @@ class UserProfileViewModelTest {
         assertEquals(RelationshipState.NONE, viewModel.relationship())
         assertEquals(listOf("send:5", "cancel:5"), repository.actions)
         repository.profiles = mapOf(5 to profile(5, RelationshipState.INCOMING))
-        viewModel.load()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         viewModel.onSecondaryAction()
         runCurrent()
@@ -130,7 +134,7 @@ class UserProfileViewModelTest {
         runCurrent()
         assertEquals(RelationshipState.FRIENDS, viewModel.relationship())
         assertEquals(false, viewModel.content().social?.busy)
-        assertEquals(listOf(UserProfileEvent.ConfirmRemove("Пользователь 5"), UserProfileEvent.ActionFailed(AppError.Network)), events)
+        assertEquals(listOf(UserProfileEvent.ConfirmRemove(UiText.Dynamic("Пользователь 5")), UserProfileEvent.ActionFailed(AppError.Network)), events)
     }
 
     @Test
@@ -158,7 +162,7 @@ class UserProfileViewModelTest {
         val events = events(viewModel)
         runCurrent()
         assertEquals(backendContent(), viewModel.uiState.value)
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(backendContent(), viewModel.uiState.value)
         assertEquals(emptyList<UserProfileEvent>(), events)
@@ -261,7 +265,7 @@ class UserProfileViewModelTest {
         runCurrent()
         assertEquals(UserProfileUiState.Error(AppError.Network), viewModel.uiState.value)
         people.people = mapOf(5 to AppResult.Success(samplePerson(5)))
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(personContent(), viewModel.uiState.value)
         assertEquals(emptyList<UserProfileEvent>(), events)
@@ -276,7 +280,7 @@ class UserProfileViewModelTest {
         assertEquals(UserProfileUiState.Error(AppError.Network), viewModel.uiState.value)
         social.profileError = null
         social.profiles = mapOf(5 to profile(5))
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(backendContent(), viewModel.uiState.value)
         assertEquals(emptyList<UserProfileEvent>(), events)
@@ -389,7 +393,7 @@ class UserProfileViewModelTest {
         social.cachedProfiles = social.profiles
         social.profileGate = { retryGate.await() }
         states.clear()
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(listOf(personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false))), states)
         retryGate.complete(Unit)
@@ -448,7 +452,7 @@ class UserProfileViewModelTest {
         people.cached = mapOf(5 to samplePerson(5))
         people.people = mapOf(5 to AppResult.Failure(AppError.Network))
         states.clear()
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(listOf(personContent().copy(social = SocialBlock(profile(5), false, false))), states)
         assertEquals(listOf(UserProfileEvent.LoadFailed, UserProfileEvent.LoadFailed), events)
@@ -579,7 +583,7 @@ class UserProfileViewModelTest {
         assertEquals(backendContent(RelationshipState.FRIENDS), viewModel.uiState.value)
         assertEquals(listOf(UserProfileEvent.LoadFailed), events)
         social.profiles = emptyMap()
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(UserProfileUiState.Error(AppError.Network), viewModel.uiState.value)
         assertEquals(listOf(UserProfileEvent.LoadFailed), events)
@@ -588,7 +592,7 @@ class UserProfileViewModelTest {
         people.gate = { gate.await() }
         social.profiles = mapOf(5 to profile(5))
         states.clear()
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         advanceTimeBy(2_999)
         runCurrent()
@@ -678,7 +682,7 @@ class UserProfileViewModelTest {
         people.gate = { gate.await() }
         reviews.gate = { gate.await() }
         states.clear()
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         advanceTimeBy(10_000)
         runCurrent()
@@ -704,7 +708,7 @@ class UserProfileViewModelTest {
         people.gate = { gate.await() }
         social.profiles = emptyMap()
         states.clear()
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(backendContent(), viewModel.uiState.value)
         assertEquals(emptyList<UserProfileUiState>(), states)
@@ -724,7 +728,7 @@ class UserProfileViewModelTest {
         val states = states(viewModel)
         runCurrent()
         people.gate = {}
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         assertTrue(cancelled)
         assertEquals(2, people.calls)
@@ -771,13 +775,47 @@ class UserProfileViewModelTest {
         runCurrent()
         viewModel.onPrimaryAction()
         runCurrent()
-        assertEquals(listOf(UserProfileEvent.ConfirmRemove("Персона 5")), events)
+        assertEquals(listOf(UserProfileEvent.ConfirmRemove(UiText.Dynamic("Персона 5"))), events)
         assertEquals(emptyList<String>(), social.actions)
         viewModel.removeFriend()
         runCurrent()
         assertEquals(listOf("remove:5"), social.actions)
         assertEquals(RelationshipState.NONE, viewModel.relationship())
-        assertEquals(listOf(UserProfileEvent.ConfirmRemove("Персона 5")), events)
+        assertEquals(listOf(UserProfileEvent.ConfirmRemove(UiText.Dynamic("Персона 5"))), events)
+    }
+
+    @Test
+    fun `an empty Backend name confirms the removal and heads the page with the placeholder`() = runTest(mainDispatcherRule.dispatcher) {
+        val unnamed = profile(5, RelationshipState.FRIENDS).let { it.copy(user = it.user.copy(name = "")) }
+        val viewModel = viewModel(FakeSocialRepository().apply { profiles = mapOf(5 to unnamed) })
+        val events = events(viewModel)
+        runCurrent()
+        val placeholder = UiText.Res(Res.string.user_name_placeholder, listOf(5))
+        assertEquals(placeholder, viewModel.content().displayName)
+
+        viewModel.onPrimaryAction()
+        runCurrent()
+
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.ConfirmRemove(placeholder)), events)
+    }
+
+    @Test
+    fun `a retry while a retry runs joins it`() = runTest(mainDispatcherRule.dispatcher) {
+        val people = personRepository()
+        val viewModel = viewModel(people = people)
+        runCurrent()
+        val gate = CompletableDeferred<Unit>()
+        people.gate = { gate.await() }
+
+        viewModel.refresh(RefreshMode.Force)
+        runCurrent()
+        viewModel.refresh(RefreshMode.Force)
+        runCurrent()
+        gate.complete(Unit)
+        runCurrent()
+
+        assertEquals(2, people.calls)
+        assertEquals(personContent(), viewModel.uiState.value)
     }
 
     @Test
@@ -923,7 +961,7 @@ class UserProfileViewModelTest {
         assertEquals(listOf("a", "b", "c", "new"), viewModel.content().reviews?.items?.map { it.id })
 
         reviews.results = mapOf(5 to AppResult.Success(ranked))
-        viewModel.retry()
+        viewModel.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(listOf("c", "a", "b"), viewModel.content().reviews?.items?.map { it.id })
     }
@@ -1010,7 +1048,7 @@ class UserProfileViewModelTest {
     }
 
     private fun TestScope.events(viewModel: UserProfileViewModel) = mutableListOf<UserProfileEvent>().also { events ->
-        backgroundScope.launch { viewModel.eventFlow.toList(events) }
+        backgroundScope.launch { viewModel.events.toList(events) }
     }
 
     private fun viewModel(

@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
@@ -78,7 +79,7 @@ class UserFriendsVisualTest {
                         SettingsNavigationTestActivity.friendsResult = result
                         scenario.onActivity {
                             val fragment = it.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment!!
-                            ViewModelProvider(fragment)[UserFriendsViewModel::class.java].load()
+                            ViewModelProvider(fragment)[UserFriendsViewModel::class.java].refresh(RefreshMode.Force)
                         }
                         settle()
                         capture("friends-$name-$index")
@@ -91,7 +92,7 @@ class UserFriendsVisualTest {
                     SettingsNavigationTestActivity.friendsDelayMs = 60_000
                     scenario.onActivity {
                         val fragment = it.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment!!
-                        ViewModelProvider(fragment)[UserFriendsViewModel::class.java].load()
+                        ViewModelProvider(fragment)[UserFriendsViewModel::class.java].refresh(RefreshMode.Force)
                     }
                     SystemClock.sleep(150)
                     capture("friends-loading-$index")

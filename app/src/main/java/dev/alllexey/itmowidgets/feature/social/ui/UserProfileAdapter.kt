@@ -19,10 +19,11 @@ import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.ui.GroupPosition
 import dev.alllexey.itmowidgets.core.ui.bindGroupPosition
 import dev.alllexey.itmowidgets.core.ui.color
-import dev.alllexey.itmowidgets.core.ui.userDisplayName
+import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.ItemOwnTeacherReviewBinding
 import dev.alllexey.itmowidgets.databinding.ItemProfileEntryBinding
 import dev.alllexey.itmowidgets.databinding.ItemProfileFactsBinding
@@ -41,7 +42,7 @@ import java.util.Locale
 sealed interface ProfileItem {
     /** The hero card: the person, the ISU number and, with a social block, the friendship and its buttons. */
     data class Header(
-        val name: String,
+        val name: UiText,
         val pictureUrl: String?,
         val isu: Int,
         val headline: ProfileHeadline?,
@@ -93,7 +94,7 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
 
     fun submitContent(state: UserProfileUiState.Content, onCommitted: () -> Unit = {}) {
         submitList(buildList {
-            add(ProfileItem.Header(state.name, state.pictureUrl, state.isu, state.headline, state.social))
+            add(ProfileItem.Header(state.displayName, state.pictureUrl, state.isu, state.headline, state.social))
             val byKind = state.facts.groupBy(ProfileFact::kind)
             listOf(ProfileFactKind.POSITION, ProfileFactKind.ROOM).forEach { kind ->
                 byKind[kind]?.let { add(ProfileItem.Facts(kind, it)) }
@@ -153,7 +154,7 @@ class UserProfileAdapter(private val actions: ProfileActions = ProfileActions())
     private inner class HeaderHolder(private val binding: ItemProfileHeaderBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(header: ProfileItem.Header) = with(binding) {
             val context = root.context
-            val displayName = context.userDisplayName(header.name, header.isu)
+            val displayName = header.name.resolve(context)
             avatar.setUser(displayName, header.pictureUrl)
             name.text = displayName
             val line = header.headline?.text(context)

@@ -16,6 +16,7 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.databinding.FragmentUserSearchBinding
@@ -62,7 +63,7 @@ class UserSearchFragment : Fragment() {
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.eventFlow
+        viewModel.events
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
             .onEach(::handle)
             .launchIn(viewLifecycleOwner.lifecycleScope)
@@ -99,7 +100,7 @@ class UserSearchFragment : Fragment() {
                 title = getString(R.string.common_load_error_title),
                 description = getString(state.error.messageRes()),
                 action = getString(R.string.common_retry)
-            ) { viewModel.retry() }
+            ) { viewModel.refresh(RefreshMode.Force) }
             is UserSearchUiState.Content -> {
                 adapter.submitList(state.items)
                 stateContainer.isVisible = false
