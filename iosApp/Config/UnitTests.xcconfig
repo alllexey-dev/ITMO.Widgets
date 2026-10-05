@@ -3,3 +3,6 @@ PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_ID).tests
 GENERATE_INFOPLIST_FILE = YES
 TEST_HOST = $(BUILT_PRODUCTS_DIR)/ITMOWidgets.app/ITMOWidgets
 BUNDLE_LOADER = $(TEST_HOST)
+
+// The tests import the Kotlin framework `Shared`; its symbols come from the host app through BUNDLE_LOADER.
+FRAMEWORK_SEARCH_PATHS = $(inherited) $(SRCROOT)/../shared/ios/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)

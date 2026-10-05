@@ -21,6 +21,10 @@ kotlin {
             // kotlinx.atomicfu.locks.SynchronizedObject of AtomicTextFile (L07 KM-04); library only, no plugin.
             implementation(libs.kotlinx.atomicfu)
         }
+        // The Darwin engine of every iOS Ktor client (L18 IO-04a; the client factories take the engine, ADR 0026).
+        iosMain.dependencies {
+            api(libs.ktor.client.darwin)
+        }
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
         }
