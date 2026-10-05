@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -14,11 +13,13 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.showProgress
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.databinding.FragmentQrCodeBinding
+import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeEvent
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeUiState
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrToolkit
@@ -28,12 +29,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @AndroidEntryPoint
 class QrCodeFragment : Fragment() {
     private var _binding: FragmentQrCodeBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: QrCodeViewModel by viewModels()
+    private val viewModel: QrCodeViewModel by viewModel()
     @Inject lateinit var toolkit: QrToolkit
     private var renderedHex: String? = null
 
@@ -44,14 +46,17 @@ class QrCodeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.toolbar.setNavigationOnClickListener { closeScreen() }
-        binding.refreshButton.setOnClickListener { viewModel.refresh() }
+        binding.refreshButton.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.uiState.collectLatest(::render) }
                 launch {
-                    viewModel.refreshErrors.collect { error ->
-                        Snackbar.make(binding.root, error.messageRes(), Snackbar.LENGTH_LONG)
-                            .setAction(R.string.common_retry) { viewModel.refresh() }.show()
+                    viewModel.events.collect { event ->
+                        when (event) {
+                            is QrCodeEvent.RefreshFailed ->
+                                Snackbar.make(binding.root, event.error.messageRes(), Snackbar.LENGTH_LONG)
+                                    .setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }.show()
+                        }
                     }
                 }
             }
