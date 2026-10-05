@@ -26,6 +26,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.CircularProgressBar
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
@@ -157,12 +158,12 @@ class SportMyFragment : Fragment(), SportBookingListener {
 
     private fun setupListeners() {
         swipe.setOnRefreshListener {
-            viewModel.refreshAllData()
+            viewModel.refresh(RefreshMode.Pull)
         }
         binding.buttonGoToSchedule.setOnClickListener {
             (parentFragment as? SportFragment)?.changeView(1)
         }
-        binding.sportStateRetry.setOnClickListener { viewModel.refreshAllData() }
+        binding.sportStateRetry.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
     }
 
     private fun setupObservers() {
@@ -261,7 +262,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
     private fun showFeedback(@androidx.annotation.StringRes message: Int, retry: Boolean = false) {
         feedbackSnackbar?.dismiss()
         feedbackSnackbar = Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).apply {
-            if (retry) setAction(R.string.common_retry) { viewModel.refreshAllData() }
+            if (retry) setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }
             show()
         }
     }

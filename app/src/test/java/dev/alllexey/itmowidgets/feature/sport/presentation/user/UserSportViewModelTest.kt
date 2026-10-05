@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.sport.presentation.user
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
@@ -16,13 +17,17 @@ import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -71,6 +76,46 @@ class UserSportViewModelTest {
         advanceUntilIdle()
 
         assertEquals(UserSportUiState.Error(AppError.Forbidden), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `a pull keeps the list under the indicator`() = runTest(mainDispatcherRule.dispatcher) {
+        val schedule = CatalogSportScheduleRepository(catalog = AppResult.Success(emptyList()))
+        val bookings = FakeUserSportRepository(AppResult.Success(UserSportBookings(emptyList(), listOf(pending(12)))))
+        val viewModel = UserSportViewModel(handle(5), bookings, schedule)
+        advanceUntilIdle()
+
+        bookings.gate = CompletableDeferred()
+        viewModel.refresh(RefreshMode.Pull)
+        viewModel.refresh(RefreshMode.Pull)
+        runCurrent()
+        val during = viewModel.uiState.value as UserSportUiState.Content
+        assertTrue(during.refreshing)
+        assertEquals(listOf(12L), during.bookings.map { it.lessonId })
+
+        bookings.gate.complete(Unit)
+        advanceUntilIdle()
+        assertFalse((viewModel.uiState.value as UserSportUiState.Content).refreshing)
+        assertEquals(listOf(5, 5), bookings.requested)
+    }
+
+    @Test
+    fun `a retry over an error shows progress until the answer`() = runTest(mainDispatcherRule.dispatcher) {
+        val schedule = CatalogSportScheduleRepository(catalog = AppResult.Success(emptyList()))
+        val bookings = FakeUserSportRepository(AppResult.Failure(AppError.Network))
+        val viewModel = UserSportViewModel(handle(5), bookings, schedule)
+        advanceUntilIdle()
+        assertEquals(UserSportUiState.Error(AppError.Network), viewModel.uiState.value)
+
+        bookings.gate = CompletableDeferred()
+        bookings.result = AppResult.Success(UserSportBookings(emptyList(), listOf(pending(12))))
+        viewModel.refresh(RefreshMode.Force)
+        runCurrent()
+        assertEquals(UserSportUiState.Loading, viewModel.uiState.value)
+
+        bookings.gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(listOf(12L), (viewModel.uiState.value as UserSportUiState.Content).bookings.map { it.lessonId })
     }
 
     private fun handle(isu: Int) = SavedStateHandle(mapOf(UserScreenArgs.ISU to isu, UserScreenArgs.NAME to "Friend"))
@@ -122,11 +167,13 @@ class UserSportViewModelTest {
         friendsBookings = emptyList()
     )
 
-    private class FakeUserSportRepository(private val result: AppResult<UserSportBookings>) : UserSportRepository {
+    private class FakeUserSportRepository(var result: AppResult<UserSportBookings>) : UserSportRepository {
         val requested = mutableListOf<Int>()
+        var gate: CompletableDeferred<Unit> = CompletableDeferred(Unit)
 
         override suspend fun getUserBookings(isu: Int): AppResult<UserSportBookings> {
             requested += isu
+            gate.await()
             return result
         }
     }

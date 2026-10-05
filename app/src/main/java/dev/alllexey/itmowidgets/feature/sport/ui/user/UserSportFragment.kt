@@ -13,6 +13,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
@@ -61,8 +62,8 @@ class UserSportFragment : Fragment(), SportBookingListener {
         adapter = SportBookingAdapter(timeProvider, this, readOnly = true)
         binding.recyclerView.adapter = adapter
         binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener(viewModel::load)
-        binding.stateAction.setOnClickListener { viewModel.load() }
+        binding.swipeRefreshLayout.setOnRefreshListener { viewModel.refresh(RefreshMode.Pull) }
+        binding.stateAction.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
 
         viewModel.uiState
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)

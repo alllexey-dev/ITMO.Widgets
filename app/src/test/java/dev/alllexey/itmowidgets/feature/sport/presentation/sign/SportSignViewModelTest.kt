@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
@@ -11,6 +12,7 @@ import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepository
@@ -48,12 +50,19 @@ class SportSignViewModelTest {
 
     private val schedule = FakeSportScheduleRepository()
     private val data = FakeSportDataRepository()
+    private val actions = FakeSportActionRepository()
     private val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 8, 12, 0))
 
-    private fun TestScope.viewModel() = SportSignViewModel(
-        schedule, data, SportSignFilterController(time), SportSignStateFactory(time),
-        bookingDelegate(FakeSportBookingRepository(), schedule, data, this), FakeSportSignPreferences, time
-    )
+    private fun TestScope.viewModel(): SportSignViewModel {
+        val delegate = bookingDelegate(FakeSportBookingRepository(), schedule, data, this, actions)
+        return SportSignViewModel(
+            schedule, data, SportSignFilterController(time), SportSignStateFactory(time), delegate,
+            SportAutoSignFlow(delegate, time), SportSharedLessonResolver(schedule, time), FakeSportSignPreferences, time
+        )
+    }
+
+    private fun SportSignViewModel.selectedDate(): LocalDate =
+        (uiState.value as SportSignUiState.Content).displayedWeek.single { it.isSelected }.date
 
     private suspend fun emitSnapshot() {
         schedule.filters.emit(AppResult.Success(emptyCatalog()))
@@ -70,7 +79,7 @@ class SportSignViewModelTest {
         assertFalse(before.refreshing)
 
         schedule.gate = CompletableDeferred()
-        viewModel.refreshAllData()
+        viewModel.refresh(RefreshMode.Pull)
         runCurrent()
         val during = viewModel.uiState.value as SportSignUiState.Content
         assertTrue(during.refreshing)
@@ -104,7 +113,7 @@ class SportSignViewModelTest {
         assertFalse((viewModel.uiState.value as SportSignUiState.Content).refreshing)
         advanceUntilIdle()
         schedule.gate = CompletableDeferred()
-        viewModel.refreshAllData()
+        viewModel.refresh(RefreshMode.Pull)
         runCurrent()
         assertTrue((viewModel.uiState.value as SportSignUiState.Content).refreshing)
         schedule.gate.complete(Unit)
@@ -135,6 +144,83 @@ class SportSignViewModelTest {
         assertEquals(SportSignUiState.Error(AppError.Network), viewModel.uiState.value)
     }
 
+    @Test
+    fun `a forced retry replaces the silent entry refresh and shows the indicator`() = runTest(mainDispatcherRule.dispatcher) {
+        emitSnapshot()
+        schedule.gate = CompletableDeferred()
+        val viewModel = viewModel()
+        runCurrent()
+        assertEquals(1, schedule.scheduleRefreshCount)
+        assertFalse((viewModel.uiState.value as SportSignUiState.Content).refreshing)
+
+        viewModel.refresh(RefreshMode.Pull)
+        runCurrent()
+        assertEquals("a pull joins the refresh in flight", 1, schedule.scheduleRefreshCount)
+        assertTrue((viewModel.uiState.value as SportSignUiState.Content).refreshing)
+
+        viewModel.refresh(RefreshMode.Force)
+        runCurrent()
+        assertEquals("a retry starts a fresh request", 2, schedule.scheduleRefreshCount)
+        assertTrue((viewModel.uiState.value as SportSignUiState.Content).refreshing)
+
+        schedule.gate.complete(Unit)
+        advanceUntilIdle()
+        assertFalse((viewModel.uiState.value as SportSignUiState.Content).refreshing)
+    }
+
+    @Test
+    fun `a second tap on a lesson in flight sends nothing and the lesson is busy until the answer`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            emitSnapshot()
+            val viewModel = viewModel()
+            advanceUntilIdle()
+            actions.gate = CompletableDeferred()
+
+            viewModel.signUpForLesson(SportCardFixtures.lesson(1))
+            viewModel.signUpForLesson(SportCardFixtures.lesson(1))
+            viewModel.signUpForLesson(SportCardFixtures.lesson(2))
+            runCurrent()
+            assertEquals(listOf(1L, 2L), actions.signedInLessons)
+            assertEquals(setOf(1L, 2L), (viewModel.uiState.value as SportSignUiState.Content).busyLessonIds)
+
+            actions.gate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(emptySet<Long>(), (viewModel.uiState.value as SportSignUiState.Content).busyLessonIds)
+            val toast = SportSignEvent.ShowToast(UiText.Resource(R.string.sport_sign_success))
+            assertEquals(toast, viewModel.events.first())
+            assertEquals(toast, viewModel.events.first())
+        }
+
+    @Test
+    fun `a failed sign-in waits for the view and frees the lesson`() = runTest(mainDispatcherRule.dispatcher) {
+        emitSnapshot()
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        actions.result = AppResult.Failure(AppError.Network)
+
+        viewModel.signUpForLesson(SportCardFixtures.lesson(1))
+        advanceUntilIdle()
+
+        assertEquals(emptySet<Long>(), (viewModel.uiState.value as SportSignUiState.Content).busyLessonIds)
+        assertEquals(SportSignEvent.ShowError(AppError.Network), viewModel.events.first())
+        viewModel.signUpForLesson(SportCardFixtures.lesson(1))
+        runCurrent()
+        assertEquals(listOf(1L, 1L), actions.signedInLessons)
+    }
+
+    @Test
+    fun `a confirmed free sign reaches Backend once with the force-sign switch`() = runTest(mainDispatcherRule.dispatcher) {
+        emitSnapshot()
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.executeAutoSignCommand(SportSignCommand.CreateFreeSign(1), forceSign = true)
+        viewModel.executeAutoSignCommand(SportSignCommand.CreateFreeSign(1), forceSign = true)
+        advanceUntilIdle()
+
+        assertEquals(listOf(1L to true), actions.freeSignRequests)
+    }
+
     private suspend fun emitCatalog(vararg lessons: SportLesson) {
         schedule.filters.emit(AppResult.Success(emptyCatalog()))
         schedule.timeSlots.emit(AppResult.Success(emptyList()))
@@ -161,7 +247,7 @@ class SportSignViewModelTest {
         advanceUntilIdle()
 
         assertEquals(SportSignEvent.OpenLessonDetails(hidden), viewModel.events.first())
-        assertEquals(LocalDate(2026, 9, 10), viewModel.userFiltersFlow.value.selectedDate)
+        assertEquals(LocalDate(2026, 9, 10), viewModel.selectedDate())
         assertTrue((viewModel.uiState.value as SportSignUiState.Content).displayedLessons.isEmpty())
         assertEquals(hidden, viewModel.linkedLesson(5))
         assertNull(viewModel.linkedLesson(1))
@@ -180,7 +266,7 @@ class SportSignViewModelTest {
         viewModel.openSharedLesson(404)
         advanceUntilIdle()
         assertEquals(SportSignEvent.ShowLinkUnavailable, viewModel.events.first())
-        assertEquals(LocalDate(2026, 9, 8), viewModel.userFiltersFlow.value.selectedDate)
+        assertEquals(LocalDate(2026, 9, 8), viewModel.selectedDate())
     }
 
     @Test
@@ -218,7 +304,7 @@ class SportSignViewModelTest {
             viewModel.openSharedLesson(7, predicted = true)
             advanceUntilIdle()
             assertEquals(SportSignEvent.OpenLessonDetails(prototype.predicted()), viewModel.events.first())
-            assertEquals(LocalDate(2026, 9, 23), viewModel.userFiltersFlow.value.selectedDate)
+            assertEquals(LocalDate(2026, 9, 23), viewModel.selectedDate())
             assertEquals(prototype.predicted(), viewModel.linkedLesson(7))
 
             viewModel.openSharedLesson(7)

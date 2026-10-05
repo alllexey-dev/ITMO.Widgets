@@ -5,7 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
-import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportBooking
@@ -16,16 +17,11 @@ import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-
-sealed interface UserSportUiState {
-    data object Loading : UserSportUiState
-    data class Error(val error: AppError) : UserSportUiState
-    data class Content(val bookings: List<SportBooking>, val refreshing: Boolean) : UserSportUiState
-}
+import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class UserSportViewModel @Inject constructor(
@@ -34,42 +30,44 @@ class UserSportViewModel @Inject constructor(
     private val sportSchedule: SportScheduleRepository
 ) : ViewModel() {
 
-    val isu: Int = checkNotNull(savedStateHandle.get<Int>(UserScreenArgs.ISU)) { "Sport needs an ISU" }
+    private val isu: Int = checkNotNull(savedStateHandle.get<Int>(UserScreenArgs.ISU)) { "Sport needs an ISU" }
     val name: String = savedStateHandle.get<String>(UserScreenArgs.NAME).orEmpty()
 
-    private val _uiState = MutableStateFlow<UserSportUiState>(UserSportUiState.Loading)
-    val uiState: StateFlow<UserSportUiState> = _uiState.asStateFlow()
+    private val refreshes = RefreshTracker(viewModelScope)
 
-    private var loading = false
+    /** The last answer; `null` until the first one. */
+    private val loaded = MutableStateFlow<AppResult<List<SportBooking>>?>(null)
+
+    val uiState: StateFlow<UserSportUiState> = combine(loaded, refreshes.refreshing, ::toUiState)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, UserSportUiState.Loading)
 
     init {
-        load()
+        refresh(RefreshMode.Silent)
     }
 
-    fun load() {
-        if (loading) return
-        loading = true
-        val current = _uiState.value
-        _uiState.value = if (current is UserSportUiState.Content) current.copy(refreshing = true) else UserSportUiState.Loading
-        viewModelScope.launch {
-            try {
-                _uiState.value = coroutineScope {
-                    // Confirmed IDs are resolved against the ITMO catalog alone: the merged schedule
-                    // also waits for the viewer's queues and friends, which only the sport tab loads.
-                    val catalog = async { sportSchedule.refreshSportSchedule(); sportSchedule.observeSportCatalog().first() }
-                    when (val bookings = userSport.getUserBookings(isu)) {
-                        is AppResult.Failure -> UserSportUiState.Error(bookings.error)
-                        is AppResult.Success -> UserSportUiState.Content(
-                            bookings = merge(bookings.value.confirmedLessonIds, bookings.value.pending, catalog.await()),
-                            refreshing = false
-                        )
-                    }
-                }
-            } finally {
-                loading = false
-            }
+    fun refresh(mode: RefreshMode) {
+        refreshes.launch(mode) { loaded.value = loadBookings() }
+    }
+
+    private suspend fun loadBookings(): AppResult<List<SportBooking>> = coroutineScope {
+        // Confirmed IDs are resolved against the ITMO catalog alone: the merged schedule
+        // also waits for the viewer's queues and friends, which only the sport tab loads.
+        val catalog = async { sportSchedule.refreshSportSchedule(); sportSchedule.observeSportCatalog().first() }
+        when (val bookings = userSport.getUserBookings(isu)) {
+            is AppResult.Failure -> AppResult.Failure(bookings.error)
+            is AppResult.Success -> AppResult.Success(
+                merge(bookings.value.confirmedLessonIds, bookings.value.pending, catalog.await())
+            )
         }
     }
+
+    /** A retry over an error shows progress until the answer; a pull keeps the list under the indicator. */
+    private fun toUiState(result: AppResult<List<SportBooking>>?, refreshing: Boolean): UserSportUiState =
+        when (result) {
+            null -> UserSportUiState.Loading
+            is AppResult.Failure -> if (refreshing) UserSportUiState.Loading else UserSportUiState.Error(result.error)
+            is AppResult.Success -> UserSportUiState.Content(result.value, refreshing)
+        }
 
     private fun merge(
         confirmedIds: List<Long>,

@@ -52,6 +52,7 @@ internal class FakeSportDataRepository : SportDataRepository {
     var limitsRefreshCount = 0
     var entriesRefreshCount = 0
     var limits = SportAutoSignLimits(3, 2, Instant.parse("2026-08-01T00:00:00+03:00"))
+    var entries: List<SportQueueEntry> = emptyList()
 
     override fun observeSportScore(): Flow<AppResult<SportScore>> = score
     override suspend fun refreshSportScore() = gate.await()
@@ -62,7 +63,8 @@ internal class FakeSportDataRepository : SportDataRepository {
     override suspend fun refreshSportAutoSignLimits() {
         limitsRefreshCount += 1
     }
-    override fun observeSportQueueEntries(): Flow<LoadState<List<SportQueueEntry>>> = flowOf(LoadState.Content(emptyList()))
+    override fun observeSportQueueEntries(): Flow<LoadState<List<SportQueueEntry>>> =
+        flow { emit(LoadState.Content(entries)) }
     override suspend fun refreshSportQueueEntries() {
         entriesRefreshCount += 1
     }
@@ -91,18 +93,26 @@ internal class FakeSportScheduleRepository : SportScheduleRepository {
     override suspend fun refreshSportTimeSlots() = Unit
 }
 
-/** Answers every action with [result]; sign-ins are recorded in [signedInLessons]. */
+/** Answers every action with [result] once [gate] opens; sign-ins and free-sign requests are recorded. */
 internal class FakeSportActionRepository : SportActionRepository {
     var result: AppResult<Unit> = AppResult.Success(Unit)
+    var gate: CompletableDeferred<Unit> = CompletableDeferred(Unit)
+    var servicesEnabled = true
     val signedInLessons = mutableListOf<Long>()
+    /** Lesson id to `forceSign`. */
+    val freeSignRequests = mutableListOf<Pair<Long, Boolean>>()
 
-    override suspend fun areCommunityServicesEnabled() = true
+    override suspend fun areCommunityServicesEnabled() = servicesEnabled
     override suspend fun signIn(lessonId: Long): AppResult<Unit> {
         signedInLessons += lessonId
+        gate.await()
         return result
     }
     override suspend fun signOut(lessonId: Long): AppResult<Unit> = result
-    override suspend fun createFreeSignEntry(lessonId: Long, forceSign: Boolean): AppResult<Unit> = result
+    override suspend fun createFreeSignEntry(lessonId: Long, forceSign: Boolean): AppResult<Unit> {
+        freeSignRequests += lessonId to forceSign
+        return result
+    }
     override suspend fun cancelFreeSignEntry(entryId: Long): AppResult<Unit> = result
     override suspend fun createAutoSignEntry(prototypeLessonId: Long): AppResult<Unit> = result
     override suspend fun cancelAutoSignEntry(entryId: Long): AppResult<Unit> = result
@@ -117,8 +127,9 @@ internal fun bookingDelegate(
     schedule: SportScheduleRepository,
     data: SportDataRepository,
     followUpScope: CoroutineScope,
+    actions: SportActionRepository = FakeSportActionRepository(),
 ) = SportBookingDelegate(
-    actionRepository = FakeSportActionRepository(),
+    actionRepository = actions,
     scheduleRefreshGateway = FakeScheduleRefreshGateway(),
     sportBookingRepository = bookings,
     sportScheduleRepository = schedule,
