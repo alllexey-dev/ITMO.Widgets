@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.di
 
 import android.content.Context
-import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,8 +16,8 @@ object LocationModule {
 
     @Provides
     @Singleton
-    fun provideBuildingDirectory(@ApplicationContext context: Context, gson: Gson): BuildingDirectory {
+    fun provideBuildingDirectory(@ApplicationContext context: Context): BuildingDirectory {
         val json = context.resources.openRawResource(R.raw.itmo_buildings).bufferedReader().use { it.readText() }
-        return BuildingDirectory.parse(json, gson)
+        return BuildingDirectory.parse(json)
     }
 }

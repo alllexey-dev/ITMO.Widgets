@@ -4,8 +4,6 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import api.myitmo.MyItmo
-import api.myitmo.model.other.TokenResponse
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -32,7 +30,6 @@ import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 class SessionRepositoryImpl @Inject constructor(
     private val tokenStore: SessionTokenStore,
     private val myItmo: MyItmo,
-    private val gson: Gson,
     private val currentUserProvider: CurrentUserProvider,
     private val refreshTokenAuthenticator: RefreshTokenAuthenticator,
     private val dataCleaners: Set<@JvmSuppressWildcards SessionDataCleaner>,
@@ -77,8 +74,7 @@ class SessionRepositoryImpl @Inject constructor(
         }
 
         val tokens = try {
-            gson.fromJson(tokenResponseJson, TokenResponse::class.java)?.toSessionTokens()
-                ?: return AppResult.Failure(AppError.Unauthorized)
+            ItmoIdTokenResponse.parse(tokenResponseJson).toSessionTokens()
         } catch (_: Exception) {
             return AppResult.Failure(AppError.Unauthorized)
         }

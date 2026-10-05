@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.core.location
 
-import com.google.gson.Gson
+import kotlinx.serialization.json.Json
 
 /**
  * Curated ITMO buildings for the map hand-off.
@@ -26,7 +26,6 @@ class BuildingDirectory(private val buildings: List<KnownBuilding>) {
     }
 
     companion object {
-        fun parse(json: String, gson: Gson): BuildingDirectory =
-            BuildingDirectory(gson.fromJson(json, Array<KnownBuilding>::class.java).toList())
+        fun parse(json: String): BuildingDirectory = BuildingDirectory(Json.decodeFromString<List<KnownBuilding>>(json))
     }
 }

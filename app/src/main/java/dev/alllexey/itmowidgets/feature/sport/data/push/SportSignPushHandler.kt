@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.sport.data.push
 
 import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import com.google.gson.JsonElement
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
@@ -23,6 +22,9 @@ import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import java.time.Clock
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -47,11 +49,11 @@ class SportSignPushHandler(
 
     override suspend fun handle(payload: JsonElement) {
         if (demo.isActive() || !backend.mayCallBackend()) return
-        val lessons = payload.asJsonObject["sportLessons"]?.takeIf { it.isJsonArray }?.asJsonArray ?: return
+        val lessons = (payload as? JsonObject)?.get("sportLessons") as? JsonArray ?: return
         val seen = mutableSetOf<Long>()
         for (element in lessons.take(100)) {
             safely {
-                val lesson = gson.fromJson(element, SportLessonDto::class.java) ?: return@safely
+                val lesson = gson.fromJson(element.toString(), SportLessonDto::class.java) ?: return@safely
                 // Delayed work must not book an expired or malformed lesson.
                 if (lesson.id <= 0 || !seen.add(lesson.id) || lesson.end.toInstant() <= clock.instant()) return@safely
                 val section = lesson.sectionName.trim().takeIf { it.isNotEmpty() } ?: return@safely

@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.core.diagnostics
 
 import android.content.Context
-import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
@@ -18,6 +17,9 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -45,7 +47,6 @@ class FileAppDiagnostics internal constructor(
 
     private val logFile = File(directory, "log.jsonl")
     private val crashFile = File(directory, "pending_crash.jsonl")
-    private val gson = Gson()
     private val writer = dispatchers.io.limitedParallelism(1)
     private val scope = CoroutineScope(SupervisorJob() + writer)
     private val fileLock = Any()
@@ -78,7 +79,7 @@ class FileAppDiagnostics internal constructor(
         )
         synchronized(fileLock) {
             directory.mkdirs()
-            crashFile.appendText(gson.toJson(entry.toStored()) + "\n")
+            crashFile.appendText(entry.toLine())
         }
     }
 
@@ -128,10 +129,10 @@ class FileAppDiagnostics internal constructor(
             synchronized(fileLock) {
                 directory.mkdirs()
                 if (current.size < MAX_ENTRIES) {
-                    logFile.appendText(gson.toJson(entry.toStored()) + "\n")
+                    logFile.appendText(entry.toLine())
                 } else {
                     // Oldest first on disk; rewrite keeps the file bounded without a second index.
-                    logFile.writeText(current.asReversed().joinToString("") { gson.toJson(it.toStored()) + "\n" })
+                    logFile.writeText(current.asReversed().joinToString("") { it.toLine() })
                 }
             }
             entries.value = current
@@ -141,17 +142,19 @@ class FileAppDiagnostics internal constructor(
     }
 
     private fun parse(line: String): DiagnosticEntry? = try {
-        gson.fromJson(line, StoredEntry::class.java)?.toEntry()
+        JOURNAL_JSON.decodeFromString(StoredEntry.serializer(), line).toEntry()
     } catch (_: Exception) {
         null
     }
 
+    /** The line 2.2 wrote with Gson: every field optional, a null one left out. */
+    @Serializable
     private data class StoredEntry(
-        val at: String?,
-        val level: String?,
-        val tag: String?,
-        val message: String?,
-        val stackTrace: String?
+        val at: String? = null,
+        val level: String? = null,
+        val tag: String? = null,
+        val message: String? = null,
+        val stackTrace: String? = null
     ) {
         fun toEntry(): DiagnosticEntry? {
             val instant = at?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return null
@@ -160,10 +163,17 @@ class FileAppDiagnostics internal constructor(
         }
     }
 
-    private fun DiagnosticEntry.toStored() = StoredEntry(at.toString(), level.name, tag, message, stackTrace)
+    private fun DiagnosticEntry.toLine(): String =
+        JOURNAL_JSON.encodeToString(StoredEntry.serializer(), StoredEntry(at.toString(), level.name, tag, message, stackTrace)) + "\n"
 
     companion object {
         const val MAX_ENTRIES = 200
         private const val TAG = "Diagnostics"
+
+        @OptIn(ExperimentalSerializationApi::class)
+        private val JOURNAL_JSON = Json {
+            explicitNulls = false
+            ignoreUnknownKeys = true
+        }
     }
 }

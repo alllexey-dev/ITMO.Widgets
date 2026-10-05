@@ -14,6 +14,8 @@ kotlin {
             api(libs.kotlinx.datetime)
             api(libs.okio)
             api(libs.androidx.datastore.preferences.core)
+            // JsonElement is the payload type of FcmPayloadHandler (L07 KM-05d).
+            api(libs.kotlinx.serialization.json)
             // kotlinx.atomicfu.locks.SynchronizedObject of AtomicTextFile (L07 KM-04); library only, no plugin.
             implementation(libs.kotlinx.atomicfu)
         }

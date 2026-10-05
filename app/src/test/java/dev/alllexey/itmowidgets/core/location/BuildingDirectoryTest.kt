@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.core.location
 
-import com.google.gson.Gson
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -9,10 +8,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BuildingDirectoryTest {
-    private val directory = BuildingDirectory.parse(
-        File("src/main/res/raw/itmo_buildings.json").readText(),
-        Gson()
-    )
+    private val directory = BuildingDirectory.parse(File("src/main/res/raw/itmo_buildings.json").readText())
 
     @Test
     fun `the shipped directory lists every known campus with coordinates in Saint Petersburg`() {
