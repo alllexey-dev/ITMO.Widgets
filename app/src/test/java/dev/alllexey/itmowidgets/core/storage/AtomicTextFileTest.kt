@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.core.storage
 
+import android.app.Application
 import android.os.Build
 import android.util.AtomicFile
 import java.io.File
@@ -20,7 +21,8 @@ import org.robolectric.annotation.Config
  * writes, and of SDK 35, which writes `.new` and renames it; 2.2 left both kinds of files on devices.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [29, 35])
+// A plain Application: these tests need no app graph, and the manifest's one cannot boot under Robolectric.
+@Config(sdk = [29, 35], application = Application::class)
 class AtomicTextFileTest {
 
     @get:Rule

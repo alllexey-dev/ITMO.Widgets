@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.core.storage
 
+import android.app.Application
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.preferencesDataStoreFile
 import java.io.File
@@ -17,7 +18,8 @@ import org.robolectric.annotation.Config
 
 /** `StorageModule` opens `app_preferences` by okio path; the file and its contents stay those of 2.2. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+// A plain Application: these tests need no app graph, and the manifest's one cannot boot under Robolectric.
+@Config(sdk = [35], application = Application::class)
 class AppPreferencesPathTest {
 
     @get:Rule
