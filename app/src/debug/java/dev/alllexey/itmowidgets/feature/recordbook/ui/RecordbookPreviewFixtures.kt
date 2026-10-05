@@ -1,6 +1,35 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
+import android.view.View
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
+import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.debug.MemorySubjectLinksRepository
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
+import dev.alllexey.itmowidgets.core.navigation.toBundle
+import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkNews
+import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.RowSearch
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetGrid
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetInspection
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRowMatch
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTabGrid
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
+import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
+import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookPreviewActivity.MemorySheetScores
+import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.SheetScoresBottomSheet
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalTime as KotlinLocalTime
+import kotlinx.datetime.plus
+import com.google.android.material.R as MaterialR
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
@@ -67,6 +96,9 @@ object RecordbookPreviewFixtures {
     fun reset() {
         RecordbookPreviewActivity.today = Phase.MIDDLE.today
         RecordbookPreviewActivity.repository = null
+        RecordbookPreviewActivity.bars = null
+        RecordbookPreviewActivity.barsEnabled = false
+        RecordbookPreviewActivity.bindingStore = RecordbookPreviewActivity.MemoryBindings()
         RecordbookPreviewActivity.sportRepository = null
         RecordbookPreviewActivity.lessonsGateway = RecordbookPreviewActivity.MemoryLessons()
         RecordbookPreviewActivity.resourceRepository = MemorySubjectLinksRepository()
@@ -76,6 +108,232 @@ object RecordbookPreviewFixtures {
         RecordbookPreviewActivity.MemorySheetScores.reset()
         RecordbookPreviewActivity.sheetRequests.clear()
     }
+
+    /**
+     * The states of the XML reference captures (LR-1c, recipe roborazzi-screenshot-test). [install] fills the host
+     * before each launch, [show] steps the launched host towards the screen and answers whether it is there, [view] is
+     * what the capture takes. The reference tests name a scene and nothing else, so prep cards that reshape the domain
+     * or the view models change this file, never those tests.
+     */
+    enum class Scene {
+        /** The list in the middle of the semester: BARS chip on, new-mark dots, a sheet total, sport attention. */
+        LIST_CONTENT,
+        LIST_EMPTY,
+        LIST_ERROR,
+        PERIOD_SHEET,
+        SUBJECT_SESSION,
+        SUBJECT_CREDIT,
+        SUBJECT_SPORT,
+        /** A BARS subject with its control tree. */
+        SUBJECT_BARS,
+        /** The math subject with its connected sheet total. */
+        SUBJECT_SHEET,
+        /** A subject whose lessons are only matched by name: the binding proposal at the end of the page. */
+        SUBJECT_BINDING,
+        SHEET_PICK_ROW,
+        SHEET_PICK_TOTAL,
+        SHEET_FAILURE;
+
+        fun install() {
+            reset()
+            RecordbookPreviewFixtures.install(if (this == SUBJECT_SESSION) Phase.SESSION else Phase.MIDDLE)
+            when (this) {
+                LIST_CONTENT -> {
+                    barsOn()
+                    RecordbookPreviewActivity.MemoryMarkTracking.news.value = listOf(newMark(MATH), newMark(DESIGN))
+                    MemorySheetScores.scores.value = listOf(sheetScore(value = "41,5").copy(scope = HISTORY_SCOPE))
+                }
+                LIST_EMPTY -> RecordbookPreviewActivity.repository = Periods(AppResult.Success(emptyList()))
+                LIST_ERROR -> RecordbookPreviewActivity.repository = Periods(AppResult.Failure(AppError.Network))
+                SUBJECT_BARS -> barsOn()
+                SUBJECT_SHEET -> MemorySheetScores.scores.value = listOf(sheetScore())
+                SUBJECT_BINDING -> RecordbookPreviewActivity.lessonsGateway =
+                    RecordbookPreviewActivity.MemoryLessons(lessons(Phase.MIDDLE.today) + algorithmsLesson())
+                SHEET_PICK_ROW -> MemorySheetScores.inspections += rowChoice()
+                SHEET_PICK_TOTAL -> {
+                    MemorySheetScores.scores.value = listOf(sheetScore().copy(column = SheetColumnRef(TOTAL_HEADER, 1)))
+                    MemorySheetScores.inspections += totals()
+                }
+                SHEET_FAILURE -> MemorySheetScores.inspections += SheetInspection.Failed(SheetStatus.NETWORK)
+                PERIOD_SHEET, SUBJECT_SESSION, SUBJECT_CREDIT, SUBJECT_SPORT -> Unit
+            }
+        }
+
+        fun show(activity: RecordbookPreviewActivity): Boolean {
+            val list = activity.supportFragmentManager.findFragmentByTag(RecordbookPreviewActivity.ROOT_TAG) ?: return false
+            // The subject page replaces the list, whose view is then gone.
+            val opened = activity.supportFragmentManager.findFragmentByTag(SUBJECT_TAG) != null
+            if (!opened && (!list.settled() || this == LIST_CONTENT && !list.barsApplied())) return false
+            return when (this) {
+                LIST_CONTENT, LIST_EMPTY, LIST_ERROR -> true
+                PERIOD_SHEET -> activity.sheet(PERIOD_TAG) { list.requireView().findViewById<View>(R.id.period_button).performClick() }
+                    ?.let { it.dialog?.isShowing == true } == true
+                SUBJECT_SESSION -> activity.subject(ALGORITHMS_ID)
+                SUBJECT_CREDIT -> activity.subject(LANGUAGE_ID)
+                SUBJECT_SPORT -> activity.subject(PE_ID)
+                SUBJECT_BARS -> activity.subject(DESIGN_ID, DESIGN_JOURNAL)
+                SUBJECT_SHEET -> activity.subject(MATH_ID)
+                SUBJECT_BINDING -> activity.subject(ALGORITHMS_ID) && activity.scrolledToBinding()
+                SHEET_PICK_ROW -> activity.sheetScores(SheetScoresArgs.Step.CONNECT)
+                SHEET_PICK_TOTAL -> activity.sheetScores(SheetScoresArgs.Step.TOTAL)
+                SHEET_FAILURE -> activity.sheetScores(SheetScoresArgs.Step.CONNECT)
+            }
+        }
+
+        /** The window content, or the sheet surface for the two bottom sheets. */
+        fun view(activity: RecordbookPreviewActivity): View = when (this) {
+            PERIOD_SHEET -> activity.sheetSurface(PERIOD_TAG)
+            SHEET_PICK_ROW, SHEET_PICK_TOTAL, SHEET_FAILURE -> activity.sheetSurface(SheetScoresBottomSheet.TAG)
+            else -> activity.findViewById(android.R.id.content)
+        }
+    }
+
+    private const val PERIOD_TAG = "RecordbookPeriodBottomSheet"
+    /** The tag the host replaces the list with on [RecordbookPreviewActivity.openScreen]. */
+    private const val SUBJECT_TAG = "detail"
+    private const val ALGORITHMS_ID = 2L
+    private const val PE_ID = 3L
+    private const val DESIGN_ID = 4L
+    private const val LANGUAGE_ID = 5L
+    private const val DESIGN = "Проектирование и разработка распределённых информационных систем"
+    private const val TOTAL_HEADER = "ИТОГО баллов"
+    private const val OWN_NAME = "Тестов Тест Тестович"
+    private val HISTORY_SCOPE = ResourceScope(6, "История", "2025-2")
+    private val SPRING = StudyHalf(2025, 2)
+    private val MATH_JOURNAL = BarsJournalReference(7, "flow", "6", 2025, 2)
+    private val DESIGN_JOURNAL = BarsJournalReference(8, "flow", "7", 2025, 2)
+
+    private fun barsOn() {
+        RecordbookPreviewActivity.bars = Bars
+        RecordbookPreviewActivity.barsEnabled = true
+    }
+
+    private fun newMark(name: String) = subjectNameKey(name).let { key ->
+        MarkNews(MarkNews.idOf(SPRING, key), SPRING, key, name, Instant.parse("2026-06-01T09:00:00Z"), notified = true)
+    }
+
+    /** The periods of [Recordbook] with one fixed answer for the subjects of any of them. */
+    private class Periods(private val subjects: AppResult<List<RecordbookSubject>>) :
+        RecordbookRepository by Recordbook(Phase.MIDDLE) {
+        override suspend fun getSubjects(programId: Long, semester: Int) = subjects
+    }
+
+    /** BARS journals of the math and design subjects; design carries a two-module control tree. */
+    private object Bars : BarsRecordbookRepository {
+        private val math = RecordbookSubject(MATH, 901, 7, "Экзамен", 74.0, null, 1, null, true, null, MATH_JOURNAL)
+        private val design = RecordbookSubject(DESIGN, 902, 8, "Экзамен", 63.5, null, 1, null, true, null, DESIGN_JOURNAL)
+        private val designControls = listOf(
+            RecordbookControl(101, "Модуль 1. Архитектура распределённых систем", 28.0, 15.0, 30.0, true, null, null),
+            RecordbookControl(102, "Практическая работа 1", 9.0, 5.0, 10.0, true, null, null, parentId = 101),
+            RecordbookControl(103, "Практическая работа 2", 10.0, 5.0, 10.0, true, null, null, parentId = 101),
+            RecordbookControl(104, "Тест по модулю", 9.0, 5.0, 10.0, true, null, null, parentId = 101),
+            RecordbookControl(105, "Модуль 2. Масштабирование и отказоустойчивость", 33.5, 20.0, 40.0, true, null, null),
+            RecordbookControl(106, "Лабораторная работа 1", 18.0, 10.0, 20.0, true, null, null, parentId = 105),
+            RecordbookControl(107, "Лабораторная работа 2", 15.5, 10.0, 20.0, true, null, null, parentId = 105),
+            RecordbookControl(108, "Экзамен", null, 12.0, 30.0, true, null, null),
+            RecordbookControl(-8, "", 2.0, null, null, false, null, null, additional = true),
+        )
+
+        override suspend fun getSubjects(period: RecordbookPeriod) = AppResult.Success(listOf(math, design))
+
+        override suspend fun getSubject(journal: BarsJournalReference) =
+            if (journal == DESIGN_JOURNAL) AppResult.Success(BarsSubjectDetails(design, designControls))
+            else AppResult.Success(BarsSubjectDetails(math, mathControls))
+
+        override fun cachedControls(journal: BarsJournalReference) =
+            if (journal == DESIGN_JOURNAL) designControls else mathControls
+    }
+
+    /** An algorithms lesson under another schedule id, so the page proposes the name match. */
+    private fun algorithmsLesson() = SubjectLesson(pairId = 200, date = Phase.MIDDLE.today.toKotlinLocalDate().plus(2, DateTimeUnit.DAY),
+        start = KotlinLocalTime(9, 30), end = KotlinLocalTime(11, 0), typeId = 2, type = "", subjectId = 555,
+        subjectName = DemoStudy.ALGORITHMS.name, flowId = 5550L, teacherIsu = 300003L, teacherFio = "Лаборант Лев Львович",
+        room = "1506", building = "Кронверкский проспект, 49", formatId = 1)
+
+    private fun workbook(vararg tabs: SheetTabGrid) = SheetWorkbook(checkNotNull(GoogleSheetUrl.parse(SHEET_URL)), tabs.toList())
+
+    /** Two rows carry the own name in one tab. */
+    private fun rowChoice(): SheetInspection {
+        val tab = SheetTab(22, "P3110")
+        val grid = SheetGrid(listOf(
+            listOf("ФИО", "Группа", "Баллы"),
+            listOf(OWN_NAME, "P3110", "50"),
+            listOf(OWN_NAME, "P3112", "70"),
+        ))
+        val candidates = listOf(1, 2).map { SheetRowMatch(tab, it, 0, subjectNameKey(OWN_NAME), KeyKind.NAME, OWN_NAME) }
+        return SheetInspection.Ready(workbook(SheetTabGrid(tab, grid)), RowSearch.Ambiguous(candidates))
+    }
+
+    /** The own row (ISU 123456) of the connected tab with the total, a test, the grade and four labs. */
+    private fun totals(): SheetInspection {
+        val headers = listOf("ИСУ", TOTAL_HEADER, "Тест к видеолекциям", "Оценка", "ЛР1", "ЛР2", "ЛР3", "ЛР4")
+        val grid = SheetGrid(listOf(
+            headers,
+            listOf("100001", "52", "6", "3E", "8", "8", "6", "4"),
+            listOf("123456", "66,3", "8", "5A", "10", "9", "10", "8"),
+        ))
+        return SheetInspection.Ready(workbook(SheetTabGrid(SheetTab(22, "P3110"), grid)), RowSearch.NotFound)
+    }
+
+    /** Loaded: no indicator, and the content or the state area is up. */
+    private fun Fragment.settled(): Boolean {
+        val root = view ?: return false
+        val visible = { id: Int -> root.findViewById<View>(id)?.visibility == View.VISIBLE }
+        return !visible(R.id.loading) && (visible(R.id.swipe_refresh_layout) || visible(R.id.state_container))
+    }
+
+    /** BARS answered: subjects without a journal say so. */
+    private fun Fragment.barsApplied(): Boolean {
+        val missing = getString(R.string.recordbook_bars_missing)
+        return requireView().findViewById<View>(R.id.main_recycler_view).texts().any { missing in it }
+    }
+
+    private fun View.texts(): Sequence<String> = when (this) {
+        is android.widget.TextView -> sequenceOf(text.toString())
+        is android.view.ViewGroup -> (0 until childCount).asSequence().flatMap { getChildAt(it).texts() }
+        else -> emptySequence()
+    }
+
+    /** Opens the subject page once; true when it has loaded. */
+    private fun RecordbookPreviewActivity.subject(entryId: Long, journal: BarsJournalReference? = null): Boolean {
+        val page = supportFragmentManager.findFragmentByTag(SUBJECT_TAG)
+        if (page == null) {
+            openScreen(AppScreen.RECORDBOOK_SUBJECT, RecordbookSubjectArgs(entryId, 1, 2, "2025/2026",
+                journal?.planId, journal?.type, journal?.identifier).toBundle())
+            return false
+        }
+        return page.settled()
+    }
+
+    /** Scrolls the page to its end; true once the binding proposal is on screen. */
+    private fun RecordbookPreviewActivity.scrolledToBinding(): Boolean {
+        val list = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recycler_view)
+        val last = (list.adapter?.itemCount ?: 0) - 1
+        if (last < 0) return false
+        list.scrollToPosition(last)
+        return findViewById<View>(R.id.confirm)?.visibility == View.VISIBLE
+    }
+
+    /** Opens the sheet [tag] once through [open]; the sheet once it exists. */
+    private fun RecordbookPreviewActivity.sheet(tag: String, open: () -> Unit): DialogFragment? {
+        val sheet = supportFragmentManager.findFragmentByTag(tag) as DialogFragment?
+        if (sheet == null) open()
+        return sheet
+    }
+
+    /** Opens «Мои баллы» for the math subject once; true when it shows a choice or a failure. */
+    private fun RecordbookPreviewActivity.sheetScores(step: SheetScoresArgs.Step): Boolean {
+        val sheet = sheet(SheetScoresBottomSheet.TAG) {
+            openSheetScores(SheetScoresArgs(MATH_SCOPE.subjectId, MATH_SCOPE.subjectName, MATH_SCOPE.periodKey, SHEET_URL, step))
+        } ?: return false
+        val root = sheet.dialog?.takeIf { it.isShowing }?.window?.decorView ?: return false
+        val visible = { id: Int -> root.findViewById<View>(id)?.visibility == View.VISIBLE }
+        return !visible(R.id.loading) && (visible(R.id.choice) || visible(R.id.state))
+    }
+
+    private fun RecordbookPreviewActivity.sheetSurface(tag: String): View =
+        checkNotNull((supportFragmentManager.findFragmentByTag(tag) as DialogFragment).dialog)
+            .findViewById(MaterialR.id.design_bottom_sheet)
 
     class Recordbook(private val phase: Phase) : RecordbookRepository {
         override suspend fun getPrograms() = AppResult.Success(listOf(RecordbookProgram(1, "Программная инженерия", listOf(
