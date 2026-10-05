@@ -27,6 +27,9 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import kotlin.time.toKotlinInstant
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalTime
 
 /**
  * Synthetic spring 2025/2026 recordbooks for the preview host: the start of the semester,
@@ -90,7 +93,7 @@ object RecordbookPreviewFixtures {
     }
 
     private class Sport(private val score: SportScoreSummary) : SportScoreRepository {
-        override suspend fun getScorePeriods() = AppResult.Success(listOf(SportScorePeriod(10, "Весна 2025/2026", SPORT_END, current = true)))
+        override suspend fun getScorePeriods() = AppResult.Success(listOf(SportScorePeriod(10, "Весна 2025/2026", SPORT_END.toInstant().toKotlinInstant(), current = true)))
         override suspend fun getScoreSummary(semesterId: Long) = AppResult.Success(score)
     }
 
@@ -143,7 +146,8 @@ object RecordbookPreviewFixtures {
     )
 
     private fun lessons(today: LocalDate) = listOf(1L, 3L, 8L, 10L).mapIndexed { index, day ->
-        SubjectLesson(pairId = 100 + index.toLong(), date = today.plusDays(day), start = LocalTime.of(10, 0), end = LocalTime.of(11, 30),
+        SubjectLesson(pairId = 100 + index.toLong(), date = today.plusDays(day).toKotlinLocalDate(),
+            start = LocalTime.of(10, 0).toKotlinLocalTime(), end = LocalTime.of(11, 30).toKotlinLocalTime(),
             typeId = if (index % 2 == 0) 1 else 3, type = "", subjectId = MATH_ID, subjectName = MATH, flowId = 10L,
             teacherIsu = if (index % 2 == 0) 300001L else 300002L,
             teacherFio = if (index % 2 == 0) "Иванова Мария Сергеевна" else "Смирнов Алексей Петрович",

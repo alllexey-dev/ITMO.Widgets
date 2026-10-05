@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.core.sport
 
 import dev.alllexey.itmowidgets.core.result.AppResult
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 /**
  * Official sport periods use their own IDs, not recordbook semester numbers.
@@ -10,7 +10,7 @@ import java.time.OffsetDateTime
 data class SportScorePeriod(
     val id: Long,
     val label: String,
-    val endsAt: OffsetDateTime? = null,
+    val endsAt: Instant? = null,
     val current: Boolean = false
 )
 

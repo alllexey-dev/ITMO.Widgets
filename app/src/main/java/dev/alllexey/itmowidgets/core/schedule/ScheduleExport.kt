@@ -1,8 +1,10 @@
 package dev.alllexey.itmowidgets.core.schedule
 
 import dev.alllexey.itmowidgets.core.result.AppResult
-import java.time.LocalDate
-import java.time.Month
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
+import kotlinx.datetime.plus
 
 /** Days of the own schedule a `.ics` file covers, counted from today. */
 sealed interface ScheduleExportRange {
@@ -18,16 +20,16 @@ sealed interface ScheduleExportRange {
     data class Custom(val start: LocalDate, val end: LocalDate) : ScheduleExportRange
 
     fun dates(today: LocalDate): ClosedRange<LocalDate> = when (this) {
-        Week -> today..today.plusDays(6)
-        TwoWeeks -> today..today.plusDays(13)
+        Week -> today..today.plus(6, DateTimeUnit.DAY)
+        TwoWeeks -> today..today.plus(13, DateTimeUnit.DAY)
         Semester -> today..semesterEnd(today)
         is Custom -> minOf(start, end)..maxOf(start, end)
     }
 
     private fun semesterEnd(today: LocalDate): LocalDate = when {
-        today.month == Month.JANUARY -> LocalDate.of(today.year, Month.JANUARY, 31)
-        today.month >= Month.AUGUST -> LocalDate.of(today.year + 1, Month.JANUARY, 31)
-        else -> LocalDate.of(today.year, Month.JULY, 31)
+        today.month == Month.JANUARY -> LocalDate(today.year, Month.JANUARY, 31)
+        today.month >= Month.AUGUST -> LocalDate(today.year + 1, Month.JANUARY, 31)
+        else -> LocalDate(today.year, Month.JULY, 31)
     }
 }
 

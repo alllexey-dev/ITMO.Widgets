@@ -34,6 +34,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
+import kotlinx.datetime.toKotlinLocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleViewModelTest {
@@ -389,7 +390,7 @@ class ScheduleViewModelTest {
             val (tomorrow, later) = timeProvider.javaToday().plusDays(1) to timeProvider.javaToday().plusDays(2)
             val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule(tomorrow), daySchedule(later)) }
             val changes = FakeScheduleChangesRepository(
-                scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, tomorrow))
+                scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, tomorrow.toKotlinLocalDate()))
             )
             val viewModel = createViewModel(repository, changesRepository = changes)
 
@@ -405,7 +406,7 @@ class ScheduleViewModelTest {
             val day = timeProvider.javaToday().plusDays(2)
             val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule(day)) }
             val changes = FakeScheduleChangesRepository(
-                scheduleChange(kind = ScheduleChangeKind.CANCELLED, before = slot(2, day))
+                scheduleChange(kind = ScheduleChangeKind.CANCELLED, before = slot(2, day.toKotlinLocalDate()))
             )
             val viewModel = createViewModel(repository, changesRepository = changes)
 
@@ -421,7 +422,7 @@ class ScheduleViewModelTest {
             val user = SelectedUser(123456, "Иван Иванов", null)
             val day = timeProvider.javaToday().plusDays(1)
             val repository = FakeScheduleRepository().apply { schedulesFor(user.isu).value = listOf(daySchedule(day)) }
-            val changes = FakeScheduleChangesRepository(scheduleChange(before = slot(3, day), after = slot(3, day.plusDays(1))))
+            val changes = FakeScheduleChangesRepository(scheduleChange(before = slot(3, day.toKotlinLocalDate()), after = slot(3, day.plusDays(1).toKotlinLocalDate())))
             val viewModel = createViewModel(repository, changesRepository = changes)
 
             viewModel.setSelectedUser(user)
@@ -437,7 +438,7 @@ class ScheduleViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val day = timeProvider.javaToday().plusDays(1)
             val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule(day)) }
-            val changes = FakeScheduleChangesRepository(scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, day)))
+            val changes = FakeScheduleChangesRepository(scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, day.toKotlinLocalDate())))
             val viewModel = createViewModel(repository, changesRepository = changes)
             viewModel.ensureDataLoaded()
             advanceUntilIdle()

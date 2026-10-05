@@ -68,6 +68,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -903,7 +905,8 @@ class RecordbookVisualTest {
     }
 
     private fun hubLesson(pairId: Long, date: String, subjectId: Long, typeId: Int, teacher: String, isu: Long, name: String = "Предмет $subjectId") = SubjectLesson(
-        pairId = pairId, date = LocalDate.parse(date), start = LocalTime.of(9, 30), end = LocalTime.of(11, 0), typeId = typeId, type = "",
+        pairId = pairId, date = LocalDate.parse(date).toKotlinLocalDate(), start = LocalTime.of(9, 30).toKotlinLocalTime(),
+        end = LocalTime.of(11, 0).toKotlinLocalTime(), typeId = typeId, type = "",
         subjectId = subjectId, subjectName = name, flowId = subjectId * 10, teacherIsu = isu, teacherFio = teacher,
         room = "1506", building = "Кронверкский проспект, 49", formatId = 1
     )

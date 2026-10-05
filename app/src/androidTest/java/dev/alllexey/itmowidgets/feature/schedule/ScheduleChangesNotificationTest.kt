@@ -24,9 +24,11 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesTestEntryPoint
 import dev.alllexey.itmowidgets.testing.TestUi
-import java.time.Instant
+import kotlin.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalTime
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -126,7 +128,8 @@ class ScheduleChangesNotificationTest {
         id = "synthetic", detectedAt = Instant.parse("2026-09-07T09:00:00Z"), kind = ScheduleChangeKind.CANCELLED,
         fields = emptySet(), subjectName = "Физика", typeId = 1, flowName = null,
         before = LessonSlot(
-            pairId = 7, date = LocalDate.of(2026, 9, 8), start = LocalTime.of(10, 0), end = LocalTime.of(11, 30),
+            pairId = 7, date = LocalDate.of(2026, 9, 8).toKotlinLocalDate(), start = LocalTime.of(10, 0).toKotlinLocalTime(),
+            end = LocalTime.of(11, 30).toKotlinLocalTime(),
             room = "1506", building = null, formatId = 1, format = null, teacherIsu = null, teacherName = null
         ),
         after = null, read = false, notified = false

@@ -75,6 +75,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.textRes
 import java.net.URI
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalTime
 
 sealed interface DetailItem {
     /** The result with the own sheet total, or the offer to connect one, at its bottom. */
@@ -449,8 +451,8 @@ class SubjectHubAdapter(
             val lesson = item.lesson
             val context = binding.root.context
             binding.root.bindGroupPosition(item.position)
-            binding.date.text = lesson.date.format(DateTimeFormatter.ofPattern(context.getString(R.string.subject_lesson_date), Locale.forLanguageTag("ru")))
-            binding.time.text = context.getString(R.string.schedule_break_range_short, lesson.start.format(TIME_FORMAT), lesson.end.format(TIME_FORMAT))
+            binding.date.text = lesson.date.toJavaLocalDate().format(DateTimeFormatter.ofPattern(context.getString(R.string.subject_lesson_date), Locale.forLanguageTag("ru")))
+            binding.time.text = context.getString(R.string.schedule_break_range_short, lesson.start.toJavaLocalTime().format(TIME_FORMAT), lesson.end.toJavaLocalTime().format(TIME_FORMAT))
             binding.typeIndicator.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context, lessonTypeColorRes(lesson.typeId)))
             binding.type.text = listOfNotNull(
                 context.getString(lessonTypeNameRes(lesson.typeId)),

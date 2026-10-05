@@ -1,9 +1,12 @@
 package dev.alllexey.itmowidgets.core.demo
 
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 
 /** A weekly free-attendance sport lesson of the demo catalog. */
 data class DemoSportSlot(
@@ -16,7 +19,7 @@ data class DemoSportSlot(
     val room: String,
     val limit: Int
 ) {
-    fun lessonId(date: LocalDate): Long = FIRST_LESSON_ID + date.toEpochDay() * 100 + index
+    fun lessonId(date: LocalDate): Long = FIRST_LESSON_ID + date.toEpochDays() * 100 + index
 
     private companion object {
         const val FIRST_LESSON_ID = 70_000_000L
@@ -67,8 +70,8 @@ object DemoSportSlots {
 
     /** The days of [ANNA_WEEKLY] she is booked for: the last four weeks and the next two. */
     fun annaBookedDates(today: LocalDate): List<LocalDate> =
-        generateSequence(today.minusDays(BOOKED_DAYS_BACK)) { it.plusDays(1) }
-            .takeWhile { !it.isAfter(today.plusDays(BOOKED_DAYS_AHEAD)) }
+        generateSequence(today.minus(BOOKED_DAYS_BACK, DateTimeUnit.DAY)) { it.plus(1, DateTimeUnit.DAY) }
+            .takeWhile { it <= today.plus(BOOKED_DAYS_AHEAD, DateTimeUnit.DAY) }
             .filter { it.dayOfWeek == ANNA_WEEKLY.day }
             .toList()
 
@@ -79,9 +82,8 @@ object DemoSportSlots {
      * midnight.
      */
     fun extraSlots(now: LocalDateTime): List<DemoSportSlot> {
-        val earliest = now.plusMinutes(EXTRA_LEAD_MINUTES)
-        if (ALL.any { it.day == now.dayOfWeek && now.toLocalDate().atTime(it.start).isAfter(earliest) }) return emptyList()
-        val elapsed = now.toLocalTime().toSecondOfDay() / SECONDS_IN_MINUTE + EXTRA_LEAD_MINUTES.toInt()
+        val elapsed = now.time.toSecondOfDay() / SECONDS_IN_MINUTE + EXTRA_LEAD_MINUTES
+        if (ALL.any { it.day == now.dayOfWeek && it.start.toSecondOfDay() / SECONDS_IN_MINUTE > elapsed }) return emptyList()
         val first = minOf((elapsed + STEP_MINUTES - 1) / STEP_MINUTES * STEP_MINUTES, LAST_EXTRA_START)
         return listOf(first, first + LESSON_MINUTES + BREAK_MINUTES)
             .filter { it <= LAST_EXTRA_START }
@@ -103,18 +105,20 @@ object DemoSportSlots {
         room: String,
         limit: Int
     ): DemoSportSlot {
-        val start = LocalTime.of(hour, minute)
-        return DemoSportSlot(index, day, start, start.plusMinutes(LESSON_MINUTES.toLong()), section, coach, room, limit)
+        val start = LocalTime(hour, minute)
+        val end = LocalTime.fromSecondOfDay((start.toSecondOfDay() + LESSON_MINUTES * SECONDS_IN_MINUTE) % SECONDS_IN_DAY)
+        return DemoSportSlot(index, day, start, end, section, coach, room, limit)
     }
 
-    private const val BOOKED_DAYS_BACK = 28L
-    private const val BOOKED_DAYS_AHEAD = 13L
+    private const val BOOKED_DAYS_BACK = 28
+    private const val BOOKED_DAYS_AHEAD = 13
     private const val LESSON_MINUTES = 90
     private const val BREAK_MINUTES = 10
-    private const val EXTRA_LEAD_MINUTES = 10L
+    private const val EXTRA_LEAD_MINUTES = 10
     private const val STEP_MINUTES = 10
     private const val LAST_EXTRA_START = 23 * 60 + 50
     private const val EXTRA_INDEX = 12
     private const val MINUTES_IN_HOUR = 60
     private const val SECONDS_IN_MINUTE = 60
+    private const val SECONDS_IN_DAY = 24 * 60 * 60
 }

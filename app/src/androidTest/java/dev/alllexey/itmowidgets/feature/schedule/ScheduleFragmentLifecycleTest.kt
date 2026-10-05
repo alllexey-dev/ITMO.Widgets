@@ -33,6 +33,7 @@ import java.time.LocalDate
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.*
@@ -223,7 +224,7 @@ class ScheduleFragmentLifecycleTest {
         val start = date.atTime(16, 0).atZone(java.time.ZoneId.of("Europe/Moscow")).toOffsetDateTime()
         ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(listOf(PendingSportBooking(
             queueId = 77, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 777,
-            sectionName = "Тестовая секция плавания", start = start, end = start.plusMinutes(90),
+            sectionName = "Тестовая секция плавания", start = start.toInstant().toKotlinInstant(), end = start.plusMinutes(90).toInstant().toKotlinInstant(),
             teacherFio = "Тестовый преподаватель", roomName = "Тестовый корпус", isPrediction = true
         )))
         ScheduleLifecycleTestActivity.showPendingSport.value = true
@@ -256,7 +257,7 @@ class ScheduleFragmentLifecycleTest {
                     PendingSportBooking(
                         queueId = id, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 1000 + id,
                         sectionName = "Тестовая секция плавания с ожиданием свободного места",
-                        start = start, end = start.plusMinutes(90), teacherFio = "Тестовый преподаватель",
+                        start = start.toInstant().toKotlinInstant(), end = start.plusMinutes(90).toInstant().toKotlinInstant(), teacherFio = "Тестовый преподаватель",
                         roomName = "Тестовый спортивный корпус", isPrediction = true
                     )
                 }
@@ -353,7 +354,7 @@ class ScheduleFragmentLifecycleTest {
                     .atZone(java.time.ZoneId.of("Europe/Moscow")).toOffsetDateTime()
                 ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(listOf(PendingSportBooking(
                     queueId = 78, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 778,
-                    sectionName = "Тестовая автозапись без учебных пар", start = start, end = start.plusMinutes(90),
+                    sectionName = "Тестовая автозапись без учебных пар", start = start.toInstant().toKotlinInstant(), end = start.plusMinutes(90).toInstant().toKotlinInstant(),
                     teacherFio = "Тестовый преподаватель", roomName = "Тестовый корпус", isPrediction = true
                 )))
                 ScheduleLifecycleTestActivity.showPendingSport.value = true

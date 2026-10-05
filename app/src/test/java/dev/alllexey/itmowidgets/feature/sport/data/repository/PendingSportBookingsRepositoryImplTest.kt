@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.*
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import java.time.LocalDateTime
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -29,6 +30,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.TimeZone
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -63,24 +65,24 @@ class PendingSportBookingsRepositoryImplTest {
 
         val pending = repository.observePendingBookings().first { it is AppResult.Success && it.value.size == 3 } as AppResult.Success
         val predicted = pending.value.first { it.isPrediction }
-        assertEquals(SportCardFixtures.start, predicted.start)
+        assertEquals(SportCardFixtures.start.toInstant().toKotlinInstant(), predicted.start)
         assertEquals(-20L, predicted.lessonId)
         assertEquals("Секция", predicted.sectionName)
         assertEquals("Преподаватель", predicted.teacherFio)
         assertEquals(300001, predicted.teacherIsu)
-        assertEquals(300001, predicted.toDetailsArgs().teacherIsu)
+        assertEquals(300001, predicted.toDetailsArgs(MOSCOW).teacherIsu)
         assertEquals("Зал", predicted.roomName)
         val bound = pending.value.first { it.lessonId == 30L }
         assertFalse(bound.isPrediction)
         assertEquals(300002, bound.teacherIsu)
-        assertEquals(300002, bound.toDetailsArgs().teacherIsu)
-        assertEquals(real.start, bound.start)
-        assertEquals(real.end, bound.end)
+        assertEquals(300002, bound.toDetailsArgs(MOSCOW).teacherIsu)
+        assertEquals(real.start.toInstant().toKotlinInstant(), bound.start)
+        assertEquals(real.end.toInstant().toKotlinInstant(), bound.end)
         assertEquals(PendingSportBooking.QueueKind.AUTO, bound.queueKind)
         val free = pending.value.first { it.queueKind == PendingSportBooking.QueueKind.FREE }
-        assertEquals(SportCardFixtures.start, free.start)
+        assertEquals(SportCardFixtures.start.toInstant().toKotlinInstant(), free.start)
         assertEquals(SportCardFixtures.entry().targetLesson.teacherIsu.toInt(), free.teacherIsu)
-        assertEquals(free.teacherIsu, free.toDetailsArgs().teacherIsu)
+        assertEquals(free.teacherIsu, free.toDetailsArgs(MOSCOW).teacherIsu)
     }
 
     @Test fun `only active future unsigned queues remain and multiple queues for real lesson do not duplicate`() = runTest {
@@ -167,7 +169,7 @@ class PendingSportBookingsRepositoryImplTest {
         val pending = (snapshot as AppResult.Success).value.single()
         assertEquals(entry.id, pending.queueId)
         assertEquals(entry.lessonId, pending.lessonId)
-        assertEquals(entry.targetLesson.start, pending.start)
+        assertEquals(entry.targetLesson.start.toInstant().toKotlinInstant(), pending.start)
         assertEquals(PendingSportBooking.QueueKind.FREE, pending.queueKind)
         assertEquals(1, bookings.refreshes)
         assertEquals(1, data.refreshes)
@@ -269,6 +271,10 @@ class PendingSportBookingsRepositoryImplTest {
     )
 
     private object FixedTime : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
+
+    private companion object {
+        val MOSCOW = TimeZone.of("Europe/Moscow")
+    }
 
     private class Bookings : SportBookingRepository {
         val confirmed = MutableStateFlow<AppResult<List<SportBooking>>>(AppResult.Success(emptyList()))

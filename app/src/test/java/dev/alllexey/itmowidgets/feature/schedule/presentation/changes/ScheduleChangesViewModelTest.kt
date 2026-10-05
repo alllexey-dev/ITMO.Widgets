@@ -7,13 +7,15 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.testing.slot
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -115,7 +117,7 @@ class ScheduleChangesViewModelTest {
     private fun read(id: String, detectedAt: String, start: LocalTime = LocalTime.of(10, 0)) = scheduleChange(
         id = id,
         detectedAt = Instant.parse(detectedAt),
-        after = slot(1, LocalDate.of(2026, 9, 9), start = start),
+        after = slot(1, LocalDate.of(2026, 9, 9).toKotlinLocalDate(), start = start.toKotlinLocalTime()),
         read = true
     )
 

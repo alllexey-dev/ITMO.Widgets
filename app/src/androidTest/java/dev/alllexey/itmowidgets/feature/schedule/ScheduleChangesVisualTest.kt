@@ -22,9 +22,11 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTouchTargets
-import java.time.Instant
+import kotlin.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -203,7 +205,10 @@ class ScheduleChangesVisualTest {
         format: String? = "Очный",
         teacherIsu: Long? = 300001,
         teacherName: String? = "Тестовый преподаватель"
-    ) = LessonSlot(pairId, date, start, start.plusMinutes(90), room, building, formatId, format, teacherIsu, teacherName)
+    ) = LessonSlot(
+        pairId, date.toKotlinLocalDate(), start.toKotlinLocalTime(), start.plusMinutes(90).toKotlinLocalTime(), room, building,
+        formatId, format, teacherIsu, teacherName
+    )
 
     private fun preview(
         appearance: PreviewAppearance,

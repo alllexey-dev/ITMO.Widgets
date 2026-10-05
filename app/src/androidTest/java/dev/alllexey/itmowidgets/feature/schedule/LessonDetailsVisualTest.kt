@@ -41,11 +41,15 @@ import dev.alllexey.itmowidgets.testing.toScheduleLifecycle
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
-import java.time.Instant
+import kotlin.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalTime
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -225,7 +229,7 @@ class LessonDetailsVisualTest {
     fun sportSheetsHaveNoFlowRow() {
         withSchedule { scenario ->
             scenario.onActivity {
-                PendingSportDetailsBottomSheet.newInstance(pendingBooking()).show(it.supportFragmentManager, PendingSportDetailsBottomSheet.TAG)
+                PendingSportDetailsBottomSheet.newInstance(pendingBooking(), MOSCOW).show(it.supportFragmentManager, PendingSportDetailsBottomSheet.TAG)
             }
             settle()
             scenario.onActivity { activity ->
@@ -370,7 +374,7 @@ class LessonDetailsVisualTest {
             withSchedule { scenario ->
                 scenario.onActivity {
                     spec.assertEffective(it.findViewById(R.id.schedule_test_container), defaultPrimary)
-                    PendingSportDetailsBottomSheet.newInstance(booking).show(it.supportFragmentManager, PendingSportDetailsBottomSheet.TAG)
+                    PendingSportDetailsBottomSheet.newInstance(booking, MOSCOW).show(it.supportFragmentManager, PendingSportDetailsBottomSheet.TAG)
                 }
                 settle()
                 scenario.onActivity { activity ->
@@ -475,7 +479,8 @@ class LessonDetailsVisualTest {
         formatId: Int = 1,
         format: String = "Очный"
     ) = LessonSlot(
-        pairId = 1, date = LocalDate.of(2026, 9, 7), start = start, end = start.plusMinutes(90), room = room,
+        pairId = 1, date = LocalDate.of(2026, 9, 7).toKotlinLocalDate(), start = start.toKotlinLocalTime(),
+        end = start.plusMinutes(90).toKotlinLocalTime(), room = room,
         building = building, formatId = formatId, format = format, teacherIsu = null,
         teacherName = "Тестовый преподаватель с длинным именем"
     )
@@ -529,7 +534,8 @@ class LessonDetailsVisualTest {
         val start = LocalDate.of(2026, 9, 7).atTime(16, 0).atOffset(java.time.ZoneOffset.ofHours(3))
         return PendingSportBooking(
             queueId = 1, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100,
-            sectionName = "Современные танцы", start = start, end = start.plusMinutes(90),
+            sectionName = "Современные танцы", start = start.toInstant().toKotlinInstant(),
+            end = start.plusMinutes(90).toInstant().toKotlinInstant(),
             teacherFio = SettingsNavigationTestActivity.LONG_NAME, roomName = "Кронверкский проспект, 49, зал 1",
             isPrediction = true, teacherIsu = 300002
         )
@@ -544,3 +550,5 @@ class LessonDetailsVisualTest {
         format = "Очный", formatId = 1, zoomUrl = null, zoomPassword = null, zoomInfo = null
     )
 }
+
+private val MOSCOW = TimeZone.of("Europe/Moscow")

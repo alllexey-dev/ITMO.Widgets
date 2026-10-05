@@ -24,6 +24,9 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.time.Instant
+import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.toLocalDateTime
 
 class DayScheduleAdapter(
     private val timeProvider: AcademicTimeProvider,
@@ -161,6 +164,9 @@ class DayScheduleAdapter(
     ): List<ScheduleItem> {
         val processedList = mutableListOf<ScheduleItem>()
         val sortedLessons = lessons.withIndex().sortedBy { it.value.start }
+        val pendingItems = pending.map { booking ->
+            ScheduleItem.PendingSportItem(booking, booking.start.wallTime(), booking.end.wallTime(), isLast = false)
+        }
 
         sortedLessons.forEachIndexed { index, indexedLesson ->
             val currentLesson = indexedLesson.value
@@ -178,23 +184,21 @@ class DayScheduleAdapter(
                 val currentEndTime = currentLesson.end
                 val nextStartTime = nextLesson.start
                 val breakDuration = Duration.between(currentEndTime, nextStartTime)
-                val overlapsPending = pending.any {
-                    it.start.toLocalTime() < nextStartTime && it.end.toLocalTime() > currentEndTime
-                }
+                val overlapsPending = pendingItems.any { it.start < nextStartTime && it.end > currentEndTime }
                 if (breakDuration > BIG_BREAK_THRESHOLD && !overlapsPending) {
                     processedList.add(ScheduleItem.BreakItem(currentEndTime, nextStartTime))
                 }
             }
         }
 
-        processedList += pending.map { ScheduleItem.PendingSportItem(it, isLast = false) }
+        processedList += pendingItems
         if (processedList.isEmpty()) {
             return listOf(ScheduleItem.NoLessonsItem(ScheduleItem.LessonState.COMPLETED))
         }
 
         return processedList.sortedBy { item -> when (item) {
             is ScheduleItem.LessonItem -> item.lesson.start
-            is ScheduleItem.PendingSportItem -> item.booking.start.toLocalTime()
+            is ScheduleItem.PendingSportItem -> item.start
             is ScheduleItem.BreakItem -> item.from
             is ScheduleItem.NoLessonsItem -> LocalTime.MIN
         } }.mapIndexed { index, item -> when (item) {
@@ -203,6 +207,8 @@ class DayScheduleAdapter(
             else -> item
         } }
     }
+
+    private fun Instant.wallTime(): LocalTime = toLocalDateTime(timeProvider.timeZone).time.toJavaLocalTime()
 
     companion object {
         private val BIG_BREAK_THRESHOLD = Duration.ofMinutes(60)

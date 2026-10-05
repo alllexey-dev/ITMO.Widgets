@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.isSportBehind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 /** Why a subject is listed under «Требуют внимания»; the row shows it instead of the assessment kind. */
 sealed interface RecordbookAttentionReason {
@@ -25,7 +25,7 @@ fun attentionReason(
     subject: RecordbookSubject,
     sport: RecordbookSportState?,
     controls: List<RecordbookControl>?,
-    now: OffsetDateTime
+    now: Instant
 ): RecordbookAttentionReason? {
     if (subject.status == RecordbookSubjectStatus.PASSED) return null
     if (subject.absent) return RecordbookAttentionReason.Absent

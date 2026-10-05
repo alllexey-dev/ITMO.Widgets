@@ -45,6 +45,7 @@ import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import java.time.LocalDate
 import java.time.LocalTime
+import kotlin.time.toKotlinInstant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
@@ -266,11 +267,13 @@ class ScheduleCardsVisualTest {
                         val waiting = PendingSportBooking(
                             queueId = 1, queueKind = PendingSportBooking.QueueKind.FREE, lessonId = 100,
                             sectionName = "Современные танцы — тестовая секция с длинным названием",
-                            start = start, end = start.plusMinutes(90), teacherFio = "Тестовый преподаватель с длинным именем",
+                            start = start.toInstant().toKotlinInstant(), end = start.plusMinutes(90).toInstant().toKotlinInstant(),
+                            teacherFio = "Тестовый преподаватель с длинным именем",
                             roomName = "Тестовый корпус на Кронверкском проспекте, 49, спортивный зал", isPrediction = false
                         )
                         val prediction = waiting.copy(queueId = 2, queueKind = PendingSportBooking.QueueKind.AUTO,
-                            lessonId = 200, start = start.plusHours(2), end = start.plusHours(3), isPrediction = true)
+                            lessonId = 200, start = start.plusHours(2).toInstant().toKotlinInstant(),
+                            end = start.plusHours(3).toInstant().toKotlinInstant(), isPrediction = true)
                         val official = if (pendingOnly) null else DaySchedule(date.dayOfWeek.value, 1, date, null,
                             listOf(lesson(), lesson().copy(pairId = 2, start = LocalTime.of(20, 0), end = LocalTime.of(21, 30))))
                         val adapter = DayScheduleAdapter(FixedTime)

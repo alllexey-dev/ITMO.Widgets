@@ -13,7 +13,6 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
@@ -21,6 +20,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPen
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidgetKind
 import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -167,8 +167,8 @@ class ScheduleWidgetDataProviderTest {
 
     private class SnapshotPendingRepository : PendingSportBookingsRepository {
         var value: AppResult<List<PendingSportBooking>> = AppResult.Success(listOf(PendingSportBooking(
-            1, PendingSportBooking.QueueKind.AUTO, -1, "Плавание", Time.javaNow().plusHours(1),
-            Time.javaNow().plusHours(2), "Тестовый преподаватель", "Бассейн", true
+            1, PendingSportBooking.QueueKind.AUTO, -1, "Плавание", Time.now() + 1.hours,
+            Time.now() + 2.hours, "Тестовый преподаватель", "Бассейн", true
         )))
         var refreshBlock: suspend () -> Unit = {}
         var refreshes = 0

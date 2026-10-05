@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import javax.inject.Inject
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
@@ -40,7 +41,7 @@ class SportScoreRepositoryImpl @Inject constructor(
         }
         periods.map {
             val isCurrent = current == null || it.id == current.id
-            SportScorePeriod(it.id, it.value.trim(), current?.dateEnd?.takeIf { isCurrent }, isCurrent)
+            SportScorePeriod(it.id, it.value.trim(), current?.dateEnd?.takeIf { isCurrent }?.toInstant()?.toKotlinInstant(), isCurrent)
         }
     }
 

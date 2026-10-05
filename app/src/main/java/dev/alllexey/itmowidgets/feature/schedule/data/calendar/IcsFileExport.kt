@@ -12,7 +12,6 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvents
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.IcsWriter
@@ -21,6 +20,7 @@ import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.toJavaLocalDate
 
 /**
  * The own schedule of a range as a `.ics` file in `cacheDir/ics`, shared through the app's `FileProvider`. Only the
@@ -46,8 +46,8 @@ class IcsFileExport internal constructor(
     })
 
     override suspend fun export(range: ScheduleExportRange): AppResult<IcsFile?> = try {
-        val dates = range.dates(time.javaToday())
-        val days = schedule.read(dates.start, dates.endInclusive)
+        val dates = range.dates(time.today())
+        val days = schedule.read(dates.start.toJavaLocalDate(), dates.endInclusive.toJavaLocalDate())
         val events = CalendarEvents.from(days, time.javaZone()) { lesson ->
             buildings.find(lesson.buildingId, lesson.mainBuildingId, lesson.building?.raw)?.address
         }

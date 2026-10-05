@@ -4,9 +4,11 @@ import dev.alllexey.itmowidgets.core.schedule.LessonSlot
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import kotlin.time.Instant
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -107,7 +109,8 @@ class ScheduleChangeDigestTest {
     )
 
     private fun slot(pairId: Long, date: LocalDate, start: LocalTime) = LessonSlot(
-        pairId = pairId, date = date, start = start, end = start.plusMinutes(90), room = "1506", building = null,
+        pairId = pairId, date = date.toKotlinLocalDate(), start = start.toKotlinLocalTime(),
+        end = start.plusMinutes(90).toKotlinLocalTime(), room = "1506", building = null,
         formatId = 1, format = "Очный", teacherIsu = null, teacherName = null
     )
 

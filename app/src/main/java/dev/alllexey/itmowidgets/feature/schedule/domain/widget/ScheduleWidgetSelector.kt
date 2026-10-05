@@ -8,6 +8,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import javax.inject.Inject
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 
 class ScheduleWidgetSelector @Inject constructor() {
 
@@ -26,11 +29,11 @@ class ScheduleWidgetSelector @Inject constructor() {
             }
         }
         val pending = pendingSport.distinctBy { it.queueKind to it.queueId }
-            .filter { it.start.isAfter(now) && it.end.isAfter(it.start) }
-            .filter { it.start.withOffsetSameInstant(now.offset).toLocalDate() in today..today.plusDays(1) }
+            .filter { it.start > now.toInstant().toKotlinInstant() && it.end > it.start }
+            .filter { it.start.atOffsetOf(now).toLocalDate() in today..today.plusDays(1) }
             .map { booking ->
-                val start = booking.start.withOffsetSameInstant(now.offset)
-                val end = booking.end.withOffsetSameInstant(now.offset)
+                val start = booking.start.atOffsetOf(now)
+                val end = booking.end.atOffsetOf(now)
                 TimelineLesson(start.toLocalDate(), start.toLocalTime(), end.toLocalTime(),
                     ScheduleWidgetLesson(
                         subject = booking.sectionName.trim(),
@@ -216,6 +219,9 @@ class ScheduleWidgetSelector @Inject constructor() {
             state = stateAt(date, start, end, now)
         )
     }
+
+    private fun Instant.atOffsetOf(now: OffsetDateTime): OffsetDateTime =
+        OffsetDateTime.ofInstant(toJavaInstant(), now.offset)
 
     private fun ScheduleWidgetLesson.withTeacherHidden(hidden: Boolean) =
         if (hidden) copy(teacher = null) else this

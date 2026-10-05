@@ -4,9 +4,12 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField.FORMAT
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField.PLACE
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField.TEACHER
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField.TIME
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlin.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -64,7 +67,7 @@ class ScheduleChangeTest {
         assertTrue(moved.isOver(WED.atTime(9, 50)))
         assertEquals(TUE.atTime(8, 20), moved.soonestStart())
         assertTrue(moved.touches(TUE) && moved.touches(WED))
-        assertFalse(moved.touches(TUE.plusDays(2)))
+        assertFalse(moved.touches(TUE.plus(2, DateTimeUnit.DAY)))
     }
 
     private fun change(
@@ -78,12 +81,12 @@ class ScheduleChangeTest {
     )
 
     private fun slot(pairId: Long, date: LocalDate) = LessonSlot(
-        pairId = pairId, date = date, start = LocalTime.of(8, 20), end = LocalTime.of(9, 50), room = "1506",
+        pairId = pairId, date = date, start = LocalTime(8, 20), end = LocalTime(9, 50), room = "1506",
         building = null, formatId = 1, format = "Очный", teacherIsu = null, teacherName = null
     )
 
     private companion object {
-        val TUE: LocalDate = LocalDate.of(2026, 9, 8)
-        val WED: LocalDate = LocalDate.of(2026, 9, 9)
+        val TUE: LocalDate = LocalDate(2026, 9, 8)
+        val WED: LocalDate = LocalDate(2026, 9, 9)
     }
 }

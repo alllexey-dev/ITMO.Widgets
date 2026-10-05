@@ -11,6 +11,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlin.time.toKotlinInstant
+import kotlinx.datetime.toJavaLocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -28,7 +30,7 @@ class HomeScheduleSelectorTest {
             now = at("10:00")
         )
 
-        assertEquals(TODAY, card.date)
+        assertEquals(TODAY, card.date.toJavaLocalDate())
         assertFalse(card.tomorrow)
         assertEquals(0, card.completed)
         assertEquals(
@@ -76,7 +78,7 @@ class HomeScheduleSelectorTest {
         )
 
         assertTrue(card.tomorrow)
-        assertEquals(TODAY.plusDays(1), card.date)
+        assertEquals(TODAY.plusDays(1), card.date.toJavaLocalDate())
         assertEquals(1, card.completed)
         assertEquals(listOf("lesson 5", "lesson 6", "pending 9"), card.rows.map(::label))
         assertEquals(HomeLessonState.NEXT, (card.rows.first() as HomeScheduleRow.Lesson).state)
@@ -99,7 +101,7 @@ class HomeScheduleSelectorTest {
             now = at("20:00")
         )
 
-        assertEquals(TODAY, card.date)
+        assertEquals(TODAY, card.date.toJavaLocalDate())
         assertTrue(card.rows.isEmpty())
         assertEquals(2, card.completed)
     }
@@ -133,7 +135,8 @@ class HomeScheduleSelectorTest {
         val startsAt = OffsetDateTime.of(date, LocalTime.parse(start), OFFSET)
         return PendingSportBooking(
             queueId = id, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100 + id,
-            sectionName = "Бассейн", start = startsAt, end = startsAt.plusMinutes(90),
+            sectionName = "Бассейн", start = startsAt.toInstant().toKotlinInstant(),
+            end = startsAt.plusMinutes(90).toInstant().toKotlinInstant(),
             teacherFio = "Тренер", roomName = "Бассейн", isPrediction = true
         )
     }

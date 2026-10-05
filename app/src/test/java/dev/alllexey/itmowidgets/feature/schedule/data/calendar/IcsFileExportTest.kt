@@ -73,7 +73,7 @@ class IcsFileExportTest {
         days = listOf(day(TODAY, lesson(1)))
         export.export(ScheduleExportRange.Week)
 
-        export.export(ScheduleExportRange.Custom(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 30)))
+        export.export(ScheduleExportRange.Custom(kotlinx.datetime.LocalDate(2026, 9, 1), kotlinx.datetime.LocalDate(2026, 9, 30)))
 
         assertEquals(listOf("itmo-schedule-2026-09-01-2026-09-30.ics"), directory.list()!!.toList())
     }

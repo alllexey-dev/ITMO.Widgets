@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
@@ -223,7 +222,7 @@ class RecordbookViewModel @Inject constructor(
 
     private fun content(selected: RecordbookSelection, subjects: List<RecordbookSubject>, sport: RecordbookSportState?) =
         RecordbookUiState.Content(programs, selected, subjects, sport, attention = subjects.mapNotNull { subject ->
-            attentionReason(subject, sport, knownControls(subject), time.javaNow())?.let { subject.entryId to it }
+            attentionReason(subject, sport, knownControls(subject), time.now())?.let { subject.entryId to it }
         }.toMap(), newSubjects = newSubjectsIn(selected.period), sheetTotals = sheetTotalsIn(selected.period, subjects))
 
     private fun sheetTotalsIn(period: RecordbookPeriod, subjects: List<RecordbookSubject>): Map<Long, String> {

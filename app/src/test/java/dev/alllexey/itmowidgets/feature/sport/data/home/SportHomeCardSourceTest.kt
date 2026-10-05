@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import java.time.LocalDateTime
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -78,8 +79,8 @@ class SportHomeCardSourceTest {
 
     private fun booking(id: Long, hour: Int) = PendingSportBooking(
         queueId = id, queueKind = PendingSportBooking.QueueKind.FREE, lessonId = 100 + id, sectionName = "Бассейн",
-        start = Today.javaToday().atTime(hour, 0).atZone(Today.javaZone()).toOffsetDateTime(),
-        end = Today.javaToday().atTime(hour + 1, 30).atZone(Today.javaZone()).toOffsetDateTime(),
+        start = Today.javaToday().atTime(hour, 0).atZone(Today.javaZone()).toInstant().toKotlinInstant(),
+        end = Today.javaToday().atTime(hour + 1, 30).atZone(Today.javaZone()).toInstant().toKotlinInstant(),
         teacherFio = "Тренер", roomName = "Бассейн", isPrediction = false
     )
 

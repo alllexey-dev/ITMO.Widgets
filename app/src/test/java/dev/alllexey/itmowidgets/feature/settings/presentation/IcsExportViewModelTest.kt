@@ -81,7 +81,7 @@ class IcsExportViewModelTest {
         viewModel.onDates(LocalDate.of(2026, 9, 28), LocalDate.of(2026, 10, 4))
         advanceUntilIdle()
 
-        assertEquals(listOf<ScheduleExportRange>(ScheduleExportRange.Custom(LocalDate.of(2026, 9, 28), LocalDate.of(2026, 10, 4))), export.ranges)
+        assertEquals(listOf<ScheduleExportRange>(ScheduleExportRange.Custom(kotlinx.datetime.LocalDate(2026, 9, 28), kotlinx.datetime.LocalDate(2026, 10, 4))), export.ranges)
         assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("28 сентября – 4 октября")), viewModel.state.value)
     }
 

@@ -12,10 +12,10 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
+import kotlin.time.Instant
 
 /** 1: the last academic snapshot of today..today+7 and the changes found against it, newest last. */
 private const val FORMAT = 1
@@ -140,7 +140,7 @@ internal fun SnapshotLesson.toStored() = StoredLesson(
 
 internal fun StoredChange.toModel() = ScheduleChange(
     id = checkNotNull(id),
-    detectedAt = Instant.ofEpochMilli(detectedAt),
+    detectedAt = Instant.fromEpochMilliseconds(detectedAt),
     kind = ScheduleChangeKind.valueOf(kind),
     fields = checkNotNull(fields).mapTo(mutableSetOf(), ScheduleChangeField::valueOf),
     subjectName = checkNotNull(subjectName),

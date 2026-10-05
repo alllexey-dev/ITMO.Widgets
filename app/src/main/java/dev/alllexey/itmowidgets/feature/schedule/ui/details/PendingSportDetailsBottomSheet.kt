@@ -34,6 +34,7 @@ import dev.alllexey.itmowidgets.databinding.FragmentPendingSportDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportConditionBinding
 import java.time.OffsetDateTime
 import javax.inject.Inject
+import kotlinx.datetime.TimeZone
 
 /**
  * A queued or predicted sport booking from the schedule, laid out like the sport
@@ -131,7 +132,8 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
         const val TAG = "PendingSportDetailsBottomSheet"
         private const val ARG_BOOKING = "arg_pending_booking"
 
-        fun newInstance(booking: PendingSportBooking): PendingSportDetailsBottomSheet = newInstance(booking.toDetailsArgs())
+        fun newInstance(booking: PendingSportBooking, zone: TimeZone): PendingSportDetailsBottomSheet =
+            newInstance(booking.toDetailsArgs(zone))
 
         fun newInstance(args: PendingSportDetailsArgs): PendingSportDetailsBottomSheet = PendingSportDetailsBottomSheet().apply {
             arguments = Bundle().apply { putNavigationArgs(ARG_BOOKING, args) }

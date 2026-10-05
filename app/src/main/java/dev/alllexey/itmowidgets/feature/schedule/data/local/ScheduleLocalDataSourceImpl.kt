@@ -23,8 +23,13 @@ import java.time.LocalDate
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 import javax.inject.Inject
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
 
 private const val SCHEDULE_CACHE_EXPIRATION_MS = 24 * 60 * 60 * 1000L
+
+private fun datesBetween(start: LocalDate, end: LocalDate): List<LocalDate> =
+    ScheduleUtil.generateDates(start.toKotlinLocalDate(), end.toKotlinLocalDate()).map { it.toJavaLocalDate() }
 
 class ScheduleLocalDataSourceImpl @Inject constructor(
     private val gson: Gson,
@@ -53,7 +58,7 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
         end: LocalDate
     ): Flow<List<DaySchedule>> {
 
-        val keys = ScheduleUtil.generateDates(start, end).map { key(userIsu, it) }
+        val keys = datesBetween(start, end).map { key(userIsu, it) }
 
         return flow {
             cacheMutex.withLock {
@@ -76,7 +81,7 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
 
     override fun peekRange(userIsu: Int?, start: LocalDate, end: LocalDate): List<DaySchedule>? {
         val snapshot = memoryCache.value
-        val keys = ScheduleUtil.generateDates(start, end).map { key(userIsu, it) }
+        val keys = datesBetween(start, end).map { key(userIsu, it) }
         if (!keys.all(snapshot::containsKey)) return null
         return keys.mapNotNull { key -> snapshot[key]?.takeUnless(::isExpired)?.let(::deserialize) }
     }
@@ -98,7 +103,7 @@ class ScheduleLocalDataSourceImpl @Inject constructor(
         end: LocalDate,
         schedules: List<DaySchedule>
     ) {
-        val dates = ScheduleUtil.generateDates(start, end)
+        val dates = datesBetween(start, end)
         if (dates.isEmpty()) return
         withContext(dispatchers.io) {
             cacheMutex.withLock {

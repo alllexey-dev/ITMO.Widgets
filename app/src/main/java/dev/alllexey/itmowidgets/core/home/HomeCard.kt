@@ -6,7 +6,7 @@ import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** Feed order is the declaration order; a kind is also the unit the user can hide. */
 enum class HomeCardKind {

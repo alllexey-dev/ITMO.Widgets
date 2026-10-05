@@ -7,7 +7,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.javaToday
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +16,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * The history of schedule changes. While the screen is visible every unread change is marked read, and the rows that
@@ -63,7 +64,7 @@ class ScheduleChangesViewModel @Inject constructor(
     private fun render(changes: List<ScheduleChange>, isNew: (ScheduleChange) -> Boolean): ScheduleChangesUiState {
         if (changes.isEmpty()) return ScheduleChangesUiState.Empty
         val today = timeProvider.javaToday()
-        val days = changes.groupBy { it.detectedAt.atZone(timeProvider.javaZone()).toLocalDate() }
+        val days = changes.groupBy { it.detectedAt.toLocalDateTime(timeProvider.timeZone).date.toJavaLocalDate() }
             .toSortedMap(reverseOrder())
             .map { (date, dayChanges) ->
                 val relative = when (date) {

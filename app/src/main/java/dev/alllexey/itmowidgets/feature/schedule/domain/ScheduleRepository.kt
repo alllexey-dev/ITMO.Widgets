@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 
 interface ScheduleRepository : ScheduleRefreshGateway {
 
@@ -29,12 +30,12 @@ interface ScheduleRepository : ScheduleRefreshGateway {
     ): AppResult<Unit>
 
     override suspend fun refreshOwnSchedule(
-        startDate: LocalDate,
-        endDate: LocalDate
+        startDate: kotlinx.datetime.LocalDate,
+        endDate: kotlinx.datetime.LocalDate
     ): AppResult<Unit> = refreshSchedule(
         userIsu = null,
-        startDate = startDate,
-        endDate = endDate
+        startDate = startDate.toJavaLocalDate(),
+        endDate = endDate.toJavaLocalDate()
     )
 
     /** Explicit cache/session cleanup, not a prerequisite for refreshing a visible schedule. */

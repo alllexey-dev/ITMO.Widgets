@@ -154,7 +154,7 @@ class ScheduleFragment : Fragment() {
     }
 
     /** Through the navigator, so the sport tab's sheet with its actions can answer when it knows the queue. */
-    private fun showPendingSportDetails(booking: PendingSportBooking) = openPendingSportDetails(booking.toDetailsArgs())
+    private fun showPendingSportDetails(booking: PendingSportBooking) = openPendingSportDetails(booking.toDetailsArgs(timeProvider.timeZone))
 
     private fun setupRecycler() {
         recycler.itemAnimator = null

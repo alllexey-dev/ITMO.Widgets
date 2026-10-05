@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import java.time.LocalDateTime
 import java.time.LocalTime
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
@@ -75,8 +76,8 @@ class ScheduleHomeCardSourceTest {
 
     private fun booking() = PendingSportBooking(
         queueId = 1, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 101, sectionName = "Бассейн",
-        start = Today.javaToday().atTime(16, 0).atZone(Today.javaZone()).toOffsetDateTime(),
-        end = Today.javaToday().atTime(17, 30).atZone(Today.javaZone()).toOffsetDateTime(),
+        start = Today.javaToday().atTime(16, 0).atZone(Today.javaZone()).toInstant().toKotlinInstant(),
+        end = Today.javaToday().atTime(17, 30).atZone(Today.javaZone()).toInstant().toKotlinInstant(),
         teacherFio = "Тренер", roomName = "Бассейн", isPrediction = false
     )
 

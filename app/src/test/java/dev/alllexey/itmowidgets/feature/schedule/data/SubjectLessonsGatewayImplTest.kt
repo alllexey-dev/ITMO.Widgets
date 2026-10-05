@@ -13,6 +13,9 @@ import java.time.LocalTime
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -34,10 +37,10 @@ class SubjectLessonsGatewayImplTest {
             ))
         )
 
-        val lessons = gateway.observeOwnLessons(monday, monday.plusDays(7)).first()
+        val lessons = gateway.observeOwnLessons(monday.toKotlinLocalDate(), monday.plusDays(7).toKotlinLocalDate()).first()
 
         assertEquals(listOf(1L, 2L, 3L), lessons.map { it.pairId })
-        assertEquals(listOf(monday, monday, monday.plusDays(1)), lessons.map { it.date })
+        assertEquals(listOf(monday, monday, monday.plusDays(1)), lessons.map { it.date.toJavaLocalDate() })
         assertEquals("1506", lessons.first().room)
         assertEquals("Кронверкский проспект, 49", lessons.first().building)
         assertNull(repository.observed.single().userIsu)
@@ -58,7 +61,8 @@ class SubjectLessonsGatewayImplTest {
     }
 
     private fun lessonSummary(subjectId: Long, name: String, flowId: Long) = SubjectLesson(
-        pairId = flowId, date = monday, start = LocalTime.of(9, 30), end = LocalTime.of(11, 0), typeId = 1, type = "Лекция",
+        pairId = flowId, date = monday.toKotlinLocalDate(), start = LocalTime.of(9, 30).toKotlinLocalTime(),
+        end = LocalTime.of(11, 0).toKotlinLocalTime(), typeId = 1, type = "Лекция",
         subjectId = subjectId, subjectName = name, flowId = flowId, teacherIsu = null, teacherFio = null,
         room = null, building = null, formatId = 1
     )

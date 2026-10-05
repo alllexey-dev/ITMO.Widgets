@@ -22,6 +22,7 @@ import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.ui.buildingShortTitle
 import dev.alllexey.itmowidgets.core.ui.headline
 import dev.alllexey.itmowidgets.core.ui.lessonTypeColorRes
@@ -42,6 +43,9 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.time.toJavaInstant
+import kotlinx.datetime.format
+import kotlinx.datetime.toKotlinTimeZone
 
 /** Everything a card can ask the screen to do; navigation stays in the Fragment. */
 data class HomeFeedActions(
@@ -112,7 +116,7 @@ class HomeFeedAdapter(
             binding.scheduleTitle.text = context.getString(
                 if (card.tomorrow) R.string.home_schedule_tomorrow else R.string.home_schedule_today
             )
-            binding.scheduleDate.text = card.date.format(DATE_FORMATTER)
+            binding.scheduleDate.text = card.date.format(DateTexts.WEEKDAY_DAY_MONTH)
             binding.scheduleRows.removeAllViews()
             card.rows.forEach { row -> binding.scheduleRows.addView(rowView(binding.scheduleRows, row)) }
             binding.scheduleRows.isVisible = card.rows.isNotEmpty()
@@ -254,12 +258,12 @@ class HomeFeedAdapter(
         private fun queueRow(parent: ViewGroup, booking: PendingSportBooking): View {
             val context = parent.context
             val binding = ItemHomeSportRowBinding.inflate(LayoutInflater.from(context), parent, false)
-            val start = booking.start.atZoneSameInstant(zoneId)
-            val end = booking.end.atZoneSameInstant(zoneId)
+            val start = booking.start.toJavaInstant().atZone(zoneId)
+            val end = booking.end.toJavaInstant().atZone(zoneId)
             binding.rowTitle.text = booking.sectionName
             binding.rowSubtitle.text = "${start.format(SHORT_DATE_FORMATTER)}$SEPARATOR${start.format(TIME_FORMATTER)}–${end.format(TIME_FORMATTER)}"
             binding.rowBadge.setText(if (booking.isPrediction) R.string.home_pending_predicted else R.string.home_pending_waiting)
-            binding.rowRoot.setOnClickListener { actions.onPendingSport(booking.toDetailsArgs()) }
+            binding.rowRoot.setOnClickListener { actions.onPendingSport(booking.toDetailsArgs(zoneId.toKotlinTimeZone())) }
             return binding.root
         }
     }
@@ -330,7 +334,6 @@ class HomeFeedAdapter(
         const val PROGRESS_MAX = 100
         val RUSSIAN: Locale = Locale.forLanguageTag("ru")
         val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
-        val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", RUSSIAN)
         val SHORT_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, d MMM", RUSSIAN)
     }
 }

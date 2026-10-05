@@ -6,7 +6,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,10 +28,10 @@ class SportHomeCardSource @Inject constructor(
         sportData.observeSportScore().map { it.valueOrNull()?.summary },
         pending.observePendingBookings().map { it.valueOrNull().orEmpty() }
     ) { score, bookings ->
-        val now = timeProvider.javaNow()
+        val now = timeProvider.now()
         val queue = bookings
             .distinctBy { it.queueKind to it.queueId }
-            .filter { it.end.isAfter(now) }
+            .filter { it.end > now }
             .sortedBy { it.start }
         val scored = score != null && score.totalCapped >= SCORE_GOAL
         if ((score == null || scored) && queue.isEmpty()) emptyList()

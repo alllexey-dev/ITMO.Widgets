@@ -233,7 +233,10 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNa
         @Volatile var sportRepository: SportScoreRepository? = null
         @Volatile var lessonsGateway: SubjectLessonsGateway = MemoryLessons()
         @Volatile var scheduleRefresh: ScheduleRefreshGateway = object : ScheduleRefreshGateway {
-            override suspend fun refreshOwnSchedule(startDate: LocalDate, endDate: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
+            override suspend fun refreshOwnSchedule(
+                startDate: kotlinx.datetime.LocalDate,
+                endDate: kotlinx.datetime.LocalDate
+            ): AppResult<Unit> = AppResult.Success(Unit)
         }
         @Volatile var resourceRepository: SubjectLinksRepository = MemorySubjectLinksRepository()
         /** The host's clock; spring 2025/2026 by default. */
@@ -259,8 +262,8 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNa
     /** Lessons a test hands in; the window filter mirrors the real cache read. */
     class MemoryLessons(initial: List<SubjectLesson> = emptyList()) : SubjectLessonsGateway {
         val lessons = MutableStateFlow(initial)
-        override fun observeOwnLessons(start: LocalDate, end: LocalDate): Flow<List<SubjectLesson>> =
-            lessons.map { list -> list.filter { !it.date.isBefore(start) && !it.date.isAfter(end) } }
+        override fun observeOwnLessons(start: kotlinx.datetime.LocalDate, end: kotlinx.datetime.LocalDate): Flow<List<SubjectLesson>> =
+            lessons.map { list -> list.filter { it.date in start..end } }
     }
 
     /** Unread marks a test hands in; reads and advances are only recorded, never written to the device's file. */

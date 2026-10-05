@@ -19,6 +19,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.time.LocalDate
 import java.time.LocalDateTime
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -26,6 +27,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toLocalDateTime
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -59,7 +63,7 @@ class SchedulePendingSportTest {
         runCurrent()
         val original = model.content().schedule
         assertEquals(1, model.content().displayDays.single().pendingSport.size)
-        clock.current = booking().start.atZoneSameInstant(Today.javaZone()).toLocalDateTime()
+        clock.current = booking().start.toLocalDateTime(Today.timeZone).toJavaLocalDateTime()
         model.updateTimeState()
         assertEquals(original, model.content().schedule)
         assertTrue(model.content().displayDays.single().pendingSport.isEmpty())
@@ -299,20 +303,22 @@ class SchedulePendingSportTest {
         model.ensureDataLoaded()
         runCurrent()
         assertTrue(model.content().schedule.isEmpty())
-        assertEquals(listOf(near.start.toLocalDate()), model.content().displayDays.map { it.date })
+        assertEquals(listOf(near.localDate()), model.content().displayDays.map { it.date })
         assertNull(model.content().displayDays.single().officialDay)
 
         model.fetchNextDays()
         runCurrent()
-        assertEquals(listOf(near.start.toLocalDate(), nextPage.start.toLocalDate()), model.content().displayDays.map { it.date })
+        assertEquals(listOf(near.localDate(), nextPage.localDate()), model.content().displayDays.map { it.date })
         assertTrue(model.content().schedule.isEmpty())
         assertEquals(0, official.clears)
     }
 
     @Test
     fun `projection normalizes dates and deduplicates queue keys not titles times or academic IDs`() {
-        val booking = booking().copy(start = Today.javaNow().withHour(22).withOffsetSameLocal(java.time.ZoneOffset.UTC),
-            end = Today.javaNow().withHour(23).withOffsetSameLocal(java.time.ZoneOffset.UTC))
+        val booking = booking().copy(
+            start = Today.javaNow().withHour(22).withOffsetSameLocal(java.time.ZoneOffset.UTC).toInstant().toKotlinInstant(),
+            end = Today.javaNow().withHour(23).withOffsetSameLocal(java.time.ZoneOffset.UTC).toInstant().toKotlinInstant()
+        )
         val another = booking.copy(queueId = 2)
         val anotherKind = booking.copy(queueKind = PendingSportBooking.QueueKind.FREE)
         val days = buildScheduleDisplayDays(listOf(day()), listOf(booking, booking, another, anotherKind),
@@ -322,7 +328,7 @@ class SchedulePendingSportTest {
         assertTrue(days.first().pendingSport.isEmpty())
         assertEquals(Today.javaToday().plusDays(1), days.last().date)
         assertEquals(3, days.last().pendingSport.size)
-        assertEquals(1, days.last().pendingSport.first().start.hour)
+        assertEquals(1, days.last().pendingSport.first().start.toLocalDateTime(Today.timeZone).hour)
         assertNull(days.last().officialDay)
     }
 
@@ -333,14 +339,16 @@ class SchedulePendingSportTest {
 
     private fun ScheduleViewModel.content() = uiState.value as ScheduleUiState.Content
 
+    private fun PendingSportBooking.localDate() = start.toLocalDateTime(Today.timeZone).date.toJavaLocalDate()
+
     private object Today : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
 
     companion object {
         private fun day() = DaySchedule(1, 1, Today.javaToday(), null, emptyList())
         private fun booking(id: Long = 1, day: LocalDate = Today.javaToday()) = PendingSportBooking(
             queueId = id, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100 + id,
-            sectionName = "Тестовая секция", start = day.atTime(16, 0).atZone(Today.javaZone()).toOffsetDateTime(),
-            end = day.atTime(17, 30).atZone(Today.javaZone()).toOffsetDateTime(), teacherFio = "Тестовый преподаватель",
+            sectionName = "Тестовая секция", start = day.atTime(16, 0).atZone(Today.javaZone()).toInstant().toKotlinInstant(),
+            end = day.atTime(17, 30).atZone(Today.javaZone()).toInstant().toKotlinInstant(), teacherFio = "Тестовый преподаватель",
             roomName = "Тестовый корпус", isPrediction = true
         )
     }

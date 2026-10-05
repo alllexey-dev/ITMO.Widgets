@@ -4,9 +4,9 @@ import dev.alllexey.itmowidgets.core.schedule.LessonSlot
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlin.time.Instant
 
 /** A synthetic change of a lesson moved from Tuesday to Wednesday unless told otherwise. */
 fun scheduleChange(
@@ -16,8 +16,8 @@ fun scheduleChange(
     subject: String = "Математический анализ",
     typeId: Int = 1,
     flowName: String? = "Тестовый поток",
-    before: LessonSlot? = if (kind == ScheduleChangeKind.ADDED) null else slot(1, LocalDate.of(2026, 9, 8)),
-    after: LessonSlot? = if (kind == ScheduleChangeKind.CANCELLED) null else slot(1, LocalDate.of(2026, 9, 9)),
+    before: LessonSlot? = if (kind == ScheduleChangeKind.ADDED) null else slot(1, LocalDate(2026, 9, 8)),
+    after: LessonSlot? = if (kind == ScheduleChangeKind.CANCELLED) null else slot(1, LocalDate(2026, 9, 9)),
     read: Boolean = false,
     notified: Boolean = false,
     detectedAt: Instant = Instant.parse("2026-09-07T09:00:00Z")
@@ -29,8 +29,8 @@ fun scheduleChange(
 fun slot(
     pairId: Long,
     date: LocalDate,
-    start: LocalTime = LocalTime.of(8, 20),
-    end: LocalTime = start.plusMinutes(90),
+    start: LocalTime = LocalTime(8, 20),
+    end: LocalTime = LocalTime.fromSecondOfDay(start.toSecondOfDay() + 90 * 60),
     room: String? = "1506",
     building: String? = "Кронверкский проспект, 49",
     formatId: Int = 1,

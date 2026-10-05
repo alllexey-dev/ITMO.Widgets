@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.core.schedule
 
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 /** One academic lesson of the viewer, as the study screens see it; no sport, no room bookings. */
 data class SubjectLesson(

@@ -26,7 +26,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.recordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.sheetScore
 import java.time.LocalDate
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -185,7 +185,7 @@ class RecordbookViewModelTest {
     private val pe = recordbookSubject(id = 7, name = "Физическая культура и спорт (элективная)").copy(controlType = "Зачёт", rate = null, score = null)
 
     private fun sportPeriodEndingOn(date: String) {
-        sport.periods = AppResult.Success(listOf(SportScorePeriod(11, "Осень 2026/2027", OffsetDateTime.parse("${date}T00:00:00+03:00"), current = true)))
+        sport.periods = AppResult.Success(listOf(SportScorePeriod(11, "Осень 2026/2027", Instant.parse("${date}T00:00:00+03:00"), current = true)))
         sport.score = AppResult.Success(SportScoreSummary(30, 10))
     }
 

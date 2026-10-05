@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.core.sport
 
-import java.time.OffsetDateTime
+import dev.alllexey.itmowidgets.core.result.AppResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import dev.alllexey.itmowidgets.core.result.AppResult
+import kotlin.time.Instant
 
 /** Own active queues only; never represents a confirmed booking or another user's sport. */
 data class PendingSportBooking(
@@ -11,8 +11,8 @@ data class PendingSportBooking(
     val queueKind: QueueKind,
     val lessonId: Long,
     val sectionName: String,
-    val start: OffsetDateTime,
-    val end: OffsetDateTime,
+    val start: Instant,
+    val end: Instant,
     val teacherFio: String,
     val roomName: String,
     val isPrediction: Boolean,

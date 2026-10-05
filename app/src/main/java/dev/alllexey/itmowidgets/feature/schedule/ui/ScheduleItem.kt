@@ -13,7 +13,13 @@ sealed interface ScheduleItem {
         val changed: Boolean = false
     ) : ScheduleItem
 
-    data class PendingSportItem(val booking: PendingSportBooking, val isLast: Boolean) : ScheduleItem
+    /** [start] and [end] are the booking's academic wall-clock times. */
+    data class PendingSportItem(
+        val booking: PendingSportBooking,
+        val start: LocalTime,
+        val end: LocalTime,
+        val isLast: Boolean
+    ) : ScheduleItem
 
     data class BreakItem(val from: LocalTime, val to: LocalTime) : ScheduleItem
 
