@@ -68,7 +68,7 @@ abstract class PreviewScreenshotTest {
             CompositionLocalProvider(LocalPreviewAppearance provides case.appearance) { case.preview() }
         }
         repeat(SETTLE_FRAMES) { compose.mainClock.advanceTimeByFrame() }
-        compose.onRoot().captureRoboImage(case.fileName)
+        compose.onRoot().captureRoboImage(case.fileName, ShotsCompare.options)
         if (suite.accessibilityChecks) {
             compose.onRoot().checkRoboAccessibility(
                 roborazziATFAccessibilityCheckOptions = RoborazziATFAccessibilityCheckOptions(

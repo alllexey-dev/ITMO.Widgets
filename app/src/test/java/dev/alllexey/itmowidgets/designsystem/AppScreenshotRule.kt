@@ -7,6 +7,7 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewAppearance
 import dev.alllexey.itmowidgets.testkit.screenshot.BaselineDirectory
 import dev.alllexey.itmowidgets.testkit.screenshot.CaptureSize
+import dev.alllexey.itmowidgets.testkit.screenshot.ShotsCompare
 import dev.alllexey.itmowidgets.testkit.screenshot.ShotsRun
 import java.io.File
 import org.junit.rules.TestRule
@@ -55,7 +56,7 @@ class AppScreenshotRule(testInstance: Any) : TestRule {
             runCatching {
                 val view = render(appearance)
                 shadowOf(Looper.getMainLooper()).idle()
-                view.captureRoboImage(directory.file(base, appearance))
+                view.captureRoboImage(directory.file(base, appearance), ShotsCompare.options)
             }.exceptionOrNull()
         }
         if (failures.isNotEmpty()) {

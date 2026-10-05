@@ -354,7 +354,11 @@ scripts/verify.sh shots all --gallery <dir>       # every capture in four appear
 - A failed comparison writes `<name>_compare.png` (reference, diff, new) to
   `<module>/build/outputs/roborazzi/`; in CI the run uploads them as the
   `screenshot-diffs` artefact. Baselines recorded on the Mac verify on the CI's
-  Ubuntu runner without a tolerance.
+  Ubuntu runner under one per-pixel tolerance for every capture
+  (`ShotsCompare` in `shared/testing`): a pixel counts as changed above an
+  RGBA distance of 0.03, about 4 of 255 per channel, which absorbs the
+  anti-aliasing of curved edges and text between arm64 and x86_64; one changed
+  pixel still fails.
 - Galleries are for review only; never copy a gallery PNG into `screenshots/`.
 
 Instrumented tests stay for what only a device shows: widgets, the
