@@ -75,7 +75,7 @@ import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import java.io.File
-import java.time.YearMonth
+import kotlinx.datetime.YearMonth
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -390,7 +390,7 @@ class UserProfileVisualTest {
     @Test fun twentyMixedReviewsRecycleEveryOptionalFieldAndRestoreScroll() = appearances { spec ->
         val reviews = (0 until 20).map { index ->
             val subject = if (index % 2 == 0) "Предмет $index — $LONG_SUBJECT" else null
-            val written = when (index % 3) { 0 -> ReviewDate.Month(YearMonth.of(2025, 1)); 1 -> ReviewDate.BeforeYear(2023); else -> null }
+            val written = when (index % 3) { 0 -> ReviewDate.Month(YearMonth(2025, 1)); 1 -> ReviewDate.BeforeYear(2023); else -> null }
             when (index % 4) {
                 0 -> copiedReview("review-$index", subject, written,
                     if (index % 8 == 0) "Очень длинное название источника отзывов студентов университета ИТМО" else null,
@@ -1485,7 +1485,7 @@ class UserProfileVisualTest {
         listOf(PersonPosition("Доцент", LONG_DEPARTMENT), PersonPosition(null, UNTITLED_DEPARTMENT)),
         listOf(PersonRoom("405", "Кронверкский проспект, 49")), emptyList())
     private fun teacherReviews() = listOf(
-        copiedReview("review-one", LONG_SUBJECT, ReviewDate.Month(YearMonth.of(2025, 1)), "Отзывы ПИ", "https://example.org/reviews/1", "Понятно объясняет материал и подробно отвечает на вопросы."),
+        copiedReview("review-one", LONG_SUBJECT, ReviewDate.Month(YearMonth(2025, 1)), "Отзывы ПИ", "https://example.org/reviews/1", "Понятно объясняет материал и подробно отвечает на вопросы."),
         copiedReview("review-two", null, ReviewDate.BeforeYear(2023), null, "https://example.org/reviews/2", "На занятиях было интересно."),
         copiedReview("review-three", null, null, null, "https://example.org/reviews/3", LONG_REVIEW)
     )
@@ -1506,12 +1506,12 @@ class UserProfileVisualTest {
         UserProfilePreviewActivity.OWN_REVIEW_ID, "Математический анализ",
         "Лекции понятные, на практике разбираем задачи из контрольных. Вопросы можно задавать в любое время.",
         anonymous = true, status = status, reviewNote = note, score = 0, verified = verified,
-        written = ReviewDate.Month(YearMonth.of(2026, 9)))
+        written = ReviewDate.Month(YearMonth(2026, 9)))
     /** The own review, a named verified review, an anonymous unverified one and a Reviews copy, in Backend's order. */
     private fun mixedReviews(mine: OwnTeacherReview? = ownReview(OwnReviewStatus.PENDING)) = reviewsOf(listOf(
-        communityReview("named", LONG_SUBJECT, ReviewDate.Month(YearMonth.of(2025, 1)),
+        communityReview("named", LONG_SUBJECT, ReviewDate.Month(YearMonth(2025, 1)),
             "Объясняет сложные темы на простых примерах, всегда отвечает на вопросы после пары.", author = AUTHOR, verified = true, score = 5),
-        communityReview("anonymous", null, ReviewDate.Month(YearMonth.of(2024, 11)), LONG_REVIEW),
+        communityReview("anonymous", null, ReviewDate.Month(YearMonth(2024, 11)), LONG_REVIEW),
         copiedReview("copy", "Математический анализ", ReviewDate.BeforeYear(2023), "Отзывы ПИ", "https://example.org/reviews/copy",
             "На занятиях было интересно."),
     ), canWrite = true, canVote = true, canReport = true, knownTeacher = true, mine = mine)

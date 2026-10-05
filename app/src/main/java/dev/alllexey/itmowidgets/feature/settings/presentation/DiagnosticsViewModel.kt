@@ -5,9 +5,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticEntry
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaZone
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,10 +22,8 @@ sealed interface DiagnosticsUiState {
 @HiltViewModel
 class DiagnosticsViewModel @Inject constructor(
     private val diagnostics: AppDiagnostics,
-    timeProvider: AcademicTimeProvider
+    private val timeProvider: AcademicTimeProvider
 ) : ViewModel() {
-
-    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(timeProvider.javaZone())
 
     val uiState: StateFlow<DiagnosticsUiState> = diagnostics.observe()
         .map<List<DiagnosticEntry>, DiagnosticsUiState> { DiagnosticsUiState.Content(it) }
@@ -36,7 +33,7 @@ class DiagnosticsViewModel @Inject constructor(
         viewModelScope.launch { diagnostics.clear() }
     }
 
-    fun formatTime(entry: DiagnosticEntry): String = formatter.format(entry.at)
+    fun formatTime(entry: DiagnosticEntry): String = DateTexts.diagnostics(entry.at, timeProvider.timeZone)
 
     /** Plain text for the clipboard: newest first, one block per entry. */
     fun exportText(): String {

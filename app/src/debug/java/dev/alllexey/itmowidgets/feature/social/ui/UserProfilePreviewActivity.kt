@@ -57,7 +57,7 @@ import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
-import java.time.YearMonth
+import kotlinx.datetime.YearMonth
 import java.util.Collections
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.delay
@@ -223,7 +223,7 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppN
 
         override suspend fun save(isu: Int, draft: TeacherReviewDraft) = mutate { current ->
             current.copy(mine = OwnTeacherReview(current.mine?.id ?: OWN_REVIEW_ID, draft.subject, draft.text, draft.anonymous,
-                OwnReviewStatus.PENDING, null, 0, false, ReviewDate.Month(YearMonth.of(2026, 9))))
+                OwnReviewStatus.PENDING, null, 0, false, ReviewDate.Month(YearMonth(2026, 9))))
         }
 
         override suspend fun delete(isu: Int) = mutate { it.copy(mine = null) }

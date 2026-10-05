@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.core.diagnostics
 
-import java.time.Instant
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Instant
 
 enum class DiagnosticLevel { WARNING, ERROR, CRASH }
 

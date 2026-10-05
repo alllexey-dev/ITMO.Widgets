@@ -15,7 +15,9 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
 import java.time.LocalDate
-import java.time.YearMonth
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.YearMonth
+import kotlinx.datetime.minus
 
 /** Reviews of the demo teachers in different tones, with AI summaries for the teachers who have enough of them. */
 object DemoReviews {
@@ -23,7 +25,7 @@ object DemoReviews {
     fun reviews(isu: Int, today: LocalDate): TeacherReviews {
         val teacher = DemoPeople.TEACHERS.firstOrNull { it.isu == isu }
             ?: return TeacherReviews(isu, emptyList(), null, canWrite = false, canVote = false, canReport = false, knownTeacher = false)
-        val month = YearMonth.from(today)
+        val month = YearMonth(today.year, today.monthValue)
         return TeacherReviews(
             isu = isu,
             reviews = REVIEWS[isu].orEmpty().mapIndexed { index, review -> review.toModel(teacher, index, month) },
@@ -51,7 +53,7 @@ object DemoReviews {
         fun toModel(teacher: DemoPerson, index: Int, month: YearMonth) = TeacherReview(
             id = "00000000-0000-4000-8000-%012d".format(teacher.isu.toLong() * 100 + index),
             subject = subject,
-            written = ReviewDate.Month(month.minusMonths(monthsAgo)),
+            written = ReviewDate.Month(month.minus(monthsAgo, DateTimeUnit.MONTH)),
             text = text,
             score = score,
             myVote = 0,

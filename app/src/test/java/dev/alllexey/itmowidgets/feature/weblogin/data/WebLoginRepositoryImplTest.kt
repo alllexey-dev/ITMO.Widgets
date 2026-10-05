@@ -19,6 +19,7 @@ import org.junit.Rule
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import dev.alllexey.itmowidgets.core.model.WebLoginPreview as WirePreview
@@ -39,7 +40,7 @@ class WebLoginRepositoryImplTest {
         val api = FakeWebLoginApi().apply { preview = ApiResponse.success(WirePreview(challenge, " Chrome ", createdAt, expiresAt)) }
         val repository = WebLoginRepositoryImpl(services(enabled = true), api.instance, noDemo(), dispatchers = dispatchers)
 
-        assertEquals(AppResult.Success(WebLoginPreview(challengeId, "Chrome", createdAt, expiresAt)), repository.preview("ABCD2345"))
+        assertEquals(AppResult.Success(WebLoginPreview(challengeId, "Chrome", Instant.parse("2026-09-24T09:04:30Z"), Instant.parse("2026-09-24T09:06:30Z"))), repository.preview("ABCD2345"))
         assertEquals(AppResult.Success(Unit), repository.approve(challengeId))
         assertEquals(listOf("webLoginPreview:ABCD2345", "approveWebLogin:$challenge"), api.calls)
     }

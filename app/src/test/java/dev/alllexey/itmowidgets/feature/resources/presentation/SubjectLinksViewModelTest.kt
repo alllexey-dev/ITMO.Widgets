@@ -32,6 +32,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import kotlin.time.Duration.Companion.hours
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SubjectLinksViewModelTest {
@@ -63,7 +64,7 @@ class SubjectLinksViewModelTest {
         val ownTop = subjectLink("own-top", score = 7)
         val ownTied = subjectLink("own-tied", score = 2)
         val newerTied = subjectLink("newer-tied", LinkCategory.MATERIALS, LinkVisibility.ALL, isMine = false, score = 2)
-            .copy(updatedAt = linkTime.plusHours(1))
+            .copy(updatedAt = linkTime + 1.hours)
         val low = subjectLink("low", visibility = LinkVisibility.FLOW, isMine = false, score = -1)
         show(linksSnapshot(mine = listOf(ownTied, ownTop), shared = listOf(low, newerTied)))
         val vm = model()

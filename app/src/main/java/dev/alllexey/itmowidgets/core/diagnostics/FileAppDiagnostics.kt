@@ -5,10 +5,7 @@ import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dev.alllexey.itmowidgets.core.time.WallClock
 import java.io.File
-import java.time.Clock
-import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -21,6 +18,8 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * One JSON object per line in `files/diagnostics/log.jsonl`, appended by a single
@@ -39,7 +38,7 @@ class FileAppDiagnostics internal constructor(
     @Inject
     constructor(
         @ApplicationContext context: Context,
-        @WallClock clock: Clock,
+        clock: Clock,
         dispatchers: AppDispatchers,
         log: AppLog,
     ) : this(File(context.filesDir, "diagnostics"), clock, dispatchers, log)
@@ -71,7 +70,7 @@ class FileAppDiagnostics internal constructor(
     /** Called from the uncaught-exception handler; must not touch coroutines. */
     fun recordCrash(threadName: String, error: Throwable) {
         val entry = DiagnosticEntry(
-            at = Instant.now(clock),
+            at = clock.now(),
             level = DiagnosticLevel.CRASH,
             tag = "Crash: $threadName",
             message = DiagnosticSanitizer.sanitize(error.message?.let { "${error.javaClass.simpleName}: $it" } ?: error.javaClass.name),
@@ -101,7 +100,7 @@ class FileAppDiagnostics internal constructor(
 
     private fun record(level: DiagnosticLevel, tag: String, message: String, error: Throwable?) {
         val entry = DiagnosticEntry(
-            at = Instant.now(clock),
+            at = clock.now(),
             level = level,
             tag = tag,
             message = DiagnosticSanitizer.sanitize(message),

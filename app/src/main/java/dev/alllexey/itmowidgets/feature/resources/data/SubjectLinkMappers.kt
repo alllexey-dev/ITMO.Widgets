@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
+import kotlin.time.toKotlinInstant
 import dev.alllexey.itmowidgets.core.model.resources.LinkAudience as WireAudience
 import dev.alllexey.itmowidgets.core.model.resources.LinkCategory as WireCategory
 import dev.alllexey.itmowidgets.core.model.resources.LinkVisibility as WireVisibility
@@ -33,7 +34,7 @@ internal fun WireLink.toModel() = SubjectLink(
     isMine = isMine,
     reportedByMe = reportedByMe,
     author = author?.toUserSummary(),
-    updatedAt = updatedAt,
+    updatedAt = updatedAt.toInstant().toKotlinInstant(),
 )
 
 internal fun LocalLink.toModel() = SubjectLink(
@@ -52,7 +53,7 @@ internal fun LocalLink.toModel() = SubjectLink(
     isMine = true,
     reportedByMe = false,
     author = null,
-    updatedAt = updatedAt,
+    updatedAt = updatedAt.toInstant().toKotlinInstant(),
     local = true,
 )
 
@@ -61,4 +62,4 @@ internal fun WireVisibility.toModel() = LinkVisibility.valueOf(name)
 internal fun LinkVisibility.toWire() = WireVisibility.valueOf(name)
 internal fun LinkCategory.toWire() = WireCategory.valueOf(name)
 internal fun ResourceReportReason.toWire() = ReportReason.valueOf(name)
-internal fun WireRestriction.toModel() = UserRestriction(id.toString(), RestrictionCapability.valueOf(capability.name), reason, expiresAt)
+internal fun WireRestriction.toModel() = UserRestriction(id.toString(), RestrictionCapability.valueOf(capability.name), reason, expiresAt?.toInstant()?.toKotlinInstant())

@@ -187,7 +187,7 @@ object RecordbookPreviewFixtures {
         mine: Boolean = false, flow: LinkAudience? = null, score: Int = 0, url: String = "https://example.org/$id"
     ) = SubjectLink(id, scope, category, url, title, visibility, flow?.flowId, flow?.label,
         if (mine && visibility == LinkVisibility.PRIVATE) SubjectLinkStatus.PRIVATE else SubjectLinkStatus.PUBLISHED, null,
-        score, 0, isMine = mine, reportedByMe = false, author = null, updatedAt = UPDATED)
+        score, 0, isMine = mine, reportedByMe = false, author = null, updatedAt = UPDATED.toInstant().toKotlinInstant())
 
     /** The own total of the math subject in [status]: read at 12:00 on the preview's today, unless [updatedAt]. */
     fun sheetScore(

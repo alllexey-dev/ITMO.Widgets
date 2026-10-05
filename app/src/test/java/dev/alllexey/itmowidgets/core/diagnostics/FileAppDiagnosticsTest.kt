@@ -4,9 +4,6 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import java.io.File
 import java.nio.file.Files
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -16,6 +13,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 
 class FileAppDiagnosticsTest {
 
@@ -25,7 +25,9 @@ class FileAppDiagnosticsTest {
     private val dispatchers = mainDispatcherRule.appDispatchers
 
     private val directory: File = Files.createTempDirectory("diagnostics").toFile()
-    private val clock = Clock.fixed(Instant.parse("2026-09-16T09:00:00Z"), ZoneOffset.UTC)
+    private val clock = object : Clock {
+        override fun now() = Instant.parse("2026-09-16T09:00:00Z")
+    }
 
     @After
     fun cleanUp() {
@@ -93,5 +95,37 @@ class FileAppDiagnosticsTest {
         val entries = FileAppDiagnostics(directory, clock, dispatchers, RecordingAppLog()).observe().first()
 
         assertEquals(listOf("ok"), entries.map { it.message })
+    }
+
+    @Test
+    fun `a 2_2 journal reads and its time is written back as 2_2 wrote it`() = runTest {
+        val journal22 = File("src/androidTest/assets/upgrade-2.2/files/diagnostics/log.jsonl").readText()
+        directory.mkdirs()
+        File(directory, "log.jsonl").writeText(journal22)
+
+        val diagnostics = FileAppDiagnostics(directory, clock, dispatchers, RecordingAppLog())
+        val captured = diagnostics.observe().first().single()
+        assertEquals(
+            DiagnosticEntry(Instant.parse("2026-10-04T09:00:00Z"), DiagnosticLevel.WARNING, "UpgradeCapture",
+                "Synthetic warning of the 2.2 fixture", null),
+            captured
+        )
+
+        val written = listOf("2026-10-04T09:00:00Z", "2026-10-04T09:00:00.120Z", "2026-10-04T09:00:00.123456Z",
+            "2026-10-04T09:00:00.000000001Z", "1970-01-01T00:00:00Z")
+        written.forEachIndexed { index, text ->
+            val at = java.time.Instant.parse(text)
+            val writer = FileAppDiagnostics(directory, object : Clock { override fun now() = at.toKotlinInstant() },
+                dispatchers, RecordingAppLog())
+            writer.warn("Tag", "message $index")
+            writer.awaitWrites()
+        }
+        val lines = File(directory, "log.jsonl").readLines()
+        assertEquals(journal22.trimEnd('\n'), lines.first())
+        assertEquals(written.map { java.time.Instant.parse(it).toString() }, lines.drop(1).map { AT.find(it)!!.groupValues[1] })
+    }
+
+    private companion object {
+        val AT = Regex(""""at":"([^"]+)"""")
     }
 }

@@ -18,7 +18,7 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
 import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
-import java.time.YearMonth
+import kotlinx.datetime.YearMonth
 import dev.alllexey.itmowidgets.core.model.reviews.OwnTeacherReview as WireOwnReview
 import dev.alllexey.itmowidgets.core.model.reviews.TeacherReview as WireReview
 import dev.alllexey.itmowidgets.core.model.reviews.TeacherReviewsResponse as WireTeacherReviews
@@ -50,7 +50,7 @@ private fun WireReview.toModel(providerUrl: String): TeacherReview? {
     return TeacherReview(
         id = id.toString(),
         subject = subjectTitle.clean(),
-        written = writtenOn?.let { ReviewDate.Month(YearMonth.from(it)) }
+        written = writtenOn?.let { ReviewDate.Month(YearMonth(it.year, it.monthValue)) }
             ?: writtenBeforeYear?.let(ReviewDate::BeforeYear),
         text = text,
         score = score,
@@ -68,7 +68,7 @@ private fun WireOwnReview.toModel() = OwnTeacherReview(
     reviewNote = reviewNote.clean(),
     score = score,
     verified = verified,
-    written = ReviewDate.Month(YearMonth.from(writtenOn)),
+    written = ReviewDate.Month(YearMonth(writtenOn.year, writtenOn.monthValue)),
 )
 
 /** Tags this app does not know are skipped; a summary without a description is no summary. */

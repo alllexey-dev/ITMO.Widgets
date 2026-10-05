@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.testing.linksSnapshot
 import dev.alllexey.itmowidgets.core.testing.subjectLink
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import kotlin.time.Duration.Companion.days
 
 class SubjectLinkChipsTest {
     private val lms = "https://lms.itmo.ru/course/1"
@@ -31,8 +32,8 @@ class SubjectLinkChipsTest {
         val snapshot = linksSnapshot(
             mine = listOf(subjectLink("own-old", LinkCategory.SCORES, score = 2)),
             shared = listOf(
-                subjectLink("shared-new", LinkCategory.TASKS, LinkVisibility.ALL, isMine = false, score = 2).copy(updatedAt = linkTime.plusDays(1)),
-                subjectLink("shared-older", LinkCategory.NOTES, LinkVisibility.ALL, isMine = false, score = 2).copy(updatedAt = linkTime.minusDays(1)),
+                subjectLink("shared-new", LinkCategory.TASKS, LinkVisibility.ALL, isMine = false, score = 2).copy(updatedAt = linkTime + 1.days),
+                subjectLink("shared-older", LinkCategory.NOTES, LinkVisibility.ALL, isMine = false, score = 2).copy(updatedAt = linkTime - 1.days),
             ),
         )
 

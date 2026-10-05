@@ -11,6 +11,8 @@ import java.io.File
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import kotlin.time.Clock
+import kotlin.time.toKotlinInstant
 
 /** `files/diagnostics/log.jsonl`: the 2.2 entry stays in the list the diagnostics screen shows. */
 object DiagnosticsLogUpgrade {
@@ -18,14 +20,14 @@ object DiagnosticsLogUpgrade {
     fun check(fixture: Upgrade22Fixture): Unit = runBlocking {
         val diagnostics = FileAppDiagnostics(
             File(fixture.filesDir, "diagnostics"),
-            fixture.clock,
+            object : Clock { override fun now() = fixture.clock.instant().toKotlinInstant() },
             DeviceDispatchers,
             AndroidAppLog()
         )
         assertEquals(
             listOf(
                 DiagnosticEntry(
-                    at = Captured22.AT,
+                    at = Captured22.AT.toKotlinInstant(),
                     level = DiagnosticLevel.WARNING,
                     tag = "UpgradeCapture",
                     message = "Synthetic warning of the 2.2 fixture",

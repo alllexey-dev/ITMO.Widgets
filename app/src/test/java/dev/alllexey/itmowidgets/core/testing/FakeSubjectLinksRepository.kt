@@ -12,11 +12,11 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.core.result.AppResult
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 
 internal val linkScope = ResourceScope(42, "Предмет", "2026-1")
-internal val linkTime: OffsetDateTime = OffsetDateTime.parse("2026-09-22T09:00:00Z")
+internal val linkTime: Instant = Instant.parse("2026-09-22T09:00:00Z")
 
 internal fun subjectLink(
     id: String,

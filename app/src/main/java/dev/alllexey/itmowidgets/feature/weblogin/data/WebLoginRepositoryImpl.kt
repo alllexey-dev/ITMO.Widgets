@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import javax.inject.Inject
 import kotlinx.coroutines.withContext
+import kotlin.time.toKotlinInstant
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
@@ -56,5 +57,6 @@ class WebLoginRepositoryImpl @Inject constructor(
         else -> AppError.Unknown()
     }
 
-    private fun WirePreview.toModel() = WebLoginPreview(challengeId.toKotlinUuid(), userAgent?.trim()?.ifEmpty { null }, createdAt, expiresAt)
+    private fun WirePreview.toModel() = WebLoginPreview(challengeId.toKotlinUuid(), userAgent?.trim()?.ifEmpty { null },
+        createdAt.toInstant().toKotlinInstant(), expiresAt.toInstant().toKotlinInstant())
 }
