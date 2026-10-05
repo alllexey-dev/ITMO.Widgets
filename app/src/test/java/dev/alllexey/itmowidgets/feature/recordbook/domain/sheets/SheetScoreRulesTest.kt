@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.sheets
 
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkEventKind
-import java.time.Instant
+import kotlin.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

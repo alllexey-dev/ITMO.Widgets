@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinkChip
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.ui.GroupPosition
 import dev.alllexey.itmowidgets.core.ui.LinkRowTrailing
 import dev.alllexey.itmowidgets.core.ui.bind
@@ -58,6 +59,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookGradeScale
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookAssessmentKind
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControlRow
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
@@ -73,10 +75,10 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.columnTitle
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.sheetCaption
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.textRes
 import java.net.URI
-import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.format
+import kotlinx.datetime.toLocalDateTime
 
 sealed interface DetailItem {
     /** The result with the own sheet total, or the offer to connect one, at its bottom. */
@@ -95,8 +97,8 @@ sealed interface DetailItem {
     data class Section(val titleRes: Int) : DetailItem
     /** The heading of a control group with its sum; its controls follow as their own connected group. */
     data class Group(val group: ControlGroup) : DetailItem
-    /** [spaced] parts a first row from a group of controls right above it. */
-    data class Control(val row: RecordbookControlRow, val subjectTeacher: String?, val position: GroupPosition, val spaced: Boolean = false) : DetailItem
+    /** [date] is the control's date in the academic time zone; [spaced] parts a first row from a group of controls right above it. */
+    data class Control(val row: RecordbookControlRow, val date: LocalDate?, val subjectTeacher: String?, val position: GroupPosition, val spaced: Boolean = false) : DetailItem
     data class Notice(val errorRes: Int?) : DetailItem
     data class Lesson(val lesson: SubjectLesson, val position: GroupPosition) : DetailItem
     /** «Все пары, N»: the rest of the window opens in place. */
@@ -197,13 +199,14 @@ class SubjectHubAdapter(
     /** Lone controls in a row share a group; each control group gets its heading and a group of its own. */
     private fun MutableList<DetailItem>.addControls(state: RecordbookSubjectUiState.Content) {
         val teacher = state.subject.teacherName
+        fun RecordbookControl.localDate() = date?.toLocalDateTime(state.timeZone)?.date
         val singles = mutableListOf<ControlEntry.Single>()
         var afterGroup = false
         fun flushSingles() {
             if (singles.isEmpty()) return
             val spaced = afterGroup
             addGroup(singles.map { entry ->
-                { position: GroupPosition -> DetailItem.Control(RecordbookControlRow(entry.control, 0), teacher, position, spaced) }
+                { position: GroupPosition -> DetailItem.Control(RecordbookControlRow(entry.control, 0), entry.control.localDate(), teacher, position, spaced) }
             })
             singles.clear()
         }
@@ -214,7 +217,7 @@ class SubjectHubAdapter(
                     flushSingles()
                     add(DetailItem.Group(entry))
                     addGroup(entry.controls.map { control ->
-                        { position: GroupPosition -> DetailItem.Control(RecordbookControlRow(control, 1), teacher, position) }
+                        { position: GroupPosition -> DetailItem.Control(RecordbookControlRow(control, 1), control.localDate(), teacher, position) }
                     })
                     afterGroup = true
                 }
@@ -325,8 +328,8 @@ class SubjectHubAdapter(
             row.value.text = score.value ?: context.getString(R.string.recordbook_score_pending)
             row.caption.text = context.sheetCaption(score.tabName, context.columnTitle(score.column.headerPath, score.column.index))
             val updated = state.updatedAt?.let { at ->
-                if (at.toLocalDate() == state.today) context.getString(R.string.sheet_scores_updated_time, at.format(TIME_FORMAT))
-                else context.getString(R.string.sheet_scores_updated_date, at.format(DAY_FORMAT))
+                if (at.date == state.today) context.getString(R.string.sheet_scores_updated_time, at.time.format(DateTexts.TIME))
+                else context.getString(R.string.sheet_scores_updated_date, at.date.format(DateTexts.DAY_MONTH))
             }
             val failure = score.status.textRes()?.let(context::getString)
             // Offline keeps the stored value and says only that; the time of a stale value would wrap on narrow screens.
@@ -451,8 +454,8 @@ class SubjectHubAdapter(
             val lesson = item.lesson
             val context = binding.root.context
             binding.root.bindGroupPosition(item.position)
-            binding.date.text = lesson.date.toJavaLocalDate().format(DateTimeFormatter.ofPattern(context.getString(R.string.subject_lesson_date), Locale.forLanguageTag("ru")))
-            binding.time.text = context.getString(R.string.schedule_break_range_short, lesson.start.toJavaLocalTime().format(TIME_FORMAT), lesson.end.toJavaLocalTime().format(TIME_FORMAT))
+            binding.date.text = lesson.date.format(DateTexts.SHORT_WEEKDAY_DAY_SHORT_MONTH)
+            binding.time.text = context.getString(R.string.schedule_break_range_short, lesson.start.format(DateTexts.TIME), lesson.end.format(DateTexts.TIME))
             binding.typeIndicator.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context, lessonTypeColorRes(lesson.typeId)))
             binding.type.text = listOfNotNull(
                 context.getString(lessonTypeNameRes(lesson.typeId)),
@@ -573,7 +576,7 @@ class SubjectHubAdapter(
             }.joinToString(", ")
             binding.meta.isVisible = binding.meta.text.isNotEmpty()
             binding.meta.setTextColor(context.color.resolve(androidx.appcompat.R.attr.colorError))
-            binding.details.text = listOfNotNull(control.date?.format(DATE_FORMAT),
+            binding.details.text = listOfNotNull(item.date?.format(DateTexts.DAY_MONTH_YEAR),
                 control.teacherName?.takeUnless { it == item.subjectTeacher }).joinToString(", ")
             binding.details.isVisible = binding.details.text.isNotEmpty()
         }
@@ -594,9 +597,6 @@ class SubjectHubAdapter(
     }
 
     private companion object {
-        val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.forLanguageTag("ru"))
-        val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
-        val DAY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM", Locale.forLanguageTag("ru"))
         const val MENU_OPEN = 1
         const val MENU_TOTAL = 2
         const val MENU_DISCONNECT = 3

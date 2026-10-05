@@ -2,9 +2,11 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.marks
 
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.atTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -18,7 +20,7 @@ class MarkDigestsTest {
     fun `nothing is shown or marked from midnight until six, not even the prompt`() {
         val news = listOf(news("Физика", 1))
 
-        for (time in listOf(LocalTime.MIDNIGHT, LocalTime.of(3, 0), LocalTime.of(5, 59, 59))) {
+        for (time in listOf(LocalTime(0, 0), LocalTime(3, 0), LocalTime(5, 59, 59))) {
             assertEquals(
                 MarkDigestDecision(null, emptySet(), showPrompt = false),
                 MarkDigests.decide(news, BarsLoginPrompt.PENDING, DAY.atTime(time))
@@ -68,12 +70,12 @@ class MarkDigestsTest {
     }
 
     private companion object {
-        val DAY: LocalDate = LocalDate.of(2026, 9, 7)
+        val DAY: LocalDate = LocalDate(2026, 9, 7)
         val HALF = StudyHalf(2026, 1)
 
         fun news(name: String, minute: Long, notified: Boolean = false): MarkNews {
             val key = subjectNameKey(name)
-            val at = Instant.parse("2026-09-07T09:00:00Z").plusSeconds(minute * 60)
+            val at = Instant.parse("2026-09-07T09:00:00Z") + minute.minutes
             return MarkNews(MarkNews.idOf(HALF, key), HALF, key, name, at, notified)
         }
     }

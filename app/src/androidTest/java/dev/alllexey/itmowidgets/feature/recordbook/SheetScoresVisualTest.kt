@@ -36,7 +36,7 @@ import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTouchTargets
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
-import java.time.Instant
+import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

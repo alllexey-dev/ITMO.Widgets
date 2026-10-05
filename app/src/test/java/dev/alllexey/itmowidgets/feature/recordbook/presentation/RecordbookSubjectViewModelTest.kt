@@ -46,7 +46,7 @@ import dev.alllexey.itmowidgets.core.testing.linksSnapshot
 import dev.alllexey.itmowidgets.core.testing.subjectLink
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherLevelsRepository
 import java.time.LocalDate
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -450,7 +450,7 @@ class RecordbookSubjectViewModelTest {
 
         val connected = vm.hub().sheet as SubjectSheetState.Connected
         assertEquals("66,3", connected.score.value)
-        assertEquals(LocalDateTime.of(2026, 9, 7, 12, 0), connected.updatedAt)
+        assertEquals(LocalDateTime(2026, 9, 7, 12, 0), connected.updatedAt)
         assertEquals(listOf(scope), sheets.refreshes)
 
         vm.refresh(); advanceUntilIdle()

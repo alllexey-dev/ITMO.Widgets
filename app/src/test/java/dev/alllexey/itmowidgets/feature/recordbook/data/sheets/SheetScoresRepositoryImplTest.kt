@@ -30,6 +30,7 @@ import java.time.Instant
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
@@ -206,7 +207,7 @@ class SheetScoresRepositoryImplTest {
         val score = repository.observe().first().single()
         assertEquals("70", score.value)
         assertEquals("70", score.baseline)
-        assertEquals(clock.instant(), score.updatedAt)
+        assertEquals(clock.instant().toKotlinInstant(), score.updatedAt)
         assertEquals(SheetCheck(emptyList(), emptyList()), repository.check(StudyHalf(2026, 1)))
     }
 
@@ -350,7 +351,7 @@ class SheetScoresRepositoryImplTest {
         assertEquals("5A", score.value)
         assertEquals("5A", score.baseline)
         assertEquals(connected.connectedAt, score.connectedAt)
-        assertEquals(clock.instant(), score.updatedAt)
+        assertEquals(clock.instant().toKotlinInstant(), score.updatedAt)
         assertNull(ResourceScope(9, "x", "2026-1").let { s -> repository.observe().first().firstOrNull { it.scope == s } })
     }
 }

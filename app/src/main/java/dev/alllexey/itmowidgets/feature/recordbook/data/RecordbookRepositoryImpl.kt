@@ -26,6 +26,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.withContext
 
 /** One instance per process: the memory cache is what the study screens render first. */
@@ -117,7 +118,7 @@ class RecordbookRepositoryImpl @Inject constructor(
         score = currentScore,
         rate = rate?.trim(),
         attempt = attempt,
-        examDate = examDate,
+        examDate = examDate?.toInstant()?.toKotlinInstant(),
         hasDetails = isHaveTree,
         teacherName = teacher?.displayName(),
         lmsLink = lmsLink?.trim()?.takeIf { it.isNotBlank() }
@@ -130,7 +131,7 @@ class RecordbookRepositoryImpl @Inject constructor(
         minimum = minValue,
         maximum = maxValue,
         required = isRequired,
-        date = date,
+        date = date?.toInstant()?.toKotlinInstant(),
         teacherName = teacher?.displayName(),
         parentId = parentId
     )

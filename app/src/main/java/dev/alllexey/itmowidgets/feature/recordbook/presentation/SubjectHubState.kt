@@ -10,8 +10,8 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContext
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
-import java.time.LocalDate
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 
 /** A link of the subject whose address is a Google Sheet; [mine] for the viewer's own links. */
 data class SheetLinkOption(val url: String, val title: String?, val mine: Boolean)

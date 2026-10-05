@@ -28,8 +28,6 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.subjectsIn
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaToday
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
 import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
@@ -67,7 +65,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 
 sealed interface RecordbookSubjectUiState {
     data object Loading : RecordbookSubjectUiState
@@ -81,7 +82,9 @@ sealed interface RecordbookSubjectUiState {
         /** BARS journal failed; subject and controls are MyITMO values. */
         val barsError: AppError? = null,
         /** Schedule and links sections: links, chats, teachers, upcoming lessons. */
-        val hub: SubjectHubState = SubjectHubState()
+        val hub: SubjectHubState = SubjectHubState(),
+        /** The academic time zone control dates are shown in. */
+        val timeZone: TimeZone
     ) : RecordbookSubjectUiState {
         /** Lone controls and groups of related ones, in server order. */
         val controlGroups: List<ControlEntry> = RecordbookControlGroups.groupControls(controls)
@@ -187,7 +190,8 @@ class RecordbookSubjectViewModel @Inject constructor(
                 sport = sport.await(),
                 controlsError = (controls as? AppResult.Failure)?.error,
                 barsError = barsError,
-                hub = previous?.hub ?: SubjectHubState()
+                hub = previous?.hub ?: SubjectHubState(),
+                timeZone = time.timeZone
             )
             loadHub(official)
         }
@@ -206,7 +210,8 @@ class RecordbookSubjectViewModel @Inject constructor(
             controls = controls,
             sport = null,
             hub = SubjectHubState(lessons = if (period.isCurrent() && !subject.isPhysicalEducation)
-                SubjectLessonsState.Loading else SubjectLessonsState.Hidden)
+                SubjectLessonsState.Loading else SubjectLessonsState.Hidden),
+            timeZone = time.timeZone
         )
     }
 
@@ -330,8 +335,8 @@ class RecordbookSubjectViewModel @Inject constructor(
     /** The connection of [scope], else the sheet links to connect, else nothing. */
     private fun sheetState(scope: ResourceScope, links: SubjectLinksState, scores: List<SheetScore>): SubjectSheetState? {
         scores.firstOrNull { it.scope.key == scope.key }?.let { score ->
-            val updatedAt = score.updatedAt?.atZone(time.javaZone())?.toLocalDateTime()
-            return SubjectSheetState.Connected(score, updatedAt, time.javaToday())
+            val updatedAt = score.updatedAt?.toLocalDateTime(time.timeZone)
+            return SubjectSheetState.Connected(score, updatedAt, time.today())
         }
         val snapshot = (links as? SubjectLinksState.Content)?.snapshot ?: return null
         val options = (snapshot.mine + snapshot.shared + snapshot.previous)
@@ -403,9 +408,9 @@ class RecordbookSubjectViewModel @Inject constructor(
 
     /** Same rule as the study root's default selection: the academic year rolls in September. */
     private fun RecordbookPeriod.isCurrent(): Boolean {
-        val today = time.javaToday()
-        val yearStart = today.year - if (today.monthValue < 9) 1 else 0
-        val half = if (today.monthValue in 2..8) 2 else 1
+        val today = time.today()
+        val yearStart = today.year - if (today.month.number < 9) 1 else 0
+        val half = if (today.month.number in 2..8) 2 else 1
         return studyYear == "$yearStart/${yearStart + 1}" && semesterInCourse == half
     }
 

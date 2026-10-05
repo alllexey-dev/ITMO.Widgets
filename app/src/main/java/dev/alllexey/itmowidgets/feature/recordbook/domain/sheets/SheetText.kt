@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.feature.recordbook.domain.sheets
 
-import java.util.Locale
-
 /** One normalisation for every cell, name and header match in a sheet. */
 object SheetText {
     private val SPACES = Regex("""\s+""")
@@ -12,7 +10,7 @@ object SheetText {
     fun normalize(text: String): String = text
         .replace('\u00A0', ' ')
         .trim()
-        .lowercase(Locale.ROOT)
+        .lowercase()
         .replace('ё', 'е')
         .replace(SPACES, " ")
         .replace(AFTER_DOT, ".")

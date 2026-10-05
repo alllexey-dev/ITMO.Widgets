@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.sheets
 import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkEventKind
-import java.time.Instant
+import kotlin.time.Instant
 
 /** The total column: its header path, found again by text; [index] is the fallback. */
 data class SheetColumnRef(val headerPath: String, val index: Int)
