@@ -1,0 +1,97 @@
+package dev.alllexey.itmowidgets.feature.__name__.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
+import dev.alllexey.itmowidgets.core.text.textResource
+import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
+import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
+import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
+import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
+import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
+import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.feature.__name__.presentation.__Name__UiState
+import dev.alllexey.itmowidgets.shared.core.common_back
+import dev.alllexey.itmowidgets.shared.core.common_load_error_title
+import dev.alllexey.itmowidgets.shared.core.common_retry
+import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
+import dev.alllexey.itmowidgets.shared.feature.__name__.Res
+import dev.alllexey.itmowidgets.shared.feature.__name__.__name___title
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
+
+/** Test tags of [__Name__Screen], read by host tests and the platform hosts. */
+object __Name__TestTags {
+    const val LOADING = "__name___loading"
+    const val STATE = "__name___state"
+    const val CONTENT = "__name___content"
+}
+
+/**
+ * The __name__ screen: loading, content and error take the same area, so states switch without a layout jump.
+ * Stateless; [__Name__Route] feeds it. Failed refreshes over content show in [snackbarHostState].
+ */
+@Composable
+fun __Name__Screen(
+    state: __Name__UiState,
+    onRefresh: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+) {
+    Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
+        Column(Modifier.fillMaxSize()) {
+            AppTopBar(
+                title = stringResource(Res.string.__name___title),
+                navigation = {
+                    AppTopBarAction(
+                        painterResource(KitRes.drawable.ic_arrow_back),
+                        stringResource(CoreRes.string.common_back),
+                        onClick = onBack,
+                    )
+                },
+            )
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                __Name__Body(state, onRefresh)
+            }
+        }
+        SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
+    }
+}
+
+@Composable
+private fun __Name__Body(state: __Name__UiState, onRefresh: () -> Unit) {
+    when (state) {
+        __Name__UiState.Loading -> ContentStateLoading(Modifier.testTag(__Name__TestTags.LOADING))
+        is __Name__UiState.Error -> ContentState(
+            title = stringResource(CoreRes.string.common_load_error_title),
+            modifier = Modifier.testTag(__Name__TestTags.STATE),
+            description = stringResource(state.error.textResource()),
+            action = ContentStateAction(stringResource(CoreRes.string.common_retry), onRefresh),
+        )
+        is __Name__UiState.Content -> Text(
+            state.summary.title,
+            Modifier
+                .fillMaxWidth()
+                .padding(ItmoTheme.spacing.screenMargin)
+                .testTag(__Name__TestTags.CONTENT),
+            color = ItmoTheme.colorScheme.onSurface,
+            style = ItmoTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+        )
+    }
+}

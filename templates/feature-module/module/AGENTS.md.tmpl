@@ -1,0 +1,30 @@
+# shared/feature-__name__
+
+## Owns
+- `src/commonMain/kotlin/dev/alllexey/itmowidgets/feature/__name__/`, by package:
+  - `domain/`: the ports and models the screen and the app read;
+  - `data/`: common implementations, bound in `__name__Module` once they replace the app's;
+  - `presentation/`: `__Name__ViewModel` and its state and events in `__Name__UiState.kt`;
+  - `ui/`: the stateless screen, its route, previews and test tags;
+  - `di/`: `__name__Module`, the definitions Koin constructs.
+- `src/commonMain/composeResources/values/strings___name__.xml`: the module's strings.
+- `src/commonTest/`: ViewModel and screen host tests.
+- `src/androidHostTest/`: the Koin graph test and the preview screenshot test; goldens go to `screenshots`.
+
+## Depends on
+- `:shared:core` and `:shared:designsystem`; `:shared:testing` in tests only.
+- Koin and the multiplatform lifecycle; a new library comes through the version catalog with L04's review.
+
+## Verify
+`scripts/verify.sh quick`, then `scripts/verify.sh shots feature-__name__` and
+`scripts/verify.sh klibs feature-__name__`.
+
+## Hot files
+- `build.gradle.kts`: the feature lane writes it, L04 reviews.
+- `strings___name__.xml`: the feature lane; keys are never renamed.
+
+## Docs
+__docs__
+- [Screen in a shared module](../../docs/recipes/shared-module-screen.md)
+- [ADR 0017](../../docs/decisions/0017-cmp-ui-in-common-main.md),
+  [ADR 0019](../../docs/decisions/0019-koin-per-lane.md)

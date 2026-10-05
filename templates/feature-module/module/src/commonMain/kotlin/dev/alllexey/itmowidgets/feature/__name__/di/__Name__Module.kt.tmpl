@@ -1,0 +1,10 @@
+package dev.alllexey.itmowidgets.feature.__name__.di
+
+import dev.alllexey.itmowidgets.feature.__name__.presentation.__Name__ViewModel
+import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.module
+
+/** The __name__ definitions Koin constructs; the repository comes from the app's bridge until it moves to `data/`. */
+val __name__Module = module {
+    viewModelOf(::__Name__ViewModel)
+}

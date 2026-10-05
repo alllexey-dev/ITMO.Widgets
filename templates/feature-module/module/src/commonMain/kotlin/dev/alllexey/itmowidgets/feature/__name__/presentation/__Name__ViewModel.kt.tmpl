@@ -1,0 +1,53 @@
+package dev.alllexey.itmowidgets.feature.__name__.presentation
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.feature.__name__.domain.__Name__Repository
+import dev.alllexey.itmowidgets.feature.__name__.domain.__Name__Summary
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+
+/**
+ * The __name__ screen. State is derived from the repository flow and the refresh in flight, never written as a
+ * transient `Loading`; a failed refresh over content becomes a [__Name__Event.RefreshFailed].
+ */
+class __Name__ViewModel(private val repository: __Name__Repository) : ViewModel() {
+
+    private val refreshes = RefreshTracker(viewModelScope)
+    private val queue = EventQueue<__Name__Event>()
+
+    val uiState: StateFlow<__Name__UiState> = combine(repository.observe(), refreshes.refreshing, ::toUiState)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, __Name__UiState.Loading)
+
+    val events: Flow<__Name__Event> = queue.events
+
+    init {
+        refresh(RefreshMode.Silent)
+    }
+
+    fun refresh(mode: RefreshMode) {
+        refreshes.launch(mode) { started ->
+            val result = repository.refresh(force = started == RefreshMode.Force)
+            if (result is AppResult.Failure && uiState.value is __Name__UiState.Content) {
+                queue.send(__Name__Event.RefreshFailed(result.error))
+            }
+        }
+    }
+
+    private fun toUiState(data: LoadState<__Name__Summary>, refreshing: Boolean): __Name__UiState = when (data) {
+        LoadState.Loading -> __Name__UiState.Loading
+        LoadState.Disabled -> __Name__UiState.Error(AppError.CustomServicesDisabled)
+        // Keep progress while a refresh may still replace the error.
+        is LoadState.Error -> if (refreshing) __Name__UiState.Loading else __Name__UiState.Error(data.error)
+        is LoadState.Content -> __Name__UiState.Content(data.value, refreshing)
+    }
+}

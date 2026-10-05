@@ -1,0 +1,16 @@
+package dev.alllexey.itmowidgets.feature.__name__.presentation
+
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.feature.__name__.domain.__Name__Summary
+
+sealed interface __Name__UiState {
+    data object Loading : __Name__UiState
+    data class Error(val error: AppError) : __Name__UiState
+    data class Content(val summary: __Name__Summary, val refreshing: Boolean = false) : __Name__UiState
+}
+
+sealed interface __Name__Event {
+
+    /** A refresh failed while content stays on the screen. */
+    data class RefreshFailed(val error: AppError) : __Name__Event
+}

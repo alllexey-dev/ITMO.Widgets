@@ -1,0 +1,19 @@
+# __Name__
+
+`shared/feature-__name__` holds the __name__ screen, its ViewModel and its Koin module; the app hosts the route.
+This page is a stub from `scripts/new-feature-module.sh`: replace every section with the current behaviour before
+the feature ships.
+
+## Screen
+
+`__Name__Screen` shows `__Name__UiState`: `Loading`, `Content(summary, refreshing)` and `Error` with a retry
+action, all in the same area. A refresh that fails over content keeps it and shows a snackbar with a retry.
+
+## Data
+
+`__Name__Repository` exposes a cached flow and `refresh(force)`. Every network call checks `DemoMode` first.
+
+## Tests
+
+- `__Name__ViewModelTest` and `__Name__ScreenTest` in `commonTest`.
+- `__Name__ModuleTest` and the goldens of `__Name__ScreenshotTest` in `androidHostTest`.

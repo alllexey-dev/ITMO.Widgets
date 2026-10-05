@@ -1,0 +1,37 @@
+package dev.alllexey.itmowidgets.feature.__name__.data
+
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.feature.__name__.domain.__Name__Repository
+import dev.alllexey.itmowidgets.feature.__name__.domain.__Name__Summary
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+/**
+ * The __name__ data in common code, a stub that keeps the last answer in memory. When it becomes the source, bind it
+ * in `__name__Module` with `singleOf(::__Name__RepositoryImpl) { bind<__Name__Repository>() }` and drop
+ * `__Name__Repository` from the bridged types of `__Name__ModuleTest`. The demo session never reaches the network:
+ * [demoMode] is checked before every request.
+ */
+class __Name__RepositoryImpl(private val demoMode: DemoMode) : __Name__Repository {
+
+    private val state = MutableStateFlow<LoadState<__Name__Summary>>(LoadState.Loading)
+
+    override fun observe(): Flow<LoadState<__Name__Summary>> = state.asStateFlow()
+
+    override suspend fun refresh(force: Boolean): AppResult<Unit> {
+        if (demoMode.isActive()) {
+            state.value = LoadState.Content(DemoSummary)
+            return AppResult.Success(Unit)
+        }
+        // TODO: request MyItmoApi or Backend inside appResultOf(...) and publish the answer or its AppError.
+        state.value = LoadState.Content(__Name__Summary(title = ""))
+        return AppResult.Success(Unit)
+    }
+
+    private companion object {
+        val DemoSummary = __Name__Summary(title = "DEMO")
+    }
+}
