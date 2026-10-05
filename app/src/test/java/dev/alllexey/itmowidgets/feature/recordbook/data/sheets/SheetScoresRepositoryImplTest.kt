@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
@@ -40,6 +39,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import okhttp3.mockwebserver.SocketPolicy
+import okio.Path.Companion.toOkioPath
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -64,7 +64,7 @@ class SheetScoresRepositoryImplTest {
     private val url = "https://docs.google.com/spreadsheets/d/$id/edit#gid=22"
     private val scope = ResourceScope(1, "Тестовый предмет", "2026-1")
     private val directory by lazy { File(temporary.root, "sheet_scores") }
-    private val store get() = SheetScoresFileStore(directory, Gson())
+    private val store get() = SheetScoresFileStore(directory.toOkioPath())
     private val clock = MutableClock(Instant.parse("2026-09-07T09:00:00Z"))
     private var isu: Int? = 123456
     private val users = object : CurrentUserProvider {

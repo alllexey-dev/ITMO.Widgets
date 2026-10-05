@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.upgrade.stores
 
+import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksFileStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.StoredBarsPlan
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.StoredBarsSnapshot
@@ -15,8 +16,12 @@ import dev.alllexey.itmowidgets.upgrade.Captured22.SUBJECT
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 
-/** `files/marks/state.json` (format 1): both snapshots and the unread subjects. */
+/**
+ * `files/marks/state.json` (format 1): both snapshots and the unread subjects. Gson wrote it; kotlinx reads it and
+ * writes format 1 back.
+ */
 object MarksFileStoreUpgrade {
 
     fun check(fixture: Upgrade22Fixture) {
@@ -40,6 +45,11 @@ object MarksFileStoreUpgrade {
             news = listOf(StoredMarkNews("news-9001", HALF, "тестовая дисциплина", SUBJECT, AT_MS, true))
         )
 
-        assertEquals(expected, MarksFileStore(File(fixture.filesDir, "marks"), fixture.gson).read())
+        val store = MarksFileStore(AndroidAppDirectories(fixture.context))
+        assertEquals(expected, store.read())
+        store.write(expected)
+        val written = File(fixture.filesDir, "marks/state.json").readText()
+        assertTrue(written, written.startsWith("{\"format\":1,"))
+        assertEquals(expected, MarksFileStore(AndroidAppDirectories(fixture.context)).read())
     }
 }

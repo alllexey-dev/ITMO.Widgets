@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.upgrade.stores
 
+import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresFileStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.StoredSheetConnection
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.StoredSheetScores
@@ -12,8 +13,12 @@ import dev.alllexey.itmowidgets.upgrade.Captured22.SUBJECT_ID
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 
-/** `files/sheet_scores/state.json` (format 1): the connected sheet and its last reading. */
+/**
+ * `files/sheet_scores/state.json` (format 1): the connected sheet and its last reading. Gson wrote it; kotlinx reads it
+ * and writes format 1 back.
+ */
 object SheetScoresFileStoreUpgrade {
 
     fun check(fixture: Upgrade22Fixture) {
@@ -42,6 +47,11 @@ object SheetScoresFileStoreUpgrade {
             )
         )
 
-        assertEquals(expected, SheetScoresFileStore(File(fixture.filesDir, "sheet_scores"), fixture.gson).read())
+        val store = SheetScoresFileStore(AndroidAppDirectories(fixture.context))
+        assertEquals(expected, store.read())
+        store.write(expected)
+        val written = File(fixture.filesDir, "sheet_scores/state.json").readText()
+        assertTrue(written, written.startsWith("{\"format\":1,"))
+        assertEquals(expected, SheetScoresFileStore(AndroidAppDirectories(fixture.context)).read())
     }
 }

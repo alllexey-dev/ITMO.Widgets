@@ -1,31 +1,32 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.sheets
 
-import android.content.Context
-import com.google.gson.Gson
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
+import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookStoreJson
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
-import java.io.File
-import java.io.FileOutputStream
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
-import kotlin.time.Instant
 import javax.inject.Inject
+import kotlin.time.Instant
+import kotlinx.serialization.Serializable
+import okio.FileSystem
+import okio.Path
 
 /** 1: the sheet connections of one account with their last readings. */
 internal const val SHEET_SCORES_FORMAT = 1
 
 /** Every sheet connection on the device; [owner] is the ISU of the account they belong to. */
+@Serializable
 internal data class StoredSheetScores(
     val format: Int = SHEET_SCORES_FORMAT,
     val owner: Int? = null,
     val connections: List<StoredSheetConnection> = emptyList(),
 )
 
+@Serializable
 internal data class StoredSheetConnection(
     val subjectId: Long,
     val subjectName: String,
@@ -38,46 +39,38 @@ internal data class StoredSheetConnection(
     val keyKind: String,
     val headerPath: String,
     val columnIndex: Int,
-    val value: String?,
-    val baseline: String?,
+    val value: String? = null,
+    val baseline: String? = null,
     val tracked: Boolean,
     val status: String,
-    val updatedAt: Long?,
+    val updatedAt: Long? = null,
     val connectedAt: Long,
 )
 
 /**
  * The sheet connections in `filesDir/sheet_scores`, cleared with the session and kept out of backups. Caller owns
- * IO dispatch. Gson bypasses Kotlin constructors, so reading checks every required field.
+ * IO dispatch.
  */
-class SheetScoresFileStore internal constructor(private val directory: File, private val gson: Gson) {
-    @Inject constructor(@ApplicationContext context: Context, gson: Gson) :
-        this(File(context.filesDir, "sheet_scores"), gson)
+class SheetScoresFileStore internal constructor(private val directory: Path) {
+    @Inject constructor(directories: AppDirectories) : this(directories.files / "sheet_scores")
 
-    private val file get() = File(directory, "state.json")
+    private val file = AtomicTextFile(directory / "state.json")
 
-    /** `null` without a file; throws on a corrupt file, another format or a missing required field. */
+    /** `null` without a file; throws on a corrupt file, another format or a missing or invalid required field. */
     internal fun read(): StoredSheetScores? {
-        if (!file.exists()) return null
-        val state = checkNotNull(gson.fromJson(file.readText(), StoredSheetScores::class.java))
+        val text = file.read() ?: return null
+        val state = RecordbookStoreJson.decodeFromString<StoredSheetScores>(text)
         check(state.format == SHEET_SCORES_FORMAT) { "Unknown sheet scores format ${state.format}" }
-        checkNotNull(state.connections).forEach { it.toModel() }
+        state.connections.forEach { it.toModel() }
         return state
     }
 
-    internal fun write(state: StoredSheetScores) {
-        check(directory.isDirectory || directory.mkdirs())
-        val temporary = File(directory, "state.json.tmp")
-        FileOutputStream(temporary).use { stream ->
-            stream.write(gson.toJson(state).toByteArray(Charsets.UTF_8)); stream.fd.sync()
-        }
-        Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-    }
+    internal fun write(state: StoredSheetScores) = file.write(RecordbookStoreJson.encodeToString(state))
 
-    internal fun clear() { check(!directory.exists() || directory.deleteRecursively()) }
+    internal fun clear() = FileSystem.SYSTEM.deleteRecursively(directory)
 }
 
-private fun required(text: String?): String = checkNotNull(text).also { check(it.isNotBlank()) { "Empty field" } }
+private fun required(text: String): String = text.also { check(it.isNotBlank()) { "Empty field" } }
 
 internal fun StoredSheetConnection.toModel(): SheetScore {
     val url = required(url)
@@ -86,11 +79,11 @@ internal fun StoredSheetConnection.toModel(): SheetScore {
         scope = ResourceScope(subjectId, required(subjectName), required(periodKey)),
         url = url,
         tabGid = tabGid,
-        tabName = checkNotNull(tabName),
+        tabName = tabName,
         rowKey = required(rowKey),
         keyColumn = keyColumn.also { check(it >= 0) },
         keyKind = KeyKind.valueOf(required(keyKind)),
-        column = SheetColumnRef(checkNotNull(headerPath), columnIndex.also { check(it >= 0) }),
+        column = SheetColumnRef(headerPath, columnIndex.also { check(it >= 0) }),
         value = value,
         baseline = baseline,
         tracked = tracked,

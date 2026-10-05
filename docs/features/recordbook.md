@@ -388,12 +388,16 @@ store, the events and whether this was only a first look:
 
 `MarksFileStore` keeps everything in `filesDir/marks/state.json` (format 1):
 the owner's ISU, the last snapshot of each source with its half-year and
-`fetchedAt`, and the unread records. They are written together, atomically
-(`.tmp`, `fd.sync()`, `ATOMIC_MOVE`), and the directory is excluded from backup
-and device transfer; there is no other copy. A corrupt file, another format, a
-missing required field (Gson bypasses Kotlin constructors) or another account's
-file is deleted and the state starts empty, so the next check of each source
-is a baseline.
+`fetchedAt`, and the unread records. They are written together through
+`AtomicTextFile` (`state.json.new`, sync, move; a `state.json.tmp` left by 2.2
+is ignored), and the directory is excluded from backup and device transfer;
+there is no other copy. The file is kotlinx JSON (`RecordbookStoreJson`) in the
+shape 2.2's Gson wrote, so format 1 stays and each version reads the other's
+file: nulls are absent, every non-null field and default (`format`, an empty
+`news`) is written, instants are epoch milliseconds. A corrupt file, another
+format, a missing or invalid required field (an unknown half-year, an absent
+name) or another account's file is deleted and the state starts empty, so the
+next check of each source is a baseline.
 
 `MarkTrackingRepositoryImpl` is a `@Singleton` that reads the file once and
 keeps the state in memory:
@@ -707,9 +711,13 @@ points. The row then shows `sheet_mark` (`ic_table`, 16 dp) and the value
 `filesDir/sheet_scores/state.json` (format 1, `owner` is the ISU): the scope,
 the address, the tab, the row key and its column and kind, the header path and
 index, `value`, `baseline`, `tracked`, the status, `updatedAt` and
-`connectedAt` (wall clock). Atomic writes, excluded from backup and device
-transfer. A corrupt file, another format, a missing required field or another
-account's file is deleted. `SheetScoresRepositoryImpl` is a `@Singleton`
+`connectedAt` (wall clock, epoch milliseconds). Written through
+`AtomicTextFile` as kotlinx JSON (`RecordbookStoreJson`) in the shape 2.2's
+Gson wrote: format 1, absent nulls, `format` and an empty `connections` always
+written. Excluded from backup and device transfer. A corrupt file, another
+format, a missing or invalid required field (a blank key, an address that is
+not a sheet, an unknown key kind or status) or another account's file is
+deleted. `SheetScoresRepositoryImpl` is a `@Singleton`
 `SessionDataCleaner`: sign-out deletes the file; a reading is written only when
 the session generation and the whole connection it was taken for are unchanged.
 
