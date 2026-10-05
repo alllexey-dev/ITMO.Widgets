@@ -1,0 +1,10 @@
+# The reviews fixtures TeacherReviewsVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
+# Not here: requests/ResourceVoteRequest.json and requests/ModerationReportRequest.json are shared with subject
+# links (common/ResourceRequests.kt) and claimed once in links.txt (CO-05).
+http/reviews/deleteMyTeacherReview.json
+http/reviews/reportTeacherReview.json
+http/reviews/saveMyTeacherReview.json
+http/reviews/teacherReviews.json
+http/reviews/teacherSummaryLevels.json
+http/reviews/voteTeacherReview.json
+requests/SaveTeacherReviewRequest.json
