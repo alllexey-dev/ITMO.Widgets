@@ -70,13 +70,13 @@ class SettingsViewModelTest {
             local = LocalSettings(customServicesEnabled = true),
             sharing = SharingSettingsState.Content(SharingSettings()))
         advanceUntilIdle()
-        assertEquals("ALL", fixture.viewModel.choice(SettingsViewModel.KEY_FRIENDS_SHARING).selectedOptionKey)
-        fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_FRIENDS_SHARING, "NOBODY")
+        assertEquals("ALL", fixture.viewModel.choice(SettingRowId.FRIENDS_SHARING).selectedOptionKey)
+        fixture.viewModel.onChoiceChanged(SettingRowId.FRIENDS_SHARING, "NOBODY")
         advanceUntilIdle()
         assertEquals(listOf(SharingVisibility.NOBODY), fixture.repository.friendsSharingRequests)
         assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
         assertTrue(fixture.repository.sportSharingRequests.isEmpty())
-        assertEquals("NOBODY", fixture.viewModel.choice(SettingsViewModel.KEY_FRIENDS_SHARING).selectedOptionKey)
+        assertEquals("NOBODY", fixture.viewModel.choice(SettingRowId.FRIENDS_SHARING).selectedOptionKey)
     }
 
     @Test
@@ -90,24 +90,24 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         assertEquals(
             setOf(
-                SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY,
-                SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER,
-                SettingsViewModel.KEY_COMPACT_WIDGET_TEXT_SIZE
+                SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY,
+                SettingRowId.COMPACT_WIDGET_HIDE_TEACHER,
+                SettingRowId.COMPACT_WIDGET_TEXT_SIZE
             ),
-            compact.viewModel.allItems().map { it.key }.toSet()
+            compact.viewModel.allItems().map { it.id }.toSet()
         )
         assertEquals(
             setOf(
-                SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER,
-                SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST,
-                SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW,
-                SettingsViewModel.KEY_FULL_WIDGET_TEXT_SIZE
+                SettingRowId.FULL_WIDGET_HIDE_TEACHER,
+                SettingRowId.FULL_WIDGET_HIDE_PAST,
+                SettingRowId.FULL_WIDGET_SHOW_TOMORROW,
+                SettingRowId.FULL_WIDGET_TEXT_SIZE
             ),
-            full.viewModel.allItems().map { it.key }.toSet()
+            full.viewModel.allItems().map { it.id }.toSet()
         )
-        assertTrue(compact.viewModel.toggle(SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER).checked)
-        assertFalse(full.viewModel.toggle(SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER).checked)
-        full.viewModel.onToggleChanged(SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER, true)
+        assertTrue(compact.viewModel.toggle(SettingRowId.COMPACT_WIDGET_HIDE_TEACHER).checked)
+        assertFalse(full.viewModel.toggle(SettingRowId.FULL_WIDGET_HIDE_TEACHER).checked)
+        full.viewModel.onToggleChanged(SettingRowId.FULL_WIDGET_HIDE_TEACHER, true)
         advanceUntilIdle()
         assertEquals(listOf(true), full.repository.fullWidgetTeacherHiddenRequests)
         assertTrue(full.repository.widgetTeacherHiddenRequests.isEmpty())
@@ -120,11 +120,11 @@ class SettingsViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.PRIVACY, local = LocalSettings(customServicesEnabled = true), localInitiallyAvailable = false)
             runCurrent()
-            assertFalse(fixture.viewModel.localSettingsLoaded.value)
+            assertFalse(fixture.viewModel.uiState.value.loaded)
             fixture.repository.publishLocalSettings()
             runCurrent()
-            assertTrue(fixture.viewModel.localSettingsLoaded.value)
-            assertTrue(fixture.viewModel.sections.value.isEmpty())
+            assertTrue(fixture.viewModel.uiState.value.loaded)
+            assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
             advanceUntilIdle()
         }
 
@@ -145,7 +145,7 @@ class SettingsViewModelTest {
                         SettingsPage.FULL_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL)
                         else -> null
                     },
-                    fixture.viewModel.previewSettings.value
+                    fixture.viewModel.uiState.value.previewSettings
                 )
             }
         }
@@ -155,15 +155,15 @@ class SettingsViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.QR_WIDGET, localInitiallyAvailable = false)
             advanceUntilIdle()
-            assertEquals(null, fixture.viewModel.previewSettings.value)
+            assertEquals(null, fixture.viewModel.uiState.value.previewSettings)
             fixture.repository.publishLocalSettings()
             advanceUntilIdle()
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_QR_DYNAMIC_COLORS, false)
-            fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_QR_ANIMATION, QrAnimationType.FADE.name)
+            fixture.viewModel.onToggleChanged(SettingRowId.QR_DYNAMIC_COLORS, false)
+            fixture.viewModel.onChoiceChanged(SettingRowId.QR_ANIMATION, QrAnimationType.FADE.name)
             advanceUntilIdle()
             assertEquals(
                 WidgetPreviewSettings.Qr(QrWidgetSettings(dynamicColors = false, animationType = QrAnimationType.FADE)),
-                fixture.viewModel.previewSettings.value
+                fixture.viewModel.uiState.value.previewSettings
             )
         }
 
@@ -173,8 +173,8 @@ class SettingsViewModelTest {
             val fixture = createFixture(local = LocalSettings(customServicesEnabled = true))
             advanceUntilIdle()
 
-            assertEquals(SettingsPage.ROOT, fixture.viewModel.page)
-            assertEquals(3, fixture.viewModel.sections.value.size)
+            assertEquals(SettingsPage.ROOT, fixture.viewModel.uiState.value.page)
+            assertEquals(3, fixture.viewModel.uiState.value.sections.size)
             assertEquals(11, fixture.viewModel.allItems().size)
             assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
             val navigation = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
@@ -185,7 +185,7 @@ class SettingsViewModelTest {
             assertTrue(navigation.all { it.description == null })
             assertTrue(navigation.filter { it.page != SettingsPage.SERVICES }.all { it.value == null })
             assertEquals(UiText.Resource(R.string.settings_services_enabled), navigation.first().value)
-            val applicationSection = fixture.viewModel.sections.value.single {
+            val applicationSection = fixture.viewModel.uiState.value.sections.single {
                 it.title == UiText.Resource(R.string.me_group_app)
             }
             assertEquals(
@@ -204,8 +204,8 @@ class SettingsViewModelTest {
                     local = LocalSettings(customServicesEnabled = true)
                 )
                 advanceUntilIdle()
-                assertEquals(page, fixture.viewModel.page)
-                assertTrue(fixture.viewModel.sections.value.isNotEmpty())
+                assertEquals(page, fixture.viewModel.uiState.value.page)
+                assertTrue(fixture.viewModel.uiState.value.sections.isNotEmpty())
                 assertEquals(
                     if (page == SettingsPage.PRIVACY) 1 else 0,
                     fixture.repository.refreshSharingCount
@@ -231,9 +231,9 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             assertEquals(5, fixture.viewModel.allItems().size)
-            assertFalse(fixture.viewModel.choice(SettingsViewModel.KEY_QR_ANIMATION).enabled)
-            assertFalse(fixture.viewModel.action(SettingsViewModel.KEY_QR_CUSTOM_IMAGE).enabled)
-            assertFalse(fixture.viewModel.action(SettingsViewModel.KEY_QR_RESET_IMAGE).enabled)
+            assertFalse(fixture.viewModel.choice(SettingRowId.QR_ANIMATION).enabled)
+            assertFalse(fixture.viewModel.action(SettingRowId.QR_CUSTOM_IMAGE).enabled)
+            assertFalse(fixture.viewModel.action(SettingRowId.QR_RESET_IMAGE).enabled)
         }
 
     @Test
@@ -256,14 +256,14 @@ class SettingsViewModelTest {
             )
 
             advanceUntilIdle()
-            assertTrue(fixture.viewModel.sections.value.isEmpty())
+            assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
 
             fixture.repository.publishLocalSettings()
             advanceUntilIdle()
 
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER).checked)
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST).checked)
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW).checked)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.FULL_WIDGET_HIDE_TEACHER).checked)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.FULL_WIDGET_HIDE_PAST).checked)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.FULL_WIDGET_SHOW_TOMORROW).checked)
         }
 
     @Test
@@ -276,15 +276,15 @@ class SettingsViewModelTest {
             )
             advanceUntilIdle()
 
-            assertTrue(fixture.viewModel.sections.value.isEmpty())
+            assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
 
             fixture.repository.sharing.value = SharingSettingsState.Content(
                 SharingSettings(scheduleVisibility = SharingVisibility.FRIENDS, sportVisibility = SharingVisibility.FRIENDS)
             )
             advanceUntilIdle()
 
-            val schedule = fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING)
-            val sport = fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING)
+            val schedule = fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING)
+            val sport = fixture.viewModel.choice(SettingRowId.SPORT_SHARING)
             assertEquals(SharingVisibility.FRIENDS.name, schedule.selectedOptionKey)
             assertEquals(SharingVisibility.FRIENDS.name, sport.selectedOptionKey)
             assertTrue(schedule.enabled)
@@ -306,51 +306,51 @@ class SettingsViewModelTest {
             val items = (listOf(fixture.viewModel) + details)
                 .flatMap { it.allItems() }
                 .filterNot { it is SettingItem.Navigation }
-            assertTrue(details.all { it.sections.value.all { section -> section.items.isNotEmpty() } })
+            assertTrue(details.all { it.uiState.value.sections.all { section -> section.items.isNotEmpty() } })
             assertEquals(
                 setOf(
-                    SettingsViewModel.KEY_CUSTOM_SERVICES,
-                    SettingsViewModel.KEY_NOTIFICATIONS,
-                    SettingsViewModel.KEY_SCHEDULE_SHARING,
-                    SettingsViewModel.KEY_SPORT_SHARING,
-                    SettingsViewModel.KEY_FRIENDS_SHARING,
-                    SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY,
-                    SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER,
-                    SettingsViewModel.KEY_COMPACT_WIDGET_TEXT_SIZE,
-                    SettingsViewModel.KEY_FULL_WIDGET_HIDE_TEACHER,
-                    SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST,
-                    SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW,
-                    SettingsViewModel.KEY_FULL_WIDGET_TEXT_SIZE,
-                    SettingsViewModel.KEY_QR_DYNAMIC_COLORS,
-                    SettingsViewModel.KEY_QR_SPOILER,
-                    SettingsViewModel.KEY_QR_ANIMATION,
-                    SettingsViewModel.KEY_QR_CUSTOM_IMAGE,
-                    SettingsViewModel.KEY_QR_RESET_IMAGE,
-                    SettingsViewModel.KEY_SPORT_TEACHER_FILTER,
-                    SettingsViewModel.KEY_SPORT_TIME_FILTER,
-                    SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN,
-                    SettingsViewModel.KEY_SCHEDULE_CHANGES,
-                    SettingsViewModel.KEY_HOME_CARD_SCHEDULE,
-                    SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES,
-                    SettingsViewModel.KEY_HOME_CARD_MARKS,
-                    SettingsViewModel.KEY_HOME_CARD_SPORT,
-                    SettingsViewModel.KEY_HOME_CARD_FRIENDS,
-                    SettingsViewModel.KEY_MYITMO_MARKS,
-                    SettingsViewModel.KEY_BARS_MARKS,
-                    SettingsViewModel.KEY_SHEET_MARKS,
-                    SettingsViewModel.KEY_CALENDAR_SYNC,
-                    SettingsViewModel.KEY_ICS_EXPORT,
-                    SettingsViewModel.KEY_REFRESH_WIDGETS,
-                    SettingsViewModel.KEY_RESTART_ONBOARDING,
-                    SettingsViewModel.KEY_DIAGNOSTICS,
-                    SettingsViewModel.KEY_VERSION,
-                    SettingsViewModel.KEY_DELETE_ACCOUNT,
-                    SettingsViewModel.KEY_PRIVACY_POLICY
+                    SettingRowId.CUSTOM_SERVICES,
+                    SettingRowId.NOTIFICATIONS,
+                    SettingRowId.SCHEDULE_SHARING,
+                    SettingRowId.SPORT_SHARING,
+                    SettingRowId.FRIENDS_SHARING,
+                    SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY,
+                    SettingRowId.COMPACT_WIDGET_HIDE_TEACHER,
+                    SettingRowId.COMPACT_WIDGET_TEXT_SIZE,
+                    SettingRowId.FULL_WIDGET_HIDE_TEACHER,
+                    SettingRowId.FULL_WIDGET_HIDE_PAST,
+                    SettingRowId.FULL_WIDGET_SHOW_TOMORROW,
+                    SettingRowId.FULL_WIDGET_TEXT_SIZE,
+                    SettingRowId.QR_DYNAMIC_COLORS,
+                    SettingRowId.QR_SPOILER,
+                    SettingRowId.QR_ANIMATION,
+                    SettingRowId.QR_CUSTOM_IMAGE,
+                    SettingRowId.QR_RESET_IMAGE,
+                    SettingRowId.SPORT_TEACHER_FILTER,
+                    SettingRowId.SPORT_TIME_FILTER,
+                    SettingRowId.SCHEDULE_SPORT_AUTO_SIGN,
+                    SettingRowId.SCHEDULE_CHANGES,
+                    SettingRowId.HOME_CARD_SCHEDULE,
+                    SettingRowId.HOME_CARD_SCHEDULE_CHANGES,
+                    SettingRowId.HOME_CARD_MARKS,
+                    SettingRowId.HOME_CARD_SPORT,
+                    SettingRowId.HOME_CARD_FRIENDS,
+                    SettingRowId.MYITMO_MARKS,
+                    SettingRowId.BARS_MARKS,
+                    SettingRowId.SHEET_MARKS,
+                    SettingRowId.CALENDAR_SYNC,
+                    SettingRowId.ICS_EXPORT,
+                    SettingRowId.REFRESH_WIDGETS,
+                    SettingRowId.RESTART_ONBOARDING,
+                    SettingRowId.DIAGNOSTICS,
+                    SettingRowId.VERSION,
+                    SettingRowId.DELETE_ACCOUNT,
+                    SettingRowId.PRIVACY_POLICY
                 ),
-                items.map(SettingItem::key).toSet()
+                items.map(SettingItem::id).toSet()
             )
 
-            val keys = items.map(SettingItem::key)
+            val keys = items.map { it.id.key }
             assertTrue(keys.none { "smart" in it || "style" in it || "map" in it })
             assertTrue(keys.none { "name" in it || "group" in it || "isu" in it })
         }
@@ -370,23 +370,23 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             assertFalse(
-                fixture.viewModel.toggle(SettingsViewModel.KEY_SPORT_TEACHER_FILTER).checked
+                fixture.viewModel.toggle(SettingRowId.SPORT_TEACHER_FILTER).checked
             )
             assertTrue(
-                fixture.viewModel.toggle(SettingsViewModel.KEY_SPORT_TIME_FILTER).checked
+                fixture.viewModel.toggle(SettingRowId.SPORT_TIME_FILTER).checked
             )
 
             fixture.viewModel.onToggleChanged(
-                SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY,
+                SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY,
                 false
             )
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER, true)
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST, true)
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW, true)
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_QR_DYNAMIC_COLORS, false)
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_QR_SPOILER, false)
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SPORT_TEACHER_FILTER, true)
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SPORT_TIME_FILTER, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.COMPACT_WIDGET_HIDE_TEACHER, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.FULL_WIDGET_HIDE_PAST, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.FULL_WIDGET_SHOW_TOMORROW, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.QR_DYNAMIC_COLORS, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.QR_SPOILER, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.SPORT_TEACHER_FILTER, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.SPORT_TIME_FILTER, false)
             advanceUntilIdle()
 
             assertEquals(listOf(false), fixture.repository.nextLessonEarlyRequests)
@@ -406,7 +406,7 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.SERVICES)
             advanceUntilIdle()
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CUSTOM_SERVICES, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.CUSTOM_SERVICES, true)
             advanceUntilIdle()
 
             assertEquals(listOf(true), fixture.customServicesRepository.requests)
@@ -424,8 +424,8 @@ class SettingsViewModelTest {
 
             advanceUntilIdle()
 
-            val schedule = fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING)
-            val sport = fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING)
+            val schedule = fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING)
+            val sport = fixture.viewModel.choice(SettingRowId.SPORT_SHARING)
             assertFalse(schedule.enabled)
             assertEquals(null, schedule.selectedOptionKey)
             assertFalse(sport.enabled)
@@ -434,7 +434,7 @@ class SettingsViewModelTest {
             assertEquals(UiText.Resource(R.string.settings_privacy_unknown), sport.value)
             assertEquals(
                 UiText.Resource(R.string.settings_privacy_services_required),
-                fixture.viewModel.sections.value.single().footer
+                fixture.viewModel.uiState.value.sections.single().footer
             )
             assertEquals(1, fixture.repository.disableSharingCount)
             assertEquals(0, fixture.repository.refreshSharingCount)
@@ -452,12 +452,12 @@ class SettingsViewModelTest {
             )
             advanceUntilIdle()
 
-            assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+            assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
             assertTrue(
-                fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled
+                fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).enabled
             )
-            assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
-            assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).enabled)
+            assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingRowId.SPORT_SHARING).selectedOptionKey)
+            assertTrue(fixture.viewModel.choice(SettingRowId.SPORT_SHARING).enabled)
             assertEquals(1, fixture.repository.refreshSharingCount)
 
             fixture.repository.sharing.value = SharingSettingsState.Content(
@@ -467,15 +467,15 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             assertFalse(
-                fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled
+                fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).enabled
             )
-            assertFalse(fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).enabled)
+            assertFalse(fixture.viewModel.choice(SettingRowId.SPORT_SHARING).enabled)
         }
 
     @Test
     fun `sharing update failure emits the repository error`() =
         runTest(mainDispatcherRule.dispatcher) {
-            for (key in listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING)) {
+            for (key in listOf(SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING)) {
                 val fixture = createFixture(
                     page = SettingsPage.PRIVACY,
                     local = LocalSettings(customServicesEnabled = true),
@@ -488,12 +488,12 @@ class SettingsViewModelTest {
                 fixture.viewModel.onChoiceChanged(key, SharingVisibility.NOBODY.name)
                 advanceUntilIdle()
 
-                assertEquals(if (key == SettingsViewModel.KEY_SCHEDULE_SHARING) listOf(SharingVisibility.NOBODY) else emptyList<SharingVisibility>(), fixture.repository.scheduleSharingRequests)
-                assertEquals(if (key == SettingsViewModel.KEY_SPORT_SHARING) listOf(SharingVisibility.NOBODY) else emptyList<SharingVisibility>(), fixture.repository.sportSharingRequests)
-                assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
-                assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
-                assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled)
-                assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).enabled)
+                assertEquals(if (key == SettingRowId.SCHEDULE_SHARING) listOf(SharingVisibility.NOBODY) else emptyList<SharingVisibility>(), fixture.repository.scheduleSharingRequests)
+                assertEquals(if (key == SettingRowId.SPORT_SHARING) listOf(SharingVisibility.NOBODY) else emptyList<SharingVisibility>(), fixture.repository.sportSharingRequests)
+                assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
+                assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingRowId.SPORT_SHARING).selectedOptionKey)
+                assertTrue(fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).enabled)
+                assertTrue(fixture.viewModel.choice(SettingRowId.SPORT_SHARING).enabled)
                 assertEquals(0, fixture.widgetRefresher.refreshCount)
                 assertEquals(
                     SettingsEvent.ShowError(AppError.Network),
@@ -513,15 +513,15 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             assertFalse(
-                fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled
+                fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).enabled
             )
             assertEquals(
                 UiText.Resource(R.string.settings_privacy_load_error),
-                fixture.viewModel.sections.value.single().footer
+                fixture.viewModel.uiState.value.sections.single().footer
             )
-            fixture.viewModel.action(SettingsViewModel.KEY_RETRY_PRIVACY)
+            fixture.viewModel.action(SettingRowId.RETRY_PRIVACY)
 
-            fixture.viewModel.onAction(SettingsViewModel.KEY_RETRY_PRIVACY)
+            fixture.viewModel.onAction(SettingRowId.RETRY_PRIVACY)
             advanceUntilIdle()
 
             assertEquals(2, fixture.repository.refreshSharingCount)
@@ -539,27 +539,27 @@ class SettingsViewModelTest {
             val full = createFixture(page = SettingsPage.FULL_SCHEDULE_WIDGET, local = local)
             advanceUntilIdle()
 
-            val choice = compact.viewModel.choice(SettingsViewModel.KEY_COMPACT_WIDGET_TEXT_SIZE)
+            val choice = compact.viewModel.choice(SettingRowId.COMPACT_WIDGET_TEXT_SIZE)
             assertEquals(WidgetTextSize.LARGE.name, choice.selectedOptionKey)
             assertEquals(WidgetTextSize.entries.map { it.name }, choice.options.map { it.key })
             assertEquals(
                 WidgetTextSize.NORMAL.name,
-                full.viewModel.choice(SettingsViewModel.KEY_FULL_WIDGET_TEXT_SIZE).selectedOptionKey
+                full.viewModel.choice(SettingRowId.FULL_WIDGET_TEXT_SIZE).selectedOptionKey
             )
 
-            compact.viewModel.onChoiceChanged(SettingsViewModel.KEY_COMPACT_WIDGET_TEXT_SIZE, "huge")
+            compact.viewModel.onChoiceChanged(SettingRowId.COMPACT_WIDGET_TEXT_SIZE, "huge")
             advanceUntilIdle()
             assertTrue(compact.repository.compactTextSizeRequests.isEmpty())
             assertEquals(0, compact.widgetRefresher.refreshCount)
 
-            full.viewModel.onChoiceChanged(SettingsViewModel.KEY_FULL_WIDGET_TEXT_SIZE, WidgetTextSize.EXTRA_LARGE.name)
+            full.viewModel.onChoiceChanged(SettingRowId.FULL_WIDGET_TEXT_SIZE, WidgetTextSize.EXTRA_LARGE.name)
             advanceUntilIdle()
 
             assertEquals(listOf(WidgetTextSize.EXTRA_LARGE), full.repository.fullTextSizeRequests)
             assertTrue(full.repository.compactTextSizeRequests.isEmpty())
             assertEquals(
                 WidgetTextSize.EXTRA_LARGE.name,
-                full.viewModel.choice(SettingsViewModel.KEY_FULL_WIDGET_TEXT_SIZE).selectedOptionKey
+                full.viewModel.choice(SettingRowId.FULL_WIDGET_TEXT_SIZE).selectedOptionKey
             )
             assertEquals(1, full.widgetRefresher.refreshCount)
         }
@@ -578,17 +578,17 @@ class SettingsViewModelTest {
             )
             advanceUntilIdle()
 
-            val choice = fixture.viewModel.choice(SettingsViewModel.KEY_QR_ANIMATION)
+            val choice = fixture.viewModel.choice(SettingRowId.QR_ANIMATION)
             assertEquals(QrAnimationType.FADE.name, choice.selectedOptionKey)
             assertEquals(QrAnimationType.entries.map { it.name }, choice.options.map { it.key })
 
-            fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_QR_ANIMATION, "unknown")
+            fixture.viewModel.onChoiceChanged(SettingRowId.QR_ANIMATION, "unknown")
             advanceUntilIdle()
             assertTrue(fixture.repository.qrAnimationRequests.isEmpty())
             assertEquals(0, fixture.widgetRefresher.refreshCount)
 
             fixture.viewModel.onChoiceChanged(
-                SettingsViewModel.KEY_QR_ANIMATION,
+                SettingRowId.QR_ANIMATION,
                 QrAnimationType.NONE.name
             )
             advanceUntilIdle()
@@ -603,22 +603,22 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.QR_WIDGET)
             advanceUntilIdle()
 
-            assertFalse(fixture.viewModel.action(SettingsViewModel.KEY_QR_RESET_IMAGE).enabled)
+            assertFalse(fixture.viewModel.action(SettingRowId.QR_RESET_IMAGE).enabled)
 
             fixture.viewModel.onCustomSpoilerChanged(configured = true)
             advanceUntilIdle()
 
-            assertTrue(fixture.viewModel.action(SettingsViewModel.KEY_QR_RESET_IMAGE).enabled)
+            assertTrue(fixture.viewModel.action(SettingRowId.QR_RESET_IMAGE).enabled)
             assertEquals(
                 UiText.Resource(R.string.settings_qr_custom_image_selected),
-                fixture.viewModel.action(SettingsViewModel.KEY_QR_CUSTOM_IMAGE).value
+                fixture.viewModel.action(SettingRowId.QR_CUSTOM_IMAGE).value
             )
             assertEquals(0, fixture.widgetRefresher.refreshCount)
 
             fixture.viewModel.onCustomSpoilerChanged(configured = false, refreshWidgets = true)
             advanceUntilIdle()
 
-            assertFalse(fixture.viewModel.action(SettingsViewModel.KEY_QR_RESET_IMAGE).enabled)
+            assertFalse(fixture.viewModel.action(SettingRowId.QR_RESET_IMAGE).enabled)
             assertEquals(1, fixture.widgetRefresher.refreshCount)
         }
 
@@ -628,10 +628,10 @@ class SettingsViewModelTest {
             val fixture = createFixture()
             advanceUntilIdle()
 
-            fixture.viewModel.onAction(SettingsViewModel.KEY_NOTIFICATIONS)
-            fixture.viewModel.onAction(SettingsViewModel.KEY_QR_CUSTOM_IMAGE)
-            fixture.viewModel.onAction(SettingsViewModel.KEY_QR_RESET_IMAGE)
-            fixture.viewModel.onAction(SettingsViewModel.KEY_REFRESH_WIDGETS)
+            fixture.viewModel.onAction(SettingRowId.NOTIFICATIONS)
+            fixture.viewModel.onAction(SettingRowId.QR_CUSTOM_IMAGE)
+            fixture.viewModel.onAction(SettingRowId.QR_RESET_IMAGE)
+            fixture.viewModel.onAction(SettingRowId.REFRESH_WIDGETS)
 
             assertEquals(
                 listOf(
@@ -653,20 +653,20 @@ class SettingsViewModelTest {
 
             assertEquals(
                 UiText.Resource(R.string.settings_notifications_checking),
-                fixture.viewModel.action(SettingsViewModel.KEY_NOTIFICATIONS).value
+                fixture.viewModel.action(SettingRowId.NOTIFICATIONS).value
             )
             fixture.viewModel.onNotificationPermissionChanged(granted = true)
             advanceUntilIdle()
 
             assertEquals(
                 UiText.Resource(R.string.settings_notifications_allowed),
-                fixture.viewModel.action(SettingsViewModel.KEY_NOTIFICATIONS).value
+                fixture.viewModel.action(SettingRowId.NOTIFICATIONS).value
             )
             val maintenance = createFixture(page = SettingsPage.MAINTENANCE)
             advanceUntilIdle()
             val version = maintenance.viewModel.allItems()
                 .filterIsInstance<SettingItem.Info>()
-                .single { it.key == SettingsViewModel.KEY_VERSION }
+                .single { it.id == SettingRowId.VERSION }
             assertEquals(UiText.Dynamic("2.1-test"), version.value)
         }
 
@@ -677,10 +677,10 @@ class SettingsViewModelTest {
             advanceUntilIdle()
             assertEquals(
                 UiText.Resource(R.string.settings_restart_onboarding_title),
-                fixture.viewModel.action(SettingsViewModel.KEY_RESTART_ONBOARDING).title
+                fixture.viewModel.action(SettingRowId.RESTART_ONBOARDING).title
             )
 
-            fixture.viewModel.onAction(SettingsViewModel.KEY_RESTART_ONBOARDING)
+            fixture.viewModel.onAction(SettingRowId.RESTART_ONBOARDING)
             advanceUntilIdle()
 
             assertEquals(1, fixture.onboardingRepository.resetCount)
@@ -696,20 +696,20 @@ class SettingsViewModelTest {
                 advanceUntilIdle()
 
                 assertEquals(
-                    listOf(SettingsViewModel.KEY_CUSTOM_SERVICES, SettingsViewModel.KEY_DELETE_ACCOUNT),
-                    fixture.viewModel.allItems().map { it.key }
+                    listOf(SettingRowId.CUSTOM_SERVICES, SettingRowId.DELETE_ACCOUNT),
+                    fixture.viewModel.allItems().map { it.id }
                 )
-                val delete = fixture.viewModel.action(SettingsViewModel.KEY_DELETE_ACCOUNT)
+                val delete = fixture.viewModel.action(SettingRowId.DELETE_ACCOUNT)
                 assertEquals(UiText.Resource(R.string.settings_delete_account_title), delete.title)
                 assertEquals(UiText.Resource(R.string.settings_delete_account_description), delete.description)
                 assertTrue(delete.enabled)
                 // The switch keeps its own footer; the deletion row is a group of its own below it.
                 assertEquals(
                     UiText.Resource(R.string.settings_services_footer),
-                    fixture.viewModel.sections.value.first().footer
+                    fixture.viewModel.uiState.value.sections.first().footer
                 )
 
-                fixture.viewModel.onAction(SettingsViewModel.KEY_DELETE_ACCOUNT)
+                fixture.viewModel.onAction(SettingRowId.DELETE_ACCOUNT)
                 assertEquals(SettingsEvent.OpenWebPage("/delete-account"), fixture.viewModel.events.first())
             }
         }
@@ -720,21 +720,21 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.MAINTENANCE)
             advanceUntilIdle()
 
-            val keys = fixture.viewModel.allItems().map { it.key }
+            val keys = fixture.viewModel.allItems().map { it.id }
             assertEquals(
-                listOf(SettingsViewModel.KEY_PRIVACY_POLICY, SettingsViewModel.KEY_VERSION),
+                listOf(SettingRowId.PRIVACY_POLICY, SettingRowId.VERSION),
                 keys.takeLast(2)
             )
             assertEquals(
                 UiText.Resource(R.string.settings_privacy_policy_title),
-                fixture.viewModel.action(SettingsViewModel.KEY_PRIVACY_POLICY).title
+                fixture.viewModel.action(SettingRowId.PRIVACY_POLICY).title
             )
             assertEquals(
                 UiText.Resource(R.string.app_unofficial_notice),
-                fixture.viewModel.sections.value.single().footer
+                fixture.viewModel.uiState.value.sections.single().footer
             )
 
-            fixture.viewModel.onAction(SettingsViewModel.KEY_PRIVACY_POLICY)
+            fixture.viewModel.onAction(SettingRowId.PRIVACY_POLICY)
             assertEquals(SettingsEvent.OpenWebPage("/privacy.html"), fixture.viewModel.events.first())
         }
 
@@ -744,7 +744,7 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         assertTrue(
-            fixture.viewModel.allItems().none { it.key == SettingsViewModel.KEY_RESTART_ONBOARDING }
+            fixture.viewModel.allItems().none { it.id == SettingRowId.RESTART_ONBOARDING }
         )
     }
 
@@ -754,13 +754,13 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         fixture.viewModel.onCustomSpoilerChanged(configured = true, busy = true)
         advanceUntilIdle()
-        assertFalse(fixture.viewModel.action(SettingsViewModel.KEY_QR_CUSTOM_IMAGE).enabled)
-        assertFalse(fixture.viewModel.action(SettingsViewModel.KEY_QR_RESET_IMAGE).enabled)
-        assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_QR_ANIMATION).enabled)
+        assertFalse(fixture.viewModel.action(SettingRowId.QR_CUSTOM_IMAGE).enabled)
+        assertFalse(fixture.viewModel.action(SettingRowId.QR_RESET_IMAGE).enabled)
+        assertTrue(fixture.viewModel.choice(SettingRowId.QR_ANIMATION).enabled)
         fixture.viewModel.onCustomSpoilerChanged(configured = true, busy = false)
         advanceUntilIdle()
-        assertTrue(fixture.viewModel.action(SettingsViewModel.KEY_QR_CUSTOM_IMAGE).enabled)
-        assertTrue(fixture.viewModel.action(SettingsViewModel.KEY_QR_RESET_IMAGE).enabled)
+        assertTrue(fixture.viewModel.action(SettingRowId.QR_CUSTOM_IMAGE).enabled)
+        assertTrue(fixture.viewModel.action(SettingRowId.QR_RESET_IMAGE).enabled)
     }
 
     @Test
@@ -769,24 +769,24 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.HOME, local = LocalSettings(hiddenHomeCards = setOf(HomeCardKind.SPORT)))
             advanceUntilIdle()
 
-            val section = fixture.viewModel.sections.value.single()
-            assertEquals(UiText.Resource(R.string.settings_group_home), fixture.viewModel.page.title)
+            val section = fixture.viewModel.uiState.value.sections.single()
+            assertEquals(UiText.Resource(R.string.settings_group_home), fixture.viewModel.uiState.value.page.title)
             assertEquals(null, section.footer)
             assertEquals(
                 listOf(
-                    SettingsViewModel.KEY_HOME_CARD_SCHEDULE, SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES,
-                    SettingsViewModel.KEY_HOME_CARD_MARKS, SettingsViewModel.KEY_HOME_CARD_SPORT,
-                    SettingsViewModel.KEY_HOME_CARD_FRIENDS
+                    SettingRowId.HOME_CARD_SCHEDULE, SettingRowId.HOME_CARD_SCHEDULE_CHANGES,
+                    SettingRowId.HOME_CARD_MARKS, SettingRowId.HOME_CARD_SPORT,
+                    SettingRowId.HOME_CARD_FRIENDS
                 ),
-                section.items.map { it.key }
+                section.items.map { it.id }
             )
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_SCHEDULE).checked)
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_SPORT).checked)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.HOME_CARD_SCHEDULE).checked)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.HOME_CARD_SPORT).checked)
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_HOME_CARD_SCHEDULE, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.HOME_CARD_SCHEDULE, false)
             advanceUntilIdle()
             assertEquals(listOf(HomeCardKind.SCHEDULE to false), fixture.repository.homeCardRequests)
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_SCHEDULE).checked)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.HOME_CARD_SCHEDULE).checked)
             assertEquals(0, fixture.widgetRefresher.refreshCount)
         }
 
@@ -796,12 +796,12 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.SCHEDULE)
             advanceUntilIdle()
 
-            val section = fixture.viewModel.sections.value.single { section ->
-                section.items.any { it.key == SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN }
+            val section = fixture.viewModel.uiState.value.sections.single { section ->
+                section.items.any { it.id == SettingRowId.SCHEDULE_SPORT_AUTO_SIGN }
             }
-            val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN)
+            val toggle = fixture.viewModel.toggle(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN)
             assertEquals(listOf(toggle), section.items)
-            assertEquals(UiText.Resource(R.string.settings_group_schedule), fixture.viewModel.page.title)
+            assertEquals(UiText.Resource(R.string.settings_group_schedule), fixture.viewModel.uiState.value.page.title)
             assertEquals(UiText.Resource(R.string.settings_schedule_sport_auto_sign_title), toggle.title)
             assertEquals(UiText.Resource(R.string.settings_schedule_sport_auto_sign_description), toggle.description)
             assertEquals(UiText.Resource(R.string.settings_schedule_footer), section.footer)
@@ -810,15 +810,15 @@ class SettingsViewModelTest {
             assertFalse(toggle.checked)
             assertEquals(0, fixture.widgetRefresher.refreshCount)
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN, true)
             advanceUntilIdle()
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN).checked)
             assertTrue(fixture.repository.local.value.showSportAutoSign)
             assertEquals(1, fixture.widgetRefresher.refreshCount)
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN, false)
             advanceUntilIdle()
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN).checked)
             assertEquals(listOf(true, false), fixture.repository.scheduleSportAutoSignRequests)
             assertFalse(fixture.repository.local.value.customServicesEnabled)
             assertTrue(fixture.customServicesRepository.requests.isEmpty())
@@ -826,7 +826,7 @@ class SettingsViewModelTest {
             assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
             assertTrue(fixture.repository.sportSharingRequests.isEmpty())
             assertEquals(2, fixture.widgetRefresher.refreshCount)
-            assertEquals(null, fixture.viewModel.previewSettings.value)
+            assertEquals(null, fixture.viewModel.uiState.value.previewSettings)
         }
 
     @Test
@@ -835,19 +835,19 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.SCHEDULE, local = LocalSettings(scheduleChangesEnabled = false))
             advanceUntilIdle()
 
-            val (changes, autoSign) = fixture.viewModel.sections.value
-            val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_CHANGES)
+            val (changes, autoSign) = fixture.viewModel.uiState.value.sections
+            val toggle = fixture.viewModel.toggle(SettingRowId.SCHEDULE_CHANGES)
             assertEquals(listOf(toggle), changes.items)
             assertEquals(null, changes.title)
             assertEquals(null, changes.footer)
             assertEquals(UiText.Resource(R.string.settings_schedule_changes_title), toggle.title)
             assertFalse(toggle.checked)
-            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN), autoSign.items.map { it.key })
+            assertEquals(listOf(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN), autoSign.items.map { it.id })
             assertEquals(UiText.Resource(R.string.settings_schedule_footer), autoSign.footer)
 
             fixture.tracking.enabled.value = true
             advanceUntilIdle()
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_CHANGES).checked)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.SCHEDULE_CHANGES).checked)
         }
 
     @Test
@@ -857,17 +857,17 @@ class SettingsViewModelTest {
             fixture.viewModel.onNotificationPermissionChanged(granted = true)
             advanceUntilIdle()
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_CHANGES, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.SCHEDULE_CHANGES, false)
             advanceUntilIdle()
             assertEquals(listOf(false), fixture.tracking.setCalls)
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_CHANGES).checked)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.SCHEDULE_CHANGES).checked)
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_CHANGES, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.SCHEDULE_CHANGES, true)
             advanceUntilIdle()
             assertEquals(listOf(false, true), fixture.tracking.setCalls)
 
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_CHANGES, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.SCHEDULE_CHANGES, true)
             advanceUntilIdle()
             assertEquals(listOf(false, true, true), fixture.tracking.setCalls)
             assertEquals(listOf(SettingsEvent.RequestNotificationPermission), fixture.viewModel.events.take(1).toList())
@@ -880,7 +880,7 @@ class SettingsViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.SCHEDULE)
             advanceUntilIdle()
-            val description = { fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_CHANGES).description }
+            val description = { fixture.viewModel.toggle(SettingRowId.SCHEDULE_CHANGES).description }
             assertEquals(UiText.Resource(R.string.settings_schedule_changes_description), description())
 
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
@@ -898,15 +898,15 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.HOME)
             advanceUntilIdle()
 
-            val row = fixture.viewModel.sections.value.single().items[1] as SettingItem.Toggle
-            assertEquals(SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES, row.key)
+            val row = fixture.viewModel.uiState.value.sections.single().items[1] as SettingItem.Toggle
+            assertEquals(SettingRowId.HOME_CARD_SCHEDULE_CHANGES, row.id)
             assertEquals(UiText.Resource(R.string.settings_home_card_schedule_changes_title), row.title)
             assertTrue(row.checked)
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.HOME_CARD_SCHEDULE_CHANGES, false)
             advanceUntilIdle()
             assertEquals(listOf(HomeCardKind.SCHEDULE_CHANGES to false), fixture.repository.homeCardRequests)
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_SCHEDULE_CHANGES).checked)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.HOME_CARD_SCHEDULE_CHANGES).checked)
             assertTrue(fixture.tracking.setCalls.isEmpty())
         }
 
@@ -929,10 +929,10 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK, local = LocalSettings(myItmoMarksEnabled = false))
             advanceUntilIdle()
 
-            val section = fixture.viewModel.sections.value.single()
+            val section = fixture.viewModel.uiState.value.sections.single()
             assertEquals(null, section.title)
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS), section.items.map { it.key })
-            val myItmo = fixture.viewModel.toggle(SettingsViewModel.KEY_MYITMO_MARKS)
+            assertEquals(listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS), section.items.map { it.id })
+            val myItmo = fixture.viewModel.toggle(SettingRowId.MYITMO_MARKS)
             assertEquals(UiText.Resource(R.string.settings_marks_myitmo_title), myItmo.title)
             assertFalse(myItmo.checked)
 
@@ -940,10 +940,10 @@ class SettingsViewModelTest {
                 fixture.repository.barsMarks.value = bars
                 advanceUntilIdle()
                 assertEquals(
-                    listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS, SettingsViewModel.KEY_SHEET_MARKS),
-                    fixture.viewModel.sections.value.single().items.map { it.key }
+                    listOf(SettingRowId.MYITMO_MARKS, SettingRowId.BARS_MARKS, SettingRowId.SHEET_MARKS),
+                    fixture.viewModel.uiState.value.sections.single().items.map { it.id }
                 )
-                val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_BARS_MARKS)
+                val toggle = fixture.viewModel.toggle(SettingRowId.BARS_MARKS)
                 assertEquals(UiText.Resource(R.string.settings_marks_bars_title), toggle.title)
                 assertEquals(bars, toggle.checked)
             }
@@ -954,10 +954,10 @@ class SettingsViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK, local = LocalSettings(sheetMarksEnabled = false))
             advanceUntilIdle()
-            val keys = { fixture.viewModel.sections.value.single().items.map { it.key } }
+            val keys = { fixture.viewModel.uiState.value.sections.single().items.map { it.id } }
 
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS), keys())
-            val sheets = fixture.viewModel.toggle(SettingsViewModel.KEY_SHEET_MARKS)
+            assertEquals(listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS), keys())
+            val sheets = fixture.viewModel.toggle(SettingRowId.SHEET_MARKS)
             assertEquals(UiText.Resource(R.string.settings_marks_sheets_title), sheets.title)
             assertFalse(sheets.checked)
 
@@ -965,10 +965,10 @@ class SettingsViewModelTest {
             fixture.repository.sheetMarks.value = true
             advanceUntilIdle()
             assertEquals(
-                listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS, SettingsViewModel.KEY_SHEET_MARKS),
+                listOf(SettingRowId.MYITMO_MARKS, SettingRowId.BARS_MARKS, SettingRowId.SHEET_MARKS),
                 keys()
             )
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SHEET_MARKS).checked)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.SHEET_MARKS).checked)
         }
 
     @Test
@@ -980,12 +980,12 @@ class SettingsViewModelTest {
             fixture.viewModel.onBackgroundWorkChanged()
             advanceUntilIdle()
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SHEET_MARKS, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.SHEET_MARKS, false)
             advanceUntilIdle()
             assertEquals(listOf(false), fixture.markTracking.sheetsCalls)
             assertEquals(emptyList<SettingsEvent>(), events)
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SHEET_MARKS, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.SHEET_MARKS, true)
             advanceUntilIdle()
             assertEquals(listOf(false, true), fixture.markTracking.sheetsCalls)
             assertEquals(listOf(SettingsEvent.RequestNotificationPermission, SettingsEvent.ShowBackgroundWorkHint), events)
@@ -1003,12 +1003,12 @@ class SettingsViewModelTest {
             )
             fixture.viewModel.onBackgroundWorkChanged()
             advanceUntilIdle()
-            val keys = { fixture.viewModel.sections.value.single().items.map { it.key } }
-            assertEquals(SettingsViewModel.KEY_BACKGROUND_WORK, keys().last())
+            val keys = { fixture.viewModel.uiState.value.sections.single().items.map { it.id } }
+            assertEquals(SettingRowId.BACKGROUND_WORK, keys().last())
 
             fixture.repository.sheetMarks.value = false
             advanceUntilIdle()
-            assertFalse(SettingsViewModel.KEY_BACKGROUND_WORK in keys())
+            assertFalse(SettingRowId.BACKGROUND_WORK in keys())
         }
 
     @Test
@@ -1016,7 +1016,7 @@ class SettingsViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK)
             advanceUntilIdle()
-            val footer = { fixture.viewModel.sections.value.single().footer }
+            val footer = { fixture.viewModel.uiState.value.sections.single().footer }
             assertEquals(UiText.Resource(R.string.settings_marks_footer), footer())
 
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
@@ -1035,11 +1035,11 @@ class SettingsViewModelTest {
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
             advanceUntilIdle()
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_MYITMO_MARKS, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.MYITMO_MARKS, false)
             advanceUntilIdle()
             assertEquals(listOf(false), fixture.markTracking.myItmoCalls)
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_BARS_MARKS, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.BARS_MARKS, true)
             advanceUntilIdle()
             assertEquals(listOf(true), fixture.markTracking.barsCalls)
             // Only the switch turned on asked; turning My ITMO off did not.
@@ -1053,14 +1053,14 @@ class SettingsViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.SCHEDULE, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
             advanceUntilIdle()
-            val keys = { fixture.viewModel.sections.value.first().items.map { it.key } }
+            val keys = { fixture.viewModel.uiState.value.sections.first().items.map { it.id } }
             // Not asked yet: the row stays out rather than flash in.
-            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_CHANGES), keys())
+            assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES), keys())
 
             fixture.viewModel.onBackgroundWorkChanged()
             advanceUntilIdle()
-            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_CHANGES, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
-            val row = fixture.viewModel.action(SettingsViewModel.KEY_BACKGROUND_WORK)
+            assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES, SettingRowId.BACKGROUND_WORK), keys())
+            val row = fixture.viewModel.action(SettingRowId.BACKGROUND_WORK)
             assertEquals(UiText.Resource(R.string.settings_background_work_title), row.title)
             assertEquals(UiText.Resource(R.string.background_work_hint), row.description)
             assertEquals(R.drawable.ic_open_in_new, row.trailingIconRes)
@@ -1068,13 +1068,13 @@ class SettingsViewModelTest {
 
             fixture.tracking.enabled.value = false
             advanceUntilIdle()
-            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_CHANGES), keys())
+            assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES), keys())
 
             fixture.tracking.enabled.value = true
             fixture.backgroundWork.unrestricted = true
             fixture.viewModel.onBackgroundWorkChanged()
             advanceUntilIdle()
-            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_CHANGES), keys())
+            assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES), keys())
         }
 
     @Test
@@ -1083,21 +1083,21 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
             fixture.viewModel.onBackgroundWorkChanged()
             advanceUntilIdle()
-            val keys = { fixture.viewModel.sections.value.single().items.map { it.key } }
+            val keys = { fixture.viewModel.uiState.value.sections.single().items.map { it.id } }
             assertEquals(
-                listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK),
+                listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS, SettingRowId.BACKGROUND_WORK),
                 keys()
             )
 
             fixture.repository.myItmoMarks.value = false
             fixture.repository.sheetMarks.value = false
             advanceUntilIdle()
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS), keys())
+            assertEquals(listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS), keys())
 
             fixture.repository.barsMarks.value = false
             advanceUntilIdle()
             assertEquals(
-                listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_BARS_MARKS, SettingsViewModel.KEY_SHEET_MARKS),
+                listOf(SettingRowId.MYITMO_MARKS, SettingRowId.BARS_MARKS, SettingRowId.SHEET_MARKS),
                 keys()
             )
 
@@ -1105,10 +1105,10 @@ class SettingsViewModelTest {
             advanceUntilIdle()
             assertEquals(
                 listOf(
-                    SettingsViewModel.KEY_MYITMO_MARKS,
-                    SettingsViewModel.KEY_BARS_MARKS,
-                    SettingsViewModel.KEY_SHEET_MARKS,
-                    SettingsViewModel.KEY_BACKGROUND_WORK
+                    SettingRowId.MYITMO_MARKS,
+                    SettingRowId.BARS_MARKS,
+                    SettingRowId.SHEET_MARKS,
+                    SettingRowId.BACKGROUND_WORK
                 ),
                 keys()
             )
@@ -1119,20 +1119,20 @@ class SettingsViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
             advanceUntilIdle()
-            val keys = { fixture.viewModel.sections.value.single().items.map { it.key } }
+            val keys = { fixture.viewModel.uiState.value.sections.single().items.map { it.id } }
 
             fixture.viewModel.onBackgroundWorkChanged()
             runCurrent()
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
+            assertEquals(listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS, SettingRowId.BACKGROUND_WORK), keys())
 
             fixture.backgroundWork.unrestricted = true
             advanceTimeBy(999)
             runCurrent()
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS, SettingsViewModel.KEY_BACKGROUND_WORK), keys())
+            assertEquals(listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS, SettingRowId.BACKGROUND_WORK), keys())
 
             advanceTimeBy(1)
             runCurrent()
-            assertEquals(listOf(SettingsViewModel.KEY_MYITMO_MARKS, SettingsViewModel.KEY_SHEET_MARKS), keys())
+            assertEquals(listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS), keys())
         }
 
     @Test
@@ -1141,7 +1141,7 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.SCHEDULE, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
             advanceUntilIdle()
 
-            fixture.viewModel.onAction(SettingsViewModel.KEY_BACKGROUND_WORK)
+            fixture.viewModel.onAction(SettingRowId.BACKGROUND_WORK)
 
             assertEquals(SettingsEvent.OpenBackgroundWorkSettings, fixture.viewModel.events.first())
         }
@@ -1150,11 +1150,11 @@ class SettingsViewModelTest {
     fun `turning a background check on offers the hint once while restricted`() =
         runTest(mainDispatcherRule.dispatcher) {
             val switches = listOf(
-                SettingsPage.SCHEDULE to SettingsViewModel.KEY_SCHEDULE_CHANGES,
-                SettingsPage.RECORDBOOK to SettingsViewModel.KEY_MYITMO_MARKS,
-                SettingsPage.RECORDBOOK to SettingsViewModel.KEY_BARS_MARKS
+                SettingsPage.SCHEDULE to SettingRowId.SCHEDULE_CHANGES,
+                SettingsPage.RECORDBOOK to SettingRowId.MYITMO_MARKS,
+                SettingsPage.RECORDBOOK to SettingRowId.BARS_MARKS
             )
-            for ((page, key) in switches) {
+            for ((page, id) in switches) {
                 val fixture = createFixture(
                     page = page,
                     local = LocalSettings(barsMarksEnabled = false),
@@ -1165,19 +1165,19 @@ class SettingsViewModelTest {
                 fixture.viewModel.onBackgroundWorkChanged()
                 advanceUntilIdle()
 
-                fixture.viewModel.onToggleChanged(key, false)
+                fixture.viewModel.onToggleChanged(id, false)
                 advanceUntilIdle()
-                assertEquals(key, emptyList<SettingsEvent>(), events)
+                assertEquals(id.key, emptyList<SettingsEvent>(), events)
 
-                fixture.viewModel.onToggleChanged(key, true)
+                fixture.viewModel.onToggleChanged(id, true)
                 advanceUntilIdle()
-                assertEquals(key, listOf(SettingsEvent.ShowBackgroundWorkHint), events)
-                assertEquals(key, 1, fixture.repository.hintShownCalls)
+                assertEquals(id.key, listOf(SettingsEvent.ShowBackgroundWorkHint), events)
+                assertEquals(id.key, 1, fixture.repository.hintShownCalls)
 
-                fixture.viewModel.onToggleChanged(key, true)
+                fixture.viewModel.onToggleChanged(id, true)
                 advanceUntilIdle()
-                assertEquals(key, listOf(SettingsEvent.ShowBackgroundWorkHint), events)
-                assertEquals(key, 1, fixture.repository.hintShownCalls)
+                assertEquals(id.key, listOf(SettingsEvent.ShowBackgroundWorkHint), events)
+                assertEquals(id.key, 1, fixture.repository.hintShownCalls)
             }
         }
 
@@ -1189,7 +1189,7 @@ class SettingsViewModelTest {
             unrestricted.viewModel.onNotificationPermissionChanged(granted = true)
             unrestricted.viewModel.onBackgroundWorkChanged()
             advanceUntilIdle()
-            unrestricted.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_CHANGES, true)
+            unrestricted.viewModel.onToggleChanged(SettingRowId.SCHEDULE_CHANGES, true)
             advanceUntilIdle()
             assertEquals(emptyList<SettingsEvent>(), quiet)
             assertEquals(0, unrestricted.repository.hintShownCalls)
@@ -1199,7 +1199,7 @@ class SettingsViewModelTest {
             restricted.viewModel.onNotificationPermissionChanged(granted = false)
             restricted.viewModel.onBackgroundWorkChanged()
             advanceUntilIdle()
-            restricted.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_CHANGES, true)
+            restricted.viewModel.onToggleChanged(SettingRowId.SCHEDULE_CHANGES, true)
             advanceUntilIdle()
             assertEquals(listOf(SettingsEvent.RequestNotificationPermission, SettingsEvent.ShowBackgroundWorkHint), events)
         }
@@ -1209,16 +1209,16 @@ class SettingsViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             val unsupported = createFixture(page = SettingsPage.QR_WIDGET)
             advanceUntilIdle()
-            assertTrue(unsupported.viewModel.allItems().none { it.key == SettingsViewModel.KEY_QR_TILE })
+            assertTrue(unsupported.viewModel.allItems().none { it.id == SettingRowId.QR_TILE })
 
             val fixture = createFixture(page = SettingsPage.QR_WIDGET, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
             advanceUntilIdle()
-            val first = fixture.viewModel.sections.value.first()
+            val first = fixture.viewModel.uiState.value.sections.first()
             assertNull(first.title)
             assertEquals(
                 listOf(
                     SettingItem.Action(
-                        key = SettingsViewModel.KEY_QR_TILE,
+                        id = SettingRowId.QR_TILE,
                         title = UiText.Resource(R.string.settings_qr_tile_title),
                         description = UiText.Resource(R.string.settings_qr_tile_description)
                     )
@@ -1228,7 +1228,7 @@ class SettingsViewModelTest {
 
             fixture.repository.qrTileAdded.value = true
             advanceUntilIdle()
-            assertTrue(fixture.viewModel.allItems().none { it.key == SettingsViewModel.KEY_QR_TILE })
+            assertTrue(fixture.viewModel.allItems().none { it.id == SettingRowId.QR_TILE })
         }
 
     @Test
@@ -1238,7 +1238,7 @@ class SettingsViewModelTest {
             val events = recordEvents(fixture)
             advanceUntilIdle()
 
-            fixture.viewModel.onAction(SettingsViewModel.KEY_QR_TILE)
+            fixture.viewModel.onAction(SettingRowId.QR_TILE)
             advanceUntilIdle()
 
             assertEquals(listOf(SettingsEvent.RequestQrTile), events)
@@ -1275,15 +1275,15 @@ class SettingsViewModelTest {
             val fixture = createFixture(page = SettingsPage.HOME)
             advanceUntilIdle()
 
-            val row = fixture.viewModel.sections.value.single().items[2] as SettingItem.Toggle
-            assertEquals(SettingsViewModel.KEY_HOME_CARD_MARKS, row.key)
+            val row = fixture.viewModel.uiState.value.sections.single().items[2] as SettingItem.Toggle
+            assertEquals(SettingRowId.HOME_CARD_MARKS, row.id)
             assertEquals(UiText.Resource(R.string.settings_home_card_marks_title), row.title)
             assertTrue(row.checked)
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_HOME_CARD_MARKS, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.HOME_CARD_MARKS, false)
             advanceUntilIdle()
             assertEquals(listOf(HomeCardKind.MARKS to false), fixture.repository.homeCardRequests)
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_HOME_CARD_MARKS).checked)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.HOME_CARD_MARKS).checked)
             assertTrue(fixture.markTracking.myItmoCalls.isEmpty())
         }
 
@@ -1295,7 +1295,7 @@ class SettingsViewModelTest {
             fixture.repository.scheduleSportAutoSignWrite = { persisted.await() }
             advanceUntilIdle()
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN, true)
             runCurrent()
 
             assertEquals(listOf(true), fixture.repository.scheduleSportAutoSignRequests)
@@ -1306,7 +1306,7 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             assertTrue(fixture.repository.local.value.showSportAutoSign)
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN).checked)
             assertEquals(1, fixture.widgetRefresher.refreshCount)
         }
 
@@ -1318,12 +1318,12 @@ class SettingsViewModelTest {
             fixture.repository.scheduleSportAutoSignWrite = { throw failure }
             advanceUntilIdle()
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN, true)
             advanceUntilIdle()
 
             assertEquals(listOf(true), fixture.repository.scheduleSportAutoSignRequests)
             assertFalse(fixture.repository.local.value.showSportAutoSign)
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN).checked)
             assertEquals(0, fixture.widgetRefresher.refreshCount)
             assertFalse(fixture.repository.local.value.customServicesEnabled)
             assertTrue(fixture.customServicesRepository.requests.isEmpty())
@@ -1339,15 +1339,15 @@ class SettingsViewModelTest {
                 localInitiallyAvailable = false
             )
             advanceUntilIdle()
-            assertTrue(fixture.viewModel.sections.value.isEmpty())
+            assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
 
             fixture.repository.publishLocalSettings()
             advanceUntilIdle()
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN).checked)
 
             fixture.repository.local.value = fixture.repository.local.value.copy(showSportAutoSign = false)
             advanceUntilIdle()
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_SCHEDULE_SPORT_AUTO_SIGN).checked)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN).checked)
             assertTrue(fixture.repository.scheduleSportAutoSignRequests.isEmpty())
             assertEquals(0, fixture.widgetRefresher.refreshCount)
         }
@@ -1361,14 +1361,14 @@ class SettingsViewModelTest {
         )
         runCurrent()
         assertEquals(1, fixture.repository.refreshSharingCount)
-        assertTrue(fixture.viewModel.sections.value.isEmpty())
+        assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
         advanceTimeBy(299)
         runCurrent()
-        assertTrue(fixture.viewModel.sections.value.isEmpty())
+        assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
         advanceTimeBy(1)
         runCurrent()
-        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
-        assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
+        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
+        assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingRowId.SPORT_SHARING).selectedOptionKey)
     }
 
     @Test
@@ -1382,10 +1382,10 @@ class SettingsViewModelTest {
         runCurrent()
         advanceTimeBy(799)
         runCurrent()
-        assertTrue(fixture.viewModel.sections.value.isEmpty())
+        assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
         advanceTimeBy(1)
         runCurrent()
-        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
     }
 
     @Test
@@ -1396,20 +1396,20 @@ class SettingsViewModelTest {
             sharing = SharingSettingsState.Error
         )
         runCurrent()
-        assertTrue(fixture.viewModel.sections.value.isEmpty())
+        assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
         advanceTimeBy(300)
         runCurrent()
-        assertTrue(fixture.viewModel.action(SettingsViewModel.KEY_RETRY_PRIVACY).enabled)
-        fixture.viewModel.onAction(SettingsViewModel.KEY_RETRY_PRIVACY)
+        assertTrue(fixture.viewModel.action(SettingRowId.RETRY_PRIVACY).enabled)
+        fixture.viewModel.onAction(SettingRowId.RETRY_PRIVACY)
         runCurrent()
         fixture.repository.sharing.value = SharingSettingsState.Content(SharingSettings(SharingVisibility.NOBODY, SharingVisibility.FRIENDS))
         runCurrent()
         advanceTimeBy(299)
         runCurrent()
-        assertTrue(fixture.viewModel.sections.value.isEmpty())
+        assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
         advanceTimeBy(1)
         runCurrent()
-        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
+        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingRowId.SPORT_SHARING).selectedOptionKey)
     }
 
     @Test
@@ -1423,11 +1423,11 @@ class SettingsViewModelTest {
         advanceTimeBy(50)
         fixture.repository.local.value = LocalSettings(customServicesEnabled = false)
         runCurrent()
-        assertTrue(fixture.viewModel.sections.value.isNotEmpty())
-        assertEquals(null, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+        assertTrue(fixture.viewModel.uiState.value.sections.isNotEmpty())
+        assertEquals(null, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
         assertEquals(SharingSettingsState.Disabled, fixture.repository.sharing.value)
         advanceUntilIdle()
-        assertEquals(null, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+        assertEquals(null, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
     }
 
     @Test
@@ -1445,10 +1445,10 @@ class SettingsViewModelTest {
         runCurrent()
         advanceTimeBy(299)
         runCurrent()
-        assertTrue(fixture.viewModel.sections.value.isEmpty())
+        assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
         advanceTimeBy(1)
         runCurrent()
-        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+        assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
     }
 
     @Test
@@ -1461,26 +1461,26 @@ class SettingsViewModelTest {
             )
             advanceUntilIdle()
             val choices = fixture.viewModel.allItems().filterIsInstance<SettingItem.Choice>()
-            assertEquals(listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING, SettingsViewModel.KEY_FRIENDS_SHARING), choices.map { it.key })
+            assertEquals(listOf(SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING, SettingRowId.FRIENDS_SHARING), choices.map { it.id })
             assertEquals(listOf(UiText.Resource(R.string.settings_schedule_sharing_title), UiText.Resource(R.string.settings_sport_sharing_title), UiText.Resource(R.string.settings_friends_sharing_title)), choices.map { it.title })
             choices.forEach { choice ->
                 assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), choice.options.map { it.key })
                 assertEquals(listOf(R.string.settings_privacy_all, R.string.settings_privacy_friends, R.string.settings_privacy_nobody).map(UiText::Resource), choice.options.map { it.label })
-                val isFriends = choice.key == SettingsViewModel.KEY_FRIENDS_SHARING
+                val isFriends = choice.id == SettingRowId.FRIENDS_SHARING
                 assertEquals((if (isFriends) SharingVisibility.ALL else SharingVisibility.FRIENDS).name, choice.selectedOptionKey)
                 assertEquals(UiText.Resource(if (isFriends) R.string.settings_privacy_all else R.string.settings_privacy_friends), choice.value)
                 assertTrue(choice.enabled)
             }
-            assertEquals(UiText.Resource(R.string.settings_privacy_footer), fixture.viewModel.sections.value.single().footer)
+            assertEquals(UiText.Resource(R.string.settings_privacy_footer), fixture.viewModel.uiState.value.sections.single().footer)
 
             fixture.repository.sharing.value = SharingSettingsState.Content(
                 SharingSettings(SharingVisibility.ALL, SharingVisibility.NOBODY)
             )
             advanceUntilIdle()
-            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
-            assertEquals(UiText.Resource(R.string.settings_privacy_all), fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).value)
-            assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
-            assertEquals(UiText.Resource(R.string.settings_privacy_nobody), fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).value)
+            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
+            assertEquals(UiText.Resource(R.string.settings_privacy_all), fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).value)
+            assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingRowId.SPORT_SHARING).selectedOptionKey)
+            assertEquals(UiText.Resource(R.string.settings_privacy_nobody), fixture.viewModel.choice(SettingRowId.SPORT_SHARING).value)
         }
 
     @Test
@@ -1492,19 +1492,19 @@ class SettingsViewModelTest {
                 sharing = SharingSettingsState.Content(SharingSettings())
             )
             advanceUntilIdle()
-            fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SCHEDULE_SHARING, SharingVisibility.ALL.name)
+            fixture.viewModel.onChoiceChanged(SettingRowId.SCHEDULE_SHARING, SharingVisibility.ALL.name)
             advanceUntilIdle()
             assertEquals(listOf(SharingVisibility.ALL), fixture.repository.scheduleSharingRequests)
             assertTrue(fixture.repository.sportSharingRequests.isEmpty())
-            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
-            assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
+            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
+            assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(SettingRowId.SPORT_SHARING).selectedOptionKey)
 
-            fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SPORT_SHARING, SharingVisibility.NOBODY.name)
+            fixture.viewModel.onChoiceChanged(SettingRowId.SPORT_SHARING, SharingVisibility.NOBODY.name)
             advanceUntilIdle()
             assertEquals(listOf(SharingVisibility.ALL), fixture.repository.scheduleSharingRequests)
             assertEquals(listOf(SharingVisibility.NOBODY), fixture.repository.sportSharingRequests)
-            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
-            assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).selectedOptionKey)
+            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
+            assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingRowId.SPORT_SHARING).selectedOptionKey)
             assertEquals(0, fixture.widgetRefresher.refreshCount)
         }
 
@@ -1517,8 +1517,8 @@ class SettingsViewModelTest {
                 sharing = SharingSettingsState.Content(SharingSettings())
             )
             advanceUntilIdle()
-            fixture.viewModel.onChoiceChanged("unknown", SharingVisibility.ALL.name)
-            for (key in listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING)) {
+            fixture.viewModel.onChoiceChanged(SettingRowId.VERSION, SharingVisibility.ALL.name)
+            for (key in listOf(SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING)) {
                 fixture.viewModel.onChoiceChanged(key, "unknown")
                 fixture.viewModel.onChoiceChanged(key, "all")
                 fixture.viewModel.onChoiceChanged(key, SharingVisibility.FRIENDS.name)
@@ -1545,14 +1545,14 @@ class SettingsViewModelTest {
                     sharing = sharing
                 )
                 advanceUntilIdle()
-                for (key in listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING)) {
+                for (key in listOf(SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING)) {
                     fixture.viewModel.onChoiceChanged(key, SharingVisibility.ALL.name)
                 }
                 advanceUntilIdle()
                 assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
                 assertTrue(fixture.repository.sportSharingRequests.isEmpty())
                 if (sharing == SharingSettingsState.Loading) {
-                    assertTrue(fixture.viewModel.sections.value.isEmpty())
+                    assertTrue(fixture.viewModel.uiState.value.sections.isEmpty())
                 } else if (sharing !is SharingSettingsState.Content) {
                     fixture.viewModel.allItems().filterIsInstance<SettingItem.Choice>().forEach { choice ->
                         assertFalse(choice.enabled)
@@ -1573,8 +1573,8 @@ class SettingsViewModelTest {
                     sharing = SharingSettingsState.Content(SharingSettings())
                 )
                 runCurrent()
-                fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SCHEDULE_SHARING, SharingVisibility.ALL.name)
-                fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SPORT_SHARING, SharingVisibility.ALL.name)
+                fixture.viewModel.onChoiceChanged(SettingRowId.SCHEDULE_SHARING, SharingVisibility.ALL.name)
+                fixture.viewModel.onChoiceChanged(SettingRowId.SPORT_SHARING, SharingVisibility.ALL.name)
                 advanceUntilIdle()
                 assertTrue(fixture.repository.scheduleSharingRequests.isEmpty())
                 assertTrue(fixture.repository.sportSharingRequests.isEmpty())
@@ -1592,13 +1592,13 @@ class SettingsViewModelTest {
             val saved = CompletableDeferred<Unit>()
             fixture.repository.sharingWrite = { saved.await() }
             advanceUntilIdle()
-            fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SCHEDULE_SHARING, SharingVisibility.ALL.name)
+            fixture.viewModel.onChoiceChanged(SettingRowId.SCHEDULE_SHARING, SharingVisibility.ALL.name)
             // No collector has run yet: even a second callback in the same frame is rejected.
-            fixture.viewModel.onChoiceChanged(SettingsViewModel.KEY_SPORT_SHARING, SharingVisibility.NOBODY.name)
+            fixture.viewModel.onChoiceChanged(SettingRowId.SPORT_SHARING, SharingVisibility.NOBODY.name)
             runCurrent()
             assertEquals(listOf(SharingVisibility.ALL), fixture.repository.scheduleSharingRequests)
             assertTrue(fixture.repository.sportSharingRequests.isEmpty())
-            for (key in listOf(SettingsViewModel.KEY_SCHEDULE_SHARING, SettingsViewModel.KEY_SPORT_SHARING)) {
+            for (key in listOf(SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING)) {
                 assertFalse(fixture.viewModel.choice(key).enabled)
                 assertEquals(SharingVisibility.FRIENDS.name, fixture.viewModel.choice(key).selectedOptionKey)
                 fixture.viewModel.onChoiceChanged(key, SharingVisibility.NOBODY.name)
@@ -1609,9 +1609,9 @@ class SettingsViewModelTest {
 
             saved.complete(Unit)
             advanceUntilIdle()
-            assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).enabled)
-            assertTrue(fixture.viewModel.choice(SettingsViewModel.KEY_SPORT_SHARING).enabled)
-            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingsViewModel.KEY_SCHEDULE_SHARING).selectedOptionKey)
+            assertTrue(fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).enabled)
+            assertTrue(fixture.viewModel.choice(SettingRowId.SPORT_SHARING).enabled)
+            assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
         }
 
     @Test
@@ -1619,15 +1619,15 @@ class SettingsViewModelTest {
         val fixture = createFixture(page = SettingsPage.SCHEDULE)
         advanceUntilIdle()
 
-        val calendar = fixture.viewModel.sections.value.last()
+        val calendar = fixture.viewModel.uiState.value.sections.last()
         assertEquals(null, calendar.title)
         assertEquals(null, calendar.footer)
-        assertEquals(listOf(SettingsViewModel.KEY_CALENDAR_SYNC, SettingsViewModel.KEY_ICS_EXPORT), calendar.items.map { it.key })
-        val toggle = fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC)
+        assertEquals(listOf(SettingRowId.CALENDAR_SYNC, SettingRowId.ICS_EXPORT), calendar.items.map { it.id })
+        val toggle = fixture.viewModel.toggle(SettingRowId.CALENDAR_SYNC)
         assertEquals(UiText.Resource(R.string.settings_calendar_sync_title), toggle.title)
         assertEquals(UiText.Resource(R.string.settings_calendar_sync_description), toggle.description)
         assertFalse(toggle.checked)
-        val export = fixture.viewModel.action(SettingsViewModel.KEY_ICS_EXPORT)
+        val export = fixture.viewModel.action(SettingRowId.ICS_EXPORT)
         assertEquals(UiText.Resource(R.string.settings_ics_export_title), export.title)
         assertEquals(UiText.Resource(R.string.settings_ics_export_description), export.description)
         assertEquals(R.drawable.ic_download, export.trailingIconRes)
@@ -1635,10 +1635,10 @@ class SettingsViewModelTest {
 
         fixture.calendarSync.state.value = CalendarSyncState(enabled = true)
         advanceUntilIdle()
-        assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
+        assertTrue(fixture.viewModel.toggle(SettingRowId.CALENDAR_SYNC).checked)
         assertEquals(
-            listOf(SettingsViewModel.KEY_CALENDAR_SYNC, SettingsViewModel.KEY_ICS_EXPORT),
-            fixture.viewModel.sections.value.last().items.map { it.key }
+            listOf(SettingRowId.CALENDAR_SYNC, SettingRowId.ICS_EXPORT),
+            fixture.viewModel.uiState.value.sections.last().items.map { it.id }
         )
     }
 
@@ -1650,13 +1650,13 @@ class SettingsViewModelTest {
 
         assertEquals(
             UiText.Resource(R.string.settings_calendar_sync_no_permission),
-            fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).description
+            fixture.viewModel.toggle(SettingRowId.CALENDAR_SYNC).description
         )
         sync.state.value = CalendarSyncState(problem = CalendarSyncProblem.CALENDAR_MISSING)
         advanceUntilIdle()
         assertEquals(
             UiText.Resource(R.string.settings_calendar_sync_calendar_missing),
-            fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).description
+            fixture.viewModel.toggle(SettingRowId.CALENDAR_SYNC).description
         )
     }
 
@@ -1668,7 +1668,7 @@ class SettingsViewModelTest {
             val events = recordEvents(fixture)
             advanceUntilIdle()
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.CALENDAR_SYNC, true)
             advanceUntilIdle()
             assertEquals(listOf<SettingsEvent>(SettingsEvent.RequestCalendarAccess), events)
             assertEquals(0, sync.enables)
@@ -1676,9 +1676,9 @@ class SettingsViewModelTest {
             fixture.viewModel.onCalendarAccessGranted()
             advanceUntilIdle()
             assertEquals(1, sync.enables)
-            assertTrue(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
+            assertTrue(fixture.viewModel.toggle(SettingRowId.CALENDAR_SYNC).checked)
 
-            fixture.viewModel.onToggleChanged(SettingsViewModel.KEY_CALENDAR_SYNC, false)
+            fixture.viewModel.onToggleChanged(SettingRowId.CALENDAR_SYNC, false)
             advanceUntilIdle()
             assertEquals(1, sync.disables)
             assertEquals(1, events.size)
@@ -1699,7 +1699,7 @@ class SettingsViewModelTest {
             fixture.viewModel.onCalendarAccessGranted()
             advanceUntilIdle()
             assertEquals(expected, events.last())
-            assertFalse(fixture.viewModel.toggle(SettingsViewModel.KEY_CALENDAR_SYNC).checked)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.CALENDAR_SYNC).checked)
         }
     }
 
@@ -1709,7 +1709,7 @@ class SettingsViewModelTest {
         val events = recordEvents(fixture)
         advanceUntilIdle()
 
-        fixture.viewModel.onAction(SettingsViewModel.KEY_ICS_EXPORT)
+        fixture.viewModel.onAction(SettingRowId.ICS_EXPORT)
 
         assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenIcsExport), events)
     }
@@ -1720,7 +1720,7 @@ class SettingsViewModelTest {
         val fixture = createFixture(page = SettingsPage.RECORDBOOK, calendarSync = sync)
         advanceUntilIdle()
 
-        assertTrue(fixture.viewModel.allItems().none { it.key.startsWith("calendar") || it.key == SettingsViewModel.KEY_ICS_EXPORT })
+        assertTrue(fixture.viewModel.allItems().none { it.id.key.startsWith("calendar") || it.id == SettingRowId.ICS_EXPORT })
     }
 
     private fun createFixture(
@@ -1770,16 +1770,16 @@ class SettingsViewModelTest {
     }
 
     private fun SettingsViewModel.allItems(): List<SettingItem> =
-        sections.value.flatMap(SettingSection::items)
+        uiState.value.sections.flatMap(SettingSection::items)
 
-    private fun SettingsViewModel.toggle(key: String): SettingItem.Toggle =
-        allItems().filterIsInstance<SettingItem.Toggle>().single { it.key == key }
+    private fun SettingsViewModel.toggle(id: SettingRowId): SettingItem.Toggle =
+        allItems().filterIsInstance<SettingItem.Toggle>().single { it.id == id }
 
-    private fun SettingsViewModel.choice(key: String): SettingItem.Choice =
-        allItems().filterIsInstance<SettingItem.Choice>().single { it.key == key }
+    private fun SettingsViewModel.choice(id: SettingRowId): SettingItem.Choice =
+        allItems().filterIsInstance<SettingItem.Choice>().single { it.id == id }
 
-    private fun SettingsViewModel.action(key: String): SettingItem.Action =
-        allItems().filterIsInstance<SettingItem.Action>().single { it.key == key }
+    private fun SettingsViewModel.action(id: SettingRowId): SettingItem.Action =
+        allItems().filterIsInstance<SettingItem.Action>().single { it.id == id }
 
     private data class Fixture(
         val viewModel: SettingsViewModel,

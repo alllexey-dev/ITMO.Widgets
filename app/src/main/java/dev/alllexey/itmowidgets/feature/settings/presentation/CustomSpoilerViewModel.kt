@@ -3,17 +3,14 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import javax.inject.Inject
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-
-data class CustomSpoilerUiState(val configured: Boolean? = null, val busy: Boolean = false)
-
-enum class CustomSpoilerEvent { SAVED, RESET, FAILED }
 
 @HiltViewModel
 class CustomSpoilerViewModel @Inject constructor(
@@ -21,9 +18,9 @@ class CustomSpoilerViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val mutableState = MutableStateFlow(CustomSpoilerUiState())
-    val state = mutableState.asStateFlow()
-    private val eventChannel = Channel<CustomSpoilerEvent>(Channel.BUFFERED)
-    val events = eventChannel.receiveAsFlow()
+    val uiState: StateFlow<CustomSpoilerUiState> = mutableState.asStateFlow()
+    private val eventQueue = EventQueue<CustomSpoilerEvent>()
+    val events: Flow<CustomSpoilerEvent> = eventQueue.events
 
     init {
         viewModelScope.launch {
@@ -48,9 +45,9 @@ class CustomSpoilerViewModel @Inject constructor(
             try {
                 if (update()) {
                     mutableState.value = mutableState.value.copy(configured = configured)
-                    eventChannel.send(if (configured) CustomSpoilerEvent.SAVED else CustomSpoilerEvent.RESET)
+                    eventQueue.send(if (configured) CustomSpoilerEvent.SAVED else CustomSpoilerEvent.RESET)
                 } else {
-                    eventChannel.send(CustomSpoilerEvent.FAILED)
+                    eventQueue.send(CustomSpoilerEvent.FAILED)
                 }
             } finally {
                 val imageExists = mutableState.value.configured ?: repository.hasImage()

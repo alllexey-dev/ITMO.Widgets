@@ -51,7 +51,7 @@ class IcsExportViewModelTest {
                     )
                 )
             ),
-            viewModel.state.value
+            viewModel.uiState.value
         )
     }
 
@@ -63,12 +63,12 @@ class IcsExportViewModelTest {
 
         viewModel.choose(IcsRangeKind.WEEK)
         runCurrent()
-        assertEquals(IcsExportUiState.Preparing, viewModel.state.value)
+        assertEquals(IcsExportUiState.Preparing, viewModel.uiState.value)
         export.gate!!.complete(Unit)
         advanceUntilIdle()
 
         assertEquals(listOf<ScheduleExportRange>(ScheduleExportRange.Week), export.ranges)
-        assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("2–8 октября")), viewModel.state.value)
+        assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("2–8 октября")), viewModel.uiState.value)
     }
 
     @Test
@@ -82,7 +82,7 @@ class IcsExportViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf<ScheduleExportRange>(ScheduleExportRange.Custom(kotlinx.datetime.LocalDate(2026, 9, 28), kotlinx.datetime.LocalDate(2026, 10, 4))), export.ranges)
-        assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("28 сентября – 4 октября")), viewModel.state.value)
+        assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("28 сентября – 4 октября")), viewModel.uiState.value)
     }
 
     @Test
@@ -91,10 +91,10 @@ class IcsExportViewModelTest {
 
         viewModel.choose(IcsRangeKind.TWO_WEEKS)
         advanceUntilIdle()
-        assertEquals(IcsExportUiState.Empty, viewModel.state.value)
+        assertEquals(IcsExportUiState.Empty, viewModel.uiState.value)
 
         viewModel.chooseAnother()
-        assertEquals(IcsRangeKind.WEEK, (viewModel.state.value as IcsExportUiState.Choose).options.first().kind)
+        assertEquals(IcsRangeKind.WEEK, (viewModel.uiState.value as IcsExportUiState.Choose).options.first().kind)
     }
 
     @Test
@@ -104,13 +104,13 @@ class IcsExportViewModelTest {
 
         viewModel.choose(IcsRangeKind.SEMESTER)
         advanceUntilIdle()
-        assertEquals(IcsExportUiState.Failed(AppError.Network), viewModel.state.value)
+        assertEquals(IcsExportUiState.Failed(AppError.Network), viewModel.uiState.value)
 
         export.result = AppResult.Success(FILE)
         viewModel.retry()
         advanceUntilIdle()
         assertEquals(listOf<ScheduleExportRange>(ScheduleExportRange.Semester, ScheduleExportRange.Semester), export.ranges)
-        assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("2 октября 2026 – 31 января 2027")), viewModel.state.value)
+        assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("2 октября 2026 – 31 января 2027")), viewModel.uiState.value)
     }
 
     @Test
@@ -121,7 +121,7 @@ class IcsExportViewModelTest {
 
         val recreated = IcsExportViewModel(export, Today, saved)
 
-        assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("2–8 октября")), recreated.state.value)
+        assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("2–8 октября")), recreated.uiState.value)
         assertEquals(1, export.ranges.size)
     }
 
@@ -136,7 +136,7 @@ class IcsExportViewModelTest {
         val recreated = IcsExportViewModel(export, Today, saved)
         advanceUntilIdle()
 
-        assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("2–8 октября")), recreated.state.value)
+        assertEquals(IcsExportUiState.Ready(FILE, UiText.Dynamic("2–8 октября")), recreated.uiState.value)
     }
 
     @Test

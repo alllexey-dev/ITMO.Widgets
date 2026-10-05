@@ -40,6 +40,7 @@ import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import dev.alllexey.itmowidgets.feature.settings.presentation.ChoiceOption
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
@@ -51,6 +52,7 @@ import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
@@ -96,7 +98,7 @@ class SettingsRendererTest {
 
     @Test
     fun unknownAndDisabledToggleRowsCannotChangeState() = withPreview { activity ->
-        val callbacks = mutableListOf<Pair<String, Boolean>>()
+        val callbacks = mutableListOf<Pair<SettingRowId, Boolean>>()
         val renderer = renderer(activity, onToggle = { key, value -> callbacks += key to value })
 
         for (item in listOf(toggle().copy(stateKnown = false), toggle().copy(enabled = false))) {
@@ -114,7 +116,7 @@ class SettingsRendererTest {
 
     @Test
     fun stateRestorationDoesNotEmitUserActionsAndTheWholeRowTogglesOnce() = withPreview { activity ->
-        val callbacks = mutableListOf<Pair<String, Boolean>>()
+        val callbacks = mutableListOf<Pair<SettingRowId, Boolean>>()
         val renderer = renderer(activity, onToggle = { key, value -> callbacks += key to value })
         val section = SettingSection(null, listOf(toggle(true)))
         renderer.render(listOf(section))
@@ -126,7 +128,7 @@ class SettingsRendererTest {
         val row = rowWithTitle(activity, "Расписание")
         assertTrue(row.isClickable)
         row.performClick()
-        assertEquals(listOf("toggle" to false), callbacks)
+        assertEquals(listOf(SettingRowId.SCHEDULE_CHANGES to false), callbacks)
 
         renderer.render(listOf(section))
         assertSame(switch, activity.sectionsContainer.findViewById<MaterialSwitch>(R.id.setting_switch))
@@ -138,9 +140,9 @@ class SettingsRendererTest {
     fun navigationUsesUpdatedPageAndDisabledRowsIgnoreActions() = withPreview { activity ->
         val navigated = mutableListOf<SettingsPage>()
         val choices = mutableListOf<SettingItem.Choice>()
-        val actions = mutableListOf<String>()
+        val actions = mutableListOf<SettingRowId>()
         val renderer = renderer(activity, onNavigate = navigated::add, onChoice = choices::add, onAction = actions::add)
-        val navigation = SettingItem.Navigation("navigation", text("Открыть"), page = SettingsPage.SERVICES)
+        val navigation = SettingItem.Navigation(SettingRowId.PAGE_SERVICES, text("Открыть"), page = SettingsPage.SERVICES)
         renderer.render(listOf(SettingSection(null, listOf(navigation))))
         val originalRow = rowWithTitle(activity, "Открыть")
         renderer.render(listOf(SettingSection(null, listOf(navigation.copy(page = SettingsPage.PRIVACY)))))
@@ -152,7 +154,7 @@ class SettingsRendererTest {
             listOf(
                 SettingSection(
                     null,
-                    listOf(navigation.copy(enabled = false), choice().copy(enabled = false), SettingItem.Action("action", text("Действие"), enabled = false))
+                    listOf(navigation.copy(enabled = false), choice().copy(enabled = false), SettingItem.Action(SettingRowId.REFRESH_WIDGETS, text("Действие"), enabled = false))
                 )
             )
         )
@@ -166,7 +168,7 @@ class SettingsRendererTest {
     fun hierarchyRestorationCannotOverwriteRepositorySwitchValues() = withPreview { activity ->
         val renderer = renderer(activity)
         val first = toggle(true)
-        val second = toggle().copy(key = "second", title = text("Спорт"))
+        val second = toggle().copy(id = SettingRowId.SPORT_TEACHER_FILTER, title = text("Спорт"))
         renderer.render(listOf(SettingSection(null, listOf(first, second))))
         val hierarchy = SparseArray<Parcelable>()
         activity.sectionsContainer.saveHierarchyState(hierarchy)
@@ -180,7 +182,7 @@ class SettingsRendererTest {
     @Test
     fun nonzeroScrollRestoresWhenRowsArriveAfterActivityRecreation() {
         val sections = listOf(SettingSection(null, (1..30).map { index ->
-            toggle(index % 2 == 0).copy(key = "setting-$index", title = text("Настройка $index"))
+            toggle(index % 2 == 0).copy(id = SettingRowId.entries[index - 1], title = text("Настройка $index"))
         }))
         ActivityScenario.launch<SettingsPreviewActivity>(previewIntent()).use { scenario ->
             scenario.onActivity {
@@ -353,7 +355,7 @@ class SettingsRendererTest {
             scenario.onActivity { activity ->
                 val choices = mutableListOf<SettingItem.Choice>()
                 val renderer = renderer(activity, onChoice = choices::add)
-                renderer.render(viewModel.sections.value)
+                renderer.render(viewModel.uiState.value.sections)
                 val schedule = rowWithTitle(activity, activity.getString(R.string.settings_schedule_sharing_title))
                 val sport = rowWithTitle(activity, activity.getString(R.string.settings_sport_sharing_title))
                 assertEquals(activity.getString(R.string.settings_privacy_friends), schedule.findViewById<TextView>(R.id.setting_value).text.toString())
@@ -363,7 +365,7 @@ class SettingsRendererTest {
                 assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), choices.single().options.map { it.key })
                 assertEquals(listOf("Все", "Друзья", "Никто"), choices.single().options.map { it.label.resolve(activity) })
                 assertEquals(SharingVisibility.FRIENDS.name, choices.single().selectedOptionKey)
-                val locked = viewModel.sections.value.map { section ->
+                val locked = viewModel.uiState.value.sections.map { section ->
                     section.copy(items = section.items.map { item ->
                         if (item is SettingItem.Choice) item.copy(enabled = false) else item
                     })
@@ -422,7 +424,7 @@ class SettingsRendererTest {
             emptyList()
         } else runBlocking {
             withTimeout(5_000) {
-                viewModel.sections.first { sections ->
+                viewModel.uiState.map { it.sections }.first { sections ->
                     sections.isNotEmpty() && sections.flatMap(SettingSection::items)
                         .filterIsInstance<SettingItem.Action>()
                         .none { it.value == UiText.Resource(R.string.settings_notifications_checking) }
@@ -440,10 +442,10 @@ class SettingsRendererTest {
 
     private fun renderer(
         activity: SettingsPreviewActivity,
-        onToggle: (String, Boolean) -> Unit = { _, _ -> },
+        onToggle: (SettingRowId, Boolean) -> Unit = { _, _ -> },
         onChoice: (SettingItem.Choice) -> Unit = {},
         onNavigate: (SettingsPage) -> Unit = {},
-        onAction: (String) -> Unit = {}
+        onAction: (SettingRowId) -> Unit = {}
     ): SettingsRenderer {
         activity.findViewById<View>(R.id.settings_scroll).visibility = View.VISIBLE
         return SettingsRenderer(activity.sectionsContainer, onToggle, onChoice, onNavigate, onAction)
@@ -484,10 +486,10 @@ class SettingsRendererTest {
             SystemClock.sleep(300)
         }
 
-    private fun toggle(checked: Boolean = false) = SettingItem.Toggle("toggle", text("Расписание"), checked = checked)
+    private fun toggle(checked: Boolean = false) = SettingItem.Toggle(SettingRowId.SCHEDULE_CHANGES, text("Расписание"), checked = checked)
 
     private fun choice() = SettingItem.Choice(
-        "choice", text("Анимация"), text("Плавное исчезновение"),
+        SettingRowId.QR_ANIMATION, text("Анимация"), text("Плавное исчезновение"),
         listOf(ChoiceOption("fade", text("Плавное исчезновение")), ChoiceOption("circle", text("Круг"))), "fade"
     )
 

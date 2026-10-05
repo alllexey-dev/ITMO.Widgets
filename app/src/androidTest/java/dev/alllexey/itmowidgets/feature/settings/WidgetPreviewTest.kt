@@ -53,6 +53,7 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsPreviewActivity
@@ -69,8 +70,10 @@ import java.time.Instant
 import java.time.ZoneOffset
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.*
@@ -86,7 +89,7 @@ class WidgetPreviewTest {
     @Test
     fun warmPreviewBindsSynchronouslyAndSpoilerRevisionInvalidatesCachedImages() = withScreen(SettingsPage.QR_WIDGET) { screen ->
         screen.scenario.onActivity { activity ->
-            val settings = checkNotNull(screen.vm.previewSettings.value)
+            val settings = checkNotNull(screen.vm.uiState.value.previewSettings)
             val another = screen.factory.create(activity, activity.lifecycleScope, settings)
             assertNotNull("Warm preview must have an image before yielding the main thread", another.view.findViewById<ImageView>(R.id.qr_code_image).drawable)
             assertSame(screen.qrBitmap(), (another.view.findViewById<ImageView>(R.id.qr_code_image).drawable as BitmapDrawable).bitmap)
@@ -107,21 +110,21 @@ class WidgetPreviewTest {
         screen.scenario.onActivity {
             original = screen.preview.view
             assertEquals(it.getString(R.string.widget_preview_subject_programming), original.findViewById<TextView>(R.id.title).text)
-            screen.toggle(SettingsViewModel.KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY)
+            screen.toggle(SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY)
         }
         settle()
         screen.scenario.onActivity {
             assertSame(original, screen.preview.view)
             assertEquals(it.getString(R.string.widget_preview_subject_math), original.findViewById<TextView>(R.id.title).text)
             assertTrue(original.findViewById<TextView>(R.id.secondary_text).text.contains(it.getString(R.string.widget_preview_teacher)))
-            screen.toggle(SettingsViewModel.KEY_COMPACT_WIDGET_HIDE_TEACHER)
+            screen.toggle(SettingRowId.COMPACT_WIDGET_HIDE_TEACHER)
         }
         settle()
         screen.scenario.onActivity {
             assertFalse(original.findViewById<TextView>(R.id.secondary_text).text.contains(it.getString(R.string.widget_preview_teacher)))
             assertNull(original.findViewById<ListView>(R.id.lesson_list))
             // Two switches and the text size choice.
-            assertEquals(3, screen.vm.sections.value.flatMap { section -> section.items }.size)
+            assertEquals(3, screen.vm.uiState.value.sections.flatMap { section -> section.items }.size)
         }
     }
 
@@ -131,7 +134,7 @@ class WidgetPreviewTest {
         var previousCount = 0
         screen.scenario.onActivity {
             previousCount = original.findViewById<ListView>(R.id.lesson_list).adapter.count
-            screen.toggle(SettingsViewModel.KEY_FULL_WIDGET_HIDE_PAST)
+            screen.toggle(SettingRowId.FULL_WIDGET_HIDE_PAST)
         }
         settle()
         screen.scenario.onActivity {
@@ -150,11 +153,11 @@ class WidgetPreviewTest {
                 original.findViewById<TextView>(R.id.preview_time).text)
             assertTrue("Evening choice must be retained in preview state",
                 checkNotNull(screen.preview.saveState()).getBoolean("evening"))
-            screen.toggle(SettingsViewModel.KEY_FULL_WIDGET_SHOW_TOMORROW)
+            screen.toggle(SettingRowId.FULL_WIDGET_SHOW_TOMORROW)
         }
         settle()
         screen.scenario.onActivity {
-            val settings = screen.vm.previewSettings.value as dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings.Schedule
+            val settings = screen.vm.uiState.value.previewSettings as dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings.Schedule
             assertTrue("Tomorrow preference must be persisted before preview rendering",
                 settings.appearance.full.showTomorrowWhenTodayIsOver)
             val list = original.findViewById<ListView>(R.id.lesson_list)
@@ -181,13 +184,13 @@ class WidgetPreviewTest {
         settle()
         screen.scenario.onActivity {
             assertFalse(cover.sameAs(screen.qrBitmap()))
-            screen.toggle(SettingsViewModel.KEY_QR_DYNAMIC_COLORS)
-            screen.vm.onChoiceChanged(SettingsViewModel.KEY_QR_ANIMATION, QrAnimationType.NONE.name)
+            screen.toggle(SettingRowId.QR_DYNAMIC_COLORS)
+            screen.vm.onChoiceChanged(SettingRowId.QR_ANIMATION, QrAnimationType.NONE.name)
         }
         settle()
         screen.scenario.onActivity {
             screen.preview.view.findViewById<View>(R.id.qr_code_image).performClick()
-            screen.toggle(SettingsViewModel.KEY_QR_SPOILER)
+            screen.toggle(SettingRowId.QR_SPOILER)
         }
         settle()
         screen.scenario.onActivity {
@@ -208,7 +211,7 @@ class WidgetPreviewTest {
         file.outputStream().use { custom.compress(Bitmap.CompressFormat.PNG, 100, it) }
         custom.recycle()
         screen.scenario.onActivity {
-            screen.toggle(SettingsViewModel.KEY_QR_SPOILER)
+            screen.toggle(SettingRowId.QR_SPOILER)
             screen.preview.refresh()
         }
         settle()
@@ -216,7 +219,7 @@ class WidgetPreviewTest {
             assertEquals(420, screen.qrBitmap().width)
             assertEquals(420, screen.qrBitmap().height)
             assertEquals(Color.MAGENTA, screen.qrBitmap().getPixel(210, 210))
-            screen.vm.onChoiceChanged(SettingsViewModel.KEY_QR_ANIMATION, QrAnimationType.FADE.name)
+            screen.vm.onChoiceChanged(SettingRowId.QR_ANIMATION, QrAnimationType.FADE.name)
         }
         settle()
         screen.scenario.onActivity { screen.preview.stop() }
@@ -229,7 +232,7 @@ class WidgetPreviewTest {
     @Test
     fun qrAnimationFramesKeepTheirBoundsAndReleaseOnClose() = withScreen(SettingsPage.QR_WIDGET) { screen ->
         for (type in QrAnimationType.entries) {
-            screen.scenario.onActivity { screen.vm.onChoiceChanged(SettingsViewModel.KEY_QR_ANIMATION, type.name) }
+            screen.scenario.onActivity { screen.vm.onChoiceChanged(SettingRowId.QR_ANIMATION, type.name) }
             settle()
             var width = 0
             var height = 0
@@ -343,7 +346,7 @@ class WidgetPreviewTest {
             activity.findViewById<TextView>(R.id.settings_title).text = page.title.resolve(activity)
             activity.findViewById<View>(R.id.settings_scroll).visibility = View.VISIBLE
             val renderer = SettingsRenderer(activity.sectionsContainer, vm::onToggleChanged, {}, {}, {})
-            vm.sections.onEach(renderer::render).launchIn(activity.lifecycleScope)
+            vm.uiState.map { it.sections }.distinctUntilChanged().onEach(renderer::render).launchIn(activity.lifecycleScope)
             val isolated = object : ContextWrapper(activity) { override fun getFilesDir() = files }
             spoilers = CustomSpoilerManager(isolated)
             images = QrPreviewBitmapCache(QrCodeGenerator(), QrBitmapRenderer(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)), spoilers, DeviceDispatchers)
@@ -352,7 +355,7 @@ class WidgetPreviewTest {
                 QrColorResolver(activity, PreviewQrPreferences),
                 SchedulePreviewScenario(ScheduleWidgetSelector())
             )
-            vm.previewSettings.filterNotNull().onEach { settings ->
+            vm.uiState.map { it.previewSettings }.distinctUntilChanged().filterNotNull().onEach { settings ->
                 if (!::preview.isInitialized) {
                     preview = factory.create(activity, activity.lifecycleScope, settings)
                     activity.findViewById<FrameLayout>(R.id.widget_preview_container).apply {
@@ -364,8 +367,8 @@ class WidgetPreviewTest {
             }.launchIn(activity.lifecycleScope)
         }
 
-        fun toggle(key: String) {
-            val item = vm.sections.value.flatMap { it.items }.filterIsInstance<SettingItem.Toggle>().first { it.key == key }
+        fun toggle(id: SettingRowId) {
+            val item = vm.uiState.value.sections.flatMap { it.items }.filterIsInstance<SettingItem.Toggle>().first { it.id == id }
             val title = item.title.resolve(activity)
             val text = activity.sectionsContainer.descendants().filterIsInstance<TextView>()
                 .first { it.id == R.id.setting_title && it.text == title }

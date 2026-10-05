@@ -7,6 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
@@ -32,54 +33,25 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
-
-sealed interface SettingsEvent {
-    data object WidgetsRefreshStarted : SettingsEvent
-    data object OpenNotificationSettings : SettingsEvent
-    /** Asks for the Android 13 permission, or opens the system page when it cannot be asked. */
-    data object RequestNotificationPermission : SettingsEvent
-    data object ChooseCustomSpoiler : SettingsEvent
-    data object ResetCustomSpoiler : SettingsEvent
-    data object OpenDiagnostics : SettingsEvent
-    data object CloseOverlays : SettingsEvent
-    /** Opens the system page where Android stops restricting the app in the background. */
-    data object OpenBackgroundWorkSettings : SettingsEvent
-    /** The one-time dialog about background work, offered when a background check is turned on. */
-    data object ShowBackgroundWorkHint : SettingsEvent
-    /** Asks the system to add the QR pass tile; the answer comes back through `onQrTileResult`. */
-    data object RequestQrTile : SettingsEvent
-    /** Asks for the calendar permission when needed, then reports back through `onCalendarAccessGranted`. */
-    data object RequestCalendarAccess : SettingsEvent
-    /** The «Выгрузить в .ics» sheet. */
-    data object OpenIcsExport : SettingsEvent
-    /** A page of the ITMO.Widgets site, [path] relative to its base address. */
-    data class OpenWebPage(val path: String) : SettingsEvent
-    data class ShowMessage(val text: UiText) : SettingsEvent
-    data class ShowError(val error: AppError) : SettingsEvent
-}
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -97,7 +69,7 @@ class SettingsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    val page = SettingsPage.fromArgument(savedStateHandle[SettingsPage.ARGUMENT])
+    private val page = SettingsPage.fromArgument(savedStateHandle[SettingsPage.ARGUMENT])
 
     private val notificationPermissionGranted = MutableStateFlow<Boolean?>(null)
     // Unknown until the screen asks; the row stays hidden rather than flash in.
@@ -127,41 +99,24 @@ class SettingsViewModel @Inject constructor(
     private val localSettings = repository.observeLocalSettings()
         .shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
 
-    val previewSettings: StateFlow<WidgetPreviewSettings?> = localSettings
-        .map { local ->
-            when (page) {
-                SettingsPage.QR_WIDGET -> WidgetPreviewSettings.Qr(local.qrWidget)
-                SettingsPage.COMPACT_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT)
-                SettingsPage.FULL_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL)
-                else -> null
-            }
-        }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
-
-    // Do not render made-up defaults while DataStore is loading. Otherwise every
-    // persisted `true` appears as an off -> on transition when Settings opens.
-    private val mutableSections = MutableStateFlow<List<SettingSection>>(emptyList())
-    val sections: StateFlow<List<SettingSection>> = mutableSections.asStateFlow()
-    private val mutableLocalSettingsLoaded = MutableStateFlow(false)
-    val localSettingsLoaded: StateFlow<Boolean> = mutableLocalSettingsLoaded.asStateFlow()
-
-    private val eventChannel = Channel<SettingsEvent>(Channel.BUFFERED)
-    val events: Flow<SettingsEvent> = eventChannel.receiveAsFlow()
-
-    init {
-        combine(
-            localSettings,
-            displayedSharingSettings,
-            notificationPermissionGranted,
-            customSpoilerConfigured,
-            customSpoilerBusy,
-            diagnosticsCount,
-            backgroundWorkUnrestricted,
-            calendarState
-        ) { values ->
-            @Suppress("UNCHECKED_CAST")
-            buildSections(
-                local = values[0] as LocalSettings,
+    // Do not render made-up defaults while DataStore is loading: the initial state is not loaded and has no rows,
+    // and the first loaded state already carries the persisted values. Otherwise every persisted `true` appears as
+    // an off -> on transition when Settings opens.
+    val uiState: StateFlow<SettingsUiState> = combine(
+        localSettings,
+        displayedSharingSettings,
+        notificationPermissionGranted,
+        customSpoilerConfigured,
+        customSpoilerBusy,
+        diagnosticsCount,
+        backgroundWorkUnrestricted,
+        calendarState
+    ) { values ->
+        val local = values[0] as LocalSettings
+        SettingsUiState(
+            page = page,
+            sections = buildSections(
+                local = local,
                 sharing = values[1] as SharingSettingsState,
                 notificationsGranted = values[2] as Boolean?,
                 hasCustomSpoiler = values[3] as Boolean,
@@ -169,14 +124,16 @@ class SettingsViewModel @Inject constructor(
                 diagnosticsCount = values[5] as Int,
                 backgroundWorkRestricted = values[6] == false,
                 calendar = values[7] as CalendarSyncState
-            )
-        }
-            .onEach {
-                mutableSections.value = it
-                mutableLocalSettingsLoaded.value = true
-            }
-            .launchIn(viewModelScope)
+            ),
+            loaded = true,
+            previewSettings = previewSettings(local)
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState(page))
 
+    private val eventQueue = EventQueue<SettingsEvent>()
+    val events: Flow<SettingsEvent> = eventQueue.events
+
+    init {
         viewModelScope.launch {
             localSettings
                 .map { local -> local.customServicesEnabled }
@@ -228,138 +185,125 @@ class SettingsViewModel @Inject constructor(
         if (refreshWidgets) widgetRefreshRequester.refreshAll()
     }
 
-    fun onToggleChanged(key: String, checked: Boolean) {
-        when (key) {
-            KEY_CUSTOM_SERVICES -> updateCustomServices(checked)
-            KEY_SCHEDULE_SPORT_AUTO_SIGN -> updateWidgetSetting {
+    fun onToggleChanged(id: SettingRowId, checked: Boolean) {
+        when (id) {
+            SettingRowId.CUSTOM_SERVICES -> updateCustomServices(checked)
+            SettingRowId.SCHEDULE_SPORT_AUTO_SIGN -> updateWidgetSetting {
                 repository.setScheduleSportAutoSignEnabled(checked)
             }
-            KEY_SCHEDULE_CHANGES -> {
-                updateLocalSetting { tracking.setEnabled(checked) }
-                if (checked && notificationPermissionGranted.value == false) {
-                    eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
-                }
-                if (checked) offerBackgroundWorkHint()
-            }
-            KEY_MYITMO_MARKS -> {
-                updateLocalSetting { markTracking.setMyItmoEnabled(checked) }
-                if (checked && notificationPermissionGranted.value == false) {
-                    eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
-                }
-                if (checked) offerBackgroundWorkHint()
-            }
-            KEY_BARS_MARKS -> {
-                updateLocalSetting { markTracking.setBarsEnabled(checked) }
-                if (checked && notificationPermissionGranted.value == false) {
-                    eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
-                }
-                if (checked) offerBackgroundWorkHint()
-            }
-            KEY_SHEET_MARKS -> {
-                updateLocalSetting { markTracking.setSheetsEnabled(checked) }
-                if (checked && notificationPermissionGranted.value == false) {
-                    eventChannel.trySend(SettingsEvent.RequestNotificationPermission)
-                }
-                if (checked) offerBackgroundWorkHint()
-            }
-            KEY_CALENDAR_SYNC -> if (checked) {
-                eventChannel.trySend(SettingsEvent.RequestCalendarAccess)
+            SettingRowId.SCHEDULE_CHANGES -> updateBackgroundCheck(checked) { tracking.setEnabled(checked) }
+            SettingRowId.MYITMO_MARKS -> updateBackgroundCheck(checked) { markTracking.setMyItmoEnabled(checked) }
+            SettingRowId.BARS_MARKS -> updateBackgroundCheck(checked) { markTracking.setBarsEnabled(checked) }
+            SettingRowId.SHEET_MARKS -> updateBackgroundCheck(checked) { markTracking.setSheetsEnabled(checked) }
+            SettingRowId.CALENDAR_SYNC -> if (checked) {
+                send(SettingsEvent.RequestCalendarAccess)
             } else {
                 updateLocalSetting { calendarSync.disable() }
             }
-            KEY_HOME_CARD_SCHEDULE, KEY_HOME_CARD_SCHEDULE_CHANGES, KEY_HOME_CARD_MARKS, KEY_HOME_CARD_SPORT,
-            KEY_HOME_CARD_FRIENDS -> updateLocalSetting {
-                val kind = HOME_CARDS.first { it.first == key }.second
+            SettingRowId.HOME_CARD_SCHEDULE, SettingRowId.HOME_CARD_SCHEDULE_CHANGES, SettingRowId.HOME_CARD_MARKS,
+            SettingRowId.HOME_CARD_SPORT, SettingRowId.HOME_CARD_FRIENDS -> updateLocalSetting {
+                val kind = HOME_CARDS.first { it.first == id }.second
                 repository.setHomeCardVisible(kind, checked)
             }
-            KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY -> updateWidgetSetting {
+            SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY -> updateWidgetSetting {
                 repository.setCompactWidgetNextLessonEarlyEnabled(checked)
             }
-            KEY_COMPACT_WIDGET_HIDE_TEACHER -> updateWidgetSetting {
+            SettingRowId.COMPACT_WIDGET_HIDE_TEACHER -> updateWidgetSetting {
                 repository.setCompactWidgetTeacherHidden(checked)
             }
-            KEY_FULL_WIDGET_HIDE_TEACHER -> updateWidgetSetting {
+            SettingRowId.FULL_WIDGET_HIDE_TEACHER -> updateWidgetSetting {
                 repository.setFullWidgetTeacherHidden(checked)
             }
-            KEY_FULL_WIDGET_HIDE_PAST -> updateWidgetSetting {
+            SettingRowId.FULL_WIDGET_HIDE_PAST -> updateWidgetSetting {
                 repository.setFullWidgetPastLessonsHidden(checked)
             }
-            KEY_FULL_WIDGET_SHOW_TOMORROW -> updateWidgetSetting {
+            SettingRowId.FULL_WIDGET_SHOW_TOMORROW -> updateWidgetSetting {
                 repository.setFullWidgetTomorrowEnabled(checked)
             }
-            KEY_QR_DYNAMIC_COLORS -> updateWidgetSetting {
+            SettingRowId.QR_DYNAMIC_COLORS -> updateWidgetSetting {
                 repository.setQrDynamicColorsEnabled(checked)
             }
-            KEY_QR_SPOILER -> updateWidgetSetting {
+            SettingRowId.QR_SPOILER -> updateWidgetSetting {
                 repository.setQrSpoilerEnabled(checked)
             }
-            KEY_SPORT_TEACHER_FILTER -> updateLocalSetting {
+            SettingRowId.SPORT_TEACHER_FILTER -> updateLocalSetting {
                 repository.setTeacherSelectorHidden(!checked)
             }
-            KEY_SPORT_TIME_FILTER -> updateLocalSetting {
+            SettingRowId.SPORT_TIME_FILTER -> updateLocalSetting {
                 repository.setTimeSelectorHidden(!checked)
             }
+            else -> Unit
         }
     }
 
-    fun onChoiceChanged(key: String, optionKey: String) {
-        when (key) {
-            KEY_QR_ANIMATION -> {
+    fun onChoiceChanged(id: SettingRowId, optionKey: String) {
+        when (id) {
+            SettingRowId.QR_ANIMATION -> {
                 val animation = QrAnimationType.entries.firstOrNull { it.name == optionKey } ?: return
                 updateWidgetSetting { repository.setQrAnimationType(animation) }
             }
-            KEY_COMPACT_WIDGET_TEXT_SIZE, KEY_FULL_WIDGET_TEXT_SIZE -> {
+            SettingRowId.COMPACT_WIDGET_TEXT_SIZE, SettingRowId.FULL_WIDGET_TEXT_SIZE -> {
                 val size = WidgetTextSize.entries.firstOrNull { it.name == optionKey } ?: return
                 updateWidgetSetting {
-                    if (key == KEY_COMPACT_WIDGET_TEXT_SIZE) {
+                    if (id == SettingRowId.COMPACT_WIDGET_TEXT_SIZE) {
                         repository.setCompactWidgetTextSize(size)
                     } else {
                         repository.setFullWidgetTextSize(size)
                     }
                 }
             }
-            KEY_SCHEDULE_SHARING, KEY_SPORT_SHARING, KEY_FRIENDS_SHARING -> {
+            SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING, SettingRowId.FRIENDS_SHARING -> {
                 val visibility = SharingVisibility.entries.firstOrNull { it.name == optionKey } ?: return
-                val item = sections.value.flatMap(SettingSection::items)
-                    .filterIsInstance<SettingItem.Choice>().firstOrNull { it.key == key } ?: return
+                val item = uiState.value.sections.flatMap(SettingSection::items)
+                    .filterIsInstance<SettingItem.Choice>().firstOrNull { it.id == id } ?: return
                 // A dialog can outlive the state that opened it. Reject stale and duplicate actions.
                 if (!item.enabled || item.selectedOptionKey == null || privacyUpdateInProgress.value) return
                 if (item.selectedOptionKey == optionKey) return
                 updateSharing {
-                    when (key) {
-                        KEY_SCHEDULE_SHARING -> repository.setScheduleVisibility(visibility)
-                        KEY_FRIENDS_SHARING -> repository.setFriendsVisibility(visibility)
+                    when (id) {
+                        SettingRowId.SCHEDULE_SHARING -> repository.setScheduleVisibility(visibility)
+                        SettingRowId.FRIENDS_SHARING -> repository.setFriendsVisibility(visibility)
                         else -> repository.setSportVisibility(visibility)
                     }
                 }
             }
+            else -> Unit
         }
     }
 
-    fun onAction(key: String) {
-        when (key) {
-            KEY_REFRESH_WIDGETS -> {
+    fun onAction(id: SettingRowId) {
+        when (id) {
+            SettingRowId.REFRESH_WIDGETS -> {
                 widgetRefreshRequester.refreshAll()
-                eventChannel.trySend(SettingsEvent.WidgetsRefreshStarted)
+                send(SettingsEvent.WidgetsRefreshStarted)
             }
-            KEY_NOTIFICATIONS -> eventChannel.trySend(SettingsEvent.OpenNotificationSettings)
-            KEY_QR_CUSTOM_IMAGE -> eventChannel.trySend(SettingsEvent.ChooseCustomSpoiler)
-            KEY_QR_RESET_IMAGE -> eventChannel.trySend(SettingsEvent.ResetCustomSpoiler)
-            KEY_DIAGNOSTICS -> eventChannel.trySend(SettingsEvent.OpenDiagnostics)
-            KEY_BACKGROUND_WORK -> eventChannel.trySend(SettingsEvent.OpenBackgroundWorkSettings)
-            KEY_QR_TILE -> eventChannel.trySend(SettingsEvent.RequestQrTile)
-            KEY_ICS_EXPORT -> eventChannel.trySend(SettingsEvent.OpenIcsExport)
-            KEY_DELETE_ACCOUNT -> eventChannel.trySend(SettingsEvent.OpenWebPage(DELETE_ACCOUNT_PATH))
-            KEY_PRIVACY_POLICY -> eventChannel.trySend(SettingsEvent.OpenWebPage(PRIVACY_POLICY_PATH))
-            KEY_RESTART_ONBOARDING -> viewModelScope.launch {
+            SettingRowId.NOTIFICATIONS -> send(SettingsEvent.OpenNotificationSettings)
+            SettingRowId.QR_CUSTOM_IMAGE -> send(SettingsEvent.ChooseCustomSpoiler)
+            SettingRowId.QR_RESET_IMAGE -> send(SettingsEvent.ResetCustomSpoiler)
+            SettingRowId.DIAGNOSTICS -> send(SettingsEvent.OpenDiagnostics)
+            SettingRowId.BACKGROUND_WORK -> send(SettingsEvent.OpenBackgroundWorkSettings)
+            SettingRowId.QR_TILE -> send(SettingsEvent.RequestQrTile)
+            SettingRowId.ICS_EXPORT -> send(SettingsEvent.OpenIcsExport)
+            SettingRowId.DELETE_ACCOUNT -> send(SettingsEvent.OpenWebPage(DELETE_ACCOUNT_PATH))
+            SettingRowId.PRIVACY_POLICY -> send(SettingsEvent.OpenWebPage(PRIVACY_POLICY_PATH))
+            SettingRowId.RESTART_ONBOARDING -> viewModelScope.launch {
                 // The stored flag is what the root gate reads; the overlay only has to get out of the way.
                 onboardingRepository.reset()
-                eventChannel.send(SettingsEvent.CloseOverlays)
+                eventQueue.send(SettingsEvent.CloseOverlays)
             }
-            KEY_RETRY_PRIVACY -> viewModelScope.launch {
+            SettingRowId.RETRY_PRIVACY -> viewModelScope.launch {
                 refreshPrivacySettings()
             }
+            else -> Unit
         }
+    }
+
+    /**
+     * Sends [event] before the calling action returns, as the action's own effect. The queue is buffered, so the
+     * undispatched send completes at once; it only waits when 64 events are undelivered.
+     */
+    private fun send(event: SettingsEvent) {
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) { eventQueue.send(event) }
     }
 
     /** The calendar permission is there: synchronization turns on into the app's own calendar. */
@@ -368,14 +312,14 @@ class SettingsViewModel @Inject constructor(
             when (calendarSync.enable()) {
                 CalendarSyncResult.DONE -> Unit
                 CalendarSyncResult.NO_PERMISSION -> showMessage(R.string.calendar_access_denied)
-                CalendarSyncResult.FAILED -> eventChannel.send(SettingsEvent.ShowError(AppError.Unknown()))
-                CalendarSyncResult.DEMO_UNAVAILABLE -> eventChannel.send(SettingsEvent.ShowError(AppError.DemoUnavailable))
+                CalendarSyncResult.FAILED -> eventQueue.send(SettingsEvent.ShowError(AppError.Unknown()))
+                CalendarSyncResult.DEMO_UNAVAILABLE -> eventQueue.send(SettingsEvent.ShowError(AppError.DemoUnavailable))
             }
         }
     }
 
     private suspend fun showMessage(res: Int) {
-        eventChannel.send(SettingsEvent.ShowMessage(UiText.Resource(res)))
+        eventQueue.send(SettingsEvent.ShowMessage(UiText.Resource(res)))
     }
 
     /** The system's answer to the add request: the row leaves once the tile is known to be in the quick settings. */
@@ -384,8 +328,7 @@ class SettingsViewModel @Inject constructor(
             QrTileAddResult.ADDED -> rememberQrTileAdded()
             QrTileAddResult.ALREADY_ADDED -> rememberQrTileAdded(R.string.settings_qr_tile_already_added)
             QrTileAddResult.NOT_ADDED, QrTileAddResult.IN_PROGRESS -> Unit
-            QrTileAddResult.FAILED ->
-                eventChannel.trySend(SettingsEvent.ShowMessage(UiText.Resource(R.string.settings_qr_tile_failed)))
+            QrTileAddResult.FAILED -> send(SettingsEvent.ShowMessage(UiText.Resource(R.string.settings_qr_tile_failed)))
         }
     }
 
@@ -396,11 +339,22 @@ class SettingsViewModel @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {
-                eventChannel.send(SettingsEvent.ShowError(AppError.Unknown(error)))
+                eventQueue.send(SettingsEvent.ShowError(AppError.Unknown(error)))
                 return@launch
             }
-            messageRes?.let { eventChannel.send(SettingsEvent.ShowMessage(UiText.Resource(it))) }
+            messageRes?.let { showMessage(it) }
         }
+    }
+
+    /**
+     * A background check's switch: stores the value and, when it is turned on, asks for notifications if they are
+     * off and offers the background work hint.
+     */
+    private fun updateBackgroundCheck(checked: Boolean, store: suspend () -> Unit) {
+        updateLocalSetting(action = store)
+        if (!checked) return
+        if (notificationPermissionGranted.value == false) send(SettingsEvent.RequestNotificationPermission)
+        offerBackgroundWorkHint()
     }
 
     /** Once per device, when a background check is turned on while Android restricts the app in the background. */
@@ -414,10 +368,10 @@ class SettingsViewModel @Inject constructor(
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (error: Exception) {
-                    eventChannel.send(SettingsEvent.ShowError(AppError.Unknown(error)))
+                    eventQueue.send(SettingsEvent.ShowError(AppError.Unknown(error)))
                     return@launch
                 }
-                eventChannel.send(SettingsEvent.ShowBackgroundWorkHint)
+                eventQueue.send(SettingsEvent.ShowBackgroundWorkHint)
             }
         }
     }
@@ -425,7 +379,7 @@ class SettingsViewModel @Inject constructor(
     private fun updateCustomServices(enabled: Boolean) {
         viewModelScope.launch {
             if (!customServicesRepository.isChangeable()) {
-                eventChannel.send(SettingsEvent.ShowError(AppError.DemoUnavailable))
+                eventQueue.send(SettingsEvent.ShowError(AppError.DemoUnavailable))
                 return@launch
             }
             try {
@@ -434,7 +388,7 @@ class SettingsViewModel @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {
-                eventChannel.send(SettingsEvent.ShowError(AppError.Unknown(error)))
+                eventQueue.send(SettingsEvent.ShowError(AppError.Unknown(error)))
             }
         }
     }
@@ -445,7 +399,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 when (val result = action()) {
                     is AppResult.Success -> Unit
-                    is AppResult.Failure -> eventChannel.send(SettingsEvent.ShowError(result.error))
+                    is AppResult.Failure -> eventQueue.send(SettingsEvent.ShowError(result.error))
                 }
             } finally {
                 privacyUpdateInProgress.value = false
@@ -468,9 +422,16 @@ class SettingsViewModel @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Exception) {
-                eventChannel.send(SettingsEvent.ShowError(AppError.Unknown(error)))
+                eventQueue.send(SettingsEvent.ShowError(AppError.Unknown(error)))
             }
         }
+    }
+
+    private fun previewSettings(local: LocalSettings): WidgetPreviewSettings? = when (page) {
+        SettingsPage.QR_WIDGET -> WidgetPreviewSettings.Qr(local.qrWidget)
+        SettingsPage.COMPACT_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT)
+        SettingsPage.FULL_SCHEDULE_WIDGET -> WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL)
+        else -> null
     }
 
     private fun buildSections(
@@ -499,7 +460,7 @@ class SettingsViewModel @Inject constructor(
                     ),
                     navigation(SettingsPage.PRIVACY),
                     SettingItem.Action(
-                        key = KEY_NOTIFICATIONS,
+                        id = SettingRowId.NOTIFICATIONS,
                         title = UiText.Resource(R.string.settings_notifications_title),
                         value = UiText.Resource(
                             when (notificationsGranted) {
@@ -539,7 +500,7 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOf(
                     SettingItem.Toggle(
-                        key = KEY_CUSTOM_SERVICES,
+                        id = SettingRowId.CUSTOM_SERVICES,
                         // The screen is already titled by the page; the switch names the action.
                         title = UiText.Resource(R.string.settings_custom_services_toggle),
                         checked = local.customServicesEnabled
@@ -552,7 +513,7 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOf(
                     SettingItem.Action(
-                        key = KEY_DELETE_ACCOUNT,
+                        id = SettingRowId.DELETE_ACCOUNT,
                         title = UiText.Resource(R.string.settings_delete_account_title),
                         description = UiText.Resource(R.string.settings_delete_account_description),
                         trailingIconRes = R.drawable.ic_open_in_new
@@ -570,17 +531,17 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOf(
                     SettingItem.Toggle(
-                        key = KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY,
+                        id = SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY,
                         title = UiText.Resource(R.string.settings_widget_next_early_title),
                         description = UiText.Resource(R.string.settings_widget_next_early_description),
                         checked = local.scheduleWidget.compact.showNextLessonEarly
                     ),
                     SettingItem.Toggle(
-                        key = KEY_COMPACT_WIDGET_HIDE_TEACHER,
+                        id = SettingRowId.COMPACT_WIDGET_HIDE_TEACHER,
                         title = UiText.Resource(R.string.settings_widget_hide_teacher_title),
                         checked = local.scheduleWidget.compact.hideTeacher
                     ),
-                    textSizeChoice(KEY_COMPACT_WIDGET_TEXT_SIZE, local.scheduleWidget.compact.textSize)
+                    textSizeChoice(SettingRowId.COMPACT_WIDGET_TEXT_SIZE, local.scheduleWidget.compact.textSize)
                 )
             )
         )
@@ -589,22 +550,22 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOf(
                     SettingItem.Toggle(
-                        key = KEY_FULL_WIDGET_HIDE_TEACHER,
+                        id = SettingRowId.FULL_WIDGET_HIDE_TEACHER,
                         title = UiText.Resource(R.string.settings_widget_hide_teacher_title),
                         checked = local.scheduleWidget.full.hideTeacher
                     ),
                     SettingItem.Toggle(
-                        key = KEY_FULL_WIDGET_HIDE_PAST,
+                        id = SettingRowId.FULL_WIDGET_HIDE_PAST,
                         title = UiText.Resource(R.string.settings_widget_hide_past_title),
                         checked = local.scheduleWidget.full.hidePastLessons
                     ),
                     SettingItem.Toggle(
-                        key = KEY_FULL_WIDGET_SHOW_TOMORROW,
+                        id = SettingRowId.FULL_WIDGET_SHOW_TOMORROW,
                         title = UiText.Resource(R.string.settings_widget_tomorrow_title),
                         description = UiText.Resource(R.string.settings_widget_tomorrow_description),
                         checked = local.scheduleWidget.full.showTomorrowWhenTodayIsOver
                     ),
-                    textSizeChoice(KEY_FULL_WIDGET_TEXT_SIZE, local.scheduleWidget.full.textSize)
+                    textSizeChoice(SettingRowId.FULL_WIDGET_TEXT_SIZE, local.scheduleWidget.full.textSize)
                 )
             )
         )
@@ -614,12 +575,12 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOf(
                     SettingItem.Toggle(
-                        key = KEY_QR_DYNAMIC_COLORS,
+                        id = SettingRowId.QR_DYNAMIC_COLORS,
                         title = UiText.Resource(R.string.settings_qr_dynamic_colors_title),
                         checked = local.qrWidget.dynamicColors
                     ),
                     SettingItem.Toggle(
-                        key = KEY_QR_SPOILER,
+                        id = SettingRowId.QR_SPOILER,
                         title = UiText.Resource(R.string.settings_qr_spoiler_title),
                         description = UiText.Resource(R.string.settings_qr_spoiler_description),
                         checked = local.qrWidget.spoilerEnabled
@@ -630,7 +591,7 @@ class SettingsViewModel @Inject constructor(
                 title = UiText.Resource(R.string.settings_group_spoiler),
                 items = listOf(
                     SettingItem.Choice(
-                        key = KEY_QR_ANIMATION,
+                        id = SettingRowId.QR_ANIMATION,
                         title = UiText.Resource(R.string.settings_qr_animation_title),
                         value = local.qrWidget.animationType.label(),
                         options = QrAnimationType.entries.map { animation ->
@@ -640,7 +601,7 @@ class SettingsViewModel @Inject constructor(
                         enabled = local.qrWidget.spoilerEnabled
                     ),
                     SettingItem.Action(
-                        key = KEY_QR_CUSTOM_IMAGE,
+                        id = SettingRowId.QR_CUSTOM_IMAGE,
                         title = UiText.Resource(R.string.settings_qr_custom_image_title),
                         value = UiText.Resource(
                             if (hasCustomSpoiler) {
@@ -653,7 +614,7 @@ class SettingsViewModel @Inject constructor(
                         enabled = local.qrWidget.spoilerEnabled && !imageBusy
                     ),
                     SettingItem.Action(
-                        key = KEY_QR_RESET_IMAGE,
+                        id = SettingRowId.QR_RESET_IMAGE,
                         title = UiText.Resource(R.string.settings_qr_reset_image_title),
                         enabled = local.qrWidget.spoilerEnabled && hasCustomSpoiler && !imageBusy
                     )
@@ -663,9 +624,9 @@ class SettingsViewModel @Inject constructor(
         SettingsPage.HOME -> listOf(
             SettingSection(
                 title = null,
-                items = HOME_CARDS.map { (key, kind, titleRes) ->
+                items = HOME_CARDS.map { (id, kind, titleRes) ->
                     SettingItem.Toggle(
-                        key = key,
+                        id = id,
                         title = UiText.Resource(titleRes),
                         checked = kind !in local.hiddenHomeCards
                     )
@@ -677,7 +638,7 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOfNotNull(
                     SettingItem.Toggle(
-                        key = KEY_SCHEDULE_CHANGES,
+                        id = SettingRowId.SCHEDULE_CHANGES,
                         title = UiText.Resource(R.string.settings_schedule_changes_title),
                         description = UiText.Resource(
                             if (notificationsGranted == false) {
@@ -695,7 +656,7 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOf(
                     SettingItem.Toggle(
-                        key = KEY_SCHEDULE_SPORT_AUTO_SIGN,
+                        id = SettingRowId.SCHEDULE_SPORT_AUTO_SIGN,
                         title = UiText.Resource(R.string.settings_schedule_sport_auto_sign_title),
                         description = UiText.Resource(R.string.settings_schedule_sport_auto_sign_description),
                         checked = local.showSportAutoSign
@@ -710,20 +671,20 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOfNotNull(
                     SettingItem.Toggle(
-                        key = KEY_MYITMO_MARKS,
+                        id = SettingRowId.MYITMO_MARKS,
                         title = UiText.Resource(R.string.settings_marks_myitmo_title),
                         checked = local.myItmoMarksEnabled
                     ),
                     // BARS appears with the account's first BARS answer; before it there is nothing to check.
                     local.barsMarksEnabled?.let { enabled ->
                         SettingItem.Toggle(
-                            key = KEY_BARS_MARKS,
+                            id = SettingRowId.BARS_MARKS,
                             title = UiText.Resource(R.string.settings_marks_bars_title),
                             checked = enabled
                         )
                     },
                     SettingItem.Toggle(
-                        key = KEY_SHEET_MARKS,
+                        id = SettingRowId.SHEET_MARKS,
                         title = UiText.Resource(R.string.settings_marks_sheets_title),
                         checked = local.sheetMarksEnabled
                     ),
@@ -743,12 +704,12 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOf(
                     SettingItem.Toggle(
-                        key = KEY_SPORT_TEACHER_FILTER,
+                        id = SettingRowId.SPORT_TEACHER_FILTER,
                         title = UiText.Resource(R.string.settings_sport_teacher_filter_title),
                         checked = !local.sport.hideTeacherSelector
                     ),
                     SettingItem.Toggle(
-                        key = KEY_SPORT_TIME_FILTER,
+                        id = SettingRowId.SPORT_TIME_FILTER,
                         title = UiText.Resource(R.string.settings_sport_time_filter_title),
                         checked = !local.sport.hideTimeSelector
                     )
@@ -760,29 +721,29 @@ class SettingsViewModel @Inject constructor(
                 title = null,
                 items = listOf(
                     SettingItem.Action(
-                        key = KEY_REFRESH_WIDGETS,
+                        id = SettingRowId.REFRESH_WIDGETS,
                         title = UiText.Resource(R.string.settings_refresh_widgets_title),
                         trailingIconRes = R.drawable.ic_refresh
                     ),
                     SettingItem.Action(
-                        key = KEY_RESTART_ONBOARDING,
+                        id = SettingRowId.RESTART_ONBOARDING,
                         title = UiText.Resource(R.string.settings_restart_onboarding_title),
                         description = UiText.Resource(R.string.settings_restart_onboarding_description),
                         trailingIconRes = R.drawable.ic_refresh
                     ),
                     SettingItem.Action(
-                        key = KEY_DIAGNOSTICS,
+                        id = SettingRowId.DIAGNOSTICS,
                         title = UiText.Resource(R.string.settings_diagnostics_title),
                         value = UiText.Resource(R.string.settings_diagnostics_count, listOf(diagnosticsCount)),
                         trailingIconRes = R.drawable.ic_chevron_right
                     ),
                     SettingItem.Action(
-                        key = KEY_PRIVACY_POLICY,
+                        id = SettingRowId.PRIVACY_POLICY,
                         title = UiText.Resource(R.string.settings_privacy_policy_title),
                         trailingIconRes = R.drawable.ic_open_in_new
                     ),
                     SettingItem.Info(
-                        key = KEY_VERSION,
+                        id = SettingRowId.VERSION,
                         title = UiText.Resource(R.string.settings_version_title),
                         value = UiText.Dynamic(appVersion.name)
                     )
@@ -807,19 +768,19 @@ class SettingsViewModel @Inject constructor(
         }?.let(UiText::Resource)
         val items = mutableListOf<SettingItem>(
             sharingChoice(
-                key = KEY_SCHEDULE_SHARING,
+                id = SettingRowId.SCHEDULE_SHARING,
                 title = UiText.Resource(R.string.settings_schedule_sharing_title),
                 visibility = content?.settings?.scheduleVisibility,
                 enabled = editable
             ),
             sharingChoice(
-                key = KEY_SPORT_SHARING,
+                id = SettingRowId.SPORT_SHARING,
                 title = UiText.Resource(R.string.settings_sport_sharing_title),
                 visibility = content?.settings?.sportVisibility,
                 enabled = editable
             ),
             sharingChoice(
-                key = KEY_FRIENDS_SHARING,
+                id = SettingRowId.FRIENDS_SHARING,
                 title = UiText.Resource(R.string.settings_friends_sharing_title),
                 visibility = content?.settings?.friendsVisibility,
                 enabled = editable
@@ -829,7 +790,7 @@ class SettingsViewModel @Inject constructor(
             items += navigation(SettingsPage.SERVICES)
         } else if (sharing is SharingSettingsState.Error) {
             items += SettingItem.Action(
-                key = KEY_RETRY_PRIVACY,
+                id = SettingRowId.RETRY_PRIVACY,
                 title = UiText.Resource(R.string.settings_privacy_retry)
             )
         }
@@ -843,12 +804,12 @@ class SettingsViewModel @Inject constructor(
     }
 
     private fun sharingChoice(
-        key: String,
+        id: SettingRowId,
         title: UiText,
         visibility: SharingVisibility?,
         enabled: Boolean
     ) = SettingItem.Choice(
-        key = key,
+        id = id,
         title = title,
         value = visibility?.label() ?: UiText.Resource(R.string.settings_privacy_unknown),
         options = SharingVisibility.entries.map { ChoiceOption(it.name, it.label()) },
@@ -871,7 +832,7 @@ class SettingsViewModel @Inject constructor(
             title = null,
             items = listOf(
                 SettingItem.Action(
-                    key = KEY_QR_TILE,
+                    id = SettingRowId.QR_TILE,
                     title = UiText.Resource(R.string.settings_qr_tile_title),
                     description = UiText.Resource(R.string.settings_qr_tile_description)
                 )
@@ -884,7 +845,7 @@ class SettingsViewModel @Inject constructor(
         title = null,
         items = listOf(
             SettingItem.Toggle(
-                key = KEY_CALENDAR_SYNC,
+                id = SettingRowId.CALENDAR_SYNC,
                 title = UiText.Resource(R.string.settings_calendar_sync_title),
                 description = UiText.Resource(
                     when (calendar.problem) {
@@ -896,7 +857,7 @@ class SettingsViewModel @Inject constructor(
                 checked = calendar.enabled
             ),
             SettingItem.Action(
-                key = KEY_ICS_EXPORT,
+                id = SettingRowId.ICS_EXPORT,
                 title = UiText.Resource(R.string.settings_ics_export_title),
                 description = UiText.Resource(R.string.settings_ics_export_description),
                 trailingIconRes = R.drawable.ic_download
@@ -906,7 +867,7 @@ class SettingsViewModel @Inject constructor(
 
     /** The whole row is the button: it opens the system page, and the row leaves once Android lets the app work. */
     private fun backgroundWorkRow() = SettingItem.Action(
-        key = KEY_BACKGROUND_WORK,
+        id = SettingRowId.BACKGROUND_WORK,
         title = UiText.Resource(R.string.settings_background_work_title),
         description = UiText.Resource(R.string.background_work_hint),
         trailingIconRes = R.drawable.ic_open_in_new
@@ -917,14 +878,14 @@ class SettingsViewModel @Inject constructor(
         title: UiText = page.title,
         value: UiText? = null
     ) = SettingItem.Navigation(
-        key = "page_${page.name.lowercase()}",
+        id = SettingRowId.navigation(page),
         title = title,
         value = value,
         page = page
     )
 
-    private fun textSizeChoice(key: String, size: WidgetTextSize) = SettingItem.Choice(
-        key = key,
+    private fun textSizeChoice(id: SettingRowId, size: WidgetTextSize) = SettingItem.Choice(
+        id = id,
         title = UiText.Resource(R.string.settings_widget_text_size_title),
         value = size.label(),
         options = WidgetTextSize.entries.map { ChoiceOption(it.name, it.label()) },
@@ -955,63 +916,19 @@ class SettingsViewModel @Inject constructor(
         private const val MIN_PRIVACY_LOADING_MS = 300L
         private const val BACKGROUND_WORK_RECHECK_MS = 1_000L
 
-        const val KEY_CUSTOM_SERVICES = "custom_services"
-        const val KEY_NOTIFICATIONS = "notifications"
-        const val KEY_SCHEDULE_SHARING = "schedule_sharing"
-        const val KEY_SPORT_SHARING = "sport_sharing"
-        const val KEY_FRIENDS_SHARING = "friends_sharing"
-        const val KEY_SCHEDULE_SPORT_AUTO_SIGN = "schedule_sport_auto_sign"
-        const val KEY_SCHEDULE_CHANGES = "schedule_changes"
-        const val KEY_HOME_CARD_SCHEDULE = "home_card_schedule"
-        const val KEY_HOME_CARD_SCHEDULE_CHANGES = "home_card_schedule_changes"
-        const val KEY_HOME_CARD_MARKS = "home_card_marks"
-        const val KEY_MYITMO_MARKS = "myitmo_marks"
-        const val KEY_BARS_MARKS = "bars_marks"
-        const val KEY_SHEET_MARKS = "sheet_marks"
-        const val KEY_BACKGROUND_WORK = "background_work"
-        const val KEY_CALENDAR_SYNC = "calendar_sync"
-        const val KEY_ICS_EXPORT = "ics_export"
-        const val KEY_HOME_CARD_SPORT = "home_card_sport"
-        const val KEY_HOME_CARD_FRIENDS = "home_card_friends"
-
-        /** Row key, the kind it hides, its title; the feed order is the row order. */
+        /** Row id, the kind it hides, its title; the feed order is the row order. */
         private val HOME_CARDS = listOf(
-            Triple(KEY_HOME_CARD_SCHEDULE, HomeCardKind.SCHEDULE, R.string.settings_home_card_schedule_title),
+            Triple(SettingRowId.HOME_CARD_SCHEDULE, HomeCardKind.SCHEDULE, R.string.settings_home_card_schedule_title),
             Triple(
-                KEY_HOME_CARD_SCHEDULE_CHANGES,
+                SettingRowId.HOME_CARD_SCHEDULE_CHANGES,
                 HomeCardKind.SCHEDULE_CHANGES,
                 R.string.settings_home_card_schedule_changes_title
             ),
-            Triple(KEY_HOME_CARD_MARKS, HomeCardKind.MARKS, R.string.settings_home_card_marks_title),
-            Triple(KEY_HOME_CARD_SPORT, HomeCardKind.SPORT, R.string.settings_home_card_sport_title),
-            Triple(KEY_HOME_CARD_FRIENDS, HomeCardKind.FRIEND_REQUESTS, R.string.settings_home_card_friends_title)
+            Triple(SettingRowId.HOME_CARD_MARKS, HomeCardKind.MARKS, R.string.settings_home_card_marks_title),
+            Triple(SettingRowId.HOME_CARD_SPORT, HomeCardKind.SPORT, R.string.settings_home_card_sport_title),
+            Triple(SettingRowId.HOME_CARD_FRIENDS, HomeCardKind.FRIEND_REQUESTS, R.string.settings_home_card_friends_title)
         )
-        const val KEY_RETRY_PRIVACY = "retry_privacy"
-        const val KEY_COMPACT_WIDGET_NEXT_LESSON_EARLY = "compact_widget_next_lesson_early"
-        const val KEY_COMPACT_WIDGET_HIDE_TEACHER = "compact_widget_hide_teacher"
-        const val KEY_FULL_WIDGET_HIDE_TEACHER = "full_widget_hide_teacher"
-        const val KEY_FULL_WIDGET_HIDE_PAST = "full_widget_hide_past"
-        const val KEY_FULL_WIDGET_SHOW_TOMORROW = "full_widget_show_tomorrow"
-        const val KEY_COMPACT_WIDGET_TEXT_SIZE = "compact_widget_text_size"
-        const val KEY_FULL_WIDGET_TEXT_SIZE = "full_widget_text_size"
-        const val KEY_QR_DYNAMIC_COLORS = "qr_dynamic_colors"
-        const val KEY_QR_SPOILER = "qr_spoiler"
-        const val KEY_QR_ANIMATION = "qr_animation"
-        const val KEY_QR_CUSTOM_IMAGE = "qr_custom_image"
-        const val KEY_QR_RESET_IMAGE = "qr_reset_image"
-        const val KEY_QR_TILE = "qr_tile"
-        const val KEY_SPORT_TEACHER_FILTER = "sport_teacher_filter"
-        const val KEY_SPORT_TIME_FILTER = "sport_time_filter"
-        const val KEY_REFRESH_WIDGETS = "refresh_widgets"
-        const val KEY_RESTART_ONBOARDING = "restart_onboarding"
-        const val KEY_VERSION = "app_version"
-        const val KEY_DIAGNOSTICS = "diagnostics"
-        const val KEY_DELETE_ACCOUNT = "delete_account"
-        const val KEY_PRIVACY_POLICY = "privacy_policy"
         const val DELETE_ACCOUNT_PATH = "/delete-account"
         const val PRIVACY_POLICY_PATH = "/privacy.html"
     }
 }
-
-/** Wraps the version string so the ViewModel stays free of Android resources. */
-data class AppVersion(val name: String)

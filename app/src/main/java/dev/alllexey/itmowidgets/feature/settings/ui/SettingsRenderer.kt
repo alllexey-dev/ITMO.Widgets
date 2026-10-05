@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.ItemSettingRowBinding
 import dev.alllexey.itmowidgets.databinding.ItemSettingToggleBinding
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
+import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 
@@ -32,15 +33,15 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
  */
 class SettingsRenderer(
     private val container: LinearLayout,
-    private val onToggle: (key: String, checked: Boolean) -> Unit,
+    private val onToggle: (id: SettingRowId, checked: Boolean) -> Unit,
     private val onChoice: (item: SettingItem.Choice) -> Unit,
     private val onNavigate: (page: SettingsPage) -> Unit,
-    private val onAction: (key: String) -> Unit,
+    private val onAction: (id: SettingRowId) -> Unit,
 ) {
 
     private val inflater = LayoutInflater.from(container.context)
-    private val toggleBindings = mutableMapOf<String, ItemSettingToggleBinding>()
-    private val rowBindings = mutableMapOf<String, ItemSettingRowBinding>()
+    private val toggleBindings = mutableMapOf<SettingRowId, ItemSettingToggleBinding>()
+    private val rowBindings = mutableMapOf<SettingRowId, ItemSettingRowBinding>()
     private val sectionLabels = mutableMapOf<Int, TextView>()
     private val sectionFooters = mutableMapOf<Int, TextView>()
     private val sectionCards = mutableMapOf<Int, View>()
@@ -138,7 +139,7 @@ class SettingsRenderer(
 
     private fun createToggle(item: SettingItem.Toggle, parent: ViewGroup): View {
         val binding = ItemSettingToggleBinding.inflate(inflater, parent, false)
-        toggleBindings[item.key] = binding
+        toggleBindings[item.id] = binding
 
         // MaterialSwitch animates every programmatic false -> true transition once
         // attached. Apply the first persisted value before adding the row to the
@@ -156,7 +157,7 @@ class SettingsRenderer(
 
     private fun createChoice(item: SettingItem.Choice, parent: ViewGroup): View {
         val binding = ItemSettingRowBinding.inflate(inflater, parent, false)
-        rowBindings[item.key] = binding
+        rowBindings[item.id] = binding
 
         binding.settingChevron.isVisible = true
         binding.root.isClickable = true
@@ -167,7 +168,7 @@ class SettingsRenderer(
 
     private fun createNavigation(item: SettingItem.Navigation, parent: ViewGroup): View {
         val binding = ItemSettingRowBinding.inflate(inflater, parent, false)
-        rowBindings[item.key] = binding
+        rowBindings[item.id] = binding
 
         binding.settingChevron.isVisible = true
         binding.root.isClickable = true
@@ -178,7 +179,7 @@ class SettingsRenderer(
 
     private fun createInfo(item: SettingItem.Info, parent: ViewGroup): View {
         val binding = ItemSettingRowBinding.inflate(inflater, parent, false)
-        rowBindings[item.key] = binding
+        rowBindings[item.id] = binding
 
         binding.settingChevron.isVisible = false
 
@@ -187,7 +188,7 @@ class SettingsRenderer(
 
     private fun createAction(item: SettingItem.Action, parent: ViewGroup): View {
         val binding = ItemSettingRowBinding.inflate(inflater, parent, false)
-        rowBindings[item.key] = binding
+        rowBindings[item.id] = binding
 
         binding.settingChevron.isVisible = item.trailingIconRes != null
         item.trailingIconRes?.let(binding.settingChevron::setImageResource)
@@ -201,7 +202,7 @@ class SettingsRenderer(
         when (item) {
             is SettingItem.Toggle -> updateToggle(item)
             is SettingItem.Choice -> {
-                val binding = rowBindings[item.key] ?: return
+                val binding = rowBindings[item.id] ?: return
                 binding.settingTitle.text = item.title.resolve(container.context)
                 bindOptionalText(binding.settingDescription, item.description)
                 bindOptionalText(binding.settingValue, item.value)
@@ -209,7 +210,7 @@ class SettingsRenderer(
                 setRowEnabled(binding.root, item.enabled)
             }
             is SettingItem.Navigation -> {
-                val binding = rowBindings[item.key] ?: return
+                val binding = rowBindings[item.id] ?: return
                 binding.settingTitle.text = item.title.resolve(container.context)
                 bindOptionalText(binding.settingDescription, item.description)
                 bindOptionalText(binding.settingValue, item.value)
@@ -217,17 +218,17 @@ class SettingsRenderer(
                 setRowEnabled(binding.root, item.enabled)
             }
             is SettingItem.Action -> {
-                val binding = rowBindings[item.key] ?: return
+                val binding = rowBindings[item.id] ?: return
                 binding.settingTitle.text = item.title.resolve(container.context)
                 bindOptionalText(binding.settingDescription, item.description)
                 bindOptionalText(binding.settingValue, item.value)
                 binding.settingChevron.isVisible = item.trailingIconRes != null
                 item.trailingIconRes?.let(binding.settingChevron::setImageResource)
-                binding.root.setOnClickListener { if (item.enabled) onAction(item.key) }
+                binding.root.setOnClickListener { if (item.enabled) onAction(item.id) }
                 setRowEnabled(binding.root, item.enabled)
             }
             is SettingItem.Info -> {
-                val binding = rowBindings[item.key] ?: return
+                val binding = rowBindings[item.id] ?: return
                 binding.settingTitle.text = item.title.resolve(container.context)
                 binding.settingDescription.isVisible = false
                 bindOptionalText(binding.settingValue, item.value)
@@ -236,7 +237,7 @@ class SettingsRenderer(
     }
 
     private fun updateToggle(item: SettingItem.Toggle) {
-        val binding = toggleBindings[item.key] ?: return
+        val binding = toggleBindings[item.id] ?: return
         val context = container.context
         val interactive = item.enabled && item.stateKnown
 
@@ -257,7 +258,7 @@ class SettingsRenderer(
             binding.settingSwitch.jumpDrawablesToCurrentState()
         }
         binding.settingSwitch.setOnCheckedChangeListener { _, checked ->
-            if (interactive) onToggle(item.key, checked)
+            if (interactive) onToggle(item.id, checked)
         }
         binding.root.setOnClickListener {
             if (interactive) binding.settingSwitch.toggle()
@@ -322,7 +323,7 @@ class SettingsRenderer(
     /** Preserve section boundaries while excluding all changing text and values. */
     private fun List<SettingSection>.structure(): List<List<String>> {
         return map { section ->
-            section.items.map { item -> "${item::class.simpleName}:${item.key}" }
+            section.items.map { item -> "${item::class.simpleName}:${item.id.key}" }
         }
     }
 }

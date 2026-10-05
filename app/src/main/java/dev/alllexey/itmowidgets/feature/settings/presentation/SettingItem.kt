@@ -16,10 +16,10 @@ data class SettingSection(
 
 sealed interface SettingItem {
 
-    val key: String
+    val id: SettingRowId
 
     data class Toggle(
-        override val key: String,
+        override val id: SettingRowId,
         val title: UiText,
         val description: UiText? = null,
         val checked: Boolean,
@@ -30,7 +30,7 @@ sealed interface SettingItem {
 
     /** Opens a single-choice Material dialog and displays the current value. */
     data class Choice(
-        override val key: String,
+        override val id: SettingRowId,
         val title: UiText,
         val value: UiText,
         val options: List<ChoiceOption>,
@@ -49,7 +49,7 @@ sealed interface SettingItem {
      * misrepresent the whole section.
      */
     data class Navigation(
-        override val key: String,
+        override val id: SettingRowId,
         val title: UiText,
         val value: UiText? = null,
         val description: UiText? = null,
@@ -59,7 +59,7 @@ sealed interface SettingItem {
 
     /** Runs an immediate command without leaving the settings screen. */
     data class Action(
-        override val key: String,
+        override val id: SettingRowId,
         val title: UiText,
         val description: UiText? = null,
         val value: UiText? = null,
@@ -69,7 +69,7 @@ sealed interface SettingItem {
 
     /** Read-only fact, such as the application version. */
     data class Info(
-        override val key: String,
+        override val id: SettingRowId,
         val title: UiText,
         val value: UiText
     ) : SettingItem
