@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "data": {
+    "id": "00000000-0000-4000-8000-000000000101",
+    "subjectId": 501,
+    "subjectName": "Математический анализ",
+    "periodKey": "2026-1",
+    "category": "QUEUE",
+    "url": "https://example.org/links/2",
+    "title": "Материалы",
+    "visibility": "FLOW",
+    "flowId": 7001,
+    "audienceLabel": "ЛЕК МАТАН 3.1",
+    "status": "PENDING",
+    "reviewNote": null,
+    "score": 1,
+    "myVote": 0,
+    "isMine": true,
+    "reportedByMe": false,
+    "author": null,
+    "updatedAt": "2026-10-03T10:00:00Z"
+  },
+  "error": null
+}

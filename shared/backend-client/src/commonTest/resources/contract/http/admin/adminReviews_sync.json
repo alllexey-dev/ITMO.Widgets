@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "data": {
+    "enabled": true,
+    "running": false,
+    "runningSince": null,
+    "lastCheckedAt": "2026-10-05T06:00:00Z",
+    "lastChangedAt": "2026-10-04T06:00:00Z",
+    "lastSuccessAt": "2026-10-05T06:00:00Z",
+    "lastOutcome": "UPDATED",
+    "lastError": null,
+    "lastAdded": 3,
+    "lastUpdated": 5,
+    "lastRemoved": 1,
+    "upstreamTeachers": 820,
+    "upstreamReviews": 4100,
+    "reviewsTotal": 4300,
+    "reviewsActive": 4100,
+    "reviewsRemoved": 200,
+    "teachersActive": 790
+  },
+  "error": null
+}

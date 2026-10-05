@@ -1,0 +1,69 @@
+{
+  "success": true,
+  "data": {
+    "teacherIsu": 200001,
+    "teacherName": "Преподаватель Тестовый",
+    "status": "PENDING",
+    "inputCount": 8,
+    "reviewCount": 7,
+    "summary": {
+      "reviewCount": 7,
+      "description": "Синтетическое описание отзывов.",
+      "pros": [
+        "Понятно объясняет"
+      ],
+      "cons": [
+        "Строгие сроки"
+      ],
+      "tags": [
+        "STRICT_DEFENSE",
+        "HARD_EXAM",
+        "STRICT_DEADLINES",
+        "ATTENDANCE_REQUIRED",
+        "CLEAR_REQUIREMENTS",
+        "QUICK_REPLIES",
+        "MANY_LABS",
+        "HEAVY_HOMEWORK",
+        "FREQUENT_TESTS",
+        "ASKS_THEORY"
+      ],
+      "scales": [
+        {
+          "kind": "EXPLAINS",
+          "value": "HIGH",
+          "reason": "Синтетическое пояснение"
+        },
+        {
+          "kind": "ATTITUDE",
+          "value": "MEDIUM",
+          "reason": "Синтетическое пояснение"
+        },
+        {
+          "kind": "FAIRNESS",
+          "value": "LOW",
+          "reason": "Синтетическое пояснение"
+        },
+        {
+          "kind": "STRICTNESS",
+          "value": "NOT_ENOUGH_DATA",
+          "reason": null
+        },
+        {
+          "kind": "WORKLOAD",
+          "value": "HIGH",
+          "reason": "Синтетическое пояснение"
+        }
+      ],
+      "level": "POSITIVE",
+      "confidence": "HIGH",
+      "generatedAt": "2026-10-04T03:00:00Z"
+    },
+    "hidden": false,
+    "hiddenAt": null,
+    "hiddenByName": null,
+    "attempts": 1,
+    "lastAttemptAt": "2026-10-04T03:00:00Z",
+    "lastError": null
+  },
+  "error": null
+}

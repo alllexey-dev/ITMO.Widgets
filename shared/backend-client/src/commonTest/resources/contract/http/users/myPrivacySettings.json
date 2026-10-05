@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "data": {
+    "scheduleVisibility": "FRIENDS",
+    "sportVisibility": "ALL",
+    "friendsVisibility": "NOBODY"
+  },
+  "error": null
+}

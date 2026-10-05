@@ -1,0 +1,41 @@
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "isu": 100001,
+        "name": "Студент Тестовый",
+        "pictureUrl": null,
+        "groups": [],
+        "roles": [
+          "ADMIN",
+          "MODERATOR"
+        ],
+        "createdAt": "2026-10-05T09:00:00Z"
+      },
+      {
+        "isu": 100002,
+        "name": "Друг Первый",
+        "pictureUrl": "https://example.org/avatars/100002.jpg",
+        "groups": [
+          {
+            "name": "К3240",
+            "course": 2,
+            "facultyShortName": "ФИТИП"
+          },
+          {
+            "name": "К3240c",
+            "course": 2,
+            "facultyShortName": "ФИТИП"
+          }
+        ],
+        "roles": [],
+        "createdAt": "2026-09-01T12:00:00Z"
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "total": 2
+  },
+  "error": null
+}

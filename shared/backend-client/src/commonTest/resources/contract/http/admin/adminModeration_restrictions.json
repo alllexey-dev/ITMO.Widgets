@@ -1,0 +1,56 @@
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000401",
+        "user": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ]
+        },
+        "capability": "REPORT",
+        "reason": "Синтетическая причина",
+        "startsAt": "2026-10-01T10:00:00Z",
+        "expiresAt": "2026-10-31T10:00:00Z",
+        "revokedAt": null,
+        "revokedByIsu": null,
+        "active": true,
+        "caseId": "00000000-0000-4000-8000-000000000301"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000402",
+        "user": {
+          "isu": 100003,
+          "name": "Студент Третий",
+          "pictureUrl": null,
+          "groups": []
+        },
+        "capability": "SUBMIT_RESOURCES",
+        "reason": "Синтетическое ограничение",
+        "startsAt": "2026-09-20T10:00:00Z",
+        "expiresAt": null,
+        "revokedAt": "2026-09-25T10:00:00Z",
+        "revokedByIsu": 100001,
+        "active": false,
+        "caseId": "00000000-0000-4000-8000-000000000302"
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "total": 2
+  },
+  "error": null
+}

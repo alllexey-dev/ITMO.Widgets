@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "data": {
+    "challengeId": "00000000-0000-4000-8000-000000000501",
+    "userAgent": null,
+    "createdAt": "2026-10-05T08:58:00Z",
+    "expiresAt": "2026-10-05T09:03:00Z"
+  },
+  "error": null
+}

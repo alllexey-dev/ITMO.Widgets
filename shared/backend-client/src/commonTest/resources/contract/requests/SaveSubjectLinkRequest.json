@@ -1,0 +1,10 @@
+{
+  "subjectId": 501,
+  "subjectName": "Математический анализ",
+  "periodKey": "2026-1",
+  "category": "MATERIALS",
+  "url": "https://example.org/links/new",
+  "title": "Конспекты лекций",
+  "visibility": "FLOW",
+  "flowId": 7001
+}

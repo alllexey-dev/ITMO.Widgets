@@ -1,0 +1,18 @@
+{
+  "policies": {
+    "SUBJECT_RESOURCE": {
+      "premoderation": true,
+      "reportThreshold": 3,
+      "voteThreshold": -3,
+      "dailySubmissionLimit": 20,
+      "dailyReportLimit": 10
+    },
+    "TEACHER_REVIEW": {
+      "premoderation": false,
+      "reportThreshold": 2,
+      "voteThreshold": -5,
+      "dailySubmissionLimit": 3,
+      "dailyReportLimit": 5
+    }
+  }
+}

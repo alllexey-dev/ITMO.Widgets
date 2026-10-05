@@ -1,0 +1,95 @@
+{
+  "success": true,
+  "data": [
+    {
+      "user": {
+        "isu": 100002,
+        "name": "Друг Первый",
+        "pictureUrl": "https://example.org/avatars/100002.jpg",
+        "groups": [
+          {
+            "name": "К3240",
+            "course": 2,
+            "facultyShortName": "ФИТИП"
+          },
+          {
+            "name": "К3240c",
+            "course": 2,
+            "facultyShortName": "ФИТИП"
+          }
+        ],
+        "capabilities": {
+          "canViewSchedule": true,
+          "canViewSport": true,
+          "canViewFriends": true
+        }
+      },
+      "relationship": "FRIENDS"
+    },
+    {
+      "user": {
+        "isu": 100004,
+        "name": "Однокурсник Третий",
+        "pictureUrl": "https://example.org/avatars/100004.jpg",
+        "groups": [
+          {
+            "name": "К3240",
+            "course": 2,
+            "facultyShortName": "ФИТИП"
+          },
+          {
+            "name": "К3240c",
+            "course": 2,
+            "facultyShortName": "ФИТИП"
+          }
+        ],
+        "capabilities": {
+          "canViewSchedule": false,
+          "canViewSport": false,
+          "canViewFriends": false
+        }
+      },
+      "relationship": "INCOMING"
+    },
+    {
+      "user": {
+        "isu": 100005,
+        "name": "Однокурсник Четвёртый",
+        "pictureUrl": "https://example.org/avatars/100005.jpg",
+        "groups": [
+          {
+            "name": "К3240",
+            "course": 2,
+            "facultyShortName": "ФИТИП"
+          },
+          {
+            "name": "К3240c",
+            "course": 2,
+            "facultyShortName": "ФИТИП"
+          }
+        ],
+        "capabilities": {
+          "canViewSchedule": true,
+          "canViewSport": false,
+          "canViewFriends": true
+        }
+      },
+      "relationship": "OUTGOING"
+    },
+    {
+      "user": {
+        "isu": 100003,
+        "name": "Друг Второй",
+        "pictureUrl": null,
+        "groups": [],
+        "capabilities": {
+          "canViewSchedule": true,
+          "canViewSport": false,
+          "canViewFriends": true
+        }
+      },
+      "relationship": "NONE"
+    }
+  ],
+  "error": null
+}

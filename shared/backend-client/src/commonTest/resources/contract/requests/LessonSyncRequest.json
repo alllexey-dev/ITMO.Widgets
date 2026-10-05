@@ -1,0 +1,43 @@
+{
+  "lessons": [
+    {
+      "pairId": 3000001,
+      "date": "2026-10-06",
+      "start": "08:20",
+      "end": "09:50",
+      "type": "Лекции",
+      "typeId": 1,
+      "note": "Принести ноутбук",
+      "subjectName": "Математический анализ",
+      "subjectId": 501,
+      "groupName": "ЛЕК МАТАН 3.1",
+      "flowId": 7001,
+      "flowTypeId": 2,
+      "teacherIsu": 200001,
+      "teacherFio": "Преподаватель Тестовый",
+      "room": "1404",
+      "building": "Кронверкский пр., д.49",
+      "buildingId": 13,
+      "mainBuildingId": 13,
+      "format": "Очно",
+      "formatId": 1
+    },
+    {
+      "pairId": 3000002,
+      "date": "2026-10-06",
+      "start": "10:00",
+      "end": "11:30",
+      "type": "Практические занятия",
+      "typeId": 3,
+      "subjectName": "Программирование",
+      "subjectId": 502,
+      "groupName": "ПРАК ПРОГ 3.1.2",
+      "flowId": 7002,
+      "flowTypeId": 2,
+      "format": "Дистанционно",
+      "formatId": 3
+    }
+  ],
+  "from": "2026-10-05",
+  "to": "2026-10-11"
+}

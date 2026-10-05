@@ -1,0 +1,110 @@
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000301",
+        "targetType": "SUBJECT_RESOURCE",
+        "status": "OPEN",
+        "reason": "SUBMISSION",
+        "openedAt": "2026-10-02T07:00:00Z",
+        "resolvedAt": null,
+        "revision": {
+          "id": "00000000-0000-4000-8000-000000000112",
+          "linkId": "00000000-0000-4000-8000-000000000101",
+          "number": 2,
+          "category": "MATERIALS",
+          "url": "https://example.org/links/new",
+          "title": "Конспекты лекций",
+          "visibility": "ALL",
+          "flowId": null,
+          "status": "PENDING",
+          "submittedAt": "2026-10-02T07:00:00Z",
+          "decidedAt": null,
+          "note": null
+        },
+        "link": {
+          "id": "00000000-0000-4000-8000-000000000101",
+          "subjectId": 501,
+          "subjectName": "Математический анализ",
+          "periodKey": "2026-1",
+          "score": 3,
+          "hidden": false
+        },
+        "review": null,
+        "author": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ]
+        },
+        "reportCount": 4
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000302",
+        "targetType": "TEACHER_REVIEW",
+        "status": "RESOLVED",
+        "reason": "REPORTS",
+        "openedAt": "2026-09-28T07:00:00Z",
+        "resolvedAt": "2026-09-28T09:00:00Z",
+        "revision": null,
+        "link": null,
+        "review": {
+          "id": "00000000-0000-4000-8000-000000000201",
+          "teacherIsu": 200001,
+          "subjectTitle": "Математический анализ",
+          "excerpt": "Синтетический отзыв под именем.",
+          "score": -4,
+          "hidden": true,
+          "anonymous": true
+        },
+        "author": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ]
+        },
+        "reportCount": 2
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000303",
+        "targetType": "SUBJECT_RESOURCE",
+        "status": "WITHDRAWN",
+        "reason": "VOTES",
+        "openedAt": "2026-09-27T07:00:00Z",
+        "resolvedAt": "2026-09-27T08:00:00Z",
+        "revision": null,
+        "link": null,
+        "review": null,
+        "author": null,
+        "reportCount": 0
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "total": 3
+  },
+  "error": null
+}

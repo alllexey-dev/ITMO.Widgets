@@ -1,0 +1,47 @@
+{
+  "success": true,
+  "data": {
+    "runs": [
+      {
+        "id": 2,
+        "timestamp": "2026-10-05T08:50:00Z",
+        "outcome": "SUCCESS",
+        "durationMillis": 1830,
+        "receivedLessons": 120,
+        "newLessonsAdded": 2,
+        "updatedLessons": 5,
+        "skippedLessons": 0,
+        "errorCategory": null
+      },
+      {
+        "id": 1,
+        "timestamp": "2026-10-05T08:40:00Z",
+        "outcome": "FAILED",
+        "durationMillis": 410,
+        "receivedLessons": 0,
+        "newLessonsAdded": 0,
+        "updatedLessons": 0,
+        "skippedLessons": 0,
+        "errorCategory": "AUTH"
+      }
+    ],
+    "outcomes7d": {
+      "SUCCESS": 0,
+      "PARTIAL": 7,
+      "FAILED": 14
+    },
+    "errors7d": {
+      "AUTH": 1,
+      "NETWORK": 0,
+      "HTTP": 0,
+      "MAPPING": 0,
+      "PERSISTENCE": 0,
+      "INTERNAL": 0
+    },
+    "averageDurationMillis7d": 1650,
+    "lastSuccessAt": "2026-10-05T08:50:00Z",
+    "activeAutoSignEntries": 17,
+    "activeFreeSignEntries": 9
+  },
+  "error": null
+}
