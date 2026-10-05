@@ -1,21 +1,28 @@
 package dev.alllexey.itmowidgets.client.contract
 
 import dev.alllexey.itmowidgets.client.BackendClient
+import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.json.BackendJson
 import dev.alllexey.itmowidgets.client.support.Fixtures
 import dev.alllexey.itmowidgets.client.support.MockBackend
 import dev.alllexey.itmowidgets.client.support.TEST_RESOURCES_DIR
 import dev.alllexey.itmowidgets.client.support.assertJsonEquals
+import dev.alllexey.itmowidgets.client.support.json
 import dev.alllexey.itmowidgets.client.support.ok
+import dev.alllexey.itmowidgets.client.support.runSuspend
+import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import okio.SYSTEM
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -40,9 +47,6 @@ object VendoredContract {
         .map { it.relativeTo(contract).segments.joinToString("/") }
         .sorted()
         .toList()
-
-    /** The fixtures an area can claim: every file under [FIXTURE_DIRECTORIES]. */
-    fun fixtures(): List<String> = files().filter { path -> FIXTURE_DIRECTORIES.any { path.startsWith(it) } }
 
     /** The areas with a claims file, sorted. */
     fun areas(): List<String> = FileSystem.SYSTEM.list(claims)
@@ -103,7 +107,11 @@ private inline fun withPath(path: String, check: () -> Unit) {
     }
 }
 
-/** The vendored contract's shape and the claims over it; each area's own test decodes what it claims. */
+/**
+ * The vendored contract's shape and the claims over it; each area's own test decodes what it claims. Every file under
+ * `contract/` is claimed exactly once: by an area (`claims/<area>.txt`), by [NotMirrored], or here
+ * (`BACKEND_COMMIT`, `README.md`, `index.json`, `openapi.json` and the error bodies).
+ */
 class VendoredContractTest {
 
     @Test
@@ -130,24 +138,51 @@ class VendoredContractTest {
     }
 
     @Test
-    fun everyClaimedPathExistsOnce() {
-        val fixtures = VendoredContract.fixtures().toSet()
-        val claimed = VendoredContract.areas().flatMap { area -> VendoredContract.claims(area).map { area to it } }
-
-        assertTrue(VendoredContract.areas().isNotEmpty(), "no claims file")
-        for ((area, path) in claimed) assertTrue(path in fixtures, "claims/$area.txt lists $path, no such fixture")
-        val twice = claimed.groupBy({ it.second }, { it.first }).filterValues { it.size > 1 }
-        assertEquals(emptyMap(), twice, "fixtures claimed more than once")
+    fun areasClaimFixturesOnly() {
+        for (area in VendoredContract.areas()) {
+            for (path in VendoredContract.claims(area)) {
+                val fixture = VendoredContract.FIXTURE_DIRECTORIES.any { path.startsWith(it) }
+                assertTrue(fixture, "claims/$area.txt lists $path, outside ${VendoredContract.FIXTURE_DIRECTORIES}")
+            }
+        }
     }
 
     @Test
-    fun unclaimedFixturesArePending() {
-        val claimed = VendoredContract.areas().flatMap { VendoredContract.claims(it) }.toSet()
+    fun everyFileIsClaimedOnce() {
+        val areaClaims = VendoredContract.areas().flatMap { area ->
+            VendoredContract.claims(area).map { "claims/$area.txt" to it }
+        }
+        val notMirroredClaims = NotMirrored.all.flatMap { route -> route.fixtures.map { "NotMirrored $route" to it } }
+        val ownClaims = (META_FILES + ERROR_FIXTURES).map { "VendoredContractTest" to it }
 
-        val pending = VendoredContract.fixtures().filterNot { it in claimed }
+        val problems =
+            ContractConformance.claimProblems(VendoredContract.files(), areaClaims + notMirroredClaims + ownClaims)
 
-        // CO-09b turns this report into a failure once every route is mirrored or listed as not mirrored.
-        println("Vendored contract: ${claimed.size} claimed, ${pending.size} pending")
-        pending.forEach { println("pending $it") }
+        assertTrue(problems.isEmpty(), problems.joinToString(separator = "\n"))
+    }
+
+    @Test
+    fun indexListsEveryFixture() {
+        val index = BackendJson.parseToJsonElement(VendoredContract.read("index.json")).jsonArray
+            .map { it.jsonObject.getValue("file").jsonPrimitive.content }
+
+        assertEquals(VendoredContract.files() - META_FILES.toSet(), index.sorted())
+    }
+
+    @Test
+    fun unauthorizedBodyIsUnauthorized() = runSuspend {
+        val body = VendoredContract.read("errors/unauthorized.json")
+
+        val backend = MockBackend { json(HttpStatusCode.Unauthorized, body) }
+
+        assertFailsWith<BackendException.Unauthorized> { backend.client.users.myUserData() }
+    }
+
+    private companion object {
+        /** Read by this package, `README.md` by people; `index.json` lists every other file. */
+        val META_FILES = listOf("BACKEND_COMMIT", "README.md", "index.json", "openapi.json")
+
+        /** Error bodies any route answers with, checked here. */
+        val ERROR_FIXTURES = listOf("errors/unauthorized.json")
     }
 }

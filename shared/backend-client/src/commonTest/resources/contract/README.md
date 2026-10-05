@@ -14,7 +14,8 @@ are.
 | `http/{admin,weblogin}/<operationId>.json` | The response body of one `/api/admin/` or `/api/web/` route; named after its `docs/openapi.json` operationId |
 | `requests/<Type>.json` | A request body as Core's Gson writes it: declaration order, `null` fields omitted, `LocalTime` as `08:20` |
 | `fcm/<TYPE>.json` | The FCM data map of one `type`: `recipient_isu` as sent, `data` parsed from its JSON string |
-| `index.json` | One entry per fixture, sorted by `id`: `id`, `kind` (`http`, `request`, `fcm`), `method`, `path`, `file`, `minCore` |
+| `errors/<code>.json` | An error body any route answers with, recorded from the real security chain (`ErrorContractTest`) |
+| `index.json` | One entry per fixture, sorted by `id`: `id`, `kind` (`http`, `request`, `fcm`, `error`), `method`, `path`, `file`, `minCore` |
 
 - The 62 routes are the 56 `ItmoWidgetsApi` and 6 `ItmoWidgetsModerationApi` methods of Core 1.7.0:
   every Backend route except `/api/admin/**` and `/api/web/**`. A test fails when a controller
@@ -27,6 +28,9 @@ are.
   reads: `appVersionInfoIos` (`GET /api/app/version-info?platform=IOS`, the same route as
   `appVersionInfo` with another query, for the shared client) and the admin and web sign-in
   routes. `method` and `path` are `null` outside `http`; `path` never carries the query.
+- `unauthorized` (kind `error`) is the 401 body of every protected route called without valid
+  credentials. Released apps tell errors apart by the HTTP status alone, so it carries `1.8.0` and
+  no decode suite reads it; the shared client and Web do.
 - `SportLessonIds` is the bare `List<Long>` body of `POST /api/sport/sign/sync`.
 - Together the app fixtures set every optional field, show every nullable field as `null` at least
   once, carry both sport entry subtypes and every value of the enums the routes return. The values
