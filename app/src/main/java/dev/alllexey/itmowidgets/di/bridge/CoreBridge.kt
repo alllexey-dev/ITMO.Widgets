@@ -8,8 +8,11 @@ import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
+import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -28,6 +31,9 @@ interface CoreBridgeEntryPoint {
     fun backendGate(): BackendGate
     fun appDispatchers(): AppDispatchers
     fun sessionRepository(): SessionRepository
+    fun secureStore(): SecureStore
+    fun crossProcessLock(): CrossProcessLock
+    fun platformCapabilities(): PlatformCapabilities
 
     companion object {
         fun from(context: Context): CoreBridgeEntryPoint =
@@ -46,4 +52,7 @@ val coreBridgeModule = module {
     single<BackendGate> { CoreBridgeEntryPoint.from(androidContext()).backendGate() }
     single<AppDispatchers> { CoreBridgeEntryPoint.from(androidContext()).appDispatchers() }
     single<SessionRepository> { CoreBridgeEntryPoint.from(androidContext()).sessionRepository() }
+    single<SecureStore> { CoreBridgeEntryPoint.from(androidContext()).secureStore() }
+    single<CrossProcessLock> { CoreBridgeEntryPoint.from(androidContext()).crossProcessLock() }
+    single<PlatformCapabilities> { CoreBridgeEntryPoint.from(androidContext()).platformCapabilities() }
 }
