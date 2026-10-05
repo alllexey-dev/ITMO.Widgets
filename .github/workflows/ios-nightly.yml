@@ -1,0 +1,159 @@
+# Scheduled iOS jobs on `v2.3/next`; never a required check. Kept apart from ios.yml so push and PR runs never
+# carry skipped check runs. Same toolchain steps as ios.yml (pins asserted, no fallback); no secrets, no signing.
+name: ios-nightly
+
+on:
+  schedule:
+    - cron: "47 1 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ios-nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  XCODEGEN_VERSION: 2.46.0
+  XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
+  # A schedule runs on the default branch; the nightly tests the integration branch, a manual run its own ref.
+  NIGHTLY_REF: ${{ github.event_name == 'schedule' && 'v2.3/next' || github.ref }}
+
+jobs:
+  ios-nightly:
+    runs-on: xcode-27
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        # kn: iosSimulatorArm64Test of every shared module with Kotlin tests; ui: test.sh ui once it exists.
+        suite: [kn, ui]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.NIGHTLY_REF }}
+          persist-credentials: false
+
+      - name: Suite available
+        id: suite
+        env:
+          SUITE: ${{ matrix.suite }}
+        run: |
+          if [ "$SUITE" = ui ] && ! grep -q '^# test.sh \[--ci\] ui' scripts/ios/test.sh; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "scripts/ios/test.sh has no ui mode yet: nothing to run."
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Select the pinned Xcode
+        if: steps.suite.outputs.run == 'true'
+        run: |
+          version=$(sed -n 's/^: "\${ITMO_XCODE_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
+          app="/Applications/Xcode_$version.app"
+          if [ -z "$version" ] || [ ! -d "$app" ]; then
+            echo "::error::Xcode ${version:-?} pinned in scripts/ios/env.sh is not on this runner image; escalate to L18 and L01, no fallback."
+            ls -d /Applications/Xcode*.app
+            exit 1
+          fi
+          echo "ITMO_DEVELOPER_DIR=$app/Contents/Developer" >> "$GITHUB_ENV"
+          echo "DEVELOPER_DIR=$app/Contents/Developer" >> "$GITHUB_ENV"
+
+      - name: Install XcodeGen
+        if: steps.suite.outputs.run == 'true'
+        run: |
+          pinned=$(sed -n 's/^: "\${ITMO_XCODEGEN_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
+          if [ "$pinned" != "$XCODEGEN_VERSION" ]; then
+            echo "::error::scripts/ios/env.sh pins XcodeGen $pinned, ios-nightly.yml installs $XCODEGEN_VERSION; update both."
+            exit 1
+          fi
+          zip="$RUNNER_TEMP/xcodegen.zip"
+          curl -fsSL -o "$zip" "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+          echo "$XCODEGEN_SHA256  $zip" | shasum -a 256 -c -
+          unzip -q "$zip" -d "$RUNNER_TEMP/xcodegen"
+          bin=$(dirname "$(find "$RUNNER_TEMP/xcodegen" -type f -name xcodegen -perm -u+x | head -n 1)")
+          echo "$bin" >> "$GITHUB_PATH"
+
+      - name: Toolchain pins
+        if: steps.suite.outputs.run == 'true'
+        run: |
+          source scripts/ios/env.sh
+          xcodebuild -version
+          xcodegen --version
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: steps.suite.outputs.run == 'true'
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        if: steps.suite.outputs.run == 'true'
+        with:
+          cache-provider: basic
+          cache-read-only: true
+
+      - name: MyItmoApi ref
+        id: myitmoapi
+        if: steps.suite.outputs.run == 'true'
+        run: echo "ref=$(head -n 1 gradle/myitmoapi.ref | tr -d ' \t\r')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.suite.outputs.run == 'true'
+        with:
+          repository: alllexey-dev/my-itmo-api
+          ref: ${{ steps.myitmoapi.outputs.ref }}
+          path: myitmoapi
+          persist-credentials: false
+
+      - name: MyItmoApi out of the workspace
+        if: steps.suite.outputs.run == 'true'
+        run: |
+          mv myitmoapi "$RUNNER_TEMP/myitmoapi"
+          echo "MYITMOAPI_DIR=$RUNNER_TEMP/myitmoapi" >> "$GITHUB_ENV"
+
+      - name: Kotlin/Native version
+        id: kotlin-native
+        if: steps.suite.outputs.run == 'true'
+        run: echo "version=$(sed -n 's/^kotlin = "\(.*\)"$/\1/p' gradle/libs.versions.toml)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore ~/.konan
+        if: steps.suite.outputs.run == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ steps.kotlin-native.outputs.version }}
+
+      # Every module under shared/ that applies the itmowidgets.testing convention (the umbrella `ios` has no tests).
+      - name: test.sh --ci ${{ matrix.suite }}
+        if: steps.suite.outputs.run == 'true'
+        env:
+          CI: "true"
+          ITMO_MAX_WORKERS: "1"
+          SUITE: ${{ matrix.suite }}
+          TEST_RUNNER_SNAPSHOT_ARTIFACTS: ${{ github.workspace }}/iosApp/build/snapshot-artifacts
+        run: |
+          if [ "$SUITE" = kn ]; then
+            modules=()
+            for file in shared/*/build.gradle.kts; do
+              grep -q 'id("itmowidgets.testing")' "$file" && modules+=("$(basename "$(dirname "$file")")")
+            done
+            echo "modules: ${modules[*]}"
+            scripts/ios/test.sh --ci kn "${modules[@]}"
+          else
+            scripts/ios/test.sh --ci ui
+          fi
+
+      - name: Upload reports
+        if: failure() && steps.suite.outputs.run == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-nightly-${{ matrix.suite }}
+          path: |
+            iosApp/build/test-results/
+            iosApp/build/snapshot-artifacts/
+            shared/*/build/reports/
+            shared/*/build/test-results/
+          if-no-files-found: ignore
+          retention-days: 14

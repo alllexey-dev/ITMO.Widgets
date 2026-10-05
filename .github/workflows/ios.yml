@@ -1,0 +1,214 @@
+# Every PR into and every push to `v2.3/next` and `master`: scripts/ios/test.sh --ci on a GitHub macOS runner.
+# `ios-check` is the ruleset name (L01 G-12b) and the name `promote` reads; never rename the job.
+# The path filter is a step inside the job, never on the trigger: a path-filtered required check would never
+# report and would block the merge. Scheduled jobs go to ios-nightly.yml (a skipped job still leaves a check run).
+name: ios
+
+on:
+  pull_request:
+    branches: [v2.3/next, master]
+  push:
+    branches: [v2.3/next, master]
+  workflow_dispatch:
+
+# Per ref; only PR runs are cancelled, so every pushed `v2.3/next` SHA keeps its own result for `promote`.
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  # XcodeGen comes from its release, not Homebrew (which serves only the latest); the version must equal
+  # ITMO_XCODEGEN_VERSION in scripts/ios/env.sh, the digest is the release asset's sha256.
+  XCODEGEN_VERSION: 2.46.0
+  XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
+
+jobs:
+  ios-check:
+    # The image carrying the Xcode pinned in scripts/ios/env.sh (27.0, gate T10); arm64, 3 vCPU, 7 GB.
+    runs-on: xcode-27
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      # Ends the job green when nothing the iOS build reads changed. PR: the merge commit against its first
+      # parent (the base head). Push: the pushed range. A new branch, a lost `before` or a manual run builds.
+      - name: iOS paths changed
+        id: paths
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          base=""
+          case "$EVENT" in
+            pull_request) base=$(git rev-parse HEAD^1) ;;
+            push)
+              if [ -n "$BEFORE" ] && [ "$BEFORE" != 0000000000000000000000000000000000000000 ] &&
+                git fetch --quiet --depth=1 origin "$BEFORE"; then
+                base=$BEFORE
+              fi
+              ;;
+          esac
+          if [ -z "$base" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "No diff base for '$EVENT': building."
+            exit 0
+          fi
+          run=false
+          while IFS= read -r path; do
+            case "$path" in
+              iosApp/* | shared/* | scripts/ios/* | scripts/slot.sh | gradle/* | build-logic/* | *.gradle.kts | \
+                gradle.properties | app/src/main/assets/* | .github/workflows/ios*.yml)
+                echo "iOS input changed: $path"
+                run=true
+                ;;
+            esac
+          done < <(git diff --name-only "$base" HEAD)
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          [ "$run" = true ] || echo "No iOS input changed since ${base:0:7}: nothing to build."
+
+      # The Xcode pin is asserted, never substituted: if the image drops it, the job fails and the pin moves
+      # through L18 and L01 (scripts/ios/env.sh refuses any other version or build).
+      - name: Select the pinned Xcode
+        if: steps.paths.outputs.run == 'true'
+        run: |
+          version=$(sed -n 's/^: "\${ITMO_XCODE_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
+          app="/Applications/Xcode_$version.app"
+          if [ -z "$version" ] || [ ! -d "$app" ]; then
+            echo "::error::Xcode ${version:-?} pinned in scripts/ios/env.sh is not on this runner image; escalate to L18 and L01, no fallback."
+            ls -d /Applications/Xcode*.app
+            exit 1
+          fi
+          echo "ITMO_DEVELOPER_DIR=$app/Contents/Developer" >> "$GITHUB_ENV"
+          echo "DEVELOPER_DIR=$app/Contents/Developer" >> "$GITHUB_ENV"
+
+      - name: Install XcodeGen
+        if: steps.paths.outputs.run == 'true'
+        run: |
+          pinned=$(sed -n 's/^: "\${ITMO_XCODEGEN_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
+          if [ "$pinned" != "$XCODEGEN_VERSION" ]; then
+            echo "::error::scripts/ios/env.sh pins XcodeGen $pinned, ios.yml installs $XCODEGEN_VERSION; update both."
+            exit 1
+          fi
+          zip="$RUNNER_TEMP/xcodegen.zip"
+          curl -fsSL -o "$zip" "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+          echo "$XCODEGEN_SHA256  $zip" | shasum -a 256 -c -
+          unzip -q "$zip" -d "$RUNNER_TEMP/xcodegen"
+          bin=$(dirname "$(find "$RUNNER_TEMP/xcodegen" -type f -name xcodegen -perm -u+x | head -n 1)")
+          echo "$bin" >> "$GITHUB_PATH"
+
+      # Asserts every pin (Xcode version and build, XcodeGen) exactly as test.sh does, before the long steps.
+      - name: Toolchain pins
+        if: steps.paths.outputs.run == 'true'
+        run: |
+          source scripts/ios/env.sh
+          xcodebuild -version
+          xcodegen --version
+          xcrun simctl list runtimes | grep -i ios
+
+      # JDK for the Gradle client; the daemon JDK (JetBrains 21) is provisioned from
+      # gradle/gradle-daemon-jvm.properties.
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: steps.paths.outputs.run == 'true'
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Basic (MIT) cache provider; only `v2.3/next` writes the cache, everything else reads it.
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        if: steps.paths.outputs.run == 'true'
+        with:
+          cache-provider: basic
+          cache-read-only: ${{ github.ref != 'refs/heads/v2.3/next' }}
+
+      # MyItmoApi 2.x at gradle/myitmoapi.ref as the composite build (ADR 0024, TC-05), as in android-ci.yml.
+      - name: MyItmoApi ref
+        id: myitmoapi
+        if: steps.paths.outputs.run == 'true'
+        run: echo "ref=$(head -n 1 gradle/myitmoapi.ref | tr -d ' \t\r')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.paths.outputs.run == 'true'
+        with:
+          repository: alllexey-dev/my-itmo-api
+          ref: ${{ steps.myitmoapi.outputs.ref }}
+          path: myitmoapi
+          persist-credentials: false
+
+      - name: MyItmoApi out of the workspace
+        if: steps.paths.outputs.run == 'true'
+        run: |
+          mv myitmoapi "$RUNNER_TEMP/myitmoapi"
+          echo "MYITMOAPI_DIR=$RUNNER_TEMP/myitmoapi" >> "$GITHUB_ENV"
+
+      # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version and runner architecture; only `v2.3/next` writes.
+      - name: Kotlin/Native version
+        id: kotlin-native
+        if: steps.paths.outputs.run == 'true'
+        run: echo "version=$(sed -n 's/^kotlin = "\(.*\)"$/\1/p' gradle/libs.versions.toml)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore ~/.konan
+        id: konan-cache
+        if: steps.paths.outputs.run == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ steps.kotlin-native.outputs.version }}
+
+      # The runner is below the local K/N estimate, so Gradle runs one worker (no parallel K/N) and a sampler
+      # records the peak of used memory (active + wired + compressed) every 5 s. No secrets, no signing.
+      - name: test.sh --ci
+        if: steps.paths.outputs.run == 'true'
+        env:
+          CI: "true"
+          ITMO_MAX_WORKERS: "1"
+          TEST_RUNNER_SNAPSHOT_ARTIFACTS: ${{ github.workspace }}/iosApp/build/snapshot-artifacts
+        run: |
+          peak="$RUNNER_TEMP/memory-peak"
+          echo 0 > "$peak"
+          (
+            max=0
+            while sleep 5; do
+              used=$(vm_stat | awk '
+                /page size of/ { size = $8 }
+                /Pages active/ || /Pages wired down/ || /Pages occupied by compressor/ { gsub("\\.", "", $NF); pages += $NF }
+                END { printf "%d", pages * size / 1048576 }')
+              if [ "$used" -gt "$max" ]; then max=$used; echo "$max" > "$peak"; fi
+            done
+          ) &
+          sampler=$!
+          started=$(date +%s)
+          rc=0
+          scripts/ios/test.sh --ci || rc=$?
+          kill "$sampler" 2> /dev/null || true
+          {
+            echo "## ios-check"
+            echo "- test.sh --ci: $(( $(date +%s) - started )) s, exit $rc"
+            echo "- peak used memory: $(cat "$peak") MB of $(( $(sysctl -n hw.memsize) / 1048576 )) MB"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
+
+      - name: Save ~/.konan
+        if: >-
+          steps.paths.outputs.run == 'true' && github.ref == 'refs/heads/v2.3/next' &&
+          steps.konan-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: ${{ steps.konan-cache.outputs.cache-primary-key }}
+
+      - name: Upload the result bundle and snapshot diffs
+        if: failure() && steps.paths.outputs.run == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-check-results
+          path: |
+            iosApp/build/test-results/
+            iosApp/build/snapshot-artifacts/
+          if-no-files-found: ignore
+          retention-days: 14
