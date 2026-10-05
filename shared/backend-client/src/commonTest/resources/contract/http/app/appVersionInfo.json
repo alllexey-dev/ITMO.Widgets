@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "data": {
+    "minVersion": "2.1",
+    "latestVersion": "2.2",
+    "note": "Синтетическая заметка о версии"
+  },
+  "error": null
+}

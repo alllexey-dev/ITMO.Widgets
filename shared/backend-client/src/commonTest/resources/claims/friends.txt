@@ -1,0 +1,9 @@
+# The friends fixtures FriendsVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
+http/friends/acceptFriendRequest.json
+http/friends/cancelFriendRequest.json
+http/friends/friends.json
+http/friends/incomingFriendRequests.json
+http/friends/outgoingFriendRequests.json
+http/friends/rejectFriendRequest.json
+http/friends/removeFriend.json
+http/friends/sendFriendRequest.json

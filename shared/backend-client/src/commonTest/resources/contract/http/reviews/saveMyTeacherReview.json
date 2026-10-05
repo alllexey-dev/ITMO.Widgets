@@ -1,0 +1,76 @@
+{
+  "success": true,
+  "data": {
+    "teacherIsu": 200001,
+    "providerUrl": "https://example.org/reviews",
+    "reviews": [],
+    "mine": {
+      "id": "00000000-0000-4000-8000-000000000210",
+      "subjectTitle": "Математический анализ",
+      "text": "Мой синтетический отзыв.",
+      "anonymous": true,
+      "status": "PENDING",
+      "reviewNote": null,
+      "score": 2,
+      "verified": false,
+      "writtenOn": "2026-10-06"
+    },
+    "canWrite": true,
+    "canVote": true,
+    "canReport": true,
+    "knownTeacher": true,
+    "summary": {
+      "reviewCount": 7,
+      "description": "Синтетическое описание отзывов.",
+      "pros": [
+        "Понятно объясняет"
+      ],
+      "cons": [
+        "Строгие сроки"
+      ],
+      "tags": [
+        "SOFT_DEFENSE",
+        "EASY_EXAM",
+        "FLEXIBLE_DEADLINES",
+        "ATTENDANCE_OPTIONAL",
+        "UNCLEAR_REQUIREMENTS",
+        "HARD_TO_REACH",
+        "AUTOMAT",
+        "BONUS_POINTS",
+        "INTERESTING_CLASSES",
+        "READS_SLIDES"
+      ],
+      "scales": [
+        {
+          "kind": "EXPLAINS",
+          "value": "LOW",
+          "reason": "Синтетическое пояснение"
+        },
+        {
+          "kind": "ATTITUDE",
+          "value": "LOW",
+          "reason": "Синтетическое пояснение"
+        },
+        {
+          "kind": "FAIRNESS",
+          "value": "MEDIUM",
+          "reason": "Синтетическое пояснение"
+        },
+        {
+          "kind": "STRICTNESS",
+          "value": "MEDIUM",
+          "reason": "Синтетическое пояснение"
+        },
+        {
+          "kind": "WORKLOAD",
+          "value": "NOT_ENOUGH_DATA",
+          "reason": null
+        }
+      ],
+      "level": "MIXED",
+      "confidence": "MEDIUM",
+      "generatedAt": "2026-10-04T03:00:00Z"
+    }
+  },
+  "error": null
+}

@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "data": {
+    "limit": 3,
+    "available": 0,
+    "nextAvailableAt": "2026-10-25T08:10:00Z"
+  },
+  "error": null
+}

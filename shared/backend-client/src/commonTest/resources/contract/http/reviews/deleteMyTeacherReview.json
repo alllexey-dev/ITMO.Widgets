@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "data": {
+    "teacherIsu": 200001,
+    "providerUrl": "https://example.org/reviews",
+    "reviews": [
+      {
+        "id": "00000000-0000-4000-8000-000000000203",
+        "kind": "REVIEWS",
+        "subjectTitle": "Программирование",
+        "writtenOn": null,
+        "writtenBeforeYear": 2024,
+        "text": "Синтетическая копия отзыва.",
+        "score": 0,
+        "myVote": 0,
+        "verified": false,
+        "reportedByMe": false,
+        "author": null,
+        "sourceTitle": "Reviews",
+        "sourceLink": "https://example.org/reviews/1"
+      }
+    ],
+    "mine": null,
+    "canWrite": false,
+    "canVote": true,
+    "canReport": true,
+    "knownTeacher": true,
+    "summary": null
+  },
+  "error": null
+}

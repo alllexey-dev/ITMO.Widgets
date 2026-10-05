@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "data": {
+    "latest": "2.2",
+    "minimum": "2.1",
+    "note": "Синтетическая заметка о версии",
+    "overridden": false,
+    "updatedAt": null
+  },
+  "error": null
+}

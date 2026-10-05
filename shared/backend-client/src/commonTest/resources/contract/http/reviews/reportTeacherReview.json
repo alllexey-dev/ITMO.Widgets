@@ -1,0 +1,41 @@
+{
+  "success": true,
+  "data": {
+    "teacherIsu": 200001,
+    "providerUrl": "https://example.org/reviews",
+    "reviews": [
+      {
+        "id": "00000000-0000-4000-8000-000000000202",
+        "kind": "COMMUNITY",
+        "subjectTitle": null,
+        "writtenOn": "2026-09-06",
+        "writtenBeforeYear": null,
+        "text": "Синтетический анонимный отзыв.",
+        "score": -1,
+        "myVote": -1,
+        "verified": false,
+        "reportedByMe": true,
+        "author": null,
+        "sourceTitle": null,
+        "sourceLink": null
+      }
+    ],
+    "mine": {
+      "id": "00000000-0000-4000-8000-000000000210",
+      "subjectTitle": "Математический анализ",
+      "text": "Мой синтетический отзыв.",
+      "anonymous": true,
+      "status": "HIDDEN",
+      "reviewNote": null,
+      "score": 2,
+      "verified": false,
+      "writtenOn": "2026-10-06"
+    },
+    "canWrite": true,
+    "canVote": true,
+    "canReport": true,
+    "knownTeacher": true,
+    "summary": null
+  },
+  "error": null
+}

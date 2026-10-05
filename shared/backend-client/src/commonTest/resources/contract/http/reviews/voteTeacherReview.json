@@ -1,0 +1,102 @@
+{
+  "success": true,
+  "data": {
+    "teacherIsu": 200001,
+    "providerUrl": "https://example.org/reviews",
+    "reviews": [
+      {
+        "id": "00000000-0000-4000-8000-000000000201",
+        "kind": "COMMUNITY",
+        "subjectTitle": "Математический анализ",
+        "writtenOn": "2026-10-06",
+        "writtenBeforeYear": null,
+        "text": "Синтетический отзыв под именем.",
+        "score": 4,
+        "myVote": 1,
+        "verified": true,
+        "reportedByMe": false,
+        "author": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ],
+          "capabilities": {
+            "canViewSchedule": true,
+            "canViewSport": true,
+            "canViewFriends": true
+          }
+        },
+        "sourceTitle": null,
+        "sourceLink": null
+      }
+    ],
+    "mine": {
+      "id": "00000000-0000-4000-8000-000000000210",
+      "subjectTitle": "Математический анализ",
+      "text": "Мой синтетический отзыв.",
+      "anonymous": true,
+      "status": "REJECTED",
+      "reviewNote": "Отзыв не о преподавателе",
+      "score": 2,
+      "verified": false,
+      "writtenOn": "2026-10-06"
+    },
+    "canWrite": true,
+    "canVote": true,
+    "canReport": true,
+    "knownTeacher": true,
+    "summary": {
+      "reviewCount": 7,
+      "description": "Синтетическое описание отзывов.",
+      "pros": [
+        "Понятно объясняет"
+      ],
+      "cons": [
+        "Строгие сроки"
+      ],
+      "tags": [],
+      "scales": [
+        {
+          "kind": "EXPLAINS",
+          "value": "NOT_ENOUGH_DATA",
+          "reason": null
+        },
+        {
+          "kind": "ATTITUDE",
+          "value": "NOT_ENOUGH_DATA",
+          "reason": null
+        },
+        {
+          "kind": "FAIRNESS",
+          "value": "NOT_ENOUGH_DATA",
+          "reason": null
+        },
+        {
+          "kind": "STRICTNESS",
+          "value": "NOT_ENOUGH_DATA",
+          "reason": null
+        },
+        {
+          "kind": "WORKLOAD",
+          "value": "NOT_ENOUGH_DATA",
+          "reason": null
+        }
+      ],
+      "level": "NEGATIVE",
+      "confidence": "LOW",
+      "generatedAt": "2026-10-04T03:00:00Z"
+    }
+  },
+  "error": null
+}

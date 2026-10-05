@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "data": {
+    "enabled": true,
+    "running": false,
+    "runningSince": null,
+    "model": "synthetic-model",
+    "keyStatus": "OK",
+    "lastStartedAt": "2026-10-05T03:00:00Z",
+    "lastFinishedAt": "2026-10-05T03:10:00Z",
+    "lastTrigger": "SCHEDULE",
+    "lastOutcome": "COMPLETED",
+    "lastError": null,
+    "lastGenerated": 12,
+    "lastFailed": 1,
+    "lastRequests": 14,
+    "ready": 300,
+    "pending": 20,
+    "failed": 2,
+    "hidden": 3,
+    "budgetDay": "2026-10-05",
+    "budgetUsed": 14,
+    "dailyBudget": 250
+  },
+  "error": null
+}

@@ -1,0 +1,8 @@
+{
+  "action": "RESTRICT_USER",
+  "note": "Синтетическое ограничение",
+  "restriction": {
+    "capability": "SUBMIT_RESOURCES",
+    "days": 7
+  }
+}

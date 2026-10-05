@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "data": {
+    "id": "00000000-0000-4000-8000-000000000501",
+    "code": "ABCD2345",
+    "pollSecret": "synthetic-poll-secret",
+    "expiresAt": "2026-10-05T09:05:00Z"
+  },
+  "error": null
+}

@@ -34,3 +34,5 @@ docs/product/releases.md:path:V8__service_credentials.sql  # Backend migration w
 docs/product/releases.md:path:V9__teacher_reviews.sql  # Backend migration without the B/ prefix
 docs/product/releases.md:path:V10__teacher_summaries.sql  # Backend migration without the B/ prefix
 docs/settings.md:path:docs/ops/account-deletion.md  # Backend doc without the B/ prefix
+
+shared/backend-client/src/commonTest/resources/contract/README.md  # Backend README vendored verbatim by scripts/sync-backend-contract.sh; its paths are Backend paths

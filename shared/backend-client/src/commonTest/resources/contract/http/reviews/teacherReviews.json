@@ -1,0 +1,143 @@
+{
+  "success": true,
+  "data": {
+    "teacherIsu": 200001,
+    "providerUrl": "https://example.org/reviews",
+    "reviews": [
+      {
+        "id": "00000000-0000-4000-8000-000000000201",
+        "kind": "COMMUNITY",
+        "subjectTitle": "Математический анализ",
+        "writtenOn": "2026-10-06",
+        "writtenBeforeYear": null,
+        "text": "Синтетический отзыв под именем.",
+        "score": 4,
+        "myVote": 1,
+        "verified": true,
+        "reportedByMe": false,
+        "author": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ],
+          "capabilities": {
+            "canViewSchedule": true,
+            "canViewSport": true,
+            "canViewFriends": true
+          }
+        },
+        "sourceTitle": null,
+        "sourceLink": null
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000202",
+        "kind": "COMMUNITY",
+        "subjectTitle": null,
+        "writtenOn": "2026-09-06",
+        "writtenBeforeYear": null,
+        "text": "Синтетический анонимный отзыв.",
+        "score": -1,
+        "myVote": -1,
+        "verified": false,
+        "reportedByMe": true,
+        "author": null,
+        "sourceTitle": null,
+        "sourceLink": null
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000203",
+        "kind": "REVIEWS",
+        "subjectTitle": "Программирование",
+        "writtenOn": null,
+        "writtenBeforeYear": 2024,
+        "text": "Синтетическая копия отзыва.",
+        "score": 0,
+        "myVote": 0,
+        "verified": false,
+        "reportedByMe": false,
+        "author": null,
+        "sourceTitle": "Reviews",
+        "sourceLink": "https://example.org/reviews/1"
+      }
+    ],
+    "mine": {
+      "id": "00000000-0000-4000-8000-000000000210",
+      "subjectTitle": "Математический анализ",
+      "text": "Мой синтетический отзыв.",
+      "anonymous": true,
+      "status": "PUBLISHED",
+      "reviewNote": null,
+      "score": 2,
+      "verified": true,
+      "writtenOn": "2026-10-06"
+    },
+    "canWrite": true,
+    "canVote": true,
+    "canReport": true,
+    "knownTeacher": true,
+    "summary": {
+      "reviewCount": 7,
+      "description": "Синтетическое описание отзывов.",
+      "pros": [
+        "Понятно объясняет"
+      ],
+      "cons": [
+        "Строгие сроки"
+      ],
+      "tags": [
+        "STRICT_DEFENSE",
+        "HARD_EXAM",
+        "STRICT_DEADLINES",
+        "ATTENDANCE_REQUIRED",
+        "CLEAR_REQUIREMENTS",
+        "QUICK_REPLIES",
+        "MANY_LABS",
+        "HEAVY_HOMEWORK",
+        "FREQUENT_TESTS",
+        "ASKS_THEORY"
+      ],
+      "scales": [
+        {
+          "kind": "EXPLAINS",
+          "value": "HIGH",
+          "reason": "Синтетическое пояснение"
+        },
+        {
+          "kind": "ATTITUDE",
+          "value": "MEDIUM",
+          "reason": "Синтетическое пояснение"
+        },
+        {
+          "kind": "FAIRNESS",
+          "value": "LOW",
+          "reason": "Синтетическое пояснение"
+        },
+        {
+          "kind": "STRICTNESS",
+          "value": "NOT_ENOUGH_DATA",
+          "reason": null
+        },
+        {
+          "kind": "WORKLOAD",
+          "value": "HIGH",
+          "reason": "Синтетическое пояснение"
+        }
+      ],
+      "level": "POSITIVE",
+      "confidence": "HIGH",
+      "generatedAt": "2026-10-04T03:00:00Z"
+    }
+  },
+  "error": null
+}

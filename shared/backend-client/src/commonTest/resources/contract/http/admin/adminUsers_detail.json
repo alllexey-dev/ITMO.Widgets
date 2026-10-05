@@ -1,0 +1,78 @@
+{
+  "success": true,
+  "data": {
+    "user": {
+      "isu": 100002,
+      "name": "Друг Первый",
+      "pictureUrl": "https://example.org/avatars/100002.jpg",
+      "groups": [
+        {
+          "name": "К3240",
+          "course": 2,
+          "facultyShortName": "ФИТИП"
+        },
+        {
+          "name": "К3240c",
+          "course": 2,
+          "facultyShortName": "ФИТИП"
+        }
+      ]
+    },
+    "roles": [
+      "MODERATOR"
+    ],
+    "groups": [
+      {
+        "name": "К3240",
+        "course": 2,
+        "facultyShortName": "ФИТИП"
+      },
+      {
+        "name": "К3240c",
+        "course": 2,
+        "facultyShortName": "ФИТИП"
+      }
+    ],
+    "createdAt": "2026-09-01T12:00:00Z",
+    "devices": [
+      {
+        "name": "Pixel 8 (synthetic)",
+        "lastLogin": "2026-10-05T07:30:00Z"
+      }
+    ],
+    "friendsCount": 12,
+    "linksCount": 3,
+    "restrictions": [
+      {
+        "id": "00000000-0000-4000-8000-000000000401",
+        "user": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ]
+        },
+        "capability": "REPORT",
+        "reason": "Синтетическая причина",
+        "startsAt": "2026-10-01T10:00:00Z",
+        "expiresAt": "2026-10-31T10:00:00Z",
+        "revokedAt": null,
+        "revokedByIsu": null,
+        "active": true,
+        "caseId": "00000000-0000-4000-8000-000000000301"
+      }
+    ],
+    "lastSeen": "2026-10-05T07:30:00Z"
+  },
+  "error": null
+}

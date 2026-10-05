@@ -1,0 +1,580 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "00000000-0000-4000-8000-000000000301",
+      "targetType": "SUBJECT_RESOURCE",
+      "status": "OPEN",
+      "reason": "SUBMISSION",
+      "openedAt": "2026-10-01T06:00:00Z",
+      "target": {
+        "targetType": "SUBJECT_RESOURCE",
+        "revision": {
+          "id": "00000000-0000-4000-8000-000000000112",
+          "linkId": "00000000-0000-4000-8000-000000000101",
+          "number": 2,
+          "category": "MATERIALS",
+          "url": "https://example.org/links/new",
+          "title": "Конспекты лекций",
+          "visibility": "ALL",
+          "flowId": null,
+          "status": "PENDING",
+          "submittedAt": "2026-10-02T07:00:00Z",
+          "decidedAt": null,
+          "note": null
+        },
+        "link": {
+          "id": "00000000-0000-4000-8000-000000000101",
+          "subjectId": 501,
+          "subjectName": "Математический анализ",
+          "periodKey": "2026-1",
+          "category": "QUEUE",
+          "url": "https://example.org/links/2",
+          "title": "Материалы",
+          "visibility": "FLOW",
+          "flowId": 7001,
+          "audienceLabel": "ЛЕК МАТАН 3.1",
+          "status": "PENDING",
+          "reviewNote": null,
+          "score": 1,
+          "myVote": 0,
+          "isMine": true,
+          "reportedByMe": false,
+          "author": null,
+          "updatedAt": "2026-10-03T10:00:00Z"
+        },
+        "author": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ],
+          "capabilities": {
+            "canViewSchedule": true,
+            "canViewSport": true,
+            "canViewFriends": true
+          }
+        },
+        "reports": [
+          {
+            "reason": "BROKEN",
+            "comment": "Не открывается",
+            "createdAt": "2026-10-05T07:10:00Z"
+          },
+          {
+            "reason": "WRONG_SUBJECT",
+            "comment": null,
+            "createdAt": "2026-10-05T07:20:00Z"
+          },
+          {
+            "reason": "SPAM",
+            "comment": null,
+            "createdAt": "2026-10-05T07:30:00Z"
+          },
+          {
+            "reason": "OTHER",
+            "comment": "Другое",
+            "createdAt": "2026-10-05T07:40:00Z"
+          }
+        ],
+        "submitterHistory": {
+          "approved": 5,
+          "rejected": 1,
+          "dismissedReports": 2,
+          "activeRestrictions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000401",
+              "capability": "SUBMIT_RESOURCES",
+              "reason": "Спам в ссылках",
+              "startsAt": "2026-10-01T09:00:00Z",
+              "expiresAt": "2026-10-08T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "decisions": []
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000302",
+      "targetType": "TEACHER_REVIEW",
+      "status": "RESOLVED",
+      "reason": "REPORTS",
+      "openedAt": "2026-10-02T06:00:00Z",
+      "target": {
+        "targetType": "TEACHER_REVIEW",
+        "revision": {
+          "id": "00000000-0000-4000-8000-000000000222",
+          "reviewId": "00000000-0000-4000-8000-000000000201",
+          "number": 2,
+          "subjectTitle": "Математический анализ",
+          "text": "Синтетическая редакция 2.",
+          "status": "REJECTED",
+          "submittedAt": "2026-09-22T07:00:00Z",
+          "decidedAt": "2026-09-22T08:00:00Z",
+          "note": "Оскорбления"
+        },
+        "review": {
+          "id": "00000000-0000-4000-8000-000000000201",
+          "teacherIsu": 200001,
+          "teacherName": null,
+          "anonymous": true,
+          "status": "HIDDEN",
+          "reviewNote": "Скрыт по жалобам",
+          "shown": {
+            "id": "00000000-0000-4000-8000-000000000221",
+            "reviewId": "00000000-0000-4000-8000-000000000201",
+            "number": 1,
+            "subjectTitle": null,
+            "text": "Синтетическая редакция 1.",
+            "status": "APPROVED",
+            "submittedAt": "2026-09-21T07:00:00Z",
+            "decidedAt": "2026-09-21T08:00:00Z",
+            "note": null
+          },
+          "score": -4,
+          "hidden": true,
+          "verification": "PENDING",
+          "verifiedFlowId": null
+        },
+        "author": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ],
+          "capabilities": {
+            "canViewSchedule": true,
+            "canViewSport": true,
+            "canViewFriends": true
+          }
+        },
+        "reports": [
+          {
+            "reason": "OFFENSIVE",
+            "comment": null,
+            "createdAt": "2026-09-28T07:10:00Z"
+          },
+          {
+            "reason": "WRONG_TEACHER",
+            "comment": "Другой преподаватель",
+            "createdAt": "2026-09-28T07:20:00Z"
+          }
+        ],
+        "submitterHistory": {
+          "approved": 5,
+          "rejected": 1,
+          "dismissedReports": 2,
+          "activeRestrictions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000401",
+              "capability": "SUBMIT_RESOURCES",
+              "reason": "Спам в ссылках",
+              "startsAt": "2026-10-01T09:00:00Z",
+              "expiresAt": "2026-10-08T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "decisions": [
+        {
+          "id": "00000000-0000-4000-8000-000000000311",
+          "moderatorId": "00000000-0000-4000-8000-000000000003",
+          "action": "HIDE",
+          "note": "Синтетическое решение 1",
+          "restriction": null,
+          "createdAt": "2026-10-02T11:00:00Z",
+          "actor": "MODERATOR"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000312",
+          "moderatorId": "00000000-0000-4000-8000-000000000003",
+          "action": "RESTRICT_USER",
+          "note": null,
+          "restriction": {
+            "capability": "REPORT",
+            "days": 30
+          },
+          "createdAt": "2026-10-03T12:00:00Z",
+          "actor": "MODERATOR"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000313",
+          "moderatorId": "00000000-0000-4000-8000-000000000003",
+          "action": "HIDE_ALL_BY_USER",
+          "note": "Синтетическое решение 3",
+          "restriction": null,
+          "createdAt": "2026-10-04T13:00:00Z",
+          "actor": "MODERATOR"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000303",
+      "targetType": "SUBJECT_RESOURCE",
+      "status": "WITHDRAWN",
+      "reason": "VOTES",
+      "openedAt": "2026-10-03T06:00:00Z",
+      "target": null,
+      "decisions": [
+        {
+          "id": "00000000-0000-4000-8000-000000000314",
+          "moderatorId": null,
+          "action": "APPROVE",
+          "note": null,
+          "restriction": null,
+          "createdAt": "2026-10-01T14:00:00Z",
+          "actor": "POLICY"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000304",
+      "targetType": "TEACHER_REVIEW",
+      "status": "OPEN",
+      "reason": "SUBMISSION",
+      "openedAt": "2026-10-04T06:00:00Z",
+      "target": {
+        "targetType": "TEACHER_REVIEW",
+        "revision": {
+          "id": "00000000-0000-4000-8000-000000000223",
+          "reviewId": "00000000-0000-4000-8000-000000000201",
+          "number": 3,
+          "subjectTitle": "Математический анализ",
+          "text": "Синтетическая редакция 3.",
+          "status": "PENDING",
+          "submittedAt": "2026-09-23T07:00:00Z",
+          "decidedAt": null,
+          "note": null
+        },
+        "review": {
+          "id": "00000000-0000-4000-8000-000000000201",
+          "teacherIsu": 200001,
+          "teacherName": "Преподаватель Тестовый",
+          "anonymous": true,
+          "status": "PENDING",
+          "reviewNote": null,
+          "shown": null,
+          "score": 0,
+          "hidden": false,
+          "verification": "UNVERIFIED",
+          "verifiedFlowId": null
+        },
+        "author": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ],
+          "capabilities": {
+            "canViewSchedule": true,
+            "canViewSport": true,
+            "canViewFriends": true
+          }
+        },
+        "reports": [],
+        "submitterHistory": {
+          "approved": 5,
+          "rejected": 1,
+          "dismissedReports": 2,
+          "activeRestrictions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000401",
+              "capability": "SUBMIT_RESOURCES",
+              "reason": "Спам в ссылках",
+              "startsAt": "2026-10-01T09:00:00Z",
+              "expiresAt": "2026-10-08T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "decisions": []
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000305",
+      "targetType": "SUBJECT_RESOURCE",
+      "status": "RESOLVED",
+      "reason": "SUBMISSION",
+      "openedAt": "2026-10-05T06:00:00Z",
+      "target": {
+        "targetType": "SUBJECT_RESOURCE",
+        "revision": {
+          "id": "00000000-0000-4000-8000-000000000113",
+          "linkId": "00000000-0000-4000-8000-000000000101",
+          "number": 3,
+          "category": "MATERIALS",
+          "url": "https://example.org/links/new",
+          "title": "Конспекты лекций",
+          "visibility": "ALL",
+          "flowId": null,
+          "status": "REJECTED",
+          "submittedAt": "2026-10-03T07:00:00Z",
+          "decidedAt": "2026-10-03T08:00:00Z",
+          "note": "Ссылка ведёт не на тот предмет"
+        },
+        "link": {
+          "id": "00000000-0000-4000-8000-000000000101",
+          "subjectId": 501,
+          "subjectName": "Математический анализ",
+          "periodKey": "2026-1",
+          "category": "QUEUE",
+          "url": "https://example.org/links/2",
+          "title": "Материалы",
+          "visibility": "FLOW",
+          "flowId": 7001,
+          "audienceLabel": "ЛЕК МАТАН 3.1",
+          "status": "PENDING",
+          "reviewNote": null,
+          "score": 1,
+          "myVote": 0,
+          "isMine": true,
+          "reportedByMe": false,
+          "author": null,
+          "updatedAt": "2026-10-03T10:00:00Z"
+        },
+        "author": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ],
+          "capabilities": {
+            "canViewSchedule": true,
+            "canViewSport": true,
+            "canViewFriends": true
+          }
+        },
+        "reports": [],
+        "submitterHistory": {
+          "approved": 5,
+          "rejected": 1,
+          "dismissedReports": 2,
+          "activeRestrictions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000401",
+              "capability": "SUBMIT_RESOURCES",
+              "reason": "Спам в ссылках",
+              "startsAt": "2026-10-01T09:00:00Z",
+              "expiresAt": "2026-10-08T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "decisions": [
+        {
+          "id": "00000000-0000-4000-8000-000000000315",
+          "moderatorId": "00000000-0000-4000-8000-000000000003",
+          "action": "REJECT",
+          "note": "Синтетическое решение 5",
+          "restriction": null,
+          "createdAt": "2026-10-02T15:00:00Z",
+          "actor": "MODERATOR"
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000306",
+      "targetType": "SUBJECT_RESOURCE",
+      "status": "WITHDRAWN",
+      "reason": "SUBMISSION",
+      "openedAt": "2026-10-06T06:00:00Z",
+      "target": {
+        "targetType": "SUBJECT_RESOURCE",
+        "revision": {
+          "id": "00000000-0000-4000-8000-000000000111",
+          "linkId": "00000000-0000-4000-8000-000000000101",
+          "number": 1,
+          "category": "MATERIALS",
+          "url": "https://example.org/links/new",
+          "title": null,
+          "visibility": "ALL",
+          "flowId": null,
+          "status": "WITHDRAWN",
+          "submittedAt": "2026-10-01T07:00:00Z",
+          "decidedAt": "2026-10-01T08:00:00Z",
+          "note": null
+        },
+        "link": {
+          "id": "00000000-0000-4000-8000-000000000101",
+          "subjectId": 501,
+          "subjectName": "Математический анализ",
+          "periodKey": "2026-1",
+          "category": "QUEUE",
+          "url": "https://example.org/links/2",
+          "title": "Материалы",
+          "visibility": "FLOW",
+          "flowId": 7001,
+          "audienceLabel": "ЛЕК МАТАН 3.1",
+          "status": "PENDING",
+          "reviewNote": null,
+          "score": 1,
+          "myVote": 0,
+          "isMine": true,
+          "reportedByMe": false,
+          "author": null,
+          "updatedAt": "2026-10-03T10:00:00Z"
+        },
+        "author": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ],
+          "capabilities": {
+            "canViewSchedule": true,
+            "canViewSport": true,
+            "canViewFriends": true
+          }
+        },
+        "reports": [],
+        "submitterHistory": {
+          "approved": 5,
+          "rejected": 1,
+          "dismissedReports": 2,
+          "activeRestrictions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000401",
+              "capability": "SUBMIT_RESOURCES",
+              "reason": "Спам в ссылках",
+              "startsAt": "2026-10-01T09:00:00Z",
+              "expiresAt": "2026-10-08T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "decisions": []
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000307",
+      "targetType": "TEACHER_REVIEW",
+      "status": "WITHDRAWN",
+      "reason": "SUBMISSION",
+      "openedAt": "2026-10-07T06:00:00Z",
+      "target": {
+        "targetType": "TEACHER_REVIEW",
+        "revision": {
+          "id": "00000000-0000-4000-8000-000000000224",
+          "reviewId": "00000000-0000-4000-8000-000000000201",
+          "number": 4,
+          "subjectTitle": "Математический анализ",
+          "text": "Синтетическая редакция 4.",
+          "status": "WITHDRAWN",
+          "submittedAt": "2026-09-24T07:00:00Z",
+          "decidedAt": "2026-09-24T08:00:00Z",
+          "note": null
+        },
+        "review": {
+          "id": "00000000-0000-4000-8000-000000000201",
+          "teacherIsu": 200001,
+          "teacherName": "Преподаватель Тестовый",
+          "anonymous": true,
+          "status": "PUBLISHED",
+          "reviewNote": null,
+          "shown": {
+            "id": "00000000-0000-4000-8000-000000000221",
+            "reviewId": "00000000-0000-4000-8000-000000000201",
+            "number": 1,
+            "subjectTitle": null,
+            "text": "Синтетическая редакция 1.",
+            "status": "APPROVED",
+            "submittedAt": "2026-09-21T07:00:00Z",
+            "decidedAt": "2026-09-21T08:00:00Z",
+            "note": null
+          },
+          "score": -4,
+          "hidden": false,
+          "verification": "VERIFIED",
+          "verifiedFlowId": 7001
+        },
+        "author": {
+          "isu": 100002,
+          "name": "Друг Первый",
+          "pictureUrl": "https://example.org/avatars/100002.jpg",
+          "groups": [
+            {
+              "name": "К3240",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            },
+            {
+              "name": "К3240c",
+              "course": 2,
+              "facultyShortName": "ФИТИП"
+            }
+          ],
+          "capabilities": {
+            "canViewSchedule": true,
+            "canViewSport": true,
+            "canViewFriends": true
+          }
+        },
+        "reports": [],
+        "submitterHistory": {
+          "approved": 5,
+          "rejected": 1,
+          "dismissedReports": 2,
+          "activeRestrictions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000401",
+              "capability": "SUBMIT_RESOURCES",
+              "reason": "Спам в ссылках",
+              "startsAt": "2026-10-01T09:00:00Z",
+              "expiresAt": "2026-10-08T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "decisions": []
+    }
+  ],
+  "error": null
+}

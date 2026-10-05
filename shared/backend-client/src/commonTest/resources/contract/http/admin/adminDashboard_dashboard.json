@@ -1,0 +1,38 @@
+{
+  "success": true,
+  "data": {
+    "totals": {
+      "users": 1200,
+      "newUsers7d": 35,
+      "activeDevices7d": 640,
+      "activeDevices30d": 910,
+      "webSessions7d": 12,
+      "friendships": 2300,
+      "links": {
+        "PRIVATE": 10,
+        "PENDING": 20,
+        "PUBLISHED": 30,
+        "REJECTED": 40,
+        "HIDDEN": 50
+      },
+      "openCases": 4,
+      "activeAutoSignEntries": 17,
+      "activeFreeSignEntries": 9
+    },
+    "days": [
+      {
+        "date": "2026-10-04",
+        "newUsers": 5,
+        "activeDevices": 300,
+        "createdLinks": 2
+      },
+      {
+        "date": "2026-10-05",
+        "newUsers": 3,
+        "activeDevices": 280,
+        "createdLinks": 0
+      }
+    ]
+  },
+  "error": null
+}

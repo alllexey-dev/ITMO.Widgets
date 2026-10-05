@@ -1,0 +1,147 @@
+{
+  "success": true,
+  "data": {
+    "id": "00000000-0000-4000-8000-000000000301",
+    "targetType": "SUBJECT_RESOURCE",
+    "status": "RESOLVED",
+    "reason": "SUBMISSION",
+    "openedAt": "2026-10-01T06:00:00Z",
+    "target": {
+      "targetType": "SUBJECT_RESOURCE",
+      "revision": {
+        "id": "00000000-0000-4000-8000-000000000112",
+        "linkId": "00000000-0000-4000-8000-000000000101",
+        "number": 2,
+        "category": "MATERIALS",
+        "url": "https://example.org/links/new",
+        "title": "Конспекты лекций",
+        "visibility": "ALL",
+        "flowId": null,
+        "status": "APPROVED",
+        "submittedAt": "2026-10-02T07:00:00Z",
+        "decidedAt": "2026-10-02T08:00:00Z",
+        "note": "Одобрено"
+      },
+      "link": {
+        "id": "00000000-0000-4000-8000-000000000101",
+        "subjectId": 501,
+        "subjectName": "Математический анализ",
+        "periodKey": "2026-1",
+        "category": "QUEUE",
+        "url": "https://example.org/links/2",
+        "title": "Материалы",
+        "visibility": "FLOW",
+        "flowId": 7001,
+        "audienceLabel": "ЛЕК МАТАН 3.1",
+        "status": "PENDING",
+        "reviewNote": null,
+        "score": 1,
+        "myVote": 0,
+        "isMine": true,
+        "reportedByMe": false,
+        "author": null,
+        "updatedAt": "2026-10-03T10:00:00Z"
+      },
+      "author": {
+        "isu": 100002,
+        "name": "Друг Первый",
+        "pictureUrl": "https://example.org/avatars/100002.jpg",
+        "groups": [
+          {
+            "name": "К3240",
+            "course": 2,
+            "facultyShortName": "ФИТИП"
+          },
+          {
+            "name": "К3240c",
+            "course": 2,
+            "facultyShortName": "ФИТИП"
+          }
+        ],
+        "capabilities": {
+          "canViewSchedule": true,
+          "canViewSport": true,
+          "canViewFriends": true
+        }
+      },
+      "reports": [
+        {
+          "reason": "BROKEN",
+          "comment": "Не открывается",
+          "createdAt": "2026-10-05T07:10:00Z"
+        },
+        {
+          "reason": "WRONG_SUBJECT",
+          "comment": null,
+          "createdAt": "2026-10-05T07:20:00Z"
+        },
+        {
+          "reason": "SPAM",
+          "comment": null,
+          "createdAt": "2026-10-05T07:30:00Z"
+        },
+        {
+          "reason": "OTHER",
+          "comment": "Другое",
+          "createdAt": "2026-10-05T07:40:00Z"
+        }
+      ],
+      "submitterHistory": {
+        "approved": 5,
+        "rejected": 1,
+        "dismissedReports": 2,
+        "activeRestrictions": [
+          {
+            "id": "00000000-0000-4000-8000-000000000401",
+            "capability": "SUBMIT_RESOURCES",
+            "reason": "Спам в ссылках",
+            "startsAt": "2026-10-01T09:00:00Z",
+            "expiresAt": "2026-10-08T09:00:00Z"
+          }
+        ]
+      }
+    },
+    "decisions": [
+      {
+        "id": "00000000-0000-4000-8000-000000000316",
+        "moderatorId": "00000000-0000-4000-8000-000000000003",
+        "action": "APPROVE",
+        "note": null,
+        "restriction": null,
+        "createdAt": "2026-10-03T16:00:00Z",
+        "actor": "MODERATOR"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000317",
+        "moderatorId": "00000000-0000-4000-8000-000000000003",
+        "action": "RESTORE",
+        "note": "Синтетическое решение 7",
+        "restriction": null,
+        "createdAt": "2026-10-04T17:00:00Z",
+        "actor": "MODERATOR"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000318",
+        "moderatorId": "00000000-0000-4000-8000-000000000003",
+        "action": "DISMISS",
+        "note": null,
+        "restriction": null,
+        "createdAt": "2026-10-01T18:00:00Z",
+        "actor": "MODERATOR"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000319",
+        "moderatorId": "00000000-0000-4000-8000-000000000003",
+        "action": "RESTRICT_USER",
+        "note": "Синтетическое решение 9",
+        "restriction": {
+          "capability": "REPORT",
+          "days": null
+        },
+        "createdAt": "2026-10-02T19:00:00Z",
+        "actor": "MODERATOR"
+      }
+    ]
+  },
+  "error": null
+}

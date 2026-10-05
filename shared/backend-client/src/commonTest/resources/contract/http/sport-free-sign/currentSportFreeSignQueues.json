@@ -1,0 +1,16 @@
+{
+  "success": true,
+  "data": [
+    {
+      "lessonId": 9001,
+      "total": 6,
+      "type": "free"
+    },
+    {
+      "lessonId": 9002,
+      "total": 1,
+      "type": "free"
+    }
+  ],
+  "error": null
+}

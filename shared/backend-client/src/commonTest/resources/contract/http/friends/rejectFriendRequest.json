@@ -1,0 +1,29 @@
+{
+  "success": true,
+  "data": {
+    "user": {
+      "isu": 100002,
+      "name": "Друг Первый",
+      "pictureUrl": "https://example.org/avatars/100002.jpg",
+      "groups": [
+        {
+          "name": "К3240",
+          "course": 2,
+          "facultyShortName": "ФИТИП"
+        },
+        {
+          "name": "К3240c",
+          "course": 2,
+          "facultyShortName": "ФИТИП"
+        }
+      ],
+      "capabilities": {
+        "canViewSchedule": true,
+        "canViewSport": true,
+        "canViewFriends": true
+      }
+    },
+    "relationship": "NONE"
+  },
+  "error": null
+}

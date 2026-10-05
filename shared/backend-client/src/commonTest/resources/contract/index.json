@@ -1,0 +1,898 @@
+[
+  {
+    "id": "FRIENDSHIP_EVENT_PAYLOAD",
+    "kind": "fcm",
+    "method": null,
+    "path": null,
+    "file": "fcm/FRIENDSHIP_EVENT_PAYLOAD.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "IdTokenRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/IdTokenRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "LessonSyncRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/LessonSyncRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "ModerationDecisionRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/ModerationDecisionRequest.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "ModerationReportRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/ModerationReportRequest.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "ModerationSettings",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/ModerationSettings.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "PinSubjectLinkRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/PinSubjectLinkRequest.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "RegisterDeviceRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/RegisterDeviceRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "ResourceVoteRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/ResourceVoteRequest.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "SPORT_AUTO_SIGN_LESSONS_PAYLOAD",
+    "kind": "fcm",
+    "method": null,
+    "path": null,
+    "file": "fcm/SPORT_AUTO_SIGN_LESSONS_PAYLOAD.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "SPORT_FREE_SIGN_LESSONS_PAYLOAD",
+    "kind": "fcm",
+    "method": null,
+    "path": null,
+    "file": "fcm/SPORT_FREE_SIGN_LESSONS_PAYLOAD.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "SaveSubjectLinkRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/SaveSubjectLinkRequest.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "SaveTeacherReviewRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/SaveTeacherReviewRequest.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "SportAutoSignRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/SportAutoSignRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "SportFreeSignRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/SportFreeSignRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "SportLessonIds",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/SportLessonIds.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "UnregisterDeviceRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/UnregisterDeviceRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "UserLookupRequest",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/UserLookupRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "UserPrivacySettings",
+    "kind": "request",
+    "method": null,
+    "path": null,
+    "file": "requests/UserPrivacySettings.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "acceptFriendRequest",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/friends/{isu}/accept",
+    "file": "http/friends/acceptFriendRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "adminAudit_audit",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/audit",
+    "file": "http/admin/adminAudit_audit.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminDashboard_dashboard",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/dashboard",
+    "file": "http/admin/adminDashboard_dashboard.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminModeration_case",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/moderation/cases/{id}",
+    "file": "http/admin/adminModeration_case.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminModeration_cases",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/moderation/cases",
+    "file": "http/admin/adminModeration_cases.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminModeration_decide",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/admin/moderation/cases/{id}/decisions",
+    "file": "http/admin/adminModeration_decide.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminModeration_restrictions",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/moderation/restrictions",
+    "file": "http/admin/adminModeration_restrictions.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminModeration_revoke",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/admin/moderation/restrictions/{id}/revoke",
+    "file": "http/admin/adminModeration_revoke.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminModeration_settings",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/moderation/settings",
+    "file": "http/admin/adminModeration_settings.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminModeration_updateSettings",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/admin/moderation/settings",
+    "file": "http/admin/adminModeration_updateSettings.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminReviews_regenerateSummary",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/admin/reviews/summaries/{isu}/regenerate",
+    "file": "http/admin/adminReviews_regenerateSummary.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminReviews_runSummaries",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/admin/reviews/summaries/run",
+    "file": "http/admin/adminReviews_runSummaries.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminReviews_setSummaryHidden",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/admin/reviews/summaries/{isu}/hidden",
+    "file": "http/admin/adminReviews_setSummaryHidden.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminReviews_startSync",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/admin/reviews/sync",
+    "file": "http/admin/adminReviews_startSync.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminReviews_summaries",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/reviews/summaries",
+    "file": "http/admin/adminReviews_summaries.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminReviews_summaryTeachers",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/reviews/summaries/teachers",
+    "file": "http/admin/adminReviews_summaryTeachers.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminReviews_sync",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/reviews/sync",
+    "file": "http/admin/adminReviews_sync.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminReviews_verification",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/reviews/verification",
+    "file": "http/admin/adminReviews_verification.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminSystem_appVersion",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/system/app-version",
+    "file": "http/admin/adminSystem_appVersion.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminSystem_credentials",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/system/credentials",
+    "file": "http/admin/adminSystem_credentials.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminSystem_replaceCredential",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/admin/system/credentials/{key}",
+    "file": "http/admin/adminSystem_replaceCredential.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminSystem_sport",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/system/sport",
+    "file": "http/admin/adminSystem_sport.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminSystem_updateAppVersion",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/admin/system/app-version",
+    "file": "http/admin/adminSystem_updateAppVersion.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminUsers_detail",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/users/{isu}",
+    "file": "http/admin/adminUsers_detail.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminUsers_grant",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/admin/users/{isu}/roles/{role}",
+    "file": "http/admin/adminUsers_grant.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminUsers_revoke",
+    "kind": "http",
+    "method": "DELETE",
+    "path": "/api/admin/users/{isu}/roles/{role}",
+    "file": "http/admin/adminUsers_revoke.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminUsers_search",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/users",
+    "file": "http/admin/adminUsers_search.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "appVersionInfo",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/app/version-info",
+    "file": "http/app/appVersionInfo.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "appVersionInfoIos",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/app/version-info",
+    "file": "http/app/appVersionInfoIos.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "approveWebLogin",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/users/me/web-login/{challengeId}/approve",
+    "file": "http/users/approveWebLogin.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "cancelFriendRequest",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/friends/{isu}/cancel",
+    "file": "http/friends/cancelFriendRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "cancelSportAutoSignEntry",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/auto-sign/entry/{id}/cancel",
+    "file": "http/sport-auto-sign/cancelSportAutoSignEntry.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "cancelSportAutoSignEntryByLesson",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/auto-sign/lesson/{lessonId}/cancel",
+    "file": "http/sport-auto-sign/cancelSportAutoSignEntryByLesson.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "cancelSportFreeSignEntry",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/free-sign/entry/{id}/cancel",
+    "file": "http/sport-free-sign/cancelSportFreeSignEntry.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "cancelSportFreeSignEntryByLesson",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/free-sign/lesson/{lessonId}/cancel",
+    "file": "http/sport-free-sign/cancelSportFreeSignEntryByLesson.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "createSportAutoSignEntry",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/auto-sign/entry/create",
+    "file": "http/sport-auto-sign/createSportAutoSignEntry.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "createSportFreeSignEntry",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/free-sign/entry/create",
+    "file": "http/sport-free-sign/createSportFreeSignEntry.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "currentSportAutoSignQueues",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/auto-sign/queue/current",
+    "file": "http/sport-auto-sign/currentSportAutoSignQueues.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "currentSportFreeSignQueues",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/sport/free-sign/queue/current",
+    "file": "http/sport-free-sign/currentSportFreeSignQueues.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "decide",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/moderation/cases/{id}/decisions",
+    "file": "http/moderation/decide.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "deleteMyTeacherReview",
+    "kind": "http",
+    "method": "DELETE",
+    "path": "/api/teachers/{isu}/reviews/mine",
+    "file": "http/reviews/deleteMyTeacherReview.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "deleteSubjectLink",
+    "kind": "http",
+    "method": "DELETE",
+    "path": "/api/links/{id}",
+    "file": "http/links/deleteSubjectLink.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "friends",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/friends",
+    "file": "http/friends/friends.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "friendsOnLesson",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/schedule/lessons/{pairId}/friends",
+    "file": "http/schedule/friendsOnLesson.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "friendsSportBookings",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/sport/friends/sport-bookings",
+    "file": "http/sport/friendsSportBookings.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "incomingFriendRequests",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/friends/requests/incoming",
+    "file": "http/friends/incomingFriendRequests.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "latestAppVersion",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/app/version",
+    "file": "http/app/latestAppVersion.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "lookupUsers",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/users/lookup",
+    "file": "http/users/lookupUsers.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "markSportAutoSignEntrySatisfied",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/auto-sign/entry/{id}/mark-satisfied",
+    "file": "http/sport-auto-sign/markSportAutoSignEntrySatisfied.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "markSportAutoSignEntrySatisfiedByLesson",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/auto-sign/lesson/{lessonId}/mark-satisfied",
+    "file": "http/sport-auto-sign/markSportAutoSignEntrySatisfiedByLesson.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "markSportFreeSignEntrySatisfied",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/free-sign/entry/{id}/mark-satisfied",
+    "file": "http/sport-free-sign/markSportFreeSignEntrySatisfied.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "markSportFreeSignEntrySatisfiedByLesson",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/free-sign/lesson/{lessonId}/mark-satisfied",
+    "file": "http/sport-free-sign/markSportFreeSignEntrySatisfiedByLesson.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "moderationCases",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/moderation/cases",
+    "file": "http/moderation/moderationCases.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "moderationSettings",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/moderation/settings",
+    "file": "http/moderation/moderationSettings.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "myPrivacySettings",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/users/me/privacy",
+    "file": "http/users/myPrivacySettings.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "myRestrictions",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/users/me/restrictions",
+    "file": "http/users/myRestrictions.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "myRoles",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/users/me/roles",
+    "file": "http/users/myRoles.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "mySportAutoSignEntries",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/sport/auto-sign/entry/my",
+    "file": "http/sport-auto-sign/mySportAutoSignEntries.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "mySportFreeSignEntries",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/sport/free-sign/entry/my",
+    "file": "http/sport-free-sign/mySportFreeSignEntries.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "myUserData",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/users/me/data",
+    "file": "http/users/myUserData.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "outgoingFriendRequests",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/friends/requests/outgoing",
+    "file": "http/friends/outgoingFriendRequests.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "pinSubjectLink",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/subjects/{subjectId}/links/pin",
+    "file": "http/links/pinSubjectLink.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "registerDevice",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/device/register-device",
+    "file": "http/device/registerDevice.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "rejectFriendRequest",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/friends/{isu}/reject",
+    "file": "http/friends/rejectFriendRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "removeFriend",
+    "kind": "http",
+    "method": "DELETE",
+    "path": "/api/friends/{isu}",
+    "file": "http/friends/removeFriend.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "reportSubjectLink",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/links/{id}/report",
+    "file": "http/links/reportSubjectLink.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "reportTeacherReview",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/reviews/{id}/report",
+    "file": "http/reviews/reportTeacherReview.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "revokeRestriction",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/moderation/restrictions/{id}/revoke",
+    "file": "http/moderation/revokeRestriction.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "saveMyTeacherReview",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/teachers/{isu}/reviews/mine",
+    "file": "http/reviews/saveMyTeacherReview.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "saveSubjectLink",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/links/{id}",
+    "file": "http/links/saveSubjectLink.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "sendFriendRequest",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/friends/{isu}/request",
+    "file": "http/friends/sendFriendRequest.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "sportAutoSignLimits",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/sport/auto-sign/limits",
+    "file": "http/sport-auto-sign/sportAutoSignLimits.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "subjectLinks",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/subjects/{subjectId}/links",
+    "file": "http/links/subjectLinks.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "syncLessons",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/schedule/lessons/sync",
+    "file": "http/schedule/syncLessons.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "syncSportLessons",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/sport/sign/sync",
+    "file": "http/sport/syncSportLessons.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "teacherReviews",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/teachers/{isu}/reviews",
+    "file": "http/reviews/teacherReviews.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "teacherSummaryLevels",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/teachers/summary-levels",
+    "file": "http/reviews/teacherSummaryLevels.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "unregisterCurrentDevice",
+    "kind": "http",
+    "method": "DELETE",
+    "path": "/api/device/current",
+    "file": "http/device/unregisterCurrentDevice.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "updateIdTokenData",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/users/me/id-token",
+    "file": "http/users/updateIdTokenData.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "updateModerationSettings",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/moderation/settings",
+    "file": "http/moderation/updateModerationSettings.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "updateMyPrivacySettings",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/users/me/privacy",
+    "file": "http/users/updateMyPrivacySettings.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "userFriends",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/users/{isu}/friends",
+    "file": "http/users/userFriends.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "userLessons",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/schedule/lessons/user/{isu}",
+    "file": "http/schedule/userLessons.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "userProfile",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/users/{isu}",
+    "file": "http/users/userProfile.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "userRestrictions",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/moderation/restrictions",
+    "file": "http/moderation/userRestrictions.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "userSportBookings",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/sport/users/{isu}/bookings",
+    "file": "http/sport/userSportBookings.json",
+    "minCore": "1.2.0"
+  },
+  {
+    "id": "voteSubjectLink",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/links/{id}/vote",
+    "file": "http/links/voteSubjectLink.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "voteTeacherReview",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/reviews/{id}/vote",
+    "file": "http/reviews/voteTeacherReview.json",
+    "minCore": "1.7.0"
+  },
+  {
+    "id": "webAuth_createChallenge",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/web/auth/challenges",
+    "file": "http/weblogin/webAuth_createChallenge.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "webAuth_logout",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/web/auth/logout",
+    "file": "http/weblogin/webAuth_logout.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "webAuth_me",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/web/auth/me",
+    "file": "http/weblogin/webAuth_me.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "webAuth_poll",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/web/auth/challenges/{id}",
+    "file": "http/weblogin/webAuth_poll.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "webLoginPreview",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/users/me/web-login/{code}",
+    "file": "http/users/webLoginPreview.json",
+    "minCore": "1.7.0"
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "data": [
+    {
+      "teacherIsu": 200001,
+      "level": "VERY_NEGATIVE"
+    },
+    {
+      "teacherIsu": 200002,
+      "level": "NEGATIVE"
+    },
+    {
+      "teacherIsu": 200003,
+      "level": "MIXED"
+    },
+    {
+      "teacherIsu": 200004,
+      "level": "POSITIVE"
+    },
+    {
+      "teacherIsu": 200005,
+      "level": "VERY_POSITIVE"
+    }
+  ],
+  "error": null
+}

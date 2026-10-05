@@ -1,0 +1,29 @@
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000601",
+        "action": "ROLE_GRANTED",
+        "target": "user:100002",
+        "details": "role MODERATOR",
+        "createdAt": "2026-10-05T09:00:00Z",
+        "actorIsu": 100001,
+        "actorName": "Студент Тестовый"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000602",
+        "action": "AI_SUMMARY_HIDDEN",
+        "target": "teacher:200001",
+        "details": null,
+        "createdAt": "2026-10-04T12:00:00Z",
+        "actorIsu": 100001,
+        "actorName": "Студент Тестовый"
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "total": 2
+  },
+  "error": null
+}

@@ -1,0 +1,37 @@
+{
+  "success": true,
+  "data": {
+    "id": 16,
+    "lessonId": 9001,
+    "position": 2,
+    "total": 6,
+    "isCancelled": false,
+    "status": "WAITING",
+    "createdAt": "2026-10-01T08:00:00Z",
+    "firstNotifiedAt": null,
+    "lastNotifiedAt": null,
+    "cancelledAt": null,
+    "satisfiedAt": null,
+    "expiredAt": null,
+    "notificationAttempts": 0,
+    "maxNotificationAttempts": 3,
+    "targetLesson": {
+      "id": 9001,
+      "sectionId": 41,
+      "sectionName": "Плавание",
+      "sectionLevel": 1,
+      "level": 1,
+      "typeId": 2,
+      "buildingId": 13,
+      "roomName": "Бассейн",
+      "start": "2026-10-07T10:00:00+03:00",
+      "end": "2026-10-07T11:30:00+03:00",
+      "timeSlotId": 3,
+      "teacherIsu": 200001,
+      "teacherFio": "Тренер Тестовый"
+    },
+    "forceSign": true,
+    "type": "free"
+  },
+  "error": null
+}
