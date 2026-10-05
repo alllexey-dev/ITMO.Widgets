@@ -28,10 +28,12 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesR
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
 import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleChangesViewModel
 import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toKotlinLocalDate
 
 /** Hosts the real history screen over changes kept in memory; no file, no check and no notification. */
 @AndroidEntryPoint
@@ -110,9 +112,9 @@ class ScheduleChangesPreviewActivity : AppCompatActivity() {
     }
 
     private object FixedTime : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.of(2026, 9, 7)
-        override fun now(): OffsetDateTime = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+        override fun today() = LocalDate.of(2026, 9, 7).toKotlinLocalDate()
+        override fun now() = today().atTime(12, 0).toInstant(timeZone)
     }
 
     companion object {

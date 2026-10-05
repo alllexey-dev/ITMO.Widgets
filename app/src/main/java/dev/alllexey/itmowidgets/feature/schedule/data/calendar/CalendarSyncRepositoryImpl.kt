@@ -10,6 +10,9 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvents
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncPlanner
@@ -151,7 +154,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         writing { leaveGoogleCalendar() }
         val calendarId = writing { usableCalendar() }
             ?: return if (swept) AppResult.Success(Unit) else AppResult.Failure(AppError.Unknown())
-        val today = time.today()
+        val today = time.javaToday()
         val days = schedule.read(today, today.plusDays(WINDOW_DAYS))
         return writing {
             val stored = loaded()
@@ -221,8 +224,8 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         days: List<DaySchedule>,
         today: LocalDate
     ): AppResult<Unit> {
-        val zone = time.zoneId
-        val now = time.now().toInstant()
+        val zone = time.javaZone()
+        val now = time.javaNow().toInstant()
         val (kept, left) = removeOurs(start, keep = calendarId)
         var stored = start.copy(events = kept, cleanups = withCleanups(start, left))
         persist(stored)
@@ -288,7 +291,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
 
     /** Deletes every live tagged event of [calendarId] in the sweep range; the number found, or null on failure. */
     private fun sweep(calendarId: Long): Int? = guardedNow {
-        val from = time.now().toInstant().minus(SWEEP_BACK)
+        val from = time.javaNow().toInstant().minus(SWEEP_BACK)
         calendars.marked(calendarId, from, from.plus(SWEEP_BACK).plus(SWEEP_AHEAD))
             .onEach { calendars.delete(it.eventId) }
             .size
@@ -296,7 +299,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
 
     /** [stored]'s pending sweeps plus [left], each due for [CLEANUP_PERIOD] from now. */
     private fun withCleanups(stored: StoredCalendarSync, left: List<Long>): List<StoredCleanup> {
-        val until = time.now().toInstant().plus(CLEANUP_PERIOD).toEpochMilli()
+        val until = time.javaNow().toInstant().plus(CLEANUP_PERIOD).toEpochMilli()
         val pending = stored.cleanups.orEmpty().filter { it.calendarId !in left }
         return pending + left.map { StoredCleanup(it, until) }
     }
@@ -310,7 +313,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         val stored = loaded()
         val pending = stored.cleanups.orEmpty()
         if (pending.isEmpty() || guarded { calendars.hasAccess() } != true) return true
-        val now = time.now().toInstant()
+        val now = time.javaNow().toInstant()
         var failed = false
         val next = pending.mapNotNull { cleanup ->
             val inUse = stored.enabled && stored.calendarId == cleanup.calendarId

@@ -6,6 +6,9 @@ import dev.alllexey.itmowidgets.core.demo.DemoSportSlots
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
@@ -44,10 +47,10 @@ object DemoSport {
      * still to sign up for ([DemoSportSlots.extraSlots]).
      */
     fun schedule(time: AcademicTimeProvider): Map<LocalDate, List<SportLesson>> {
-        val today = time.today()
+        val today = time.javaToday()
         val booked = DemoSportSlots.annaBookedDates(today)
         val queued = queuedSwimming(time)
-        val extra = DemoSportSlots.extraSlots(time.now().toLocalDateTime())
+        val extra = DemoSportSlots.extraSlots(time.javaNow().toLocalDateTime())
         return (0 until CATALOG_DAYS).map(today::plusDays).associateWith { date ->
             val slots = DemoSportSlots.ALL.filter { it.day == date.dayOfWeek } + if (date == today) extra else emptyList()
             slots.map { slot ->
@@ -60,8 +63,8 @@ object DemoSport {
 
     /** Anna's confirmed visits that have not passed yet. */
     fun bookings(time: AcademicTimeProvider): List<SportBooking> =
-        DemoSportSlots.annaBookedDates(time.today())
-            .filter { !it.isBefore(time.today()) }
+        DemoSportSlots.annaBookedDates(time.javaToday())
+            .filter { !it.isBefore(time.javaToday()) }
             .map { date -> DemoSportSlots.ANNA_WEEKLY.toLesson(date, time, signed = true, available = 0).toBookingOfLesson() }
 
     fun queueEntries(time: AcademicTimeProvider): List<SportQueueEntry> = listOf(freeEntry(time), autoEntry(time))
@@ -72,7 +75,7 @@ object DemoSport {
     )
 
     fun friendsBookings(time: AcademicTimeProvider): List<FriendSportBooking> {
-        val today = time.today()
+        val today = time.javaToday()
         val volleyball = DemoSportSlots.annaBookedDates(today).filter { !it.isBefore(today) }
             .map { DemoSportSlots.ANNA_WEEKLY.lessonId(it) }
         val tennis = DemoSportSlots.TABLE_TENNIS_WEDNESDAY.nextDate(today)
@@ -82,7 +85,7 @@ object DemoSport {
     }
 
     fun userBookings(isu: Int, time: AcademicTimeProvider): UserSportBookings? {
-        val today = time.today()
+        val today = time.javaToday()
         return when (isu) {
             DemoPeople.IVAN.isu -> UserSportBookings(
                 DemoSportSlots.annaBookedDates(today).filter { !it.isBefore(today) }.map(DemoSportSlots.ANNA_WEEKLY::lessonId),
@@ -101,11 +104,11 @@ object DemoSport {
     fun attempts(): SportAttempts = SportAttempts(total = 3, used = 1, free = 2, canSignIn = true)
 
     fun autoSignLimits(time: AcademicTimeProvider): SportAutoSignLimits =
-        SportAutoSignLimits(limit = 2, available = 1, nextAvailableAt = time.now().plusDays(3).withHour(9).withMinute(0))
+        SportAutoSignLimits(limit = 2, available = 1, nextAvailableAt = time.javaNow().plusDays(3).withHour(9).withMinute(0))
 
     /** Points of the current period: eight volleyball visits, a tournament and the fitness standards. */
     fun score(time: AcademicTimeProvider): SportScore {
-        val today = time.today()
+        val today = time.javaToday()
         val visits = (1..VISITS).map { week ->
             val date = DemoSportSlots.ANNA_WEEKLY.nextDate(today).minusWeeks(week.toLong())
             attendance("lesson", "Волейбол", 2, date.at(DemoSportSlots.ANNA_WEEKLY.start, time), competition = false)
@@ -128,7 +131,7 @@ object DemoSport {
 
     /** The current half-year and the two before it; only the current one knows its end. */
     fun periods(time: AcademicTimeProvider): List<SportScorePeriod> {
-        val today = time.today()
+        val today = time.javaToday()
         val autumn = today.month >= Month.SEPTEMBER || today.month == Month.JANUARY
         val year = if (today.month >= Month.SEPTEMBER) today.year else today.year - 1
         val currentEnd = if (autumn) LocalDate.of(year + 1, Month.JANUARY, 31) else LocalDate.of(year + 1, Month.JUNE, 30)
@@ -168,15 +171,15 @@ object DemoSport {
 
     /** The next Tuesday's swimming: full, Anna waits in the queue for a free seat. */
     private fun queuedSwimming(time: AcademicTimeProvider) =
-        QueuedLesson(DemoSportSlots.SWIMMING_TUESDAY, DemoSportSlots.SWIMMING_TUESDAY.nextDate(time.today().plusDays(1)))
+        QueuedLesson(DemoSportSlots.SWIMMING_TUESDAY, DemoSportSlots.SWIMMING_TUESDAY.nextDate(time.javaToday().plusDays(1)))
 
     /** This week's Friday swimming: its repeat two weeks later is not in the catalog yet, Anna auto-signs for it. */
     private fun autoPrototype(time: AcademicTimeProvider) =
-        QueuedLesson(DemoSportSlots.SWIMMING_FRIDAY, DemoSportSlots.SWIMMING_FRIDAY.nextDate(time.today()))
+        QueuedLesson(DemoSportSlots.SWIMMING_FRIDAY, DemoSportSlots.SWIMMING_FRIDAY.nextDate(time.javaToday()))
 
     private fun freeEntry(time: AcademicTimeProvider): SportFreeSignEntry {
         val lesson = queuedSwimming(time)
-        val created = time.now().minusDays(1)
+        val created = time.javaNow().minusDays(1)
         return SportFreeSignEntry(
             id = 1, lessonId = lesson.lessonId, position = 2, total = FREE_QUEUE_TOTAL, isCancelled = false,
             status = SportQueueEntryStatus.WAITING, createdAt = created, firstNotifiedAt = null, lastNotifiedAt = null,
@@ -191,7 +194,7 @@ object DemoSport {
         val prototype = autoPrototype(time)
         return SportAutoSignEntry(
             id = 2, prototypeLessonId = prototype.lessonId, realLessonId = null, position = 1, total = AUTO_QUEUE_TOTAL,
-            isCancelled = false, status = SportQueueEntryStatus.WAITING, createdAt = time.now().minusDays(2),
+            isCancelled = false, status = SportQueueEntryStatus.WAITING, createdAt = time.javaNow().minusDays(2),
             firstNotifiedAt = null, lastNotifiedAt = null, cancelledAt = null, satisfiedAt = null, expiredAt = null,
             notificationAttempts = 0, maxNotificationAttempts = 5, targetLesson = prototype.queueLesson(time), realLesson = null
         )
@@ -209,7 +212,7 @@ object DemoSport {
 
     private fun DemoSportSlot.toLesson(date: LocalDate, time: AcademicTimeProvider, signed: Boolean, available: Int): SportLesson {
         val start = date.at(this.start, time)
-        val reasons = UnavailableReason.getSortedUnavailableReasons(signed, start, available, emptyList(), time.now())
+        val reasons = UnavailableReason.getSortedUnavailableReasons(signed, start, available, emptyList(), time.javaNow())
         return SportLesson(
             isLessonReal = true,
             lessonId = lessonId(date),
@@ -262,7 +265,7 @@ object DemoSport {
         generateSequence(from) { it.plusDays(1) }.first { it.dayOfWeek == day }
 
     private fun LocalDate.at(time: LocalTime, provider: AcademicTimeProvider): OffsetDateTime =
-        atTime(time).atZone(provider.zoneId).toOffsetDateTime()
+        atTime(time).atZone(provider.javaZone()).toOffsetDateTime()
 
     private fun label(autumn: Boolean, year: Int) = (if (autumn) "Осень" else "Весна") + " ${year}/${year + 1}"
 

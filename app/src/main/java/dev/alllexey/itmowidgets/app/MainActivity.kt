@@ -31,6 +31,8 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
@@ -252,7 +254,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
      */
     private suspend fun findSportBookingAt(date: LocalDate, start: LocalTime, subject: String): SportBooking? {
         val candidates = sportBookingsSnapshot()?.filter { booking ->
-            val local = booking.start.atZoneSameInstant(timeProvider.zoneId)
+            val local = booking.start.atZoneSameInstant(timeProvider.javaZone())
             local.toLocalDate() == date && local.toLocalTime() == start
         }.orEmpty()
         val wanted = subject.trim().lowercase()
@@ -266,7 +268,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     private fun onSportSheetAction(lessonId: Long, action: String?) {
         lifecycleScope.launch {
             val booking = findSportBooking(lessonId) ?: return@launch
-            val expected = booking.toDetailsArgs().bookingAction(timeProvider.now())
+            val expected = booking.toDetailsArgs().bookingAction(timeProvider.javaNow())
             if (expected == SportBookingAction.NONE || expected.name != action) return@launch
             MaterialAlertDialogBuilder(this@MainActivity)
                 .setMessage(R.string.sport_cancel_booking_question)

@@ -1,29 +1,34 @@
 package dev.alllexey.itmowidgets.core.time
 
-import java.time.Clock
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
+import kotlin.time.Instant
 
+/** With an override date, the academic time is that date at the real wall time in [timeZone]. */
 class DefaultAcademicTimeProvider(
     private val clock: Clock,
+    override val timeZone: TimeZone,
     private val overrideStore: AcademicTimeOverrideStore
 ) : AcademicTimeProvider, AcademicTimeOverrideController {
 
-    override val zoneId: ZoneId
-        get() = clock.zone
-
     override fun today(): LocalDate {
-        return overrideStore.getOverrideDate() ?: LocalDate.now(clock)
+        return overrideStore.getOverrideDate() ?: clock.now().toLocalDateTime(timeZone).date
     }
 
-    override fun now(): OffsetDateTime {
-        val realNow = OffsetDateTime.now(clock)
+    override fun now(): Instant {
+        val realNow = clock.now()
         val overrideDate = overrideStore.getOverrideDate() ?: return realNow
-        return overrideDate
-            .atTime(realNow.toLocalTime())
-            .atZone(clock.zone)
-            .toOffsetDateTime()
+        return LocalDateTime(overrideDate, realNow.toLocalDateTime(timeZone).time).toInstant(timeZone)
+    }
+
+    override fun localNow(): LocalDateTime {
+        val realNow = clock.now().toLocalDateTime(timeZone)
+        val overrideDate = overrideStore.getOverrideDate() ?: return realNow
+        return LocalDateTime(overrideDate, realNow.time)
     }
 
     override fun getOverrideDate(): LocalDate? {

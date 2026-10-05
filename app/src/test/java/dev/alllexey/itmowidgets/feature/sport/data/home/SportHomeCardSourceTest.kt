@@ -8,6 +8,8 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.testing.FakePendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.sport.domain.model.FriendSportBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignLimits
@@ -76,8 +78,8 @@ class SportHomeCardSourceTest {
 
     private fun booking(id: Long, hour: Int) = PendingSportBooking(
         queueId = id, queueKind = PendingSportBooking.QueueKind.FREE, lessonId = 100 + id, sectionName = "Бассейн",
-        start = Today.today().atTime(hour, 0).atZone(Today.zoneId).toOffsetDateTime(),
-        end = Today.today().atTime(hour + 1, 30).atZone(Today.zoneId).toOffsetDateTime(),
+        start = Today.javaToday().atTime(hour, 0).atZone(Today.javaZone()).toOffsetDateTime(),
+        end = Today.javaToday().atTime(hour + 1, 30).atZone(Today.javaZone()).toOffsetDateTime(),
         teacherFio = "Тренер", roomName = "Бассейн", isPrediction = false
     )
 

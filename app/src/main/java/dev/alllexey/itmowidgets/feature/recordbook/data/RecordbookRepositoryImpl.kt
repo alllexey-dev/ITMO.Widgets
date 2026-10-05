@@ -5,6 +5,9 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import api.myitmo.model.recordbook.ControlEntry
 import api.myitmo.model.recordbook.RecordBookEntry
@@ -38,7 +41,7 @@ class RecordbookRepositoryImpl @Inject constructor(
     private val cache = RecordbookMemoryCache()
 
     override suspend fun getPrograms(): AppResult<List<RecordbookProgram>> = if (demo.isActive()) {
-        AppResult.Success(DemoRecordbook.programs(time.today()))
+        AppResult.Success(DemoRecordbook.programs(time.javaToday()))
     } else request(
         call = { api.getSpecializations() },
         transform = { programs -> programs.map { it.toModel() } }
@@ -48,7 +51,7 @@ class RecordbookRepositoryImpl @Inject constructor(
         programId: Long,
         semester: Int
     ): AppResult<List<RecordbookSubject>> = if (demo.isActive()) {
-        DemoRecordbook.subjects(programId, semester, time.today(), time.zoneId)?.let { AppResult.Success(it) }
+        DemoRecordbook.subjects(programId, semester, time.javaToday(), time.javaZone())?.let { AppResult.Success(it) }
             ?: AppResult.Failure(AppError.NotFound)
     } else request(
         call = { api.getRecordBook(programId, semester) },
@@ -56,7 +59,7 @@ class RecordbookRepositoryImpl @Inject constructor(
     ).also { result -> if (result is AppResult.Success) cache.subjects[programId to semester] = result.value }
 
     override suspend fun getControls(entryId: Long): AppResult<List<RecordbookControl>> = if (demo.isActive()) {
-        AppResult.Success(DemoRecordbook.controls(entryId, time.now()).orEmpty())
+        AppResult.Success(DemoRecordbook.controls(entryId, time.javaNow()).orEmpty())
     } else request(
         call = { api.getControlEntries(entryId) },
         transform = { controls -> controls.map { it.toModel() } }

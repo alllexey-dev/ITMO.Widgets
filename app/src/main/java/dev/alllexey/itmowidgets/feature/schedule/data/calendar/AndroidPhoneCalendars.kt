@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.MarkedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
@@ -55,7 +56,7 @@ class AndroidPhoneCalendars @Inject constructor(
             put(Calendars.CALENDAR_COLOR, ContextCompat.getColor(context, R.color.calendar_app))
             put(Calendars.CALENDAR_ACCESS_LEVEL, Calendars.CAL_ACCESS_OWNER)
             put(Calendars.OWNER_ACCOUNT, ACCOUNT_NAME)
-            put(Calendars.CALENDAR_TIME_ZONE, time.zoneId.id)
+            put(Calendars.CALENDAR_TIME_ZONE, time.javaZone().id)
             put(Calendars.VISIBLE, 1)
             put(Calendars.SYNC_EVENTS, 1)
         }
@@ -94,7 +95,7 @@ class AndroidPhoneCalendars @Inject constructor(
         put(Events.TITLE, event.title)
         put(Events.DTSTART, event.start.toEpochMilli())
         put(Events.DTEND, event.end.toEpochMilli())
-        put(Events.EVENT_TIMEZONE, time.zoneId.id)
+        put(Events.EVENT_TIMEZONE, time.javaZone().id)
         put(Events.EVENT_LOCATION, event.location.orEmpty())
         put(Events.DESCRIPTION, event.taggedDescription)
         put(Events.AVAILABILITY, Events.AVAILABILITY_BUSY)

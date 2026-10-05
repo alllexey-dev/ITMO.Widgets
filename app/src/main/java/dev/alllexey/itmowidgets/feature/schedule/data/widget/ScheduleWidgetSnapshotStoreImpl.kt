@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
 import java.io.File
@@ -50,7 +51,7 @@ class ScheduleWidgetSnapshotStoreImpl @Inject constructor(
             when {
                 !tokens.hasRefreshToken() -> ScheduleWidgetSnapshot.signedOut()
                 generation != cached.second -> ScheduleWidgetSnapshot.loading()
-                else -> snapshot.forPendingAvailability(enabled, timeProvider.now().toInstant())
+                else -> snapshot.forPendingAvailability(enabled, timeProvider.javaNow().toInstant())
             }
         }
     }

@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.core.testing.unreachableMyItmo
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProvider
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportActionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
@@ -66,7 +67,7 @@ class SportDemoGateTest {
         assertTrue(lessons.any { it.isLessonReal && it.available == 0 && it.signEntry is SportFreeSignEntry })
         assertTrue(lessons.any { !it.isLessonReal && it.signEntry is SportAutoSignEntry })
         assertTrue(lessons.any { lesson -> lesson.friendsBookings.any { it.friend.isu == DemoPeople.IVAN.isu } })
-        assertTrue(lessons.all { !it.start.toLocalDate().isBefore(time.today()) })
+        assertTrue(lessons.all { !it.start.toLocalDate().isBefore(time.javaToday()) })
     }
 
     @Test

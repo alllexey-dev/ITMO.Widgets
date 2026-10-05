@@ -28,6 +28,8 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.subjectsIn
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
 import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
@@ -239,7 +241,7 @@ class RecordbookSubjectViewModel @Inject constructor(
         }
         updateHub { copy(lessons = SubjectLessonsState.Loading, teachers = fallbackTeachers) }
         hubJob = viewModelScope.launch {
-            val today = time.today()
+            val today = time.javaToday()
             val end = today.plusDays(WINDOW_DAYS)
             val refresh = scheduleRefresh.refreshOwnSchedule(today, end)
             combine(lessonsGateway.observeOwnLessons(today, end), bindingVersion) { lessons, _ -> lessons }
@@ -326,8 +328,8 @@ class RecordbookSubjectViewModel @Inject constructor(
     /** The connection of [scope], else the sheet links to connect, else nothing. */
     private fun sheetState(scope: ResourceScope, links: SubjectLinksState, scores: List<SheetScore>): SubjectSheetState? {
         scores.firstOrNull { it.scope.key == scope.key }?.let { score ->
-            val updatedAt = score.updatedAt?.atZone(time.zoneId)?.toLocalDateTime()
-            return SubjectSheetState.Connected(score, updatedAt, time.today())
+            val updatedAt = score.updatedAt?.atZone(time.javaZone())?.toLocalDateTime()
+            return SubjectSheetState.Connected(score, updatedAt, time.javaToday())
         }
         val snapshot = (links as? SubjectLinksState.Content)?.snapshot ?: return null
         val options = (snapshot.mine + snapshot.shared + snapshot.previous)
@@ -399,7 +401,7 @@ class RecordbookSubjectViewModel @Inject constructor(
 
     /** Same rule as the study root's default selection: the academic year rolls in September. */
     private fun RecordbookPeriod.isCurrent(): Boolean {
-        val today = time.today()
+        val today = time.javaToday()
         val yearStart = today.year - if (today.monthValue < 9) 1 else 0
         val half = if (today.monthValue in 2..8) 2 else 1
         return studyYear == "$yearStart/${yearStart + 1}" && semesterInCourse == half

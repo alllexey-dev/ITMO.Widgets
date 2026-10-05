@@ -8,6 +8,8 @@ import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookBarsMerge
@@ -176,7 +178,7 @@ class RecordbookViewModel @Inject constructor(
                 is AppResult.Success -> {
                     val official = result.value
                     // What the list shows advances the snapshot of the current half-year; children of the load job.
-                    val half = selected.period.studyHalf()?.takeIf { it == StudyHalf.of(time.today()) }
+                    val half = selected.period.studyHalf()?.takeIf { it == StudyHalf.of(time.javaToday()) }
                     if (half != null) {
                         launch { marks.recordMyItmoSeen(stamp, half, selected.program.id, selected.period.semester, official) }
                     }
@@ -221,7 +223,7 @@ class RecordbookViewModel @Inject constructor(
 
     private fun content(selected: RecordbookSelection, subjects: List<RecordbookSubject>, sport: RecordbookSportState?) =
         RecordbookUiState.Content(programs, selected, subjects, sport, attention = subjects.mapNotNull { subject ->
-            attentionReason(subject, sport, knownControls(subject), time.now())?.let { subject.entryId to it }
+            attentionReason(subject, sport, knownControls(subject), time.javaNow())?.let { subject.entryId to it }
         }.toMap(), newSubjects = newSubjectsIn(selected.period), sheetTotals = sheetTotalsIn(selected.period, subjects))
 
     private fun sheetTotalsIn(period: RecordbookPeriod, subjects: List<RecordbookSubject>): Map<Long, String> {
@@ -253,7 +255,7 @@ class RecordbookViewModel @Inject constructor(
 
     private fun defaultSelection(): RecordbookSelection? {
         val options = programs.flatMap { program -> program.periods.map { RecordbookSelection(program, it) } }
-        val half = StudyHalf.of(time.today())
+        val half = StudyHalf.of(time.javaToday())
         return options.firstOrNull { it.period.studyHalf() == half }
             ?: options.firstOrNull { it.period.actual }
             ?: options.minByOrNull { it.period.semester }

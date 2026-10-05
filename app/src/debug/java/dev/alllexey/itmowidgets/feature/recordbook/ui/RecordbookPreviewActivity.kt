@@ -77,7 +77,10 @@ import java.time.LocalDate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.Flow
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toKotlinLocalDate
 
 /** Real production Fragments with test-supplied in-memory repositories; never reads a session. */
 @AndroidEntryPoint
@@ -205,9 +208,9 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNa
     }
 
     private object FixedTime : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = RecordbookPreviewActivity.today
-        override fun now() = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+        override fun today() = RecordbookPreviewActivity.today.toKotlinLocalDate()
+        override fun now() = today().atTime(12, 0).toInstant(timeZone)
     }
 
     private object NoBars : BarsRecordbookRepository {

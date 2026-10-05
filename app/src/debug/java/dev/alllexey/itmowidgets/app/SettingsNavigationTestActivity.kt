@@ -107,6 +107,10 @@ import dev.alllexey.itmowidgets.core.debug.MemoryCalendarSync
 import dev.alllexey.itmowidgets.core.debug.MemoryIcsExport
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toKotlinLocalDate
 
 /** Actual settings/NavHost lifecycle, backed only by in-memory settings and no credentials. */
 @AndroidEntryPoint
@@ -519,9 +523,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
 
     /** The `.ics` sheet's academic time, fixed at [icsToday] 09:00 in Moscow. */
     private object IcsTime : dev.alllexey.itmowidgets.core.time.AcademicTimeProvider {
-        override val zoneId: java.time.ZoneId = java.time.ZoneId.of("Europe/Moscow")
-        override fun today(): java.time.LocalDate = icsToday
-        override fun now(): java.time.OffsetDateTime = icsToday.atTime(9, 0).atZone(zoneId).toOffsetDateTime()
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+        override fun today() = icsToday.toKotlinLocalDate()
+        override fun now() = today().atTime(9, 0).toInstant(timeZone)
     }
 
     private object Services : CustomServicesRepository {

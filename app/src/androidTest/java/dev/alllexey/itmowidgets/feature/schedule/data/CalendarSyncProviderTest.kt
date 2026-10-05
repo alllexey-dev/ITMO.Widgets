@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.AndroidPhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncFileStore
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepositoryImpl
@@ -32,12 +33,14 @@ import java.io.File
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toKotlinLocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -292,8 +295,8 @@ class CalendarSyncProviderTest {
     private fun event(key: String, hour: Int) = CalendarEvent(
         key = key,
         title = "Физика",
-        start = MONDAY.atTime(hour, 0).atZone(Time.zoneId).toInstant(),
-        end = MONDAY.atTime(hour, 0).atZone(Time.zoneId).toInstant().plusSeconds(5400),
+        start = MONDAY.atTime(hour, 0).atZone(Time.javaZone()).toInstant(),
+        end = MONDAY.atTime(hour, 0).atZone(Time.javaZone()).toInstant().plusSeconds(5400),
         location = null,
         description = "Лекция"
     )
@@ -366,9 +369,9 @@ class CalendarSyncProviderTest {
 
     /** Monday 2030-09-09, 08:00 in Moscow: every lesson of the tests is ahead. */
     private object Time : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = MONDAY
-        override fun now(): OffsetDateTime = MONDAY.atTime(8, 0).atZone(zoneId).toOffsetDateTime()
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+        override fun today() = MONDAY.toKotlinLocalDate()
+        override fun now() = today().atTime(8, 0).toInstant(timeZone)
     }
 
     private companion object {

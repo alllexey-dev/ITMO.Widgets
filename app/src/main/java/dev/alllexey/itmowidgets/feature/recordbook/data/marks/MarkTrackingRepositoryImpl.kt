@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.marks
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import kotlinx.coroutines.flow.update
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
@@ -86,7 +87,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
 
     override fun observeNews(): Flow<List<MarkNews>> = flow {
         if (demo.isActive()) {
-            emitAll(demoRead.map { read -> DemoRecordbook.news(time.today(), clock.instant()).filterNot { it.id in read } })
+            emitAll(demoRead.map { read -> DemoRecordbook.news(time.javaToday(), clock.instant()).filterNot { it.id in read } })
             return@flow
         }
         lock.withLock { loaded() }
@@ -97,7 +98,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
         val started = generation.get()
         val epoch = epochs.getValue(MarkSource.MY_ITMO).get()
         val fetchedAt = clock.millis()
-        val half = StudyHalf.of(time.today())
+        val half = StudyHalf.of(time.javaToday())
         val current = when (val answer = requestMyItmo(half)) {
             is AppResult.Success -> answer.value
             is AppResult.Failure -> return@withLock answer
@@ -130,7 +131,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
         val started = generation.get()
         val epoch = epochs.getValue(MarkSource.BARS).get()
         val fetchedAt = clock.millis()
-        val half = StudyHalf.of(time.today())
+        val half = StudyHalf.of(time.javaToday())
         val plans = when (val read = bars.read(half)) {
             is BarsMarkRead.Journals -> read.plans
             BarsMarkRead.NoSession -> return@withLock BarsCheck.NoSession
@@ -163,7 +164,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     override suspend fun checkSheets(): SheetsCheck = checks.withLock {
         val started = generation.get()
         val epoch = epochs.getValue(MarkSource.SHEETS).get()
-        val half = StudyHalf.of(time.today())
+        val half = StudyHalf.of(time.javaToday())
         val check = sheets.check(half)
         lock.withLock {
             if (generation.get() != started) return@withLock SheetsCheck(MarkCheckResult.Stale, listOf(AppError.Unauthorized))
@@ -212,7 +213,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun target(news: MarkNews, withBars: Boolean): MarkSubjectTarget? = if (demo.isActive()) {
-        DemoRecordbook.target(news, time.today())
+        DemoRecordbook.target(news, time.javaToday())
     } else lock.withLock {
         val stored = loaded()
         MarkNewsRules.target(news, stored.myItmo?.toModel(), stored.bars?.toModel(), withBars)
@@ -240,7 +241,7 @@ class MarkTrackingRepositoryImpl @Inject constructor(
 
     override suspend fun markAllRead() {
         if (demo.isActive()) {
-            demoRead.update { read -> read + DemoRecordbook.news(time.today(), clock.instant()).map { it.id } }
+            demoRead.update { read -> read + DemoRecordbook.news(time.javaToday(), clock.instant()).map { it.id } }
             return
         }
         update { stored -> stored.copy(news = emptyList()) }

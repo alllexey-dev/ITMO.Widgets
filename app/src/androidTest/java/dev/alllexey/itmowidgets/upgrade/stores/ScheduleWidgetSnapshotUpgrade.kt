@@ -19,12 +19,12 @@ import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.time.Clock
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.junit.Assert.assertEquals
 
 /** `no_backup/widgets/schedule_snapshot.json`: placed widgets keep their last content until the next refresh. */
@@ -68,9 +68,9 @@ object ScheduleWidgetSnapshotUpgrade {
     }
 
     private class FixedTime(private val clock: Clock) : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.ofInstant(clock.instant(), zoneId)
-        override fun now(): OffsetDateTime = OffsetDateTime.ofInstant(clock.instant(), zoneId)
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+        override fun today() = now().toLocalDateTime(timeZone).date
+        override fun now() = clock.instant().toKotlinInstant()
     }
 
     private object SignedInTokens : SessionTokenStore {

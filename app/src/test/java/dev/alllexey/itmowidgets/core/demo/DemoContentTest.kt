@@ -5,6 +5,9 @@ import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.resources.data.demo.DemoSubjectLinks
@@ -33,7 +36,7 @@ class DemoContentTest {
 
     @Test
     fun `every person named anywhere belongs to the demo people`() = clocks.forEach { time ->
-        val today = time.today()
+        val today = time.javaToday()
         val schedule = DemoSchedule.ownDays(today.minusDays(14), today.plusDays(14), today)
         val semester = DemoRecordbook.programs(today).single().periods.single { it.actual }
         val people = buildList {
@@ -46,13 +49,13 @@ class DemoContentTest {
                 DemoReviews.reviews(teacher.isu, today).reviews.mapNotNull { (it.origin as ReviewOrigin.Community).author?.name }
             })
             addAll(DemoStudy.CURRENT.flatMap { subject ->
-                val snapshot = DemoSubjectLinks.snapshot(ResourceScope(subject.id, subject.name, StudyHalf.of(today).periodKey), time.now())
+                val snapshot = DemoSubjectLinks.snapshot(ResourceScope(subject.id, subject.name, StudyHalf.of(today).periodKey), time.javaNow())
                 (snapshot.mine + snapshot.shared).mapNotNull { it.author?.name }
             })
             (1..semester.semester).forEach { number ->
-                DemoRecordbook.subjects(DemoStudy.PROGRAM_ID, number, today, time.zoneId).orEmpty().forEach { subject ->
+                DemoRecordbook.subjects(DemoStudy.PROGRAM_ID, number, today, time.javaZone()).orEmpty().forEach { subject ->
                     subject.teacherName?.let(::add)
-                    DemoRecordbook.controls(subject.entryId, time.now()).orEmpty().mapNotNull { it.teacherName }.forEach(::add)
+                    DemoRecordbook.controls(subject.entryId, time.javaNow()).orEmpty().mapNotNull { it.teacherName }.forEach(::add)
                 }
             }
         }
@@ -63,20 +66,20 @@ class DemoContentTest {
 
     @Test
     fun `no placeholder words and no test ISU`() = clocks.forEach { time ->
-        val today = time.today()
+        val today = time.javaToday()
         val text = listOf(
             DemoPeople.EVERYONE,
             DemoSchedule.ownDays(today.minusDays(14), today.plusDays(14), today),
             DemoPeople.FRIENDS.map { DemoSchedule.userDays(it.isu, today, today.plusDays(6)) },
-            DemoSchedule.changes(today, time.now().toInstant()),
+            DemoSchedule.changes(today, time.javaNow().toInstant()),
             DemoSport.schedule(time), DemoSport.bookings(time), DemoSport.queueEntries(time), DemoSport.friendsBookings(time),
             DemoSport.score(time), DemoSport.periods(time), DemoSport.filters(), DemoSport.timeSlots(),
             DemoSocial.friends(), DemoSocial.requests(), DemoPeople.EVERYONE.map { DemoSocial.person(it.isu) },
             DemoPeople.TEACHERS.map { DemoReviews.reviews(it.isu, today) },
-            DemoStudy.CURRENT.map { DemoSubjectLinks.snapshot(ResourceScope(it.id, it.name, StudyHalf.of(today).periodKey), time.now()) },
-            DemoRecordbook.programs(today), (1..4).map { DemoRecordbook.subjects(DemoStudy.PROGRAM_ID, it, today, time.zoneId) },
-            DemoStudy.CURRENT.map { DemoRecordbook.controls(it.id * 10 + 3, time.now()) },
-            DemoRecordbook.news(today, time.now().toInstant()), DemoRecordbook.sheetScores(today, time.now().toInstant())
+            DemoStudy.CURRENT.map { DemoSubjectLinks.snapshot(ResourceScope(it.id, it.name, StudyHalf.of(today).periodKey), time.javaNow()) },
+            DemoRecordbook.programs(today), (1..4).map { DemoRecordbook.subjects(DemoStudy.PROGRAM_ID, it, today, time.javaZone()) },
+            DemoStudy.CURRENT.map { DemoRecordbook.controls(it.id * 10 + 3, time.javaNow()) },
+            DemoRecordbook.news(today, time.javaNow().toInstant()), DemoRecordbook.sheetScores(today, time.javaNow().toInstant())
         ).joinToString("\n")
 
         val forbidden = Regex("тест|синтет|lorem|123456", RegexOption.IGNORE_CASE).findAll(text).map { it.value }.toList()
@@ -87,7 +90,7 @@ class DemoContentTest {
 
     @Test
     fun `schedule and sport dates stay within two weeks of today`() = clocks.forEach { time ->
-        val today = time.today()
+        val today = time.javaToday()
         val window = today.minusDays(14)..today.plusDays(14)
         val ahead = today..today.plusDays(14)
         val schedule = DemoSchedule.ownDays(window.start, window.endInclusive, today)
@@ -96,7 +99,7 @@ class DemoContentTest {
         assertTrue(schedule.all { it.date in window })
         assertTrue(schedule.count { it.lessons.isNotEmpty() } >= 16)
         assertTrue(sport.all { it in DemoSportSlots.annaBookedDates(today) })
-        assertTrue(DemoSchedule.changes(today, time.now().toInstant()).all { change -> listOfNotNull(change.before, change.after).all { it.date in ahead } })
+        assertTrue(DemoSchedule.changes(today, time.javaNow().toInstant()).all { change -> listOfNotNull(change.before, change.after).all { it.date in ahead } })
         assertTrue(DemoSport.schedule(time).keys.all { it in ahead })
         assertTrue(DemoSport.bookings(time).all { it.start.toLocalDate() in ahead })
         assertTrue(DemoSport.queueEntries(time).all { it.targetLesson.start.toLocalDate() in ahead })
@@ -113,11 +116,11 @@ class DemoContentTest {
             LocalDateTime.of(2026, 10, 11, 12, 0)
         )
         moments.map(::FixedAcademicTime).forEach { time ->
-            val now = time.now()
-            val today = DemoSport.schedule(time).getValue(time.today())
+            val now = time.javaNow()
+            val today = DemoSport.schedule(time).getValue(time.javaToday())
 
             assertTrue("Nothing to sign up for at $now", today.any { it.start.isAfter(now) && it.canSignIn && it.available > 0 })
-            assertTrue(today.all { it.start.toLocalDate() == time.today() && it.end.isAfter(it.start) })
+            assertTrue(today.all { it.start.toLocalDate() == time.javaToday() && it.end.isAfter(it.start) })
             assertEquals(today.size, today.map { it.lessonId }.toSet().size)
         }
     }
@@ -126,12 +129,12 @@ class DemoContentTest {
     fun `the template's own lessons need no extra ones`() {
         val wednesdayNoon = FixedAcademicTime(LocalDateTime.of(LocalDate.of(2026, 10, 7), LocalTime.NOON))
 
-        assertTrue(DemoSportSlots.extraSlots(wednesdayNoon.now().toLocalDateTime()).isEmpty())
+        assertTrue(DemoSportSlots.extraSlots(wednesdayNoon.javaNow().toLocalDateTime()).isEmpty())
     }
 
     @Test
     fun `every place is a known ITMO building`() = clocks.forEach { time ->
-        val today = time.today()
+        val today = time.javaToday()
         val lessons = DemoSchedule.ownDays(today.minusDays(7), today.plusDays(7), today).flatMap { it.lessons } +
             DemoPeople.FRIENDS.flatMap { friend -> DemoSchedule.userDays(friend.isu, today, today.plusDays(6)).flatMap { it.lessons } }
         lessons.forEach { lesson ->

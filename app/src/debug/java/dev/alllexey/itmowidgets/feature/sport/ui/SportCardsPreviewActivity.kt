@@ -33,8 +33,11 @@ import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonItem
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportLessonsAdapter
 import dev.alllexey.itmowidgets.feature.sport.ui.sign.SportSignActionsListener
 import java.time.LocalDate
-import java.time.ZoneId
 import java.util.Locale
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toKotlinLocalDate
 
 /** Isolated real adapters and details sheet, with synthetic test inputs and no network actions. */
 @AndroidEntryPoint
@@ -143,9 +146,9 @@ class SportCardsPreviewActivity : AppCompatActivity(), SportBookingListener, Spo
     override fun onLessonClick(lesson: SportLesson) = showDetails(lesson)
 
     object FixedTime : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = LocalDate.of(2026, 9, 7)
-        override fun now() = today().atTime(12, 0).atZone(zoneId).toOffsetDateTime()
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+        override fun today() = LocalDate.of(2026, 9, 7).toKotlinLocalDate()
+        override fun now() = today().atTime(12, 0).toInstant(timeZone)
     }
 
     companion object { @Volatile var appearance = PreviewAppearance() }

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import java.time.LocalDateTime
 import org.junit.Assert.assertEquals
@@ -19,7 +20,7 @@ class SportSignFilterControllerTest {
         }
 
         assertEquals(
-            timeProvider.today().with(java.time.DayOfWeek.MONDAY)
+            timeProvider.javaToday().with(java.time.DayOfWeek.MONDAY)
                 .plusWeeks(MAX_WEEKS_FORWARD.toLong()),
             controller.filters.value.selectedDate
         )
@@ -29,14 +30,14 @@ class SportSignFilterControllerTest {
         }
 
         assertEquals(
-            timeProvider.today().with(java.time.DayOfWeek.MONDAY),
+            timeProvider.javaToday().with(java.time.DayOfWeek.MONDAY),
             controller.filters.value.selectedDate
         )
     }
 
     @Test
     fun `reset preserves date and restores filter defaults`() {
-        val selectedDate = timeProvider.today().plusDays(8)
+        val selectedDate = timeProvider.javaToday().plusDays(8)
         controller.selectDate(selectedDate)
         controller.selectSports(setOf(SectionName("Плавание")))
         controller.selectBuilding("Кронверкский")

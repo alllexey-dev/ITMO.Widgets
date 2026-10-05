@@ -19,6 +19,7 @@ import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.ConditionTone
 import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
 import dev.alllexey.itmowidgets.core.ui.alignRailIcon
@@ -72,7 +73,7 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?): Unit = with(binding) {
         toolbar.setNavigationOnClickListener { dismiss() }
-        val zone = timeProvider.zoneId
+        val zone = timeProvider.javaZone()
         val start = OffsetDateTime.parse(booking.start).atZoneSameInstant(zone)
         val end = OffsetDateTime.parse(booking.end).atZoneSameInstant(zone)
         val teacherIsu = UserScreenArgs.profileIsu(booking.teacherIsu?.toLong())

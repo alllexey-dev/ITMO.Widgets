@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.widget.NestedScrollView
 import androidx.core.graphics.ColorUtils
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.core.ui.ConditionTone
 import androidx.fragment.app.DialogFragment
 import androidx.test.core.app.ActivityScenario
@@ -46,7 +47,9 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignStateFa
 import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportSignFilters
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterOption
-import java.time.ZoneId
+import kotlin.time.toKotlinInstant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinLocalDate
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -165,9 +168,9 @@ class SportCardsVisualTest {
         val unknown = original.copy(lessonId = 103, sectionName = SectionName("Тренировка"), buildingId = null,
             roomId = 99, roomName = "Место уточняется")
         val clock = object : AcademicTimeProvider {
-            override val zoneId = ZoneId.of("Europe/Moscow")
-            override fun today() = original.start.toLocalDate()
-            override fun now() = original.start.minusHours(1)
+            override val timeZone = TimeZone.of("Europe/Moscow")
+            override fun today() = original.start.toLocalDate().toKotlinLocalDate()
+            override fun now() = original.start.minusHours(1).toInstant().toKotlinInstant()
         }
         val factory = SportSignStateFactory(clock)
         val catalog = SportFilterCatalog(
@@ -180,7 +183,7 @@ class SportCardsVisualTest {
                 for ((filter, expected) in listOf("Онлайн" to listOf(online), "Другие объекты" to listOf(external, unknown))) {
                     val state = factory.create(listOf(online, external, unknown), catalog, emptyList(),
                         SportSignFilters(
-                            selectedDate = clock.today(), selectedBuildingName = filter), false)
+                            selectedDate = clock.javaToday(), selectedBuildingName = filter), false)
                     assertEquals(expected, state.displayedLessons)
                     scenario.onActivity { it.showLessons(state.displayedLessons.map { row -> SportLessonItem(row) }) }
                     settle()
@@ -279,9 +282,9 @@ class SportCardsVisualTest {
             scenario.onActivity {
                 val details = sheet(it) as SportCommonDetailsBottomSheet
                 details.timeProvider = object : AcademicTimeProvider {
-                    override val zoneId = ZoneId.of("Europe/Moscow")
-                    override fun today() = lesson.start.toLocalDate()
-                    override fun now() = lesson.start
+                    override val timeZone = TimeZone.of("Europe/Moscow")
+                    override fun today() = lesson.start.toLocalDate().toKotlinLocalDate()
+                    override fun now() = lesson.start.toInstant().toKotlinInstant()
                 }
                 details.requireView().findViewById<View>(R.id.booking_action).performClick()
                 assertEquals(View.GONE, details.requireView().findViewById<View>(R.id.booking_action).visibility)

@@ -19,6 +19,7 @@ import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.navigation.SettingsScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
@@ -136,7 +137,7 @@ class HomeFragment : Fragment() {
                 onOpenMarks = { openRoot(AppRoot.RECORDBOOK) },
                 onDismissMarks = { viewModel.dismissCard(HomeCardKind.MARKS) }
             ),
-            zoneId = timeProvider.zoneId
+            zoneId = timeProvider.javaZone()
         )
         adapter = feed
         binding.homeFeed.adapter = feed

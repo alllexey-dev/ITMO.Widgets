@@ -9,7 +9,11 @@ import dev.alllexey.itmowidgets.core.testing.FakePendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.testing.MutableAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.time.LocalDate
@@ -47,12 +51,7 @@ class SchedulePendingSportTest {
 
     @Test
     fun `time updates remove started pending rows without reloading or clearing official data`() = runTest(dispatcher.dispatcher) {
-        var now = Today.now()
-        val clock = object : AcademicTimeProvider {
-            override val zoneId = Today.zoneId
-            override fun today() = now.toLocalDate()
-            override fun now() = now
-        }
+        val clock = MutableAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
         val official = FakeScheduleRepository(listOf(day()))
         val pending = FakePendingSportBookingsRepository(booking())
         val model = ScheduleViewModel(official, clock, SavedStateHandle(), FakeSchedulePreferencesRepository(true), pending, FakeScheduleChangesRepository(), FakeCalendarSync())
@@ -60,7 +59,7 @@ class SchedulePendingSportTest {
         runCurrent()
         val original = model.content().schedule
         assertEquals(1, model.content().displayDays.single().pendingSport.size)
-        now = booking().start
+        clock.current = booking().start.atZoneSameInstant(Today.javaZone()).toLocalDateTime()
         model.updateTimeState()
         assertEquals(original, model.content().schedule)
         assertTrue(model.content().displayDays.single().pendingSport.isEmpty())
@@ -198,8 +197,8 @@ class SchedulePendingSportTest {
     @Test
     fun `pending only content survives delayed refresh failure and paginated loading after official success`() = runTest(dispatcher.dispatcher) {
         val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
-        val near = booking(day = Today.today().plusDays(2))
-        val nextPage = booking(id = 2, day = Today.today().plusDays(15))
+        val near = booking(day = Today.javaToday().plusDays(2))
+        val nextPage = booking(id = 2, day = Today.javaToday().plusDays(15))
         val pending = FakePendingSportBookingsRepository(booking()).apply { values.value = AppResult.Success(listOf(near, nextPage)) }
         val model = model(official, FakeSchedulePreferencesRepository(true), pending)
         model.ensureDataLoaded()
@@ -293,8 +292,8 @@ class SchedulePendingSportTest {
     @Test
     fun `queue-only dates follow loaded range and never enter official schedule`() = runTest(dispatcher.dispatcher) {
         val official = FakeScheduleRepository(listOf(day())).apply { days.value = emptyList() }
-        val near = booking(day = Today.today().plusDays(2))
-        val nextPage = booking(id = 2, day = Today.today().plusDays(15))
+        val near = booking(day = Today.javaToday().plusDays(2))
+        val nextPage = booking(id = 2, day = Today.javaToday().plusDays(15))
         val pending = FakePendingSportBookingsRepository(booking()).apply { values.value = AppResult.Success(listOf(near, nextPage)) }
         val model = model(official, FakeSchedulePreferencesRepository(true), pending)
         model.ensureDataLoaded()
@@ -312,16 +311,16 @@ class SchedulePendingSportTest {
 
     @Test
     fun `projection normalizes dates and deduplicates queue keys not titles times or academic IDs`() {
-        val booking = booking().copy(start = Today.now().withHour(22).withOffsetSameLocal(java.time.ZoneOffset.UTC),
-            end = Today.now().withHour(23).withOffsetSameLocal(java.time.ZoneOffset.UTC))
+        val booking = booking().copy(start = Today.javaNow().withHour(22).withOffsetSameLocal(java.time.ZoneOffset.UTC),
+            end = Today.javaNow().withHour(23).withOffsetSameLocal(java.time.ZoneOffset.UTC))
         val another = booking.copy(queueId = 2)
         val anotherKind = booking.copy(queueKind = PendingSportBooking.QueueKind.FREE)
         val days = buildScheduleDisplayDays(listOf(day()), listOf(booking, booking, another, anotherKind),
-            Today.today(), Today.today().plusDays(1), Today.zoneId, Today.now())
+            Today.javaToday(), Today.javaToday().plusDays(1), Today.javaZone(), Today.javaNow())
 
         assertEquals(2, days.size)
         assertTrue(days.first().pendingSport.isEmpty())
-        assertEquals(Today.today().plusDays(1), days.last().date)
+        assertEquals(Today.javaToday().plusDays(1), days.last().date)
         assertEquals(3, days.last().pendingSport.size)
         assertEquals(1, days.last().pendingSport.first().start.hour)
         assertNull(days.last().officialDay)
@@ -337,11 +336,11 @@ class SchedulePendingSportTest {
     private object Today : AcademicTimeProvider by FixedAcademicTime(LocalDateTime.of(2026, 9, 7, 12, 0))
 
     companion object {
-        private fun day() = DaySchedule(1, 1, Today.today(), null, emptyList())
-        private fun booking(id: Long = 1, day: LocalDate = Today.today()) = PendingSportBooking(
+        private fun day() = DaySchedule(1, 1, Today.javaToday(), null, emptyList())
+        private fun booking(id: Long = 1, day: LocalDate = Today.javaToday()) = PendingSportBooking(
             queueId = id, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100 + id,
-            sectionName = "Тестовая секция", start = day.atTime(16, 0).atZone(Today.zoneId).toOffsetDateTime(),
-            end = day.atTime(17, 30).atZone(Today.zoneId).toOffsetDateTime(), teacherFio = "Тестовый преподаватель",
+            sectionName = "Тестовая секция", start = day.atTime(16, 0).atZone(Today.javaZone()).toOffsetDateTime(),
+            end = day.atTime(17, 30).atZone(Today.javaZone()).toOffsetDateTime(), teacherFio = "Тестовый преподаватель",
             roomName = "Тестовый корпус", isPrediction = true
         )
     }

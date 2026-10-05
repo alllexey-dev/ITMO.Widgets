@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.outcomeOf
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigests
@@ -29,7 +30,7 @@ class ScheduleChangesCheck @Inject constructor(
     }
 
     private suspend fun deliver() {
-        val decision = ScheduleChangeDigests.decide(repository.observeChanges().first(), timeProvider.now().toLocalDateTime())
+        val decision = ScheduleChangeDigests.decide(repository.observeChanges().first(), timeProvider.javaNow().toLocalDateTime())
         decision.digest?.let(notifier::show)
         if (decision.handled.isNotEmpty()) repository.markNotified(decision.handled)
     }

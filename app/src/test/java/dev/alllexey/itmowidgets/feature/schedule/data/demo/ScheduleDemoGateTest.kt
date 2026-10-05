@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.unreachable
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSourceImpl
@@ -34,7 +35,7 @@ class ScheduleDemoGateTest {
     private val backend = unreachable<ItmoWidgetsApi>()
     // The stored opt-in is on: the demo alone must keep every request local.
     private val gate = FakeBackendGate(optedIn = true, demo)
-    private val week = time.today().minusDays(time.today().dayOfWeek.value - 1L).let { it..it.plusDays(6) }
+    private val week = time.javaToday().minusDays(time.javaToday().dayOfWeek.value - 1L).let { it..it.plusDays(6) }
 
     @Test
     fun `the own week has lessons, the volleyball and no Sunday classes`() = runTest {

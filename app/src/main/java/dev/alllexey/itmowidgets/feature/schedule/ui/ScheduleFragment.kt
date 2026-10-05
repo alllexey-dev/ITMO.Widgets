@@ -20,6 +20,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.toDetailsArgs
@@ -225,7 +227,7 @@ class ScheduleFragment : Fragment() {
                     // Time changes presentation only: do not reload data or reset the list.
                     viewModel.updateTimeState()
                     scheduleAdapter?.updateLessonStates()
-                    val now = timeProvider.now()
+                    val now = timeProvider.javaNow()
                     delay(60_000L - now.second * 1_000L - now.nano / 1_000_000L)
                 }
             }
@@ -461,7 +463,7 @@ class ScheduleFragment : Fragment() {
 
         if (hasScrolledToToday) return
 
-        val today = timeProvider.today()
+        val today = timeProvider.javaToday()
         val index = schedule.indexOfFirst { it.date >= today }
 
         if (index != -1) {

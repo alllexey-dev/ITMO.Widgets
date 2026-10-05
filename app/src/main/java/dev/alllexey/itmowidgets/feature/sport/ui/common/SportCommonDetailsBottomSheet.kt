@@ -20,6 +20,8 @@ import androidx.core.os.bundleOf
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -107,7 +109,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun bindAction(): Unit = with(binding) {
-        val action = item.bookingAction(timeProvider.now())
+        val action = item.bookingAction(timeProvider.javaNow())
         bookingAction.isVisible = requireArguments().getBoolean(ARG_ACTIONS) && action != SportBookingAction.NONE
         bookingAction.isEnabled = !actionSubmitted && !requireArguments().getBoolean(ARG_BUSY)
         bookingAction.setText(when (action) {
@@ -120,7 +122,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         bookingAction.setOnClickListener {
             if (actionSubmitted || requireArguments().getBoolean(ARG_BUSY)) return@setOnClickListener
             // Time can move on while details are open. Never dispatch the earlier offer.
-            if (item.bookingAction(timeProvider.now()) != action) {
+            if (item.bookingAction(timeProvider.javaNow()) != action) {
                 bindAction()
                 bindConditions()
                 return@setOnClickListener
@@ -150,7 +152,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun shareLink(): String? {
-        if (!OffsetDateTime.parse(item.end).isAfter(timeProvider.now())) return null
+        if (!OffsetDateTime.parse(item.end).isAfter(timeProvider.javaNow())) return null
         val prototypeLessonId = item.prototypeLessonId
         return when {
             item.isReal && item.lessonId > 0 -> shareLinks.sportLesson(item.lessonId)
@@ -207,14 +209,14 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
         if (timestamp == null) return
         val row = ItemSportHistoryFactBinding.inflate(layoutInflater, parent, false)
         row.historyLabel.setText(title)
-        row.historyValue.text = OffsetDateTime.parse(timestamp).atZoneSameInstant(timeProvider.zoneId)
+        row.historyValue.text = OffsetDateTime.parse(timestamp).atZoneSameInstant(timeProvider.javaZone())
             .format(DateTimeFormatter.ofPattern("d MMM, HH:mm", Locale.forLanguageTag("ru")))
         parent.addView(row.root)
     }
 
     private fun bindConditions() = with(binding) {
         attentionContainer.removeAllViews()
-        val availability = item.bookingConditions?.evaluate(timeProvider.now())
+        val availability = item.bookingConditions?.evaluate(timeProvider.javaNow())
         attentionCard.isVisible = (!item.signed && availability != null) || item.intersectsSchedule || !item.isReal
         val prerequisites = buildList {
             add(getString(R.string.sport_booking_auto_checks))
@@ -245,7 +247,7 @@ class SportCommonDetailsBottomSheet : BottomSheetDialogFragment() {
             }
         }
         if (availability?.mayWait == true && item.isReal && !item.signed &&
-            !timeProvider.now().isBefore(OffsetDateTime.parse(item.start).minusHours(1))) {
+            !timeProvider.javaNow().isBefore(OffsetDateTime.parse(item.start).minusHours(1))) {
             conditionCard(ConditionTone.WARNING, R.string.sport_booking_late_auto,
                 getString(R.string.sport_booking_late_auto_hint), icon = R.drawable.ic_schedule)
         }

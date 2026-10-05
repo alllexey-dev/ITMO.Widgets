@@ -1,20 +1,20 @@
 package dev.alllexey.itmowidgets.core.time
 
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import javax.inject.Qualifier
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class AcademicClock
-
+/** The academic time: the wall clock in [timeZone] (Europe/Moscow), or a debug override date at the real wall time. */
 interface AcademicTimeProvider {
-    val zoneId: ZoneId
+    val timeZone: TimeZone
 
     fun today(): LocalDate
 
-    fun now(): OffsetDateTime
+    fun now(): Instant
+
+    fun localNow(): LocalDateTime = now().toLocalDateTime(timeZone)
 }
 
 interface AcademicTimeOverrideController {

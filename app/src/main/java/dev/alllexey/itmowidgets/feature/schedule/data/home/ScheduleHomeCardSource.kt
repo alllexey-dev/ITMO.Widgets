@@ -8,6 +8,8 @@ import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.home.HomeScheduleSelector
 import javax.inject.Inject
@@ -35,15 +37,15 @@ class ScheduleHomeCardSource @Inject constructor(
 ) : HomeCardSource {
 
     override fun observe(): Flow<List<HomeCard>> = ticker().flatMapLatest {
-        val today = timeProvider.today()
+        val today = timeProvider.javaToday()
         combine(
             repository.observeScheduleForRange(null, today, today.plusDays(1)),
             pendingRows()
-        ) { days, bookings -> listOf(selector.select(days, bookings, timeProvider.now())) }
+        ) { days, bookings -> listOf(selector.select(days, bookings, timeProvider.javaNow())) }
     }
 
     override suspend fun refresh(): AppResult<Unit> = coroutineScope {
-        val today = timeProvider.today()
+        val today = timeProvider.javaToday()
         val schedule = async { repository.refreshSchedule(null, today, today.plusDays(1)) }
         val bookings = async { pending.refresh() }
         bookings.await()

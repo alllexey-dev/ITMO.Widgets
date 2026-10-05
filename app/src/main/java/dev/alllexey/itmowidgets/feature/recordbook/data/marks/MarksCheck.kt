@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.outcomeOf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
@@ -52,7 +53,7 @@ class MarksCheck @Inject constructor(
         val decision = MarkDigests.decide(
             repository.observeNews().first(),
             markSources.getBarsLoginPrompt(),
-            timeProvider.now().toLocalDateTime()
+            timeProvider.javaNow().toLocalDateTime()
         )
         decision.digest?.let { digest ->
             val target = digest.single?.let { repository.target(it, barsPreference.isEnabled()) }

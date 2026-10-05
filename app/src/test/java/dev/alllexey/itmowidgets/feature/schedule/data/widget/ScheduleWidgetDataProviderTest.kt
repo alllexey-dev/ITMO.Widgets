@@ -13,6 +13,8 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPendingStatus
@@ -32,7 +34,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleWidgetDataProviderTest {
     private val stores = PreferenceStores(MemoryPreferences())
-    private val official = FakeScheduleRepository(listOf(DaySchedule(1, 1, Time.today(), null, emptyList())))
+    private val official = FakeScheduleRepository(listOf(DaySchedule(1, 1, Time.javaToday(), null, emptyList())))
     private val pending = SnapshotPendingRepository()
     private val tokens = FakeSessionTokenStore()
     private val demo = FakeDemoMode()
@@ -83,7 +85,7 @@ class ScheduleWidgetDataProviderTest {
         val result = available()
         assertEquals(ScheduleWidgetPendingStatus.PREDICTED, result.snapshot.singleLesson.lesson?.pendingStatus)
         assertEquals(listOf("refresh", "snapshot"), pending.calls)
-        assertEquals(Time.today() to Time.today().plusDays(1), official.refreshed.map { it.startDate to it.endDate }.single())
+        assertEquals(Time.javaToday() to Time.javaToday().plusDays(1), official.refreshed.map { it.startDate to it.endDate }.single())
         assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, result.snapshot.withoutPendingSport().singleLesson.kind)
         assertEquals(ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY, result.nextUpdateDelay)
         assertEquals(0, official.clears)
@@ -165,8 +167,8 @@ class ScheduleWidgetDataProviderTest {
 
     private class SnapshotPendingRepository : PendingSportBookingsRepository {
         var value: AppResult<List<PendingSportBooking>> = AppResult.Success(listOf(PendingSportBooking(
-            1, PendingSportBooking.QueueKind.AUTO, -1, "Плавание", Time.now().plusHours(1),
-            Time.now().plusHours(2), "Тестовый преподаватель", "Бассейн", true
+            1, PendingSportBooking.QueueKind.AUTO, -1, "Плавание", Time.javaNow().plusHours(1),
+            Time.javaNow().plusHours(2), "Тестовый преподаватель", "Бассейн", true
         )))
         var refreshBlock: suspend () -> Unit = {}
         var refreshes = 0
