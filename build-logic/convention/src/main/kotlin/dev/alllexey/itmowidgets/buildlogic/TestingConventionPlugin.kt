@@ -23,7 +23,8 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 /**
  * JVM screenshot tests (ADR 0022): Roborazzi, Robolectric and ComposablePreviewScanner on the host tests of a
  * shared module (`androidHostTest`) or of `:app` (`test`), Robolectric offline on a fixed SDK with native
- * graphics, and the `screenshotsRecord` / `screenshotsVerify` tasks that `scripts/verify.sh shots` calls.
+ * graphics (more SDKs through [ItmoTestingExtension]), and the `screenshotsRecord` / `screenshotsVerify` tasks
+ * that `scripts/verify.sh shots` calls.
  */
 class TestingConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
@@ -56,6 +57,8 @@ class TestingConventionPlugin : Plugin<Project> {
         dependencies {
             robolectricRuntime(libs.library("robolectric-android-all"))
         }
+        // Opt-in extra SDKs for @Config(sdk = [...]) (TC-17).
+        extensions.add(ItmoTestingExtension::class.java, "itmoTesting", ItmoTestingExtension(this, robolectricRuntime))
         tasks.withType<Test>().configureEach {
             // JVM default locale en-US, as on an English-language device (SP-13a plural forms).
             jvmArgs("-Duser.language=en", "-Duser.country=US")
