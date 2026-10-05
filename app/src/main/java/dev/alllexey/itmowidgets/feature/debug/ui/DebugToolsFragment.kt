@@ -15,6 +15,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.debug.DebugOnly
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.databinding.DialogSportScoreOverrideBinding
 import dev.alllexey.itmowidgets.databinding.DialogDebugRefreshTokenBinding
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 @AndroidEntryPoint
+@DebugOnly
 class DebugToolsFragment : Fragment() {
 
     private var _binding: FragmentDebugToolsBinding? = null

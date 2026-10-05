@@ -16,6 +16,8 @@ class LayerRulesTest {
             .assertFalse { file ->
                 file.imports.any { import ->
                     forbiddenDomainImports.any(import.name::startsWith) ||
+                        CLIENT_LIBRARIES.any(import.name::startsWith) ||
+                        FEATURE_OUTER_LAYER.containsMatchIn(import.name) ||
                         (
                             import.name.startsWith(CORE_TRANSPORT_MODELS) &&
                                 import.name != SHARED_USER_MODEL
@@ -31,7 +33,9 @@ class LayerRulesTest {
             .requireNonEmpty("ui files")
             .assertFalse { file ->
                 file.imports.any { import ->
-                    forbiddenUiImports.any(import.name::startsWith)
+                    forbiddenUiImports.any(import.name::startsWith) ||
+                        CLIENT_LIBRARIES.any(import.name::startsWith) ||
+                        FEATURE_DATA.containsMatchIn(import.name)
                 }
             }
     }
@@ -43,7 +47,9 @@ class LayerRulesTest {
             .requireNonEmpty("presentation files")
             .assertFalse { file ->
                 file.imports.any { import ->
-                    forbiddenPresentationImports.any(import.name::startsWith)
+                    forbiddenPresentationImports.any(import.name::startsWith) ||
+                        CLIENT_LIBRARIES.any(import.name::startsWith) ||
+                        FEATURE_DATA.containsMatchIn(import.name)
                 } ||
                     "Throwable" in file.text ||
                     ".message" in file.text
@@ -59,6 +65,21 @@ class LayerRulesTest {
                 file.imports.any { import ->
                     import.name.contains(".ui.") ||
                         import.name.contains(".presentation.")
+                }
+            }
+    }
+
+    @Test
+    fun `work depends on neither presentation nor another feature's widgets`() {
+        // A feature's own work and ui.widget packages may import each other: the widget workers render their widgets.
+        productionFiles
+            .filter { it.packagee?.name?.split('.')?.contains("work") == true }
+            .requireNonEmpty("work files")
+            .assertFalse { file ->
+                val sourceFeature = featureOf(file.packagee?.name.orEmpty())
+                file.imports.any { import ->
+                    ".presentation." in import.name ||
+                        (".ui.widget." in import.name && featureOf(import.name) != sourceFeature)
                 }
             }
     }
@@ -100,6 +121,22 @@ class LayerRulesTest {
     }
 
     private companion object {
+        /** MyItmoApi 1.x (`api.myitmo`, `api.bars`), MyItmoApi 2.x and the Core 2.0 Backend client. */
+        val CLIENT_LIBRARIES = listOf(
+            "api.",
+            "dev.alllexey.itmoapi.",
+            "dev.alllexey.itmowidgets.client."
+        )
+        val FEATURE_DATA = Regex("""^dev\.alllexey\.itmowidgets\.feature\.\w+\.data\.""")
+        val FEATURE_OUTER_LAYER =
+            Regex("""^dev\.alllexey\.itmowidgets\.feature\.\w+\.(data|presentation|ui|work)\.""")
+
+        /** The feature of a package or import, or null outside `feature.*`. */
+        fun featureOf(name: String): String? = name
+            .takeIf { it.startsWith(FEATURE_PACKAGE_PREFIX) }
+            ?.removePrefix(FEATURE_PACKAGE_PREFIX)
+            ?.substringBefore(".")
+
         const val CORE_TRANSPORT_MODELS =
             "dev.alllexey.itmowidgets.core.model."
         const val SHARED_USER_MODEL =
@@ -112,7 +149,6 @@ class LayerRulesTest {
         val forbiddenDomainImports = listOf(
             "android.",
             "androidx.",
-            "api.myitmo.",
             "com.google.gson.",
             "dev.alllexey.itmowidgets.R",
             "dev.alllexey.itmowidgets.core.network.",
@@ -121,7 +157,6 @@ class LayerRulesTest {
         )
 
         val forbiddenUiImports = listOf(
-            "api.myitmo.",
             "dev.alllexey.itmowidgets.core.model.reviews.",
             "dev.alllexey.itmowidgets.core.model.resources.",
             "dev.alllexey.itmowidgets.core.model.social.",
@@ -133,7 +168,6 @@ class LayerRulesTest {
 
         val forbiddenPresentationImports = listOf(
             "android.",
-            "api.myitmo.",
             "dev.alllexey.itmowidgets.core.model.reviews.",
             "dev.alllexey.itmowidgets.core.model.resources.",
             "dev.alllexey.itmowidgets.core.model.social.",

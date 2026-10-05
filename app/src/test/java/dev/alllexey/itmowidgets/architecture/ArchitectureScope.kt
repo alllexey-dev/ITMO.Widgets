@@ -44,3 +44,4 @@ internal const val CORE_STORAGE_PACKAGE = "dev.alllexey.itmowidgets.core.storage
 internal const val MIN_GATED_CLASSES = 20
 internal const val MIN_VIEW_MODELS = 34
 internal const val MIN_DOMAIN_FILES = 95
+internal const val MIN_DEBUG_ONLY_CLASSES = 5
