@@ -22,6 +22,27 @@ class GateRulesTest {
         }
     }
 
+    @Test
+    fun `backend clients are gated by the opt-in`() {
+        // DemoMode keeps the demo session off the network; BackendGate.mayCallBackend() also needs the opt-in.
+        productionClasses
+            .filter { declaration ->
+                val packageName = declaration.packagee?.name.orEmpty()
+                val buildsClients = packageName == NETWORK_PACKAGE || packageName == DI_PACKAGE ||
+                    packageName.startsWith("$DI_PACKAGE.")
+                !buildsClients &&
+                    declaration.constructors.any { constructor -> constructor.parameters.any(::isBackendClient) }
+            }
+            .requireAtLeast(MIN_BACKEND_GATED_CLASSES, "classes that take the Backend client")
+            .assertTrue { declaration ->
+                declaration.constructors
+                    .filter { constructor -> constructor.parameters.any(::isBackendClient) }
+                    .all { constructor -> constructor.parameters.any { it.type.name == BACKEND_GATE } }
+            }
+    }
+
+    private fun isBackendClient(parameter: KoParameterDeclaration): Boolean = parameter.type.name == BACKEND_CLIENT
+
     private fun isNetworkClient(parameter: KoParameterDeclaration): Boolean =
         parameter.type.name in networkClients ||
             (parameter.type.name == OK_HTTP_CLIENT && parameter.hasAnnotationWithName(PUBLIC_WEB_CLIENT))
@@ -31,6 +52,8 @@ class GateRulesTest {
         const val NETWORK_PACKAGE =
             "dev.alllexey.itmowidgets.core.network"
         const val DEMO_MODE = "DemoMode"
+        const val BACKEND_CLIENT = "ItmoWidgetsApi"
+        const val BACKEND_GATE = "BackendGate"
         const val OK_HTTP_CLIENT = "OkHttpClient"
         const val PUBLIC_WEB_CLIENT = "PublicWebClient"
 

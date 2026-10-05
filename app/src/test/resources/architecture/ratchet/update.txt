@@ -1,0 +1,10 @@
+# Known violations in feature.update, KN-01c. Lines only go away: delete yours when the code is fixed
+# (a stale line fails its rule) and never add one. Format and rules: vibe/v2.3/recipes/konsist-rule.md.
+
+viewmodel-shape dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateGateViewModel
+viewmodel-shape dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateViewModel
+
+domain-imports-javax-inject dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
+
+domain-imports-java dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
+domain-imports-java dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
