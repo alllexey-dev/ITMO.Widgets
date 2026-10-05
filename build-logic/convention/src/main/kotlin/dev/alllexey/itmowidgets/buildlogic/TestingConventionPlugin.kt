@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.buildlogic
 import com.android.build.api.dsl.ApplicationExtension
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import io.github.takahirom.roborazzi.RoborazziExtension
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
@@ -19,6 +20,7 @@ import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import org.gradle.process.CommandLineArgumentProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import java.io.File
 
 /**
  * JVM screenshot tests (ADR 0022): Roborazzi, Robolectric and ComposablePreviewScanner on the host tests of a
@@ -78,11 +80,15 @@ class TestingConventionPlugin : Plugin<Project> {
      * Screenshot tests are the `*ScreenshotTest` classes of the host tests ([SCREENSHOT_HOST_TEST]). Every host-test
      * run excludes them, so `verifyQuick` never renders; `screenshotsRecord` / `screenshotsVerify` run Roborazzi's
      * record / verify task for that one test task with only those classes, goldens in `<module>/screenshots/`.
+     * With `-Pshots.gallery=<dir>` (`scripts/verify.sh shots ... --gallery <dir>`) a record writes to
+     * `<dir>/<module>/` instead and the baselines stay untouched; a verify refuses the property.
      */
     @OptIn(ExperimentalRoborazziApi::class)
     private fun Project.configureScreenshots() {
+        val galleryModule = if (path == ":app") "app" else name
+        val gallery = providers.gradleProperty(GALLERY_PROPERTY).orNull?.let { File(it, galleryModule) }
         extensions.configure<RoborazziExtension> {
-            outputDir.set(layout.projectDirectory.dir(SCREENSHOTS_DIR))
+            if (gallery != null) outputDir.set(gallery) else outputDir.set(layout.projectDirectory.dir(SCREENSHOTS_DIR))
             compare {
                 outputDir.set(layout.buildDirectory.dir("outputs/roborazzi"))
             }
@@ -136,6 +142,9 @@ class TestingConventionPlugin : Plugin<Project> {
         val shotsProperties = providers.gradlePropertiesPrefixedBy("shots.")
         gradle.taskGraph.whenReady {
             if (!hasTask(record.get()) && !hasTask(verify.get())) return@whenReady
+            if (hasTask(verify.get()) && gallery != null) {
+                throw GradleException("-P$GALLERY_PROPERTY only records (screenshotsRecord); never pass it to a verify")
+            }
             tasks.named<Test>(hostTest.taskName).configure {
                 filter.setExcludePatterns()
                 filter.includeTestsMatching(SCREENSHOT_TEST_PATTERN)
@@ -154,6 +163,9 @@ class TestingConventionPlugin : Plugin<Project> {
     private companion object {
         const val SCREENSHOTS_DIR = "screenshots"
         const val SCREENSHOT_TEST_PATTERN = "*ScreenshotTest"
+
+        /** An absolute directory: a record renders a gallery there instead of the baselines. */
+        const val GALLERY_PROPERTY = "shots.gallery"
 
         /** The SDK of `robolectric-android-all` in the catalog (android-all-instrumented 15 = API 35). */
         const val ROBOLECTRIC_SDK = 35

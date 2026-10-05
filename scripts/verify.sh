@@ -2,8 +2,8 @@
 # verify.sh [quick]                        root verifyQuick: every module's tests, Konsist, lintGithubDebug, APKs
 # verify.sh full                           root verifyFull (both lints), then klibs
 # verify.sh klibs [<module>]               iosSimulatorArm64 klibs of every shared module, or of shared/<module>
-# verify.sh shots <module>|app [--record] [-P<name>=<value>...]
-#                                          :shared:<module> or :app screenshotsVerify (screenshotsRecord)
+# verify.sh shots <module>|app|all [--record | --gallery <dir>] [-P<name>=<value>...]
+#                                          :shared:<module>, :app or all of them: screenshotsVerify (screenshotsRecord)
 # verify.sh ui <Class>[,<Class>...]|all    :app:connectedGithubDebugAndroidTest on a pool emulator
 # verify.sh ship                           scripts/ship-check.sh when it exists, else full + check-play-policy.sh
 # verify.sh run -- <gradle args...>        ad hoc Gradle tasks (kn slot when an argument names an iOS task)
@@ -18,6 +18,10 @@
 #   $(git rev-parse --absolute-git-dir)/itmo-myitmoapi-dir, which `lane new|pin` writes. A missing pin or one off
 #   gradle/myitmoapi.ref warns with the `lane pin` command and builds on. Skipped when MYITMOAPI_DIR is set (CI) or a
 #   run passes its own -PmyItmoApiDir or -PmyItmoApiFromCentral.
+# - shots all runs every shared module with a *ScreenshotTest class or a screenshots/ directory, plus :app, in one
+#   Gradle call with --continue, so one run reports every module's differences. --gallery <dir> (an absent or empty
+#   directory) renders every capture in all four appearances into <dir>/<module>/ without comparing and without
+#   touching the baselines (screenshotsRecord with -Pshots.gallery and -Pshots.appearance=full).
 # - ui accepts FQCNs or bare class names (resolved to the one file under app/src/androidTest*/), optionally with
 #   #method. It refuses unless ANDROID_SERIAL is emulator-<port> and the device reports ro.boot.qemu (or
 #   ro.kernel.qemu) = 1; emulator-5554 only from a worktree whose itmo-lane marker reads `integrator`.
@@ -168,35 +172,77 @@ run_ship() {
 # ---- shots -----------------------------------------------------------------------------------------------
 
 run_shots() {
-  local module=${1:-} task=screenshotsVerify project out rc arg
-  local -a props=()
-  [ -n "$module" ] || refuse "usage: shots <module>|app [--record] [-P<name>=<value>...]"
+  local module=${1:-} task=screenshotsVerify out rc arg gallery="" record=""
+  local -a props=() projects=() tasks=()
+  [ -n "$module" ] || refuse "usage: shots <module>|app|all [--record | --gallery <dir>] [-P<name>=<value>...]"
   shift
-  for arg in "$@"; do
+  while [ $# -gt 0 ]; do
+    arg=$1
+    shift
     case "$arg" in
-      --record) task=screenshotsRecord ;;
+      --record) record=1 ;;
+      --gallery)
+        [ $# -gt 0 ] && [ -n "$1" ] || refuse "shots: --gallery needs a directory"
+        gallery=$1
+        shift
+        ;;
       -P?*=*) props+=("$arg") ;;
       *) refuse "shots: unknown argument '$arg'" ;;
     esac
   done
+  [ -z "$record" ] || [ -z "$gallery" ] || refuse "shots: --record and --gallery exclude each other"
+  [ -z "$record" ] || task=screenshotsRecord
   [[ $module =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || refuse "shots: '$module' is not a module name"
   grep -rqs --include='*.kts' --include='*.kt' screenshotsVerify "$root/build-logic" 2> /dev/null ||
     refuse "screenshot harness not installed (no screenshotsVerify task in build-logic yet)"
-  if [ "$module" = app ]; then
-    project=:app
-  else
-    [ -d "$root/shared/$module" ] || refuse "shots: no module shared/$module"
-    project=":shared:$module"
+  case "$module" in
+    app) projects=(:app) ;;
+    all) while IFS= read -r arg; do projects+=("$arg"); done < <(shot_projects) ;;
+    *)
+      [ -d "$root/shared/$module" ] || refuse "shots: no module shared/$module"
+      projects=(":shared:$module")
+      ;;
+  esac
+  if [ -n "$gallery" ]; then
+    task=screenshotsRecord
+    mkdir -p "$gallery" && gallery=$(cd "$gallery" && pwd -P) || refuse "shots: cannot create the gallery $gallery"
+    [ -z "$(ls -A "$gallery")" ] || refuse "shots: the gallery $gallery is not empty; pass a new directory"
+    props+=("-Pshots.gallery=$gallery" "-Pshots.appearance=full")
   fi
+  for arg in "${projects[@]}"; do tasks+=("$arg:$task"); done
+  [ "${#tasks[@]}" -eq 1 ] || tasks=(--continue "${tasks[@]}")
   out=$(mktemp "${TMPDIR:-/tmp}/verify-shots.XXXXXX") || refuse "cannot create a temporary file"
-  gradle_part android "$project:$task" ${props[@]+"${props[@]}"} 2>&1 | tee "$out"
+  gradle_part android "${tasks[@]}" ${props[@]+"${props[@]}"} 2>&1 | tee "$out"
   rc=${PIPESTATUS[0]}
   if [ "$rc" -ne 0 ] && grep -qE "(Task '$task' not found|Cannot locate tasks that match)" "$out"; then
     rm -f "$out"
-    refuse "screenshot harness not installed in $project"
+    refuse "screenshot harness not installed in ${projects[*]}"
   fi
   rm -f "$out"
+  [ -z "$gallery" ] || gallery_summary "$gallery"
   return "$rc"
+}
+
+# :app and every shared module with a screenshot test or baselines, one Gradle path per line.
+shot_projects() {
+  local dir
+  for dir in "$root"/shared/*/; do
+    dir=${dir%/}
+    [ -f "$dir/build.gradle.kts" ] || continue
+    if [ -d "$dir/screenshots" ] ||
+      [ -n "$(find "$dir/src" -path '*/src/androidHostTest/*' -name '*ScreenshotTest.kt' -print -quit 2> /dev/null)" ]; then
+      printf ':shared:%s\n' "${dir##*/}"
+    fi
+  done
+  printf ':app\n'
+}
+
+gallery_summary() { # dir
+  local dir
+  for dir in "$1"/*/; do
+    [ -d "$dir" ] || continue
+    note "gallery: $(find "$dir" -name '*.png' | wc -l | tr -d ' ') PNGs in $dir"
+  done
 }
 
 # ---- ui --------------------------------------------------------------------------------------------------

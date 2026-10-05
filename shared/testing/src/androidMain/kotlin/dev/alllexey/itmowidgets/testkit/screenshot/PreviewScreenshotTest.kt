@@ -81,6 +81,7 @@ abstract class PreviewScreenshotTest {
 
     @Test
     fun baselines() {
+        if (ShotsRun.gallery != null) return
         val inventory = BaselineInventory(suite.previews.keys, suite.directory)
         print(inventory.report())
         check(inventory.problems.isEmpty()) { "Baselines of ${suite.packageTree}:\n" + inventory.report() }
