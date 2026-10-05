@@ -4,46 +4,20 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewLimits
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
-import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.core.text.toUiText
 import javax.inject.Inject
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-data class ReviewEditorUiState(
-    val subject: String = "",
-    val text: String = "",
-    val anonymous: Boolean = true,
-    /** Subjects of the viewer's own lessons with the teacher, newest first. */
-    val suggestions: List<String> = emptyList(),
-    val subjectError: UiText? = null,
-    val textError: UiText? = null,
-    val saving: Boolean = false,
-    val editing: Boolean = false,
-) {
-    val canSave: Boolean get() = text.isNotBlank() && !saving
-
-    /** The minimum length is a quiet hint while typing; it turns into an error only on send. */
-    val showsMinimumHint: Boolean get() = textError == null && TeacherReviewLimits.length(text.trim()) < TeacherReviewLimits.MIN_TEXT
-}
-
-sealed interface ReviewEditorEvent {
-    data object Saved : ReviewEditorEvent
-    data class Failed(val text: UiText) : ReviewEditorEvent
-}
 
 /** Writes the viewer's review of a teacher, or edits the one in the cached reviews. */
 @HiltViewModel
@@ -52,21 +26,23 @@ class ReviewEditorViewModel @Inject constructor(
     private val repository: TeacherReviewsRepository,
     private val lessons: TeacherLessonsGateway,
 ) : ViewModel() {
-    val teacherIsu: Int = checkNotNull(handle[TeacherReviewArgs.TEACHER_ISU])
+    private val teacherIsu: Int = checkNotNull(handle[TeacherReviewArgs.TEACHER_ISU])
     val teacherName: String = checkNotNull(handle[TeacherReviewArgs.TEACHER_NAME])
-    private val _uiState = MutableStateFlow(restoredState())
-    val uiState: StateFlow<ReviewEditorUiState> = _uiState.asStateFlow()
-    private val channel = Channel<ReviewEditorEvent>(Channel.BUFFERED)
-    val events: Flow<ReviewEditorEvent> = channel.receiveAsFlow()
+    private val state = MutableStateFlow(restoredState())
+    private val eventQueue = EventQueue<ReviewEditorEvent>()
     /** Flows of the viewer's lessons with the teacher, growing as the schedule weeks answer. */
     private var flowIds: Set<Long> = emptySet()
+
+    val uiState: StateFlow<ReviewEditorUiState> = state.asStateFlow()
+
+    val events: Flow<ReviewEditorEvent> = eventQueue.events
 
     init {
         viewModelScope.launch {
             lessons.taughtBy(teacherIsu).collect { result ->
                 if (result is AppResult.Success) {
                     flowIds = result.value.flowIds
-                    _uiState.update { it.copy(suggestions = result.value.subjects) }
+                    state.update { it.copy(suggestions = result.value.subjects) }
                 }
             }
         }
@@ -74,54 +50,53 @@ class ReviewEditorViewModel @Inject constructor(
 
     fun onSubjectChanged(subject: String) {
         handle[KEY_SUBJECT] = subject
-        _uiState.update { it.copy(subject = subject, subjectError = null) }
+        state.update { it.copy(subject = subject, subjectError = null) }
     }
 
     fun onTextChanged(text: String) {
         handle[KEY_TEXT] = text
-        _uiState.update { it.copy(text = text, textError = null) }
+        state.update { it.copy(text = text, textError = null) }
     }
 
     fun onAnonymousChanged(anonymous: Boolean) {
         handle[KEY_ANONYMOUS] = anonymous
-        _uiState.update { it.copy(anonymous = anonymous) }
+        state.update { it.copy(anonymous = anonymous) }
     }
 
     /** Sends with the flows collected so far; a slow schedule history never delays the review. */
     fun save() {
-        val state = _uiState.value
-        if (state.saving) return
-        val subject = state.subject.trim()
-        val text = state.text.replace("\r\n", "\n").trim()
+        val form = state.value
+        if (form.saving) return
+        val subject = form.subject.trim()
+        val text = form.text.replace("\r\n", "\n").trim()
         val textLength = TeacherReviewLimits.length(text)
         val textError = when {
-            textLength < TeacherReviewLimits.MIN_TEXT -> UiText.Resource(R.string.review_text_too_short, listOf(TeacherReviewLimits.MIN_TEXT))
-            textLength > TeacherReviewLimits.MAX_TEXT -> UiText.Resource(R.string.review_text_too_long, listOf(TeacherReviewLimits.MAX_TEXT))
+            textLength < TeacherReviewLimits.MIN_TEXT -> ReviewFieldError.TEXT_TOO_SHORT
+            textLength > TeacherReviewLimits.MAX_TEXT -> ReviewFieldError.TEXT_TOO_LONG
             else -> null
         }
-        val subjectError = if (TeacherReviewLimits.length(subject) > TeacherReviewLimits.MAX_SUBJECT) {
-            UiText.Resource(R.string.review_subject_too_long, listOf(TeacherReviewLimits.MAX_SUBJECT))
-        } else null
+        val subjectError =
+            if (TeacherReviewLimits.length(subject) > TeacherReviewLimits.MAX_SUBJECT) ReviewFieldError.SUBJECT_TOO_LONG else null
         if (textError != null || subjectError != null) {
-            _uiState.update { it.copy(textError = textError, subjectError = subjectError) }
+            state.update { it.copy(textError = textError, subjectError = subjectError) }
             return
         }
-        _uiState.update { it.copy(saving = true) }
-        val draft = TeacherReviewDraft(subject.ifEmpty { null }, text, state.anonymous, flowIds)
+        state.update { it.copy(saving = true) }
+        val draft = TeacherReviewDraft(subject.ifEmpty { null }, text, form.anonymous, flowIds)
         viewModelScope.launch {
             val result = repository.save(teacherIsu, draft)
-            _uiState.update { it.copy(saving = false) }
-            channel.send(when (result) {
+            state.update { it.copy(saving = false) }
+            eventQueue.send(when (result) {
                 is AppResult.Success -> ReviewEditorEvent.Saved
-                is AppResult.Failure -> ReviewEditorEvent.Failed(result.error.toUiText())
+                is AppResult.Failure -> ReviewEditorEvent.Failed(result.error)
             })
         }
     }
 
     fun hasChanges(): Boolean {
-        val state = _uiState.value
-        return state.subject != handle[KEY_INITIAL_SUBJECT] || state.text != handle[KEY_INITIAL_TEXT] ||
-            state.anonymous != handle[KEY_INITIAL_ANONYMOUS]
+        val form = state.value
+        return form.subject != handle[KEY_INITIAL_SUBJECT] || form.text != handle[KEY_INITIAL_TEXT] ||
+            form.anonymous != handle[KEY_INITIAL_ANONYMOUS]
     }
 
     /** The first opening starts from the viewer's cached review; later ones, after process death too, from the handle. */

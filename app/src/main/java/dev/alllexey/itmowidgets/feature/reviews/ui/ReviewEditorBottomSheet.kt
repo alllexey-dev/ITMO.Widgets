@@ -25,12 +25,13 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewLimits
 import dev.alllexey.itmowidgets.core.ui.expandToContent
-import dev.alllexey.itmowidgets.core.ui.resolve
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.shortPersonName
 import dev.alllexey.itmowidgets.databinding.SheetReviewEditorBinding
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorEvent
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorUiState
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorViewModel
+import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewFieldError
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -82,7 +83,7 @@ class ReviewEditorBottomSheet : BottomSheetDialogFragment() {
         viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
             when (event) {
                 ReviewEditorEvent.Saved -> dismiss()
-                is ReviewEditorEvent.Failed -> Snackbar.make(root, event.text.resolve(requireContext()), Snackbar.LENGTH_LONG).show()
+                is ReviewEditorEvent.Failed -> Snackbar.make(root, event.error.messageRes(), Snackbar.LENGTH_LONG).show()
             }
         }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
@@ -96,14 +97,14 @@ class ReviewEditorBottomSheet : BottomSheetDialogFragment() {
                 subject.setText(state.subject)
                 subject.setSelection(state.subject.length)
             }
-            subjectLayout.error = state.subjectError?.resolve(requireContext())
+            subjectLayout.error = state.subjectError?.let(::message)
             bindSuggestions(state.suggestions)
             markPickedSuggestion(state.subject)
             if (text.text?.toString() != state.text) {
                 text.setText(state.text)
                 text.setSelection(state.text.length)
             }
-            textLayout.error = state.textError?.resolve(requireContext())
+            textLayout.error = state.textError?.let(::message)
             textLayout.helperText = if (state.showsMinimumHint) {
                 getString(R.string.review_text_too_short, TeacherReviewLimits.MIN_TEXT)
             } else null
@@ -114,6 +115,12 @@ class ReviewEditorBottomSheet : BottomSheetDialogFragment() {
         } finally {
             rendering = false
         }
+    }
+
+    private fun message(error: ReviewFieldError): String = when (error) {
+        ReviewFieldError.TEXT_TOO_SHORT -> getString(R.string.review_text_too_short, TeacherReviewLimits.MIN_TEXT)
+        ReviewFieldError.TEXT_TOO_LONG -> getString(R.string.review_text_too_long, TeacherReviewLimits.MAX_TEXT)
+        ReviewFieldError.SUBJECT_TOO_LONG -> getString(R.string.review_subject_too_long, TeacherReviewLimits.MAX_SUBJECT)
     }
 
     private fun bindSuggestions(suggestions: List<String>) = with(binding) {
