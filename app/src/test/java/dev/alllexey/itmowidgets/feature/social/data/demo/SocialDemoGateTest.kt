@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.social.data.demo
 
-import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.model.RelationshipState
@@ -14,6 +13,7 @@ import dev.alllexey.itmowidgets.core.testing.unreachable
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.unreachablePersonalitiesClient
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -56,8 +56,8 @@ class SocialDemoGateTest {
     @Test
     fun `people and the directory search come from the demo set`() = runTest {
         val social = SocialRepositoryImpl(gate, backend, backgroundScope, demo, dispatchers)
-        val persons = PersonRepositoryImpl(unreachable<MyItmoApi>(), demo, dispatchers)
-        val search = PeopleSearchRepositoryImpl(unreachable<MyItmoApi>(), social, demo, dispatchers)
+        val persons = PersonRepositoryImpl(unreachablePersonalitiesClient(), demo, dispatchers)
+        val search = PeopleSearchRepositoryImpl(unreachablePersonalitiesClient(), social, demo, dispatchers)
 
         val teacher = (persons.person(DemoPeople.DATABASES_TEACHER.isu) as AppResult.Success).value
         val student = (persons.person(DemoPeople.MARIA.isu) as AppResult.Success).value
