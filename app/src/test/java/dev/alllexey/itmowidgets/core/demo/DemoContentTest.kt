@@ -51,7 +51,7 @@ class DemoContentTest {
                 DemoReviews.reviews(teacher.isu, today).reviews.mapNotNull { (it.origin as ReviewOrigin.Community).author?.name }
             })
             addAll(DemoStudy.CURRENT.flatMap { subject ->
-                val snapshot = DemoSubjectLinks.snapshot(ResourceScope(subject.id, subject.name, StudyHalf.of(today).periodKey), time.javaNow())
+                val snapshot = DemoSubjectLinks.snapshot(ResourceScope(subject.id, subject.name, StudyHalf.of(today).periodKey), time.now())
                 (snapshot.mine + snapshot.shared).mapNotNull { it.author?.name }
             })
             (1..semester.semester).forEach { number ->
@@ -78,7 +78,7 @@ class DemoContentTest {
             DemoSport.score(time), DemoSport.periods(time), DemoSport.filters(), DemoSport.timeSlots(),
             DemoSocial.friends(), DemoSocial.requests(), DemoPeople.EVERYONE.map { DemoSocial.person(it.isu) },
             DemoPeople.TEACHERS.map { DemoReviews.reviews(it.isu, today) },
-            DemoStudy.CURRENT.map { DemoSubjectLinks.snapshot(ResourceScope(it.id, it.name, StudyHalf.of(today).periodKey), time.javaNow()) },
+            DemoStudy.CURRENT.map { DemoSubjectLinks.snapshot(ResourceScope(it.id, it.name, StudyHalf.of(today).periodKey), time.now()) },
             DemoRecordbook.programs(today), (1..4).map { DemoRecordbook.subjects(DemoStudy.PROGRAM_ID, it, today, time.javaZone()) },
             DemoStudy.CURRENT.map { DemoRecordbook.controls(it.id * 10 + 3, time.javaNow()) },
             DemoRecordbook.news(today, time.javaNow().toInstant()), DemoRecordbook.sheetScores(today, time.javaNow().toInstant())

@@ -54,6 +54,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlin.time.toKotlinInstant
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import dev.alllexey.itmowidgets.core.model.resources.SubjectLink as WireLink
@@ -92,7 +93,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     }
 
     private fun demoSnapshot(scope: ResourceScope) =
-        DemoSubjectLinks.snapshot(scope, OffsetDateTime.ofInstant(clock.instant(), clock.zone))
+        DemoSubjectLinks.snapshot(scope, clock.instant().toKotlinInstant())
 
     private fun observeStored(scope: ResourceScope): Flow<SubjectLinksState> = combine(
         state, backend.observeConnected().onEach { enabled = it }, loadError, scopeErrors, refreshing,
@@ -204,8 +205,8 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         }
 
     override fun observeRestrictions(): Flow<List<UserRestriction>> = combine(restrictions, backend.observeConnected(), flow {
-        while (true) { emit(clock.instant()); delay(RESTRICTION_TICK_MILLIS) }
-    }) { rows, on, now -> if (!on) emptyList() else rows.filter { it.expiresAt?.toInstant()?.isAfter(now) != false } }
+        while (true) { emit(clock.instant().toKotlinInstant()); delay(RESTRICTION_TICK_MILLIS) }
+    }) { rows, on, now -> if (!on) emptyList() else rows.filter { it.expiresAt.let { at -> at == null || at > now } } }
         .distinctUntilChanged()
 
     override suspend fun refreshRestrictions(): AppResult<Unit> = if (demo.isActive()) AppResult.Success(Unit) else attempt {

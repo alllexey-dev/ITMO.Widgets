@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.core.reviews
 
 import dev.alllexey.itmowidgets.core.model.UserSummary
-import java.time.YearMonth
+import kotlinx.datetime.YearMonth
 
 /**
  * Reviews of one teacher for the current viewer. [reviews] keeps Backend's ranked order and never holds the
@@ -71,7 +71,17 @@ object TeacherReviewLimits {
     const val MAX_COMMENT = 500
     const val MAX_FLOWS = 50
 
-    fun length(text: String): Int = text.codePointCount(0, text.length)
+    /** Code points of [text]: a surrogate pair counts once, an unpaired surrogate once, like `codePointCount`. */
+    fun length(text: String): Int {
+        var count = 0
+        var index = 0
+        while (index < text.length) {
+            val pair = text[index].isHighSurrogate() && index + 1 < text.length && text[index + 1].isLowSurrogate()
+            index += if (pair) 2 else 1
+            count++
+        }
+        return count
+    }
 }
 
 sealed interface ReviewDate {

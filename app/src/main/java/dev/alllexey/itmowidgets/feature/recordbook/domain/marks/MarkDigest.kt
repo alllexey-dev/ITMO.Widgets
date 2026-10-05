@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.marks
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.work.QuietHours
 import java.time.LocalDateTime
+import kotlinx.datetime.toKotlinLocalTime
 
 /** One summary notification: every unread subject, newest first, and the record when there is only one. */
 data class MarkDigest(val subjects: List<String>, val single: MarkNews?)
@@ -16,7 +17,7 @@ object MarkDigests {
     const val PROMPT_ID = 2
 
     fun decide(news: List<MarkNews>, prompt: BarsLoginPrompt, now: LocalDateTime): MarkDigestDecision {
-        if (QuietHours.isQuiet(now.toLocalTime())) return MarkDigestDecision(null, emptySet(), showPrompt = false)
+        if (QuietHours.isQuiet(now.toLocalTime().toKotlinLocalTime())) return MarkDigestDecision(null, emptySet(), showPrompt = false)
         val pending = news.filter { !it.notified }
         // The digest replaces the previous one, so a subject it named before must stay in it.
         val digest = if (pending.isEmpty()) null else MarkDigest(

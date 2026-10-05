@@ -18,10 +18,10 @@ object ScheduleChangeDigests {
     const val NOTIFICATION_ID = 1
 
     fun decide(changes: List<ScheduleChange>, now: LocalDateTime): DigestDecision {
-        if (QuietHours.isQuiet(now.toLocalTime())) return DigestDecision(null, emptySet())
+        val wallTime = now.toKotlinLocalDateTime()
+        if (QuietHours.isQuiet(wallTime.time)) return DigestDecision(null, emptySet())
         val pending = changes.filter { !it.read && !it.notified }
         val handled = pending.mapTo(mutableSetOf()) { it.id }
-        val wallTime = now.toKotlinLocalDateTime()
         val fresh = pending.filterNot { it.isOver(wallTime) }
         if (fresh.isEmpty()) return DigestDecision(null, handled)
 

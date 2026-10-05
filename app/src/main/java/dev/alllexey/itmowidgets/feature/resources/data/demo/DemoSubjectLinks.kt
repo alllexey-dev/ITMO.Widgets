@@ -11,12 +11,13 @@ import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
-import java.time.OffsetDateTime
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 /** Links of the demo subjects: the stream's shared links, one of Anna's own and the pin of the period. */
 object DemoSubjectLinks {
 
-    fun snapshot(scope: ResourceScope, now: OffsetDateTime): SubjectLinksSnapshot {
+    fun snapshot(scope: ResourceScope, now: Instant): SubjectLinksSnapshot {
         val subject = DemoStudy.CURRENT.firstOrNull { it.id == scope.subjectId }
         val links = subject?.let { LINKS[it] }.orEmpty().mapIndexed { index, link -> link.toModel(scope, subject!!, index, now) }
         val mine = links.filter { it.isMine }
@@ -48,7 +49,7 @@ object DemoSubjectLinks {
     ) {
         val isMine: Boolean get() = author == DemoPeople.ME_PERSON
 
-        fun toModel(scope: ResourceScope, subject: DemoSubject, index: Int, now: OffsetDateTime) = SubjectLink(
+        fun toModel(scope: ResourceScope, subject: DemoSubject, index: Int, now: Instant) = SubjectLink(
             id = "00000000-0000-4000-9000-%012d".format(subject.id * 100 + index),
             scope = scope,
             category = category,
@@ -68,7 +69,7 @@ object DemoSubjectLinks {
             isMine = isMine,
             reportedByMe = false,
             author = author?.summary(),
-            updatedAt = now.minusDays(daysAgo)
+            updatedAt = now - daysAgo.days
         )
     }
 

@@ -3,9 +3,9 @@ package dev.alllexey.itmowidgets.core.testing
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticEntry
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticLevel
-import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.time.Instant
 
 /** In-memory journal for tests: records synchronously, newest first. */
 class RecordingDiagnostics : AppDiagnostics {
@@ -24,6 +24,6 @@ class RecordingDiagnostics : AppDiagnostics {
     }
 
     private fun record(level: DiagnosticLevel, tag: String, message: String, error: Throwable?) {
-        entries.value = listOf(DiagnosticEntry(Instant.EPOCH, level, tag, message, error?.toString())) + entries.value
+        entries.value = listOf(DiagnosticEntry(Instant.fromEpochMilliseconds(0), level, tag, message, error?.toString())) + entries.value
     }
 }

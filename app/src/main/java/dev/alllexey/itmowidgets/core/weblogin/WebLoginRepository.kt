@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.core.weblogin
 
 import dev.alllexey.itmowidgets.core.result.AppResult
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 /** A browser waiting for this account to approve its sign-in to the web version. */
@@ -9,8 +9,8 @@ data class WebLoginPreview(
     val challengeId: Uuid,
     /** The browser's User-Agent as Backend recorded it; null when the browser sent none. */
     val userAgent: String?,
-    val createdAt: OffsetDateTime,
-    val expiresAt: OffsetDateTime,
+    val createdAt: Instant,
+    val expiresAt: Instant,
 )
 
 /**

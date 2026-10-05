@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.core.resources
 
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppError
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 data class ResourceScope(val subjectId: Long, val subjectName: String, val periodKey: String) {
     val key: String get() = "$subjectId-$periodKey"
@@ -47,7 +47,7 @@ data class SubjectLink(
     val isMine: Boolean,
     val reportedByMe: Boolean,
     val author: UserSummary?,
-    val updatedAt: OffsetDateTime,
+    val updatedAt: Instant,
     val local: Boolean = false,
 )
 
@@ -74,6 +74,6 @@ sealed interface SubjectLinksState {
     data class Error(val error: AppError) : SubjectLinksState
 }
 
-data class UserRestriction(val id: String, val capability: RestrictionCapability, val reason: String, val expiresAt: OffsetDateTime?)
+data class UserRestriction(val id: String, val capability: RestrictionCapability, val reason: String, val expiresAt: Instant?)
 fun List<UserRestriction>.blocks(capability: RestrictionCapability): UserRestriction? =
     firstOrNull { it.capability == capability || it.capability == RestrictionCapability.ALL }

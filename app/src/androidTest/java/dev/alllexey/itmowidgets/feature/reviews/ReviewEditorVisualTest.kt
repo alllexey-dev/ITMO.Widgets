@@ -46,7 +46,7 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
-import java.time.YearMonth
+import kotlinx.datetime.YearMonth
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -332,7 +332,7 @@ class ReviewEditorVisualTest {
         canReport = true, knownTeacher = true)
 
     private fun own() = OwnTeacherReview("own", "Математический анализ", REVIEW_TEXT, anonymous = false, status = OwnReviewStatus.PUBLISHED,
-        reviewNote = null, score = 2, verified = true, written = ReviewDate.Month(YearMonth.of(2026, 9)))
+        reviewNote = null, score = 2, verified = true, written = ReviewDate.Month(YearMonth(2026, 9)))
 
     private companion object {
         const val SCREENSHOTS = "review-editor-screenshots"

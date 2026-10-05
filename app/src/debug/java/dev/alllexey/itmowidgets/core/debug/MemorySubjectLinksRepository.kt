@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -28,7 +28,7 @@ class MemorySubjectLinksRepository : SubjectLinksRepository {
     val failure = MutableStateFlow<AppError?>(null)
     val loading = MutableStateFlow(false)
     var servicesEnabled = false
-    private val now = OffsetDateTime.parse("2026-09-22T09:00:00Z")
+    private val now = Instant.parse("2026-09-22T09:00:00Z")
 
     override fun observe(scope: ResourceScope): Flow<SubjectLinksState> = combine(snapshots, failure, loading) { _, error, busy ->
         when {

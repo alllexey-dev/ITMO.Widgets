@@ -22,11 +22,9 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
-import java.time.Clock
-import java.time.Instant
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.datetime.TimeZone
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 /**
@@ -62,7 +60,7 @@ class WebLoginPreviewActivity : AppCompatActivity() {
             val factory = object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T = WebLoginViewModel(SavedStateHandle(), repository,
-                    Clock.fixed(Instant.parse("2026-09-24T09:05:00Z"), ZoneId.of("Europe/Moscow"))) as T
+                    TimeZone.of("Europe/Moscow")) as T
             }
             ViewModelProvider(fragment, factory)[WebLoginViewModel::class.java]
         }
@@ -98,8 +96,8 @@ class WebLoginPreviewActivity : AppCompatActivity() {
         val SYNTHETIC_PREVIEW = WebLoginPreview(
             challengeId = Uuid.parse("00000000-0000-0000-0000-000000000042"),
             userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-            createdAt = OffsetDateTime.parse("2026-09-24T09:04:30Z"),
-            expiresAt = OffsetDateTime.parse("2026-09-24T09:06:30Z"),
+            createdAt = Instant.parse("2026-09-24T09:04:30Z"),
+            expiresAt = Instant.parse("2026-09-24T09:06:30Z"),
         )
 
         @Volatile var appearance = PreviewAppearance()

@@ -46,7 +46,7 @@ import java.io.IOException
 import java.lang.reflect.Proxy
 import java.time.Instant
 import java.time.LocalDate
-import java.time.YearMonth
+import kotlinx.datetime.YearMonth
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
@@ -108,7 +108,7 @@ class TeacherReviewsRepositoryImplTest {
         assertEquals(listOf(100001), api.requestedIsus)
         assertEquals(100001, reviews.isu)
         assertEquals(listOf(UUID(0, 1).toString(), UUID(0, 2).toString(), UUID(0, 3).toString()), reviews.reviews.map { it.id })
-        assertEquals(listOf(ReviewDate.Month(YearMonth.of(2025, 1)), ReviewDate.BeforeYear(2024), null), reviews.reviews.map { it.written })
+        assertEquals(listOf(ReviewDate.Month(YearMonth(2025, 1)), ReviewDate.BeforeYear(2024), null), reviews.reviews.map { it.written })
         assertEquals(reviews, repository.cachedReviews(100001))
     }
 
@@ -440,7 +440,7 @@ class TeacherReviewsRepositoryImplTest {
         val reviews = (repository.reviews(100001) as AppResult.Success).value
 
         assertEquals(listOf(
-            TeacherReview(UUID(0, 1).toString(), null, ReviewDate.Month(YearMonth.of(2026, 9)), "Отзыв 1", 3, 1,
+            TeacherReview(UUID(0, 1).toString(), null, ReviewDate.Month(YearMonth(2026, 9)), "Отзыв 1", 3, 1,
                 ReviewOrigin.Community(verified = true, author = author.toUserSummary(), reportedByMe = false)),
             TeacherReview(UUID(0, 2).toString(), null, null, "Отзыв 2", 0, -1,
                 ReviewOrigin.Community(verified = false, author = null, reportedByMe = true)),
@@ -459,7 +459,7 @@ class TeacherReviewsRepositoryImplTest {
         assertEquals("Грубость", mine.reviewNote)
         assertEquals(2, mine.score)
         assertTrue(mine.verified)
-        assertEquals(ReviewDate.Month(YearMonth.of(2026, 9)), mine.written)
+        assertEquals(ReviewDate.Month(YearMonth(2026, 9)), mine.written)
         assertEquals(listOf(true, true, false, true), listOf(reviews.canWrite, reviews.canVote, reviews.canReport, reviews.knownTeacher))
     }
 

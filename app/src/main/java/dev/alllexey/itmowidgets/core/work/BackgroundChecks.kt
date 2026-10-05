@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.core.work
 
 import androidx.work.ListenableWorker.Result
 import dev.alllexey.itmowidgets.core.result.AppError
-import java.time.LocalTime
+import kotlinx.datetime.LocalTime
 
 /*
  * Rules shared by the background checks that run on the device (schedule changes, marks): when they stay
@@ -11,7 +11,7 @@ import java.time.LocalTime
 
 /** Moscow's quiet hours: from midnight up to, not including, [UNTIL]; they never cross midnight. */
 object QuietHours {
-    val UNTIL: LocalTime = LocalTime.of(6, 0)
+    val UNTIL: LocalTime = LocalTime(6, 0)
 
     fun isQuiet(time: LocalTime): Boolean = time < UNTIL
 }

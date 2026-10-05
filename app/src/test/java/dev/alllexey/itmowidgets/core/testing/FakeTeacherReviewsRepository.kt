@@ -19,7 +19,7 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
-import java.time.YearMonth
+import kotlinx.datetime.YearMonth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
@@ -55,7 +55,7 @@ internal fun copiedReview(id: String) = TeacherReview(id, "Предмет", Revi
     myVote = 0, origin = ReviewOrigin.Reviews("Источник", "https://example.org/reviews/$id"))
 
 internal fun communityReview(id: String, author: UserSummary? = null) = TeacherReview(id, "Предмет",
-    ReviewDate.Month(YearMonth.of(2026, 9)), "Отзыв $id", score = 0, myVote = 0,
+    ReviewDate.Month(YearMonth(2026, 9)), "Отзыв $id", score = 0, myVote = 0,
     origin = ReviewOrigin.Community(verified = false, author = author, reportedByMe = false))
 
 internal fun ownReview(status: OwnReviewStatus = OwnReviewStatus.PUBLISHED) = OwnTeacherReview(
@@ -67,7 +67,7 @@ internal fun ownReview(status: OwnReviewStatus = OwnReviewStatus.PUBLISHED) = Ow
     reviewNote = if (status == OwnReviewStatus.REJECTED) "Причина отклонения" else null,
     score = 0,
     verified = false,
-    written = ReviewDate.Month(YearMonth.of(2026, 9)),
+    written = ReviewDate.Month(YearMonth(2026, 9)),
 )
 
 internal class FakeTeacherReviewsRepository : TeacherReviewsRepository {

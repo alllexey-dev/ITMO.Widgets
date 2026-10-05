@@ -8,10 +8,6 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
-import java.time.Clock
-import java.time.Instant
-import java.time.OffsetDateTime
-import java.time.ZoneId
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
@@ -20,6 +16,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import kotlinx.datetime.TimeZone
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -30,8 +28,8 @@ class WebLoginViewModelTest {
     private val preview = WebLoginPreview(
         challengeId = challenge,
         userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-        createdAt = OffsetDateTime.parse("2026-09-24T09:04:30Z"),
-        expiresAt = OffsetDateTime.parse("2026-09-24T09:06:30Z"),
+        createdAt = Instant.parse("2026-09-24T09:04:30Z"),
+        expiresAt = Instant.parse("2026-09-24T09:06:30Z"),
     )
 
     @Test fun `a scanned link is checked then approved`() = runTest(main.dispatcher) {
@@ -176,7 +174,7 @@ class WebLoginViewModelTest {
     }
 
     private fun model(handle: SavedStateHandle = SavedStateHandle()) =
-        WebLoginViewModel(handle, repository, Clock.fixed(Instant.parse("2026-09-24T09:05:00Z"), ZoneId.of("Europe/Moscow")))
+        WebLoginViewModel(handle, repository, TimeZone.of("Europe/Moscow"))
 
     private class FakeWebLoginRepository : WebLoginRepository {
         val previews = mutableMapOf<String, AppResult<WebLoginPreview>>()

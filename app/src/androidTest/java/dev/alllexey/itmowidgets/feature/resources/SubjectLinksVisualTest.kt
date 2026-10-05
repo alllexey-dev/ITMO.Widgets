@@ -44,7 +44,7 @@ import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTouchTargets
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -597,7 +597,7 @@ class SubjectLinksVisualTest {
         val LECTURE_FLOW = LinkAudience(7101, "ФИЗ ПИИКТ 3", typeId = 1, depth = 1)
         val PRACTICE_FLOW = LinkAudience(7102, "ФИЗ ПИИКТ 3.2", typeId = 3, depth = 2)
         val LAB_FLOW = LinkAudience(7103, "ФИЗ ПИИКТ 3.2.1", typeId = 2, depth = 3)
-        val NOW: OffsetDateTime = OffsetDateTime.parse("2026-09-22T09:00:00Z")
+        val NOW: Instant = Instant.parse("2026-09-22T09:00:00Z")
         val AUTHOR = UserSummary(100001, "Синтетический Автор", null, listOf(UserGroup("P3118", 2, "ФПИиКТ")), UserSharing(false, false))
 
         fun link(
