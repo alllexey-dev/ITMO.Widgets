@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Shared by :app and every shared module (itmowidgets.android.app and itmowidgets.kmp.library). -->
+<lint>
+    <!-- Version checks query Maven repositories, so their results drift with the network and the day;
+         Dependabot proposes the updates instead. -->
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+</lint>
