@@ -1,0 +1,109 @@
+package dev.alllexey.itmowidgets.di.bridge
+
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.services.BackendGate
+import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.koin.core.Koin
+import org.koin.core.context.GlobalContext
+import org.koin.core.context.stopKoin
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.experimental.LazyApplication
+import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
+
+/**
+ * Boots the real `@HiltAndroidApp` Application with Koin, in both distribution flavors (the github and play unit-test
+ * tasks each run it). Every test creates a new Application in the same JVM, so each one is also a second boot.
+ */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35], application = ItmoWidgetsApplication::class)
+@LazyApplication(LazyLoad.ON)
+class KoinStartTest {
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
+
+    @Test
+    fun `the application boots with Koin and Hilt`() {
+        val application = bootApplication()
+
+        val koin = GlobalContext.get()
+        assertSame(application, koin.get<Context>())
+        assertSame(application.diagnostics, koin.get<AppDiagnostics>())
+    }
+
+    @Test
+    fun `core contracts resolve in Koin to the instances Hilt builds`() {
+        val application = bootApplication()
+        val hilt = CoreBridgeEntryPoint.from(application)
+        val koin = GlobalContext.get()
+
+        assertSame(hilt.academicTimeProvider(), koin.get<AcademicTimeProvider>())
+        assertSame(hilt.demoMode(), koin.get<DemoMode>())
+        assertSame(hilt.appDiagnostics(), koin.get<AppDiagnostics>())
+        assertSame(hilt.backendGate(), koin.get<BackendGate>())
+        assertSame(hilt.appDispatchers(), koin.get<AppDispatchers>())
+        assertSame(hilt.sessionRepository(), koin.get<SessionRepository>())
+    }
+
+    @Test
+    fun `a running graph is returned as is`() {
+        val application = bootApplication()
+
+        assertSame(GlobalContext.get(), KoinStarter.ensureStarted(application))
+    }
+
+    @Test
+    fun `concurrent first calls start one graph`() {
+        val application = bootApplication()
+        stopKoin()
+        val threads = 8
+        val ready = CountDownLatch(threads)
+        val executor = Executors.newFixedThreadPool(threads)
+        try {
+            val results = executor.invokeAll(
+                List(threads) {
+                    Callable<Koin> {
+                        ready.countDown()
+                        ready.await()
+                        KoinStarter.ensureStarted(application)
+                    }
+                },
+            ).map { it.get(10, TimeUnit.SECONDS) }
+
+            assertEquals(1, results.distinct().size)
+            assertSame(GlobalContext.get(), results.first())
+        } finally {
+            executor.shutdownNow()
+        }
+    }
+
+    /**
+     * Creates the Application. Robolectric runs no `androidx.startup` provider, so `onCreate()` stops at
+     * `FcmWork.syncToken` with "WorkManager is not initialized", after Koin started and Hilt injected the fields.
+     */
+    private fun bootApplication(): ItmoWidgetsApplication {
+        val failure = runCatching { ApplicationProvider.getApplicationContext<Context>() }.exceptionOrNull()
+        if (failure != null) {
+            val causes = generateSequence(failure) { it.cause }
+            assertTrue(failure.stackTraceToString(), causes.any { "WorkManager" in it.message.orEmpty() })
+        }
+        return GlobalContext.get().get<Context>() as ItmoWidgetsApplication
+    }
+}

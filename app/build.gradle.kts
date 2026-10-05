@@ -6,6 +6,8 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
+    // Robolectric (offline) for host tests that boot the real Application.
+    id("itmowidgets.testing")
 }
 
 // Release signing reads the ignored keystore.properties; a debug build needs none.
@@ -134,6 +136,8 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.ksoup)
     implementation(libs.hilt.android)
+    // Koin beside Hilt (ADR 0019): the graph starts in di/bridge/KoinStarter.
+    implementation(libs.koin.android)
     "playImplementation"(libs.play.app.update.ktx)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
@@ -142,6 +146,7 @@ dependencies {
     testRuntimeOnly(libs.konsist.kotlin.compiler.embeddable)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.koin.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.monitor)

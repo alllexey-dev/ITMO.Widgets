@@ -24,3 +24,7 @@ domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesso
 domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetModels
 domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
+
+entry-point-accessors dev.alllexey.itmowidgets.feature.schedule.work.CalendarSyncWorker
+entry-point-accessors dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesWorker
+entry-point-accessors dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetEntryPoint
