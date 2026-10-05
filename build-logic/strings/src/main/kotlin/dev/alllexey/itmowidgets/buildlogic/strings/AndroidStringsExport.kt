@@ -16,20 +16,33 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 
 /**
- * Android copies of `composeResources` string files (ADR 0028): `:app` merges them into its own `res`, so
- * `dev.alllexey.itmowidgets.R.string.<id>` and XML `@string/<id>` keep working under `android.nonTransitiveRClass`.
- * A copy is named `<module>_<file>` (`core_strings_common.xml`) so it never clashes with a same-named file that is
- * still in `app/src/main/res`.
+ * Android copies of `composeResources` string files and drawables (ADR 0028): `:app` merges them into its own `res`,
+ * so `dev.alllexey.itmowidgets.R.string.<id>`, `R.drawable.<id>` and XML `@string/<id>`, `@drawable/<id>` keep
+ * working under `android.nonTransitiveRClass`. A string copy is named `<module>_<file>` (`core_strings_common.xml`)
+ * so it never clashes with a same-named file that is still in `app/src/main/res`; a drawable keeps its name, which
+ * is its resource id.
  */
 object AndroidStringsExport {
 
     /**
      * `values/strings_platform.xml` of `designsystem` -> `values/designsystem_strings_platform.xml`; a resource file
-     * name allows no `-`, so `feature-qr` gives `feature_qr_strings_qr.xml`.
+     * name allows no `-`, so `feature-qr` gives `feature_qr_strings_qr.xml`. `drawable/ic_qr.xml` stays as it is.
      */
     fun exportedPath(module: String, path: String): String {
+        if (DRAWABLE.matches(path)) return path
         requireExportable(path)
         return path.substringBeforeLast('/') + "/" + module.replace('-', '_') + "_" + path.substringAfterLast('/')
+    }
+
+    /** Every `drawable/<id>.xml` of [resourcesDir], sorted; fails when there is none. */
+    fun drawablePaths(resourcesDir: File): List<String> {
+        val files = File(resourcesDir, DRAWABLE_DIR).listFiles { file -> file.isFile }.orEmpty()
+            .map { "$DRAWABLE_DIR/${it.name}" }
+            .sorted()
+        if (files.isEmpty()) throw GradleException("androidExportDrawables(): no file in $resourcesDir/$DRAWABLE_DIR")
+        val invalid = files.filterNot { DRAWABLE.matches(it) }
+        if (invalid.isNotEmpty()) throw GradleException("androidExportDrawables(): not <lower_snake>.xml: $invalid")
+        return files
     }
 
     /** Fails unless [path] is a `values[-<qualifier>]/strings*.xml` file relative to `composeResources`. */
@@ -76,11 +89,13 @@ object AndroidStringsExport {
         }
     }
 
+    const val DRAWABLE_DIR = "drawable"
+    private val DRAWABLE = Regex("""$DRAWABLE_DIR/[a-z][a-z0-9_]*\.xml""")
     private val EXPORTABLE = Regex("""values(-[A-Za-z0-9+-]+)?/strings[A-Za-z0-9_]*\.xml""")
     private val PROLOG = Regex("""\A<\?xml[^>]*\?>\r?\n?""")
 }
 
-/** Producer side: a shared module's declared `androidExport` files, ready for `:app`. */
+/** Producer side: a shared module's declared `androidExport` files and drawables, ready for `:app`. */
 abstract class ExportAndroidStrings : DefaultTask() {
 
     @get:Input
@@ -88,6 +103,9 @@ abstract class ExportAndroidStrings : DefaultTask() {
 
     @get:Input
     abstract val paths: ListProperty<String>
+
+    @get:Input
+    abstract val drawables: Property<Boolean>
 
     @get:Input
     abstract val sourcePrefix: Property<String>
@@ -103,13 +121,17 @@ abstract class ExportAndroidStrings : DefaultTask() {
     abstract val outputDir: DirectoryProperty
 
     @TaskAction
-    fun export() = AndroidStringsExport.export(
-        module.get(),
-        resourcesDir.get().asFile,
-        sourcePrefix.get(),
-        paths.get(),
-        outputDir.get().asFile,
-    )
+    fun export() {
+        val resources = resourcesDir.get().asFile
+        val drawablePaths = if (drawables.get()) AndroidStringsExport.drawablePaths(resources) else emptyList()
+        AndroidStringsExport.export(
+            module.get(),
+            resources,
+            sourcePrefix.get(),
+            paths.get() + drawablePaths,
+            outputDir.get().asFile,
+        )
+    }
 }
 
 /** Consumer side: one generated `res` directory of `:app` with the exports of its project dependencies. */
