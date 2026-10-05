@@ -1,0 +1,14 @@
+# The links fixtures SubjectLinksVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
+# http/users/myRestrictions.json is here because SubjectLinksApi mirrors it. The vote and report bodies are shared
+# with teacher reviews (common/ResourceRequests.kt) and claimed here once.
+http/links/deleteSubjectLink.json
+http/links/pinSubjectLink.json
+http/links/reportSubjectLink.json
+http/links/saveSubjectLink.json
+http/links/subjectLinks.json
+http/links/voteSubjectLink.json
+http/users/myRestrictions.json
+requests/ModerationReportRequest.json
+requests/PinSubjectLinkRequest.json
+requests/ResourceVoteRequest.json
+requests/SaveSubjectLinkRequest.json
