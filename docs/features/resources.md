@@ -177,9 +177,16 @@ background synchronization.
 
 `SubjectLinksFileStore` keeps `filesDir/subject_links/cache.json`: local links,
 local pins and the last server answer per scope. It is persistent data, not
-`cacheDir`, because device-only links must not be evicted. Writes go through a
-temporary file, `fsync` and an atomic move; a corrupted file is reported and
-never replaced with an empty one. Cloud backup and device transfer exclude the
+`cacheDir`, because device-only links must not be evicted. The file is kotlinx
+JSON in format 3: app-owned rows (local links with the request their first
+upload sends, pins, and per scope the links, authors and audiences of the last
+answer) with ISO instants; the repository maps Backend's answers into these rows.
+Formats 1 and 2, which 2.2 wrote with Gson, still read: their local links and
+pins are kept exactly and their cached answers are dropped, so every scope is
+refetched once on its next open; the first write after that is format 3, which
+2.2 cannot read. Writes go through `AtomicTextFile` (`cache.json.new`, sync,
+atomic move); a corrupted file or an unknown format is reported and never
+replaced with an empty one. Cloud backup and device transfer exclude the
 directory. A failed refresh keeps the cached snapshot; a scope that never
 loaded shows its local links if it has any, otherwise an error.
 

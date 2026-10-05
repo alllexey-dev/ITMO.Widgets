@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
@@ -17,6 +16,7 @@ import java.io.IOException
 import java.lang.reflect.Proxy
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.test.runTest
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -59,7 +59,7 @@ class TeacherLevelsRepositoryImplTest {
     }
 
     private fun repository(demo: DemoMode = noDemo()) =
-        TeacherLevelsRepositoryImpl(services, api.instance, TeacherLevelsFileStore(directory, Gson()), clock, demo, dispatchers)
+        TeacherLevelsRepositoryImpl(services, api.instance, TeacherLevelsFileStore(directory.toOkioPath()), clock, demo, dispatchers)
 
     @Test
     fun `a disabled opt-in answers nothing without a request and erases the file`() = runTest {

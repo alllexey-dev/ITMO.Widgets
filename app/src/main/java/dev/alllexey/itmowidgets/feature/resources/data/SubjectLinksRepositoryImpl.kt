@@ -11,8 +11,6 @@ import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.resources.ModerationReportRequest
 import dev.alllexey.itmowidgets.core.model.resources.PinSubjectLinkRequest
 import dev.alllexey.itmowidgets.core.model.resources.ResourceVoteRequest
-import dev.alllexey.itmowidgets.core.model.resources.SaveSubjectLinkRequest
-import dev.alllexey.itmowidgets.core.model.resources.SubjectLinksResponse
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
@@ -141,14 +139,14 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         load(generation)
         val request = saveRequest(scope, id, category, url, title, visibility, flowId)
         if (!isEnabled()) {
-            val onServer = current().scopes.values.any { cached -> cached.response.mine.any { it.id.toString() == id } }
+            val onServer = current().scopes.values.any { cached -> cached.response.mine.any { it.id == id } }
             if (visibility != LinkVisibility.PRIVATE || onServer) throw Failure(AppError.CustomServicesDisabled)
             val link = LocalLink(id, request, clock.now())
             mutate(generation) { it.copy(local = it.local + (id to link)) }
             return@attempt link.toModel()
         }
         networkLock.withLock {
-            val answer = restricted(generation) { request(generation) { api.saveSubjectLink(id.toWireId(), request) } }
+            val answer = restricted(generation) { request(generation) { api.saveSubjectLink(id.toWireId(), request.toWire()) } }.toStored()
             mutate(generation) { it.copy(local = it.local - id).withMine(scope, answer) }
             if (current().scopes[scope.key] == null) {
                 try { fetch(generation, scope) } catch (_: Failure) { /* The saved link comes with the next refresh. */ }
@@ -185,7 +183,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         networkLock.withLock {
             val answer = request(generation) {
                 api.pinSubjectLink(scope.subjectId, PinSubjectLinkRequest(scope.periodKey, id?.toWireId()))
-            }
+            }.toStored()
             mutate(generation) { it.copy(localPins = it.localPins - scope.key).withResponse(scope, answer) }
         }
     }
@@ -245,7 +243,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     private suspend fun upload(generation: Long) {
         for (link in current().local.values.toList()) {
             val answer = try {
-                request(generation) { api.saveSubjectLink(link.id.toWireId(), link.request) }
+                request(generation) { api.saveSubjectLink(link.id.toWireId(), link.request.toWire()) }.toStored()
             } catch (failure: Failure) {
                 if (failure.error.refusesItem) continue else throw failure
             }
@@ -260,7 +258,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
             val answer = try {
                 request(generation) {
                     api.pinSubjectLink(pin.scope.subjectId, PinSubjectLinkRequest(pin.scope.periodKey, pin.linkId.toWireId()))
-                }
+                }.toStored()
             } catch (failure: Failure) {
                 if (failure.error.refusesItem) null else throw failure
             }
@@ -272,7 +270,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     }
 
     private suspend fun fetch(generation: Long, scope: ResourceScope) {
-        val answer = request(generation) { api.subjectLinks(scope.subjectId, scope.periodKey) }
+        val answer = request(generation) { api.subjectLinks(scope.subjectId, scope.periodKey) }.toStored()
         mutate(generation) { it.withResponse(scope, answer) }
     }
 
@@ -280,7 +278,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         val generation = epoch.get()
         load(generation)
         networkLock.withLock {
-            val answer = restricted(generation) { request(generation, block) }
+            val answer = restricted(generation) { request(generation, block) }.toStored()
             mutate(generation) { it.withLink(scope, answer) }
         }
     }
@@ -383,7 +381,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         val mine = cached.mine.map { it.toModel() }
         val ids = mine.map { it.id }.toSet()
         return SubjectLinksSnapshot(mine + local.filter { it.id !in ids }, cached.shared.map { it.toModel() },
-            cached.previous.map { it.toModel() }, cached.pinnedId?.toString(), cached.audiences.map { it.toModel() },
+            cached.previous.map { it.toModel() }, cached.pinnedId, cached.audiences.map { it.toModel() },
             cached.premoderation, servicesEnabled = true)
     }
 
@@ -395,7 +393,7 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         title: String?,
         visibility: LinkVisibility,
         flowId: Long?,
-    ): SaveSubjectLinkRequest {
+    ): StoredLinkRequest {
         Uuid.parse(id)
         val cleanUrl = url.trim()
         val cleanTitle = title?.trim()?.takeIf { it.isNotEmpty() }
@@ -404,14 +402,14 @@ class SubjectLinksRepositoryImpl @Inject constructor(
         require(cleanUrl.length <= MAX_URL_LENGTH && (cleanTitle?.length ?: 0) <= MAX_TITLE_LENGTH)
         require(scope.subjectId > 0 && scope.subjectName.isNotBlank() && scope.periodKey.matches(PERIOD_KEY))
         require((visibility == LinkVisibility.FLOW) == (flowId != null))
-        return SaveSubjectLinkRequest(scope.subjectId, scope.subjectName.trim(), scope.periodKey, category.toWire(),
-            cleanUrl, cleanTitle, visibility.toWire(), flowId)
+        return StoredLinkRequest(scope.subjectId, scope.subjectName.trim(), scope.periodKey, category, cleanUrl, cleanTitle,
+            visibility, flowId)
     }
 
-    private fun StoredLinks.withResponse(scope: ResourceScope, response: SubjectLinksResponse) =
+    private fun StoredLinks.withResponse(scope: ResourceScope, response: StoredLinksAnswer) =
         copy(scopes = scopes + (scope.key to CachedLinks(scope, response)))
 
-    private fun StoredLinks.withMine(scope: ResourceScope, link: WireLink): StoredLinks {
+    private fun StoredLinks.withMine(scope: ResourceScope, link: StoredLink): StoredLinks {
         val cached = scopes[scope.key]?.response ?: return this
         val mine = if (cached.mine.any { it.id == link.id }) cached.mine.replacing(link) else cached.mine + link
         return withResponse(scope, cached.copy(mine = mine))
@@ -420,17 +418,17 @@ class SubjectLinksRepositoryImpl @Inject constructor(
     private fun StoredLinks.withoutMine(scope: ResourceScope, id: String): StoredLinks {
         val pins = localPins.filterValues { it.linkId != id }
         val cached = scopes[scope.key]?.response ?: return copy(localPins = pins)
-        return copy(localPins = pins).withResponse(scope, cached.copy(mine = cached.mine.filterNot { it.id.toString() == id },
-            pinnedId = cached.pinnedId?.takeUnless { it.toString() == id }))
+        return copy(localPins = pins).withResponse(scope, cached.copy(mine = cached.mine.filterNot { it.id == id },
+            pinnedId = cached.pinnedId?.takeUnless { it == id }))
     }
 
-    private fun StoredLinks.withLink(scope: ResourceScope, link: WireLink): StoredLinks {
+    private fun StoredLinks.withLink(scope: ResourceScope, link: StoredLink): StoredLinks {
         val cached = scopes[scope.key]?.response ?: return this
         return withResponse(scope, cached.copy(mine = cached.mine.replacing(link), shared = cached.shared.replacing(link),
             previous = cached.previous.replacing(link)))
     }
 
-    private fun List<WireLink>.replacing(link: WireLink) = map { if (it.id == link.id) link else it }
+    private fun List<StoredLink>.replacing(link: StoredLink) = map { if (it.id == link.id) link else it }
 
     /** The server refused this one link; the others are still worth sending. */
     private val AppError.refusesItem: Boolean

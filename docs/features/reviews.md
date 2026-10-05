@@ -136,8 +136,8 @@ implementation:
 - is gated by the custom-services opt-in: without it the answer is empty, the
   cache is deleted and nothing is sent;
 - keeps Backend's answers, including «no level», in
-  `filesDir/teacher_levels/levels.json` (format 1, atomic writes, excluded from
-  backup and device transfer) for a day, and asks Backend only for missing or
+  `filesDir/teacher_levels/levels.json` (format 1, kotlinx JSON that 2.2 also
+  reads, atomic writes, excluded from backup and device transfer) for a day, and asks Backend only for missing or
   older teachers, in sorted batches of 50
   (`GET /api/teachers/summary-levels`). Only ISU numbers in
   `100000..9999999` are sent; Backend would reject a whole batch with another
