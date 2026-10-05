@@ -62,6 +62,10 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjec
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonsLoader
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLinksLoader
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetLoader
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacherLevelsLoader
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCheck
@@ -134,9 +138,11 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNa
                                 values["bars_identifier"] = checkNotNull(args.getString("bars_identifier"))
                             }
                             val handle = SavedStateHandle(values)
-                            RecordbookSubjectViewModel(checkNotNull(repository), bars ?: NoBars, handle, resolver,
-                                lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime, resourceRepository, levelsRepository,
-                                MemoryMarkTracking, MemorySheetScores) as T
+                            RecordbookSubjectViewModel(checkNotNull(repository), bars ?: NoBars, handle, resolver, FixedTime,
+                                MemoryMarkTracking,
+                                SubjectLessonsLoader(lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime),
+                                SubjectLinksLoader(resourceRepository), SubjectSheetLoader(MemorySheetScores, FixedTime),
+                                SubjectTeacherLevelsLoader(levelsRepository)) as T
                         }
                     }
                 }

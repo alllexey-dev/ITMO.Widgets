@@ -18,6 +18,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.navigation.toBundle
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
 import dev.alllexey.itmowidgets.core.ui.messageRes
@@ -44,7 +45,7 @@ class RecordbookFragment : Fragment() {
     private var selection: RecordbookSelection? = null
     private var renderingBars = false
     private val barsLogin = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (it.resultCode == Activity.RESULT_OK) viewModel.refresh()
+        if (it.resultCode == Activity.RESULT_OK) viewModel.refresh(RefreshMode.Force)
     }
     private var scrollState: Parcelable? = null
 
@@ -60,20 +61,15 @@ class RecordbookFragment : Fragment() {
         binding.mainRecyclerView.adapter = adapter
         binding.mainRecyclerView.itemAnimator = null
         binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh() })
-        binding.stateAction.setOnClickListener { viewModel.refresh() }
+        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh(RefreshMode.Pull) })
+        binding.stateAction.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
         binding.barsChip.setOnCheckedChangeListener { _, checked -> if (!renderingBars) viewModel.setBarsEnabled(checked) }
-        viewModel.barsEnabled.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { enabled ->
-            renderingBars = true
-            binding.barsChip.isChecked = enabled
-            renderingBars = false
-        }.launchIn(viewLifecycleOwner.lifecycleScope)
         parentFragmentManager.setFragmentResultListener(RecordbookPeriodBottomSheet.RESULT_KEY, viewLifecycleOwner) { _, result ->
             viewModel.selectPeriod(result.getLong(RecordbookPeriodBottomSheet.RESULT_PROGRAM_ID), result.getInt(RecordbookPeriodBottomSheet.RESULT_SEMESTER))
         }
         viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.ensureDataLoaded()
+        viewModel.refresh(RefreshMode.Silent)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -93,6 +89,9 @@ class RecordbookFragment : Fragment() {
     }
 
     private fun render(state: RecordbookUiState) {
+        renderingBars = true
+        binding.barsChip.isChecked = state.barsEnabled
+        renderingBars = false
         if (state !is RecordbookUiState.Content) binding.loading.isVisible = state is RecordbookUiState.Loading
         val refreshError = (state as? RecordbookUiState.Content)?.refreshError
         val barsError = (state as? RecordbookUiState.Content)?.barsError
@@ -100,9 +99,9 @@ class RecordbookFragment : Fragment() {
             errorSnackbar?.dismiss()
             errorSnackbar = refreshError?.let {
                 Snackbar.make(binding.root, getString(R.string.recordbook_refresh_error, getString(it.messageRes())), Snackbar.LENGTH_LONG)
-                    .setAction(R.string.common_retry) { viewModel.refresh() }.also(Snackbar::show)
+                    .setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }.also(Snackbar::show)
             } ?: barsError?.let { error ->
-                recordbookBarsSnackbar(binding.root, error, { viewModel.refresh() }) {
+                recordbookBarsSnackbar(binding.root, error, { viewModel.refresh(RefreshMode.Force) }) {
                     barsLogin.launch(Intent(requireContext(), BarsLoginActivity::class.java))
                 }
             }
@@ -138,7 +137,7 @@ class RecordbookFragment : Fragment() {
                 binding.stateDescription.setText(state.error.messageRes())
                 binding.stateAction.isVisible = true
             }
-            RecordbookUiState.Empty -> {
+            is RecordbookUiState.Empty -> {
                 renderPeriod(emptyList(), null)
                 binding.swipeRefreshLayout.isVisible = false
                 binding.stateContainer.isVisible = true

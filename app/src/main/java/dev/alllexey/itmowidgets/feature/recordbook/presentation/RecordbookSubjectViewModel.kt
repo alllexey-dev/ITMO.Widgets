@@ -5,146 +5,89 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
-import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
-import dev.alllexey.itmowidgets.core.presentation.StableOrder
-import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
+import dev.alllexey.itmowidgets.core.presentation.BusyKeys
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
-import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
-import dev.alllexey.itmowidgets.core.resources.blocks
-import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkChips
-import dev.alllexey.itmowidgets.core.resources.SubjectLinkRanking
-import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.resources.subjectLinkChips
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
-import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
-import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
-import dev.alllexey.itmowidgets.core.schedule.SubjectLesson
-import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
-import dev.alllexey.itmowidgets.core.schedule.subjectsIn
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
-import dev.alllexey.itmowidgets.feature.recordbook.domain.ControlEntry
-import dev.alllexey.itmowidgets.feature.recordbook.domain.GradeStep
-import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookControlGroups
-import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookGradeScale
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
-import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
-import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
-import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContext
-import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.studyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
-import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.domain.withBars
 import javax.inject.Inject
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
-import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
 
-sealed interface RecordbookSubjectUiState {
-    data object Loading : RecordbookSubjectUiState
-    data class Content(
-        val subject: RecordbookSubject,
-        val controls: List<RecordbookControl>,
-        val sport: RecordbookSportState?,
-        val controlsError: AppError? = null,
-        val refreshing: Boolean = false,
-        val refreshError: AppError? = null,
-        /** BARS journal failed; subject and controls are MyITMO values. */
-        val barsError: AppError? = null,
-        /** Schedule and links sections: links, chats, teachers, upcoming lessons. */
-        val hub: SubjectHubState = SubjectHubState(),
-        /** The academic time zone control dates are shown in. */
-        val timeZone: TimeZone
-    ) : RecordbookSubjectUiState {
-        /** Lone controls and groups of related ones, in server order. */
-        val controlGroups: List<ControlEntry> = RecordbookControlGroups.groupControls(controls)
-
-        /** The hint to the next grade; none once a final result is set or for physical education. */
-        val gradeStep: GradeStep?
-            get() = if (subject.isPhysicalEducation || subject.normalizedRate != RecordbookRate.InProgress) null
-                else RecordbookGradeScale.nextStep(subject.score, subject.assessmentKind)
-    }
-    data class Error(val error: AppError) : RecordbookSubjectUiState
-}
-
+/**
+ * One subject page: the MyITMO subject with its controls (BARS values over them when the list had a journal), and the
+ * hub below it. The hub's lessons, links, sheet total and teacher tones come from their loaders.
+ */
 @HiltViewModel
 class RecordbookSubjectViewModel @Inject constructor(
     private val repository: RecordbookRepository,
     private val bars: BarsRecordbookRepository,
     savedStateHandle: SavedStateHandle,
     private val sportResolver: RecordbookSportResolver,
-    private val lessonsGateway: SubjectLessonsGateway,
-    private val scheduleRefresh: ScheduleRefreshGateway,
-    private val bindings: SubjectBindingStore,
-    private val contextResolver: SubjectContextResolver,
     private val time: AcademicTimeProvider,
-    private val subjectLinks: SubjectLinksRepository,
-    private val teacherLevels: TeacherLevelsRepository,
     private val marks: MarkTrackingRepository,
-    private val sheets: SheetScoresRepository,
+    private val lessonsLoader: SubjectLessonsLoader,
+    private val linksLoader: SubjectLinksLoader,
+    private val sheetLoader: SubjectSheetLoader,
+    private val levelsLoader: SubjectTeacherLevelsLoader,
 ) : ViewModel() {
-    private val entryId = checkNotNull(savedStateHandle.get<Long>(ARG_ENTRY_ID))
-    private val programId = checkNotNull(savedStateHandle.get<Long>(ARG_PROGRAM_ID))
+    private val entryId = checkNotNull(savedStateHandle.get<Long>(RecordbookSubjectArgs.ENTRY_ID))
+    private val programId = checkNotNull(savedStateHandle.get<Long>(RecordbookSubjectArgs.PROGRAM_ID))
     private val period = RecordbookPeriod(
-        studyYear = checkNotNull(savedStateHandle.get<String>(ARG_STUDY_YEAR)),
-        semester = checkNotNull(savedStateHandle.get<Int>(ARG_SEMESTER)),
+        studyYear = checkNotNull(savedStateHandle.get<String>(RecordbookSubjectArgs.STUDY_YEAR_KEY)),
+        semester = checkNotNull(savedStateHandle.get<Int>(RecordbookSubjectArgs.SEMESTER)),
         course = 0,
         actual = false
     )
-    private val barsJournal: BarsJournalReference? = savedStateHandle.get<Long>(ARG_BARS_PLAN)?.let { plan ->
-        BarsJournalReference(plan, checkNotNull(savedStateHandle.get<String>(ARG_BARS_TYPE)),
-            checkNotNull(savedStateHandle.get<String>(ARG_BARS_IDENTIFIER)),
+    private val barsJournal: BarsJournalReference? = savedStateHandle.get<Long>(RecordbookSubjectArgs.BARS_PLAN)?.let { plan ->
+        BarsJournalReference(plan, checkNotNull(savedStateHandle.get<String>(RecordbookSubjectArgs.BARS_TYPE)),
+            checkNotNull(savedStateHandle.get<String>(RecordbookSubjectArgs.BARS_IDENTIFIER)),
             period.studyYear.substringBefore('/').toInt(), period.semesterInCourse)
     }
     private val _uiState = MutableStateFlow<RecordbookSubjectUiState>(RecordbookSubjectUiState.Loading)
-    val uiState = _uiState.asStateFlow()
+    val uiState: StateFlow<RecordbookSubjectUiState> = _uiState.asStateFlow()
+    private val eventQueue = EventQueue<RecordbookSubjectEvent>()
+    val events: Flow<RecordbookSubjectEvent> = eventQueue.events
     private var loadJob: Job? = null
     private var hubJob: Job? = null
     private var linksJob: Job? = null
     private var levelsJob: Job? = null
     private var levelIsus: Set<Int> = emptySet()
-    /** Bumped after a binding is written so the lesson flow is re-evaluated. */
-    private val bindingVersion = MutableStateFlow(0)
-    private var proposalRejected = false
-    private var voting = false
-    /** The order of the ranked links while the page is open, so a vote does not change which three are shown. */
-    private val linkOrder = StableOrder()
-    private val linkFailures = Channel<AppError>(Channel.BUFFERED)
-    /** A vote on the page that did not reach the server. */
-    val linkErrors: Flow<AppError> = linkFailures.receiveAsFlow()
+    private val proposalRejected = MutableStateFlow(false)
+    /** One vote at a time: a tap while one is sent is ignored. */
+    private val voting = BusyKeys<Unit>(viewModelScope)
 
     init {
-        refresh(silent = true)
+        refresh(RefreshMode.Silent)
         // Opening the page reads the subject's new marks: once, on the first content from the cache or the answer.
         period.studyHalf()?.let { half ->
             viewModelScope.launch {
@@ -154,14 +97,17 @@ class RecordbookSubjectViewModel @Inject constructor(
         }
     }
 
-    /** A pull shows the indicator; the load on entry stays silent behind the cached subject. */
-    /** A pull also ranks the links afresh; votes in between keep the rows the page shows in their places. */
-    fun refresh(silent: Boolean = false) {
+    /**
+     * Every mode reloads the page and replaces a load in flight. The load on entry stays silent behind the cached
+     * subject; a pull or a retry shows the indicator and ranks the links afresh, while votes in between keep the rows
+     * the page shows in their places.
+     */
+    fun refresh(mode: RefreshMode) {
         loadJob?.cancel()
-        if (!silent) linkOrder.reset()
+        if (mode.showsIndicator) linksLoader.rankAfresh()
         val previous = (_uiState.value as? RecordbookSubjectUiState.Content)?.copy(refreshing = false)
             ?: seedFromCache()
-        _uiState.value = previous?.copy(refreshing = !silent, refreshError = null)
+        _uiState.value = previous?.copy(refreshing = mode.showsIndicator, refreshError = null)
             ?: RecordbookSubjectUiState.Loading
         loadJob = viewModelScope.launch {
             val journal = barsJournal?.let { async { bars.getSubject(it) } }
@@ -222,16 +168,14 @@ class RecordbookSubjectViewModel @Inject constructor(
     fun confirmBinding(subjectId: Long) {
         val subject = (_uiState.value as? RecordbookSubjectUiState.Content)?.subject ?: return
         viewModelScope.launch {
-            bindings.put(subject.disciplineId, subjectId)
-            proposalRejected = false
-            bindingVersion.update { it + 1 }
+            lessonsLoader.bind(subject.disciplineId, subjectId)
+            proposalRejected.value = false
         }
     }
 
     /** Not the same thing: nothing is stored, the proposal is gone for this screen. */
     fun rejectProposal() {
-        proposalRejected = true
-        bindingVersion.update { it + 1 }
+        proposalRejected.value = true
     }
 
     fun retryLessons() {
@@ -248,31 +192,9 @@ class RecordbookSubjectViewModel @Inject constructor(
         }
         updateHub { copy(lessons = SubjectLessonsState.Loading, teachers = fallbackTeachers) }
         hubJob = viewModelScope.launch {
-            val today = time.today()
-            val end = today.plus(WINDOW_DAYS, DateTimeUnit.DAY)
-            val refresh = scheduleRefresh.refreshOwnSchedule(today, end)
-            combine(lessonsGateway.observeOwnLessons(today, end), bindingVersion) { lessons, _ -> lessons }
-                .collectLatest { lessons ->
-                    if (lessons.isEmpty() && refresh is AppResult.Failure) {
-                        updateHub { copy(lessons = SubjectLessonsState.Error(refresh.error)) }
-                        return@collectLatest
-                    }
-                    val context = contextResolver.resolve(subject, subjectsIn(lessons), bindings.get(subject.disciplineId))
-                    val own = (context as? SubjectContext.Bound)?.let { bound -> lessons.filter { it.subjectId == bound.subjectId } }
-                    val teachers = own?.let(::teachersOf)?.takeIf { it.isNotEmpty() } ?: fallbackTeachers
-                    val state = when (context) {
-                        is SubjectContext.Bound ->
-                            if (own.isNullOrEmpty()) SubjectLessonsState.Unmatched
-                            else SubjectLessonsState.Content(own, context.source)
-                        is SubjectContext.Proposed ->
-                            if (proposalRejected) SubjectLessonsState.Unmatched else SubjectLessonsState.Proposed(context.candidate)
-                        is SubjectContext.Ambiguous ->
-                            if (proposalRejected) SubjectLessonsState.Unmatched else SubjectLessonsState.Ambiguous(context.candidates)
-                        SubjectContext.Unmatched -> SubjectLessonsState.Unmatched
-                        SubjectContext.NotApplicable -> SubjectLessonsState.Hidden
-                    }
-                    updateHub { copy(lessons = state, teachers = teachers) }
-                }
+            lessonsLoader.observe(subject, proposalRejected, fallbackTeachers).collect { update ->
+                updateHub { copy(lessons = update.lessons, teachers = update.teachers ?: teachers) }
+            }
         }
     }
 
@@ -288,23 +210,17 @@ class RecordbookSubjectViewModel @Inject constructor(
         }
         val scope = ResourceScope(subject.disciplineId, subject.name,
             ResourceScope.periodKey(period.studyYear, period.semesterInCourse))
-        val cached = subjectLinks.peek(scope)?.let { SubjectLinksState.Content(it) } ?: SubjectLinksState.Loading
-        updateHub { withLinks(scope, cached, subject.lmsLink) }
+        updateHub { withLinks(scope, linksLoader.cached(scope), subject.lmsLink) }
         linksJob = viewModelScope.launch {
-            launch { subjectLinks.refresh(scope) }
-            // On entry and on every pull, without an indicator: the stored total shows until the new one arrives.
-            launch { sheets.refresh(scope) }
-            combine(subjectLinks.observe(scope), sheets.observe(), subjectLinks.observeRestrictions()) { state, scores, restrictions ->
-                Triple(state, scores, restrictions)
-            }.collect { (state, scores, restrictions) ->
-                updateHub {
-                    withLinks(scope, state, subject.lmsLink).copy(
-                        sheet = sheetState(scope, state, scores),
-                        canVote = (state as? SubjectLinksState.Content)?.snapshot?.servicesEnabled == true &&
-                            restrictions.blocks(RestrictionCapability.VOTE) == null
-                    )
+            combine(linksLoader.observe(scope), sheetLoader.observe(scope)) { links, scores -> links to scores }
+                .collect { (links, scores) ->
+                    updateHub {
+                        withLinks(scope, links.links, subject.lmsLink).copy(
+                            sheet = sheetLoader.state(scope, links.links, scores),
+                            canVote = links.canVote
+                        )
+                    }
                 }
-            }
         }
     }
 
@@ -314,44 +230,15 @@ class RecordbookSubjectViewModel @Inject constructor(
         val scope = hub.resourceScope ?: return
         val snapshot = (hub.links as? SubjectLinksState.Content)?.snapshot ?: return
         val link = (snapshot.mine + snapshot.shared + snapshot.previous).firstOrNull { it.id == id } ?: return
-        if (voting) return
-        voting = true
-        val value = if (up) 1 else -1
-        viewModelScope.launch {
-            try {
-                val result = subjectLinks.vote(scope, id, if (link.myVote == value) 0 else value)
-                if (result is AppResult.Failure) linkFailures.send(result.error)
-            } finally {
-                voting = false
-            }
+        voting.launch(Unit) {
+            val result = linksLoader.vote(scope, link, up)
+            if (result is AppResult.Failure) eventQueue.send(RecordbookSubjectEvent.VoteFailed(result.error))
         }
     }
 
     fun disconnectSheet() {
         val scope = (_uiState.value as? RecordbookSubjectUiState.Content)?.hub?.resourceScope ?: return
-        viewModelScope.launch { sheets.disconnect(scope) }
-    }
-
-    /** The connection of [scope], else the sheet links to connect, else nothing. */
-    private fun sheetState(scope: ResourceScope, links: SubjectLinksState, scores: List<SheetScore>): SubjectSheetState? {
-        scores.firstOrNull { it.scope.key == scope.key }?.let { score ->
-            val updatedAt = score.updatedAt?.toLocalDateTime(time.timeZone)
-            return SubjectSheetState.Connected(score, updatedAt, time.today())
-        }
-        val snapshot = (links as? SubjectLinksState.Content)?.snapshot ?: return null
-        val options = (snapshot.mine + snapshot.shared + snapshot.previous)
-            .filter { GoogleSheetUrl.parse(it.url) != null }
-            .sortedWith(compareBy<SubjectLink> { link ->
-                when {
-                    link.isMine -> 0
-                    link.id == snapshot.pinnedId -> 1
-                    link.category == LinkCategory.SCORES -> 2
-                    else -> 3
-                }
-            }.then(SubjectLinkRanking))
-            .distinctBy { it.url.trim() }
-            .map { SheetLinkOption(it.url, it.title, it.isMine) }
-        return options.takeIf { it.isNotEmpty() }?.let(SubjectSheetState::Hint)
+        viewModelScope.launch { sheetLoader.disconnect(scope) }
     }
 
     private fun SubjectHubState.withLinks(scope: ResourceScope, state: SubjectLinksState, lmsUrl: String?): SubjectHubState {
@@ -359,24 +246,12 @@ class RecordbookSubjectViewModel @Inject constructor(
         return copy(
             resourceScope = scope,
             links = state,
-            chips = subjectLinkChips(snapshot ?: EMPTY_LINKS, lmsUrl, limit = SubjectHubState.LINK_ROWS) { ranked ->
-                linkOrder.arrange(ranked) { it.id }
-            },
+            chips = subjectLinkChips(snapshot ?: EMPTY_LINKS, lmsUrl, limit = SubjectHubState.LINK_ROWS, linksLoader::arrange),
             linkCount = snapshot?.let { (it.mine + it.shared + it.previous).distinctBy { link -> link.id }.size } ?: 0,
             chats = snapshot?.let { (it.mine + it.shared).filter { link -> link.category == LinkCategory.CHAT }.distinctBy { link -> link.id } }
                 .orEmpty()
         )
     }
-
-    /** Distinct people by ISU (or name without one), each with the lesson types they run. */
-    private fun teachersOf(lessons: List<SubjectLesson>): List<SubjectTeacher> =
-        lessons.filter { !it.teacherFio.isNullOrBlank() }
-            .groupBy { it.teacherIsu?.toString() ?: it.teacherFio!!.trim() }
-            .values
-            .map { group ->
-                val roles = group.groupingBy { it.typeId }.eachCount().entries.sortedByDescending { it.value }.map { it.key }
-                SubjectTeacher(group.first().teacherFio!!.trim(), group.first().teacherIsu, roles)
-            }
 
     private fun updateHub(transform: SubjectHubState.() -> SubjectHubState) {
         _uiState.update { state ->
@@ -385,9 +260,9 @@ class RecordbookSubjectViewModel @Inject constructor(
         (_uiState.value as? RecordbookSubjectUiState.Content)?.hub?.teachers?.let(::loadTeacherLevels)
     }
 
-    /** Asks for tones only when the set of teachers with an ISU changes; the repository keeps them for a day. */
+    /** Asks for tones only when the set of teachers with an ISU changes. */
     private fun loadTeacherLevels(teachers: List<SubjectTeacher>) {
-        val isus = teachers.mapNotNull { UserScreenArgs.profileIsu(it.isu) }.toSet()
+        val isus = levelsLoader.isusOf(teachers)
         if (isus == levelIsus) return
         levelIsus = isus
         levelsJob?.cancel()
@@ -395,9 +270,7 @@ class RecordbookSubjectViewModel @Inject constructor(
             updateLevels(emptyMap())
             return
         }
-        levelsJob = viewModelScope.launch {
-            updateLevels(teacherLevels.levels(isus).mapKeys { (isu, _) -> isu.toLong() })
-        }
+        levelsJob = viewModelScope.launch { updateLevels(levelsLoader.levels(isus)) }
     }
 
     private fun updateLevels(levels: Map<Long, TeacherLevel>) = _uiState.update { state ->
@@ -417,16 +290,8 @@ class RecordbookSubjectViewModel @Inject constructor(
     private suspend fun myItmoControls(subject: RecordbookSubject): AppResult<List<RecordbookControl>> =
         if (subject.hasDetails) repository.getControls(entryId) else AppResult.Success(emptyList())
 
-    companion object {
-        private const val WINDOW_DAYS = 28
-        private val EMPTY_LINKS = SubjectLinksSnapshot(emptyList(), emptyList(), emptyList(), null, emptyList(),
+    private companion object {
+        val EMPTY_LINKS = SubjectLinksSnapshot(emptyList(), emptyList(), emptyList(), null, emptyList(),
             premoderation = false, servicesEnabled = false)
-        const val ARG_ENTRY_ID = RecordbookSubjectArgs.ENTRY_ID
-        const val ARG_PROGRAM_ID = RecordbookSubjectArgs.PROGRAM_ID
-        const val ARG_SEMESTER = RecordbookSubjectArgs.SEMESTER
-        const val ARG_STUDY_YEAR = RecordbookSubjectArgs.STUDY_YEAR_KEY
-        const val ARG_BARS_PLAN = RecordbookSubjectArgs.BARS_PLAN
-        const val ARG_BARS_TYPE = RecordbookSubjectArgs.BARS_TYPE
-        const val ARG_BARS_IDENTIFIER = RecordbookSubjectArgs.BARS_IDENTIFIER
     }
 }
