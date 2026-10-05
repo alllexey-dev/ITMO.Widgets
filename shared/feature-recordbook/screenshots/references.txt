@@ -1,0 +1,15 @@
+# XML references recorded by :app (XmlReferenceCapture) under the name of a future preview.
+# The port that adds the preview re-records the files and deletes its line and the reference test.
+RecordbookPeriodSheet_content
+RecordbookScreen_content
+RecordbookScreen_empty
+RecordbookScreen_error
+RecordbookSubjectScreen_bars
+RecordbookSubjectScreen_binding
+RecordbookSubjectScreen_credit
+RecordbookSubjectScreen_session
+RecordbookSubjectScreen_sheet
+RecordbookSubjectScreen_sport
+SheetScoresSheet_failure
+SheetScoresSheet_pick-row
+SheetScoresSheet_pick-total

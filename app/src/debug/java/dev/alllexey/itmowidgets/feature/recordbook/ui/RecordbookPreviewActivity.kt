@@ -226,7 +226,7 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNa
 
     /** In-memory toggle so previews never touch DataStore or a BARS session. */
     private val preference = object : BarsPreferenceRepository {
-        private var enabled = false
+        private var enabled = barsEnabled
         override suspend fun isEnabled() = enabled
         override suspend fun setEnabled(enabled: Boolean): AppResult<Unit> { this.enabled = enabled; return AppResult.Success(Unit) }
     }
@@ -236,6 +236,8 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNa
         @Volatile var appearance = PreviewAppearance()
         @Volatile var repository: RecordbookRepository? = null
         @Volatile var bars: BarsRecordbookRepository? = null
+        /** Whether the BARS chip starts on; the toggle itself stays in memory. */
+        @Volatile var barsEnabled = false
         @Volatile var sportRepository: SportScoreRepository? = null
         @Volatile var lessonsGateway: SubjectLessonsGateway = MemoryLessons()
         @Volatile var scheduleRefresh: ScheduleRefreshGateway = object : ScheduleRefreshGateway {
