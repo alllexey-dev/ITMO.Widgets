@@ -30,9 +30,11 @@ from Koin and draws `QrPassScreen`.
   «Попробуйте обновить пропуск через My ITMO»), `Error` («Не удалось
   загрузить» with the error's text). A code that cannot be drawn shows «Не
   удалось загрузить» with the `Empty` description.
-- The code area stays square and the instruction keeps its space in every
-  state (transparent, not removed). The refresh button keeps its place, shows
-  its progress inside while `refreshing` and is disabled during `Loading`.
+- The code area stays square, at most 300 dp, and the instruction keeps its
+  space in every state (transparent, not removed). At large font sizes the
+  empty and error texts may extend below the square. The refresh button keeps
+  its place, shows its progress inside while `refreshing` and is disabled only
+  during `Loading`.
 - A refresh that fails while a valid code is shown keeps the code; the event
   `QrCodeEvent.RefreshFailed` shows a snackbar with the error and «Повторить».
 
@@ -47,8 +49,8 @@ from `LifecycleStartEffect`).
   code even while a forced refresh is pending, then refreshes again.
 - Time is the injected wall `kotlin.time.Clock`, never the debug academic date.
 
-The screen draws the version 1 code of `QrCodeGenerator` in Compose with the
-widget palette (`QrColors`): black on white, or with the QR colour setting the
+The screen draws the version 1 code of `QrCodeGenerator` with `QrCodeImage` in
+Compose, in the widget palette (`QrColors`): black on white, or with the QR colour setting the
 theme's surface and the darker of `onSurface` and `onSurfaceVariant`. The
 widget draws its bitmap with `QrToolkit` and `QrColorResolver` in `:app`.
 
@@ -66,7 +68,9 @@ All in `commonMain`, constructed by Koin (`feature/qr/di/QrModule.kt`, one
 - `QrCodeRemoteDataSourceImpl` checks `DemoMode` first and answers `DemoQr.HEX`
   in the demo session, a code no turnstile accepts. Otherwise it calls
   `MyItmoClient.qr.getQrCode()`; an answer without a code gets one forced token
-  refresh and one more request. The client's own 401 handling refreshes once.
+  refresh and one more request. The client's own 401 handling refreshes the
+  session once; a server error fails at once and keeps a still valid cached
+  code.
 - `QrCodeLocalDataSourceImpl` keeps `<epochMillis>|<hex>` in `cache/qr_hex`
   (`AppDirectories.cache`, written through `AtomicTextFile`), valid for 60
   minutes of wall-clock time. A file from v2.0 with only the payload (at least
