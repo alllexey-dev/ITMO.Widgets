@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.ui.AppLocale
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -25,6 +26,8 @@ class ItmoWidgetsApplication : Application() {
     @Inject lateinit var calendarSync: CalendarSync
 
     override fun onCreate() {
+        // Koin first: Hilt injects the fields above inside super.onCreate(), and a Koin to Hilt bridge may run there.
+        KoinStarter.ensureStarted(this)
         super.onCreate()
         AppLocale.apply(this)
         DiagnosticsCrashHandler.install(diagnostics)

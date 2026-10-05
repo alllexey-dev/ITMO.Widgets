@@ -75,7 +75,8 @@ internal enum class RatchetRule(val id: String) {
     VIEW_MODEL_SHAPE("viewmodel-shape"),
     PRESENTATION_RESOURCES("presentation-imports-r"),
     DOMAIN_JAVAX_INJECT("domain-imports-javax-inject"),
-    DOMAIN_JAVA("domain-imports-java");
+    DOMAIN_JAVA("domain-imports-java"),
+    ENTRY_POINT_ACCESSORS("entry-point-accessors");
 
     companion object {
         fun byId(id: String): RatchetRule? = entries.firstOrNull { it.id == id }
