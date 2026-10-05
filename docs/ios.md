@@ -97,3 +97,29 @@ scripts/ios/test.sh --cleanup                                # delete this workt
   start without it.
 - The app link prints one known warning: the ICU data object in Compose Multiplatform 1.12.1 targets iOS 18.5,
   above the 18.0 deployment target. It is harmless; the minimum stays iOS 18.0 (ADR 0023).
+
+## CI
+
+`.github/workflows/ios.yml` runs the job `ios-check` (the required check's name; never renamed) on every PR into
+and every push to `v2.3/next` and `master`, and on `workflow_dispatch`.
+
+- Runner: the GitHub `xcode-27` image (arm64, 3 vCPU, 7 GB), the image with the Xcode pinned in
+  `scripts/ios/env.sh`. The job selects `/Applications/Xcode_<pin>.app` and fails when the image lacks it; it never
+  falls back to another Xcode. XcodeGen comes from its GitHub release at the pinned version, checked by sha256.
+- Path filter: a first step ends the job green when nothing under `iosApp/`, `shared/`, `scripts/ios/`,
+  `scripts/slot.sh`, `gradle/`, `build-logic/`, `app/src/main/assets/`, the `*.gradle.kts` files,
+  `gradle.properties` or `.github/workflows/ios*.yml` changed. The filter is never on the trigger, so the check
+  always reports.
+- The build is `scripts/ios/test.sh --ci` with MyItmoApi checked out at `gradle/myitmoapi.ref` (`MYITMOAPI_DIR`, as
+  in `android-ci.yml`), one Gradle worker (`ITMO_MAX_WORKERS=1`, no parallel K/N), the Gradle cache and `~/.konan`
+  cached; only `v2.3/next` writes the caches. No secrets and no signing.
+- On failure the `.xcresult` from `iosApp/build/test-results/` and the snapshot diffs from
+  `iosApp/build/snapshot-artifacts/` (`SNAPSHOT_ARTIFACTS` for the test runner) are uploaded as `ios-check-results`.
+- The step summary records the duration of `test.sh --ci` and the peak used memory (active, wired and compressed
+  pages, sampled every 5 s).
+- `.github/workflows/ios-nightly.yml` runs on a schedule against `v2.3/next`: `test.sh --ci kn` over every shared
+  module with the testing convention, and `test.sh --ci ui` once `test.sh` has a `ui` mode. It is never a required
+  check.
+
+Measured on the first runs (no caches): the job takes about 18.5 minutes, `test.sh --ci` 1076 s, with a peak of
+6.3 GB used of 7 GB. If the build runs out of memory, split it into a framework job and an `xcodebuild` job.
