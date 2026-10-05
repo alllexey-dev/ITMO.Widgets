@@ -1,0 +1,4 @@
+# The FCM data maps FcmVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
+fcm/FRIENDSHIP_EVENT_PAYLOAD.json
+fcm/SPORT_AUTO_SIGN_LESSONS_PAYLOAD.json
+fcm/SPORT_FREE_SIGN_LESSONS_PAYLOAD.json
