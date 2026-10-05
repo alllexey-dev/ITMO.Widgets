@@ -6,7 +6,10 @@ import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
-import java.time.Instant
+import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
+import kotlinx.datetime.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -90,11 +93,11 @@ class ScheduleWidgetSnapshotTest {
         assertSame(snapshot.officialFallback, snapshot.forPendingAvailability(enabled = false, now = NOW))
         assertSame(
             snapshot.officialFallback,
-            snapshot.forPendingAvailability(enabled = true, now = NOW.plusSeconds(300))
+            snapshot.forPendingAvailability(enabled = true, now = (NOW + 300.seconds))
         )
         assertSame(
             snapshot.officialFallback,
-            snapshot.forPendingAvailability(enabled = true, now = NOW.plusSeconds(301))
+            snapshot.forPendingAvailability(enabled = true, now = (NOW + 301.seconds))
         )
     }
 
@@ -215,7 +218,7 @@ class ScheduleWidgetSnapshotTest {
             singleLessonStyle = LessonStyle.DOT,
             lessonListStyle = LessonStyle.DOT,
             officialFallback = official,
-            pendingValidUntil = NOW.plusSeconds(300).toString()
+            pendingValidUntil = (NOW + 300.seconds).toString()
         )
     }
 
@@ -226,7 +229,7 @@ class ScheduleWidgetSnapshotTest {
     ) = ScheduleWidgetLesson(
         subject = subject,
         start = start,
-        end = java.time.LocalTime.parse(start).plusMinutes(90).toString(),
+        end = LocalTime.parse(start).plusMinutes(90).toString(),
         typeId = if (pendingStatus == null) 1 else 11,
         teacher = null,
         room = null,

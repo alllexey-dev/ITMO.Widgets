@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
 import java.io.File
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,7 +25,7 @@ class TeacherWeeksFileStoreTest {
 
         assertEquals(
             mapOf(
-                LocalDate.of(2026, 9, 28) to listOf(
+                LocalDate(2026, 9, 28) to listOf(
                     WeekLesson(100101, 3001, "Тестовая дисциплина"),
                     WeekLesson(100102, 3002, "")
                 )

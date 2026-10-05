@@ -10,7 +10,6 @@ import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPreferences
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelection
@@ -20,6 +19,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 
 class ScheduleWidgetDataProvider @Inject constructor(
     private val repository: ScheduleRepository,
@@ -35,9 +37,9 @@ class ScheduleWidgetDataProvider @Inject constructor(
     suspend fun load(): ScheduleWidgetLoadResult {
         val preferences = readPreferences()
         if (!tokens.hasRefreshToken()) return signedOut(preferences)
-        val now = timeProvider.javaNow()
-        val start = now.toLocalDate()
-        val end = if (preferences.display.full.showTomorrowWhenTodayIsOver) start.plusDays(1) else start
+        val now = timeProvider.now()
+        val start = now.toLocalDateTime(timeProvider.timeZone).date
+        val end = if (preferences.display.full.showTomorrowWhenTodayIsOver) start.plus(1, DateTimeUnit.DAY) else start
 
         val includePending = pendingEnabled()
         val (refreshResult, pending) = coroutineScope {
@@ -63,6 +65,7 @@ class ScheduleWidgetDataProvider @Inject constructor(
             selector.select(
                 schedule = cached,
                 now = now,
+                timeZone = timeProvider.timeZone,
                 preferences = preferences,
                 pendingSport = if (pendingEnabled()) pending else emptyList()
             ).let { selection ->

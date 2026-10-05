@@ -1,7 +1,9 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain
 
-import java.time.DayOfWeek
-import java.time.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -60,11 +62,11 @@ class StudyWeeksTest {
         assertEquals(week(2027, 5, 31), weeks.first())
         assertEquals(week(2023, 9, 25), weeks.last())
         assertEquals(weeks.sortedByDescending { it.start }, weeks)
-        assertTrue(weeks.all { it.start.dayOfWeek == DayOfWeek.MONDAY && it.endInclusive == it.start.plusDays(6) })
+        assertTrue(weeks.all { it.start.dayOfWeek == DayOfWeek.MONDAY && it.endInclusive == it.start.plus(6, DateTimeUnit.DAY) })
         assertEquals(weeks.size, weeks.distinct().size)
     }
 
-    private fun week(year: Int, month: Int, monday: Int): ClosedRange<LocalDate> = date(year, month, monday).let { it..it.plusDays(6) }
+    private fun week(year: Int, month: Int, monday: Int): ClosedRange<LocalDate> = date(year, month, monday).let { it..it.plus(6, DateTimeUnit.DAY) }
 
-    private fun date(year: Int, month: Int, day: Int): LocalDate = LocalDate.of(year, month, day)
+    private fun date(year: Int, month: Int, day: Int): LocalDate = LocalDate(year, month, day)
 }

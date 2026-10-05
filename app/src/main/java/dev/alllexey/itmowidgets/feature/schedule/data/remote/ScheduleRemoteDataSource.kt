@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.remote
 
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 interface ScheduleRemoteDataSource {
 

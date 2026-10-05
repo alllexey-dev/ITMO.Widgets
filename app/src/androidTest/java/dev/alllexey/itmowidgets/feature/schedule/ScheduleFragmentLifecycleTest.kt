@@ -29,13 +29,19 @@ import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivit
 import dev.alllexey.itmowidgets.feature.schedule.ui.DayScheduleAdapter
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
-import java.time.LocalDate
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.time.toKotlinInstant
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -221,10 +227,10 @@ class ScheduleFragmentLifecycleTest {
     fun liveAutoSignPreferenceUpdatesTheVisibleDayWithoutResettingItsAnchor() = withSchedule { scenario ->
         val anchor = scrollToMiddle(scenario)
         val date = sampleDays()[anchor.first].date
-        val start = date.atTime(16, 0).atZone(java.time.ZoneId.of("Europe/Moscow")).toOffsetDateTime()
+        val start = date.atTime(16, 0).toInstant(TimeZone.of("Europe/Moscow"))
         ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(listOf(PendingSportBooking(
             queueId = 77, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 777,
-            sectionName = "Тестовая секция плавания", start = start.toInstant().toKotlinInstant(), end = start.plusMinutes(90).toInstant().toKotlinInstant(),
+            sectionName = "Тестовая секция плавания", start = start, end = start + 90.minutes,
             teacherFio = "Тестовый преподаватель", roomName = "Тестовый корпус", isPrediction = true
         )))
         ScheduleLifecycleTestActivity.showPendingSport.value = true
@@ -248,16 +254,16 @@ class ScheduleFragmentLifecycleTest {
     @Test
     fun pendingOnlyRefreshAndScrollPaginationKeepTheVisibleDayThroughEveryFrame() =
         withSchedule(initialDays = emptyList(), restrictToRequestedRange = true) { scenario ->
-            val today = LocalDate.of(2026, 9, 7)
+            val today = LocalDate(2026, 9, 7)
             ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success((1..42).flatMap { day ->
                 (0..2).map { index ->
                     val id = (day * 10 + index).toLong()
-                    val start = today.plusDays(day.toLong()).atTime(14 + index * 2, 0)
-                        .atZone(java.time.ZoneId.of("Europe/Moscow")).toOffsetDateTime()
+                    val start = today.plus(day.toLong(), DateTimeUnit.DAY).atTime(14 + index * 2, 0)
+                        .toInstant(TimeZone.of("Europe/Moscow"))
                     PendingSportBooking(
                         queueId = id, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 1000 + id,
                         sectionName = "Тестовая секция плавания с ожиданием свободного места",
-                        start = start.toInstant().toKotlinInstant(), end = start.plusMinutes(90).toInstant().toKotlinInstant(), teacherFio = "Тестовый преподаватель",
+                        start = start, end = start + 90.minutes, teacherFio = "Тестовый преподаватель",
                         roomName = "Тестовый спортивный корпус", isPrediction = true
                     )
                 }
@@ -350,11 +356,11 @@ class ScheduleFragmentLifecycleTest {
     fun pendingOnlyRowsAreRemovedDuringLoadingAndStayRemovedAfterFailure() {
         for (removal in listOf("preference", "services", "error")) {
             withSchedule(initialDays = emptyList()) { scenario ->
-                val start = LocalDate.of(2026, 9, 8).atTime(16, 0)
-                    .atZone(java.time.ZoneId.of("Europe/Moscow")).toOffsetDateTime()
+                val start = LocalDate(2026, 9, 8).atTime(16, 0)
+                    .toInstant(TimeZone.of("Europe/Moscow"))
                 ScheduleLifecycleTestActivity.pendingSport.value = AppResult.Success(listOf(PendingSportBooking(
                     queueId = 78, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 778,
-                    sectionName = "Тестовая автозапись без учебных пар", start = start.toInstant().toKotlinInstant(), end = start.plusMinutes(90).toInstant().toKotlinInstant(),
+                    sectionName = "Тестовая автозапись без учебных пар", start = start, end = start + 90.minutes,
                     teacherFio = "Тестовый преподаватель", roomName = "Тестовый корпус", isPrediction = true
                 )))
                 ScheduleLifecycleTestActivity.showPendingSport.value = true
@@ -603,7 +609,7 @@ class ScheduleFragmentLifecycleTest {
                 assertTrue("The friend's schedule must be visible", activity.recycler().isShown)
                 assertFalse(activity.recycler().hasPendingAdapterUpdates())
                 // Today, with the same peek of the previous day a fresh screen has.
-                assertEquals(20, activity.dayTop(LocalDate.of(2026, 9, 7)))
+                assertEquals(20, activity.dayTop(LocalDate(2026, 9, 7)))
             }
         }
 
@@ -662,7 +668,7 @@ class ScheduleFragmentLifecycleTest {
             assertTrue("The schedule must be visible", recycler.isShown)
             assertFalse(recycler.hasPendingAdapterUpdates())
             assertFalse(recycler.isLayoutRequested)
-            assertEquals(20, activity.dayTop(LocalDate.of(2026, 9, 7)))
+            assertEquals(20, activity.dayTop(LocalDate(2026, 9, 7)))
         }
     }
 
@@ -802,8 +808,8 @@ class ScheduleFragmentLifecycleTest {
         TestUi.eventually(attempts = 40, delayMillis = 50, idleBetween = true) { scenario.onActivity(assertion) }
 
     private fun sampleDays(count: Int = 30) = (0 until count).map { offset ->
-        val date = LocalDate.of(2026, 9, 6).plusDays(offset.toLong())
-        DaySchedule(date.dayOfWeek.value, 1, date, null, emptyList())
+        val date = LocalDate(2026, 9, 6).plus(offset.toLong(), DateTimeUnit.DAY)
+        DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, emptyList())
     }
 
     private fun installDiffGate(scenario: ActivityScenario<ScheduleLifecycleTestActivity>): GatedDays<ScheduleDisplayDay> {

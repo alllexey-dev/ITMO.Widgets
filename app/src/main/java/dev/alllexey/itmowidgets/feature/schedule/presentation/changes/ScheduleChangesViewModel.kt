@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +15,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 
 /**
@@ -63,13 +63,13 @@ class ScheduleChangesViewModel @Inject constructor(
 
     private fun render(changes: List<ScheduleChange>, isNew: (ScheduleChange) -> Boolean): ScheduleChangesUiState {
         if (changes.isEmpty()) return ScheduleChangesUiState.Empty
-        val today = timeProvider.javaToday()
-        val days = changes.groupBy { it.detectedAt.toLocalDateTime(timeProvider.timeZone).date.toJavaLocalDate() }
-            .toSortedMap(reverseOrder())
+        val today = timeProvider.today()
+        val days = changes.groupBy { it.detectedAt.toLocalDateTime(timeProvider.timeZone).date }
+            .entries.sortedByDescending { it.key }
             .map { (date, dayChanges) ->
                 val relative = when (date) {
                     today -> RelativeDay.TODAY
-                    today.minusDays(1) -> RelativeDay.YESTERDAY
+                    today.minus(1, DateTimeUnit.DAY) -> RelativeDay.YESTERDAY
                     else -> if (date.year == today.year) RelativeDay.OTHER else RelativeDay.OTHER_YEAR
                 }
                 val rows = dayChanges.sortedWith(ROW_ORDER).map { ScheduleChangeRow(it, isNew(it)) }

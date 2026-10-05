@@ -8,8 +8,10 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import java.lang.reflect.Proxy
-import java.time.LocalDate
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -22,7 +24,7 @@ class ScheduleRemoteDataSourceImplTest {
 
     private val dispatchers = mainDispatcherRule.appDispatchers
 
-    private val start = LocalDate.of(2026, 9, 7)
+    private val start = LocalDate(2026, 9, 7)
     private val calls = mutableListOf<String>()
     private val backend = Proxy.newProxyInstance(ItmoWidgetsApi::class.java.classLoader, arrayOf(ItmoWidgetsApi::class.java)) { _, method, _ ->
         calls += method.name
@@ -35,11 +37,11 @@ class ScheduleRemoteDataSourceImplTest {
         val gate = FakeBackendGate(optedIn = false)
         val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, FixedAcademicTime(), noDemo(), dispatchers)
 
-        assertTrue(remote.getSchedule(null, start, start.plusDays(6)).isEmpty())
+        assertTrue(remote.getSchedule(null, start, start.plus(6, DateTimeUnit.DAY)).isEmpty())
         assertTrue(calls.isEmpty())
 
         gate.optedIn.value = true
-        remote.getSchedule(null, start, start.plusDays(6))
+        remote.getSchedule(null, start, start.plus(6, DateTimeUnit.DAY))
         assertEquals(listOf("syncLessons"), calls)
     }
 }

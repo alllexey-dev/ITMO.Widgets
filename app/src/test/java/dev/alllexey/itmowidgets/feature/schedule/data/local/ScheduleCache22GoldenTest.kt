@@ -10,15 +10,16 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import java.io.File
 import java.time.Clock
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneOffset
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.plus
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -29,6 +30,7 @@ import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.time.Instant
 
 /** 2.2's gzip cache entries, `data` a JSON document in a string, read into the same days and are rewritten unchanged. */
 class ScheduleCache22GoldenTest {
@@ -68,7 +70,7 @@ class ScheduleCache22GoldenTest {
         File(cacheDirectory, "default_2026-10-06.json").writeText("not gzip")
         val cache = cache(at = 1_791_180_000_000)
 
-        assertEquals(emptyList<DaySchedule>(), cache.observeRange(null, DATE, DATE.plusDays(1)).first())
+        assertEquals(emptyList<DaySchedule>(), cache.observeRange(null, DATE, DATE.plus(1, DateTimeUnit.DAY)).first())
         assertNull(cache.get(null, DATE))
     }
 
@@ -101,7 +103,7 @@ class ScheduleCache22GoldenTest {
         java.io.ByteArrayOutputStream().also { bytes -> GZIPOutputStream(bytes).use { it.write(text.toByteArray()) } }.toByteArray()
 
     private companion object {
-        val DATE: LocalDate = LocalDate.of(2026, 10, 5)
+        val DATE: LocalDate = LocalDate(2026, 10, 5)
 
         /** The G-04 capture's entry. */
         val FRIEND_DAY = DaySchedule(

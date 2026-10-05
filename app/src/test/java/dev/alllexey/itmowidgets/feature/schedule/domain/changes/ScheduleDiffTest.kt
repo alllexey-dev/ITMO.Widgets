@@ -7,9 +7,13 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField.TIME
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind.ADDED
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind.CANCELLED
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind.UPDATED
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
+import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -166,10 +170,10 @@ class ScheduleDiffTest {
 
     @Test
     fun `snapshots without an overlap are no change`() {
-        val old = LocalDate.of(2026, 8, 20)
+        val old = LocalDate(2026, 8, 20)
 
         assertEquals(emptyList<DetectedChange>(), compare(
-            snapshot(listOf(lesson(1, old.plusDays(1))), start = old),
+            snapshot(listOf(lesson(1, old.plus(1, DateTimeUnit.DAY))), start = old),
             snapshot(listOf(lesson(2, TUE)))
         ))
     }
@@ -195,7 +199,7 @@ class ScheduleDiffTest {
     private fun compare(previous: ScheduleSnapshot, current: ScheduleSnapshot) = ScheduleDiff.compare(previous, current, NOW)
 
     private fun snapshot(lessons: List<SnapshotLesson>, start: LocalDate = MON) =
-        ScheduleSnapshot(start, start.plusDays(7), lessons)
+        ScheduleSnapshot(start, start.plus(7, DateTimeUnit.DAY), lessons)
 
     private fun lesson(
         pairId: Long,
@@ -217,17 +221,17 @@ class ScheduleDiffTest {
         room = room, building = building, formatId = formatId, format = if (formatId == 3) "Дистанционный" else "Очный"
     )
 
-    private fun at(hour: Int, minute: Int): LocalTime = LocalTime.of(hour, minute)
+    private fun at(hour: Int, minute: Int): LocalTime = LocalTime(hour, minute)
 
     private companion object {
-        val SUN: LocalDate = LocalDate.of(2026, 9, 6)
-        val MON: LocalDate = LocalDate.of(2026, 9, 7)
-        val TUE: LocalDate = LocalDate.of(2026, 9, 8)
-        val WED: LocalDate = LocalDate.of(2026, 9, 9)
-        val THU: LocalDate = LocalDate.of(2026, 9, 10)
-        val FRI: LocalDate = LocalDate.of(2026, 9, 11)
-        val NEXT_MON: LocalDate = LocalDate.of(2026, 9, 14)
-        val NEXT_TUE: LocalDate = LocalDate.of(2026, 9, 15)
+        val SUN: LocalDate = LocalDate(2026, 9, 6)
+        val MON: LocalDate = LocalDate(2026, 9, 7)
+        val TUE: LocalDate = LocalDate(2026, 9, 8)
+        val WED: LocalDate = LocalDate(2026, 9, 9)
+        val THU: LocalDate = LocalDate(2026, 9, 10)
+        val FRI: LocalDate = LocalDate(2026, 9, 11)
+        val NEXT_MON: LocalDate = LocalDate(2026, 9, 14)
+        val NEXT_TUE: LocalDate = LocalDate(2026, 9, 15)
         val LAST_DAY: LocalDate = NEXT_MON
         val NOW: LocalDateTime = MON.atTime(12, 0)
     }

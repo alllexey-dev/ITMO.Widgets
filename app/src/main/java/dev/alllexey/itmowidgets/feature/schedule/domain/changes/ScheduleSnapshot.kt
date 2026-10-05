@@ -3,11 +3,9 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.changes
 import dev.alllexey.itmowidgets.core.schedule.LessonSlot
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinLocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 
 /** My ITMO's flow type of study lessons; sport (3) and room bookings (5) are not compared. */
 const val ACADEMIC_FLOW = 2
@@ -30,14 +28,14 @@ data class SnapshotLesson(
     val formatId: Int,
     val format: String?
 ) {
-    val startsAt: LocalDateTime get() = LocalDateTime.of(date, start)
-    val endsAt: LocalDateTime get() = LocalDateTime.of(date, end)
+    val startsAt: LocalDateTime get() = LocalDateTime(date, start)
+    val endsAt: LocalDateTime get() = LocalDateTime(date, end)
 
     fun slot() = LessonSlot(
         pairId = pairId,
-        date = date.toKotlinLocalDate(),
-        start = start.toKotlinLocalTime(),
-        end = end.toKotlinLocalTime(),
+        date = date,
+        start = start,
+        end = end,
         room = room,
         building = building,
         formatId = formatId,

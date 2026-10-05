@@ -4,9 +4,9 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
 
 /**
  * The phone's calendars as the app sees them. Calls throw `SecurityException` without the calendar permission;

@@ -2,9 +2,11 @@ package dev.alllexey.itmowidgets.feature.schedule.domain.calendar
 
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
 
 /** One lesson as a calendar event; [key] names the same occurrence in every sync and every `.ics` file. */
 data class CalendarEvent(
@@ -43,7 +45,7 @@ object CalendarEvents {
      * Events of [days] in time order. A lesson repeated under the same key is kept once, at its first slot.
      * [address] gives the building's street address when the building is known.
      */
-    fun from(days: List<DaySchedule>, zone: ZoneId, address: (Lesson) -> String?): List<CalendarEvent> = days
+    fun from(days: List<DaySchedule>, zone: TimeZone, address: (Lesson) -> String?): List<CalendarEvent> = days
         .flatMap { day -> day.lessons.map { lesson -> event(day.date, lesson, zone, address(lesson)) } }
         .sortedWith(compareBy(CalendarEvent::start, CalendarEvent::key))
         .distinctBy(CalendarEvent::key)
@@ -53,9 +55,9 @@ object CalendarEvents {
         if (lesson.pairId > 0) "lesson-${lesson.pairId}"
         else "lesson-$date-${lesson.start.toSecondOfDay() / 60}-${lesson.flowId}-${lesson.subjectId}"
 
-    private fun event(date: LocalDate, lesson: Lesson, zone: ZoneId, address: String?): CalendarEvent {
-        val start = date.atTime(lesson.start).atZone(zone).toInstant()
-        val end = date.atTime(lesson.end).atZone(zone).toInstant()
+    private fun event(date: LocalDate, lesson: Lesson, zone: TimeZone, address: String?): CalendarEvent {
+        val start = date.atTime(lesson.start).toInstant(zone)
+        val end = date.atTime(lesson.end).toInstant(zone)
         return CalendarEvent(
             key = key(date, lesson),
             title = lesson.subjectName.trim(),

@@ -12,9 +12,6 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.WallClock
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaToday
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.DetectedChange
@@ -27,10 +24,10 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.changes.academicSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.time.Clock
 import java.time.Duration
-import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +38,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
 import retrofit2.HttpException
 
 /**
@@ -70,7 +72,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
 
     override fun observeChanges(): Flow<List<ScheduleChange>> = flow {
         if (demo.isActive()) {
-            emit(DemoSchedule.changes(time.javaToday(), clock.instant()))
+            emit(DemoSchedule.changes(time.today(), clock.instant().toKotlinInstant()))
             return@flow
         }
         lock.withLock { loaded() }
@@ -81,8 +83,8 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
         if (demo.isActive()) return@withLock AppResult.Success(ScheduleCheckResult.Compared(0))
         val started = generation.get()
         val epoch = snapshotEpoch.get()
-        val today = time.javaToday()
-        val end = today.plusDays(WINDOW_DAYS)
+        val today = time.today()
+        val end = today.plus(WINDOW_DAYS, DateTimeUnit.DAY)
         val current = try {
             withContext(dispatchers.io) { request(today, end) }?.academicSnapshot(today, end)
         } catch (cancellation: CancellationException) {
@@ -147,7 +149,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
             // A new term's schedule landing on empty weeks is not a list of added lessons.
             return stored.copy(snapshot = current.toStored(), emptyHeld = false) to ScheduleCheckResult.Baseline
         }
-        val found = ScheduleDiff.compare(previous, current, time.javaNow().atZoneSameInstant(time.javaZone()).toLocalDateTime())
+        val found = ScheduleDiff.compare(previous, current, time.localNow())
         val detectedAt = clock.millis()
         val next = stored.copy(
             snapshot = current.toStored(),
@@ -203,13 +205,13 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
 
     /** `null` when My ITMO answered without data. */
     private fun request(start: LocalDate, end: LocalDate): List<DaySchedule>? {
-        val response = api.getPersonalSchedule(start, end).execute()
+        val response = api.getPersonalSchedule(start.toJavaLocalDate(), end.toJavaLocalDate()).execute()
         if (!response.isSuccessful) throw HttpException(response)
         return response.body()?.data?.map { day ->
             DaySchedule(
                 dayNumber = day.dayNumber,
                 weekNumber = day.weekNumber,
-                date = day.date,
+                date = day.date.toKotlinLocalDate(),
                 note = day.note,
                 lessons = day.lessons.orEmpty().map { it.toModel() }
             )
@@ -234,7 +236,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     }
 
     private companion object {
-        const val WINDOW_DAYS = 7L
+        const val WINDOW_DAYS = 7
         const val PUBLICATION_THRESHOLD = 5
         const val MAX_CHANGES = 500
         val RETENTION: Duration = Duration.ofDays(30)

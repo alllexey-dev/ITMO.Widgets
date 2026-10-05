@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSou
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import java.io.IOException
-import java.time.LocalDate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,6 +19,10 @@ import retrofit2.Response
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -76,7 +79,7 @@ class ScheduleRepositoryImplTest {
 
     @Test
     fun `successful refresh replaces only its user and range in one batch`() = runTest {
-        val end = DATE.plusDays(2)
+        val end = DATE.plus(2, DateTimeUnit.DAY)
         remote.schedules = listOf(day(DATE), day(end))
 
         val result = createRepository(true).refreshSchedule(123456, DATE, end)
@@ -151,7 +154,7 @@ class ScheduleRepositoryImplTest {
         }
         val old = async { repository.refreshSchedule(123456, DATE, DATE) }
         runCurrent()
-        assertEquals(AppResult.Failure(AppError.Forbidden), repository.refreshSchedule(123456, DATE.plusDays(1), DATE.plusDays(1)))
+        assertEquals(AppResult.Failure(AppError.Forbidden), repository.refreshSchedule(123456, DATE.plus(1, DateTimeUnit.DAY), DATE.plus(1, DateTimeUnit.DAY)))
         oldResponse.complete(listOf(day(DATE)))
         assertEquals(AppResult.Failure(AppError.Forbidden), old.await())
         assertTrue(local.replacements.isEmpty())
@@ -194,7 +197,7 @@ class ScheduleRepositoryImplTest {
         assertEquals(2, local.clears)
     }
 
-    private fun day(date: LocalDate) = DaySchedule(date.dayOfWeek.value, 1, date, null, emptyList())
+    private fun day(date: LocalDate) = DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, emptyList())
 
     private data class Replacement(val userIsu: Int?, val start: LocalDate, val end: LocalDate, val schedules: List<DaySchedule>)
 
@@ -254,6 +257,6 @@ class ScheduleRepositoryImplTest {
     }
 
     private companion object {
-        val DATE: LocalDate = LocalDate.of(2026, 2, 16)
+        val DATE: LocalDate = LocalDate(2026, 2, 16)
     }
 }

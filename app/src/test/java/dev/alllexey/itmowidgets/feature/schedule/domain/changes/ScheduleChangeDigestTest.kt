@@ -4,9 +4,13 @@ import dev.alllexey.itmowidgets.core.schedule.LessonSlot
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
-import java.time.LocalDate
-import java.time.LocalTime
+import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
 import kotlin.time.Instant
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Assert.assertEquals
@@ -22,7 +26,7 @@ class ScheduleChangeDigestTest {
     fun `nothing is shown or marked from midnight until six`() {
         val changes = listOf(moved("1", TUE, WED), moved("2", MON, MON))
 
-        for (time in listOf(LocalTime.MIDNIGHT, LocalTime.of(3, 0), LocalTime.of(5, 59, 59))) {
+        for (time in listOf(LocalTime(0, 0), LocalTime(3, 0), LocalTime(5, 59, 59))) {
             assertEquals(DigestDecision(null, emptySet()), ScheduleChangeDigests.decide(changes, TUE.atTime(time)))
         }
     }
@@ -65,14 +69,14 @@ class ScheduleChangeDigestTest {
     fun `a change touching today or tomorrow makes a sound and a later one does not`() {
         val now = TUE.atTime(12, 0)
 
-        assertTrue(ScheduleChangeDigests.decide(listOf(moved("1", TUE, FRI, start = LocalTime.of(15, 0))), now).digest!!.audible)
+        assertTrue(ScheduleChangeDigests.decide(listOf(moved("1", TUE, FRI, start = LocalTime(15, 0))), now).digest!!.audible)
         assertTrue(ScheduleChangeDigests.decide(listOf(moved("1", FRI, WED)), now).digest!!.audible)
         assertFalse(ScheduleChangeDigests.decide(listOf(moved("1", THU, FRI)), now).digest!!.audible)
     }
 
     @Test
     fun `the digest names the soonest fresh change and counts every unread one that is not over`() {
-        val later = moved("1", FRI, FRI.plusDays(1))
+        val later = moved("1", FRI, FRI.plus(1, DateTimeUnit.DAY))
         val soonest = moved("2", THU, FRI)
         val deliveredBefore = moved("3", WED, THU, notified = true)
         val read = moved("4", WED, WED, read = true)
@@ -98,27 +102,27 @@ class ScheduleChangeDigestTest {
         id: String,
         from: LocalDate,
         to: LocalDate,
-        start: LocalTime = LocalTime.of(8, 20),
+        start: LocalTime = LocalTime(8, 20),
         read: Boolean = false,
         notified: Boolean = false
     ) = ScheduleChange(
         id = id, detectedAt = Instant.parse("2026-09-07T09:00:00Z"), kind = ScheduleChangeKind.UPDATED,
         fields = setOf(ScheduleChangeField.TIME), subjectName = "Предмет $id", typeId = 1, flowName = null,
-        before = slot(id.toLong(), from, LocalTime.of(8, 20)), after = slot(id.toLong(), to, start),
+        before = slot(id.toLong(), from, LocalTime(8, 20)), after = slot(id.toLong(), to, start),
         read = read, notified = notified
     )
 
     private fun slot(pairId: Long, date: LocalDate, start: LocalTime) = LessonSlot(
-        pairId = pairId, date = date.toKotlinLocalDate(), start = start.toKotlinLocalTime(),
-        end = start.plusMinutes(90).toKotlinLocalTime(), room = "1506", building = null,
+        pairId = pairId, date = date, start = start,
+        end = start.plusMinutes(90), room = "1506", building = null,
         formatId = 1, format = "Очный", teacherIsu = null, teacherName = null
     )
 
     private companion object {
-        val MON: LocalDate = LocalDate.of(2026, 9, 7)
-        val TUE: LocalDate = LocalDate.of(2026, 9, 8)
-        val WED: LocalDate = LocalDate.of(2026, 9, 9)
-        val THU: LocalDate = LocalDate.of(2026, 9, 10)
-        val FRI: LocalDate = LocalDate.of(2026, 9, 11)
+        val MON: LocalDate = LocalDate(2026, 9, 7)
+        val TUE: LocalDate = LocalDate(2026, 9, 8)
+        val WED: LocalDate = LocalDate(2026, 9, 9)
+        val THU: LocalDate = LocalDate(2026, 9, 10)
+        val FRI: LocalDate = LocalDate(2026, 9, 11)
     }
 }

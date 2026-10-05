@@ -243,7 +243,8 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
         const val TAG = "LessonDetailsBottomSheet"
         private const val ARG_LESSON = "arg_lesson"
 
-        fun newInstance(lesson: Lesson, date: LocalDate): LessonDetailsBottomSheet = newInstance(lesson.toDetailsArgs(date))
+        fun newInstance(lesson: Lesson, date: kotlinx.datetime.LocalDate): LessonDetailsBottomSheet =
+            newInstance(lesson.toDetailsArgs(date))
 
         fun newInstance(args: LessonDetailsArgs): LessonDetailsBottomSheet = LessonDetailsBottomSheet().apply {
             arguments = Bundle().apply {

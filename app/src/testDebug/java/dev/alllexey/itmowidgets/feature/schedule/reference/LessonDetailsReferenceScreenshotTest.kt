@@ -27,10 +27,10 @@ import dev.alllexey.itmowidgets.feature.schedule.reference.ScheduleReferenceFixt
 import dev.alllexey.itmowidgets.feature.schedule.reference.ScheduleReferenceFixtures.today
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
 import dev.alllexey.itmowidgets.feature.schedule.ui.details.LessonDetailsBottomSheet
-import java.time.LocalDate
-import java.time.LocalTime
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -65,7 +65,7 @@ class LessonDetailsReferenceScreenshotTest {
     fun full() = capture(
         "LessonDetailsContent_full",
         ScheduleReferenceFixtures.lesson(
-            CHANGED_PAIR_ID, LocalTime.of(10, 0), "Физика", 3, "Практика", teacherIsu = TEACHER_ISU, room = "2202",
+            CHANGED_PAIR_ID, LocalTime(10, 0), "Физика", 3, "Практика", teacherIsu = TEACHER_ISU, room = "2202",
             building = "ул. Ломоносова, 9", note = "Организационная информация о занятии",
             zoomUrl = "https://example.invalid/meeting", zoomPassword = "1234",
         ).toArgs(),
@@ -107,7 +107,7 @@ class LessonDetailsReferenceScreenshotTest {
     )
 
     private fun plainLesson(teacherIsu: Int? = null) = ScheduleReferenceFixtures.lesson(
-        3, LocalTime.of(11, 40), "Программирование", 2, "Лабораторная", teacherIsu = teacherIsu,
+        3, LocalTime(11, 40), "Программирование", 2, "Лабораторная", teacherIsu = teacherIsu,
     ).toArgs()
 
     private fun Lesson.toArgs(): LessonDetailsArgs = toDetailsArgs(today)

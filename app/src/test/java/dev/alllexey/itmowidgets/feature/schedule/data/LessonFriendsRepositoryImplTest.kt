@@ -17,9 +17,10 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import java.io.IOException
 import java.lang.reflect.Proxy
-import java.time.LocalDate
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toKotlinLocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -31,7 +32,7 @@ class LessonFriendsRepositoryImplTest {
 
     private val dispatchers = mainDispatcherRule.appDispatchers
 
-    private val date = LocalDate.of(2026, 9, 8)
+    private val date = LocalDate(2026, 9, 8)
 
     @Test
     fun `without the opt-in nothing is requested`() = runTest {
@@ -96,7 +97,7 @@ class LessonFriendsRepositoryImplTest {
                 "friendsOnLesson" -> {
                     calls += 1
                     val continuation = arguments.last() as Continuation<Any?>
-                    val value = result(arguments[0] as Long, arguments[1] as LocalDate)
+                    val value = result(arguments[0] as Long, (arguments[1] as java.time.LocalDate).toKotlinLocalDate())
                     continuation.resumeWith(Result.success(value))
                     kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
                 }

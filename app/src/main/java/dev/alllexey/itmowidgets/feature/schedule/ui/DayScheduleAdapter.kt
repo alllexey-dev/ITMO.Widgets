@@ -12,20 +12,19 @@ import com.google.android.material.card.MaterialCardView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.dp
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import java.time.LocalDate
-import java.time.Duration
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
-import kotlinx.datetime.toJavaLocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toLocalDateTime
 
 class DayScheduleAdapter(
@@ -37,7 +36,7 @@ class DayScheduleAdapter(
 
     private var timelineDays = emptyList<ScheduleDisplayDay>()
     private var timelineStates = emptyList<List<ScheduleItem.LessonState>>()
-    private var renderedToday = timeProvider.javaToday()
+    private var renderedToday = timeProvider.today()
 
     override fun onCurrentListChanged(
         previousList: List<ScheduleDisplayDay>,
@@ -69,10 +68,11 @@ class DayScheduleAdapter(
         val lessons = daySchedule.officialDay?.lessons.orEmpty()
         val context = holder.itemView.context
 
-        holder.dayTitle.text = date.dayOfWeek
+        val javaDate = date.toJavaLocalDate()
+        holder.dayTitle.text = javaDate.dayOfWeek
             .getDisplayName(TextStyle.FULL, RUSSIAN_LOCALE)
             .replaceFirstChar { it.uppercase(RUSSIAN_LOCALE) }
-        holder.dayDate.text = date.format(DATE_FORMATTER)
+        holder.dayDate.text = javaDate.format(DATE_FORMATTER)
 
         holder.numberOfLessons.text = if (lessons.isEmpty()) {
             context.getString(if (daySchedule.pendingSport.isEmpty()) R.string.schedule_no_lessons else R.string.schedule_auto_sign_label)
@@ -84,8 +84,8 @@ class DayScheduleAdapter(
             )
         }
 
-        val today = timeProvider.javaToday()
-        val isToday = date.equals(today)
+        val today = timeProvider.today()
+        val isToday = date == today
 
         if (isToday) {
             holder.card.strokeWidth = 2.dp
@@ -108,12 +108,12 @@ class DayScheduleAdapter(
 
         // Past days keep the established fade; lesson rows remain opaque so it
         // is applied only once. Always reset it when a holder is reused.
-        holder.itemRoot.alpha = if (date.isBefore(today)) 0.72f else 1f
+        holder.itemRoot.alpha = if (date < today) 0.72f else 1f
 
         // Also support a first bind before ListAdapter's list-change callback.
         // Keep the committed snapshot intact for its old/new marker comparison.
         val states = if (timelineDays === currentList) timelineStates
-        else resolveScheduleTimeline(currentList, timeProvider.javaNow().toLocalDateTime())
+        else resolveScheduleTimeline(currentList, timeProvider.localNow())
         val processed = processLessonsWithBreaks(lessons, states[position], daySchedule.pendingSport, daySchedule.changedPairIds)
         val lessonAdapter = LessonAdapter(processed, { lesson -> onLessonClick(lesson, date) }, onPendingClick)
         // Days are recycled by the outer list. A day's bounded rows must all
@@ -131,7 +131,7 @@ class DayScheduleAdapter(
         val previousStates = timelineStates
         val previousToday = renderedToday
         updateTimeline(currentList)
-        renderedToday = timeProvider.javaToday()
+        renderedToday = timeProvider.today()
         if (previousToday != renderedToday) {
             // Date-card emphasis and past-day alpha also change at midnight.
             notifyItemRangeChanged(0, itemCount)
@@ -144,7 +144,7 @@ class DayScheduleAdapter(
 
     private fun updateTimeline(days: List<ScheduleDisplayDay>) {
         timelineDays = days
-        timelineStates = resolveScheduleTimeline(days, timeProvider.javaNow().toLocalDateTime())
+        timelineStates = resolveScheduleTimeline(days, timeProvider.localNow())
     }
 
     class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -183,7 +183,7 @@ class DayScheduleAdapter(
                 val nextLesson = sortedLessons[index + 1].value
                 val currentEndTime = currentLesson.end
                 val nextStartTime = nextLesson.start
-                val breakDuration = Duration.between(currentEndTime, nextStartTime)
+                val breakDuration = (nextStartTime.toSecondOfDay() - currentEndTime.toSecondOfDay()).seconds
                 val overlapsPending = pendingItems.any { it.start < nextStartTime && it.end > currentEndTime }
                 if (breakDuration > BIG_BREAK_THRESHOLD && !overlapsPending) {
                     processedList.add(ScheduleItem.BreakItem(currentEndTime, nextStartTime))
@@ -200,7 +200,7 @@ class DayScheduleAdapter(
             is ScheduleItem.LessonItem -> item.lesson.start
             is ScheduleItem.PendingSportItem -> item.start
             is ScheduleItem.BreakItem -> item.from
-            is ScheduleItem.NoLessonsItem -> LocalTime.MIN
+            is ScheduleItem.NoLessonsItem -> LocalTime(0, 0)
         } }.mapIndexed { index, item -> when (item) {
             is ScheduleItem.LessonItem -> item.copy(isLastLesson = index == processedList.lastIndex)
             is ScheduleItem.PendingSportItem -> item.copy(isLast = index == processedList.lastIndex)
@@ -208,10 +208,10 @@ class DayScheduleAdapter(
         } }
     }
 
-    private fun Instant.wallTime(): LocalTime = toLocalDateTime(timeProvider.timeZone).time.toJavaLocalTime()
+    private fun Instant.wallTime(): LocalTime = toLocalDateTime(timeProvider.timeZone).time
 
     companion object {
-        private val BIG_BREAK_THRESHOLD = Duration.ofMinutes(60)
+        private val BIG_BREAK_THRESHOLD = 60.minutes
         private val RUSSIAN_LOCALE = Locale.forLanguageTag("ru")
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("d MMMM", RUSSIAN_LOCALE)
         private val ScheduleDiffCallback = object : DiffUtil.ItemCallback<ScheduleDisplayDay>() {

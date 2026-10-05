@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRep
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncScheduler
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.MarkedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
-import java.time.Instant
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 

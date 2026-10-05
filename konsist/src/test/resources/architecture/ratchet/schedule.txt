@@ -7,24 +7,6 @@ domain-imports-javax-inject dev.alllexey.itmowidgets.feature.schedule.domain.hom
 domain-imports-javax-inject dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 domain-imports-javax-inject dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.StudyWeeks
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncPlanner
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.calendar.IcsWriter
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleDiff
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleSnapshot
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.home.HomeScheduleSelector
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.model.LessonDetailsMapping
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetModels
-domain-imports-java dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
-
 entry-point-accessors dev.alllexey.itmowidgets.feature.schedule.work.CalendarSyncWorker
 entry-point-accessors dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesWorker
 entry-point-accessors dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetEntryPoint

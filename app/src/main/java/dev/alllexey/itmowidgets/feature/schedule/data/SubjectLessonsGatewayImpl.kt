@@ -9,16 +9,13 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinLocalTime
 
 class SubjectLessonsGatewayImpl @Inject constructor(
     private val repository: ScheduleRepository
 ) : SubjectLessonsGateway {
 
     override fun observeOwnLessons(start: LocalDate, end: LocalDate): Flow<List<SubjectLesson>> =
-        repository.observeScheduleForRange(null, start.toJavaLocalDate(), end.toJavaLocalDate()).map { days ->
+        repository.observeScheduleForRange(null, start, end).map { days ->
             days.sortedBy(DaySchedule::date).flatMap { day ->
                 day.lessons
                     .filter { it.flowTypeId == ACADEMIC_FLOW }
@@ -27,11 +24,11 @@ class SubjectLessonsGatewayImpl @Inject constructor(
             }
         }
 
-    private fun Lesson.toSubjectLesson(date: java.time.LocalDate) = SubjectLesson(
+    private fun Lesson.toSubjectLesson(date: LocalDate) = SubjectLesson(
         pairId = pairId,
-        date = date.toKotlinLocalDate(),
-        start = start.toKotlinLocalTime(),
-        end = end.toKotlinLocalTime(),
+        date = date,
+        start = start,
+        end = end,
         typeId = typeId.raw,
         type = type,
         subjectId = subjectId,

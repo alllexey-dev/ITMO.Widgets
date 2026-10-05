@@ -8,10 +8,10 @@ import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleStoreJson
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.SnapshotLesson
-import java.time.LocalDate
-import java.time.LocalTime
 import javax.inject.Inject
 import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.serialization.Serializable
 import okio.FileSystem
 import okio.Path

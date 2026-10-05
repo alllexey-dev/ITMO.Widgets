@@ -13,9 +13,6 @@ import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaToday
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
@@ -30,7 +27,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import javax.inject.Inject
 
 @HiltViewModel
@@ -146,8 +146,8 @@ class ScheduleViewModel @Inject constructor(
     fun fetchNextDays() {
         if (isLoading) return
 
-        val newStart = currentEnd.plusDays(1)
-        val newEnd = currentEnd.plusDays(PAGE_SIZE_DAYS)
+        val newStart = currentEnd.plus(1, DateTimeUnit.DAY)
+        val newEnd = currentEnd.plus(PAGE_SIZE_DAYS, DateTimeUnit.DAY)
         currentEnd = newEnd
         isLoading = true
         lastError = null
@@ -265,7 +265,7 @@ class ScheduleViewModel @Inject constructor(
 
     private fun currentDisplayDays() = buildScheduleDisplayDays(
         currentDays, if (canShowPendingSport()) pendingSport else emptyList(),
-        currentStart, currentEnd, timeProvider.javaZone(), timeProvider.javaNow(), changedOccurrences
+        currentStart, currentEnd, timeProvider.timeZone, timeProvider.now(), changedOccurrences
     )
 
     // A successful empty academic response is still a usable snapshot. Keep its
@@ -312,14 +312,14 @@ class ScheduleViewModel @Inject constructor(
         currentEnd = initialEnd()
     }
 
-    private fun initialStart(): LocalDate = timeProvider.javaToday().minusDays(1)
+    private fun initialStart(): LocalDate = timeProvider.today().minus(1, DateTimeUnit.DAY)
 
-    private fun initialEnd(): LocalDate = timeProvider.javaToday().plusDays(PAGE_SIZE_DAYS)
+    private fun initialEnd(): LocalDate = timeProvider.today().plus(PAGE_SIZE_DAYS, DateTimeUnit.DAY)
 
     companion object {
         const val ARG_USER_ISU = "user_isu"
         private const val NO_USER_ISU = -1
-        private const val PAGE_SIZE_DAYS = 14L
+        private const val PAGE_SIZE_DAYS = 14
         private const val STATE_SELECTED_USER_ISU = "selected_user_isu"
         private const val STATE_SELECTED_USER_NAME = "selected_user_name"
         private const val STATE_SELECTED_USER_AVATAR = "selected_user_avatar"

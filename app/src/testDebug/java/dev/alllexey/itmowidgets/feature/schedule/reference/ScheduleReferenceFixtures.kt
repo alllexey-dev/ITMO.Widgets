@@ -20,19 +20,21 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
+import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
 import dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesPreviewActivity
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneOffset
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinLocalTime
 import org.robolectric.shadow.api.Shadow
 import org.robolectric.shadows.ShadowViewRootImpl
 import org.robolectric.util.ReflectionHelpers
@@ -45,7 +47,7 @@ import com.google.android.material.R as MaterialR
  */
 internal object ScheduleReferenceFixtures {
 
-    val today: LocalDate = LocalDate.of(2026, 9, 7)
+    val today: LocalDate = LocalDate(2026, 9, 7)
 
     const val FRIEND_ISU = 300100
     const val FRIEND_NAME = "Тестовая подруга Константинопольская-Преображенская"
@@ -56,7 +58,7 @@ internal object ScheduleReferenceFixtures {
     /** The hosts' [AcademicTimeProvider]: the same instant, for the view models a test builds itself. */
     object FixedTime : AcademicTimeProvider {
         override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
-        override fun today() = ScheduleReferenceFixtures.today.toKotlinLocalDate()
+        override fun today() = ScheduleReferenceFixtures.today
         override fun now() = today().atTime(12, 0).toInstant(timeZone)
     }
 
@@ -83,21 +85,21 @@ internal object ScheduleReferenceFixtures {
 
     /** The own schedule: yesterday, a full today with a changed lesson, and tomorrow. */
     fun ownDays(): List<DaySchedule> = listOf(
-        day(today.minusDays(1), lesson(10, LocalTime.of(10, 0), "Физическая культура", 11, "Спорт")),
+        day(today.minus(1, DateTimeUnit.DAY), lesson(10, LocalTime(10, 0), "Физическая культура", 11, "Спорт")),
         day(
             today,
-            lesson(1, LocalTime.of(8, 20), "Математический анализ (продвинутый уровень)", 1, "Лекция",
+            lesson(1, LocalTime(8, 20), "Математический анализ (продвинутый уровень)", 1, "Лекция",
                 note = "Организационная информация о занятии"),
-            lesson(CHANGED_PAIR_ID, LocalTime.of(10, 0), "Физика", 3, "Практика", room = "2202",
+            lesson(CHANGED_PAIR_ID, LocalTime(10, 0), "Физика", 3, "Практика", room = "2202",
                 building = "ул. Ломоносова, 9"),
-            lesson(3, LocalTime.of(11, 40), "Программирование", 2, "Лабораторная"),
-            lesson(4, LocalTime.of(15, 20), "Английский язык", 3, "Практика", teacher = null, room = null,
+            lesson(3, LocalTime(11, 40), "Программирование", 2, "Лабораторная"),
+            lesson(4, LocalTime(15, 20), "Английский язык", 3, "Практика", teacher = null, room = null,
                 building = null, zoomUrl = "https://example.invalid/meeting"),
         ),
         day(
-            today.plusDays(1),
-            lesson(5, LocalTime.of(8, 20), "Дискретная математика", 1, "Лекция"),
-            lesson(6, LocalTime.of(10, 0), "Базы данных", 2, "Лабораторная"),
+            today.plus(1, DateTimeUnit.DAY),
+            lesson(5, LocalTime(8, 20), "Дискретная математика", 1, "Лекция"),
+            lesson(6, LocalTime(10, 0), "Базы данных", 2, "Лабораторная"),
         ),
     )
 
@@ -105,14 +107,14 @@ internal object ScheduleReferenceFixtures {
     fun friendDays(): List<DaySchedule> = listOf(
         day(
             today,
-            lesson(21, LocalTime.of(10, 0), "История России", 1, "Лекция"),
-            lesson(22, LocalTime.of(11, 40), "Иностранный язык в профессиональной деятельности", 3, "Практика"),
-            lesson(23, LocalTime.of(13, 30), "Алгоритмы и структуры данных", 2, "Лабораторная"),
+            lesson(21, LocalTime(10, 0), "История России", 1, "Лекция"),
+            lesson(22, LocalTime(11, 40), "Иностранный язык в профессиональной деятельности", 3, "Практика"),
+            lesson(23, LocalTime(13, 30), "Алгоритмы и структуры данных", 2, "Лабораторная"),
         ),
         day(
-            today.plusDays(1),
-            lesson(24, LocalTime.of(8, 20), "Линейная алгебра", 1, "Лекция"),
-            lesson(25, LocalTime.of(10, 0), "Операционные системы", 2, "Лабораторная"),
+            today.plus(1, DateTimeUnit.DAY),
+            lesson(24, LocalTime(8, 20), "Линейная алгебра", 1, "Лекция"),
+            lesson(25, LocalTime(10, 0), "Операционные системы", 2, "Лабораторная"),
         ),
     )
 
@@ -120,12 +122,12 @@ internal object ScheduleReferenceFixtures {
     fun pendingSport(): List<PendingSportBooking> = listOf(waitingBooking(), predictedBooking())
 
     fun waitingBooking() = booking(
-        queueId = 1, kind = PendingSportBooking.QueueKind.FREE, lessonId = 100, start = LocalTime.of(17, 0),
+        queueId = 1, kind = PendingSportBooking.QueueKind.FREE, lessonId = 100, start = LocalTime(17, 0),
         isPrediction = false,
     )
 
     fun predictedBooking() = booking(
-        queueId = 2, kind = PendingSportBooking.QueueKind.AUTO, lessonId = 200, start = LocalTime.of(18, 40),
+        queueId = 2, kind = PendingSportBooking.QueueKind.AUTO, lessonId = 200, start = LocalTime(18, 40),
         isPrediction = true,
     )
 
@@ -133,34 +135,34 @@ internal object ScheduleReferenceFixtures {
     fun roomChange() = change(
         "room", ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.PLACE), "2026-09-07T06:00:00Z",
         subject = "Физика", typeId = 3,
-        before = slot(CHANGED_PAIR_ID, today, LocalTime.of(10, 0)),
-        after = slot(CHANGED_PAIR_ID, today, LocalTime.of(10, 0), room = "2202", building = "ул. Ломоносова, 9"),
+        before = slot(CHANGED_PAIR_ID, today, LocalTime(10, 0)),
+        after = slot(CHANGED_PAIR_ID, today, LocalTime(10, 0), room = "2202", building = "ул. Ломоносова, 9"),
     )
 
     /** The history screen: today, yesterday and an earlier day, read and unread rows, every kind of change. */
     fun history(): List<ScheduleChange> = listOf(
         change("added", ScheduleChangeKind.ADDED, emptySet(), "2026-09-07T08:00:00Z",
-            before = null, after = slot(1, LocalDate.of(2026, 9, 9), LocalTime.of(10, 0))),
+            before = null, after = slot(1, LocalDate(2026, 9, 9), LocalTime(10, 0))),
         change("cancelled", ScheduleChangeKind.CANCELLED, emptySet(), "2026-09-07T06:00:00Z", subject = "Физика",
-            typeId = 3, flowName = "ФИЗ ПИИКТ 3.2", before = slot(2, LocalDate.of(2026, 9, 8)), after = null,
+            typeId = 3, flowName = "ФИЗ ПИИКТ 3.2", before = slot(2, LocalDate(2026, 9, 8)), after = null,
             read = true),
         change("same-day", ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.TIME), "2026-09-06T12:00:00Z",
-            subject = "Программирование", typeId = 2, before = slot(3, LocalDate.of(2026, 9, 10)),
-            after = slot(3, LocalDate.of(2026, 9, 10), LocalTime.of(10, 0))),
+            subject = "Программирование", typeId = 2, before = slot(3, LocalDate(2026, 9, 10)),
+            after = slot(3, LocalDate(2026, 9, 10), LocalTime(10, 0))),
         change("moved", ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.TIME, ScheduleChangeField.PLACE),
             "2026-09-06T09:00:00Z", subject = "Физика", typeId = 1,
-            before = slot(4, LocalDate.of(2026, 9, 8), LocalTime.of(13, 30)),
-            after = slot(4, LocalDate.of(2026, 9, 11), LocalTime.of(15, 20), room = "2202",
+            before = slot(4, LocalDate(2026, 9, 8), LocalTime(13, 30)),
+            after = slot(4, LocalDate(2026, 9, 11), LocalTime(15, 20), room = "2202",
                 building = "ул. Ломоносова, 9")),
         change("format", ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.FORMAT, ScheduleChangeField.PLACE),
             "2026-09-03T10:00:00Z", subject = "Английский язык", typeId = 3, flowName = null,
-            before = slot(5, LocalDate.of(2026, 9, 9), LocalTime.of(11, 40)),
-            after = slot(5, LocalDate.of(2026, 9, 9), LocalTime.of(11, 40), room = null, building = null,
+            before = slot(5, LocalDate(2026, 9, 9), LocalTime(11, 40)),
+            after = slot(5, LocalDate(2026, 9, 9), LocalTime(11, 40), room = null, building = null,
                 formatId = 3, format = "Дистанционный"),
             read = true),
         change("teacher", ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.TEACHER), "2026-09-03T09:00:00Z",
-            subject = "Математический анализ", typeId = 3, before = slot(6, LocalDate.of(2026, 9, 14)),
-            after = slot(6, LocalDate.of(2026, 9, 14), teacherIsu = 300002, teacherName = "Новый преподаватель")),
+            subject = "Математический анализ", typeId = 3, before = slot(6, LocalDate(2026, 9, 14)),
+            after = slot(6, LocalDate(2026, 9, 14), teacherIsu = 300002, teacherName = "Новый преподаватель")),
     )
 
     /** Friends on the lesson: one with a group, one without a name (the ISU placeholder). */
@@ -246,7 +248,7 @@ internal object ScheduleReferenceFixtures {
     }
 
     private fun day(date: LocalDate, vararg lessons: Lesson) =
-        DaySchedule(date.dayOfWeek.value, 1, date, null, lessons.toList())
+        DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, lessons.toList())
 
     private fun booking(
         queueId: Long,
@@ -255,11 +257,11 @@ internal object ScheduleReferenceFixtures {
         start: LocalTime,
         isPrediction: Boolean,
     ): PendingSportBooking {
-        val begin = today.atTime(start).atOffset(ZoneOffset.ofHours(3))
+        val begin = today.atTime(start).toInstant(FixedTime.timeZone)
         return PendingSportBooking(
             queueId = queueId, queueKind = kind, lessonId = lessonId,
             sectionName = "Современные танцы: тестовая секция с длинным названием",
-            start = begin.toInstant().toKotlinInstant(), end = begin.plusMinutes(90).toInstant().toKotlinInstant(),
+            start = begin, end = begin + 90.minutes,
             teacherFio = TEACHER_NAME, roomName = "Кронверкский проспект, 49, спортивный зал",
             isPrediction = isPrediction, teacherIsu = 300002,
         )
@@ -284,7 +286,7 @@ internal object ScheduleReferenceFixtures {
     private fun slot(
         pairId: Long,
         date: LocalDate,
-        start: LocalTime = LocalTime.of(8, 20),
+        start: LocalTime = LocalTime(8, 20),
         room: String? = "1506",
         building: String? = "Кронверкский проспект, 49",
         formatId: Int = 1,
@@ -292,7 +294,7 @@ internal object ScheduleReferenceFixtures {
         teacherIsu: Long? = TEACHER_ISU.toLong(),
         teacherName: String? = TEACHER_NAME,
     ) = LessonSlot(
-        pairId, date.toKotlinLocalDate(), start.toKotlinLocalTime(), start.plusMinutes(90).toKotlinLocalTime(), room,
+        pairId, date, start, start.plusMinutes(90), room,
         building, formatId, format, teacherIsu, teacherName,
     )
 }

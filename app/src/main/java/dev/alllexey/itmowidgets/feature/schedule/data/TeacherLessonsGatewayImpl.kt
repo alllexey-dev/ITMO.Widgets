@@ -9,10 +9,8 @@ import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.StudyWeeks
-import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,6 +22,10 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
+import kotlinx.datetime.toJavaLocalDate
 import retrofit2.HttpException
 
 /**
@@ -45,9 +47,9 @@ class TeacherLessonsGatewayImpl @Inject constructor(
     private val generation = AtomicLong()
 
     override fun taughtBy(teacherIsu: Int): Flow<AppResult<TeacherLessons>> = channelFlow {
-        val today = time.javaToday()
+        val today = time.today()
         if (demo.isActive()) {
-            val lessons = DemoSchedule.ownDays(today.minusDays(6), today, today)
+            val lessons = DemoSchedule.ownDays(today.minus(6, DateTimeUnit.DAY), today, today)
                 .sortedByDescending { it.date }
                 .flatMap { it.lessons }
                 .filter { it.flowTypeId == ACADEMIC_FLOW && it.teacherIsu == teacherIsu.toLong() }
@@ -117,7 +119,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
     }.also { finished = it }
 
     private fun request(week: ClosedRange<LocalDate>): List<WeekLesson> {
-        val response = api.getPersonalSchedule(week.start, week.endInclusive).execute()
+        val response = api.getPersonalSchedule(week.start.toJavaLocalDate(), week.endInclusive.toJavaLocalDate()).execute()
         if (!response.isSuccessful) throw HttpException(response)
         return response.body()?.data.orEmpty()
             .sortedByDescending { it.date }

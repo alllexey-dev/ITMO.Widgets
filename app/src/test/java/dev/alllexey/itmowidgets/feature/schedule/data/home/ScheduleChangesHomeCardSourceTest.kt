@@ -9,10 +9,11 @@ import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.testing.slot
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
-import java.time.LocalDate
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.atTime
 import kotlinx.datetime.toKotlinLocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -37,7 +38,7 @@ class ScheduleChangesHomeCardSourceTest {
             id = "newer", kind = ScheduleChangeKind.CANCELLED, detectedAt = Instant.parse("2026-09-07T08:00:00Z")
         )
         val over = scheduleChange(
-            id = "over", kind = ScheduleChangeKind.ADDED, after = slot(2, TODAY.toKotlinLocalDate()),
+            id = "over", kind = ScheduleChangeKind.ADDED, after = slot(2, TODAY),
             detectedAt = Instant.parse("2026-09-07T08:30:00Z")
         )
         repository.changes.value = listOf(older, over, newer)
@@ -81,6 +82,6 @@ class ScheduleChangesHomeCardSourceTest {
     private object Noon : AcademicTimeProvider by FixedAcademicTime(TODAY.atTime(12, 0))
 
     private companion object {
-        val TODAY: LocalDate = LocalDate.of(2026, 9, 7)
+        val TODAY: LocalDate = LocalDate(2026, 9, 7)
     }
 }

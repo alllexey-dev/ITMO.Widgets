@@ -14,12 +14,12 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.dp
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlin.math.ceil
+import kotlinx.datetime.format
 
 class LessonAdapter(
     private val scheduleList: List<ScheduleItem>,
@@ -32,7 +32,7 @@ class LessonAdapter(
         private const val VIEW_TYPE_BREAK = 2
         private const val VIEW_TYPE_NO_LESSONS = 3
         private const val VIEW_TYPE_PENDING_SPORT = 4
-        private val TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
+        private val TIME_FORMATTER = DateTexts.TIME
     }
 
     private var timelineGuideOffset: Int? = null

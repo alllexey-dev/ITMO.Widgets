@@ -18,12 +18,14 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
+import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
 import java.io.File
 import java.io.IOException
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
+import kotlin.time.toJavaDuration
+import kotlin.time.toJavaInstant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +34,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
 import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -52,7 +59,7 @@ class CalendarSyncRepositoryImplTest {
 
     private val folder by lazy { File(temporary.root, "calendar_sync") }
     private val calendars = FakePhoneCalendars().apply { add(GOOGLE) }
-    private val clock = MutableClock(Instant.parse("2026-09-07T06:00:00Z"))
+    private val clock = MutableClock(Instant.parse("2026-09-07T06:00:00Z").toJavaInstant())
     private val requests = mutableListOf<Pair<LocalDate, LocalDate>>()
     private var days: List<DaySchedule> = emptyList()
     private var failure: Exception? = null
@@ -79,13 +86,13 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `turning on creates the app calendar and the first sync fills the window from today`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))), day(MONDAY.plusDays(28), lesson(3)))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30))), day(MONDAY.plus(28, DateTimeUnit.DAY), lesson(3)))
         val repository = repository()
 
         assertEquals(CalendarSyncResult.DONE, repository.enable())
         assertEquals(AppResult.Success(Unit), repository.sync())
 
-        assertEquals(listOf(MONDAY to MONDAY.plusDays(28)), requests)
+        assertEquals(listOf(MONDAY to MONDAY.plus(28, DateTimeUnit.DAY)), requests)
         assertEquals(listOf("lesson-1", "lesson-2", "lesson-3"), calendars.eventsIn(own).map { it.key })
         assertEquals(CalendarSyncState(enabled = true), repository.observeState().first())
         assertEquals("1506, Кронверкский проспект, 49, Санкт-Петербург", calendars.eventsIn(own).first().location)
@@ -94,7 +101,7 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `syncing twice adds nothing twice`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30))))
         val repository = enabled()
 
         repository.sync()
@@ -108,12 +115,12 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `a changed lesson updates its event and a cancelled one is deleted`() = runTest {
-        days = listOf(day(MONDAY, lesson(1, start = LocalTime.of(10, 0)), lesson(2, start = LocalTime.of(13, 30))))
+        days = listOf(day(MONDAY, lesson(1, start = LocalTime(10, 0)), lesson(2, start = LocalTime(13, 30))))
         val repository = enabled()
         repository.sync()
         val idOfFirst = calendars.events.entries.first { it.value.second.key == "lesson-1" }.key
 
-        days = listOf(day(MONDAY, lesson(1, start = LocalTime.of(11, 40), room = Room("2304"))))
+        days = listOf(day(MONDAY, lesson(1, start = LocalTime(11, 40), room = Room("2304"))))
         repository.sync()
 
         val (_, moved) = calendars.events.getValue(idOfFirst)
@@ -124,11 +131,11 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `a lesson over before the sync stays when the schedule drops it`() = runTest {
-        days = listOf(day(MONDAY, lesson(1, start = LocalTime.of(10, 0))))
+        days = listOf(day(MONDAY, lesson(1, start = LocalTime(10, 0))))
         val repository = enabled()
         repository.sync()
 
-        clock.advance(Duration.ofHours(6))
+        clock.advance(6.hours.toJavaDuration())
         days = emptyList()
         repository.sync()
 
@@ -138,12 +145,12 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `an event deleted by the user comes back with the next change`() = runTest {
-        days = listOf(day(MONDAY, lesson(1, start = LocalTime.of(10, 0))))
+        days = listOf(day(MONDAY, lesson(1, start = LocalTime(10, 0))))
         val repository = enabled()
         repository.sync()
         calendars.events.clear()
 
-        days = listOf(day(MONDAY, lesson(1, start = LocalTime.of(11, 40))))
+        days = listOf(day(MONDAY, lesson(1, start = LocalTime(11, 40))))
         repository.sync()
 
         assertEquals(listOf("lesson-1"), calendars.events.values.map { it.second.key })
@@ -151,7 +158,7 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `turning off deletes the app calendar in one operation`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30))))
         val repository = enabled()
         repository.sync()
 
@@ -210,7 +217,7 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `events inserted before the provider failed are kept, so the next sync adds no duplicate`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30)), lesson(3, start = LocalTime.of(15, 20))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30)), lesson(3, start = LocalTime(15, 20))))
         val repository = enabled()
         calendars.failOnInsert = 2
 
@@ -223,7 +230,7 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `turning off while a sync waits for My ITMO leaves no event behind`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30))))
         val repository = enabled()
         val answer = CompletableDeferred<Unit>()
         val asked = CompletableDeferred<Unit>()
@@ -243,7 +250,7 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `turning off during the inserts of the first sync leaves nothing behind`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30)), lesson(3, start = LocalTime.of(15, 20))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30)), lesson(3, start = LocalTime(15, 20))))
         val repository = enabled()
         var disable: Deferred<Unit>? = null
         calendars.onInsert = {
@@ -260,7 +267,7 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `a sync cancelled while writing keeps every inserted id`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30)), lesson(3, start = LocalTime.of(15, 20))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30)), lesson(3, start = LocalTime(15, 20))))
         val repository = enabled()
         lateinit var sync: Job
         calendars.onInsert = { sync.cancel() }
@@ -275,7 +282,7 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `every insert is written at once`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30))))
         val repository = enabled()
         val written = mutableListOf<Int>()
         calendars.onInsert = { written += (store.read()?.events?.size ?: 0) }
@@ -288,7 +295,7 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `a sync deletes tagged events it does not know before inserting, so nothing doubles`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30))))
         enabled().sync()
         val foreign = calendars.insertForeign(own, calendars.eventsIn(own).first().copy(key = "user"))
         store.write(store.read()!!.copy(events = emptyList()))
@@ -302,7 +309,7 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `a Google calendar of an earlier build reads as off and the next run leaves it without inserting`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30))))
         val tracked = googleState(enabled = true)
         val foreign = calendars.insertForeign(GOOGLE, event("user"))
         val repository = repository()
@@ -333,7 +340,7 @@ class CalendarSyncRepositoryImplTest {
         assertTrue(repository.hasPendingCleanup())
         assertTrue(requests.isEmpty())
 
-        clock.advance(Duration.ofDays(4))
+        clock.advance(4.days.toJavaDuration())
         repository.sync()
         assertFalse(repository.hasPendingCleanup())
     }
@@ -368,7 +375,7 @@ class CalendarSyncRepositoryImplTest {
 
     @Test
     fun `a file of an earlier build without calendar ids is cleaned up completely`() = runTest {
-        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime.of(13, 30))))
+        days = listOf(day(MONDAY, lesson(1), lesson(2, start = LocalTime(13, 30))))
         val ids = listOf(calendars.insert(GOOGLE, event("lesson-1")), calendars.insert(GOOGLE, event("lesson-2")))
         folder.mkdirs()
         File(folder, "state.json").writeText(
@@ -428,9 +435,9 @@ class CalendarSyncRepositoryImplTest {
 
     private fun repository() = CalendarSyncRepositoryImpl(calendars, source, store, ClockAcademicTime(clock), BUILDINGS, dispatchers)
 
-    private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.value, 1, date, null, lessons.toList())
+    private fun day(date: LocalDate, vararg lessons: Lesson) = DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, lessons.toList())
 
-    private fun lesson(pairId: Long, start: LocalTime = LocalTime.of(10, 0), room: Room? = Room("1506")) = Lesson(
+    private fun lesson(pairId: Long, start: LocalTime = LocalTime(10, 0), room: Room? = Room("1506")) = Lesson(
         pairId = pairId, start = start, end = start.plusMinutes(90), type = "Лекция", typeId = Lesson.TypeId(1),
         note = null, subjectName = "Физика", subjectId = pairId * 10, groupName = "ФИЗ ПИИКТ 3.2", flowId = pairId * 100,
         flowTypeId = 2, teacherIsu = 300001, teacherFio = "Тестовый преподаватель", room = room,
@@ -440,7 +447,7 @@ class CalendarSyncRepositoryImplTest {
 
     private companion object {
         /** 2026-09-07 09:00 in Moscow is a Monday morning. */
-        val MONDAY: LocalDate = LocalDate.of(2026, 9, 7)
+        val MONDAY: LocalDate = LocalDate(2026, 9, 7)
         /** The Google calendar an earlier build wrote to. */
         const val GOOGLE = 7L
         val BUILDINGS = BuildingDirectory(

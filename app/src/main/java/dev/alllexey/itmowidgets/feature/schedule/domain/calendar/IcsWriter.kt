@@ -1,8 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.domain.calendar
 
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
+import dev.alllexey.itmowidgets.core.text.DateTexts
+import kotlin.time.Instant
 
 /**
  * An RFC 5545 calendar of [CalendarEvent]s: CRLF line ends, lines folded at 75 octets without splitting a UTF-8
@@ -70,9 +69,8 @@ object IcsWriter {
         append(fold(content)).append(CRLF)
     }
 
-    private fun utc(instant: Instant): String = UTC_FORMAT.format(instant)
+    private fun utc(instant: Instant): String = DateTexts.icsUtc(instant)
 
     private const val CRLF = "\r\n"
     private const val MAX_OCTETS = 75
-    private val UTC_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneOffset.UTC)
 }

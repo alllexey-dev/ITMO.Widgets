@@ -41,7 +41,7 @@ class DemoContentTest {
     @Test
     fun `every person named anywhere belongs to the demo people`() = clocks.forEach { time ->
         val today = time.javaToday()
-        val schedule = DemoSchedule.ownDays(today.minusDays(14), today.plusDays(14), today)
+        val schedule = DemoSchedule.ownDays(today.minusDays(14).toKotlinLocalDate(), today.plusDays(14).toKotlinLocalDate(), today.toKotlinLocalDate())
         val semester = DemoRecordbook.programs(today).single().periods.single { it.actual }
         val people = buildList {
             addAll(schedule.flatMap { day -> day.lessons.mapNotNull { it.teacherFio } })
@@ -73,9 +73,9 @@ class DemoContentTest {
         val today = time.javaToday()
         val text = listOf(
             DemoPeople.EVERYONE,
-            DemoSchedule.ownDays(today.minusDays(14), today.plusDays(14), today),
-            DemoPeople.FRIENDS.map { DemoSchedule.userDays(it.isu, today, today.plusDays(6)) },
-            DemoSchedule.changes(today, time.javaNow().toInstant()),
+            DemoSchedule.ownDays(today.minusDays(14).toKotlinLocalDate(), today.plusDays(14).toKotlinLocalDate(), today.toKotlinLocalDate()),
+            DemoPeople.FRIENDS.map { DemoSchedule.userDays(it.isu, today.toKotlinLocalDate(), today.plusDays(6).toKotlinLocalDate()) },
+            DemoSchedule.changes(today.toKotlinLocalDate(), time.now()),
             DemoSport.schedule(time), DemoSport.bookings(time), DemoSport.queueEntries(time), DemoSport.friendsBookings(time),
             DemoSport.score(time), DemoSport.periods(time), DemoSport.filters(), DemoSport.timeSlots(),
             DemoSocial.friends(), DemoSocial.requests(), DemoPeople.EVERYONE.map { DemoSocial.person(it.isu) },
@@ -97,13 +97,13 @@ class DemoContentTest {
         val today = time.javaToday()
         val window = today.minusDays(14)..today.plusDays(14)
         val ahead = today..today.plusDays(14)
-        val schedule = DemoSchedule.ownDays(window.start, window.endInclusive, today)
+        val schedule = DemoSchedule.ownDays(window.start.toKotlinLocalDate(), window.endInclusive.toKotlinLocalDate(), today.toKotlinLocalDate())
         val sport = schedule.filter { day -> day.lessons.any { it.typeId.raw == SPORT } }.map { it.date }
 
-        assertTrue(schedule.all { it.date in window })
+        assertTrue(schedule.all { it.date.toJavaLocalDate() in window })
         assertTrue(schedule.count { it.lessons.isNotEmpty() } >= 16)
-        assertTrue(sport.all { it.toKotlinLocalDate() in DemoSportSlots.annaBookedDates(today.toKotlinLocalDate()) })
-        assertTrue(DemoSchedule.changes(today, time.javaNow().toInstant()).all { change -> listOfNotNull(change.before, change.after).all { it.date.toJavaLocalDate() in ahead } })
+        assertTrue(sport.all { it in DemoSportSlots.annaBookedDates(today.toKotlinLocalDate()) })
+        assertTrue(DemoSchedule.changes(today.toKotlinLocalDate(), time.now()).all { change -> listOfNotNull(change.before, change.after).all { it.date.toJavaLocalDate() in ahead } })
         assertTrue(DemoSport.schedule(time).keys.all { it in ahead })
         assertTrue(DemoSport.bookings(time).all { it.start.academicDate(time) in ahead })
         assertTrue(DemoSport.queueEntries(time).all { it.targetLesson.start.academicDate(time) in ahead })
@@ -139,8 +139,10 @@ class DemoContentTest {
     @Test
     fun `every place is a known ITMO building`() = clocks.forEach { time ->
         val today = time.javaToday()
-        val lessons = DemoSchedule.ownDays(today.minusDays(7), today.plusDays(7), today).flatMap { it.lessons } +
-            DemoPeople.FRIENDS.flatMap { friend -> DemoSchedule.userDays(friend.isu, today, today.plusDays(6)).flatMap { it.lessons } }
+        val lessons = DemoSchedule.ownDays(today.minusDays(7).toKotlinLocalDate(), today.plusDays(7).toKotlinLocalDate(), today.toKotlinLocalDate()).flatMap { it.lessons } +
+            DemoPeople.FRIENDS.flatMap { friend ->
+                DemoSchedule.userDays(friend.isu, today.toKotlinLocalDate(), today.plusDays(6).toKotlinLocalDate()).flatMap { it.lessons }
+            }
         lessons.forEach { lesson ->
             assertNotNull(lesson.building?.raw, buildings.find(lesson.buildingId, lesson.mainBuildingId, lesson.building?.raw))
         }

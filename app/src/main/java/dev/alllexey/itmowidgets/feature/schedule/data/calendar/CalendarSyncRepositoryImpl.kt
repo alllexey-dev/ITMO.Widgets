@@ -10,9 +10,6 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaNow
-import dev.alllexey.itmowidgets.core.time.javaToday
-import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvents
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncPlanner
@@ -21,12 +18,11 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSour
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.SyncedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +34,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.plus
 
 /**
  * The own schedule of today..today+28 in the app's own local calendar «ITMO.Widgets», which the app owns entirely.
@@ -154,8 +154,8 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         writing { leaveGoogleCalendar() }
         val calendarId = writing { usableCalendar() }
             ?: return if (swept) AppResult.Success(Unit) else AppResult.Failure(AppError.Unknown())
-        val today = time.javaToday()
-        val days = schedule.read(today, today.plusDays(WINDOW_DAYS))
+        val today = time.today()
+        val days = schedule.read(today, today.plus(WINDOW_DAYS, DateTimeUnit.DAY))
         return writing {
             val stored = loaded()
             when {
@@ -224,12 +224,12 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         days: List<DaySchedule>,
         today: LocalDate
     ): AppResult<Unit> {
-        val zone = time.javaZone()
-        val now = time.javaNow().toInstant()
+        val zone = time.timeZone
+        val now = time.now()
         val (kept, left) = removeOurs(start, keep = calendarId)
         var stored = start.copy(events = kept, cleanups = withCleanups(start, left))
         persist(stored)
-        val window = today.atStartOfDay(zone).toInstant()..<today.plusDays(WINDOW_DAYS + 1).atStartOfDay(zone).toInstant()
+        val window = today.atStartOfDayIn(zone)..<today.plus(WINDOW_DAYS + 1, DateTimeUnit.DAY).atStartOfDayIn(zone)
         val tracked = stored.events.mapTo(mutableSetOf()) { it.eventId }
         val orphansRemoved = guarded {
             calendars.marked(calendarId, window.start, window.endExclusive)
@@ -291,15 +291,15 @@ class CalendarSyncRepositoryImpl @Inject constructor(
 
     /** Deletes every live tagged event of [calendarId] in the sweep range; the number found, or null on failure. */
     private fun sweep(calendarId: Long): Int? = guardedNow {
-        val from = time.javaNow().toInstant().minus(SWEEP_BACK)
-        calendars.marked(calendarId, from, from.plus(SWEEP_BACK).plus(SWEEP_AHEAD))
+        val from = time.now() - SWEEP_BACK
+        calendars.marked(calendarId, from, from + SWEEP_BACK + SWEEP_AHEAD)
             .onEach { calendars.delete(it.eventId) }
             .size
     }
 
     /** [stored]'s pending sweeps plus [left], each due for [CLEANUP_PERIOD] from now. */
     private fun withCleanups(stored: StoredCalendarSync, left: List<Long>): List<StoredCleanup> {
-        val until = time.javaNow().toInstant().plus(CLEANUP_PERIOD).toEpochMilli()
+        val until = (time.now() + CLEANUP_PERIOD).toEpochMilliseconds()
         val pending = stored.cleanups.orEmpty().filter { it.calendarId !in left }
         return pending + left.map { StoredCleanup(it, until) }
     }
@@ -313,15 +313,15 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         val stored = loaded()
         val pending = stored.cleanups.orEmpty()
         if (pending.isEmpty() || guarded { calendars.hasAccess() } != true) return true
-        val now = time.javaNow().toInstant()
+        val now = time.now()
         var failed = false
         val next = pending.mapNotNull { cleanup ->
             val inUse = stored.enabled && stored.calendarId == cleanup.calendarId
             if (inUse || guardedNow { calendars.exists(cleanup.calendarId) } != true) return@mapNotNull null
             when (val found = sweep(cleanup.calendarId)) {
                 null -> cleanup.also { failed = true }
-                0 -> cleanup.takeIf { now.toEpochMilli() < it.until }
-                else -> cleanup.copy(until = now.plus(CLEANUP_PERIOD).toEpochMilli())
+                0 -> cleanup.takeIf { now.toEpochMilliseconds() < it.until }
+                else -> cleanup.copy(until = (now + CLEANUP_PERIOD).toEpochMilliseconds())
             }
         }
         if (next != pending) persist(stored.copy(cleanups = next))
@@ -373,11 +373,11 @@ class CalendarSyncRepositoryImpl @Inject constructor(
 
     private companion object {
         /** The window is today and the next 28 days. */
-        const val WINDOW_DAYS = 28L
+        const val WINDOW_DAYS = 28
         /** The sweep of a calendar the app leaves covers what a sync could have written and kept. */
         val SWEEP_BACK: Duration = CalendarSyncPlanner.RETENTION
-        val SWEEP_AHEAD: Duration = Duration.ofDays(400)
+        val SWEEP_AHEAD: Duration = 400.days
         /** How long a left calendar must stay clean; Google's sync writes undone deletions back within it. */
-        val CLEANUP_PERIOD: Duration = Duration.ofDays(3)
+        val CLEANUP_PERIOD: Duration = 3.days
     }
 }

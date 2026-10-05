@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.ui
 
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 /**
  * States follow the original day/official-lesson indices, not lesson IDs: an
@@ -18,7 +18,7 @@ fun resolveScheduleTimeline(
     var nextStart: LocalDateTime? = null
     days.forEachIndexed { dayIndex, day ->
         day.officialDay?.lessons.orEmpty().forEachIndexed { lessonIndex, lesson ->
-            val start = lesson.start.atDate(day.date)
+            val start = LocalDateTime(day.date, lesson.start)
             val previousNextStart = nextStart
             if (start > now && (previousNextStart == null || start < previousNextStart)) {
                 nextDayIndex = dayIndex
@@ -31,8 +31,8 @@ fun resolveScheduleTimeline(
     return days.mapIndexed { dayIndex, day ->
         day.officialDay?.lessons.orEmpty().mapIndexed { lessonIndex, lesson ->
             when {
-                now >= lesson.end.atDate(day.date) -> ScheduleItem.LessonState.COMPLETED
-                now >= lesson.start.atDate(day.date) -> ScheduleItem.LessonState.CURRENT
+                now >= LocalDateTime(day.date, lesson.end) -> ScheduleItem.LessonState.COMPLETED
+                now >= LocalDateTime(day.date, lesson.start) -> ScheduleItem.LessonState.CURRENT
                 dayIndex == nextDayIndex && lessonIndex == nextLessonIndex -> ScheduleItem.LessonState.NEXT
                 else -> ScheduleItem.LessonState.UPCOMING
             }

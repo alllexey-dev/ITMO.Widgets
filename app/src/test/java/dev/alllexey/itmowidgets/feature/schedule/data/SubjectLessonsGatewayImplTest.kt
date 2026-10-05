@@ -8,12 +8,14 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
-import java.time.LocalDate
-import java.time.LocalTime
+import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalTime
 import org.junit.Assert.assertEquals
@@ -23,12 +25,12 @@ import org.junit.Test
 class SubjectLessonsGatewayImplTest {
     private val repository = FakeScheduleRepository()
     private val gateway = SubjectLessonsGatewayImpl(repository)
-    private val monday = LocalDate.of(2026, 9, 7)
+    private val monday = LocalDate(2026, 9, 7)
 
     @Test
     fun `academic lessons come out flat, dated and ordered, without sport or bookings`() = runTest {
         repository.days.value = listOf(
-            DaySchedule(2, 1, monday.plusDays(1), null, listOf(lesson(3, "13:30", subjectId = 20, flowTypeId = 2))),
+            DaySchedule(2, 1, monday.plus(1, DateTimeUnit.DAY), null, listOf(lesson(3, "13:30", subjectId = 20, flowTypeId = 2))),
             DaySchedule(1, 1, monday, null, listOf(
                 lesson(2, "11:30", subjectId = 10, flowTypeId = 2),
                 lesson(9, "16:00", subjectId = 99, flowTypeId = 3, typeId = 11),
@@ -37,10 +39,10 @@ class SubjectLessonsGatewayImplTest {
             ))
         )
 
-        val lessons = gateway.observeOwnLessons(monday.toKotlinLocalDate(), monday.plusDays(7).toKotlinLocalDate()).first()
+        val lessons = gateway.observeOwnLessons(monday, monday.plus(7, DateTimeUnit.DAY)).first()
 
         assertEquals(listOf(1L, 2L, 3L), lessons.map { it.pairId })
-        assertEquals(listOf(monday, monday, monday.plusDays(1)), lessons.map { it.date.toJavaLocalDate() })
+        assertEquals(listOf(monday, monday, monday.plus(1, DateTimeUnit.DAY)), lessons.map { it.date })
         assertEquals("1506", lessons.first().room)
         assertEquals("Кронверкский проспект, 49", lessons.first().building)
         assertNull(repository.observed.single().userIsu)
@@ -61,8 +63,8 @@ class SubjectLessonsGatewayImplTest {
     }
 
     private fun lessonSummary(subjectId: Long, name: String, flowId: Long) = SubjectLesson(
-        pairId = flowId, date = monday.toKotlinLocalDate(), start = LocalTime.of(9, 30).toKotlinLocalTime(),
-        end = LocalTime.of(11, 0).toKotlinLocalTime(), typeId = 1, type = "Лекция",
+        pairId = flowId, date = monday, start = LocalTime(9, 30),
+        end = LocalTime(11, 0), typeId = 1, type = "Лекция",
         subjectId = subjectId, subjectName = name, flowId = flowId, teacherIsu = null, teacherFio = null,
         room = null, building = null, formatId = 1
     )

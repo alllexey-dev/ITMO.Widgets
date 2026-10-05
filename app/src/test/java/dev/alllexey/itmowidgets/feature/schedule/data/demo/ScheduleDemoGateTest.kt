@@ -11,11 +11,14 @@ import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.unreachable
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSourceImpl
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -35,7 +38,7 @@ class ScheduleDemoGateTest {
     private val backend = unreachable<ItmoWidgetsApi>()
     // The stored opt-in is on: the demo alone must keep every request local.
     private val gate = FakeBackendGate(optedIn = true, demo)
-    private val week = time.javaToday().minusDays(time.javaToday().dayOfWeek.value - 1L).let { it..it.plusDays(6) }
+    private val week = time.today().minus(time.today().dayOfWeek.isoDayNumber - 1L, DateTimeUnit.DAY).let { it..it.plus(6, DateTimeUnit.DAY) }
 
     @Test
     fun `the own week has lessons, the volleyball and no Sunday classes`() = runTest {
@@ -66,7 +69,7 @@ class ScheduleDemoGateTest {
     fun `the export source reads the demo schedule`() = runTest {
         val source = MyItmoOwnScheduleSource(myItmo, time, demo, dispatchers)
 
-        val days = source.read(week.start, week.start.plusDays(40))
+        val days = source.read(week.start, week.start.plus(40, DateTimeUnit.DAY))
 
         assertEquals(41, days.size)
         assertTrue(days.sumOf { it.lessons.size } > 20)

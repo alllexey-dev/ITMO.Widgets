@@ -41,13 +41,17 @@ import dev.alllexey.itmowidgets.testing.toScheduleLifecycle
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.atTime
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalTime
 import org.junit.After
@@ -102,7 +106,7 @@ class LessonDetailsVisualTest {
                     activity.sheet().showChange(null)
                     assertEquals(View.GONE, root.findViewById<View>(R.id.changes_card).visibility)
                     activity.sheet().showChange(change(ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.TIME, ScheduleChangeField.PLACE),
-                        after = slot(LocalTime.of(10, 0), room = "2202", building = "ул. Ломоносова, 9")))
+                        after = slot(LocalTime(10, 0), room = "2202", building = "ул. Ломоносова, 9")))
                 }
                 settle()
                 scenario.onActivity { activity ->
@@ -122,7 +126,7 @@ class LessonDetailsVisualTest {
                     val root = activity.sheet().requireView()
                     // One changed field: only its "было → стало" line, no second "Формат: Дистанционный".
                     activity.sheet().showChange(change(ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.FORMAT),
-                        after = slot(LocalTime.of(8, 20), formatId = 3, format = "Дистанционный")))
+                        after = slot(LocalTime(8, 20), formatId = 3, format = "Дистанционный")))
                     assertEquals(listOf("Формат: Очный → Дистанционный"), root.changeLines())
                     activity.sheet().showChange(change(ScheduleChangeKind.ADDED, emptySet(), before = null))
                     assertEquals(listOf("Добавлена: пн, 7 сентября, 08:20"), root.changeLines())
@@ -243,7 +247,7 @@ class LessonDetailsVisualTest {
 
     @Test
     fun aLinkedLessonShowsTheHostAndTheCardMarksIt() {
-        val date = LocalDate.of(2026, 9, 7)
+        val date = LocalDate(2026, 9, 7)
         // An online lesson: no room, no building, MyITMO's "virtual rooms" id that the directory does not know.
         val linked = lesson().copy(pairId = 2, zoomUrl = "https://bbb.itmo.ru/b/abc", zoomPassword = "1234",
             room = null, building = null, buildingId = null, mainBuildingId = 319)
@@ -413,7 +417,7 @@ class LessonDetailsVisualTest {
 
     @Test
     fun detailsArgsCarryEveryFieldOfTheLesson() {
-        val args = lesson().toDetailsArgs(LocalDate.of(2026, 9, 7))
+        val args = lesson().toDetailsArgs(LocalDate(2026, 9, 7))
         assertEquals(1L, args.pairId)
         assertEquals("2026-09-07", args.date)
         assertEquals("08:20", args.start)
@@ -426,8 +430,8 @@ class LessonDetailsVisualTest {
         lessons: List<Lesson> = listOf(lesson()),
         block: (ActivityScenario<ScheduleLifecycleTestActivity>) -> Unit
     ) {
-        val date = LocalDate.of(2026, 9, 7)
-        ScheduleLifecycleTestActivity.days = MutableStateFlow(listOf(DaySchedule(date.dayOfWeek.value, 1, date, null, lessons)))
+        val date = LocalDate(2026, 9, 7)
+        ScheduleLifecycleTestActivity.days = MutableStateFlow(listOf(DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, null, lessons)))
         ScheduleLifecycleTestActivity.friendDays = MutableStateFlow(emptyList())
         ScheduleLifecycleTestActivity.refreshOutcome = { AppResult.Success(Unit) }
         ScheduleLifecycleTestActivity.clearOutcome = {}
@@ -464,8 +468,8 @@ class LessonDetailsVisualTest {
     private fun change(
         kind: ScheduleChangeKind,
         fields: Set<ScheduleChangeField>,
-        before: LessonSlot? = slot(LocalTime.of(8, 20)),
-        after: LessonSlot? = slot(LocalTime.of(8, 20), room = "2202")
+        before: LessonSlot? = slot(LocalTime(8, 20)),
+        after: LessonSlot? = slot(LocalTime(8, 20), room = "2202")
     ) = ScheduleChange(
         id = "visual", detectedAt = Instant.parse("2026-09-07T06:00:00Z"), kind = kind, fields = fields,
         subjectName = lesson().subjectName, typeId = 1, flowName = "ФИЗ ПИИКТ 3.2", before = before, after = after,
@@ -479,8 +483,8 @@ class LessonDetailsVisualTest {
         formatId: Int = 1,
         format: String = "Очный"
     ) = LessonSlot(
-        pairId = 1, date = LocalDate.of(2026, 9, 7).toKotlinLocalDate(), start = start.toKotlinLocalTime(),
-        end = start.plusMinutes(90).toKotlinLocalTime(), room = room,
+        pairId = 1, date = LocalDate(2026, 9, 7), start = start,
+        end = start.plusMinutes(90), room = room,
         building = building, formatId = formatId, format = format, teacherIsu = null,
         teacherName = "Тестовый преподаватель с длинным именем"
     )
@@ -531,18 +535,18 @@ class LessonDetailsVisualTest {
     private fun settle() = TestUi.settle(400)
 
     private fun pendingBooking(): PendingSportBooking {
-        val start = LocalDate.of(2026, 9, 7).atTime(16, 0).atOffset(java.time.ZoneOffset.ofHours(3))
+        val start = LocalDate(2026, 9, 7).atTime(16, 0).toInstant(UtcOffset(hours = 3))
         return PendingSportBooking(
             queueId = 1, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 100,
-            sectionName = "Современные танцы", start = start.toInstant().toKotlinInstant(),
-            end = start.plusMinutes(90).toInstant().toKotlinInstant(),
+            sectionName = "Современные танцы", start = start,
+            end = start + 90.minutes,
             teacherFio = SettingsNavigationTestActivity.LONG_NAME, roomName = "Кронверкский проспект, 49, зал 1",
             isPrediction = true, teacherIsu = 300002
         )
     }
 
     private fun lesson() = Lesson(
-        pairId = 1, start = LocalTime.of(8, 20), end = LocalTime.of(9, 50), type = "Лекция", typeId = Lesson.TypeId(1),
+        pairId = 1, start = LocalTime(8, 20), end = LocalTime(9, 50), type = "Лекция", typeId = Lesson.TypeId(1),
         note = "Организационная информация о занятии", subjectName = "Математический анализ (продвинутый уровень)",
         subjectId = 1, groupName = "ФИЗ ПИИКТ 3.2", flowId = 1, flowTypeId = 2, teacherIsu = null,
         teacherFio = "Тестовый преподаватель с длинным именем", room = Room("1506"),
