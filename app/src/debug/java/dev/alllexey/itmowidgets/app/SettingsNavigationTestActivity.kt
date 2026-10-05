@@ -304,7 +304,20 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
                 val factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                        SettingsViewModel::class.java -> SettingsViewModel(repository, Services, Onboarding, refresh, AppVersion("test"), MemoryScheduleChangeTracking, MemoryMarkTracking, MemoryBackgroundWork, MemoryQuickSettingsTile, calendarSync, NoDiagnostics, SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name)))
+                        SettingsViewModel::class.java -> SettingsViewModel(
+                            SettingsPages(
+                                RootPageProvider(),
+                                ServicesPageProvider(repository, Services, refresh),
+                                WidgetsPageProvider(repository, MemoryQuickSettingsTile),
+                                HomePageProvider(repository),
+                                SchedulePageProvider(repository, MemoryScheduleChangeTracking, calendarSync),
+                                RecordbookPageProvider(MemoryMarkTracking),
+                                SportPageProvider(repository),
+                                MaintenancePageProvider(refresh, Onboarding, AppVersion("test"), NoDiagnostics)
+                            ),
+                            repository, refresh, MemoryBackgroundWork,
+                            SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
+                        )
                         CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(customSpoiler)
                         else -> error("Unexpected ViewModel")
                     } as T
