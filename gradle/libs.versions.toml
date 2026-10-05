@@ -44,6 +44,8 @@ robolectric = "4.17"
 roborazzi = "1.76.0"
 composablePreviewScanner = "0.9.3"
 turbine = "1.2.1"
+# Advisory buildHealth in android-nightly.yml only (TC-08).
+dependencyAnalysis = "3.19.2"
 
 itmoWidgetsCore = "1.7.0"
 myItmoApi = "1.8.2"
@@ -217,3 +219,5 @@ androidx-viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref =
 # id without a version, or Gradle fails with "already on the classpath with an unknown version".
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
 koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koinCompiler" }
+# Not in any plugins {} block: the root build.gradle.kts loads it only with -Pitmo.buildHealth=true (TC-08).
+dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependencyAnalysis" }

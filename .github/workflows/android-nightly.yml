@@ -1,0 +1,62 @@
+# Scheduled and advisory jobs; never a required check. Kept apart from android-ci.yml so push and PR runs
+# never carry skipped check runs.
+name: android-nightly
+
+on:
+  schedule:
+    - cron: "23 1 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: android-nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Advisory (L04 TC-08): the dependency-analysis report of every module. The plugin loads only with
+  # -Pitmo.buildHealth=true, so a failure here never reaches verify.sh or android-ci.yml.
+  build-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+          cache-read-only: true
+
+      - name: buildHealth
+        env:
+          CI: "true"
+        run: scripts/verify.sh run -- -Pitmo.buildHealth=true buildHealth
+
+      - name: Report summary
+        if: always()
+        run: |
+          report=build/reports/dependency-analysis/build-health-report.txt
+          [ -f "$report" ] || exit 0
+          {
+            echo '## buildHealth'
+            echo '```'
+            cat "$report"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: build-health-report
+          path: build/reports/dependency-analysis/
+          if-no-files-found: ignore
+          retention-days: 14
