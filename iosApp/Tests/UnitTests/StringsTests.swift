@@ -101,7 +101,9 @@ final class StringsTests: XCTestCase {
 
     func testEverySharedIconHasASymbol() {
         for icon in AppIcon.entries {
-            XCTAssertNotNil(UIImage(systemName: icon.symbol.systemName), icon.id)
+            let symbol = icon.symbol
+            let image = symbol.isCustom ? UIImage(named: symbol.systemName) : UIImage(systemName: symbol.systemName)
+            XCTAssertNotNil(image, icon.id)
         }
     }
 
