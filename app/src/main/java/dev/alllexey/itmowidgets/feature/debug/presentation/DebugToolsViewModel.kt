@@ -8,45 +8,22 @@ import dev.alllexey.itmowidgets.core.debug.DebugRefreshTokenController
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
-import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
-import dev.alllexey.itmowidgets.core.time.javaToday
-import java.time.LocalDate
+import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import javax.inject.Inject
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinLocalDate
-
-sealed interface DebugToolsUiState {
-    data class Content(
-        val effectiveDate: LocalDate,
-        val dateOverride: LocalDate?,
-        val scoreOverride: SportScoreOverride?,
-        val lessonTemplatesEnabled: Boolean,
-        val refreshTokenConfigured: Boolean,
-        val refreshTokenUpdateInProgress: Boolean,
-        val customServicesEnabled: Boolean
-    ) : DebugToolsUiState
-}
-
-sealed interface DebugToolsEvent {
-    data object RecreateActivity : DebugToolsEvent
-    data object RefreshTokenUpdated : DebugToolsEvent
-    data class RefreshTokenUpdateFailed(val error: AppError) : DebugToolsEvent
-}
+import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 class DebugToolsViewModel @Inject constructor(
@@ -65,8 +42,8 @@ class DebugToolsViewModel @Inject constructor(
         MutableStateFlow<DebugToolsUiState>(readState(customServicesEnabled = false))
     val uiState: StateFlow<DebugToolsUiState> = mutableUiState.asStateFlow()
 
-    private val eventChannel = Channel<DebugToolsEvent>(Channel.BUFFERED)
-    val events: Flow<DebugToolsEvent> = eventChannel.receiveAsFlow()
+    private val queue = EventQueue<DebugToolsEvent>()
+    val events: Flow<DebugToolsEvent> = queue.events
 
     init {
         customServicesRepository.observeEnabled()
@@ -92,7 +69,7 @@ class DebugToolsViewModel @Inject constructor(
     fun probeBarsSession() = barsSessionProbe.start()
 
     fun setDateOverride(date: LocalDate?) {
-        timeOverrideController.setOverrideDate(date?.toKotlinLocalDate())
+        timeOverrideController.setOverrideDate(date)
         publishAndRecreate()
     }
 
@@ -122,11 +99,11 @@ class DebugToolsViewModel @Inject constructor(
             when (val result = refreshTokenController.replaceRefreshToken(refreshToken)) {
                 is AppResult.Success -> {
                     mutableUiState.value = readState()
-                    eventChannel.send(DebugToolsEvent.RefreshTokenUpdated)
+                    queue.send(DebugToolsEvent.RefreshTokenUpdated)
                 }
                 is AppResult.Failure -> {
                     mutableUiState.value = readState()
-                    eventChannel.send(DebugToolsEvent.RefreshTokenUpdateFailed(result.error))
+                    queue.send(DebugToolsEvent.RefreshTokenUpdateFailed(result.error))
                 }
             }
         }
@@ -134,7 +111,7 @@ class DebugToolsViewModel @Inject constructor(
 
     private fun publishAndRecreate() {
         mutableUiState.value = readState()
-        eventChannel.trySend(DebugToolsEvent.RecreateActivity)
+        viewModelScope.launch { queue.send(DebugToolsEvent.RecreateActivity) }
     }
 
     private fun currentState(): DebugToolsUiState.Content = mutableUiState.value as DebugToolsUiState.Content
@@ -143,8 +120,8 @@ class DebugToolsViewModel @Inject constructor(
         customServicesEnabled: Boolean = currentState().customServicesEnabled
     ): DebugToolsUiState.Content {
         return DebugToolsUiState.Content(
-            effectiveDate = timeProvider.javaToday(),
-            dateOverride = timeOverrideController.getOverrideDate()?.toJavaLocalDate(),
+            effectiveDate = timeProvider.today(),
+            dateOverride = timeOverrideController.getOverrideDate(),
             scoreOverride = sportScoreOverrideController.getOverride(),
             lessonTemplatesEnabled = sportLessonTemplateController.isEnabled(),
             refreshTokenConfigured = refreshTokenController.hasRefreshToken(),

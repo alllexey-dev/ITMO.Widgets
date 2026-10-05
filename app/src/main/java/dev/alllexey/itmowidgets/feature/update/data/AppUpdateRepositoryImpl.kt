@@ -6,14 +6,13 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
-import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateReminder
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
-import java.time.Clock
-import java.time.Instant
 import javax.inject.Inject
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
@@ -29,7 +28,7 @@ class AppUpdateRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
     private val utilityStorage: UtilityStorage,
     private val installedVersion: AppVersionName,
-    @param:WallClock private val clock: Clock,
+    private val clock: Clock,
     private val diagnostics: AppDiagnostics,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
@@ -52,11 +51,11 @@ class AppUpdateRepositoryImpl @Inject constructor(
 
     override suspend fun reminder(): AppUpdateReminder = AppUpdateReminder(
         skippedVersion = AppVersionName(utilityStorage.getSkippedVersion()),
-        notifiedAt = Instant.ofEpochMilli(utilityStorage.getVersionNotificationTimestamp())
+        notifiedAt = Instant.fromEpochMilliseconds(utilityStorage.getVersionNotificationTimestamp())
     )
 
     override suspend fun markNotified() {
-        utilityStorage.setVersionNotificationTimestamp(clock.millis())
+        utilityStorage.setVersionNotificationTimestamp(clock.now().toEpochMilliseconds())
     }
 
     override suspend fun skip(version: AppVersionName) {

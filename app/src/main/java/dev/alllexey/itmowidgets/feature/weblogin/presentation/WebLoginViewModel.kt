@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.toUiText
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
@@ -22,39 +23,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
-
-sealed interface WebLoginUiState {
-    /** Typing or scanning; [error] says why the last code was not taken. */
-    data class Input(val code: String = "", val error: UiText? = null) : WebLoginUiState {
-        val canSubmit: Boolean get() = code.isNotBlank()
-    }
-
-    data class Checking(val code: String) : WebLoginUiState
-
-    /** The browser behind the code, waiting for «Войти». */
-    data class Confirm(
-        val code: String,
-        val preview: WebLoginPreview,
-        val browser: UiText,
-        val requestedAt: UiText,
-        val approving: Boolean = false,
-    ) : WebLoginUiState
-
-    data object Done : WebLoginUiState
-
-    /** [code] is what a retry checks again; empty when the code itself is gone. */
-    data class Error(val text: UiText, val code: String) : WebLoginUiState
-}
 
 /** Approves a browser's sign-in to the web version: code from the QR or typed, a look at the browser, then «Войти». */
 @HiltViewModel
 class WebLoginViewModel @Inject constructor(
     private val handle: SavedStateHandle,
     private val repository: WebLoginRepository,
-    private val zone: TimeZone,
+    private val time: AcademicTimeProvider,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<WebLoginUiState>(WebLoginUiState.Input(handle[KEY_CODE] ?: ""))
     val uiState: StateFlow<WebLoginUiState> = _uiState.asStateFlow()
@@ -143,9 +120,10 @@ class WebLoginViewModel @Inject constructor(
     }
 
     private fun confirm(code: String, preview: WebLoginPreview): WebLoginUiState.Confirm {
-        val time = preview.createdAt.toLocalDateTime(zone).time.format(DateTexts.TIME)
+        // The academic zone like every time the app shows; a debug date override does not move a real request.
+        val requestedAt = preview.createdAt.toLocalDateTime(time.timeZone).time.format(DateTexts.TIME)
         return WebLoginUiState.Confirm(code, preview, browserText(preview.userAgent),
-            UiText.Resource(R.string.web_login_requested_at, listOf(time)))
+            UiText.Resource(R.string.web_login_requested_at, listOf(requestedAt)))
     }
 
     /** A used or expired sign-in cannot be retried with the same code. */

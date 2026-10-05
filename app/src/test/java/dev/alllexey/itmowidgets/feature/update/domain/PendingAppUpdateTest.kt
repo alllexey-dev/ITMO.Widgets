@@ -1,15 +1,14 @@
 package dev.alllexey.itmowidgets.feature.update.domain
 
 import dev.alllexey.itmowidgets.feature.update.FakeAppUpdateRepository
-import java.time.Clock
-import java.time.Duration
-import java.time.Instant
-import java.time.ZoneOffset
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 
 class PendingAppUpdateTest {
 
@@ -37,12 +36,12 @@ class PendingAppUpdateTest {
     fun `waits a day between offers of the same release`() = runTest {
         val repository = FakeAppUpdateRepository(
             update = update(),
-            reminderState = reminder(notifiedAt = now.minus(Duration.ofHours(23)))
+            reminderState = reminder(notifiedAt = now - 23.hours)
         )
 
         assertNull(PendingAppUpdate(repository, clock())())
 
-        repository.reminderState = reminder(notifiedAt = now.minus(Duration.ofHours(25)))
+        repository.reminderState = reminder(notifiedAt = now - 25.hours)
         assertNotNull(PendingAppUpdate(repository, clock())())
     }
 
@@ -70,7 +69,9 @@ class PendingAppUpdateTest {
         assertEquals(1, repository.notifications)
     }
 
-    private fun clock(): Clock = Clock.fixed(now, ZoneOffset.UTC)
+    private fun clock(): Clock = object : Clock {
+        override fun now(): Instant = now
+    }
 
     private fun update(
         latest: String = "2.2",
@@ -84,6 +85,10 @@ class PendingAppUpdateTest {
 
     private fun reminder(
         skipped: String = "2.1",
-        notifiedAt: Instant = Instant.EPOCH
+        notifiedAt: Instant = NEVER
     ) = AppUpdateReminder(AppVersionName(skipped), notifiedAt)
+
+    private companion object {
+        val NEVER: Instant = Instant.fromEpochMilliseconds(0)
+    }
 }

@@ -13,9 +13,6 @@ import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import java.io.IOException
 import java.lang.reflect.Proxy
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,6 +24,8 @@ import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class AppUpdateRepositoryImplTest {
 
@@ -82,7 +81,7 @@ class AppUpdateRepositoryImplTest {
     fun `remembers when the offer was shown and which release was skipped`() = runTest {
         val fixture = createRepository()
 
-        assertEquals(Instant.EPOCH, fixture.repository.reminder().notifiedAt)
+        assertEquals(Instant.fromEpochMilliseconds(0), fixture.repository.reminder().notifiedAt)
         // Nothing is skipped yet: the installed build is its own floor.
         assertEquals(AppVersionName("2.1"), fixture.repository.reminder().skippedVersion)
 
@@ -106,7 +105,9 @@ class AppUpdateRepositoryImplTest {
                 backend = FakeBackendGate(customServicesEnabled),
                 utilityStorage = storage,
                 installedVersion = AppVersionName(INSTALLED_VERSION),
-                clock = Clock.fixed(now, ZoneOffset.UTC),
+                clock = object : Clock {
+                    override fun now(): Instant = now
+                },
                 diagnostics = RecordingDiagnostics(),
                 demo = noDemo(),
                 dispatchers = dispatchers

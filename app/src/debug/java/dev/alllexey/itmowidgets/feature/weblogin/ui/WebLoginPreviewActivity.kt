@@ -19,11 +19,15 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -60,7 +64,7 @@ class WebLoginPreviewActivity : AppCompatActivity() {
             val factory = object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T = WebLoginViewModel(SavedStateHandle(), repository,
-                    TimeZone.of("Europe/Moscow")) as T
+                    FixedTime) as T
             }
             ViewModelProvider(fragment, factory)[WebLoginViewModel::class.java]
         }
@@ -70,6 +74,13 @@ class WebLoginPreviewActivity : AppCompatActivity() {
             val window = (fragment as? DialogFragment)?.dialog?.window ?: return
             window.setLayout((width * fragment.resources.displayMetrics.density).toInt(), ViewGroup.LayoutParams.MATCH_PARENT)
         }
+    }
+
+    /** 12:05 Moscow time on the day of [SYNTHETIC_PREVIEW]; the sheet reads only the zone. */
+    private object FixedTime : AcademicTimeProvider {
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+        override fun today() = LocalDate(2026, 9, 24)
+        override fun now() = today().atTime(12, 5).toInstant(timeZone)
     }
 
     /** Synthetic answers: codes in [previews] exist, everything else is not found. */

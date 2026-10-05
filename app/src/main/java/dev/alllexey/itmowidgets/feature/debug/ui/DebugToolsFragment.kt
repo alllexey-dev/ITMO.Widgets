@@ -24,11 +24,13 @@ import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.feature.debug.presentation.DebugToolsEvent
 import dev.alllexey.itmowidgets.feature.debug.presentation.DebugToolsUiState
 import dev.alllexey.itmowidgets.feature.debug.presentation.DebugToolsViewModel
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
+import kotlinx.datetime.toJavaLocalDate
 
 @AndroidEntryPoint
 @DebugOnly
@@ -88,12 +90,12 @@ class DebugToolsFragment : Fragment() {
             requireContext(),
             { _, year, month, dayOfMonth ->
                 viewModel.setDateOverride(
-                    LocalDate.of(year, month + 1, dayOfMonth)
+                    LocalDate(year, month + 1, dayOfMonth)
                 )
             },
             initialDate.year,
-            initialDate.monthValue - 1,
-            initialDate.dayOfMonth
+            initialDate.month.number - 1,
+            initialDate.day
         ).show()
     }
 
@@ -205,7 +207,7 @@ class DebugToolsFragment : Fragment() {
         } else {
             getString(
                 R.string.debug_academic_time_value,
-                overrideDate.format(
+                overrideDate.toJavaLocalDate().format(
                     DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
                 )
             )

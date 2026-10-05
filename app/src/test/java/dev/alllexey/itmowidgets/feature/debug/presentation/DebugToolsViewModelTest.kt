@@ -13,13 +13,12 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.time.javaToday
-import java.time.LocalDate
 import kotlinx.coroutines.async
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -81,7 +80,7 @@ class DebugToolsViewModelTest {
     @Test
     fun `publishes debug values through state`() {
         val viewModel = createViewModel()
-        val date = LocalDate.of(2026, 2, 1)
+        val date = LocalDate(2026, 2, 1)
 
         viewModel.setDateOverride(date)
         viewModel.setScoreOverride(attendances = 120, bonus = 10)
@@ -89,7 +88,7 @@ class DebugToolsViewModelTest {
 
         assertEquals(
             DebugToolsUiState.Content(
-                effectiveDate = FixedTimeProvider.javaToday(),
+                effectiveDate = FixedTimeProvider.today(),
                 dateOverride = date,
                 scoreOverride = SportScoreOverride(120, 10),
                 lessonTemplatesEnabled = true,
@@ -144,6 +143,17 @@ class DebugToolsViewModelTest {
     }
 
     @Test
+    fun `a recreation requested while nobody listens reaches the next collector`() =
+        runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.setLessonTemplatesEnabled(true)
+        advanceUntilIdle()
+
+        assertEquals(DebugToolsEvent.RecreateActivity, viewModel.events.first())
+    }
+
+    @Test
     fun `replaces refresh token without exposing it in state`() =
         runTest(mainDispatcherRule.dispatcher) {
         val viewModel = createViewModel()
@@ -160,14 +170,14 @@ class DebugToolsViewModelTest {
         )
     }
 
-    private object FixedTimeProvider : AcademicTimeProvider by FixedAcademicTime(LocalDate.of(2026, 7, 24))
+    private object FixedTimeProvider : AcademicTimeProvider by FixedAcademicTime(java.time.LocalDate.of(2026, 7, 24))
 
     private class FakeTimeOverrideController : AcademicTimeOverrideController {
-        private var value: kotlinx.datetime.LocalDate? = null
+        private var value: LocalDate? = null
 
-        override fun getOverrideDate(): kotlinx.datetime.LocalDate? = value
+        override fun getOverrideDate(): LocalDate? = value
 
-        override fun setOverrideDate(date: kotlinx.datetime.LocalDate?) {
+        override fun setOverrideDate(date: LocalDate?) {
             value = date
         }
     }

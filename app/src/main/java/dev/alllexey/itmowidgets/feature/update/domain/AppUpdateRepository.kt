@@ -1,12 +1,12 @@
 package dev.alllexey.itmowidgets.feature.update.domain
 
-import java.time.Instant
+import kotlin.time.Instant
 
 /** What the user already decided about update offers. */
 data class AppUpdateReminder(
     /** Offers up to this version stay silent; defaults to the installed build. */
     val skippedVersion: AppVersionName,
-    /** When the last offer was shown. [Instant.EPOCH] means "never". */
+    /** When the last offer was shown. The epoch (`Instant.fromEpochMilliseconds(0)`) means "never". */
     val notifiedAt: Instant
 )
 
