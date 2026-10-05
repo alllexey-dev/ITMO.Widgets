@@ -1,0 +1,405 @@
+{
+    "schemaVersion": 1,
+    "source": "app",
+    "generatedBy": "shared/designsystem exportDesignTokens; do not edit",
+    "color": {
+        "scheme": {
+            "light": {
+                "primary": "#6750A4",
+                "onPrimary": "#FFFFFF",
+                "primaryContainer": "#EADDFF",
+                "onPrimaryContainer": "#21005D",
+                "inversePrimary": "#D0BCFF",
+                "secondary": "#625B71",
+                "onSecondary": "#FFFFFF",
+                "secondaryContainer": "#E8DEF8",
+                "onSecondaryContainer": "#1D192B",
+                "tertiary": "#7D5260",
+                "onTertiary": "#FFFFFF",
+                "tertiaryContainer": "#FFD8E4",
+                "onTertiaryContainer": "#31111D",
+                "background": "#FEF7FF",
+                "onBackground": "#1D1B20",
+                "surface": "#FEF7FF",
+                "onSurface": "#1D1B20",
+                "surfaceVariant": "#E7E0EC",
+                "onSurfaceVariant": "#49454F",
+                "surfaceTint": "#6750A4",
+                "inverseSurface": "#322F35",
+                "inverseOnSurface": "#F5EFF7",
+                "error": "#B3261E",
+                "onError": "#FFFFFF",
+                "errorContainer": "#F9DEDC",
+                "onErrorContainer": "#410E0B",
+                "outline": "#79747E",
+                "outlineVariant": "#CAC4D0",
+                "scrim": "#000000",
+                "surfaceBright": "#FEF7FF",
+                "surfaceDim": "#DED8E1",
+                "surfaceContainerLowest": "#FFFFFF",
+                "surfaceContainerLow": "#F7F2FA",
+                "surfaceContainer": "#F3EDF7",
+                "surfaceContainerHigh": "#ECE6F0",
+                "surfaceContainerHighest": "#E6E0E9",
+                "primaryFixed": "#EADDFF",
+                "primaryFixedDim": "#D0BCFF",
+                "onPrimaryFixed": "#21005D",
+                "onPrimaryFixedVariant": "#4F378B",
+                "secondaryFixed": "#E8DEF8",
+                "secondaryFixedDim": "#CCC2DC",
+                "onSecondaryFixed": "#1D192B",
+                "onSecondaryFixedVariant": "#4A4458",
+                "tertiaryFixed": "#FFD8E4",
+                "tertiaryFixedDim": "#EFB8C8",
+                "onTertiaryFixed": "#31111D",
+                "onTertiaryFixedVariant": "#633B48"
+            },
+            "dark": {
+                "primary": "#D0BCFF",
+                "onPrimary": "#381E72",
+                "primaryContainer": "#4F378B",
+                "onPrimaryContainer": "#EADDFF",
+                "inversePrimary": "#6750A4",
+                "secondary": "#CCC2DC",
+                "onSecondary": "#332D41",
+                "secondaryContainer": "#4A4458",
+                "onSecondaryContainer": "#E8DEF8",
+                "tertiary": "#EFB8C8",
+                "onTertiary": "#492532",
+                "tertiaryContainer": "#633B48",
+                "onTertiaryContainer": "#FFD8E4",
+                "background": "#141218",
+                "onBackground": "#E6E0E9",
+                "surface": "#141218",
+                "onSurface": "#E6E0E9",
+                "surfaceVariant": "#49454F",
+                "onSurfaceVariant": "#CAC4D0",
+                "surfaceTint": "#D0BCFF",
+                "inverseSurface": "#E6E0E9",
+                "inverseOnSurface": "#322F35",
+                "error": "#F2B8B5",
+                "onError": "#601410",
+                "errorContainer": "#8C1D18",
+                "onErrorContainer": "#F9DEDC",
+                "outline": "#938F99",
+                "outlineVariant": "#49454F",
+                "scrim": "#000000",
+                "surfaceBright": "#3B383E",
+                "surfaceDim": "#141218",
+                "surfaceContainerLowest": "#0F0D13",
+                "surfaceContainerLow": "#1D1B20",
+                "surfaceContainer": "#211F26",
+                "surfaceContainerHigh": "#2B2930",
+                "surfaceContainerHighest": "#36343B",
+                "primaryFixed": "#EADDFF",
+                "primaryFixedDim": "#D0BCFF",
+                "onPrimaryFixed": "#21005D",
+                "onPrimaryFixedVariant": "#4F378B",
+                "secondaryFixed": "#E8DEF8",
+                "secondaryFixedDim": "#CCC2DC",
+                "onSecondaryFixed": "#1D192B",
+                "onSecondaryFixedVariant": "#4A4458",
+                "tertiaryFixed": "#FFD8E4",
+                "tertiaryFixedDim": "#EFB8C8",
+                "onTertiaryFixed": "#31111D",
+                "onTertiaryFixedVariant": "#633B48"
+            }
+        },
+        "extended": {
+            "light": {
+                "lessonTypeLecture": "#4984E2",
+                "lessonTypeLab": "#8A5BE1",
+                "lessonTypePractice": "#CDA634",
+                "lessonTypeAssessment": "#F14F7B",
+                "lessonTypeConsultation": "#355EDA",
+                "lessonTypeSport": "#44C614",
+                "lessonTypeFree": "#7A7A7A",
+                "lessonTypeDefault": "#5C5C5C",
+                "recordbookPassed": "#286B39",
+                "sportScoreAttendance": "#345BD1",
+                "sportScoreBonus": "#C93672",
+                "sportConditionAllowed": "#216B3C",
+                "sportConditionWaiting": "#285EA7",
+                "sportConditionWarning": "#875200",
+                "sportConditionBlocked": "#B32635",
+                "teacherLevelVeryNegative": "#D32F2F",
+                "teacherLevelNegative": "#E06C00",
+                "teacherLevelMixed": "#B58900",
+                "teacherLevelPositive": "#689F38",
+                "teacherLevelVeryPositive": "#2E7D32"
+            },
+            "dark": {
+                "lessonTypeLecture": "#4984E2",
+                "lessonTypeLab": "#8A5BE1",
+                "lessonTypePractice": "#CDA634",
+                "lessonTypeAssessment": "#F14F7B",
+                "lessonTypeConsultation": "#355EDA",
+                "lessonTypeSport": "#44C614",
+                "lessonTypeFree": "#7A7A7A",
+                "lessonTypeDefault": "#5C5C5C",
+                "recordbookPassed": "#89D995",
+                "sportScoreAttendance": "#85A2FF",
+                "sportScoreBonus": "#FF78AE",
+                "sportConditionAllowed": "#86D9A3",
+                "sportConditionWaiting": "#9BBEFF",
+                "sportConditionWarning": "#F4C16F",
+                "sportConditionBlocked": "#FFB3B9",
+                "teacherLevelVeryNegative": "#FF6E6E",
+                "teacherLevelNegative": "#FFA24C",
+                "teacherLevelMixed": "#FFD54F",
+                "teacherLevelPositive": "#AED581",
+                "teacherLevelVeryPositive": "#4CAF50"
+            }
+        },
+        "derived": {
+            "sportConditionContainer": "the accent mixed 12 % (sRGB) over surfaceContainerLowest",
+            "teacherLevel": "harmonized towards primary (hue up to 15 degrees)"
+        }
+    },
+    "shape": {
+        "corner": {
+            "extraSmall": 4.0,
+            "small": 8.0,
+            "medium": 12.0,
+            "large": 16.0,
+            "largeIncreased": 20.0,
+            "extraLarge": 28.0,
+            "extraLargeIncreased": 32.0,
+            "extraExtraLarge": 48.0,
+            "full": "50%"
+        },
+        "named": {
+            "cardContent": 20.0,
+            "cardSummary": 24.0,
+            "cardHero": 28.0,
+            "scheduleDay": 16.0,
+            "groupOuter": 20.0,
+            "groupInner": 4.0,
+            "groupGap": 2.0,
+            "cardStroke": 1.0,
+            "cardElevation": 0.0
+        }
+    },
+    "spacing": {
+        "related": 4.0,
+        "compact": 8.0,
+        "content": 12.0,
+        "group": 16.0,
+        "section": 24.0,
+        "screenMargin": 16.0,
+        "cardPadding": 16.0,
+        "summaryPadding": 20.0,
+        "touchTarget": 48.0,
+        "fabStackClearance": 152.0,
+        "statePadding": 32.0,
+        "stateIcon": 64.0,
+        "stateInlineIcon": 56.0
+    },
+    "type": {
+        "fontFamily": "system",
+        "roles": {
+            "displayLarge": {
+                "size": 57.0,
+                "lineHeight": 64.0,
+                "tracking": -0.25,
+                "weight": 400
+            },
+            "displayMedium": {
+                "size": 45.0,
+                "lineHeight": 52.0,
+                "tracking": 0.0,
+                "weight": 400
+            },
+            "displaySmall": {
+                "size": 36.0,
+                "lineHeight": 44.0,
+                "tracking": 0.0,
+                "weight": 400
+            },
+            "headlineLarge": {
+                "size": 32.0,
+                "lineHeight": 40.0,
+                "tracking": 0.0,
+                "weight": 400
+            },
+            "headlineMedium": {
+                "size": 28.0,
+                "lineHeight": 36.0,
+                "tracking": 0.0,
+                "weight": 400
+            },
+            "headlineSmall": {
+                "size": 24.0,
+                "lineHeight": 32.0,
+                "tracking": 0.0,
+                "weight": 400
+            },
+            "titleLarge": {
+                "size": 22.0,
+                "lineHeight": 28.0,
+                "tracking": 0.0,
+                "weight": 400
+            },
+            "titleMedium": {
+                "size": 16.0,
+                "lineHeight": 24.0,
+                "tracking": 0.15,
+                "weight": 500
+            },
+            "titleSmall": {
+                "size": 14.0,
+                "lineHeight": 20.0,
+                "tracking": 0.1,
+                "weight": 500
+            },
+            "bodyLarge": {
+                "size": 16.0,
+                "lineHeight": 24.0,
+                "tracking": 0.5,
+                "weight": 400
+            },
+            "bodyMedium": {
+                "size": 14.0,
+                "lineHeight": 20.0,
+                "tracking": 0.25,
+                "weight": 400
+            },
+            "bodySmall": {
+                "size": 12.0,
+                "lineHeight": 16.0,
+                "tracking": 0.4,
+                "weight": 400
+            },
+            "labelLarge": {
+                "size": 14.0,
+                "lineHeight": 20.0,
+                "tracking": 0.1,
+                "weight": 500
+            },
+            "labelMedium": {
+                "size": 12.0,
+                "lineHeight": 16.0,
+                "tracking": 0.5,
+                "weight": 500
+            },
+            "labelSmall": {
+                "size": 11.0,
+                "lineHeight": 16.0,
+                "tracking": 0.5,
+                "weight": 500
+            }
+        },
+        "emphasized": {
+            "displayLarge": {
+                "size": 57.0,
+                "lineHeight": 64.0,
+                "tracking": 0.0,
+                "weight": 500
+            },
+            "displayMedium": {
+                "size": 45.0,
+                "lineHeight": 52.0,
+                "tracking": 0.0,
+                "weight": 500
+            },
+            "displaySmall": {
+                "size": 36.0,
+                "lineHeight": 44.0,
+                "tracking": 0.0,
+                "weight": 500
+            },
+            "headlineLarge": {
+                "size": 32.0,
+                "lineHeight": 40.0,
+                "tracking": 0.0,
+                "weight": 500
+            },
+            "headlineMedium": {
+                "size": 28.0,
+                "lineHeight": 36.0,
+                "tracking": 0.0,
+                "weight": 500
+            },
+            "headlineSmall": {
+                "size": 24.0,
+                "lineHeight": 32.0,
+                "tracking": 0.0,
+                "weight": 500
+            },
+            "titleLarge": {
+                "size": 22.0,
+                "lineHeight": 28.0,
+                "tracking": 0.0,
+                "weight": 500
+            },
+            "titleMedium": {
+                "size": 16.0,
+                "lineHeight": 24.0,
+                "tracking": 0.15,
+                "weight": 700
+            },
+            "titleSmall": {
+                "size": 14.0,
+                "lineHeight": 20.0,
+                "tracking": 0.1,
+                "weight": 700
+            },
+            "bodyLarge": {
+                "size": 16.0,
+                "lineHeight": 24.0,
+                "tracking": 0.15,
+                "weight": 500
+            },
+            "bodyMedium": {
+                "size": 14.0,
+                "lineHeight": 20.0,
+                "tracking": 0.25,
+                "weight": 500
+            },
+            "bodySmall": {
+                "size": 12.0,
+                "lineHeight": 16.0,
+                "tracking": 0.4,
+                "weight": 500
+            },
+            "labelLarge": {
+                "size": 14.0,
+                "lineHeight": 20.0,
+                "tracking": 0.1,
+                "weight": 700
+            },
+            "labelMedium": {
+                "size": 12.0,
+                "lineHeight": 16.0,
+                "tracking": 0.5,
+                "weight": 700
+            },
+            "labelSmall": {
+                "size": 11.0,
+                "lineHeight": 16.0,
+                "tracking": 0.5,
+                "weight": 700
+            }
+        }
+    },
+    "motion": {
+        "durationMs": {
+            "quick": 180,
+            "standard": 220,
+            "emphasis": 260,
+            "reveal": 300,
+            "progress": 700,
+            "progressSlow": 1000,
+            "pulse": 1200
+        },
+        "pulseMinAlpha": 0.55,
+        "easing": [
+            0.2,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "scheme": "standard",
+        "reducedMotion": "end state without animation"
+    }
+}
