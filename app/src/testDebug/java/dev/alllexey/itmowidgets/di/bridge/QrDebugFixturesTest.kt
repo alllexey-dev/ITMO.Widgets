@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import kotlin.time.Clock
@@ -33,13 +34,15 @@ class QrDebugFixturesTest {
     fun `a fixture replaces the repository and the clock until its host unloads it`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
+        val release = koin.get<QrCodeRepository>()
 
         val fixture = QrDebugFixtures.load(application, FakeRepository, EpochClock)
         assertSame(FakeRepository, koin.get<QrCodeRepository>())
         assertSame(EpochClock, koin.get<Clock>())
 
         QrDebugFixtures.unload(application, fixture)
-        assertSame(QrBridgeEntryPoint.from(application).qrCodeRepository(), koin.get<QrCodeRepository>())
+        assertSame(release, koin.get<QrCodeRepository>())
+        assertSame(koin.get<QrCodeRepositoryImpl>(), koin.get<QrCodeRepository>())
         assertSame(CoreBridgeEntryPoint.from(application).clock(), koin.get<Clock>())
     }
 

@@ -85,8 +85,8 @@ pinned by `PeriodicCheckSpecTest`). Use them instead of a feature copy.
    [debug tools](../features/debug.md#screen).
 10. **Gates in the data call**: every class that takes a network client
     checks `DemoMode` first and answers from the feature's demo data
-    (`feature/qr/data/remote/QrCodeRemoteDataSourceImpl.kt` returns
-    `DemoQr.HEX`, `feature/schedule/data/changes/ScheduleChangesRepositoryImpl.kt`
+    (`feature/qr/data/remote/QrCodeRemoteDataSourceImpl.kt` of
+    `:shared:feature-qr` returns `DemoQr.HEX`, `feature/schedule/data/changes/ScheduleChangesRepositoryImpl.kt`
     compares nothing). A Backend call also needs `BackendGate.mayCallBackend()`
     (`core/notification/FcmTokenSync.kt`). `GateRulesTest` enforces both. The
     demo session has no refresh token, so the checks skip it anyway.

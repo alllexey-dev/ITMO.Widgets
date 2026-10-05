@@ -63,13 +63,24 @@ class ModuleRulesTest {
         }
         .toSet()
 
-    /** `<file>:<function>` to the fully qualified names its return type may stand for. */
+    /**
+     * `<file>:<function>` to the fully qualified names it binds: the return type, or for a multibinding contribution
+     * (`@IntoSet`, `@IntoMap`) the implementation a `@Binds` takes. A contribution returns the element type of an open
+     * set both graphs feed (`SessionDataCleaner`: Hilt's `@IntoSet` plus Koin's qualified singles, merged by
+     * `SessionCleanersBridge`), so the element type is not a binding of its own; binding a Koin-built implementation
+     * into a Hilt set still fails. A `@Provides` contribution builds its element in the body and is not checked.
+     */
     private fun KoFileDeclaration.hiltBindings(): List<Pair<String, Set<String>>> =
         functions(includeNested = true, includeLocal = false)
             .filter { it.hasAnnotationWithName(PROVIDES, BINDS) }
             .mapNotNull { function ->
+                val binding = "$projectPath:${function.name}"
+                if (function.hasAnnotationWithName(INTO_SET, INTO_MAP)) {
+                    val bound = if (function.hasAnnotationWithName(BINDS)) function.parameters else emptyList()
+                    return@mapNotNull binding to bound.flatMap { candidateNames(it.type.name) }.toSet()
+                }
                 val returnType = function.returnType?.name ?: return@mapNotNull null
-                "$projectPath:${function.name}" to candidateNames(returnType)
+                binding to candidateNames(returnType)
             }
 
     private fun sharedFeatureBuildFiles(): List<File> =
@@ -87,6 +98,8 @@ class ModuleRulesTest {
         const val KOIN_TO_HILT_BRIDGE = "/app/src/main/java/dev/alllexey/itmowidgets/di/bridge/"
         const val PROVIDES = "Provides"
         const val BINDS = "Binds"
+        const val INTO_SET = "IntoSet"
+        const val INTO_MAP = "IntoMap"
 
         /** `project(":shared:feature-x")` or the type-safe `projects.shared.featureX`. */
         val FEATURE_DEPENDENCY = Regex("""project\(\s*":shared:(feature-[\w-]+)"\s*\)|projects\.shared\.(feature\w+)""")

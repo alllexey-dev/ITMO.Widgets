@@ -54,22 +54,8 @@ one in-memory source (`HomeFixture`) and never touch MyITMO or Backend.
 
 ## QR pass
 
-`feature/qr` uses the existing MyItmoApi repository and QR renderer, not a second
-API client. The screen shows a valid cached code immediately after rendering
-(a fresh view model reads the cache before it writes `Loading`, so the pass
-appears in the first frame with `refreshing`), can force a refresh, and
-distinguishes loading, content, empty and error. A
-refresh failure keeps only a still-valid code and offers retry feedback.
-
-`QrCodeSnapshot` carries the cache deadline from the local source. The screen
-hides the pass at that deadline even while a refresh is pending, and revalidates
-on return. Its jobs stop while the screen is not visible. It uses the injected
-wall clock, never the debug academic clock. The widget’s explicit expired-cache
-fallback remains unchanged.
-
-The QR area keeps a square geometry in every state, the refresh control remains
-in place, and the existing widget palette determines QR contrast. Preview and
-test screenshots use synthetic non-credential payloads only.
+The home QR button opens the pass above the feed. Screen, data, cache and expiry
+are described in [QR pass](qr.md).
 
 ## Quick-settings tile and app shortcuts
 

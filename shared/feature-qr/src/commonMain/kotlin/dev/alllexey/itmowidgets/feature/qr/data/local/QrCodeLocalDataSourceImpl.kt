@@ -1,29 +1,32 @@
 package dev.alllexey.itmowidgets.feature.qr.data.local
 
-import android.content.Context
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dev.alllexey.itmowidgets.core.time.WallClock
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.mapNotNull
-import java.io.File
-import java.time.Clock
-import javax.inject.Inject
 
 private const val QR_CACHE_EXPIRATION_MS = 60 * 60 * 1000L
+
 internal data class QrCacheEntry(
     val hex: String,
     val timestamp: Long
 )
 
-class QrCodeLocalDataSourceImpl @Inject constructor(
-    @ApplicationContext context: Context,
-    @param:WallClock private val clock: Clock
+/**
+ * The last pass in `cacheDir/qr_hex` ([AppDirectories.cache]) as `<epochMillis>|<hex>`, the 2.2 format byte for
+ * byte; the v2.0 file with the hex alone still reads. A pass expires 60 minutes after it was saved on the wall
+ * [clock], never on academic time.
+ */
+class QrCodeLocalDataSourceImpl internal constructor(
+    private val file: AtomicTextFile,
+    private val clock: Clock
 ) : QrCodeLocalDataSource {
 
-    private val file = File(context.cacheDir, "qr_hex")
+    constructor(directories: AppDirectories, clock: Clock) : this(AtomicTextFile(directories.cache / FILE_NAME), clock)
 
     private val _flow = MutableStateFlow(readFromDisk())
     private val flow = _flow.asStateFlow()
@@ -49,23 +52,27 @@ class QrCodeLocalDataSourceImpl @Inject constructor(
     override fun save(hex: String) {
         val entry = QrCacheEntry(
             hex = hex,
-            timestamp = clock.millis()
+            timestamp = nowMillis()
         )
 
         try {
-            file.writeText(serialize(entry))
+            file.write(serialize(entry))
             _flow.value = entry
         } catch (_: Exception) {}
     }
 
     override fun clear() {
-        file.delete()
+        try {
+            file.write(null)
+        } catch (_: Exception) {}
         _flow.value = null
     }
 
     internal fun isExpired(entry: QrCacheEntry): Boolean {
-        return clock.millis() - entry.timestamp >= QR_CACHE_EXPIRATION_MS
+        return nowMillis() - entry.timestamp >= QR_CACHE_EXPIRATION_MS
     }
+
+    private fun nowMillis(): Long = clock.now().toEpochMilliseconds()
 
     private fun serialize(entry: QrCacheEntry): String {
         return "${entry.timestamp}|${entry.hex}"
@@ -79,7 +86,7 @@ class QrCodeLocalDataSourceImpl @Inject constructor(
                 // v2.0 stored only the QR payload. Keep it during the refactor so an
                 // app update does not blank an otherwise working home-screen pass.
                 return value.takeIf { it.length >= MIN_QR_LENGTH }?.let { legacyHex ->
-                    QrCacheEntry(hex = legacyHex, timestamp = clock.millis())
+                    QrCacheEntry(hex = legacyHex, timestamp = nowMillis())
                 }
             }
             QrCacheEntry(
@@ -93,14 +100,14 @@ class QrCodeLocalDataSourceImpl @Inject constructor(
 
     private fun readFromDisk(): QrCacheEntry? {
         return try {
-            if (!file.exists()) return null
-            deserialize(file.readText())
+            file.read()?.let(::deserialize)
         } catch (_: Exception) {
             null
         }
     }
 
     private companion object {
+        const val FILE_NAME = "qr_hex"
         const val MIN_QR_LENGTH = 6
     }
 }

@@ -1,8 +1,13 @@
 package dev.alllexey.itmowidgets.feature.qr.di
 
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
-import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
+import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import kotlin.test.Test
 import kotlin.time.Clock
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -11,16 +16,21 @@ import org.koin.test.verify.verify
 class QrModuleTest {
 
     /**
-     * The repository, the colour setting and the wall clock are bridged from the app's Hilt graph; every other type
-     * is Koin's.
+     * The data and the screen resolve inside the module; only the core types the app's `CoreBridge` forwards from
+     * Hilt are given.
      */
     @OptIn(KoinExperimentalAPI::class)
     @Test
-    fun theQrModuleResolvesWithTheBridgedRepositoryPreferencesAndClock() {
+    fun theQrModuleResolvesWithTheBridgedCoreTypes() {
         qrModule.verify(
             extraTypes = listOf(
-                QrCodeRepository::class,
-                QrAppearancePreferences::class,
+                MyItmoClient::class,
+                DataStore::class,
+                AppDirectories::class,
+                QrSettingsPreferences::class,
+                DeviceHintPreferences::class,
+                DemoMode::class,
+                AppDispatchers::class,
                 Clock::class,
                 SavedStateHandle::class,
             ),

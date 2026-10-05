@@ -1,13 +1,19 @@
 package dev.alllexey.itmowidgets.di.bridge
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.test.core.app.ApplicationProvider
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionRepository
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
+import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
@@ -62,6 +68,11 @@ class KoinStartTest {
         assertSame(hilt.appDispatchers(), koin.get<AppDispatchers>())
         assertSame(hilt.sessionRepository(), koin.get<SessionRepository>())
         assertSame(hilt.clock(), koin.get<Clock>())
+        assertSame(hilt.myItmoClient(), koin.get<MyItmoClient>())
+        assertSame(hilt.appPreferences(), koin.get<DataStore<Preferences>>())
+        assertSame(hilt.appDirectories(), koin.get<AppDirectories>())
+        assertSame(hilt.qrSettingsPreferences(), koin.get<QrSettingsPreferences>())
+        assertSame(hilt.deviceHintPreferences(), koin.get<DeviceHintPreferences>())
     }
 
     @Test

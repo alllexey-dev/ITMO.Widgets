@@ -2,16 +2,16 @@ package dev.alllexey.itmowidgets.feature.qr.data.repository
 
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class QrTilePreferencesImplTest {
 
     @Test
-    fun `adding and removing the tile reach the stored flag`() = runTest {
+    fun addingAndRemovingTheTileReachTheStoredFlag() = runTest {
         val storage = DeviceHintPreferences(InMemoryPreferencesDataStore())
         val preferences = QrTilePreferencesImpl(storage)
 
