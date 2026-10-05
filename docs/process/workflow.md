@@ -51,8 +51,24 @@ integrator's instrumented subset per batch.
   `githubDebug` APK (Android), open risks.
 - After "OK `<repo>` `<sha>`" the integrator fast-forwards `master` (`main` in
   Web) through `~/proj/.wt/bin/promote`. A rejected PR is reverted, not fixed forward.
-- Backend `dev` moves only after a separate "deploy dev", at most once a day;
-  production only on its own word.
+- Backend `dev` moves at most once a day; production only on its own word.
+
+Standing approvals (owner, 2026-10-04) replace a per-case word in two cases;
+everything else still needs the owner:
+
+- **Surface.** The integrator accepts paths outside a card's `touches` when the
+  independent reviewer confirms the card caused them and each one is test code
+  (tests, fixtures, fakes, debug preview hosts), documentation (`docs/**`,
+  `*.md`, `changelog.d/**`) or a mechanical call-site or import change forced
+  by the card's own rename or removal. The PR lists them in `Surface:` and
+  `Surface notes:`; the integrator records `surface OK (standing approval
+  2026-10-04: <category>)`. New behaviour, new API, build logic, CI, release or
+  deploy configuration and another lane's frozen hot file still go to the owner.
+- **Backend dev.** The integrator moves Backend `dev` to a green `v2.3/next`
+  head without asking when the batch has no Flyway migration and no deploy
+  configuration change (`B/deploy/`, `B/.github/workflows/deliver.yml`), then
+  checks `/api/app/version` on dev. A batch with a migration, Web deploys and
+  production still need the owner's word.
 
 ## Closing a feature
 

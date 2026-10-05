@@ -474,6 +474,13 @@ relying on review.
 - Instrumented tests cover what needs a device: Keystore, file storage, real
   layouts in an isolated debug host (`SportCardsVisualTest`,
   `RecordbookVisualTest`, `SelectionRowsTest`, `SportScoreCollapseTest`).
+- One instrumented run is one app process, so Hilt singletons outlive a test
+  class. `SessionRepositoryImpl.initialize()` reads the token store once and
+  returns early afterwards, so a token file written directly is invisible to a
+  session another class already started: sign in through
+  `TestSession.seedActiveSession()` (the real `completeItmoIdLogin`) and sign
+  out afterwards. A class that fails in a full run is re-run alone before the
+  change is blamed.
 - Visual tests share `app/src/androidTest/java/dev/alllexey/itmowidgets/testing/`:
   `Appearances` (the light/dark/dynamic/narrow matrix; `Appearances.Spec.toPreview()`
   builds the one `core/debug/PreviewAppearance` every debug host takes, and each

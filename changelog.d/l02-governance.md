@@ -15,3 +15,6 @@
 - `scripts/check-docs.sh` guards docs against dangling paths, links and
   `vibe/` references, and unreleased changes go to `changelog.d/` fragments
   checked by `scripts/changelog.sh`.
+- Owner rules that lived only in agent memory are in the docs: the v2.3
+  standing approvals in `docs/process/workflow.md` and the one-process rule for
+  instrumented tests in `docs/architecture.md`.
