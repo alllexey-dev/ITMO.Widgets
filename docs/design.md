@@ -263,8 +263,9 @@ the geometry.
   sport status 260 ms, the QR settings preview 300 ms) and 700 or 1000 ms for a
   progress that fills (the sport score). Do not animate unchanged text or flash
   the screen on refresh. Sport tabs switch by
-  tap and pager gesture; the sport date strip moves only with its arrows; the
-  month label animates only when the month changes.
+  tap and pager gesture; the sport date strip moves only with its arrows
+  ([Tab swipe](#tab-swipe), rules 3 and 4); the month label animates only when
+  the month changes.
 - Every mutable visual property is set on rebind. Past schedule days keep content
   alpha 0.72; today and future days 1.0; inner lesson rows get no second alpha layer.
 - Schedule timeline markers: a hollow neutral circle for a lesson not yet
@@ -292,6 +293,41 @@ the geometry.
   bottom end and the list reserves space under it: a list under a stack of FABs
   (home, schedule) ends with `design_fab_stack_clearance` of bottom padding and
   `clipToPadding="false"`, so its last item scrolls clear of them.
+
+### Tab swipe
+
+The same rules on Android and iOS. The kit's `designsystem/gesture/` package
+holds the pieces: `TabSwipeDefaults` (the numbers below), `tabSwipeHandover`,
+`tabSwipeBlocked` and `TabSwipeRegistry`; `GestureRulesTest` enforces rules 3
+and 5.
+
+1. The five bottom tabs switch by a tap and by a horizontal swipe on a tab
+   root, in bar order, one tab per swipe, no wrap-around.
+2. The swipe exists only on tab roots: never on overlays, pushed screens,
+   sheets, dialogs, sign-in, onboarding, or while one of them is open; not where
+   the navigation rail shows (medium and expanded widths).
+3. Inner horizontal content wins: every horizontal scroller on a tab root uses
+   `tabSwipeHandover`; it scrolls first, never flies over into the next tab,
+   and a new swipe at its edge switches the tab. `Мой спорт`/`Запись` keep
+   their pager swipe under this rule.
+4. Days never move by a horizontal swipe on content: day lists scroll
+   vertically; a week strip changes the day by a tap and the week by its arrows
+   and is `tabSwipeBlocked`.
+5. System gestures win: no gesture exclusion; on Android the back edges stay
+   the system's; on iOS the tab swipe never starts within 24 pt of the left
+   edge, and a pushed screen has only the back swipe.
+6. Diagonal drags belong to vertical lists (2x slop for the tab pager).
+7. Feedback: the bar's indicator moves to the target tab when the drag passes
+   the commit threshold, with one threshold haptic; no hint, coach mark, peek
+   animation or new text.
+8. Accessibility: the tabs stay bar buttons and nothing needs the swipe; the
+   tab pager exposes no page semantics and is off under TalkBack, Switch
+   Access, VoiceOver and Switch Control.
+9. Reduced motion: the drag still follows the finger; the settle and tap
+   switches are instant on Android and a cross-fade on iOS.
+10. Entry points land on screens: widgets, links, notifications, shortcuts and
+    the Control open a route with its tab, never a page index; a switch by a
+    route, a tap or Back never slides through the tabs in between.
 
 ## Shared components
 
