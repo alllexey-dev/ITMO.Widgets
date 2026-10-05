@@ -19,6 +19,8 @@ fun UiText.resolve(context: Context): String {
         )
         is UiText.Resource -> context.getString(resourceId, *arguments.resolved(context))
         is UiText.Dynamic -> value
+        is UiText.Joined -> parts.joinToString(separator) { it.resolve(context) }
+        is UiText.LowercaseFirst -> text.resolve(context).replaceFirstChar(Char::lowercaseChar)
     }
 }
 

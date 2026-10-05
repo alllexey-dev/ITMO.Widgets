@@ -86,6 +86,15 @@ class UiTextResolverTest {
         assertEquals("Тон отзывов: Смешанные", runBlocking { text.resolve() })
     }
 
+    @Test
+    fun `joined and lowercased texts resolve the same on both sides`() {
+        val mixed = UiText.Res(Res.string.teacher_level_mixed)
+        val text = UiText.Joined(listOf(UiText.Dynamic("1506"), UiText.LowercaseFirst(mixed)), " · ")
+
+        assertEquals("1506 · смешанные", text.resolve(context))
+        assertEquals("1506 · смешанные", runBlocking { text.resolve() })
+    }
+
     /** Key -> text of each `<string>` or `<plurals>` (first item) of the core catalog files. */
     private fun catalogEntries(tag: String): Map<String, String> {
         val dir = listOf(File(".."), File("."))

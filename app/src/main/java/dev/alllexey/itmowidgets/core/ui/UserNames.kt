@@ -1,18 +1,11 @@
 package dev.alllexey.itmowidgets.core.ui
 
 import android.content.Context
-import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.text.shortPersonName as commonShortPersonName
+import dev.alllexey.itmowidgets.core.text.userDisplayName as userDisplayNameText
 
-/** Backend sends an empty name until the owner's identity is published; never show it raw. */
-fun Context.userDisplayName(name: String, isu: Int): String =
-    name.trim().ifEmpty { getString(R.string.user_name_placeholder, isu) }
+// Android adapters of `core.text.UserNames`; each goes with its last caller.
 
-/**
- * «Фамилия Имя Отчество» as «Фамилия И. О.»; a single word stays as it is. The initials are joined by no-break
- * spaces so a line never ends between them.
- */
-fun shortPersonName(name: String): String {
-    val parts = name.trim().split(Regex("\\s+")).filter(String::isNotEmpty)
-    if (parts.size < 2) return name.trim()
-    return parts.first() + " " + parts.drop(1).joinToString("\u00A0") { "${it.first().uppercaseChar()}." }
-}
+fun Context.userDisplayName(name: String, isu: Int): String = userDisplayNameText(name, isu).resolve(this)
+
+fun shortPersonName(name: String): String = commonShortPersonName(name)
