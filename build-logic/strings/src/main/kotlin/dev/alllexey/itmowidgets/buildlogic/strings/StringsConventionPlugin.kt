@@ -15,7 +15,8 @@ import org.gradle.kotlin.dsl.register
  * line for it.
  *
  * - Every module gets the `itmowidgetsStrings { androidExport(...) }` extension.
- * - A shared module publishes the declared files as its `itmowidgetsAndroidStringsElements` variant.
+ * - A shared module publishes the declared files (and its drawables after `androidExportDrawables()`) as its
+ *   `itmowidgetsAndroidStringsElements` variant.
  * - `:app` runs `checkStringCatalog` before every build (`preBuild`) and merges the exports of its project
  *   dependencies into a generated `res` directory of each variant.
  * - `:app:exportAppleStrings` writes the committed `iosApp/Shared` tables and `AppSymbol.swift` ([AppleExport]).
@@ -34,12 +35,19 @@ class StringsConventionPlugin : Plugin<Project> {
         val root = isolated.rootProject.projectDirectory.asFile
         val resources = layout.projectDirectory.dir(COMPOSE_RESOURCES)
         val export = tasks.register<ExportAndroidStrings>("exportAndroidStrings") {
-            description = "Android copies of the composeResources string files named by androidExport(...)."
+            description = "Android copies of the composeResources files named by androidExport(...) and of the " +
+                "drawables after androidExportDrawables()."
             module.set(project.name)
             paths.set(extension.androidExports)
+            drawables.set(extension.androidDrawables)
             sourcePrefix.set(resources.asFile.relativeTo(root).invariantSeparatorsPath)
             resourcesDir.set(resources)
             sources.from(extension.androidExports.map { list -> list.map { resources.file(it) } })
+            sources.from(
+                extension.androidDrawables.map { export ->
+                    if (export) listOf(resources.dir(AndroidStringsExport.DRAWABLE_DIR)) else emptyList()
+                },
+            )
             outputDir.set(layout.buildDirectory.dir("generated/itmowidgets/androidStrings"))
         }
         configurations.consumable(ELEMENTS) {
@@ -97,7 +105,7 @@ class StringsConventionPlugin : Plugin<Project> {
             }.files
             val name = "collect${variant.name.replaceFirstChar { it.uppercase() }}AndroidStrings"
             val collect = tasks.register<CollectAndroidStrings>(name) {
-                description = "Merges the androidExport files of the project dependencies into a generated res dir."
+                description = "Merges the Android exports of the project dependencies into a generated res dir."
                 this.exported.from(exported)
                 outputDir.set(layout.buildDirectory.dir("generated/itmowidgets/androidStrings/${variant.name}"))
             }

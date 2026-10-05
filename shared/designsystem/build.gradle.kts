@@ -55,3 +55,9 @@ gradle.taskGraph.whenReady {
         outputs.cacheIf { false }
     }
 }
+
+// Shared icons stay Android drawables of :app for its layouts and R.drawable.ic_*; whoever removes the last such
+// user in app/ removes this line (L05 KM-09a).
+itmowidgetsStrings {
+    androidExportDrawables()
+}

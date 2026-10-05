@@ -6,7 +6,9 @@ import org.junit.Test
 import java.io.File
 
 /**
- * `docs/design/icons.tsv` is the one list of app icons; every `ic_*` drawable has exactly one row.
+ * `docs/design/icons.tsv` is the one list of app icons; every `ic_*` drawable has exactly one row. `shared` and
+ * `custom` icons live in `:shared:designsystem` `composeResources` (exported to `:app` as Android drawables),
+ * `android` rows and the launcher icon stay in `:app`.
  *
  * `shared` icons are in the house format `scripts/icons-fetch.py` writes: Material Symbols Rounded, a 960 viewport
  * drawn at 24 dp, untinted (the use site tints them; CMP's vector parser reads neither `android:tint` nor theme
@@ -35,13 +37,14 @@ class IconRegistryTest {
     }
 
     @Test
-    fun `rows and drawables match one to one`() {
-        val drawables = File(root, DRAWABLES)
-            .listFiles { file -> file.name.startsWith("ic_") && !file.name.startsWith("ic_launcher_") }
-            .orEmpty()
-            .map { it.name }
-            .sorted()
-        assertEquals(rows.map { "ic_${it[ID]}.xml" }.sorted(), drawables)
+    fun `android rows stay in app`() {
+        assertEquals(fileNames(rows.filter { it[KIND] == "android" }), appIcons())
+    }
+
+    @Test
+    fun `shared and custom rows live in designsystem composeResources`() {
+        val files = File(root, SHARED_DRAWABLES).list().orEmpty().sorted()
+        assertEquals(fileNames(rows.filter { it[KIND] != "android" }), files)
     }
 
     @Test
@@ -65,7 +68,7 @@ class IconRegistryTest {
     @Test
     fun `shared icons are Material Symbols Rounded in the house format`() {
         rows.filter { it[KIND] == "shared" }.forEach { row ->
-            val text = drawable(row[ID]).readText()
+            val text = drawable(row).readText()
             val style = if (row[FILL] == "1") "fill1" else "default"
             val url = "$SYMBOLS_URL/${row[SYMBOL]}/$style/24px.svg"
             assertTrue(row[ID], text.contains("<!-- Material Symbols Rounded: $url -->"))
@@ -78,7 +81,7 @@ class IconRegistryTest {
     @Test
     fun `app icons carry no baked tint or theme colour`() {
         rows.filter { it[KIND] != "android" }.forEach { row ->
-            val text = drawable(row[ID]).readText()
+            val text = drawable(row).readText()
             UNTINTED.forEach { forbidden -> assertTrue("${row[ID]}: $forbidden", forbidden !in text) }
         }
     }
@@ -100,7 +103,7 @@ class IconRegistryTest {
         assertEquals(5, items.size)
         val filled = items.map { selector ->
             assertTrue(selector, selector.startsWith("nav_"))
-            val states = NAV_STATE.findAll(File(root, "$DRAWABLES/$selector.xml").readText())
+            val states = NAV_STATE.findAll(File(root, "$APP_DRAWABLES/$selector.xml").readText())
                 .map { it.groupValues[1] to it.groupValues[2] }
                 .toList()
             val checked = states.single { it.second.isNotEmpty() }
@@ -113,11 +116,21 @@ class IconRegistryTest {
         assertEquals(filledRows.sorted(), filled.sorted())
     }
 
-    private fun drawable(id: String) = File(root, "$DRAWABLES/ic_$id.xml")
+    private fun drawable(row: List<String>) =
+        File(root, "${if (row[KIND] == "android") APP_DRAWABLES else SHARED_DRAWABLES}/ic_${row[ID]}.xml")
+
+    private fun fileNames(rows: List<List<String>>) = rows.map { "ic_${it[ID]}.xml" }.sorted()
+
+    private fun appIcons() = File(root, APP_DRAWABLES)
+        .listFiles { file -> file.name.startsWith("ic_") && !file.name.startsWith("ic_launcher_") }
+        .orEmpty()
+        .map { it.name }
+        .sorted()
 
     private companion object {
         const val REGISTRY = "docs/design/icons.tsv"
-        const val DRAWABLES = "app/src/main/res/drawable"
+        const val APP_DRAWABLES = "app/src/main/res/drawable"
+        const val SHARED_DRAWABLES = "shared/designsystem/src/commonMain/composeResources/drawable"
         const val BOTTOM_NAV = "app/src/main/res/menu/bottom_nav.xml"
         const val SYMBOLS_URL = "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsrounded"
         const val HOUSE_VECTOR = """android:width="24dp" android:height="24dp" """ +

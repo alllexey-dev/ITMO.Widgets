@@ -3,9 +3,11 @@
 
 For every `shared` row it downloads
   https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsrounded/<symbol>/<default|fill1>/24px.svg
-(`fill1` when the row's `fill` is 1) and writes app/src/main/res/drawable/ic_<id>.xml in the house format
+(`fill1` when the row's `fill` is 1) and writes
+shared/designsystem/src/commonMain/composeResources/drawable/ic_<id>.xml in the house format
 (ADR 0028): the URL in a header comment, 24 dp, a 960 viewport, the SVG's `0 -960` origin moved by
-`<group android:translateY="960">`, fill #FF000000, no tint. The use site tints the icon.
+`<group android:translateY="960">`, fill #FF000000, no tint. The use site tints the icon. `:app` gets the same
+files as Android drawables through the export of :shared:designsystem.
 
 `android` and `custom` rows are drawn by hand and never written here.
 The output depends only on the registry and the downloaded SVG, so a second run changes nothing.
@@ -23,7 +25,7 @@ from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "docs" / "design" / "icons.tsv"
-DRAWABLE = ROOT / "app" / "src" / "main" / "res" / "drawable"
+DRAWABLE = ROOT / "shared" / "designsystem" / "src" / "commonMain" / "composeResources" / "drawable"
 URL = "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsrounded/{symbol}/{style}/24px.svg"
 SVG_NS = "{http://www.w3.org/2000/svg}"
 

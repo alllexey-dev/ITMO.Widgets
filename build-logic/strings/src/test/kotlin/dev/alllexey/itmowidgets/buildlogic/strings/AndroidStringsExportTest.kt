@@ -62,6 +62,28 @@ class AndroidStringsExportTest {
     }
 
     @Test
+    fun `drawables keep their resource names and get the header`() {
+        val out = temp.newFolder()
+        val paths = AndroidStringsExport.drawablePaths(coreResources)
+
+        AndroidStringsExport.export("core", coreResources, CORE_PREFIX, paths, out)
+
+        assertEquals(listOf("drawable/ic_sample.xml"), paths)
+        assertEquals(
+            AndroidStringsExport.render(
+                "$CORE_PREFIX/drawable/ic_sample.xml",
+                File(coreResources, "drawable/ic_sample.xml").readText(),
+            ),
+            File(out, "drawable/ic_sample.xml").readText(),
+        )
+    }
+
+    @Test
+    fun `exporting drawables from a module without any fails`() {
+        assertThrows(GradleException::class.java) { AndroidStringsExport.drawablePaths(temp.newFolder()) }
+    }
+
+    @Test
     fun `a file without an XML declaration gets the header first`() {
         assertEquals(
             "<!-- Generated from a/strings_x.xml, do not edit. -->\n<resources/>\n",
@@ -74,7 +96,7 @@ class AndroidStringsExportTest {
         AndroidStringsExport.export(
             module = "core",
             resourcesDir = coreResources,
-            sourcePrefix = "shared/core/src/commonMain/composeResources",
+            sourcePrefix = CORE_PREFIX,
             paths = listOf("values/strings_common.xml"),
             outputDir = out,
         )
@@ -83,4 +105,8 @@ class AndroidStringsExportTest {
 
     private fun tree(dir: File): Map<String, String> = dir.walkTopDown().filter { it.isFile }
         .associate { it.relativeTo(dir).invariantSeparatorsPath to it.readText() }
+
+    private companion object {
+        const val CORE_PREFIX = "shared/core/src/commonMain/composeResources"
+    }
 }
