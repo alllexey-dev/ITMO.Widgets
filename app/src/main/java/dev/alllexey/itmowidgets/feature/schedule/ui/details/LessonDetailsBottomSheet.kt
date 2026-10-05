@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.schedule.ui.details
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -31,6 +30,8 @@ import dev.alllexey.itmowidgets.core.location.MapDestination
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.navigation.navigationArgs
+import dev.alllexey.itmowidgets.core.navigation.putNavigationArgs
 import dev.alllexey.itmowidgets.core.ui.DetailsHeaderContent
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
@@ -53,7 +54,6 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonFrie
 import dev.alllexey.itmowidgets.feature.schedule.ui.colorRes
 import dev.alllexey.itmowidgets.feature.schedule.ui.nameRes
 import dev.alllexey.itmowidgets.feature.schedule.ui.shortTitle
-import java.io.Serializable
 import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
@@ -74,7 +74,7 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
     private val viewModel: LessonDetailsViewModel by viewModels()
 
     private val lesson: LessonDetailsArgs by lazy {
-        requireNotNull(requireArguments().serializable(ARG_LESSON, LessonDetailsArgs::class.java))
+        requireNotNull(requireArguments().navigationArgs<LessonDetailsArgs>(ARG_LESSON))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -247,16 +247,11 @@ class LessonDetailsBottomSheet : BottomSheetDialogFragment() {
 
         fun newInstance(args: LessonDetailsArgs): LessonDetailsBottomSheet = LessonDetailsBottomSheet().apply {
             arguments = Bundle().apply {
-                putSerializable(ARG_LESSON, args)
+                putNavigationArgs(ARG_LESSON, args)
                 putLong(LessonDetailsViewModel.ARG_PAIR_ID, args.pairId)
                 putString(LessonDetailsViewModel.ARG_DATE, args.date)
                 UserScreenArgs.profileIsu(args.teacherIsu)?.let { putInt(LessonDetailsViewModel.ARG_TEACHER_ISU, it) }
             }
         }
-
-        @Suppress("DEPRECATION", "UNCHECKED_CAST")
-        private fun <T : Serializable> Bundle.serializable(key: String, type: Class<T>): T? =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) getSerializable(key, type)
-            else getSerializable(key) as? T
     }
 }

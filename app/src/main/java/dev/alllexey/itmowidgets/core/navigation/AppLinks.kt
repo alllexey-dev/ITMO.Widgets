@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.core.navigation
 
-import java.net.URI
-import java.net.URISyntaxException
+import dev.alllexey.itmowidgets.core.url.StrictUri
 
 /** What a verified `https` link to the site asks the app to open. */
 sealed interface AppLink {
@@ -35,7 +34,7 @@ object AppLinks {
 
     /** Null when the link is not the app's: another scheme, host or path. */
     fun parse(url: String?): AppLink? {
-        val uri = url?.let(::toUri) ?: return null
+        val uri = url?.let(StrictUri::parse) ?: return null
         if (!uri.scheme.equals("https", ignoreCase = true)) return null
         if (uri.host?.lowercase() !in setOf(PROD_HOST, DEV_HOST)) return null
         val path = uri.rawPath.orEmpty()
@@ -48,12 +47,6 @@ object AppLinks {
                 ?.toLongOrNull()?.let(AppLink::SportLesson) ?: AppLink.Malformed
             else -> null
         }
-    }
-
-    private fun toUri(url: String): URI? = try {
-        URI(url)
-    } catch (_: URISyntaxException) {
-        null
     }
 
     private fun identifier(path: String, prefix: String, format: Regex): String? =

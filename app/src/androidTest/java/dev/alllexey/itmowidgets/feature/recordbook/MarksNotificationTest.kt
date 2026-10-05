@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.app.AndroidAppNotifier
 import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.core.navigation.from
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.NotificationDebugEntryPoint

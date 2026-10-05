@@ -1,11 +1,12 @@
 package dev.alllexey.itmowidgets.core.navigation
 
-import android.os.Bundle
+import kotlinx.serialization.Serializable
 
 /**
- * Arguments of the recordbook subject page. A notification carries them in its intent, so [from] trusts nothing:
- * a malformed or partial set opens the recordbook root instead of a broken page.
+ * Arguments of the recordbook subject page. A notification carries them in its intent, so `from(Bundle)` trusts
+ * nothing: a malformed or partial set opens the recordbook root instead of a broken page.
  */
+@Serializable
 data class RecordbookSubjectArgs(
     val entryId: Long,
     val programId: Long,
@@ -24,16 +25,6 @@ data class RecordbookSubjectArgs(
         return this
     }
 
-    fun toBundle(): Bundle = Bundle().apply {
-        putLong(ENTRY_ID, entryId)
-        putLong(PROGRAM_ID, programId)
-        putInt(SEMESTER, semester)
-        putString(STUDY_YEAR_KEY, studyYear)
-        barsPlan?.let { putLong(BARS_PLAN, it) }
-        barsType?.let { putString(BARS_TYPE, it) }
-        barsIdentifier?.let { putString(BARS_IDENTIFIER, it) }
-    }
-
     companion object {
         const val ENTRY_ID = "entry_id"
         const val PROGRAM_ID = "program_id"
@@ -44,18 +35,5 @@ data class RecordbookSubjectArgs(
         const val BARS_IDENTIFIER = "bars_identifier"
 
         private val STUDY_YEAR = Regex("""\d{4}/\d{4}""")
-
-        fun from(bundle: Bundle?): RecordbookSubjectArgs? {
-            if (bundle == null) return null
-            return RecordbookSubjectArgs(
-                entryId = bundle.getLong(ENTRY_ID),
-                programId = bundle.getLong(PROGRAM_ID),
-                semester = bundle.getInt(SEMESTER),
-                studyYear = bundle.getString(STUDY_YEAR_KEY).orEmpty(),
-                barsPlan = if (bundle.containsKey(BARS_PLAN)) bundle.getLong(BARS_PLAN) else null,
-                barsType = bundle.getString(BARS_TYPE),
-                barsIdentifier = bundle.getString(BARS_IDENTIFIER)
-            ).validOrNull()
-        }
     }
 }

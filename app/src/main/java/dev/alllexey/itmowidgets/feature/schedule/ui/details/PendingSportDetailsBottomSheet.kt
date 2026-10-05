@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.ui.details
 
 import android.content.res.ColorStateList
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,6 +15,8 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.location.MapDestination
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.navigation.navigationArgs
+import dev.alllexey.itmowidgets.core.navigation.putNavigationArgs
 import dev.alllexey.itmowidgets.core.navigation.toDetailsArgs
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -30,7 +31,6 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.databinding.FragmentPendingSportDetailsBinding
 import dev.alllexey.itmowidgets.databinding.ItemSportConditionBinding
-import java.io.Serializable
 import java.time.OffsetDateTime
 import javax.inject.Inject
 
@@ -47,7 +47,7 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
     @Inject lateinit var timeProvider: AcademicTimeProvider
 
     private val booking: PendingSportDetailsArgs by lazy {
-        requireNotNull(requireArguments().serializable(ARG_BOOKING, PendingSportDetailsArgs::class.java))
+        requireNotNull(requireArguments().navigationArgs<PendingSportDetailsArgs>(ARG_BOOKING))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -133,12 +133,7 @@ class PendingSportDetailsBottomSheet : BottomSheetDialogFragment() {
         fun newInstance(booking: PendingSportBooking): PendingSportDetailsBottomSheet = newInstance(booking.toDetailsArgs())
 
         fun newInstance(args: PendingSportDetailsArgs): PendingSportDetailsBottomSheet = PendingSportDetailsBottomSheet().apply {
-            arguments = Bundle().apply { putSerializable(ARG_BOOKING, args) }
+            arguments = Bundle().apply { putNavigationArgs(ARG_BOOKING, args) }
         }
-
-        @Suppress("DEPRECATION", "UNCHECKED_CAST")
-        private fun <T : Serializable> Bundle.serializable(key: String, type: Class<T>): T? =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) getSerializable(key, type)
-            else getSerializable(key) as? T
     }
 }

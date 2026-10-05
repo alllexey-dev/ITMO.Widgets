@@ -1,8 +1,9 @@
 package dev.alllexey.itmowidgets.core.navigation
 
-import java.io.Serializable
+import kotlinx.serialization.Serializable
 
-data class SubjectLinksArgs(val subjectId: Long, val subjectName: String, val periodKey: String) : Serializable {
+@Serializable
+data class SubjectLinksArgs(val subjectId: Long, val subjectName: String, val periodKey: String) {
     companion object {
         const val SUBJECT_ID = "link_subject_id"
         const val SUBJECT_NAME = "link_subject_name"

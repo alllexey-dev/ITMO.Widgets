@@ -1,9 +1,10 @@
 package dev.alllexey.itmowidgets.core.navigation
 
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
-import java.io.Serializable
+import kotlinx.serialization.Serializable
 
 /** A queued or predicted sport booking as the schedule shows it; times travel as ISO strings. */
+@Serializable
 data class PendingSportDetailsArgs(
     val lessonId: Long,
     val sectionName: String,
@@ -14,7 +15,7 @@ data class PendingSportDetailsArgs(
     val teacherFio: String,
     val roomName: String,
     val teacherIsu: Int? = null
-) : Serializable
+)
 
 fun PendingSportBooking.toDetailsArgs() = PendingSportDetailsArgs(
     lessonId = lessonId,
