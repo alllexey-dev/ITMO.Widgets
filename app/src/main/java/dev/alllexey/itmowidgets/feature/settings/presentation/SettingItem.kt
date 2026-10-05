@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 
 /**
@@ -63,7 +64,7 @@ sealed interface SettingItem {
         val title: UiText,
         val description: UiText? = null,
         val value: UiText? = null,
-        val trailingIconRes: Int? = null,
+        val trailingIcon: AppIcon? = null,
         val enabled: Boolean = true
     ) : SettingItem
 

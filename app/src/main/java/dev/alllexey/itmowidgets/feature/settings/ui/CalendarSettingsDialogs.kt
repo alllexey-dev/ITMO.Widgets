@@ -14,8 +14,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toKotlinLocalDate
 
 /** The tag of the date range picker, so a recreated sheet listens to it again. */
 internal const val ICS_DATES_TAG = "ics_dates"
@@ -107,7 +108,8 @@ private fun Fragment.startSafely(intent: Intent) {
     }
 }
 
-private fun utcDate(millis: Long): LocalDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+private fun utcDate(millis: Long): LocalDate =
+    Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate().toKotlinLocalDate()
 
 private fun viewIntent(uri: Uri) = Intent(Intent.ACTION_VIEW)
     .setDataAndType(uri, ICS_TYPE)

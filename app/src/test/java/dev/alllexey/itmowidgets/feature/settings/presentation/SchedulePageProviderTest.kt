@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import kotlinx.coroutines.CompletableDeferred
@@ -147,7 +148,7 @@ class SchedulePageProviderTest {
             val row = fixture.viewModel.action(SettingRowId.BACKGROUND_WORK)
             assertEquals(UiText.Resource(R.string.settings_background_work_title), row.title)
             assertEquals(UiText.Resource(R.string.background_work_hint), row.description)
-            assertEquals(R.drawable.ic_open_in_new, row.trailingIconRes)
+            assertEquals(AppIcon.OPEN_IN_NEW, row.trailingIcon)
             assertTrue(row.enabled)
 
             fixture.tracking.enabled.value = false
@@ -253,7 +254,7 @@ class SchedulePageProviderTest {
         val export = fixture.viewModel.action(SettingRowId.ICS_EXPORT)
         assertEquals(UiText.Resource(R.string.settings_ics_export_title), export.title)
         assertEquals(UiText.Resource(R.string.settings_ics_export_description), export.description)
-        assertEquals(R.drawable.ic_download, export.trailingIconRes)
+        assertEquals(AppIcon.DOWNLOAD, export.trailingIcon)
         assertTrue(export.enabled)
 
         fixture.calendarSync.state.value = CalendarSyncState(enabled = true)

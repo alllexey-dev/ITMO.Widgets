@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 
 /** Rows more than one page shows. */
@@ -22,6 +23,6 @@ internal object SettingRows {
         id = SettingRowId.BACKGROUND_WORK,
         title = UiText.Resource(R.string.settings_background_work_title),
         description = UiText.Resource(R.string.background_work_hint),
-        trailingIconRes = R.drawable.ic_open_in_new
+        trailingIcon = AppIcon.OPEN_IN_NEW
     )
 }
