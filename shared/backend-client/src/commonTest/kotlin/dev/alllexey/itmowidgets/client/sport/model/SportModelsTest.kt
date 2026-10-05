@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.client.sport.model
 
 import dev.alllexey.itmowidgets.client.contract.VendoredContract
+import dev.alllexey.itmowidgets.client.http.ApiEnvelope
 import dev.alllexey.itmowidgets.client.json.BackendJson
 import dev.alllexey.itmowidgets.client.support.assertJsonEquals
 import kotlinx.serialization.KSerializer
@@ -18,6 +19,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.fail
 import kotlin.time.Instant
 
 /** The sport wire models (07 CORE-K2, item 12 "Polymorphism"; 13 "More closed sets on the wire") on BK-03's data. */
@@ -263,4 +265,11 @@ class SportModelsTest {
             encode(SportAutoSignRequest.serializer(), SportAutoSignRequest(prototypeLessonId = 9101)),
         )
     }
+}
+
+/** Decoded `data` of the vendored sport answers. */
+internal object SportFixtures {
+    fun <T> data(path: String, serializer: KSerializer<T>): T =
+        BackendJson.decodeFromString(ApiEnvelope.serializer(serializer), VendoredContract.read(path)).data
+            ?: fail("$path has no data")
 }
