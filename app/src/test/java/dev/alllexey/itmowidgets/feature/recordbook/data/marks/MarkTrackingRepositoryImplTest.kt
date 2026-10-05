@@ -12,7 +12,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetChange
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.SheetsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkEventKind
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -45,6 +44,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -62,7 +62,7 @@ class MarkTrackingRepositoryImplTest {
 
     @get:Rule val temporary = TemporaryFolder()
     private val folder by lazy { File(temporary.root, "marks") }
-    private val store get() = MarksFileStore(folder, Gson())
+    private val store get() = MarksFileStore(folder.toOkioPath())
     private val clock = MutableClock(Instant.parse("2026-09-07T09:00:00Z"))
     private val recordbook = FakeRecordbookRepository().apply {
         programs = AppResult.Success(listOf(program(1L, RecordbookPeriod("2026/2027", 3, 2, true), RecordbookPeriod("2025/2026", 2, 1, false))))
