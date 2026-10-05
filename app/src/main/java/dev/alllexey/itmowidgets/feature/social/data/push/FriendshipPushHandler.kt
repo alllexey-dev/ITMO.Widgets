@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.social.data.push
 
 import com.google.gson.Gson
-import com.google.gson.JsonElement
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.model.fcm.impl.FriendshipEvent
@@ -15,6 +14,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.text.UiText
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.JsonElement
 import javax.inject.Inject
 
 class FriendshipPushHandler @Inject constructor(
@@ -29,7 +29,7 @@ class FriendshipPushHandler @Inject constructor(
     override suspend fun handle(payload: JsonElement) {
         if (!services.isEnabled()) return
         val event = try {
-            gson.fromJson(payload, FriendshipEventPayload::class.java) ?: return
+            gson.fromJson(payload.toString(), FriendshipEventPayload::class.java) ?: return
         } catch (error: Exception) {
             diagnostics.warn(TAG, "Invalid friendship push", error)
             return

@@ -1,10 +1,11 @@
 package dev.alllexey.itmowidgets.core.session
 
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import kotlin.io.encoding.Base64
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /**
  * Reads the signed-in user from the locally stored ITMO.ID token.
@@ -16,7 +17,6 @@ import kotlinx.coroutines.withContext
  */
 class IdTokenCurrentUserProvider(
     private val tokenStore: SessionTokenStore,
-    private val gson: Gson,
     private val dispatchers: AppDispatchers,
     private val log: AppLog
 ) : CurrentUserProvider {
@@ -31,7 +31,7 @@ class IdTokenCurrentUserProvider(
             val payload = idToken.split(TOKEN_SEPARATOR).getOrNull(PAYLOAD_INDEX)
                 ?: return null
             val json = PAYLOAD_BASE64.decode(payload).decodeToString()
-            val claims = gson.fromJson(json, IdTokenClaims::class.java) ?: return null
+            val claims = CLAIMS_JSON.decodeFromString<IdTokenClaims>(json)
 
             CurrentUser(
                 isu = claims.isu,
@@ -40,15 +40,16 @@ class IdTokenCurrentUserProvider(
             ).takeIf { it.isu != null || it.name != null }
         } catch (error: Exception) {
             // Never log the token or its payload.
-            log.warn(TAG, "Unreadable id token payload: ${error.javaClass.simpleName}")
+            log.warn(TAG, "Unreadable id token payload: ${error::class.simpleName}")
             null
         }
     }
 
+    @Serializable
     private data class IdTokenClaims(
-        val isu: Int?,
-        val name: String?,
-        val picture: String?
+        val isu: Int? = null,
+        val name: String? = null,
+        val picture: String? = null
     )
 
     private companion object {
@@ -58,5 +59,8 @@ class IdTokenCurrentUserProvider(
 
         /** JWT segments are unpadded; padding stays accepted, as the 2.2 JDK URL decoder did. */
         val PAYLOAD_BASE64 = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT_OPTIONAL)
+
+        /** The token carries many more claims than these three. */
+        val CLAIMS_JSON = Json { ignoreUnknownKeys = true }
     }
 }

@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.auth.data
 
 import api.myitmo.MyItmo
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -22,6 +21,7 @@ import java.io.IOException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -105,6 +105,59 @@ class SessionRepositoryImplTest {
 
         assertEquals(AppResult.Failure(AppError.Unauthorized), result)
         assertEquals(0, fixture.cleaner.requests)
+    }
+
+    @Test
+    fun `accepts a complete Keycloak token response with fields the app does not read`() = runTest {
+        val fixture = fixture(hasRefreshToken = false)
+
+        val result = fixture.repository.completeItmoIdLogin(
+            """{"access_token":" access ","expires_in":300,"refresh_expires_in":600,"refresh_token":"refresh",""" +
+                """"token_type":"Bearer","id_token":"header.payload.signature","not-before-policy":0,""" +
+                """"session_state":"synthetic-session","scope":"openid profile"}"""
+        )
+
+        assertEquals(AppResult.Success(Unit), result)
+        assertEquals(TOKENS, fixture.tokenStore.tokens)
+        assertEquals(1, fixture.cleaner.requests)
+    }
+
+    @Test
+    fun `rejects token responses without a token, with null or invalid expirations, or that are not an object`() = runTest {
+        val complete = mapOf(
+            "access_token" to "\"access\"", "expires_in" to "300", "refresh_token" to "\"refresh\"",
+            "refresh_expires_in" to "600", "id_token" to "\"header.payload.signature\""
+        )
+        fun response(fields: Map<String, String>) = fields.entries.joinToString(",", "{", "}") { "\"${it.key}\":${it.value}" }
+        val responses = complete.keys.map { key -> response(complete - key) } +
+            complete.keys.map { key -> response(complete + (key to "null")) } +
+            listOf(
+                response(complete + ("id_token" to "\"  \"")),
+                response(complete + ("expires_in" to "0")),
+                response(complete + ("refresh_expires_in" to "-1")),
+                "null", "[]", "not json", "{\"access_token\":\"only\"} trailing"
+            )
+        for (body in responses) {
+            val fixture = fixture(hasRefreshToken = false)
+
+            assertEquals(body, AppResult.Failure(AppError.Unauthorized), fixture.repository.completeItmoIdLogin(body))
+            assertEquals(body, 0, fixture.cleaner.requests)
+        }
+    }
+
+    @Test
+    fun `a MyItmoApi 1_x refresh response goes through the same validation`() {
+        val response = api.myitmo.model.other.TokenResponse().apply {
+            accessToken = "access"
+            expiresIn = 300
+            refreshToken = " refresh "
+            refreshExpiresIn = 600
+            idToken = "header.payload.signature"
+        }
+
+        assertEquals(TOKENS, response.toItmoIdTokenResponse().toSessionTokens())
+        response.idToken = null
+        assertThrows(IllegalArgumentException::class.java) { response.toItmoIdTokenResponse().toSessionTokens() }
     }
 
     @Test
@@ -212,7 +265,6 @@ class SessionRepositoryImplTest {
         val repository = SessionRepositoryImpl(
             tokenStore = tokenStore,
             myItmo = RefreshExpiryMyItmo(refreshTokenExpired),
-            gson = Gson(),
             currentUserProvider = object : CurrentUserProvider {
                 override suspend fun getCurrentUser(): CurrentUser? = currentUser
             },

@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.core.notification
 
-import com.google.gson.JsonElement
+import kotlinx.serialization.json.JsonElement
 
 interface FcmPayloadHandler {
     val type: String

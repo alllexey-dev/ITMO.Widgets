@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.core.demo
 
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
@@ -33,7 +32,7 @@ class DemoContentTest {
         FixedAcademicTime(LocalDateTime.of(LocalDate.of(2026, 10, 7), LocalTime.NOON)),
         FixedAcademicTime(LocalDateTime.of(LocalDate.of(2026, 10, 11), LocalTime.NOON))
     )
-    private val buildings = BuildingDirectory.parse(File("src/main/res/raw/itmo_buildings.json").readText(), Gson())
+    private val buildings = BuildingDirectory.parse(File("src/main/res/raw/itmo_buildings.json").readText())
     private val names = DemoPeople.EVERYONE.map { it.name }.toSet()
 
     @Test

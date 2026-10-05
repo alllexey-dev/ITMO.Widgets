@@ -14,27 +14,37 @@ import org.junit.Assert.assertEquals
 import kotlin.time.Clock
 import kotlin.time.toKotlinInstant
 
-/** `files/diagnostics/log.jsonl`: the 2.2 entry stays in the list the diagnostics screen shows. */
+/**
+ * `files/diagnostics/log.jsonl`: Gson wrote the 2.2 entry; kotlinx reads it, appends after it and a new instance
+ * reads both.
+ */
 object DiagnosticsLogUpgrade {
 
     fun check(fixture: Upgrade22Fixture): Unit = runBlocking {
-        val diagnostics = FileAppDiagnostics(
-            File(fixture.filesDir, "diagnostics"),
-            object : Clock { override fun now() = fixture.clock.instant().toKotlinInstant() },
-            DeviceDispatchers,
-            AndroidAppLog()
+        val captured = DiagnosticEntry(
+            at = Captured22.AT.toKotlinInstant(),
+            level = DiagnosticLevel.WARNING,
+            tag = "UpgradeCapture",
+            message = "Synthetic warning of the 2.2 fixture",
+            stackTrace = null
         )
+        val diagnostics = diagnostics(fixture)
+        assertEquals(listOf(captured), diagnostics.observe().first())
+
+        diagnostics.warn("UpgradeCheck", "Synthetic warning after the upgrade")
+        diagnostics.awaitWrites()
+
         assertEquals(
-            listOf(
-                DiagnosticEntry(
-                    at = Captured22.AT.toKotlinInstant(),
-                    level = DiagnosticLevel.WARNING,
-                    tag = "UpgradeCapture",
-                    message = "Synthetic warning of the 2.2 fixture",
-                    stackTrace = null
-                )
-            ),
-            diagnostics.observe().first()
+            listOf("UpgradeCheck" to "Synthetic warning after the upgrade", "UpgradeCapture" to captured.message),
+            diagnostics(fixture).observe().first().map { it.tag to it.message }
         )
+        assertEquals(captured, diagnostics(fixture).observe().first().last())
     }
+
+    private fun diagnostics(fixture: Upgrade22Fixture) = FileAppDiagnostics(
+        File(fixture.filesDir, "diagnostics"),
+        object : Clock { override fun now() = fixture.clock.instant().toKotlinInstant() },
+        DeviceDispatchers,
+        AndroidAppLog()
+    )
 }

@@ -61,6 +61,28 @@ class AppErrorMapperTest {
         assertEquals(AppError.Restricted, error.toAppError())
     }
 
+    @Test
+    fun `only Backend's restricted error code turns a 403 into restricted`() {
+        val restricted = listOf(
+            """{"success":false,"data":null,"error":{"message":"Synthetic","code":"restricted"}}""",
+            """{"error":{"code":"restricted"},"extra":[1,2]}"""
+        )
+        val forbidden = listOf(
+            """{"success":false,"data":null,"error":{"message":"Synthetic","code":"forbidden"}}""",
+            """{"success":false,"error":{"message":"Synthetic","code":null}}""",
+            """{"success":false,"error":null}""",
+            """{"error":"restricted"}""",
+            """{"error":{"code":{"value":"restricted"}}}""",
+            "<html>restricted</html>", "null", "[]", ""
+        )
+        for (body in restricted) {
+            assertEquals(body, AppError.Restricted, HttpException(Response.error<Unit>(403, body.toResponseBody())).toAppError())
+        }
+        for (body in forbidden) {
+            assertEquals(body, AppError.Forbidden, HttpException(Response.error<Unit>(403, body.toResponseBody())).toAppError())
+        }
+    }
+
     private fun httpException(statusCode: Int): HttpException {
         return HttpException(
             Response.error<Unit>(

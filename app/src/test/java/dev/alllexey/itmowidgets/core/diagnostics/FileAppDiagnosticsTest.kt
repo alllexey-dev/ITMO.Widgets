@@ -6,6 +6,9 @@ import java.io.File
 import java.nio.file.Files
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -123,6 +126,42 @@ class FileAppDiagnosticsTest {
         val lines = File(directory, "log.jsonl").readLines()
         assertEquals(journal22.trimEnd('\n'), lines.first())
         assertEquals(written.map { java.time.Instant.parse(it).toString() }, lines.drop(1).map { AT.find(it)!!.groupValues[1] })
+    }
+
+    @Test
+    fun `lines keep the 2_2 fields and leave a missing stack trace out`() = runTest {
+        val diagnostics = FileAppDiagnostics(directory, clock, dispatchers, RecordingAppLog())
+        diagnostics.warn("Sync", "plain <a&b='c'>")
+        diagnostics.error("Push", "failed", IllegalStateException("boom"))
+        diagnostics.awaitWrites()
+
+        val lines = File(directory, "log.jsonl").readLines().map { Json.parseToJsonElement(it).jsonObject }
+        assertEquals(setOf("at", "level", "tag", "message"), lines[0].keys)
+        assertEquals("plain <a&b='c'>", lines[0].getValue("message").jsonPrimitive.content)
+        assertEquals(setOf("at", "level", "tag", "message", "stackTrace"), lines[1].keys)
+        assertEquals("2026-09-16T09:00:00Z", lines[1].getValue("at").jsonPrimitive.content)
+        assertEquals("ERROR", lines[1].getValue("level").jsonPrimitive.content)
+    }
+
+    @Test
+    fun `lines 2_2 wrote with any field order, escapes or unknown fields still read`() = runTest {
+        directory.mkdirs()
+        File(directory, "log.jsonl").writeText(
+            """{"message":"a \u003cb\u003e \u0026 \u003d","tag":"T","level":"ERROR","at":"2026-09-16T08:00:00Z","stackTrace":"trace","extra":1}""" + "\n" +
+                """{"at":"2026-09-16T08:30:00Z","level":"CRASH"}""" + "\n" +
+                """{"at":"not a time","level":"WARNING","tag":"T","message":"skipped"}""" + "\n" +
+                """{"at":"2026-09-16T08:45:00Z","level":"UNKNOWN","tag":"T","message":"skipped"}""" + "\n"
+        )
+
+        val entries = FileAppDiagnostics(directory, clock, dispatchers, RecordingAppLog()).observe().first()
+
+        assertEquals(
+            listOf(
+                DiagnosticEntry(Instant.parse("2026-09-16T08:30:00Z"), DiagnosticLevel.CRASH, "", "", null),
+                DiagnosticEntry(Instant.parse("2026-09-16T08:00:00Z"), DiagnosticLevel.ERROR, "T", "a <b> & =", "trace")
+            ),
+            entries
+        )
     }
 
     private companion object {

@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.social.data.push
 
 import api.myitmo.MyItmo
-import com.google.gson.JsonParser
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
 import dev.alllexey.itmowidgets.core.model.UserCapabilities
@@ -16,6 +15,10 @@ import java.lang.reflect.Proxy
 import java.time.OffsetDateTime
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import org.junit.Assert.*
 import org.junit.Test
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
@@ -54,8 +57,8 @@ class FriendshipPushHandlerTest {
     @Test fun `unknown malformed and disabled events cannot notify or refresh`() = runTest {
         val fixture = Fixture()
         fixture.loaded = true
-        for (wire in listOf("{}", "null", """{"event":"UNKNOWN"}""")) fixture.handler.handle(JsonParser.parseString(wire))
-        val unknown = payload(FriendshipEvent.REQUEST_RECEIVED).asJsonObject.apply { addProperty("event", "UNKNOWN") }
+        for (wire in listOf("{}", "null", """{"event":"UNKNOWN"}""")) fixture.handler.handle(Json.parseToJsonElement(wire))
+        val unknown = JsonObject(payload(FriendshipEvent.REQUEST_RECEIVED).jsonObject + ("event" to JsonPrimitive("UNKNOWN")))
         fixture.handler.handle(unknown)
         fixture.enabled = false
         fixture.handler.handle(payload(FriendshipEvent.REQUEST_ACCEPTED))
@@ -63,8 +66,8 @@ class FriendshipPushHandlerTest {
         assertEquals(0, fixture.refreshes)
     }
 
-    private fun payload(event: FriendshipEvent) = gson.toJsonTree(
-        FriendshipEventPayload(event, actor, OffsetDateTime.parse("2026-09-15T10:00:00+03:00")))
+    private fun payload(event: FriendshipEvent) = Json.parseToJsonElement(gson.toJson(
+        FriendshipEventPayload(event, actor, OffsetDateTime.parse("2026-09-15T10:00:00+03:00"))))
 
     private inner class Fixture {
         var loaded = false

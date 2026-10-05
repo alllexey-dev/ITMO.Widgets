@@ -1,6 +1,9 @@
 package dev.alllexey.itmowidgets.core.location
 
+import kotlinx.serialization.Serializable
+
 /** One ITMO building from `res/raw/itmo_buildings.json`; coordinates checked against OpenStreetMap on 2026-09-20. */
+@Serializable
 data class KnownBuilding(
     val id: String,
     val buildingIds: List<Int>,

@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.di
 import android.content.Context
 import android.os.Build
 import api.myitmo.MyItmo
-import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -62,7 +61,6 @@ object SessionModule {
     @Singleton
     fun provideCurrentUserProvider(
         tokenStore: SessionTokenStore,
-        gson: Gson,
         demo: DemoMode,
         dispatchers: AppDispatchers,
         log: AppLog
@@ -70,7 +68,6 @@ object SessionModule {
         demo = demo,
         signedIn = IdTokenCurrentUserProvider(
             tokenStore = tokenStore,
-            gson = gson,
             dispatchers = dispatchers,
             log = log
         )

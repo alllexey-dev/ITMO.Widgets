@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.core.session
 
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
@@ -36,6 +35,26 @@ class IdTokenCurrentUserProviderTest {
             ),
             provider.getCurrentUser()
         )
+    }
+
+    @Test
+    fun `ignores the other claims of a real ITMO_ID token`() = runTest {
+        val provider = provider(
+            token(
+                """{"exp":1790000000,"iat":1789990000,"aud":["itmo"],"sub":"synthetic","isu":123456,""" +
+                    """"name":"Иванов Иван","given_name":"Иван","groups":[{"name":"T100"}],"picture":null,""" +
+                    """"email_verified":true}"""
+            )
+        )
+
+        assertEquals(CurrentUser(isu = 123456, name = "Иванов Иван", pictureUrl = null), provider.getCurrentUser())
+    }
+
+    @Test
+    fun `an id token payload that is not a claims object reads as no user`() = runTest {
+        for (payload in listOf("[]", "\"text\"", """{"isu":{"id":1}}""")) {
+            assertNull(payload, provider(token(payload)).getCurrentUser())
+        }
     }
 
     @Test
@@ -89,7 +108,6 @@ class IdTokenCurrentUserProviderTest {
     private fun provider(idToken: String?): IdTokenCurrentUserProvider {
         return IdTokenCurrentUserProvider(
             FakeSessionTokenStore(signedIn = false, idToken = idToken),
-            Gson(),
             dispatchers,
             log
         )

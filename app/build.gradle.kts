@@ -140,6 +140,8 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.ksoup)
     implementation(libs.kotlinx.datetime)
+    // kotlinx JSON of the core stores, auth and the FCM envelope (KM-05d); Gson goes with Core 1.x in KM-10i.
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.hilt.android)
     // Koin beside Hilt (ADR 0019): the graph starts in di/bridge/KoinStarter.
     implementation(libs.koin.android)

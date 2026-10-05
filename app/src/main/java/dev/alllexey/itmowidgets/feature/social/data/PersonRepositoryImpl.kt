@@ -4,11 +4,6 @@ import api.myitmo.MyItmoApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonObject
-import com.google.gson.JsonParseException
-import com.google.gson.JsonPrimitive
-import com.google.gson.Strictness
 import dev.alllexey.itmowidgets.core.network.requireResult
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -18,6 +13,12 @@ import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 import retrofit2.HttpException
 import retrofit2.Response
 import java.util.concurrent.ConcurrentHashMap
@@ -65,14 +66,16 @@ class PersonRepositoryImpl @Inject constructor(
         if (code() != 400) return false
         val body = errorBody()?.use { it.string() } ?: return false
         return try {
-            val envelope = ERROR_GSON.fromJson(body, JsonObject::class.java)
-            envelope?.get("error_code") == JsonPrimitive(100) && envelope.get("result")?.isJsonNull == true
-        } catch (_: JsonParseException) {
+            val envelope = Json.parseToJsonElement(body) as? JsonObject ?: return false
+            // A number equal to 100 (100.0 too, as 2.2 compared it), never the string "100".
+            val errorCode = (envelope["error_code"] as? JsonPrimitive)?.takeUnless { it.isString || it is JsonNull }
+            errorCode?.doubleOrNull == MISSING_PERSON_CODE && envelope["result"] is JsonNull
+        } catch (_: SerializationException) {
             false
         }
     }
 
     private companion object {
-        val ERROR_GSON = GsonBuilder().setStrictness(Strictness.STRICT).create()
+        const val MISSING_PERSON_CODE = 100.0
     }
 }

@@ -161,7 +161,7 @@ class SportSignPushHandlerTest {
         suspend fun run(vararg lessons: String, enabled: Boolean = true) {
             settings.setCustomServicesEnabled(enabled)
             val payload = "{\"sportLessons\":[${lessons.ifEmpty { arrayOf(lesson(42)) }.joinToString(",")}] }"
-            handler.handle(com.google.gson.JsonParser.parseString(payload))
+            handler.handle(kotlinx.serialization.json.Json.parseToJsonElement(payload))
         }
     }
 
