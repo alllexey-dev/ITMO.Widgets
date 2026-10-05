@@ -1,4 +1,4 @@
-# Every PR into and every push to `v2.3/next` and `master`: scripts/verify.sh quick.
+# Every PR into and every push to `v2.3/next` and `master`: scripts/verify.sh quick, then the iOS klibs.
 # `verify-quick` is the required check of the ruleset, `integrate merge` and `promote`; never rename it.
 # Only always-running jobs live here: scheduled and advisory jobs go to android-nightly.yml,
 # because a skipped job still leaves a `skipped` check run on the SHA.
@@ -48,6 +48,31 @@ jobs:
           CI: "true"
         run: scripts/verify.sh quick
 
+      # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version; only `v2.3/next` writes the cache.
+      - name: Kotlin/Native version
+        id: kotlin-native
+        run: echo "version=$(sed -n 's/^kotlin = "\(.*\)"$/\1/p' gradle/libs.versions.toml)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore ~/.konan
+        id: konan-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ steps.kotlin-native.outputs.version }}
+
+      # iOS klibs compile on Linux x86_64 without Xcode (SP-10); never link* or *Test on Apple targets here.
+      - name: verify.sh klibs
+        env:
+          CI: "true"
+        run: scripts/verify.sh klibs
+
+      - name: Save ~/.konan
+        if: github.ref == 'refs/heads/v2.3/next' && steps.konan-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: ${{ steps.konan-cache.outputs.cache-primary-key }}
+
       - name: Upload test and lint reports
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -56,5 +81,7 @@ jobs:
           path: |
             */build/reports/
             */build/test-results/
+            shared/*/build/reports/
+            shared/*/build/test-results/
           if-no-files-found: ignore
           retention-days: 14

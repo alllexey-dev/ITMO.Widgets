@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# verify.sh [quick]                        unit tests (Konsist included), lintGithubDebug, both debug assembles
-# verify.sh full                           the AGENTS.md "Build and verify" command (both lints)
+# verify.sh [quick]                        root verifyQuick: every module's tests, Konsist, lintGithubDebug, APKs
+# verify.sh full                           root verifyFull (both lints), then klibs
+# verify.sh klibs [<module>]               iosSimulatorArm64 klibs of every shared module, or of shared/<module>
 # verify.sh shots <module> [--record]      :shared:<module>:screenshotsVerify (screenshotsRecord)
 # verify.sh ui <Class>[,<Class>...]|all    :app:connectedGithubDebugAndroidTest on a pool emulator
 # verify.sh ship                           scripts/ship-check.sh when it exists, else full + check-play-policy.sh
@@ -46,7 +47,7 @@ if [ "${1:-}" = __gradle ]; then
 fi
 
 usage() {
-  sed -n '2,7p' "$self" | sed 's/^# //' >&2
+  sed -n '2,8p' "$self" | sed 's/^# //' >&2
   exit 2
 }
 
@@ -57,7 +58,7 @@ mode=${1:-quick}
 [ $# -gt 0 ] && shift
 case "$mode" in
   -h | --help) usage ;;
-  quick | full | shots | ui | ship | run) ;;
+  quick | full | klibs | shots | ui | ship | run) ;;
   *) note "unknown mode '$mode'"; usage ;;
 esac
 
@@ -89,23 +90,34 @@ gradle_part() { # kind gradle-args...
 
 no_args() { [ $# -eq 0 ] || refuse "$mode takes no arguments (got: $*)"; }
 
-# ---- quick, full, ship -----------------------------------------------------------------------------------
+# ---- quick, full, klibs, ship ----------------------------------------------------------------------------
 
-UNIT_TESTS=":app:testGithubDebugUnitTest :app:testPlayDebugUnitTest"
-ASSEMBLES=":app:assembleGithubDebug :app:assemblePlayDebug"
+# The task lists live in the root build.gradle.kts (verifyQuick, verifyFull, verifyIosKlibs).
 
 run_quick() {
   if [ -e "$root/scripts/check-docs.sh" ]; then
     note "scripts/check-docs.sh (outside any slot)"
     "$root/scripts/check-docs.sh" || return 1
   fi
-  # shellcheck disable=SC2086 # task lists are fixed words
-  gradle_part android $UNIT_TESTS :app:lintGithubDebug $ASSEMBLES
+  gradle_part android verifyQuick
 }
 
 run_full() {
-  # shellcheck disable=SC2086
-  gradle_part android $UNIT_TESTS :app:lintGithubDebug :app:lintPlayDebug $ASSEMBLES
+  gradle_part android verifyFull || return 1
+  run_klibs
+}
+
+# Compile-only (no link*, no *Test on Apple targets): needs no Xcode, and runs on Linux x86_64 in CI (SP-10).
+run_klibs() {
+  local module=${1:-}
+  [ $# -le 1 ] || refuse "usage: klibs [<module>]"
+  if [ -z "$module" ]; then
+    gradle_part kn verifyIosKlibs
+    return
+  fi
+  [[ $module =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || refuse "klibs: '$module' is not a module name"
+  [ -f "$root/shared/$module/build.gradle.kts" ] || refuse "klibs: no module shared/$module"
+  gradle_part kn ":shared:$module:compileKotlinIosSimulatorArm64"
 }
 
 run_ship() {
@@ -254,6 +266,7 @@ run_run() {
 case "$mode" in
   quick) no_args "$@"; run_quick ;;
   full) no_args "$@"; run_full ;;
+  klibs) run_klibs "$@" ;;
   ship) run_ship "$@" ;;
   shots) run_shots "$@" ;;
   ui) run_ui "$@" ;;

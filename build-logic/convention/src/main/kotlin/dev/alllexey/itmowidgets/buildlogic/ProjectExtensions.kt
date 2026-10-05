@@ -5,14 +5,27 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.MinimalExternalModuleDependency
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.getByType
 
 internal const val BASE_PACKAGE = "dev.alllexey.itmowidgets"
 
-/** The per-module lifecycle task scripts/verify.sh quick aggregates (TC-04b); later checks attach here. */
+/** The per-module lifecycle task the root `verifyQuick` aggregates (TC-04b); later checks attach here. */
 internal const val VERIFY_QUICK_TASK = "itmoVerifyQuick"
+
+/**
+ * Core fakes shared by the tests of `:shared:core`, the ten `:shared:feature-*` modules and `:app` (L07 KM-06 creates
+ * the directory). One source root in several modules instead of a 17th module (master plan section 3.1); never in
+ * `:shared:testing` (core-free) or `:shared:designsystem` (its tests need no core fakes).
+ */
+internal val Project.coreTestFixturesDir: Directory
+    get() = isolated.rootProject.projectDirectory.dir("shared/core/src/testFixtures/kotlin")
+
+/** Whether this module's tests compile [coreTestFixturesDir]. */
+internal val Project.usesCoreTestFixtures: Boolean
+    get() = path == ":shared:core" || path.startsWith(":shared:feature-")
 
 internal val Project.libs: VersionCatalog
     get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
