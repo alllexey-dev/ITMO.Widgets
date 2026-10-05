@@ -2,7 +2,8 @@
 # verify.sh [quick]                        root verifyQuick: every module's tests, Konsist, lintGithubDebug, APKs
 # verify.sh full                           root verifyFull (both lints), then klibs
 # verify.sh klibs [<module>]               iosSimulatorArm64 klibs of every shared module, or of shared/<module>
-# verify.sh shots <module> [--record]      :shared:<module>:screenshotsVerify (screenshotsRecord)
+# verify.sh shots <module>|app [--record] [-P<name>=<value>...]
+#                                          :shared:<module> or :app screenshotsVerify (screenshotsRecord)
 # verify.sh ui <Class>[,<Class>...]|all    :app:connectedGithubDebugAndroidTest on a pool emulator
 # verify.sh ship                           scripts/ship-check.sh when it exists, else full + check-play-policy.sh
 # verify.sh run -- <gradle args...>        ad hoc Gradle tasks (kn slot when an argument names an iOS task)
@@ -51,7 +52,7 @@ if [ "${1:-}" = __gradle ]; then
 fi
 
 usage() {
-  sed -n '2,8p' "$self" | sed 's/^# //' >&2
+  sed -n '2,9p' "$self" | sed 's/^# //' >&2
   exit 2
 }
 
@@ -167,25 +168,32 @@ run_ship() {
 # ---- shots -----------------------------------------------------------------------------------------------
 
 run_shots() {
-  local module=${1:-} task=screenshotsVerify out rc
-  [ -n "$module" ] || refuse "usage: shots <module> [--record]"
+  local module=${1:-} task=screenshotsVerify project out rc arg
+  local -a props=()
+  [ -n "$module" ] || refuse "usage: shots <module>|app [--record] [-P<name>=<value>...]"
   shift
-  case "${1:-}" in
-    "") ;;
-    --record) task=screenshotsRecord; shift ;;
-    *) refuse "shots: unknown argument '$1'" ;;
-  esac
-  no_args "$@"
+  for arg in "$@"; do
+    case "$arg" in
+      --record) task=screenshotsRecord ;;
+      -P?*=*) props+=("$arg") ;;
+      *) refuse "shots: unknown argument '$arg'" ;;
+    esac
+  done
   [[ $module =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || refuse "shots: '$module' is not a module name"
   grep -rqs --include='*.kts' --include='*.kt' screenshotsVerify "$root/build-logic" 2> /dev/null ||
     refuse "screenshot harness not installed (no screenshotsVerify task in build-logic yet)"
-  [ -d "$root/shared/$module" ] || refuse "shots: no module shared/$module"
+  if [ "$module" = app ]; then
+    project=:app
+  else
+    [ -d "$root/shared/$module" ] || refuse "shots: no module shared/$module"
+    project=":shared:$module"
+  fi
   out=$(mktemp "${TMPDIR:-/tmp}/verify-shots.XXXXXX") || refuse "cannot create a temporary file"
-  gradle_part android ":shared:$module:$task" 2>&1 | tee "$out"
+  gradle_part android "$project:$task" ${props[@]+"${props[@]}"} 2>&1 | tee "$out"
   rc=${PIPESTATUS[0]}
   if [ "$rc" -ne 0 ] && grep -qE "(Task '$task' not found|Cannot locate tasks that match)" "$out"; then
     rm -f "$out"
-    refuse "screenshot harness not installed in :shared:$module"
+    refuse "screenshot harness not installed in $project"
   fi
   rm -f "$out"
   return "$rc"
