@@ -489,7 +489,7 @@ relying on review.
   `awaitFrameCommit`) and `ViewChecks` (`assertTextFits`, `assertTouchTargets`,
   `descendants`). By default a visual test runs one appearance and takes no
   screenshots; the full matrix and the PNGs are opt-in through instrumentation
-  arguments, see [Verification matrix](design.md#verification-matrix). Debug
+  arguments, see [Running the visual tests](design.md#running-the-visual-tests). Debug
   hosts that implement `AppNavigator` delegate to the debug `NoOpAppNavigator`.
 - `UpgradeFrom22Test` (androidTest, pool emulator) reads the 2.2 data directory
   captured in `app/src/androidTest/assets/upgrade-2.2/` through head stores; a

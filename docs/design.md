@@ -3,7 +3,10 @@
 One visual language across the Android application, grown from the screens the
 user already likes: the schedule and the sport cards. Quiet surfaces, compact
 layout, clear hierarchy, small meaningful accents. This is the target contract
-for every screen; card styles are pinned by `DesignCardResourcesTest`.
+for every screen. Compose screens take every value from `ItmoTheme` in
+`:shared:designsystem` ([Tokens](#tokens)); XML screens keep the v2.2 look from
+the app theme and `res/values` until their port deletes them, and their card
+styles are pinned by `DesignCardResourcesTest`.
 
 ## Principle
 
@@ -14,27 +17,72 @@ for every screen; card styles are pinned by `DesignCardResourcesTest`.
 - Hierarchy comes from surfaces, typography and spacing, not shadows.
 - Never stack a filled surface, a coloured stroke, a large status, a badge and a
   decorative progress on one element.
-- Screens that already work are kept. Unification does not mean a redesign, a
-  new UI framework or features outside the roadmap.
+- Screens that already work keep their look. Screens move to Compose
+  Multiplatform ([ADR 0017](decisions/0017-cmp-ui-in-common-main.md)) as parity
+  ports: a port matches its XML screen against a JVM reference capture and lists
+  every deliberate deviation in its PR. The Material 3 Expressive look arrives
+  later as one token change ([ADR 0021](decisions/0021-m3-expressive-order.md)),
+  not screen by screen. Unification does not mean a redesign or features
+  outside the roadmap.
+
+## Tokens
+
+`ItmoTheme` (`shared/designsystem`, package `dev.alllexey.itmowidgets.designsystem`)
+is the one source of design values for Compose. Its schema has the Material 3
+Expressive shape from the start (extended colours, a corner scale with
+`largeIncreased`, emphasized type, `MotionScheme`), so component APIs do not
+change when the values do; the values are v2.2's until the M3E token change.
+Components and screens read tokens only through `ItmoTheme.*`. No raw colour,
+`.dp` spacing or font size outside `shared/designsystem`; experimental and
+expressive Material APIs only inside it, behind `Itmo*` wrappers.
+
+| Slot | Contents and today's values |
+|---|---|
+| `ItmoTheme.colorScheme` | The M3 colour roles. `ColorSource.Platform` (default): dynamic colour on Android 12+, otherwise, and on iOS, the static M3 baseline scheme (the `#6750A4` family that API 26-30 get from `Theme.Material3.DynamicColors.DayNight`). `ColorSource.Seed` generates MDC's content-based scheme from a seed (previews, tests) |
+| `ItmoTheme.extendedColors` | The app's own colours beside the scheme, one slot per entry of `res/values{,-night}/colors.xml`: lesson types, recordbook passed, sport scores and conditions, teacher levels. Derived per scheme: sport condition containers (the accent mixed 12 % over `surfaceContainerLowest`) and teacher levels (harmonized towards `primary`). In dark, lesson types keep their light values until the M3E change |
+| `ItmoTheme.shapes` | Corner scale `extraSmall` 4, `small` 8, `medium` 12, `large` 16, `largeIncreased` 20, `extraLarge` 28, `extraLargeIncreased` 32, `extraExtraLarge` 48 dp, `full`; card family `cardContent` 20, `cardSummary` 24, `cardHero` 28, `scheduleDay` 16 dp; connected groups 20 dp outer, 4 dp inner, 2 dp gap; stroke 1 dp, elevation 0 dp |
+| `ItmoTheme.spacing` | `related` 4, `compact` 8, `content` 12, `group` 16, `section` 24, `screenMargin` 16, `cardPadding` 16, `summaryPadding` 20, `touchTarget` 48, `fabStackClearance` 152, `statePadding` 32, `stateIcon` 64, `stateInlineIcon` 56 dp |
+| `ItmoTheme.typography`, `ItmoTheme.emphasizedTypography` | The 15 M3 type roles at MDC 1.13's `TextAppearance.Material3.*` values on the system font, each with an emphasized twin; pinned, so a material3 bump cannot change a ported screen's text |
+| `ItmoTheme.motion` | Durations `quick` 180, `standard` 220, `emphasis` 260, `reveal` 300, `progress` 700, `progressSlow` 1000 ms; the skeleton pulse 1200 ms down to alpha 0.55; easing `(0.2, 0, 0, 1)`; Material's `MotionScheme.standard()` for components until the M3E change |
+
+- `cardSummary` (24 dp) is off the corner scale on purpose: it is named so the
+  M3E change can move it with the rest.
+- Reduced motion: `rememberReducedMotion()` is true when the system animator
+  duration scale is 0 (iOS reports false until its host reads Reduce Motion); a
+  kit animation then shows its end state at once.
+- Parity with the XML screens is tested: `DesignTokensParityTest` (`:app`) keeps
+  extended colours, spacing and shapes equal to `res/values`, `ThemeParityTest`
+  the static scheme and `TypographyParityTest` the type scale.
+- `shared/designsystem/tokens/itmo-tokens.json` exports the tokens (static light
+  and dark schemes by role, extended colours with the derivation rules, shapes,
+  spacing, type, motion; colours `#RRGGBB`, sizes dp or sp, durations ms;
+  `schemaVersion` grows with a breaking change). The iOS client and the web app
+  take their tokens from it instead of copying values. It is generated, never
+  edited or merged by hand: after a token change or a rebase run
+  `scripts/verify.sh run -- :shared:designsystem:exportDesignTokens`;
+  `DesignTokensExportTest` fails while it is stale.
 
 ## Colour and surfaces
 
-Material 3 with the existing `Theme.Material3.DynamicColors.DayNight`. Every
-screen must work in light, dark and dynamic palettes; never assume the wallpaper.
+Material 3 colour roles, named here by their token; the XML theme attribute
+stands in parentheses while XML screens remain. Compose reads them from
+`ItmoTheme.colorScheme`, XML screens from the app theme on
+`Theme.Material3.DynamicColors.DayNight`, with the same values. Every screen
+must work in light, dark and dynamic palettes; never assume the wallpaper.
 
 | Role | Rule |
 |---|---|
-| Screen background | `colorSurface`; never override the window background with a fixed colour |
-| Ordinary card | `colorSurfaceContainerLow`, elevation 0 dp |
-| Nested neutral panel | a surface-container level such as `colorSurfaceContainerHighest` |
-| Primary text | `colorOnSurface` |
-| Metadata and decorative icons | `colorOnSurfaceVariant` |
-| Action, current item, small accent | `colorPrimary` |
-| Selected contextual surface | `colorSecondaryContainer` with `colorOnSecondaryContainer` |
-| Quiet stroke and divider | `colorOutlineVariant` |
+| Screen background | `surface` (`colorSurface`); never override the window background with a fixed colour |
+| Ordinary card | `surfaceContainerLow` (`colorSurfaceContainerLow`), elevation 0 dp |
+| Nested neutral panel | a surface-container level such as `surfaceContainerHighest` (`colorSurfaceContainerHighest`) |
+| Primary text | `onSurface` (`colorOnSurface`) |
+| Metadata and decorative icons | `onSurfaceVariant` (`colorOnSurfaceVariant`) |
+| Action, current item, small accent | `primary` (`colorPrimary`) |
+| Selected contextual surface | `secondaryContainer` with `onSecondaryContainer` (`colorSecondaryContainer`, `colorOnSecondaryContainer`) |
+| Quiet stroke and divider | `outlineVariant` (`colorOutlineVariant`) |
 
 `on…Container` colours are used only on their container. Do not fill large
-cards with `colorPrimary` to make them prominent; the user rejects heavy tonal
+cards with `primary` to make them prominent; the user rejects heavy tonal
 fills. Lesson types, grades, sport statuses and ring sectors are domain
 semantics with their own deliberate light and dark values and contrast checks;
 a status is also readable by text or icon, never by colour alone.
@@ -43,7 +91,8 @@ The tone of a teacher's AI summary is such a stable colour of meaning:
 `teacher_level_*` from red to green (`very_negative`, `negative`, `mixed`,
 `positive`, `very_positive`, light `#D32F2F`, `#E06C00`, `#B58900`, `#689F38`,
 `#2E7D32`, dark `#FF6E6E`, `#FFA24C`, `#FFD54F`, `#AED581`, `#4CAF50`),
-only harmonized towards the primary colour (`core/ui/TeacherLevelTone.kt`), so
+only harmonized towards the primary colour (`core/ui/TeacherLevelTone.kt`;
+`teacherLevel*` in `ItmoTheme.extendedColors`), so
 every palette keeps five distinct tones. The dot is decorative; its row says
 the tone in words.
 
@@ -225,39 +274,94 @@ the geometry.
 
 ## Shared components
 
-Keep XML, Material components and the current architecture. The shared layer is
-deliberately small: card variants, named dimensions, refresh helper, content-state
-styles, the accessible selection row (`bindSelectionAccessibility`), the user row
-(`item_user_row.xml`), the contextual screen header and the details-sheet header
+Compose screens build from the kit in `shared/designsystem`
+(`designsystem/components/`): stateless components over primitives (state and
+callbacks in; text, icons and formatted dates as parameters; no feature or
+`core` domain types, no network or clock), each with previews and baselines in
+all four appearances. Today: `AppTopBar`, `ContentState`, `Skeleton`,
+`AppRefreshBox`, `ProgressButton`, `ButtonRow`, `Pill`, `ToneDot`, `Avatar`,
+`ItmoNavigationBar`, connected groups (`Modifier.connectedGroupItem`,
+`SectionHeading`, `GroupActionRow`) and the settings rows (`SettingsGroup`,
+`SettingsRow` and its variants). More components follow before the ports that
+need them; a port uses the kit and grows it instead of drawing its own variant.
+
+XML screens that are not ported yet keep XML, Material components and their
+helpers. That shared layer is deliberately small: card variants, named
+dimensions, refresh helper, content-state styles, the accessible selection row
+(`bindSelectionAccessibility`), the user row (`item_user_row.xml`), the
+contextual screen header and the details-sheet header
 (`view_details_header.xml`: title, kind, date with the time range and duration,
-teacher, flow, place, map button) that every bottom sheet with a session starts with. Shared helpers belong to
-`core/ui`; screen-specific behaviour to `feature/<name>/ui`. Extract only rules
-that genuinely repeat; do not build a universal renderer.
+teacher, flow, place, map button) that every bottom sheet with a session starts
+with. Shared helpers belong to `core/ui`; screen-specific behaviour to
+`feature/<name>/ui`. Extract only rules that genuinely repeat; do not build a
+universal renderer.
 
-## Verification matrix
+## Verification tiers
 
-Every meaningful UI change is checked on an emulator before it is called done:
+Screens and kit components are checked by JVM screenshot baselines
+([ADR 0022](decisions/0022-jvm-screenshot-tests.md)); an emulator is used only
+for what the JVM cannot render. Screenshots and fixtures contain synthetic data
+only. Compilation is not visual verification.
 
-- light and dark theme, at least one non-default Material You palette on
-  Android 12+; the ITMO.ID window in its light theme;
-- a narrow phone (320 dp content width) and the primary test device; font scale
-  1.0 and 1.3;
-- long Russian names and titles; loading, content, empty and error; first load,
-  refresh with cache, refresh error, retry, in-button progress, view recreation;
-- touch targets, TalkBack descriptions, selected and unavailable states;
-- first and last transition frames; no clipped dates or chips, no jumps, no
-  leftover alpha after recycling, no lost scroll.
-
-Screenshots and fixtures contain synthetic data only. Compilation is not visual
-verification.
+- **Every PR.** `scripts/verify.sh quick`, plus `scripts/verify.sh shots <module>`
+  for a UI change: light and dark baselines of every preview, compared pixel for
+  pixel, with accessibility checks (touch targets, labels, contrast) on every
+  capture. CI's `verify-quick` runs `shots all` and never records. A baseline
+  changes only with the code behind it, and every new or changed PNG is looked
+  at before it is committed.
+- **Four appearances** (light; dark; a seeded palette at font scale 1.3 on a
+  320 dp width; dark with another seed at 1.3 on 320 dp) for the kit, always,
+  and for a feature's screens on its last port; once recorded, every run
+  verifies them.
+- **Ports.** Before a screen is ported, a JVM reference capture of its XML
+  screen is recorded under the future preview's name; the port's re-record diff
+  is the parity diff.
+- **Emulator** only for Android-only surfaces: widgets, the quick-settings tile,
+  shortcuts, WebView, notifications and the instrumented tests of screens not
+  ported yet, through `scripts/verify.sh ui` on a pool emulator.
+- **Release candidate.** The full matrix: `scripts/verify.sh shots all --gallery <dir>`
+  plus an emulator pass that covers
+  - light and dark theme, at least one non-default Material You palette on
+    Android 12+; the ITMO.ID window in its light theme;
+  - a narrow phone (320 dp content width) and the primary test device; font
+    scale 1.0 and 1.3;
+  - long Russian names and titles; loading, content, empty and error; first
+    load, refresh with cache, refresh error, retry, in-button progress, view
+    recreation;
+  - touch targets, TalkBack descriptions, selected and unavailable states;
+  - first and last transition frames; no clipped dates or chips, no jumps, no
+    leftover alpha after recycling, no lost scroll.
 
 ### Running the visual tests
 
-Screens move to JVM screenshot tests (`scripts/verify.sh shots <module>`).
+Screenshot tests run on the JVM (Roborazzi on Robolectric) from each module's
+`@Preview`s:
+
+```bash
+scripts/verify.sh shots <module>                  # compare shared/<module>: light and dark (the kit: all four)
+scripts/verify.sh shots <module> --record         # re-record after a deliberate change, then look at every PNG
+scripts/verify.sh shots <module> --record -Pshots.appearance=full   # also the two narrow appearances
+scripts/verify.sh shots app                       # :app: XML reference captures and the harness proof
+scripts/verify.sh shots all                       # every module plus :app, what CI runs
+scripts/verify.sh shots all --gallery <dir>       # every capture in four appearances into <dir>, no compare
+```
+
+- Baselines live in `<module>/screenshots/` as `<Preview>_<appearance>.png`
+  (`<Preview>_<state>_<appearance>.png` for a named preview state); XML
+  references of screens not ported yet are listed in
+  `<module>/screenshots/references.txt`. A run also fails on a stale baseline
+  or a preview without one.
+- A failed comparison writes `<name>_compare.png` (reference, diff, new) to
+  `<module>/build/outputs/roborazzi/`; in CI the run uploads them as the
+  `screenshot-diffs` artefact. Baselines recorded on the Mac verify on the CI's
+  Ubuntu runner without a tolerance.
+- Galleries are for review only; never copy a gallery PNG into `screenshots/`.
+
 Instrumented tests stay for what only a device shows: widgets, the
-quick-settings tile, WebView, notifications and the platform list. They run on a
-pool emulator through `scripts/verify.sh ui`, never with bare `adb` or Gradle
-commands against a shared device:
+quick-settings tile, WebView, notifications and the platform list, plus the
+visual tests of screens not ported yet. They run on a pool emulator through
+`scripts/verify.sh ui`, never with bare `adb` or Gradle commands against a
+shared device:
 
 ```bash
 scripts/emulator.sh up            # prints ANDROID_SERIAL=emulator-<port>; `up --api 30` for API 30
