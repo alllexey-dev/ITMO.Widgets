@@ -51,6 +51,21 @@ class SemanticsChecksTest {
     }
 
     @Test
+    fun shortTextInAWideAreaPasses() = runComposeUiTest {
+        // A wrap-content text narrower than its constraints, as a button label or a centred title.
+        setContent { Column(Modifier.width(320.dp)) { BasicText(SHORT_LABEL) } }
+
+        assertNoTextOverflow()
+    }
+
+    @Test
+    fun unwrappedTextWiderThanItsBoundsFails() = runComposeUiTest {
+        setContent { Box(Modifier.width(40.dp)) { BasicText(LONG_NAME, softWrap = false) } }
+
+        assertFailsWith<IllegalStateException> { assertNoTextOverflow() }
+    }
+
+    @Test
     fun ellipsizedTextFailsUnlessAllowed() = runComposeUiTest {
         setContent {
             Column {
@@ -65,5 +80,6 @@ class SemanticsChecksTest {
     private companion object {
         const val LONG_NAME = "Константинопольский Александр Владимирович"
         const val SHORTENED = "shortened"
+        const val SHORT_LABEL = "Повторить"
     }
 }

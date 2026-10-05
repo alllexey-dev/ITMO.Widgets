@@ -31,17 +31,30 @@ fun SemanticsNodeInteractionsProvider.assertTouchTargets(minSize: Dp = MinTouchT
 }
 
 /**
- * No text is cut off: every text node lays out within its bounds and lines (`TextLayoutResult.hasVisualOverflow`,
- * which an ellipsis also sets). Nodes that match [allowed] (deliberately shortened lines) are skipped.
+ * No text is cut off: every text node lays out within its bounds and lines, and no line ends in an ellipsis. Nodes
+ * that match [allowed] (deliberately shortened lines) are skipped.
  */
 fun SemanticsNodeInteractionsProvider.assertNoTextOverflow(allowed: SemanticsMatcher? = null) {
     val failures = onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult), useUnmergedTree = true)
         .fetchSemanticsNodes()
         .filterNot { allowed?.matches(it) == true }
-        .filter { node -> node.textLayouts().any { it.hasVisualOverflow } }
+        .filter { node -> node.textLayouts().any { it.overflows() } }
         .map { it.describe() }
     check(failures.isEmpty()) { "Text overflows its bounds:\n" + failures.joinToString("\n") }
 }
+
+/**
+ * `hasVisualOverflow` would flag every short text narrower than its constraints: the layout that the semantics action
+ * returns keeps the paragraph at the constraints' width while `size` is the text's own. So widths compare per line.
+ */
+private fun TextLayoutResult.overflows(): Boolean {
+    if (didOverflowHeight) return true
+    if (lineCount > 0 && isLineEllipsized(lineCount - 1)) return true
+    return (0 until lineCount).any { line -> getLineRight(line) - getLineLeft(line) > size.width + LINE_SLACK_PX }
+}
+
+/** Half a pixel for the rounding between a line's float width and the integer size. */
+private const val LINE_SLACK_PX = 0.5f
 
 private fun SemanticsNode.textLayouts(): List<TextLayoutResult> {
     val results = mutableListOf<TextLayoutResult>()
