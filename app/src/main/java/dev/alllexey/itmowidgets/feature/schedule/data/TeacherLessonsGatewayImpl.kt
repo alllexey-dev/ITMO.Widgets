@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.StudyWeeks
 import java.time.LocalDate
@@ -44,7 +45,7 @@ class TeacherLessonsGatewayImpl @Inject constructor(
     private val generation = AtomicLong()
 
     override fun taughtBy(teacherIsu: Int): Flow<AppResult<TeacherLessons>> = channelFlow {
-        val today = time.today()
+        val today = time.javaToday()
         if (demo.isActive()) {
             val lessons = DemoSchedule.ownDays(today.minusDays(6), today, today)
                 .sortedByDescending { it.date }

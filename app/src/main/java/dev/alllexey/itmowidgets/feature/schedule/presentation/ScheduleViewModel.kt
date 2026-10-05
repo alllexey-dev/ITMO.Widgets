@@ -13,6 +13,9 @@ import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
@@ -262,7 +265,7 @@ class ScheduleViewModel @Inject constructor(
 
     private fun currentDisplayDays() = buildScheduleDisplayDays(
         currentDays, if (canShowPendingSport()) pendingSport else emptyList(),
-        currentStart, currentEnd, timeProvider.zoneId, timeProvider.now(), changedOccurrences
+        currentStart, currentEnd, timeProvider.javaZone(), timeProvider.javaNow(), changedOccurrences
     )
 
     // A successful empty academic response is still a usable snapshot. Keep its
@@ -309,9 +312,9 @@ class ScheduleViewModel @Inject constructor(
         currentEnd = initialEnd()
     }
 
-    private fun initialStart(): LocalDate = timeProvider.today().minusDays(1)
+    private fun initialStart(): LocalDate = timeProvider.javaToday().minusDays(1)
 
-    private fun initialEnd(): LocalDate = timeProvider.today().plusDays(PAGE_SIZE_DAYS)
+    private fun initialEnd(): LocalDate = timeProvider.javaToday().plusDays(PAGE_SIZE_DAYS)
 
     companion object {
         const val ARG_USER_ISU = "user_isu"

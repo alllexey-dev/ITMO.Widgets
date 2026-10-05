@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.reviews.data.demo.DemoReviews
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.model.ApiResponse
@@ -62,7 +63,7 @@ class TeacherReviewsRepositoryImpl @Inject constructor(
 
     override suspend fun reviews(isu: Int): AppResult<TeacherReviews> {
         if (demo.isActive()) {
-            val reviews = DemoReviews.reviews(isu, time.today())
+            val reviews = DemoReviews.reviews(isu, time.javaToday())
             synchronized(cacheLock) { cache[isu] = reviews }
             return AppResult.Success(reviews)
         }

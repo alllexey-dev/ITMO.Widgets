@@ -2,6 +2,9 @@ package dev.alllexey.itmowidgets.feature.sport.data.debug
 
 import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
@@ -17,17 +20,17 @@ class DefaultSportLessonTemplateProvider @Inject constructor(
     override fun getSchedule(): Map<LocalDate, List<SportLesson>>? {
         if (!templateController.isEnabled()) return null
 
-        val now = timeProvider.now()
+        val now = timeProvider.javaNow()
         val firstDate = if (now.toLocalTime() < LAST_TODAY_START) {
-            timeProvider.today()
+            timeProvider.javaToday()
         } else {
-            timeProvider.today().plusDays(1)
+            timeProvider.javaToday().plusDays(1)
         }
         val lessons = listOf(
             createLesson(
                 id = -1_001,
                 date = firstDate,
-                startTime = if (firstDate == timeProvider.today()) LAST_TODAY_START else MORNING_START,
+                startTime = if (firstDate == timeProvider.javaToday()) LAST_TODAY_START else MORNING_START,
                 durationMinutes = 90,
                 sectionName = "Фитнес (функциональная тренировка)",
                 teacher = "Иванова Анна Сергеевна",
@@ -107,7 +110,7 @@ class DefaultSportLessonTemplateProvider @Inject constructor(
         available: Int,
         unavailableReasons: List<UnavailableReason> = emptyList()
     ): SportLesson {
-        val start = date.atTime(startTime).atZone(timeProvider.zoneId).toOffsetDateTime()
+        val start = date.atTime(startTime).atZone(timeProvider.javaZone()).toOffsetDateTime()
         return SportLesson(
             isLessonReal = true,
             lessonId = id,

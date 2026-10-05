@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,7 +26,7 @@ class ScheduleChangesHomeCardSource @Inject constructor(
 ) : HomeCardSource {
 
     override fun observe(): Flow<List<HomeCard>> = combine(ticker(), repository.observeChanges()) { _, changes ->
-        val now = timeProvider.now().toLocalDateTime()
+        val now = timeProvider.javaNow().toLocalDateTime()
         val unread = changes.filter { !it.read && !it.isOver(now) }
         val latest = unread.maxWithOrNull(NEWEST) ?: return@combine emptyList()
         listOf(HomeCard.ScheduleChanges(unread = unread.size, latest = latest))

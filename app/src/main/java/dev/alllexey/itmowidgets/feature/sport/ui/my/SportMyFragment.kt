@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.sport.ui.my
 import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.os.Bundle
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.feature.sport.ui.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.ui.common.toDetailsArgs
@@ -94,7 +95,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
             val current = adapter.currentList.firstOrNull {
                 it.lessonId == result.getLong(SportCommonDetailsBottomSheet.RESULT_LESSON_ID)
             } ?: return@setFragmentResultListener
-            val action = current.toDetailsArgs().bookingAction(timeProvider.now())
+            val action = current.toDetailsArgs().bookingAction(timeProvider.javaNow())
             if (action != SportBookingAction.NONE && action.name == result.getString(SportCommonDetailsBottomSheet.RESULT_ACTION)) {
                 onUnSign(current)
             }

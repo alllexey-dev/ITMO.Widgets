@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.sign
 
 import android.os.Bundle
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
 import android.view.LayoutInflater
@@ -98,7 +99,7 @@ class SportSignFragment : Fragment(), FilterActionsListener, SportSignActionsLis
                 ?: viewModel.linkedLesson(lessonId)?.let { SportLessonItem(it, isBusy = isBusy(lessonId)) }
                 ?: return@setFragmentResultListener
             if (current.isBusy) return@setFragmentResultListener
-            val action = current.lesson.bookingConditions().evaluate(timeProvider.now()).action
+            val action = current.lesson.bookingConditions().evaluate(timeProvider.javaNow()).action
             if (action.name != result.getString(SportCommonDetailsBottomSheet.RESULT_ACTION)) {
                 showFeedback(R.string.sport_lesson_unavailable)
                 return@setFragmentResultListener

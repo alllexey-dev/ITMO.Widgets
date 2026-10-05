@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.*
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
@@ -91,7 +92,7 @@ class PendingSportBookingsRepositoryImplTest {
                 base.copy(id = index + 10L, status = status, targetLesson = base.targetLesson.copy(id = index + 10L))
             } + listOf(
                 base.copy(isCancelled = true),
-                base.copy(targetLesson = base.targetLesson.copy(start = FixedTime.now(), end = FixedTime.now().plusMinutes(90))),
+                base.copy(targetLesson = base.targetLesson.copy(start = FixedTime.javaNow(), end = FixedTime.javaNow().plusMinutes(90))),
                 signed,
                 auto(real = signed.targetLesson),
                 base.copy(id = 99, targetLesson = base.targetLesson.copy(id = 10))
@@ -262,7 +263,7 @@ class PendingSportBookingsRepositoryImplTest {
     ) = SportAutoSignEntry(
         id = id, prototypeLessonId = prototype.id, realLessonId = real?.id,
         position = 1, total = 1, isCancelled = false, status = SportQueueEntryStatus.WAITING,
-        createdAt = FixedTime.now(), firstNotifiedAt = null, lastNotifiedAt = null,
+        createdAt = FixedTime.javaNow(), firstNotifiedAt = null, lastNotifiedAt = null,
         cancelledAt = null, satisfiedAt = null, expiredAt = null, notificationAttempts = 0,
         maxNotificationAttempts = 10, targetLesson = prototype, realLesson = real
     )

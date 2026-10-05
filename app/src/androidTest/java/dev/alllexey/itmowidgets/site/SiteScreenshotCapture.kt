@@ -26,6 +26,8 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
@@ -47,8 +49,10 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalDateTime
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -132,7 +136,7 @@ class SiteScreenshotCapture {
         }
         return listOf(
             HomeCard.Schedule(date = TODAY, tomorrow = false, rows = rows, completed = 0),
-            HomeCard.ScheduleChanges(unread = 1, latest = DemoSchedule.changes(TODAY, TIME.now().toInstant()).first()),
+            HomeCard.ScheduleChanges(unread = 1, latest = DemoSchedule.changes(TODAY, TIME.javaNow().toInstant()).first()),
             HomeCard.Marks(listOf(DemoStudy.DATABASES.name, DemoStudy.DISCRETE.name)),
             HomeCard.Sport(DemoSport.score(TIME).summary, pendingBookings()),
             HomeCard.FriendRequests(REQUESTS)
@@ -209,7 +213,7 @@ class SiteScreenshotCapture {
     private fun catalog(): List<SportLesson> {
         val entries = DemoSport.queueEntries(TIME).filterIsInstance<SportFreeSignEntry>().associateBy { it.lessonId }
         val friends = DemoSport.friendsBookings(TIME).groupBy { it.lessonId }
-        return DemoSport.schedule(TIME).values.flatten().filter { it.start > TIME.now() }.take(CATALOG_SIZE).map {
+        return DemoSport.schedule(TIME).values.flatten().filter { it.start > TIME.javaNow() }.take(CATALOG_SIZE).map {
             it.copy(signEntry = entries[it.lessonId], friendsBookings = friends[it.lessonId].orEmpty())
         }
     }
@@ -267,9 +271,9 @@ class SiteScreenshotCapture {
     private class SiteRecordbook : RecordbookRepository {
         override suspend fun getPrograms() = AppResult.Success(DemoRecordbook.programs(RECORDBOOK_TODAY))
         override suspend fun getSubjects(programId: Long, semester: Int): AppResult<List<RecordbookSubject>> =
-            AppResult.Success(DemoRecordbook.subjects(programId, semester, RECORDBOOK_TODAY, RECORDBOOK_TIME.zoneId).orEmpty())
+            AppResult.Success(DemoRecordbook.subjects(programId, semester, RECORDBOOK_TODAY, RECORDBOOK_TIME.javaZone()).orEmpty())
         override suspend fun getControls(entryId: Long) =
-            AppResult.Success(DemoRecordbook.controls(entryId, RECORDBOOK_TIME.now()).orEmpty())
+            AppResult.Success(DemoRecordbook.controls(entryId, RECORDBOOK_TIME.javaNow()).orEmpty())
     }
     // endregion
 
@@ -312,8 +316,8 @@ class SiteScreenshotCapture {
 
     /** The academic clock of the captures, standing still in Moscow. */
     private class FixedTime(private val at: LocalDateTime) : AcademicTimeProvider {
-        override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-        override fun today(): LocalDate = at.toLocalDate()
-        override fun now(): OffsetDateTime = at.atZone(zoneId).toOffsetDateTime()
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+        override fun today() = at.toLocalDate().toKotlinLocalDate()
+        override fun now() = at.toKotlinLocalDateTime().toInstant(timeZone)
     }
 }

@@ -8,6 +8,8 @@ import dev.alllexey.itmowidgets.core.testing.FakePendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.home.HomeScheduleSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
@@ -31,14 +33,14 @@ class ScheduleHomeCardSourceTest {
 
     @Test
     fun `the card is built from today and tomorrow of the cache`() = runTest {
-        repository.days.value = listOf(DaySchedule(1, 1, Today.today(), null, listOf(lesson(1, "13:30"))))
+        repository.days.value = listOf(DaySchedule(1, 1, Today.javaToday(), null, listOf(lesson(1, "13:30"))))
 
         val card = source.observe().first().single() as HomeCard.Schedule
 
         assertEquals(1, card.rows.size)
         val request = repository.observed.single()
-        assertEquals(Today.today(), request.startDate)
-        assertEquals(Today.today().plusDays(1), request.endDate)
+        assertEquals(Today.javaToday(), request.startDate)
+        assertEquals(Today.javaToday().plusDays(1), request.endDate)
     }
 
     @Test
@@ -53,14 +55,14 @@ class ScheduleHomeCardSourceTest {
 
     @Test
     fun `a failed refresh reports the error while the cache keeps the card`() = runTest {
-        repository.days.value = listOf(DaySchedule(1, 1, Today.today(), null, listOf(lesson(1, "13:30"))))
+        repository.days.value = listOf(DaySchedule(1, 1, Today.javaToday(), null, listOf(lesson(1, "13:30"))))
         repository.refreshResult = AppResult.Failure(AppError.Network)
 
         assertEquals(AppResult.Failure(AppError.Network), source.refresh())
         assertEquals(1, pending.refreshes)
         assertTrue(source.observe().first().single() is HomeCard.Schedule)
         val request = repository.refreshed.single()
-        assertEquals(Today.today().plusDays(1), request.endDate)
+        assertEquals(Today.javaToday().plusDays(1), request.endDate)
     }
 
     private fun lesson(pairId: Long, start: String) = Lesson(
@@ -73,8 +75,8 @@ class ScheduleHomeCardSourceTest {
 
     private fun booking() = PendingSportBooking(
         queueId = 1, queueKind = PendingSportBooking.QueueKind.AUTO, lessonId = 101, sectionName = "Бассейн",
-        start = Today.today().atTime(16, 0).atZone(Today.zoneId).toOffsetDateTime(),
-        end = Today.today().atTime(17, 30).atZone(Today.zoneId).toOffsetDateTime(),
+        start = Today.javaToday().atTime(16, 0).atZone(Today.javaZone()).toOffsetDateTime(),
+        end = Today.javaToday().atTime(17, 30).atZone(Today.javaZone()).toOffsetDateTime(),
         teacherFio = "Тренер", roomName = "Бассейн", isPrediction = false
     )
 

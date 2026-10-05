@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticEntry
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaZone
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,7 +26,7 @@ class DiagnosticsViewModel @Inject constructor(
     timeProvider: AcademicTimeProvider
 ) : ViewModel() {
 
-    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(timeProvider.zoneId)
+    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(timeProvider.javaZone())
 
     val uiState: StateFlow<DiagnosticsUiState> = diagnostics.observe()
         .map<List<DiagnosticEntry>, DiagnosticsUiState> { DiagnosticsUiState.Content(it) }

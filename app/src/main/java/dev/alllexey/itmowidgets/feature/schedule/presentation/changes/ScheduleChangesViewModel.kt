@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,8 +62,8 @@ class ScheduleChangesViewModel @Inject constructor(
 
     private fun render(changes: List<ScheduleChange>, isNew: (ScheduleChange) -> Boolean): ScheduleChangesUiState {
         if (changes.isEmpty()) return ScheduleChangesUiState.Empty
-        val today = timeProvider.today()
-        val days = changes.groupBy { it.detectedAt.atZone(timeProvider.zoneId).toLocalDate() }
+        val today = timeProvider.javaToday()
+        val days = changes.groupBy { it.detectedAt.atZone(timeProvider.javaZone()).toLocalDate() }
             .toSortedMap(reverseOrder())
             .map { (date, dayChanges) ->
                 val relative = when (date) {

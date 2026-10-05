@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toBooking
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
@@ -65,7 +66,7 @@ class PendingSportBookingsRepositoryImpl @Inject constructor(
                 if (error != null) return@combine AppResult.Failure(error)
 
                 val signedIds = confirmed.valueOrNull().orEmpty().mapTo(mutableSetOf()) { it.lessonId }
-                val now = timeProvider.now()
+                val now = timeProvider.javaNow()
                 val pending = queues.valueOrNull().orEmpty()
                     .filter { !it.isCancelled && it.status in SportQueueEntryStatus.notifiableStatuses }
                     .map { it.toBooking() }

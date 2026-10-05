@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.sport.cards
 
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportOccupancy
@@ -15,7 +14,6 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAc
 import java.io.*
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -126,11 +124,7 @@ class SportSessionPresentationTest {
 
     @Test fun `shared date names the weekday and the date, never today or tomorrow`() {
         val lesson = SportCardFixtures.lesson()
-        val time = object : AcademicTimeProvider {
-            override val zoneId: ZoneId = ZoneId.of("Europe/Moscow")
-            override fun today(): LocalDate = lesson.start.toLocalDate()
-            override fun now(): OffsetDateTime = lesson.start.minusHours(1)
-        }
+        val time = FixedAcademicTime(lesson.start.minusHours(1).toLocalDateTime())
         assertEquals("вторник, 8 сентября, 18:30–20:00", SportSessionTiming(lesson.start, lesson.end, time).shareDateText())
     }
 }

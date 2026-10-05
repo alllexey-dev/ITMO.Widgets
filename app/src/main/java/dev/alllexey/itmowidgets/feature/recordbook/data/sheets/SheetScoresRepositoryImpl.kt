@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -70,7 +71,7 @@ class SheetScoresRepositoryImpl @Inject constructor(
 
     override fun observe(): Flow<List<SheetScore>> = flow {
         if (demo.isActive()) {
-            emit(DemoRecordbook.sheetScores(time.today(), clock.instant()))
+            emit(DemoRecordbook.sheetScores(time.javaToday(), clock.instant()))
             return@flow
         }
         lock.withLock { loaded() }

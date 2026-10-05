@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPreferences
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelection
@@ -34,7 +35,7 @@ class ScheduleWidgetDataProvider @Inject constructor(
     suspend fun load(): ScheduleWidgetLoadResult {
         val preferences = readPreferences()
         if (!tokens.hasRefreshToken()) return signedOut(preferences)
-        val now = timeProvider.now()
+        val now = timeProvider.javaNow()
         val start = now.toLocalDate()
         val end = if (preferences.display.full.showTomorrowWhenTodayIsOver) start.plusDays(1) else start
 

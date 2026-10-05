@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.core.ui.ThemeColors
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.databinding.ItemSportLessonBinding
@@ -107,7 +108,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener, private val ti
         }
 
         private fun bindActions(item: SportLesson, isBusy: Boolean) {
-            val availability = item.bookingConditions().evaluate(timeProvider.now())
+            val availability = item.bookingConditions().evaluate(timeProvider.javaNow())
             with(binding) {
                 statusText.isVisible = false
                 statusText.setTextColor(root.context.color.onSurfaceVariant)
@@ -148,7 +149,7 @@ class SportLessonsAdapter(val listener: SportSignActionsListener, private val ti
                         else -> null
                     },
                     onClick = {
-                        if (item.bookingConditions().evaluate(timeProvider.now()).action != action) {
+                        if (item.bookingConditions().evaluate(timeProvider.javaNow()).action != action) {
                             bind(item, false)
                         } else when (action) {
                             SportBookingAction.SIGN -> listener.onSignUpClick(item)

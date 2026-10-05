@@ -133,6 +133,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp)
     implementation(libs.ksoup)
+    implementation(libs.kotlinx.datetime)
     implementation(libs.hilt.android)
     "playImplementation"(libs.play.app.update.ktx)
     ksp(libs.hilt.compiler)

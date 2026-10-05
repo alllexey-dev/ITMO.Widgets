@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.core.time.javaToday
 import java.time.LocalDate
 import kotlinx.coroutines.async
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -88,7 +89,7 @@ class DebugToolsViewModelTest {
 
         assertEquals(
             DebugToolsUiState.Content(
-                effectiveDate = FixedTimeProvider.today(),
+                effectiveDate = FixedTimeProvider.javaToday(),
                 dateOverride = date,
                 scoreOverride = SportScoreOverride(120, 10),
                 lessonTemplatesEnabled = true,
@@ -162,11 +163,11 @@ class DebugToolsViewModelTest {
     private object FixedTimeProvider : AcademicTimeProvider by FixedAcademicTime(LocalDate.of(2026, 7, 24))
 
     private class FakeTimeOverrideController : AcademicTimeOverrideController {
-        private var value: LocalDate? = null
+        private var value: kotlinx.datetime.LocalDate? = null
 
-        override fun getOverrideDate(): LocalDate? = value
+        override fun getOverrideDate(): kotlinx.datetime.LocalDate? = value
 
-        override fun setOverrideDate(date: LocalDate?) {
+        override fun setOverrideDate(date: kotlinx.datetime.LocalDate?) {
             value = date
         }
     }

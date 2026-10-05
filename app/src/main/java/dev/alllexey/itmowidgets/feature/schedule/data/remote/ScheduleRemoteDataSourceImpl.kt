@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.model.LessonSyncRequest
 import dev.alllexey.itmowidgets.core.schedule.ScheduleUtil
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.core.utils.toDto
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
@@ -35,7 +36,7 @@ class ScheduleRemoteDataSourceImpl @Inject constructor(
     ): List<DaySchedule> = withContext(dispatchers.io) {
         if (demo.isActive()) {
             return@withContext if (userIsu == null) {
-                DemoSchedule.ownDays(start, end, time.today())
+                DemoSchedule.ownDays(start, end, time.javaToday())
             } else {
                 DemoSchedule.userDays(userIsu, start, end)
             }

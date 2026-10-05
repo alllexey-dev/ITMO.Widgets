@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -123,7 +124,7 @@ class IcsExportViewModel @Inject constructor(
     }
 
     private fun choice(): IcsExportUiState.Choose {
-        val today = time.today()
+        val today = time.javaToday()
         fun option(kind: IcsRangeKind, title: Int, range: ScheduleExportRange) =
             IcsRangeOption(kind, UiText.Resource(title), IcsDateLabels.range(range.dates(today)))
         return IcsExportUiState.Choose(
@@ -147,7 +148,7 @@ class IcsExportViewModel @Inject constructor(
         )
     }
 
-    private fun label(range: ScheduleExportRange): UiText = IcsDateLabels.range(range.dates(time.today()))
+    private fun label(range: ScheduleExportRange): UiText = IcsDateLabels.range(range.dates(time.javaToday()))
 
     private fun saveRange(range: ScheduleExportRange) {
         saved[RANGE] = when (range) {

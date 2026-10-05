@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.common
 
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import java.time.Duration
@@ -38,9 +40,9 @@ data class SportOccupancy(val available: Int, val limit: Int) {
 }
 
 class SportSessionTiming(start: OffsetDateTime, end: OffsetDateTime, time: AcademicTimeProvider) {
-    val start = start.atZoneSameInstant(time.zoneId)
-    val end = end.atZoneSameInstant(time.zoneId)
+    val start = start.atZoneSameInstant(time.javaZone())
+    val end = end.atZoneSameInstant(time.javaZone())
     val durationMinutes: Long? = Duration.between(start, end).toMinutes().takeIf { it > 0 }
-    val isToday = this.start.toLocalDate() == time.today()
-    val isTomorrow = this.start.toLocalDate() == time.today().plusDays(1)
+    val isToday = this.start.toLocalDate() == time.javaToday()
+    val isTomorrow = this.start.toLocalDate() == time.javaToday().plusDays(1)
 }

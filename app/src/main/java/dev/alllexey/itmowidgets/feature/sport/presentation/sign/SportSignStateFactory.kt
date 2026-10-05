@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
@@ -22,7 +24,7 @@ class SportSignStateFactory @Inject constructor(
         userFilters: SportSignFilters,
         hasPartialError: Boolean
     ): SportSignUiState.Content = with(userFilters) {
-        val today = timeProvider.today()
+        val today = timeProvider.javaToday()
         val buildingsById = catalog.buildings.associate { it.id to it.value }
         val teachersByIsu = catalog.teachers.associate { it.id to it.value }
         val timeSlotsById = timeSlots.associate { it.id to it.displayName }
@@ -81,7 +83,7 @@ class SportSignStateFactory @Inject constructor(
             .sorted()
         val availableTeachers = validTeacherNames.sorted()
 
-        val now = timeProvider.now()
+        val now = timeProvider.javaNow()
         val visibleLessons = filteredLessons
             .asSequence()
             .filter { it.end > now }

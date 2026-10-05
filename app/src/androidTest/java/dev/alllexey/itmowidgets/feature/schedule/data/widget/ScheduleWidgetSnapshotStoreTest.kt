@@ -20,13 +20,15 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.*
 import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import java.io.File
 import java.time.OffsetDateTime
-import java.time.ZoneId
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toKotlinLocalDate
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -163,8 +165,8 @@ class ScheduleWidgetSnapshotStoreTest {
 
     private class Time : AcademicTimeProvider {
         var value: OffsetDateTime = OffsetDateTime.parse("2026-09-08T10:00:00+03:00")
-        override val zoneId = ZoneId.of("Europe/Moscow")
-        override fun now() = value
-        override fun today() = value.toLocalDate()
+        override val timeZone = TimeZone.of("Europe/Moscow")
+        override fun now() = value.toInstant().toKotlinInstant()
+        override fun today() = value.toLocalDate().toKotlinLocalDate()
     }
 }

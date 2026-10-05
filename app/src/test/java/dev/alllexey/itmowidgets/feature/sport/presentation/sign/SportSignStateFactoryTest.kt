@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterOption
@@ -60,7 +61,7 @@ class SportSignStateFactoryTest {
             selectedBuildingName = "Кронверкский",
             selectedTeacherName = "Иванов И. И.",
             selectedTimeSlot = "10:00-11:30",
-            selectedDate = timeProvider.today()
+            selectedDate = timeProvider.javaToday()
         )
 
         val state = factory.create(
@@ -75,7 +76,7 @@ class SportSignStateFactoryTest {
         assertEquals(6, state.calendarWeeks.size)
         assertEquals(7, state.displayedWeek.size)
         assertEquals(0, state.selectedWeekIndex)
-        assertTrue(state.displayedWeek.single { it.date == timeProvider.today() }.hasLessons)
+        assertTrue(state.displayedWeek.single { it.date == timeProvider.javaToday() }.hasLessons)
         assertTrue(state.hasActiveFilters)
         assertTrue(SectionName("Плавание") in state.availableSports)
         assertTrue(SectionName("Йога") in state.availableSports)
@@ -90,12 +91,12 @@ class SportSignStateFactoryTest {
                 lessons = emptyList(),
                 catalog = catalog,
                 timeSlots = timeSlots,
-                userFilters = SportSignFilters(selectedDate = timeProvider.today()),
+                userFilters = SportSignFilters(selectedDate = timeProvider.javaToday()),
                 hasPartialError = false
             )
 
             assertEquals("Июль", state.currentMonthName)
-            assertEquals("ср", state.displayedWeek.single { it.date == timeProvider.today() }.dayOfWeek)
+            assertEquals("ср", state.displayedWeek.single { it.date == timeProvider.javaToday() }.dayOfWeek)
         } finally {
             Locale.setDefault(systemLocale)
         }
@@ -107,7 +108,7 @@ class SportSignStateFactoryTest {
             selectedBuildingName = "Несуществующий корпус",
             selectedTeacherName = "Несуществующий преподаватель",
             selectedTimeSlot = "00:00-00:00",
-            selectedDate = timeProvider.today()
+            selectedDate = timeProvider.javaToday()
         )
 
         val state = factory.create(
@@ -145,7 +146,7 @@ class SportSignStateFactoryTest {
         val rows = listOf(external, anotherExternal, online, unknownOffline, missingOnlineMarker)
         val filters = catalog.copy(buildings = catalog.buildings + SportFilterOption(0, "Другие объекты"))
         fun state(building: String?) = factory.create(rows, filters, timeSlots,
-            SportSignFilters(selectedDate = timeProvider.today(), selectedBuildingName = building), false)
+            SportSignFilters(selectedDate = timeProvider.javaToday(), selectedBuildingName = building), false)
 
         assertEquals(listOf(online), state("Онлайн").displayedLessons)
         assertEquals(listOf(external, anotherExternal, unknownOffline, missingOnlineMarker), state("Другие объекты").displayedLessons)

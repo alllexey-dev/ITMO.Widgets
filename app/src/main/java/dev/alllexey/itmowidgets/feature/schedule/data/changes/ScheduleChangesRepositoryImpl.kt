@@ -12,6 +12,9 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.WallClock
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
+import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.DetectedChange
@@ -67,7 +70,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
 
     override fun observeChanges(): Flow<List<ScheduleChange>> = flow {
         if (demo.isActive()) {
-            emit(DemoSchedule.changes(time.today(), clock.instant()))
+            emit(DemoSchedule.changes(time.javaToday(), clock.instant()))
             return@flow
         }
         lock.withLock { loaded() }
@@ -78,7 +81,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
         if (demo.isActive()) return@withLock AppResult.Success(ScheduleCheckResult.Compared(0))
         val started = generation.get()
         val epoch = snapshotEpoch.get()
-        val today = time.today()
+        val today = time.javaToday()
         val end = today.plusDays(WINDOW_DAYS)
         val current = try {
             withContext(dispatchers.io) { request(today, end) }?.academicSnapshot(today, end)
@@ -144,7 +147,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
             // A new term's schedule landing on empty weeks is not a list of added lessons.
             return stored.copy(snapshot = current.toStored(), emptyHeld = false) to ScheduleCheckResult.Baseline
         }
-        val found = ScheduleDiff.compare(previous, current, time.now().atZoneSameInstant(time.zoneId).toLocalDateTime())
+        val found = ScheduleDiff.compare(previous, current, time.javaNow().atZoneSameInstant(time.javaZone()).toLocalDateTime())
         val detectedAt = clock.millis()
         val next = stored.copy(
             snapshot = current.toStored(),

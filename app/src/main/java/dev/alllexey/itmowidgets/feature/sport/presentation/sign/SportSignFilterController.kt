@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.presentation.sign
 
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +16,7 @@ class SportSignFilterController @Inject constructor(
 ) {
 
     private val mutableFilters = MutableStateFlow(
-        SportSignFilters(selectedDate = timeProvider.today())
+        SportSignFilters(selectedDate = timeProvider.javaToday())
     )
     val filters: StateFlow<SportSignFilters> = mutableFilters.asStateFlow()
 
@@ -66,7 +67,7 @@ class SportSignFilterController @Inject constructor(
     }
 
     private fun moveWeek(offset: Int) {
-        val today = timeProvider.today()
+        val today = timeProvider.javaToday()
         val currentMonday = today.with(DayOfWeek.MONDAY)
         val selectedMonday = mutableFilters.value.selectedDate.with(DayOfWeek.MONDAY)
         val currentOffset = ChronoUnit.WEEKS

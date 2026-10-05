@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
 import dev.alllexey.itmowidgets.core.testing.slot
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.ScheduleRequest
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
@@ -259,7 +260,7 @@ class ScheduleViewModelTest {
             advanceUntilIdle()
 
             assertEquals(
-                ScheduleRequest(null, timeProvider.today().minusDays(1), timeProvider.today().plusDays(28)),
+                ScheduleRequest(null, timeProvider.javaToday().minusDays(1), timeProvider.javaToday().plusDays(28)),
                 repository.refreshed.last()
             )
             assertEquals(observations, repository.observed)
@@ -385,7 +386,7 @@ class ScheduleViewModelTest {
     @Test
     fun `a change marks its lesson only on its own day`() =
         runTest(mainDispatcherRule.dispatcher) {
-            val (tomorrow, later) = timeProvider.today().plusDays(1) to timeProvider.today().plusDays(2)
+            val (tomorrow, later) = timeProvider.javaToday().plusDays(1) to timeProvider.javaToday().plusDays(2)
             val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule(tomorrow), daySchedule(later)) }
             val changes = FakeScheduleChangesRepository(
                 scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, tomorrow))
@@ -401,7 +402,7 @@ class ScheduleViewModelTest {
     @Test
     fun `a cancelled lesson still in the cache is marked by its old slot`() =
         runTest(mainDispatcherRule.dispatcher) {
-            val day = timeProvider.today().plusDays(2)
+            val day = timeProvider.javaToday().plusDays(2)
             val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule(day)) }
             val changes = FakeScheduleChangesRepository(
                 scheduleChange(kind = ScheduleChangeKind.CANCELLED, before = slot(2, day))
@@ -418,7 +419,7 @@ class ScheduleViewModelTest {
     fun `a friend's schedule with the same lesson shows the mark too`() =
         runTest(mainDispatcherRule.dispatcher) {
             val user = SelectedUser(123456, "Иван Иванов", null)
-            val day = timeProvider.today().plusDays(1)
+            val day = timeProvider.javaToday().plusDays(1)
             val repository = FakeScheduleRepository().apply { schedulesFor(user.isu).value = listOf(daySchedule(day)) }
             val changes = FakeScheduleChangesRepository(scheduleChange(before = slot(3, day), after = slot(3, day.plusDays(1))))
             val viewModel = createViewModel(repository, changesRepository = changes)
@@ -434,7 +435,7 @@ class ScheduleViewModelTest {
     @Test
     fun `a change leaving the store removes the mark without asking for the schedule again`() =
         runTest(mainDispatcherRule.dispatcher) {
-            val day = timeProvider.today().plusDays(1)
+            val day = timeProvider.javaToday().plusDays(1)
             val repository = FakeScheduleRepository().apply { days.value = listOf(daySchedule(day)) }
             val changes = FakeScheduleChangesRepository(scheduleChange(kind = ScheduleChangeKind.ADDED, after = slot(1, day)))
             val viewModel = createViewModel(repository, changesRepository = changes)
@@ -472,15 +473,15 @@ class ScheduleViewModelTest {
 
     private fun initialRequest(userIsu: Int? = null) = ScheduleRequest(
         userIsu,
-        timeProvider.today().minusDays(1),
-        timeProvider.today().plusDays(14)
+        timeProvider.javaToday().minusDays(1),
+        timeProvider.javaToday().plusDays(14)
     )
 
     private fun daysIncludingNextPage(): List<DaySchedule> = (-1L..28L).map { offset ->
-        daySchedule(timeProvider.today().plusDays(offset))
+        daySchedule(timeProvider.javaToday().plusDays(offset))
     }
 
-    private fun daySchedule(date: LocalDate = timeProvider.today()): DaySchedule {
+    private fun daySchedule(date: LocalDate = timeProvider.javaToday()): DaySchedule {
         return DaySchedule(
             dayNumber = 1,
             weekNumber = 1,

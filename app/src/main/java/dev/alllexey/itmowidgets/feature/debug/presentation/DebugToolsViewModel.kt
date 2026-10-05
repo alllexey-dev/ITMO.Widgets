@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.time.javaToday
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -26,6 +27,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
 
 sealed interface DebugToolsUiState {
     data class Content(
@@ -89,7 +92,7 @@ class DebugToolsViewModel @Inject constructor(
     fun probeBarsSession() = barsSessionProbe.start()
 
     fun setDateOverride(date: LocalDate?) {
-        timeOverrideController.setOverrideDate(date)
+        timeOverrideController.setOverrideDate(date?.toKotlinLocalDate())
         publishAndRecreate()
     }
 
@@ -140,8 +143,8 @@ class DebugToolsViewModel @Inject constructor(
         customServicesEnabled: Boolean = currentState().customServicesEnabled
     ): DebugToolsUiState.Content {
         return DebugToolsUiState.Content(
-            effectiveDate = timeProvider.today(),
-            dateOverride = timeOverrideController.getOverrideDate(),
+            effectiveDate = timeProvider.javaToday(),
+            dateOverride = timeOverrideController.getOverrideDate()?.toJavaLocalDate(),
             scoreOverride = sportScoreOverrideController.getOverride(),
             lessonTemplatesEnabled = sportLessonTemplateController.isEnabled(),
             refreshTokenConfigured = refreshTokenController.hasRefreshToken(),

@@ -12,6 +12,8 @@ import com.google.android.material.card.MaterialCardView
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.core.ui.color
 import dev.alllexey.itmowidgets.core.ui.dp
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleDisplayDay
@@ -32,7 +34,7 @@ class DayScheduleAdapter(
 
     private var timelineDays = emptyList<ScheduleDisplayDay>()
     private var timelineStates = emptyList<List<ScheduleItem.LessonState>>()
-    private var renderedToday = timeProvider.today()
+    private var renderedToday = timeProvider.javaToday()
 
     override fun onCurrentListChanged(
         previousList: List<ScheduleDisplayDay>,
@@ -79,7 +81,7 @@ class DayScheduleAdapter(
             )
         }
 
-        val today = timeProvider.today()
+        val today = timeProvider.javaToday()
         val isToday = date.equals(today)
 
         if (isToday) {
@@ -108,7 +110,7 @@ class DayScheduleAdapter(
         // Also support a first bind before ListAdapter's list-change callback.
         // Keep the committed snapshot intact for its old/new marker comparison.
         val states = if (timelineDays === currentList) timelineStates
-        else resolveScheduleTimeline(currentList, timeProvider.now().toLocalDateTime())
+        else resolveScheduleTimeline(currentList, timeProvider.javaNow().toLocalDateTime())
         val processed = processLessonsWithBreaks(lessons, states[position], daySchedule.pendingSport, daySchedule.changedPairIds)
         val lessonAdapter = LessonAdapter(processed, { lesson -> onLessonClick(lesson, date) }, onPendingClick)
         // Days are recycled by the outer list. A day's bounded rows must all
@@ -126,7 +128,7 @@ class DayScheduleAdapter(
         val previousStates = timelineStates
         val previousToday = renderedToday
         updateTimeline(currentList)
-        renderedToday = timeProvider.today()
+        renderedToday = timeProvider.javaToday()
         if (previousToday != renderedToday) {
             // Date-card emphasis and past-day alpha also change at midnight.
             notifyItemRangeChanged(0, itemCount)
@@ -139,7 +141,7 @@ class DayScheduleAdapter(
 
     private fun updateTimeline(days: List<ScheduleDisplayDay>) {
         timelineDays = days
-        timelineStates = resolveScheduleTimeline(days, timeProvider.now().toLocalDateTime())
+        timelineStates = resolveScheduleTimeline(days, timeProvider.javaNow().toLocalDateTime())
     }
 
     class DayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

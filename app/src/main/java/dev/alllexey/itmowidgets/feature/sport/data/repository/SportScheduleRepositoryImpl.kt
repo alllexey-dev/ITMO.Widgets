@@ -7,6 +7,8 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
+import dev.alllexey.itmowidgets.core.time.javaNow
+import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -176,13 +178,13 @@ class SportScheduleRepositoryImpl @Inject constructor(
 
         try {
             val result = withContext(dispatchers.io) {
-                val from = timeProvider.today()
+                val from = timeProvider.javaToday()
                 val to = from.plusDays(21)
 
                 val response = myItmoApi
                     .getSportSchedule(from, to, null, null, null)
                     .execute()
-                val now = timeProvider.now()
+                val now = timeProvider.javaNow()
 
                 response.body()?.result?.associate {
                     it.date to it.lessons.orEmpty().map { lesson ->

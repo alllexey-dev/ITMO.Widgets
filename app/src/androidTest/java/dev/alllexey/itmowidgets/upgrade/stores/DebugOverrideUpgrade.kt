@@ -3,10 +3,11 @@ package dev.alllexey.itmowidgets.upgrade.stores
 import dev.alllexey.itmowidgets.core.debug.FileSportLessonTemplateStore
 import dev.alllexey.itmowidgets.core.debug.FileSportScoreOverrideStore
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.core.time.FileAcademicTimeOverrideStore
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 
@@ -22,7 +23,7 @@ object DebugOverrideUpgrade {
         )
         assertEquals(
             LocalDate.parse("2026-10-12"),
-            FileAcademicTimeOverrideStore(File(debug, "academic_date_override")).getOverrideDate()
+            FileAcademicTimeOverrideStore(AtomicTextFile(File(debug, "academic_date_override"))).getOverrideDate()
         )
     }
 }

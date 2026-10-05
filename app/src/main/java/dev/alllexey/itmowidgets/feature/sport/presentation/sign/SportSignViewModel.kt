@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.javaNow
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
@@ -141,7 +142,7 @@ class SportSignViewModel @Inject constructor(
                 state.errorOrNull()?.let { eventChannel.send(SportSignEvent.ShowError(it)) }
                 return@launch
             }
-            val lesson = lessons.findLinked(lessonId, predicted)?.takeIf { it.end > timeProvider.now() }
+            val lesson = lessons.findLinked(lessonId, predicted)?.takeIf { it.end > timeProvider.javaNow() }
             if (lesson == null) {
                 eventChannel.send(SportSignEvent.ShowLinkUnavailable)
                 return@launch
