@@ -1,0 +1,6 @@
+id	symbol	fill	kind	sf_symbol	note
+account_circle_filled	account_circle	1	shared	person.crop.circle.fill	Selected tab
+brand_github	-	0	custom	custom.brand_github	Brand mark
+clock	-	1	custom	clock.fill	Drawn glyph
+repeat	repeat	0	shared	repeat	Swift keyword
+tile_qr	qr_code	0	android	-	Tile

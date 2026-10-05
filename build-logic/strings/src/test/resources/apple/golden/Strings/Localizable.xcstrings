@@ -1,0 +1,42 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "app_name" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "ios_camera_usage" : {
+      "comment" : "Generated from strings_ios.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Камера нужна для QR-кода"
+          }
+        }
+      }
+    },
+    "notification_sport_success" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы записаны на %1$@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

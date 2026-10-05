@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ITMO.Widgets</string>
+    <string name="notification_sport_success">Вы записаны на %1$s</string>
+</resources>

@@ -1,0 +1,450 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "links_author" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автор: %1$@"
+          }
+        }
+      }
+    },
+    "links_connection_required" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделиться можно с подключением к ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "links_copied" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка скопирована"
+          }
+        }
+      }
+    },
+    "links_copy" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать ссылку"
+          }
+        }
+      }
+    },
+    "links_delete" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить"
+          }
+        }
+      }
+    },
+    "links_delete_confirm" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить ссылку?"
+          }
+        }
+      }
+    },
+    "links_edit" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить"
+          }
+        }
+      }
+    },
+    "links_editor_edit" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить ссылку"
+          }
+        }
+      }
+    },
+    "links_editor_new" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новая ссылка"
+          }
+        }
+      }
+    },
+    "links_empty" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылок пока нет"
+          }
+        }
+      }
+    },
+    "links_error_title" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить ссылки"
+          }
+        }
+      }
+    },
+    "links_invalid_url" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужна ссылка https://"
+          }
+        }
+      }
+    },
+    "links_name_hint" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Название"
+          }
+        }
+      }
+    },
+    "links_open" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть"
+          }
+        }
+      }
+    },
+    "links_pin" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрепить"
+          }
+        }
+      }
+    },
+    "links_pinned" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "закреплена"
+          }
+        }
+      }
+    },
+    "links_previous" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "С прошлых лет"
+          }
+        }
+      }
+    },
+    "links_rejected_reason" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Причина: %1$@"
+          }
+        }
+      }
+    },
+    "links_report" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пожаловаться"
+          }
+        }
+      }
+    },
+    "links_report_broken" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не открывается"
+          }
+        }
+      }
+    },
+    "links_report_comment" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Комментарий"
+          }
+        }
+      }
+    },
+    "links_report_other" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другое"
+          }
+        }
+      }
+    },
+    "links_report_send" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить"
+          }
+        }
+      }
+    },
+    "links_report_spam" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спам"
+          }
+        }
+      }
+    },
+    "links_report_title" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жалоба на ссылку"
+          }
+        }
+      }
+    },
+    "links_report_wrong_subject" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другой предмет"
+          }
+        }
+      }
+    },
+    "links_save" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить"
+          }
+        }
+      }
+    },
+    "links_status_hidden" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "скрыта"
+          }
+        }
+      }
+    },
+    "links_status_pending" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "на проверке"
+          }
+        }
+      }
+    },
+    "links_status_rejected" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "отклонена"
+          }
+        }
+      }
+    },
+    "links_title_too_long" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не больше 120 символов"
+          }
+        }
+      }
+    },
+    "links_unpin" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открепить"
+          }
+        }
+      }
+    },
+    "links_url_clear" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить ссылку"
+          }
+        }
+      }
+    },
+    "links_url_hint" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка"
+          }
+        }
+      }
+    },
+    "links_visibility_all_review" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "После проверки"
+          }
+        }
+      }
+    },
+    "links_who_sees" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кто видит"
+          }
+        }
+      }
+    },
+    "sheet_scores_action" : {
+      "comment" : "Generated from strings_resources.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мои баллы"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

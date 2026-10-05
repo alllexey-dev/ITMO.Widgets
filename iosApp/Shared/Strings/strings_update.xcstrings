@@ -1,0 +1,114 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "app_update_action" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скачать"
+          }
+        }
+      }
+    },
+    "app_update_description" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновление уже можно скачать. В нём новые возможности и исправления."
+          }
+        }
+      }
+    },
+    "app_update_later" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напомнить позже"
+          }
+        }
+      }
+    },
+    "app_update_open_failed" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось открыть страницу с релизом"
+          }
+        }
+      }
+    },
+    "app_update_skip" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропустить версию"
+          }
+        }
+      }
+    },
+    "app_update_title" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вышла новая версия"
+          }
+        }
+      }
+    },
+    "app_update_unsupported_description" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ITMO.Widgets больше не поддерживает установленную версию — часть возможностей может не работать. Обновитесь, и всё снова заработает."
+          }
+        }
+      }
+    },
+    "app_update_unsupported_title" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эта версия устарела"
+          }
+        }
+      }
+    },
+    "app_update_versions" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ → %2$@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

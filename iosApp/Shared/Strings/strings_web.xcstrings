@@ -1,0 +1,54 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "my_itmo_web_error_description" : {
+      "comment" : "Generated from strings_web.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверьте подключение к интернету и попробуйте ещё раз"
+          }
+        }
+      }
+    },
+    "my_itmo_web_error_title" : {
+      "comment" : "Generated from strings_web.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось открыть My ITMO"
+          }
+        }
+      }
+    },
+    "my_itmo_web_external" : {
+      "comment" : "Generated from strings_web.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть в браузере"
+          }
+        }
+      }
+    },
+    "my_itmo_web_reload" : {
+      "comment" : "Generated from strings_web.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновить страницу"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

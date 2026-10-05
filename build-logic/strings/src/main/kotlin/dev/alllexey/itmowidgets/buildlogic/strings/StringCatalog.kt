@@ -4,14 +4,21 @@ import org.w3c.dom.Element
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 
-/** One `<string>` or `<plurals>` entry; [texts] holds the string value or every plural item. */
+/**
+ * One `<string>` or `<plurals>` entry; [texts] holds the string value or every plural item, [forms] maps each plural
+ * quantity to its item. [markup] is true when the value or an item has child elements (`<b>`, `<xliff:g>`).
+ */
 data class CatalogEntry(
     val key: String,
     val kind: String,
     val texts: List<String>,
     val quantities: Set<String>,
     val attributes: Set<String>,
-)
+    val forms: Map<String, String> = emptyMap(),
+    val markup: Boolean = false,
+) {
+    val isPlural: Boolean get() = kind == PLURALS
+}
 
 /** A catalog file in Android resource syntax; [path] is the repository-relative path used in messages. */
 class CatalogFile(val path: String, val entries: List<CatalogEntry>) {
@@ -28,10 +35,17 @@ class CatalogFile(val path: String, val entries: List<CatalogEntry>) {
                     texts = if (element.tagName == PLURALS) items.map { it.textContent } else listOf(element.textContent),
                     quantities = items.map { it.getAttribute("quantity") }.toSet(),
                     attributes = (listOf(element) + items).flatMap { attributeNames(it) }.toSet(),
+                    forms = items.associate { it.getAttribute("quantity") to it.textContent },
+                    markup = (if (element.tagName == PLURALS) items else listOf(element))
+                        .any { children(it).isNotEmpty() },
                 )
             }
             return CatalogFile(path, entries)
         }
+
+        /** Parses [files] in path order; paths in messages are relative to [root]. */
+        fun parseAll(files: Iterable<File>, root: File): List<CatalogFile> =
+            files.sortedBy { it.invariantSeparatorsPath }.map { parse(it.relativeTo(root).invariantSeparatorsPath, it) }
 
         private fun children(element: Element): List<Element> =
             (0 until element.childNodes.length).map { element.childNodes.item(it) }.filterIsInstance<Element>()
@@ -43,7 +57,7 @@ class CatalogFile(val path: String, val entries: List<CatalogEntry>) {
 
 /**
  * The `checkStringCatalog` rules (ADR 0028, report 95 "Tooling"). Each rule returns one message per violation;
- * an empty list means the catalog passes. The freshness of generated outputs is TC-16b's rule.
+ * an empty list means the catalog passes. [AppleExport.staleOutputs] adds the freshness of the committed Apple files.
  */
 object StringCatalogRules {
 

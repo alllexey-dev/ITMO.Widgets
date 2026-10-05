@@ -1,0 +1,138 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "app_link_unavailable_text" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка повреждена. Попросите отправить её ещё раз."
+          }
+        }
+      }
+    },
+    "app_link_unavailable_title" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка не открывается"
+          }
+        }
+      }
+    },
+    "auth_title" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "demo_banner_sign_in" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти"
+          }
+        }
+      }
+    },
+    "demo_banner_text" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Демо-режим · вымышленные данные"
+          }
+        }
+      }
+    },
+    "title_home" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Главная"
+          }
+        }
+      }
+    },
+    "title_me" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Профиль"
+          }
+        }
+      }
+    },
+    "title_qr" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропуск"
+          }
+        }
+      }
+    },
+    "title_schedule" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание"
+          }
+        }
+      }
+    },
+    "update_downloaded" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновление загружено"
+          }
+        }
+      }
+    },
+    "update_restart" : {
+      "comment" : "Generated from strings_app.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапустить"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

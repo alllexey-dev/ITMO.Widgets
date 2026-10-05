@@ -18,6 +18,7 @@ import org.gradle.kotlin.dsl.register
  * - A shared module publishes the declared files as its `itmowidgetsAndroidStringsElements` variant.
  * - `:app` runs `checkStringCatalog` before every build (`preBuild`) and merges the exports of its project
  *   dependencies into a generated `res` directory of each variant.
+ * - `:app:exportAppleStrings` writes the committed `iosApp/Shared` tables and `AppSymbol.swift` ([AppleExport]).
  */
 class StringsConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
@@ -49,17 +50,37 @@ class StringsConventionPlugin : Plugin<Project> {
 
     private fun Project.registerCatalogCheck() {
         val root = isolated.rootProject.projectDirectory
+        val catalog = files(
+            layout.projectDirectory.dir("src/main/res/values").asFileTree.matching { include("strings_*.xml") },
+            root.dir("shared").asFileTree.matching { include("*/$COMPOSE_RESOURCES/values*/strings*.xml") },
+            root.dir("iosApp/Strings").asFileTree.matching { include("strings_ios*.xml") },
+        )
+        val shared = root.dir(APPLE_SHARED)
+        val export = tasks.register<ExportAppleStrings>("exportAppleStrings") {
+            group = "build"
+            description = "Writes the committed iosApp/Shared string tables and AppSymbol.swift (ADR 0028)."
+            catalogFiles.from(catalog)
+            appleTables.set(root.file(AppleExport.TABLES_FILE))
+            iconRegistry.set(root.file(AppleExport.ICONS_FILE))
+            repositoryRoot.set(root)
+            sharedDir.set(shared)
+        }
         val check = tasks.register<CheckStringCatalog>("checkStringCatalog") {
             group = "verification"
-            description = "Checks every string catalog file against the ADR 0028 rules."
-            catalogFiles.from(
-                layout.projectDirectory.dir("src/main/res/values").asFileTree.matching { include("strings_*.xml") },
-                root.dir("shared").asFileTree.matching { include("*/$COMPOSE_RESOURCES/values*/strings*.xml") },
-                root.dir("iosApp/Strings").asFileTree.matching { include("strings_ios*.xml") },
-            )
+            description = "Checks every string catalog file against the ADR 0028 rules and the Apple export."
+            catalogFiles.from(catalog)
             frozenKeys.set(root.file(StringCatalogRules.FROZEN_KEYS))
+            appleTables.set(root.file(AppleExport.TABLES_FILE))
+            iconRegistry.set(root.file(AppleExport.ICONS_FILE))
+            appleOutputs.from(
+                shared.asFileTree.matching {
+                    include("${AppleExport.STRINGS_DIR}/*.xcstrings", AppleExport.SYMBOLS_FILE)
+                },
+            )
+            sharedDir.set(shared)
             repositoryRoot.set(root)
             report.set(layout.buildDirectory.file("reports/checkStringCatalog/files.txt"))
+            mustRunAfter(export)
         }
         tasks.named { it == "preBuild" }.configureEach { dependsOn(check) }
     }
@@ -89,5 +110,6 @@ class StringsConventionPlugin : Plugin<Project> {
         const val ELEMENTS = "itmowidgetsAndroidStringsElements"
         const val USAGE = "itmowidgets-android-strings"
         const val COMPOSE_RESOURCES = "src/commonMain/composeResources"
+        const val APPLE_SHARED = "iosApp/Shared"
     }
 }

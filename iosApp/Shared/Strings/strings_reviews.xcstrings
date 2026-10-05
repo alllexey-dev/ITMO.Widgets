@@ -1,0 +1,258 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "review_anonymous" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Анонимно"
+          }
+        }
+      }
+    },
+    "review_anonymous_off" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Имя будет видно всем"
+          }
+        }
+      }
+    },
+    "review_discard" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сохранять"
+          }
+        }
+      }
+    },
+    "review_discard_title" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сохранять отзыв?"
+          }
+        }
+      }
+    },
+    "review_editor_close" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть"
+          }
+        }
+      }
+    },
+    "review_editor_edit" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить отзыв"
+          }
+        }
+      }
+    },
+    "review_editor_new" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новый отзыв"
+          }
+        }
+      }
+    },
+    "review_report_comment" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Комментарий"
+          }
+        }
+      }
+    },
+    "review_report_offensive" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оскорбления"
+          }
+        }
+      }
+    },
+    "review_report_other" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другое"
+          }
+        }
+      }
+    },
+    "review_report_send" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить"
+          }
+        }
+      }
+    },
+    "review_report_spam" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спам"
+          }
+        }
+      }
+    },
+    "review_report_title" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жалоба на отзыв"
+          }
+        }
+      }
+    },
+    "review_report_wrong_teacher" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не тот преподаватель"
+          }
+        }
+      }
+    },
+    "review_save" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить"
+          }
+        }
+      }
+    },
+    "review_send" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить"
+          }
+        }
+      }
+    },
+    "review_subject_hint" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предмет"
+          }
+        }
+      }
+    },
+    "review_subject_too_long" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не больше %1$lld символов"
+          }
+        }
+      }
+    },
+    "review_text_hint" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отзыв"
+          }
+        }
+      }
+    },
+    "review_text_too_long" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не больше %1$lld символов"
+          }
+        }
+      }
+    },
+    "review_text_too_short" : {
+      "comment" : "Generated from strings_reviews.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не короче %1$lld символов"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
