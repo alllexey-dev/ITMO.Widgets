@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.home
 
 import android.view.View
 import android.widget.ImageView
-import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
@@ -19,6 +18,7 @@ import dev.alllexey.itmowidgets.testing.TestUi
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 
 @RunWith(AndroidJUnit4::class)
 class HomeQrVisualTest {
@@ -71,11 +71,13 @@ class HomeQrVisualTest {
                         assertEquals(View.VISIBLE, qrRoot(it).findViewById<View>(R.id.loading).visibility)
                         assertFalse(qrRoot(it).findViewById<View>(R.id.refresh_button).isEnabled)
                         val fragment = it.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment!!
-                        ViewModelProvider(fragment)[QrCodeViewModel::class.java].stop()
+                        // The Fragment's own instance, from Koin as the Fragment obtains it.
+                        val viewModel = fragment.getViewModel<QrCodeViewModel>()
+                        viewModel.stop()
                         SettingsNavigationTestActivity.qrDelayMs = 0
                         SettingsNavigationTestActivity.qrCode = QrCodeSnapshot("RETRY-TEST", 3_600_000)
                         SettingsNavigationTestActivity.qrRefreshResult = AppResult.Success(Unit)
-                        ViewModelProvider(fragment)[QrCodeViewModel::class.java].start()
+                        viewModel.start()
                     }
                     settle()
                     scenario.onActivity {

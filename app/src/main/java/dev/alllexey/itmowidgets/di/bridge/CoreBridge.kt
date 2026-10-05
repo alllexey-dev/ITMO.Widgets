@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import kotlin.time.Clock
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -35,6 +36,9 @@ interface CoreBridgeEntryPoint {
     fun crossProcessLock(): CrossProcessLock
     fun platformCapabilities(): PlatformCapabilities
 
+    /** The wall clock; academic logic reads [AcademicTimeProvider] instead. */
+    fun clock(): Clock
+
     companion object {
         fun from(context: Context): CoreBridgeEntryPoint =
             EntryPointAccessors.fromApplication(context.applicationContext, CoreBridgeEntryPoint::class.java)
@@ -55,4 +59,5 @@ val coreBridgeModule = module {
     single<SecureStore> { CoreBridgeEntryPoint.from(androidContext()).secureStore() }
     single<CrossProcessLock> { CoreBridgeEntryPoint.from(androidContext()).crossProcessLock() }
     single<PlatformCapabilities> { CoreBridgeEntryPoint.from(androidContext()).platformCapabilities() }
+    single<Clock> { CoreBridgeEntryPoint.from(androidContext()).clock() }
 }

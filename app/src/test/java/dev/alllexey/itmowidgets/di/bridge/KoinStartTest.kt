@@ -13,6 +13,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.time.Clock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -60,6 +61,7 @@ class KoinStartTest {
         assertSame(hilt.backendGate(), koin.get<BackendGate>())
         assertSame(hilt.appDispatchers(), koin.get<AppDispatchers>())
         assertSame(hilt.sessionRepository(), koin.get<SessionRepository>())
+        assertSame(hilt.clock(), koin.get<Clock>())
     }
 
     @Test

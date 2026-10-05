@@ -2,38 +2,32 @@ package dev.alllexey.itmowidgets.feature.qr.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
-import java.time.Clock
-import javax.inject.Inject
+import kotlin.time.Clock
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-sealed interface QrCodeUiState {
-    data object Loading : QrCodeUiState
-    data object Empty : QrCodeUiState
-    data class Error(val error: AppError) : QrCodeUiState
-    data class Content(val code: QrCodeSnapshot, val refreshing: Boolean = false) : QrCodeUiState
-}
-
-@HiltViewModel
-class QrCodeViewModel @Inject constructor(
+/**
+ * The QR pass screen. Expiry follows the wall [clock], never the academic time, so the debug academic override
+ * cannot keep an expired pass on the screen.
+ */
+class QrCodeViewModel(
     private val repository: QrCodeRepository,
-    @param:WallClock private val clock: Clock
+    private val clock: Clock
 ) : ViewModel() {
     private val state = MutableStateFlow<QrCodeUiState>(QrCodeUiState.Loading)
-    val uiState = state.asStateFlow()
-    private val errors = Channel<AppError>(Channel.BUFFERED)
-    val refreshErrors = errors.receiveAsFlow()
+    val uiState: StateFlow<QrCodeUiState> = state.asStateFlow()
+    private val queue = EventQueue<QrCodeEvent>()
+    val events: Flow<QrCodeEvent> = queue.events
     private var request: Job? = null
     private var expiration: Job? = null
     private var visible = false
@@ -41,8 +35,8 @@ class QrCodeViewModel @Inject constructor(
     fun start() {
         visible = true
         val current = state.value as? QrCodeUiState.Content
-        if (current != null && current.code.expiresAtMillis <= clock.millis()) state.value = QrCodeUiState.Loading
-        refresh(force = false)
+        if (current != null && current.code.expiresAtMillis <= nowMillis()) state.value = QrCodeUiState.Loading
+        refresh(RefreshMode.Silent)
     }
 
     fun stop() {
@@ -53,25 +47,25 @@ class QrCodeViewModel @Inject constructor(
         expiration = null
     }
 
-    fun refresh(force: Boolean = true) {
+    fun refresh(mode: RefreshMode) {
         if (!visible || request?.isActive == true) return
-        val previous = (state.value as? QrCodeUiState.Content)?.takeIf { it.code.expiresAtMillis > clock.millis() }
+        val previous = (state.value as? QrCodeUiState.Content)?.takeIf { it.code.expiresAtMillis > nowMillis() }
         if (previous != null) state.value = previous.copy(refreshing = true)
         request = viewModelScope.launch {
             if (previous == null) {
                 // A fresh screen shows the cached pass at once; only an absent or expired cache waits.
-                val cached = repository.currentQr()?.takeIf { it.expiresAtMillis > clock.millis() && it.hex.isNotBlank() }
+                val cached = repository.currentQr()?.takeIf { it.expiresAtMillis > nowMillis() && it.hex.isNotBlank() }
                 state.value = cached?.let { QrCodeUiState.Content(it, refreshing = true) } ?: QrCodeUiState.Loading
             }
-            val result = repository.refreshQrHex(force)
-            val code = repository.currentQr()?.takeIf { it.expiresAtMillis > clock.millis() && it.hex.isNotBlank() }
+            val result = repository.refreshQrHex(force = mode == RefreshMode.Force)
+            val code = repository.currentQr()?.takeIf { it.expiresAtMillis > nowMillis() && it.hex.isNotBlank() }
             state.value = when {
                 code != null -> QrCodeUiState.Content(code)
                 result is AppResult.Failure -> QrCodeUiState.Error(result.error)
                 else -> QrCodeUiState.Empty
             }
             if (code != null) {
-                if (result is AppResult.Failure) errors.send(result.error)
+                if (result is AppResult.Failure) queue.send(QrCodeEvent.RefreshFailed(result.error))
                 expireAt(code)
             }
         }
@@ -80,10 +74,12 @@ class QrCodeViewModel @Inject constructor(
     private fun expireAt(code: QrCodeSnapshot) {
         expiration?.cancel()
         expiration = viewModelScope.launch {
-            delay((code.expiresAtMillis - clock.millis()).coerceAtLeast(0))
+            delay((code.expiresAtMillis - nowMillis()).coerceAtLeast(0))
             // Hide at the cache deadline even when a manual network refresh is still pending.
             state.value = QrCodeUiState.Loading
-            refresh(force = false)
+            refresh(RefreshMode.Silent)
         }
     }
+
+    private fun nowMillis(): Long = clock.now().toEpochMilliseconds()
 }

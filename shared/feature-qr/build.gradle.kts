@@ -10,9 +10,16 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared:core"))
             implementation(project(":shared:designsystem"))
+            // QrCodeViewModel is a KMP ViewModel that :app obtains through Koin (L09 LH-1a, recipe koin-module).
+            api(libs.jetbrains.lifecycle.viewmodel)
+            api(libs.koin.core)
+            api(libs.koin.core.viewmodel)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
+        }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.koin.test)
         }
     }
 }

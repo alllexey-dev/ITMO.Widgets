@@ -14,8 +14,8 @@ import java.time.Instant
 import java.time.ZoneOffset
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
-import dev.alllexey.itmowidgets.feature.qr.presentation.QrCodeViewModel
-import dev.alllexey.itmowidgets.feature.qr.ui.QrCodeFragment
+import dev.alllexey.itmowidgets.di.bridge.QrDebugFixtures
+import org.koin.core.module.Module
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import androidx.appcompat.app.AppCompatDelegate
@@ -130,6 +130,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     private val refresh = object : WidgetRefreshRequester { override fun refreshAll() = Unit }
     private val onboardingServices = FixtureOnboardingServices()
     private val onboardingAppearance = FixtureWidgetAppearance()
+    private lateinit var qrFixture: Module
     private val customSpoiler = FixtureCustomSpoiler()
 
     /** The first-run flow with no stored preferences and no backend behind the opt-in. */
@@ -200,6 +201,8 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Before super.onCreate(): a restored QrCodeFragment obtains its ViewModel from Koin.
+        qrFixture = QrDebugFixtures.load(this, FixtureQrCodeRepository, FixtureWallClock)
         supportFragmentManager.fragmentFactory = object : FragmentFactory() {
             override fun instantiate(classLoader: ClassLoader, className: String): Fragment =
                 if (className == MyItmoWebFragment::class.java.name) MyItmoWebPreviewFragment()
@@ -216,24 +219,6 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
                                 FriendSelectorViewModel(it.repository, it.history, it.search, extras.createSavedStateHandle()) as T
                             }
                     })[FriendSelectorViewModel::class.java]
-                    return
-                }
-                if (f is QrCodeFragment) {
-                    ViewModelProvider(f, object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = QrCodeViewModel(
-                            object : QrCodeRepository {
-                                override suspend fun currentQr() = qrCode
-                                override suspend fun currentQrHex(allowExpired: Boolean) = qrCode?.hex
-                                override fun observeQrHex() = flowOf(qrCode?.hex.orEmpty())
-                                override suspend fun refreshQrHex(force: Boolean): AppResult<Unit> {
-                                    delay(qrDelayMs)
-                                    return qrRefreshResult
-                                }
-                                override fun clearCache() = Unit
-                            }, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-                        ) as T
-                    })[QrCodeViewModel::class.java]
                     return
                 }
                 if (f is UserProfileFragment || f is UserFriendsFragment) {
@@ -411,6 +396,28 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
 
     val host: NavHostFragment
         get() = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+
+    override fun onDestroy() {
+        super.onDestroy()
+        QrDebugFixtures.unload(this, qrFixture)
+    }
+
+    /** The QR pass as [qrCode], [qrRefreshResult] and [qrDelayMs] say at the moment of each call. */
+    private object FixtureQrCodeRepository : QrCodeRepository {
+        override suspend fun currentQr() = qrCode
+        override suspend fun currentQrHex(allowExpired: Boolean) = qrCode?.hex
+        override fun observeQrHex() = flowOf(qrCode?.hex.orEmpty())
+        override suspend fun refreshQrHex(force: Boolean): AppResult<Unit> {
+            delay(qrDelayMs)
+            return qrRefreshResult
+        }
+        override fun clearCache() = Unit
+    }
+
+    /** The wall clock stands at the epoch, so the fixture pass (valid for an hour) never expires on screen. */
+    private object FixtureWallClock : kotlin.time.Clock {
+        override fun now(): kotlin.time.Instant = kotlin.time.Instant.fromEpochMilliseconds(0)
+    }
 
     private class FixtureRepository : SettingsRepository {
         private val local = MutableStateFlow(LocalSettings(customServicesEnabled = true))
