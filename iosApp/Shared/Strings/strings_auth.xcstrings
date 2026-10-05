@@ -1,0 +1,198 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "auth_error_invalid_credentials" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сессию подтвердить не вышло. Войдите заново или проверьте Refresh token."
+          }
+        }
+      }
+    },
+    "auth_error_network" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось связаться с ITMO.ID. Проверьте интернет."
+          }
+        }
+      }
+    },
+    "auth_error_unknown" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход не завершился. Попробуйте ещё раз."
+          }
+        }
+      }
+    },
+    "auth_feature_friends" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзья и их расписание"
+          }
+        }
+      }
+    },
+    "auth_feature_sport" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спорт с автозаписью на занятия"
+          }
+        }
+      }
+    },
+    "auth_feature_widgets" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание и QR-пропуск на главном экране"
+          }
+        }
+      }
+    },
+    "auth_login_itmo_id" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти через ITMO.ID"
+          }
+        }
+      }
+    },
+    "auth_login_refresh_token" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другой способ входа"
+          }
+        }
+      }
+    },
+    "auth_manual_dialog_description" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот способ — на случай, когда вход через ITMO.ID не работает. Токен останется на устройстве."
+          }
+        }
+      }
+    },
+    "auth_manual_dialog_title" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход по Refresh token"
+          }
+        }
+      }
+    },
+    "auth_manual_token_hint" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh token"
+          }
+        }
+      }
+    },
+    "auth_manual_token_required" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставьте Refresh token"
+          }
+        }
+      }
+    },
+    "auth_official_page_notice" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Логин и пароль вводятся только на странице ITMO.ID."
+          }
+        }
+      }
+    },
+    "auth_reauthentication_description" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сессия истекла. Войдите снова, чтобы продолжить."
+          }
+        }
+      }
+    },
+    "auth_sign_in" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти"
+          }
+        }
+      }
+    },
+    "demo_entered" : {
+      "comment" : "Generated from strings_auth.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Демо-режим"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

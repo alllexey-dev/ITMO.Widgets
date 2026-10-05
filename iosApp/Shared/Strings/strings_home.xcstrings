@@ -1,0 +1,414 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "home_empty_title" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока пусто"
+          }
+        }
+      }
+    },
+    "home_friends_all" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все заявки"
+          }
+        }
+      }
+    },
+    "home_friends_title" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заявки в друзья"
+          }
+        }
+      }
+    },
+    "home_hint_dismiss" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть подсказку"
+          }
+        }
+      }
+    },
+    "home_hint_notifications_action" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включить"
+          }
+        }
+      }
+    },
+    "home_hint_notifications_description" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без них не придут результаты автозаписи на спорт и заявки в друзья."
+          }
+        }
+      }
+    },
+    "home_hint_notifications_title" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления выключены"
+          }
+        }
+      }
+    },
+    "home_hint_services_action" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключиться"
+          }
+        }
+      }
+    },
+    "home_hint_services_description" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзья на паре, очереди на спорт и уведомления."
+          }
+        }
+      }
+    },
+    "home_hint_services_title" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзья и автозапись"
+          }
+        }
+      }
+    },
+    "home_hint_widgets_action" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить"
+          }
+        }
+      }
+    },
+    "home_hint_widgets_description" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ближайшая пара и QR-пропуск прямо на домашнем экране."
+          }
+        }
+      }
+    },
+    "home_hint_widgets_title" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавьте виджет"
+          }
+        }
+      }
+    },
+    "home_marks_description" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$lld. %3$@"
+          }
+        }
+      }
+    },
+    "home_marks_dismiss" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитано"
+          }
+        }
+      }
+    },
+    "home_open_my_itmo" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть My ITMO"
+          }
+        }
+      }
+    },
+    "home_open_qr" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть QR-пропуск"
+          }
+        }
+      }
+    },
+    "home_pending_predicted" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "прогноз"
+          }
+        }
+      }
+    },
+    "home_pending_waiting" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ждём запись"
+          }
+        }
+      }
+    },
+    "home_schedule_changes_description" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$lld. %3$@"
+          }
+        }
+      }
+    },
+    "home_schedule_changes_dismiss" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитано"
+          }
+        }
+      }
+    },
+    "home_schedule_completed" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld пары прошли"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld пар прошло"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld пара прошла"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld пары прошли"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home_schedule_done" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На сегодня всё"
+          }
+        }
+      }
+    },
+    "home_schedule_empty" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пар сегодня нет"
+          }
+        }
+      }
+    },
+    "home_schedule_next" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "далее"
+          }
+        }
+      }
+    },
+    "home_schedule_now" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "сейчас"
+          }
+        }
+      }
+    },
+    "home_schedule_tomorrow" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завтра"
+          }
+        }
+      }
+    },
+    "home_sport_more" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld записи"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld записей"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld запись"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld записи"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home_sport_score" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из 100"
+          }
+        }
+      }
+    },
+    "home_sport_title" : {
+      "comment" : "Generated from strings_home.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спорт"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

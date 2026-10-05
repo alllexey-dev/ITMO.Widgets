@@ -1,0 +1,306 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "me_find_people_description" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По имени в My ITMO"
+          }
+        }
+      }
+    },
+    "me_find_people_title" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найти людей"
+          }
+        }
+      }
+    },
+    "me_friends_count" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld"
+          }
+        }
+      }
+    },
+    "me_friends_error" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не загрузились"
+          }
+        }
+      }
+    },
+    "me_friends_loading" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружаем…"
+          }
+        }
+      }
+    },
+    "me_friends_none" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока никого"
+          }
+        }
+      }
+    },
+    "me_friends_title" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзья"
+          }
+        }
+      }
+    },
+    "me_github" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub"
+          }
+        }
+      }
+    },
+    "me_github_accessibility" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть проект на GitHub"
+          }
+        }
+      }
+    },
+    "me_group_format" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ • %2$lld курс • %3$@"
+          }
+        }
+      }
+    },
+    "me_group_social" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзья"
+          }
+        }
+      }
+    },
+    "me_isu" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИСУ %1$lld"
+          }
+        }
+      }
+    },
+    "me_privacy_description" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кто видит расписание, спорт и друзей"
+          }
+        }
+      }
+    },
+    "me_privacy_title" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приватность"
+          }
+        }
+      }
+    },
+    "me_requests_badge" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld"
+          }
+        }
+      }
+    },
+    "me_requests_badge_accessibility" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Входящих заявок: %1$lld"
+          }
+        }
+      }
+    },
+    "me_services_disabled_description" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзья, заявки и приватность появятся после подключения"
+          }
+        }
+      }
+    },
+    "me_services_disabled_title" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет подключения к ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "me_sign_out" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти"
+          }
+        }
+      }
+    },
+    "me_sign_out_confirm_message" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "С устройства удалятся данные аккаунта и содержимое виджетов. Настройки приложения останутся."
+          }
+        }
+      }
+    },
+    "me_sign_out_confirm_title" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти из аккаунта?"
+          }
+        }
+      }
+    },
+    "me_telegram" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telegram"
+          }
+        }
+      }
+    },
+    "me_telegram_accessibility" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть канал @itmowidgets в Telegram"
+          }
+        }
+      }
+    },
+    "me_unknown_user" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Профиль не загрузился"
+          }
+        }
+      }
+    },
+    "me_web_login_title" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход на сайт"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

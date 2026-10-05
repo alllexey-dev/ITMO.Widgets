@@ -1,0 +1,354 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "web_login_approve" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти"
+          }
+        }
+      }
+    },
+    "web_login_browser_chrome" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chrome"
+          }
+        }
+      }
+    },
+    "web_login_browser_edge" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edge"
+          }
+        }
+      }
+    },
+    "web_login_browser_firefox" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Firefox"
+          }
+        }
+      }
+    },
+    "web_login_browser_on_platform" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ на %2$@"
+          }
+        }
+      }
+    },
+    "web_login_browser_opera" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opera"
+          }
+        }
+      }
+    },
+    "web_login_browser_safari" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safari"
+          }
+        }
+      }
+    },
+    "web_login_browser_samsung" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samsung Internet"
+          }
+        }
+      }
+    },
+    "web_login_browser_unknown" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузер"
+          }
+        }
+      }
+    },
+    "web_login_browser_yandex" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Яндекс Браузер"
+          }
+        }
+      }
+    },
+    "web_login_code_hint" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Код с сайта"
+          }
+        }
+      }
+    },
+    "web_login_code_invalid" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужен код из 8 символов"
+          }
+        }
+      }
+    },
+    "web_login_continue" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продолжить"
+          }
+        }
+      }
+    },
+    "web_login_done" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово — вернитесь в браузер"
+          }
+        }
+      }
+    },
+    "web_login_not_found" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Код не найден или устарел"
+          }
+        }
+      }
+    },
+    "web_login_own_only" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтверждайте только свой вход"
+          }
+        }
+      }
+    },
+    "web_login_platform_android" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android"
+          }
+        }
+      }
+    },
+    "web_login_platform_chrome_os" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ChromeOS"
+          }
+        }
+      }
+    },
+    "web_login_platform_ios" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS"
+          }
+        }
+      }
+    },
+    "web_login_platform_ipados" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPadOS"
+          }
+        }
+      }
+    },
+    "web_login_platform_linux" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linux"
+          }
+        }
+      }
+    },
+    "web_login_platform_macos" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS"
+          }
+        }
+      }
+    },
+    "web_login_platform_windows" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows"
+          }
+        }
+      }
+    },
+    "web_login_qr_unknown" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это не QR для входа на сайт"
+          }
+        }
+      }
+    },
+    "web_login_requested_at" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запрошен в %1$@"
+          }
+        }
+      }
+    },
+    "web_login_scan" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканировать QR"
+          }
+        }
+      }
+    },
+    "web_login_scanner_unavailable" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканер недоступен, введите код"
+          }
+        }
+      }
+    },
+    "web_login_services_disabled" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужно подключение к ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "web_login_title" : {
+      "comment" : "Generated from strings_weblogin.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход на сайт"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

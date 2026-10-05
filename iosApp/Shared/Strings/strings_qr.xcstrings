@@ -1,0 +1,126 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "qr_pass_description" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покажите код считывателю на входе в корпус"
+          }
+        }
+      }
+    },
+    "qr_pass_empty_description" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попробуйте обновить пропуск через My ITMO"
+          }
+        }
+      }
+    },
+    "qr_pass_empty_title" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-код пока недоступен"
+          }
+        }
+      }
+    },
+    "qr_pass_image_description" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-код пропуска"
+          }
+        }
+      }
+    },
+    "qr_pass_refresh" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновить QR-код"
+          }
+        }
+      }
+    },
+    "qr_pass_title" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-пропуск"
+          }
+        }
+      }
+    },
+    "widget_preview_failed" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить превью"
+          }
+        }
+      }
+    },
+    "widget_preview_qr_hint" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пример QR-кода. Нажмите, чтобы открыть спойлер."
+          }
+        }
+      }
+    },
+    "widget_preview_qr_open_hint" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пример QR-кода. Нажмите, чтобы скрыть."
+          }
+        }
+      }
+    },
+    "widget_preview_qr_plain_hint" : {
+      "comment" : "Generated from strings_qr.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пример, не пропуск"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

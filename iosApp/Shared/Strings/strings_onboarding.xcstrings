@@ -1,0 +1,438 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "onboarding_compact_widget_title" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компактный виджет расписания"
+          }
+        }
+      }
+    },
+    "onboarding_done" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
+          }
+        }
+      }
+    },
+    "onboarding_full_widget_title" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Полный виджет расписания"
+          }
+        }
+      }
+    },
+    "onboarding_next" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Далее"
+          }
+        }
+      }
+    },
+    "onboarding_notifications_allow" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешить"
+          }
+        }
+      }
+    },
+    "onboarding_notifications_configure" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настроить в Android"
+          }
+        }
+      }
+    },
+    "onboarding_notifications_off" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выключены"
+          }
+        }
+      }
+    },
+    "onboarding_notifications_on" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешены"
+          }
+        }
+      }
+    },
+    "onboarding_notifications_open_settings" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки"
+          }
+        }
+      }
+    },
+    "onboarding_notifications_subtitle" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заявки в друзья и результат автозаписи на спорт."
+          }
+        }
+      }
+    },
+    "onboarding_notifications_title" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления"
+          }
+        }
+      }
+    },
+    "onboarding_qr_widget_title" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виджет QR-пропуска"
+          }
+        }
+      }
+    },
+    "onboarding_services_feature_friends" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзья и их расписание"
+          }
+        }
+      }
+    },
+    "onboarding_services_feature_notifications" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления о заявках и записях"
+          }
+        }
+      }
+    },
+    "onboarding_services_feature_sport" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автозапись на спорт"
+          }
+        }
+      }
+    },
+    "onboarding_services_gives_title" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что даёт"
+          }
+        }
+      }
+    },
+    "onboarding_services_privacy_default" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание и спорт по умолчанию видят только друзья. Меняется в настройках."
+          }
+        }
+      }
+    },
+    "onboarding_services_source_link" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Код сервера"
+          }
+        }
+      }
+    },
+    "onboarding_services_stored_device" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен уведомлений этого устройства"
+          }
+        }
+      }
+    },
+    "onboarding_services_stored_footer" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Токен ITMO.ID сервер проверяет и не сохраняет. Всё удаляется вместе с аккаунтом."
+          }
+        }
+      }
+    },
+    "onboarding_services_stored_group" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Учебная группа"
+          }
+        }
+      }
+    },
+    "onboarding_services_stored_identity" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИСУ, имя и фото из ITMO.ID"
+          }
+        }
+      }
+    },
+    "onboarding_services_stored_schedule" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание на ближайшие недели — чтобы его видели друзья"
+          }
+        }
+      }
+    },
+    "onboarding_services_stored_sport" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записи и очереди на спорт"
+          }
+        }
+      }
+    },
+    "onboarding_services_stored_title" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что хранит сервер"
+          }
+        }
+      }
+    },
+    "onboarding_services_subtitle" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзья, автозапись на спорт и уведомления работают через сервер проекта."
+          }
+        }
+      }
+    },
+    "onboarding_services_title" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключение к ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "onboarding_services_toggle_description" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание, зачётка и QR работают и без подключения."
+          }
+        }
+      }
+    },
+    "onboarding_services_toggle_title" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключиться"
+          }
+        }
+      }
+    },
+    "onboarding_skip" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропустить"
+          }
+        }
+      }
+    },
+    "onboarding_spoiler_image_replace" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать другое"
+          }
+        }
+      }
+    },
+    "onboarding_spoiler_image_reset" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть стандартное"
+          }
+        }
+      }
+    },
+    "onboarding_step_progress" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаг %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "onboarding_widget_add" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить на главный экран"
+          }
+        }
+      }
+    },
+    "onboarding_widget_added" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавлен на главный экран"
+          }
+        }
+      }
+    },
+    "onboarding_widget_manual_hint" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот лаунчер не даёт добавить виджет отсюда. Добавьте его через меню виджетов на главном экране."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

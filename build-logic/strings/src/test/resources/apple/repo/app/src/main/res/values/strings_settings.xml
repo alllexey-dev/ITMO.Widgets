@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_sync_status">%1$s: синхронизировано %2$d из %3$d</string>
+    <string name="settings_escapes">Строка\nвторая, лимит 100%% \"в кавычках\" и\'апостроф</string>
+    <string name="settings_more">%1$s и ещё\u00A0%2$d</string>
+    <string name="settings_spaces">"  два  пробела  "   и   хвост   </string>
+    <plurals name="settings_lessons">
+        <item quantity="one">%1$d пара</item>
+        <item quantity="few">%1$d пары</item>
+        <item quantity="many">%1$d пар</item>
+        <item quantity="other">%1$d пары</item>
+    </plurals>
+    <plurals name="settings_free_places">
+        <item quantity="one">Свободное место</item>
+        <item quantity="few">Свободных места</item>
+        <item quantity="many">Свободных мест</item>
+        <item quantity="other">Свободных места</item>
+    </plurals>
+</resources>

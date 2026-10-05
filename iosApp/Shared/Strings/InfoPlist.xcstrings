@@ -1,0 +1,18 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Generated from strings_platform.xml (app_name)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ITMO.Widgets"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
