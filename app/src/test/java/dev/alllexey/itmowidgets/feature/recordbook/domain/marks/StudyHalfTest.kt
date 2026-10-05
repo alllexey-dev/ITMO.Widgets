@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.domain.marks
 
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -10,10 +10,10 @@ class StudyHalfTest {
 
     @Test
     fun `autumn runs from September through January and spring from February through August`() {
-        assertEquals("2025/2026-1", StudyHalf.of(LocalDate.of(2026, 1, 31)).key)
-        assertEquals("2025/2026-2", StudyHalf.of(LocalDate.of(2026, 2, 1)).key)
-        assertEquals("2025/2026-2", StudyHalf.of(LocalDate.of(2026, 8, 31)).key)
-        assertEquals("2026/2027-1", StudyHalf.of(LocalDate.of(2026, 9, 1)).key)
+        assertEquals("2025/2026-1", StudyHalf.of(LocalDate(2026, 1, 31)).key)
+        assertEquals("2025/2026-2", StudyHalf.of(LocalDate(2026, 2, 1)).key)
+        assertEquals("2025/2026-2", StudyHalf.of(LocalDate(2026, 8, 31)).key)
+        assertEquals("2026/2027-1", StudyHalf.of(LocalDate(2026, 9, 1)).key)
     }
 
     @Test

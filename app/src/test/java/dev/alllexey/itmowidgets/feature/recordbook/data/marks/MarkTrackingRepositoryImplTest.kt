@@ -40,6 +40,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import java.io.File
 import java.time.Duration
 import java.time.Instant
+import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -101,7 +102,7 @@ class MarkTrackingRepositoryImplTest {
         val news = repository.observeNews().first().single()
         assertEquals("Физика", news.name)
         assertFalse(news.notified)
-        assertEquals(clock.instant(), news.detectedAt)
+        assertEquals(clock.instant().toKotlinInstant(), news.detectedAt)
     }
 
     @Test

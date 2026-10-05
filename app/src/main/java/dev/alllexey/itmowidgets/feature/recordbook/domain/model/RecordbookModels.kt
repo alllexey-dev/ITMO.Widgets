@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.domain.model
 
-import java.time.OffsetDateTime
+import kotlin.time.Instant
 
 /** BARS has its own year/season and plan identity, unrelated to MyITMO est_id. */
 data class BarsJournalReference(val planId: Long, val type: String, val identifier: String,
@@ -49,7 +49,7 @@ data class RecordbookSubject(
     val score: Double?,
     val rate: String?,
     val attempt: Int?,
-    val examDate: OffsetDateTime?,
+    val examDate: Instant?,
     val hasDetails: Boolean,
     val teacherName: String?,
     val barsJournal: BarsJournalReference? = null,
@@ -108,7 +108,7 @@ data class RecordbookControl(
     val minimum: Double?,
     val maximum: Double?,
     val required: Boolean,
-    val date: OffsetDateTime?,
+    val date: Instant?,
     val teacherName: String?,
     val parentId: Long? = null,
     val absent: Boolean = false,

@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookBarsMerge
@@ -177,7 +176,7 @@ class RecordbookViewModel @Inject constructor(
                 is AppResult.Success -> {
                     val official = result.value
                     // What the list shows advances the snapshot of the current half-year; children of the load job.
-                    val half = selected.period.studyHalf()?.takeIf { it == StudyHalf.of(time.javaToday()) }
+                    val half = selected.period.studyHalf()?.takeIf { it == StudyHalf.of(time.today()) }
                     if (half != null) {
                         launch { marks.recordMyItmoSeen(stamp, half, selected.program.id, selected.period.semester, official) }
                     }
@@ -254,7 +253,7 @@ class RecordbookViewModel @Inject constructor(
 
     private fun defaultSelection(): RecordbookSelection? {
         val options = programs.flatMap { program -> program.periods.map { RecordbookSelection(program, it) } }
-        val half = StudyHalf.of(time.javaToday())
+        val half = StudyHalf.of(time.today())
         return options.firstOrNull { it.period.studyHalf() == half }
             ?: options.firstOrNull { it.period.actual }
             ?: options.minByOrNull { it.period.semester }

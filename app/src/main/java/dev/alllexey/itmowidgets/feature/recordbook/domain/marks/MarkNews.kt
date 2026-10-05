@@ -2,8 +2,8 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.marks
 
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 /** An unread subject: one per half-year and name for both sources. [notified] is false until a digest named it. */
 data class MarkNews(
@@ -69,8 +69,8 @@ object MarkNewsRules {
 
     /** Without records older than [RETENTION_DAYS] and beyond the [MAX_NEWS] newest, newest first. */
     fun pruned(news: List<MarkNews>, now: Instant): List<MarkNews> {
-        val oldest = now.minus(Duration.ofDays(RETENTION_DAYS))
-        return news.filter { !it.detectedAt.isBefore(oldest) }
+        val oldest = now - RETENTION_DAYS.days
+        return news.filter { it.detectedAt >= oldest }
             .sortedWith(compareByDescending<MarkNews> { it.detectedAt }.thenBy { it.name })
             .take(MAX_NEWS)
     }

@@ -5,7 +5,7 @@ import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.recordbook.FakeMarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.markNews
-import java.time.Instant
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

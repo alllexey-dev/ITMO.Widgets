@@ -30,7 +30,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTabGrid
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
 import java.time.Clock
-import java.time.Instant
+import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -114,7 +115,7 @@ class SheetScoresRepositoryImpl @Inject constructor(
         require(row.tab == total.tab)
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         return lock.withLock {
-            val now = clock.instant()
+            val now = clock.instant().toKotlinInstant()
             val score = connection(scope, url, row, total, connectedAt = now)
             write(loaded().filterNot { it.scope.key == scope.key } + score)
         }
@@ -179,7 +180,7 @@ class SheetScoresRepositoryImpl @Inject constructor(
             baseline = value,
             tracked = true,
             status = SheetStatus.OK,
-            updatedAt = clock.instant(),
+            updatedAt = clock.instant().toKotlinInstant(),
             connectedAt = connectedAt,
         )
     }
@@ -206,7 +207,7 @@ class SheetScoresRepositoryImpl @Inject constructor(
             val current = loaded()
             val score = current.firstOrNull { it.scope.key == read.scope.key }
             if (score == null || !score.sameTarget(read)) return@withLock null
-            val update = SheetScoreRules.apply(score, reading, clock.instant(), notify)
+            val update = SheetScoreRules.apply(score, reading, clock.instant().toKotlinInstant(), notify)
             persistOrKeep(current.map { if (it === score) update.score else it })
             update.change?.let { SheetChange(score.scope, it) }
         }

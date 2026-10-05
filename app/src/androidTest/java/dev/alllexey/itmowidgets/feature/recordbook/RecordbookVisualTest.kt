@@ -64,7 +64,7 @@ import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
 import dev.alllexey.itmowidgets.testing.ViewChecks.assertTextFits
 import dev.alllexey.itmowidgets.testing.ViewChecks.descendants
-import java.time.Instant
+import kotlin.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.CompletableDeferred

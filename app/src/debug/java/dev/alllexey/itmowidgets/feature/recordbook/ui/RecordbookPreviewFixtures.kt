@@ -23,7 +23,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
-import java.time.Instant
+import kotlin.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime

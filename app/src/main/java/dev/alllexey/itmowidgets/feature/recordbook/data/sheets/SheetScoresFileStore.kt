@@ -13,7 +13,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.time.Instant
+import kotlin.time.Instant
 import javax.inject.Inject
 
 /** 1: the sheet connections of one account with their last readings. */
@@ -95,8 +95,8 @@ internal fun StoredSheetConnection.toModel(): SheetScore {
         baseline = baseline,
         tracked = tracked,
         status = SheetStatus.valueOf(required(status)),
-        updatedAt = updatedAt?.let(Instant::ofEpochMilli),
-        connectedAt = Instant.ofEpochMilli(connectedAt),
+        updatedAt = updatedAt?.let(Instant::fromEpochMilliseconds),
+        connectedAt = Instant.fromEpochMilliseconds(connectedAt),
     )
 }
 
@@ -116,6 +116,6 @@ internal fun SheetScore.toStored() = StoredSheetConnection(
     baseline = baseline,
     tracked = tracked,
     status = status.name,
-    updatedAt = updatedAt?.toEpochMilli(),
-    connectedAt = connectedAt.toEpochMilli(),
+    updatedAt = updatedAt?.toEpochMilliseconds(),
+    connectedAt = connectedAt.toEpochMilliseconds(),
 )

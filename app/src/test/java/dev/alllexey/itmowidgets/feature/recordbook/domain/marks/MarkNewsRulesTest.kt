@@ -2,8 +2,9 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.marks
 
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -46,8 +47,8 @@ class MarkNewsRulesTest {
 
     @Test
     fun `a background check waits for a digest again and a seen list counts as delivered`() {
-        val delivered = news("Физика", NOW.minusSeconds(3600), notified = true)
-        val pending = news("Химия", NOW.minusSeconds(3600), notified = false)
+        val delivered = news("Физика", NOW - 3600.seconds, notified = true)
+        val pending = news("Химия", NOW - 3600.seconds, notified = false)
         val physics = MarkEvent(MarkSource.MY_ITMO, HALF, "физика", MarkEventKind.MARK_CHANGED)
         val chemistry = MarkEvent(MarkSource.BARS, HALF, "Химия", MarkEventKind.MARK_ADDED)
 
@@ -61,11 +62,11 @@ class MarkNewsRulesTest {
 
     @Test
     fun `records older than thirty days go and only the hundred newest stay`() {
-        val old = news("Старый", NOW.minus(Duration.ofDays(31)))
-        val fresh = news("Свежий", NOW.minus(Duration.ofDays(29)))
+        val old = news("Старый", NOW - 31.days)
+        val fresh = news("Свежий", NOW - 29.days)
         assertEquals(listOf(fresh), MarkNewsRules.pruned(listOf(old, fresh), NOW))
 
-        val many = (1..105).map { news("Тестовый предмет $it", NOW.minusSeconds(it.toLong())) }
+        val many = (1..105).map { news("Тестовый предмет $it", NOW - it.seconds) }
         val kept = MarkNewsRules.pruned(many.shuffled(), NOW)
         assertEquals(100, kept.size)
         assertEquals(many.take(100), kept)

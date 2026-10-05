@@ -18,7 +18,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkCheckResult
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkSubjectTarget
 import dev.alllexey.itmowidgets.feature.recordbook.markNews
 import androidx.work.ListenableWorker.Result
-import java.time.Instant
+import kotlin.time.Instant
 import java.time.LocalDateTime
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

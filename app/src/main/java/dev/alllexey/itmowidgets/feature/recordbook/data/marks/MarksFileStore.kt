@@ -14,7 +14,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.time.Instant
+import kotlin.time.Instant
 import javax.inject.Inject
 
 /** 1: the last snapshot of each source and the unread subjects of one account. */
@@ -147,8 +147,8 @@ internal fun StoredMarkNews.toModel() = MarkNews(
     half = half(half),
     nameKey = checkNotNull(nameKey),
     name = checkNotNull(name),
-    detectedAt = Instant.ofEpochMilli(detectedAt),
+    detectedAt = Instant.fromEpochMilliseconds(detectedAt),
     notified = notified
 )
 
-internal fun MarkNews.toStored() = StoredMarkNews(id, half.key, nameKey, name, detectedAt.toEpochMilli(), notified)
+internal fun MarkNews.toStored() = StoredMarkNews(id, half.key, nameKey, name, detectedAt.toEpochMilliseconds(), notified)
