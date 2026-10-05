@@ -11,7 +11,7 @@ class RatchetRulesTest {
     fun `ratchet lines name a known rule and a key in its owner's file`() {
         assertTrue("No ratchet directory at ${Ratchet.directory}", Ratchet.directory.isDirectory)
         val problems = Ratchet.entries.mapNotNull { entry ->
-            val where = "$APP_MODULE/${Ratchet.DIRECTORY}/${entry.file}:${entry.line}"
+            val where = "$KONSIST_MODULE/${Ratchet.DIRECTORY}/${entry.file}:${entry.line}"
             when {
                 RatchetRule.byId(entry.ruleId) == null -> "$where: unknown rule ${entry.ruleId}"
                 !KEY.matches(entry.key) -> "$where: `${entry.key}` is not one fully qualified name"

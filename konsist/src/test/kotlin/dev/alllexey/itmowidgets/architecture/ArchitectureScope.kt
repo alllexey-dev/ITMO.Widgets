@@ -28,7 +28,7 @@ internal object ArchitectureScope {
     private fun isTooling(file: KoFileDeclaration): Boolean =
         "/.claude/" in file.projectPath || EXCLUDED_MODULES.any { file.projectPath.startsWith("/$it/") }
 
-    private val EXCLUDED_MODULES = listOf("build-logic", "konsist")
+    private val EXCLUDED_MODULES = listOf("build-logic", KONSIST_MODULE)
 }
 
 /** A rule over an empty set proves nothing, so each rule checks the size of its scope before asserting on it. */
@@ -39,6 +39,10 @@ internal fun <T> List<T>.requireAtLeast(floor: Int, what: String): List<T> = als
 internal fun <T> List<T>.requireNonEmpty(what: String): List<T> = requireAtLeast(1, what)
 
 internal const val APP_MODULE = "app"
+
+/** This module: it holds the rules and their ratchet files, and its own sources are never in scope. */
+internal const val KONSIST_MODULE = "konsist"
+
 internal const val ROOT_PACKAGE = "dev.alllexey.itmowidgets"
 internal const val FEATURE_PACKAGE_PREFIX = "dev.alllexey.itmowidgets.feature."
 internal const val CORE_PACKAGE_PREFIX = "dev.alllexey.itmowidgets.core."
@@ -97,7 +101,7 @@ internal object Ratchet {
 
     const val DIRECTORY = "src/test/resources/architecture/ratchet"
 
-    val directory: File get() = ArchitectureScope.moduleFile(APP_MODULE, DIRECTORY)
+    val directory: File get() = ArchitectureScope.moduleFile(KONSIST_MODULE, DIRECTORY)
 
     val entries: List<RatchetEntry> by lazy {
         directory.listFiles { file -> file.isFile }.orEmpty().sortedBy { it.name }.flatMap { file ->
@@ -134,7 +138,9 @@ internal object Ratchet {
             }
             if (stale.isNotEmpty()) {
                 appendLine("${stale.size} stale line(s) of ${rule.id}; the code is fixed, delete them:")
-                stale.forEach { appendLine("  $APP_MODULE/$DIRECTORY/${it.file}:${it.line} ${it.ruleId} ${it.key}") }
+                stale.forEach {
+                    appendLine("  $KONSIST_MODULE/$DIRECTORY/${it.file}:${it.line} ${it.ruleId} ${it.key}")
+                }
             }
         }
         fail(message)
