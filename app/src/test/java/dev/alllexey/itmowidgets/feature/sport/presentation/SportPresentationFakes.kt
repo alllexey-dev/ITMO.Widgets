@@ -25,6 +25,9 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.sign.SportBookingDele
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.job
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
@@ -140,3 +143,14 @@ internal fun bookingDelegate(
 )
 
 internal fun emptyCatalog() = SportFilterCatalog(buildings = emptyList(), sections = emptyList(), sportTypes = emptyList(), teachers = emptyList())
+
+/**
+ * The application scope of a test: on the test's scheduler, so `advanceUntilIdle` runs its work (it skips
+ * `backgroundScope`'s), but outside the test's job, so its endless collectors do not keep `runTest` waiting.
+ * It ends with the test.
+ */
+internal fun TestScope.applicationScope(): CoroutineScope {
+    val job = SupervisorJob()
+    backgroundScope.coroutineContext.job.invokeOnCompletion { job.cancel() }
+    return CoroutineScope(coroutineContext + job)
+}

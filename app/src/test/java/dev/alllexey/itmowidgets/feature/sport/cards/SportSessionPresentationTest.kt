@@ -8,18 +8,15 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportRegistrat
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSessionTiming
 import dev.alllexey.itmowidgets.feature.sport.ui.common.fullDateText
 import dev.alllexey.itmowidgets.feature.sport.ui.common.shareDateText
-import dev.alllexey.itmowidgets.feature.sport.ui.common.toDetailsArgs
-import dev.alllexey.itmowidgets.feature.sport.ui.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
-import java.io.*
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDetailsArgs
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingAction
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import kotlin.time.toJavaInstant
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -34,10 +31,10 @@ class SportSessionPresentationTest {
 
     @Test fun `details expose the same lesson offer and only existing booking cancellation`() {
         val lesson = SportCardFixtures.lesson()
-        val now = (lesson.start - 2.hours).inMoscow()
+        val now = lesson.start - 2.hours
         assertEquals(lesson.lessonId, lesson.toDetailsArgs().lessonId)
         assertEquals(SportBookingAction.SIGN, lesson.toDetailsArgs().bookingAction(now))
-        assertEquals(SportBookingAction.NONE, lesson.toDetailsArgs().bookingAction(lesson.start.inMoscow()))
+        assertEquals(SportBookingAction.NONE, lesson.toDetailsArgs().bookingAction(lesson.start))
         assertEquals(SportBookingAction.CANCEL, lesson.copy(signed = true).toDetailsArgs().bookingAction(now))
         assertEquals(SportBookingAction.AUTO, lesson.copy(available = 0, canSignIn = false,
             unavailableReasons = listOf(UnavailableReason.Full)).toDetailsArgs().bookingAction(now))
@@ -94,7 +91,7 @@ class SportSessionPresentationTest {
         assertEquals("Пятница, 25 сентября 2026", SportSessionTiming(friday, friday + 90.minutes, time).fullDateText())
     }
 
-    @Test fun `details preserve full title and available source fields through serialization`() {
+    @Test fun `details preserve full title and available source fields through their JSON arguments`() {
         val args = SportCardFixtures.lesson().copy(signEntry = SportCardFixtures.entry(),
             intersection = true, unavailableReasons = listOf(UnavailableReason.AlreadyEnrolled, UnavailableReason.TimeConflict)).toDetailsArgs()
         assertEquals("Фитнес (функциональная тренировка)", args.sectionName)
@@ -104,9 +101,10 @@ class SportSessionPresentationTest {
         assertEquals(listOf(dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingObstacle.TIME_CONFLICT), args.bookingConditions?.restrictions?.map { it.kind })
         assertNotNull(args.signEntry?.createdAt)
         assertNotNull(args.signEntry?.lastNotifiedAt)
-        val bytes = ByteArrayOutputStream().also { ObjectOutputStream(it).use { stream -> stream.writeObject(args) } }.toByteArray()
-        val restored = ObjectInputStream(ByteArrayInputStream(bytes)).use { it.readObject() }
-        assertEquals(args, restored)
+        assertEquals(args, SportCommonDetailsArgs.fromJson(args.toJson()))
+        val prediction = SportCardFixtures.booking(-7).copy(isLessonReal = false, signed = false,
+            signEntry = SportCardFixtures.entry().copy(isCancelled = true)).toDetailsArgs()
+        assertEquals(prediction, SportCommonDetailsArgs.fromJson(prediction.toJson()))
     }
 
     @Test fun `booking details do not invent capacity or comments`() {
@@ -133,7 +131,4 @@ class SportSessionPresentationTest {
         val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 8, 17, 30))
         assertEquals("вторник, 8 сентября, 18:30–20:00", SportSessionTiming(lesson.start, lesson.end, time).shareDateText())
     }
-
-    /** The details sheet still takes `javaNow()`, the academic offset. */
-    private fun Instant.inMoscow(): OffsetDateTime = toJavaInstant().atOffset(ZoneOffset.ofHours(3))
 }

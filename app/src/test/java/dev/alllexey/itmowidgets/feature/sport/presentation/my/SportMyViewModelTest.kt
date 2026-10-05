@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.sport.cards.SportCardFixtures
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
@@ -12,7 +13,9 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportActionReposi
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportScheduleRepository
+import dev.alllexey.itmowidgets.feature.sport.presentation.applicationScope
 import dev.alllexey.itmowidgets.feature.sport.presentation.bookingDelegate
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingsHolder
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -37,7 +40,13 @@ class SportMyViewModelTest {
     private val actions = FakeSportActionRepository()
 
     private fun TestScope.viewModel() = SportMyViewModel(
-        bookings, data, bookingDelegate(bookings, FakeSportScheduleRepository(), data, this, actions)
+        bookings, data,
+        SportBookingsHolder(
+            bookings, data,
+            bookingDelegate(bookings, FakeSportScheduleRepository(), data, backgroundScope, actions),
+            FixedAcademicTime(),
+            applicationScope()
+        )
     )
 
     private suspend fun emitSnapshot() {
