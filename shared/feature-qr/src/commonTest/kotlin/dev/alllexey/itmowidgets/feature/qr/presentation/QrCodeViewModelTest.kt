@@ -3,6 +3,8 @@ package dev.alllexey.itmowidgets.feature.qr.presentation
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.settings.QrAnimationType
+import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.testkit.FakeClock
@@ -26,6 +28,7 @@ import kotlinx.coroutines.test.runTest
 class QrCodeViewModelTest {
     private val main = TestMainDispatcher()
     private val clock = FakeClock(Instant.fromEpochMilliseconds(0))
+    private val appearance = FakeQrAppearancePreferences()
 
     @BeforeTest
     fun setUp() = main.install()
@@ -36,7 +39,7 @@ class QrCodeViewModelTest {
     @Test
     fun firstLoadUsesCacheAndRepeatedRefreshCannotDuplicateTheRequest() = runTest(main.dispatcher) {
         val repository = FakeQrCodeRepository()
-        val vm = QrCodeViewModel(repository, clock)
+        val vm = QrCodeViewModel(repository, appearance, clock)
         vm.start()
         runCurrent()
         assertEquals(QrCodeUiState.Content(repository.code!!), vm.uiState.value)
@@ -53,7 +56,7 @@ class QrCodeViewModelTest {
     @Test
     fun onlyForceBypassesTheCache() = runTest(main.dispatcher) {
         val repository = FakeQrCodeRepository()
-        val vm = QrCodeViewModel(repository, clock)
+        val vm = QrCodeViewModel(repository, appearance, clock)
         vm.start()
         runCurrent()
         vm.refresh(RefreshMode.Silent)
@@ -70,7 +73,7 @@ class QrCodeViewModelTest {
     fun aFreshScreenShowsTheCachedPassBeforeTheNetworkAnswers() = runTest(main.dispatcher) {
         val repository = FakeQrCodeRepository()
         repository.pending = CompletableDeferred()
-        val vm = QrCodeViewModel(repository, clock)
+        val vm = QrCodeViewModel(repository, appearance, clock)
         vm.start()
         runCurrent()
         assertEquals(QrCodeUiState.Content(repository.code!!, refreshing = true), vm.uiState.value)
@@ -83,7 +86,7 @@ class QrCodeViewModelTest {
     @Test
     fun expiryHidesThePassEvenDuringAPendingRefreshAndAFailedRefreshNeverRevivesIt() = runTest(main.dispatcher) {
         val repository = FakeQrCodeRepository()
-        val vm = QrCodeViewModel(repository, clock)
+        val vm = QrCodeViewModel(repository, appearance, clock)
         vm.start()
         runCurrent()
         repository.pending = CompletableDeferred()
@@ -100,7 +103,7 @@ class QrCodeViewModelTest {
     @Test
     fun refreshFailureKeepsOnlyAStillValidPassAndOffersRetryFeedback() = runTest(main.dispatcher) {
         val repository = FakeQrCodeRepository()
-        val vm = QrCodeViewModel(repository, clock)
+        val vm = QrCodeViewModel(repository, appearance, clock)
         vm.start()
         runCurrent()
         repository.result = AppResult.Failure(AppError.Network)
@@ -115,7 +118,7 @@ class QrCodeViewModelTest {
     @Test
     fun aFailureReportedWhileNobodyCollectsReachesTheNextCollector() = runTest(main.dispatcher) {
         val repository = FakeQrCodeRepository()
-        val vm = QrCodeViewModel(repository, clock)
+        val vm = QrCodeViewModel(repository, appearance, clock)
         vm.start()
         runCurrent()
         repository.result = AppResult.Failure(AppError.Network)
@@ -128,7 +131,7 @@ class QrCodeViewModelTest {
     @Test
     fun returningAfterExpiryClearsOldContentBeforeLoadingAndEmptyDiffersFromError() = runTest(main.dispatcher) {
         val repository = FakeQrCodeRepository()
-        val vm = QrCodeViewModel(repository, clock)
+        val vm = QrCodeViewModel(repository, appearance, clock)
         vm.start()
         runCurrent()
         vm.stop()
@@ -147,6 +150,32 @@ class QrCodeViewModelTest {
         vm.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(QrCodeUiState.Content(repository.code!!), vm.uiState.value)
+        vm.stop()
+    }
+
+    @Test
+    fun contentCarriesTheColourSettingAndAReturnPicksUpItsChange() = runTest(main.dispatcher) {
+        val repository = FakeQrCodeRepository()
+        repository.code = QrCodeSnapshot("ITMO-TEST", 60_000)
+        appearance.dynamicColors = true
+        val vm = QrCodeViewModel(repository, appearance, clock)
+        vm.start()
+        runCurrent()
+        assertEquals(QrCodeUiState.Content(repository.code!!, useDynamicColors = true), vm.uiState.value)
+        vm.stop()
+
+        appearance.dynamicColors = false
+        repository.pending = CompletableDeferred()
+        vm.start()
+        runCurrent()
+        // The still valid pass switches colours at once, before the network answers.
+        assertEquals(
+            QrCodeUiState.Content(repository.code!!, refreshing = true, useDynamicColors = false),
+            vm.uiState.value,
+        )
+        repository.pending!!.complete(AppResult.Success(Unit))
+        runCurrent()
+        assertEquals(QrCodeUiState.Content(repository.code!!, useDynamicColors = false), vm.uiState.value)
         vm.stop()
     }
 
@@ -170,5 +199,12 @@ class QrCodeViewModelTest {
             return pending?.await() ?: result
         }
         override fun clearCache() { code = null }
+    }
+
+    private class FakeQrAppearancePreferences : QrAppearancePreferences {
+        var dynamicColors = false
+        override suspend fun useDynamicColors() = dynamicColors
+        override suspend fun isSpoilerEnabled() = true
+        override suspend fun spoilerAnimationType() = QrAnimationType.entries.first()
     }
 }

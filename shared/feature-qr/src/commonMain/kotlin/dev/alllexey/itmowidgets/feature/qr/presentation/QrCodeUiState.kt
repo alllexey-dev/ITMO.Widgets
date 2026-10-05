@@ -7,7 +7,13 @@ sealed interface QrCodeUiState {
     data object Loading : QrCodeUiState
     data object Empty : QrCodeUiState
     data class Error(val error: AppError) : QrCodeUiState
-    data class Content(val code: QrCodeSnapshot, val refreshing: Boolean = false) : QrCodeUiState
+
+    /** [useDynamicColors] is the user's QR colour setting: theme colours instead of black on white. */
+    data class Content(
+        val code: QrCodeSnapshot,
+        val refreshing: Boolean = false,
+        val useDynamicColors: Boolean = false,
+    ) : QrCodeUiState
 }
 
 sealed interface QrCodeEvent {

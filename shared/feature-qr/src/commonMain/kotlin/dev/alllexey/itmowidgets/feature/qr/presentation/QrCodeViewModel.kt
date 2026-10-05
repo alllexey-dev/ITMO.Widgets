@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.feature.qr.domain.QrAppearancePreferences
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import kotlin.time.Clock
@@ -18,10 +19,12 @@ import kotlinx.coroutines.launch
 
 /**
  * The QR pass screen. Expiry follows the wall [clock], never the academic time, so the debug academic override
- * cannot keep an expired pass on the screen.
+ * cannot keep an expired pass on the screen. The colour setting is read on every request, so a change made in the
+ * settings shows when the screen comes back.
  */
 class QrCodeViewModel(
     private val repository: QrCodeRepository,
+    private val appearance: QrAppearancePreferences,
     private val clock: Clock
 ) : ViewModel() {
     private val state = MutableStateFlow<QrCodeUiState>(QrCodeUiState.Loading)
@@ -52,15 +55,20 @@ class QrCodeViewModel(
         val previous = (state.value as? QrCodeUiState.Content)?.takeIf { it.code.expiresAtMillis > nowMillis() }
         if (previous != null) state.value = previous.copy(refreshing = true)
         request = viewModelScope.launch {
+            val dynamicColors = appearance.useDynamicColors()
             if (previous == null) {
                 // A fresh screen shows the cached pass at once; only an absent or expired cache waits.
                 val cached = repository.currentQr()?.takeIf { it.expiresAtMillis > nowMillis() && it.hex.isNotBlank() }
-                state.value = cached?.let { QrCodeUiState.Content(it, refreshing = true) } ?: QrCodeUiState.Loading
+                state.value = cached
+                    ?.let { QrCodeUiState.Content(it, refreshing = true, useDynamicColors = dynamicColors) }
+                    ?: QrCodeUiState.Loading
+            } else if (previous.useDynamicColors != dynamicColors) {
+                state.value = previous.copy(refreshing = true, useDynamicColors = dynamicColors)
             }
             val result = repository.refreshQrHex(force = mode == RefreshMode.Force)
             val code = repository.currentQr()?.takeIf { it.expiresAtMillis > nowMillis() && it.hex.isNotBlank() }
             state.value = when {
-                code != null -> QrCodeUiState.Content(code)
+                code != null -> QrCodeUiState.Content(code, useDynamicColors = dynamicColors)
                 result is AppResult.Failure -> QrCodeUiState.Error(result.error)
                 else -> QrCodeUiState.Empty
             }
