@@ -1,0 +1,12 @@
+# The sport fixtures SportModelFixturesTest checks (scripts/sync-backend-contract.sh vendors them): every answer
+# that carries a sport model. CO-04b adds the Unit answers and the request bodies with the routes. Not mirrored:
+# http/sport-*-sign/mark*EntrySatisfied.json (by entry ID, no app caller).
+http/sport-auto-sign/createSportAutoSignEntry.json
+http/sport-auto-sign/currentSportAutoSignQueues.json
+http/sport-auto-sign/mySportAutoSignEntries.json
+http/sport-auto-sign/sportAutoSignLimits.json
+http/sport-free-sign/createSportFreeSignEntry.json
+http/sport-free-sign/currentSportFreeSignQueues.json
+http/sport-free-sign/mySportFreeSignEntries.json
+http/sport/friendsSportBookings.json
+http/sport/userSportBookings.json
