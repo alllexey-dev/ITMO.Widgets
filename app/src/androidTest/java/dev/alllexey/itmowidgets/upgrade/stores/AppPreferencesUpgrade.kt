@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.upgrade.stores
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -14,6 +16,7 @@ import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
@@ -25,6 +28,7 @@ import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
 import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.preferencesDataStoreFile
 import dev.alllexey.itmowidgets.feature.friendselector.data.DataStoreFriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.qr.data.QrWidgetStateStoreImpl
 import dev.alllexey.itmowidgets.feature.qr.domain.QrWidgetState
@@ -35,6 +39,10 @@ import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
 import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -44,12 +52,26 @@ import org.junit.Assert.assertTrue
 /**
  * `files/datastore/app_preferences.preferences_pb`: all 40 keys 2.2 wrote (28 of `AppSettingsStorage`, now split
  * into the per-concern stores, 8 of `UtilityStorage` and one each of the subject bindings, the BARS switch, a QR
- * widget's state and the recent friends) keep their names, types and values and read through head stores.
+ * widget's state and the recent friends) keep their names, types and values and read through head stores. The file
+ * is opened as `StorageModule` opens it: `createWithPath` on `AppDirectories`, so through okio.
  */
 object AppPreferencesUpgrade {
 
-    fun check(fixture: Upgrade22Fixture): Unit = runBlocking {
-        val preferences = fixture.preferences
+    fun check(fixture: Upgrade22Fixture) {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        try {
+            check(
+                fixture,
+                PreferenceDataStoreFactory.createWithPath(scope = scope, produceFile = {
+                    AndroidAppDirectories(fixture.context).preferencesDataStoreFile("app_preferences")
+                })
+            )
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    private fun check(fixture: Upgrade22Fixture, preferences: DataStore<Preferences>): Unit = runBlocking {
         assertEquals(EXPECTED.asMap(), preferences.data.first().asMap())
 
         assertTrue(ServicesOptInPreferences(preferences).getCustomServicesEnabled())

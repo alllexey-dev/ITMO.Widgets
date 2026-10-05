@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.gradle.process.CommandLineArgumentProvider
 
 // SDK levels, JVM 17, the Compose compiler and test defaults come from itmowidgets.android.app (build-logic).
 plugins {
@@ -116,6 +117,10 @@ dependencies {
     implementation(libs.my.itmo.api)
     implementation(libs.androidx.navigation.ui)
     implementation(libs.androidx.datastore.preferences)
+    // Storage foundation (KM-04): okio files, DataStore by okio path, the common lock of AtomicTextFile.
+    implementation(libs.androidx.datastore.preferences.core)
+    implementation(libs.okio)
+    implementation(libs.kotlinx.atomicfu)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -146,6 +151,7 @@ dependencies {
     // Konsist 0.17.3 brings a 2.0.21 parser that misreads Kotlin 2.4 syntax.
     testRuntimeOnly(libs.konsist.kotlin.compiler.embeddable)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.koin.test)
     androidTestImplementation(libs.androidx.junit)
@@ -153,4 +159,45 @@ dependencies {
     androidTestImplementation(libs.androidx.test.monitor)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+// AtomicTextFileTest runs the real android.util.AtomicFile on SDK 29 (`.bak`) and SDK 35 (`.new`). Robolectric
+// reads both jars from Gradle's cache through robolectric-deps.properties and never downloads into ~/.m2 (SP-13a).
+// One configuration per jar: in one configuration Gradle would resolve the two versions of the module to one.
+val robolectricSdkJars = listOf(libs.robolectric.android.all, libs.robolectric.android.all.sdk29).mapIndexed { index, jar ->
+    configurations.create("robolectricSdkJar$index") { isTransitive = false }.also { dependencies.add(it.name, jar) }
+}
+val robolectricDeps = tasks.register<RobolectricDepsFile>("robolectricDeps") {
+    jars.from(robolectricSdkJars)
+    output = layout.buildDirectory.file("robolectric/robolectric-deps.properties")
+}
+tasks.withType<Test>().configureEach {
+    jvmArgumentProviders.add(RobolectricDepsArgument(robolectricDeps.flatMap { it.output }))
+}
+
+abstract class RobolectricDepsFile : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract val jars: ConfigurableFileCollection
+
+    @get:OutputFile
+    abstract val output: RegularFileProperty
+
+    @TaskAction
+    fun write() {
+        output.get().asFile.writeText(
+            jars.files.sortedBy { it.name }.joinToString(separator = "") { jar ->
+                val version = jar.name.removePrefix("android-all-instrumented-").removeSuffix(".jar")
+                "org.robolectric\\:android-all-instrumented\\:$version=${jar.absolutePath}\n"
+            }
+        )
+    }
+}
+
+class RobolectricDepsArgument(
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    val file: Provider<RegularFile>
+) : CommandLineArgumentProvider {
+    override fun asArguments() = listOf("-Drobolectric-deps.properties=${file.get().asFile.absolutePath}")
 }

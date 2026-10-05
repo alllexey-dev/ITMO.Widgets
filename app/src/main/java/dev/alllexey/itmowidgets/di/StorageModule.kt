@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStoreFile
 import api.myitmo.storage.Storage
 import dagger.Binds
 import dagger.Module
@@ -14,7 +13,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.core.storage.AndroidKeystoreTokenCipher
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
@@ -29,6 +30,7 @@ import dev.alllexey.itmowidgets.core.storage.TokenCipher
 import dev.alllexey.itmowidgets.core.storage.TokenStorageFile
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.preferencesDataStoreFile
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import java.io.File
 import javax.inject.Singleton
@@ -68,15 +70,22 @@ abstract class StorageModule {
 
         @Provides
         @Singleton
+        fun provideAppDirectories(
+            @ApplicationContext context: Context
+        ): AppDirectories = AndroidAppDirectories(context)
+
+        /** The one instance of `app_preferences` in the process; a second one over the same file would throw. */
+        @Provides
+        @Singleton
         @AppPreferences
         fun provideAppPreferences(
-            @ApplicationContext context: Context,
+            directories: AppDirectories,
             dispatchers: AppDispatchers
         ): DataStore<Preferences> {
-            return PreferenceDataStoreFactory.create(
+            return PreferenceDataStoreFactory.createWithPath(
                 scope = CoroutineScope(SupervisorJob() + dispatchers.io),
                 produceFile = {
-                    context.preferencesDataStoreFile(APP_PREFERENCES_FILE)
+                    directories.preferencesDataStoreFile(APP_PREFERENCES_FILE)
                 }
             )
         }
