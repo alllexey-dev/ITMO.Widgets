@@ -6,6 +6,7 @@ import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.core.network.BackendClientFactory
 import dev.alllexey.itmowidgets.core.network.MyItmoClientFactory
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -22,7 +23,6 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.core.testing.unreachable
-import dev.alllexey.itmowidgets.core.testing.unreachableMyItmo
 import dev.alllexey.itmowidgets.feature.qr.data.demo.DemoQr
 import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
@@ -46,7 +46,8 @@ import kotlin.uuid.Uuid
 
 /**
  * Single-call clients of the demo session: the pass, the update offer, web sign-in, privacy and Backend sessions.
- * The Backend ones send nothing in the demo, even with the stored opt-in, and nothing without the opt-in.
+ * The Backend ones send nothing in the demo, even with the stored opt-in, and nothing without the opt-in; the Core 2.0
+ * identity sync does not even read the ITMO.ID session.
  */
 class DemoNetworkGateTest {
 
@@ -61,6 +62,16 @@ class DemoNetworkGateTest {
         kotlinx.coroutines.runBlocking { it.servicesOptIn.setCustomServicesEnabled(true) }
     }
     private val gate = DefaultBackendGate(stores.servicesOptIn, demo)
+
+    /** The 2.x session and Core 2.0 over storage and an engine that fail the test on any use. */
+    private val unreachableTokens = object : TokenStorage {
+        override suspend fun read(): TokenSet? = throw AssertionError("The demo session read the ITMO.ID session")
+
+        override suspend fun write(tokens: TokenSet?) = throw AssertionError("The demo session wrote the ITMO.ID session")
+    }
+    private val unreachableEngine = MockEngine { request -> throw AssertionError("The demo session asked ${request.url}") }
+    private val unreachableSession = MyItmoClientFactory.create(unreachableTokens, unreachableEngine, Clock.System)
+    private val backendClient = BackendClientFactory.create("https://backend.test", unreachableSession.tokens, unreachableEngine)
 
     @Test
     fun `the pass is a code no turnstile accepts`() = runTest {
@@ -130,12 +141,16 @@ class DemoNetworkGateTest {
             it.setFirebaseToken("demo-token")
         }
         val devices = DefaultBackendDeviceSession(gate, utility, backend, "Pixel", user, demo, dispatchers)
-        val identity = DefaultBackendIdentitySync(unusedContext(), gate, unreachableMyItmo(), backend, RecordingDiagnostics(), demo, dispatchers)
+        val identity = DefaultBackendIdentitySync(
+            unusedContext(), gate, unreachableSession.tokens, unreachableTokens, backendClient.users, RecordingDiagnostics(), demo,
+            dispatchers
+        )
 
         devices.registerCurrentDevice()
         devices.unregisterCurrentDevice()
 
         assertTrue(identity.sync())
+        assertTrue(unreachableEngine.requestHistory.isEmpty())
     }
 
     private fun settingsRepository(stores: PreferenceStores, gate: BackendGate, demo: DemoMode) = SettingsRepositoryImpl(

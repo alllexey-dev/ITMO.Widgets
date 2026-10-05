@@ -22,6 +22,9 @@ kotlin {
             // client, its storage and Ktor's engine type are in core's public signatures (L07 KM-10a1).
             api(libs.my.itmo.api.kmp)
             api(libs.ktor.client.core)
+            // BackendClientFactory and BackendException.asAppError() have Core 2.0's client and errors in their
+            // signatures (L07 KM-10a2); the client never depends on core, the mapping lives here.
+            api(project(":shared:backend-client"))
             // kotlinx.atomicfu.locks.SynchronizedObject of AtomicTextFile (L07 KM-04); library only, no plugin.
             implementation(libs.kotlinx.atomicfu)
         }
