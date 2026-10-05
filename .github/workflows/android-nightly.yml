@@ -1,11 +1,15 @@
 # Scheduled and advisory jobs; never a required check. Kept apart from android-ci.yml so push and PR runs
-# never carry skipped check runs.
+# never carry skipped check runs. A PR that edits this file or the platform list runs every job here once.
 name: android-nightly
 
 on:
   schedule:
     - cron: "23 1 * * *"
   workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/android-nightly.yml
+      - app/src/androidTest/platform-tests.txt
 
 concurrency:
   group: android-nightly-${{ github.ref }}
@@ -58,5 +62,67 @@ jobs:
         with:
           name: build-health-report
           path: build/reports/dependency-analysis/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # L04 TC-14: the platform instrumentation list under Android Test Orchestrator on a Gradle Managed Device
+  # (ciAtd, the newest ATD image), which only CI creates. A scheduled run uses the default branch's copy of this
+  # file, so it checks out v2.3/next explicitly; a PR run tests the PR.
+  platform-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'v2.3/next' || '' }}
+          persist-credentials: false
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' |
+            sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+          cache-read-only: true
+
+      # MyItmoApi 2.x at gradle/myitmoapi.ref as the composite build (ADR 0024), as in android-ci.yml.
+      - name: MyItmoApi ref
+        id: myitmoapi
+        run: echo "ref=$(head -n 1 gradle/myitmoapi.ref | tr -d ' \t\r')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: alllexey-dev/my-itmo-api
+          ref: ${{ steps.myitmoapi.outputs.ref }}
+          path: myitmoapi
+          persist-credentials: false
+
+      - name: MyItmoApi out of the workspace
+        run: |
+          mv myitmoapi "$RUNNER_TEMP/myitmoapi"
+          echo "MYITMOAPI_DIR=$RUNNER_TEMP/myitmoapi" >> "$GITHUB_ENV"
+
+      - name: verify.sh ui @platform --managed-device
+        env:
+          CI: "true"
+        run: scripts/verify.sh ui @platform --managed-device
+
+      - name: Upload instrumentation reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: platform-tests-reports
+          path: |
+            app/build/reports/androidTests/managedDevice/
+            app/build/outputs/androidTest-results/managedDevice/
           if-no-files-found: ignore
           retention-days: 14

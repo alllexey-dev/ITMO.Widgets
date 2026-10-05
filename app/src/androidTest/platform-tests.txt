@@ -1,0 +1,24 @@
+# Platform instrumentation tests (L04 TC-14): no View coupling, kept through the Compose ports and moved with their
+# owning module. `scripts/verify.sh ui @platform` runs this list under Android Test Orchestrator with
+# clearPackageData; android-nightly.yml runs it on a Gradle Managed Device. One FQCN per line, `#` starts a comment.
+# A lane that adds a platform test adds its line in the same PR; View and visual tests never go here.
+
+# Report 05 "Instrumentation tests", platform group (ScheduleLocalDataSourceTest is a JVM test since LS-1c).
+dev.alllexey.itmowidgets.core.storage.AndroidKeystoreTokenCipherTest
+dev.alllexey.itmowidgets.core.storage.MyItmoStorageTest
+dev.alllexey.itmowidgets.feature.recordbook.BarsTokenStorageTest
+dev.alllexey.itmowidgets.feature.schedule.data.CalendarSyncProviderTest
+dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreTest
+dev.alllexey.itmowidgets.feature.recordbook.work.MarksWorkTest
+dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesWorkTest
+dev.alllexey.itmowidgets.feature.recordbook.MarksNotificationTest
+dev.alllexey.itmowidgets.feature.schedule.ScheduleChangesNotificationTest
+dev.alllexey.itmowidgets.feature.qr.QrColorResolverTest
+dev.alllexey.itmowidgets.feature.qr.QrTileFlowTest
+dev.alllexey.itmowidgets.app.AppShortcutsTest
+dev.alllexey.itmowidgets.core.ui.ShareTextTest
+dev.alllexey.itmowidgets.feature.sport.data.SportSessionBindingsTest
+
+# 2.2 upgrade (G-04 UpgradeFrom22Test with the stores/*Upgrade checkers; IO-03b's secure store over the same capture).
+dev.alllexey.itmowidgets.upgrade.UpgradeFrom22Test
+dev.alllexey.itmowidgets.core.platform.SecureStoreUpgradeTest

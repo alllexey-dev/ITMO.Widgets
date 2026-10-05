@@ -5,6 +5,7 @@
 # verify.sh shots <module>|app|all [--record | --gallery <dir>] [-P<name>=<value>...]
 #                                          :shared:<module>, :app or all of them: screenshotsVerify (screenshotsRecord)
 # verify.sh ui <Class>[,<Class>...]|all    :app:connectedGithubDebugAndroidTest on a pool emulator
+# verify.sh ui @platform [--managed-device] the platform list under Orchestrator (pool emulator, or CI's managed device)
 # verify.sh ship                           scripts/ship-check.sh when it exists, else full + check-play-policy.sh
 # verify.sh run -- <gradle args...>        ad hoc Gradle tasks (kn slot when an argument names an iOS task)
 #
@@ -28,6 +29,9 @@
 # - ui accepts FQCNs or bare class names (resolved to the one file under app/src/androidTest*/), optionally with
 #   #method. It refuses unless ANDROID_SERIAL is emulator-<port> and the device reports ro.boot.qemu (or
 #   ro.kernel.qemu) = 1; emulator-5554 only from a worktree whose itmo-lane marker reads `integrator`.
+# - ui @platform runs the FQCNs of app/src/androidTest/platform-tests.txt with -Pitmo.orchestrator=true (Android
+#   Test Orchestrator, clearPackageData; L04 TC-14). --managed-device runs them on the Gradle Managed Device ciAtd
+#   instead of ANDROID_SERIAL and only with CI=true: locally it would create an AVD.
 # - Never runs --stop, publishToMavenLocal, connected* outside ui, or install*/uninstall* tasks.
 # - The last line of a finished run is `VERIFY A <mode> PASS|FAIL <secs>s <sha7>[+dirty]`.
 # - Exit code: 0 pass, 1 fail, 2 refused (usage, missing harness, unsafe device); refusals print no VERIFY line.
@@ -39,6 +43,9 @@ REPO_LETTER=A
 # K/N daemon heap (TC-15): the release framework link of :shared:ios peaks at about 2.3 GB of heap (5.4 GB
 # footprint with LLVM); -Xmx2g slowed it down, -Xmx6g did not speed it up.
 KN_HEAP=3g
+# TC-14: the platform instrumentation list and the CI-only Gradle Managed Device of app/build.gradle.kts.
+PLATFORM_LIST=app/src/androidTest/platform-tests.txt
+MANAGED_DEVICE=ciAtd
 
 refuse() { printf '%s: %s\n' "$me" "$*" >&2; exit 2; }
 note() { printf '%s: %s\n' "$me" "$*" >&2; }
@@ -62,7 +69,7 @@ if [ "${1:-}" = __gradle ]; then
 fi
 
 usage() {
-  sed -n '2,9p' "$self" | sed 's/^# //' >&2
+  sed -n '2,10p' "$self" | sed 's/^# //' >&2
   exit 2
 }
 
@@ -314,11 +321,33 @@ check_device() {
   refuse "ui: $serial is not a reachable emulator (getprop ro.boot.qemu / ro.kernel.qemu is not 1)"
 }
 
+# The FQCNs of the platform list, comma-separated; comments and blank lines skipped.
+platform_classes() {
+  local list="$root/$PLATFORM_LIST" classes
+  [ -f "$list" ] || refuse "ui: no platform list $PLATFORM_LIST"
+  classes=$(sed -e 's/#.*//' -e 's/[[:space:]]//g' "$list" | grep -v '^$' | paste -sd , -)
+  [ -n "$classes" ] || refuse "ui: $PLATFORM_LIST lists no class"
+  printf '%s' "$classes"
+}
+
 run_ui() {
-  local spec=${1:-} item name method classes="" fqcn old_ifs
-  [ -n "$spec" ] || refuse "usage: ui <Class>[,<Class>...]|all"
+  local spec=${1:-} item name method classes="" fqcn old_ifs task=:app:connectedGithubDebugAndroidTest
+  local -a extra=()
+  [ -n "$spec" ] || refuse "usage: ui <Class>[,<Class>...]|all|@platform [--managed-device]"
   shift
-  no_args "$@"
+  if [ "$spec" = @platform ]; then
+    extra=(-Pitmo.orchestrator=true)
+    if [ "${1:-}" = --managed-device ]; then
+      shift
+      [ "${CI:-}" = true ] || refuse "ui: --managed-device only in CI (CI=true); locally it would create an AVD"
+      task=:app:${MANAGED_DEVICE}GithubDebugAndroidTest
+      extra+=(-Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect)
+    fi
+    no_args "$@"
+    spec=$(platform_classes) || exit 2
+  else
+    no_args "$@"
+  fi
   if [ "$spec" != all ]; then
     old_ifs=$IFS
     IFS=,
@@ -338,9 +367,13 @@ run_ui() {
     done
     classes=${classes#,}
   fi
-  check_device
-  note "running on $ANDROID_SERIAL: ${classes:-all instrumentation tests}"
-  gradle_part android :app:connectedGithubDebugAndroidTest \
+  if [ "$task" = :app:connectedGithubDebugAndroidTest ]; then
+    check_device
+    note "running on $ANDROID_SERIAL: ${classes:-all instrumentation tests}"
+  else
+    note "running on the managed device $MANAGED_DEVICE: $classes"
+  fi
+  gradle_part android "$task" ${extra[@]+"${extra[@]}"} \
     ${classes:+"-Pandroid.testInstrumentationRunnerArguments.class=$classes"}
 }
 
@@ -360,7 +393,9 @@ run_run() {
     case "$task" in
       *ToMavenLocal* | *toMavenLocal*) refuse "run: no publishing to Maven Local ($arg)" ;;
       install* | uninstall*) refuse "run: no installs outside ui ($arg)" ;;
-      connected* | deviceCheck) refuse "run: device tests go through \`verify.sh ui\` ($arg)" ;;
+      connected* | deviceCheck | allDevices* | "$MANAGED_DEVICE"* | cleanManagedDevices)
+        refuse "run: device tests go through \`verify.sh ui\` ($arg)"
+        ;;
     esac
     case "$arg" in
       *Ios* | *iosSimulatorArm64* | *iosArm64* | *iosX64* | link*Framework* | *:link*Framework*) kind=kn ;;
