@@ -161,7 +161,6 @@ dependencies {
     "playImplementation"(libs.play.app.update.ktx)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
-    testImplementation(libs.konsist)
     // Konsist 0.17.3 brings a 2.0.21 parser that misreads Kotlin 2.4 syntax.
     testRuntimeOnly(libs.konsist.kotlin.compiler.embeddable)
     testImplementation(libs.kotlinx.coroutines.test)
