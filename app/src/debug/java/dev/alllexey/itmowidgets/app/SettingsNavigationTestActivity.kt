@@ -9,11 +9,9 @@ import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorViewModel
 import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
+import dev.alllexey.itmowidgets.di.bridge.HomeDebugFixtures
 import dev.alllexey.itmowidgets.di.bridge.QrDebugFixtures
 import org.koin.core.module.Module
 import kotlinx.coroutines.flow.emptyFlow
@@ -90,8 +88,6 @@ import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
-import dev.alllexey.itmowidgets.feature.home.presentation.HomeViewModel
-import dev.alllexey.itmowidgets.feature.home.ui.HomeFragment
 import dev.alllexey.itmowidgets.feature.settings.domain.*
 import dev.alllexey.itmowidgets.feature.settings.presentation.*
 import dev.alllexey.itmowidgets.feature.settings.ui.IcsExportBottomSheet
@@ -131,6 +127,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     private val onboardingServices = FixtureOnboardingServices()
     private val onboardingAppearance = FixtureWidgetAppearance()
     private lateinit var qrFixture: Module
+    private lateinit var homeKoinFixture: Module
     private val customSpoiler = FixtureCustomSpoiler()
 
     /** The first-run flow with no stored preferences and no backend behind the opt-in. */
@@ -201,8 +198,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Before super.onCreate(): a restored QrCodeFragment obtains its ViewModel from Koin.
+        // Before super.onCreate(): a restored QrCodeFragment or HomeFragment obtains its ViewModel from Koin.
         qrFixture = QrDebugFixtures.load(this, FixtureQrCodeRepository, FixtureWallClock)
+        homeKoinFixture = HomeDebugFixtures.load(this, FixtureHomeFakes, FixtureWallClock)
         supportFragmentManager.fragmentFactory = object : FragmentFactory() {
             override fun instantiate(classLoader: ClassLoader, className: String): Fragment =
                 if (className == MyItmoWebFragment::class.java.name) MyItmoWebPreviewFragment()
@@ -241,18 +239,6 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
                     }
                     if (f is UserFriendsFragment) ViewModelProvider(f, factory)[UserFriendsViewModel::class.java]
                     else ViewModelProvider(f, factory)[UserProfileViewModel::class.java]
-                    return
-                }
-                if (f is HomeFragment) {
-                    ViewModelProvider(f, object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            val source = FixtureHomeCardSource(homeFixture).also { homeSource = it }
-                            val preferences = FixtureHomeCardPreferences(homeFixture.hidden).also { homePreferences = it }
-                            val hints = FixtureHomeHintStore().also { homeHintStore = it }
-                            return HomeViewModel(setOf(source), preferences, hints, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)) as T
-                        }
-                    })[HomeViewModel::class.java]
                     return
                 }
                 if (f is MeFragment) {
@@ -413,6 +399,14 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     override fun onDestroy() {
         super.onDestroy()
         QrDebugFixtures.unload(this, qrFixture)
+        HomeDebugFixtures.unload(this, homeKoinFixture)
+    }
+
+    /** A new feed for each new ViewModel from [homeFixture]; tests reach it through [homeSource] and its siblings. */
+    private object FixtureHomeFakes : HomeDebugFixtures.Fakes {
+        override fun source() = FixtureHomeCardSource(homeFixture).also { homeSource = it }
+        override fun preferences() = FixtureHomeCardPreferences(homeFixture.hidden).also { homePreferences = it }
+        override fun hintStore() = FixtureHomeHintStore().also { homeHintStore = it }
     }
 
     /** The QR pass as [qrCode], [qrRefreshResult] and [qrDelayMs] say at the moment of each call. */
@@ -427,7 +421,10 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
         override fun clearCache() = Unit
     }
 
-    /** The wall clock stands at the epoch, so the fixture pass (valid for an hour) never expires on screen. */
+    /**
+     * The wall clock stands at the epoch, so the fixture pass (valid for an hour) never expires on screen and the
+     * feed never turns stale.
+     */
     private object FixtureWallClock : kotlin.time.Clock {
         override fun now(): kotlin.time.Instant = kotlin.time.Instant.fromEpochMilliseconds(0)
     }

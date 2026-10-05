@@ -5,8 +5,10 @@ import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
-import dev.alllexey.itmowidgets.feature.home.FakeHomeHintStatus
-import dev.alllexey.itmowidgets.feature.home.FakeHomeHintStore
+import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStatus
+import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -56,5 +58,21 @@ class HintHomeCardSourceTest {
         status.widgetPlaced = true
         assertEquals(AppResult.Success(Unit), source.refresh())
         assertTrue(source.observe().first().isEmpty())
+    }
+
+    /** `HomeFakes` sit in `:shared:feature-home`'s commonTest, which `:app` cannot see, until this source moves. */
+    private class FakeHomeHintStatus : HomeHintStatus {
+        var widgetPlaced = true
+        var notifications = true
+        override suspend fun anyWidgetPlaced() = widgetPlaced
+        override suspend fun notificationsEnabled() = notifications
+    }
+
+    private class FakeHomeHintStore : HomeHintStore {
+        private val dismissed = MutableStateFlow<Set<HomeHint>>(emptySet())
+        override fun observeDismissed(): Flow<Set<HomeHint>> = dismissed
+        override suspend fun dismiss(hint: HomeHint) {
+            dismissed.value = dismissed.value + hint
+        }
     }
 }

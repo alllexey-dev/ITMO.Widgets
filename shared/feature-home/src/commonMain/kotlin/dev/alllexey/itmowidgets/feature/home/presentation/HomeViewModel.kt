@@ -2,25 +2,22 @@ package dev.alllexey.itmowidgets.feature.home.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.home.HomeCard
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeCardSource
 import dev.alllexey.itmowidgets.core.home.HomeHint
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.feature.home.domain.HomeCardPreferences
 import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
-import java.time.Clock
-import javax.inject.Inject
+import kotlin.time.Clock
 import kotlinx.coroutines.async
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
@@ -28,23 +25,22 @@ import kotlinx.coroutines.supervisorScope
 /**
  * Merges every registered [HomeCardSource]: cards sort by kind, hidden kinds
  * drop out, and a refresh asks all sources at once. Errors never replace the
- * feed; the first one becomes a single event.
+ * feed; the first one becomes a single event. Staleness follows the wall [clock].
  */
-@HiltViewModel
-class HomeViewModel @Inject constructor(
-    private val sources: Set<@JvmSuppressWildcards HomeCardSource>,
+class HomeViewModel(
+    private val sources: List<HomeCardSource>,
     preferences: HomeCardPreferences,
     private val hintStore: HomeHintStore,
-    @param:WallClock private val clock: Clock
+    private val clock: Clock
 ) : ViewModel() {
 
     private val refreshing = MutableStateFlow(false)
     private var inFlight = false
-    private val eventChannel = Channel<HomeEvent>(Channel.BUFFERED)
+    private val queue = EventQueue<HomeEvent>()
     private var loaded = false
     private var lastRefreshMillis = 0L
 
-    val events: Flow<HomeEvent> = eventChannel.receiveAsFlow()
+    val events: Flow<HomeEvent> = queue.events
 
     private val cards: Flow<List<HomeCard>> =
         combine(sources.map { it.observe() }) { lists -> lists.flatMap { it } }
@@ -57,21 +53,24 @@ class HomeViewModel @Inject constructor(
     fun ensureDataLoaded() {
         if (loaded) return
         loaded = true
-        refresh(silent = true)
+        refresh(RefreshMode.Silent)
     }
 
-    /** A pull shows the indicator; an automatic refresh on entry or resume stays silent behind the cards. */
-    fun refresh(silent: Boolean = false) {
+    /**
+     * Only a [RefreshMode.Pull] shows the indicator; an automatic refresh on entry or resume stays silent behind the
+     * cards. A call while a refresh runs is dropped.
+     */
+    fun refresh(mode: RefreshMode) {
         if (inFlight) return
         inFlight = true
-        if (!silent) refreshing.value = true
+        if (mode == RefreshMode.Pull) refreshing.value = true
         viewModelScope.launch {
             try {
                 val failure = supervisorScope {
                     sources.map { source -> async { source.refresh() } }
                 }.mapNotNull { (it.await() as? AppResult.Failure)?.error }.firstOrNull()
-                lastRefreshMillis = clock.millis()
-                failure?.let { eventChannel.send(HomeEvent.RefreshFailed(it)) }
+                lastRefreshMillis = nowMillis()
+                failure?.let { queue.send(HomeEvent.RefreshFailed(it)) }
             } finally {
                 inFlight = false
                 refreshing.value = false
@@ -82,7 +81,7 @@ class HomeViewModel @Inject constructor(
     /** Cheap checks always; the network only when the feed is stale. */
     fun onScreenResumed() {
         viewModelScope.launch { sources.forEach { it.revalidate() } }
-        if (loaded && clock.millis() - lastRefreshMillis >= STALE_AFTER_MILLIS) refresh(silent = true)
+        if (loaded && nowMillis() - lastRefreshMillis >= STALE_AFTER_MILLIS) refresh(RefreshMode.Silent)
     }
 
     fun dismissHint(hint: HomeHint) {
@@ -92,6 +91,8 @@ class HomeViewModel @Inject constructor(
     fun dismissCard(kind: HomeCardKind) {
         viewModelScope.launch { sources.forEach { it.dismiss(kind) } }
     }
+
+    private fun nowMillis(): Long = clock.now().toEpochMilliseconds()
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L

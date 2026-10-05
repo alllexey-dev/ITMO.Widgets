@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +17,7 @@ import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.home.HomeHint
 import dev.alllexey.itmowidgets.core.navigation.SettingsScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.time.javaZone
 import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
@@ -39,6 +39,7 @@ import dev.alllexey.itmowidgets.feature.home.presentation.HomeViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -52,7 +53,7 @@ class HomeFragment : Fragment() {
 
     // region State
 
-    private val viewModel: HomeViewModel by viewModels()
+    private val viewModel: HomeViewModel by viewModel()
     private var adapter: HomeFeedAdapter? = null
     private var pinRequester: WidgetPinRequester? = null
     private var feedbackSnackbar: Snackbar? = null
@@ -146,7 +147,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        binding.swipeRefresh.setOnRefreshListener { viewModel.refresh() }
+        binding.swipeRefresh.setOnRefreshListener { viewModel.refresh(RefreshMode.Pull) }
         binding.webFab.setOnClickListener { openScreen(AppScreen.MY_ITMO_WEB) }
         binding.qrFab.setOnClickListener { openScreen(AppScreen.QR_PASS) }
     }
@@ -195,7 +196,7 @@ class HomeFragment : Fragment() {
         feedbackSnackbar?.dismiss()
         feedbackSnackbar = Snackbar.make(binding.root, R.string.common_partial_load_error, Snackbar.LENGTH_LONG)
             .setAnchorView(binding.quickActions)
-            .setAction(R.string.common_retry) { viewModel.refresh() }
+            .setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Pull) }
             .also(Snackbar::show)
     }
 
