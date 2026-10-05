@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
+import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetSnapshotStoreImpl
@@ -18,6 +19,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SingleLessonWidge
 import dev.alllexey.itmowidgets.testing.DeviceDispatchers
 import dev.alllexey.itmowidgets.upgrade.Captured22
 import dev.alllexey.itmowidgets.upgrade.Upgrade22Fixture
+import java.io.File
 import java.time.Clock
 import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.flow.Flow
@@ -26,8 +28,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 
-/** `no_backup/widgets/schedule_snapshot.json`: placed widgets keep their last content until the next refresh. */
+/**
+ * `no_backup/widgets/schedule_snapshot.json`: placed widgets keep their last content until the next refresh. Gson wrote
+ * it without a version; kotlinx reads it and writes `formatVersion` 2 back.
+ */
 object ScheduleWidgetSnapshotUpgrade {
 
     fun check(fixture: Upgrade22Fixture): Unit = runBlocking {
@@ -47,18 +53,23 @@ object ScheduleWidgetSnapshotUpgrade {
             compactTextSize = WidgetTextSize.LARGE,
             fullTextSize = WidgetTextSize.EXTRA_LARGE
         )
-        val store = ScheduleWidgetSnapshotStoreImpl(
-            gson = fixture.gson,
-            context = fixture.context,
-            scheduleChecks = ScheduleCheckPreferences(fixture.preferences),
-            backend = OptedInBackend,
-            timeProvider = FixedTime(fixture.clock),
-            tokens = SignedInTokens,
-            dispatchers = DeviceDispatchers
-        )
+        val store = store(fixture)
 
         assertEquals(expected, store.read())
+        store.write(expected)
+        val written = File(fixture.noBackupFilesDir, "widgets/schedule_snapshot.json").readText()
+        assertTrue(written, written.startsWith("{\"formatVersion\":2,"))
+        assertEquals(expected, store(fixture).read())
     }
+
+    private fun store(fixture: Upgrade22Fixture) = ScheduleWidgetSnapshotStoreImpl(
+        directories = AndroidAppDirectories(fixture.context),
+        scheduleChecks = ScheduleCheckPreferences(fixture.preferences),
+        backend = OptedInBackend,
+        timeProvider = FixedTime(fixture.clock),
+        tokens = SignedInTokens,
+        dispatchers = DeviceDispatchers
+    )
 
     private object OptedInBackend : BackendGate {
         override suspend fun isConnected() = true

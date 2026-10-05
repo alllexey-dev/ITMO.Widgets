@@ -1,24 +1,20 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.widget
 
-import android.content.Context
-import android.content.ContextWrapper
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.session.SessionTokens
 import dev.alllexey.itmowidgets.core.settings.LessonStyle
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.*
 import dev.alllexey.itmowidgets.testing.DeviceDispatchers
-import java.io.File
 import java.time.OffsetDateTime
 import kotlin.time.toKotlinInstant
 import kotlinx.coroutines.CompletableDeferred
@@ -29,6 +25,8 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
+import okio.Path
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -46,25 +44,28 @@ class ScheduleWidgetSnapshotStoreTest {
 
     @Test
     fun recreationKeepsExplicitPendingMarkerButFlagsAndExpiryRemoveIt() = runBlocking {
-        val context = isolatedContext()
+        val directories = isolatedDirectories()
         enable()
-        store(context).write(snapshot())
-        assertEquals(ScheduleWidgetPendingStatus.PREDICTED, store(context).read().singleLesson.lesson?.pendingStatus)
+        store(directories).write(snapshot())
+        assertEquals(
+            ScheduleWidgetPendingStatus.PREDICTED,
+            store(directories).read().singleLesson.lesson?.pendingStatus
+        )
         scheduleChecks.setScheduleSportAutoSignEnabled(false)
-        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(context).read().singleLesson.kind)
+        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(directories).read().singleLesson.kind)
         enable()
         servicesOptIn.setCustomServicesEnabled(false)
-        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(context).read().singleLesson.kind)
+        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(directories).read().singleLesson.kind)
         enable()
         time.value = time.value.plusMinutes(7)
-        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(context).read().singleLesson.kind)
+        assertEquals(SingleLessonWidgetKind.EMPTY_TODAY, store(directories).read().singleLesson.kind)
     }
 
     @Test
     fun sessionCleanupRejectsLateOldWorkerWriteAfterNewSessionStarts() = runBlocking {
-        val context = isolatedContext()
+        val directories = isolatedDirectories()
         enable()
-        val store = store(context)
+        val store = store(directories)
         val oldGeneration = store.currentGeneration()
         store.write(snapshot())
         store.clearSessionData()
@@ -76,15 +77,15 @@ class ScheduleWidgetSnapshotStoreTest {
         assertTrue(store.writeIfCurrent(snapshot(), current))
         assertEquals(ScheduleWidgetPendingStatus.PREDICTED, store.read().singleLesson.lesson?.pendingStatus)
         store.clearSessionData()
-        assertEquals(SingleLessonWidgetKind.LOADING, store(context).read().singleLesson.kind)
+        assertEquals(SingleLessonWidgetKind.LOADING, store(directories).read().singleLesson.kind)
     }
 
     @Test
     fun sessionCleanupInvalidatesReadSuspendedInSettingsEvenAfterNewLogin() = runBlocking {
         withTimeout(5_000) {
-            val context = isolatedContext()
+            val directories = isolatedDirectories()
             enable()
-            val store = store(context)
+            val store = store(directories)
             store.write(snapshot())
             val enteredSettings = CompletableDeferred<Unit>()
             val resumeSettings = CompletableDeferred<Unit>()
@@ -103,22 +104,17 @@ class ScheduleWidgetSnapshotStoreTest {
 
     @Test
     fun signedOutReadNeverExposesPersistedData() = runBlocking {
-        val context = isolatedContext()
+        val directories = isolatedDirectories()
         enable()
-        store(context).write(snapshot())
+        store(directories).write(snapshot())
         tokens.signedIn = false
-        assertEquals(SingleLessonWidgetKind.SIGNED_OUT, store(context).read().singleLesson.kind)
+        assertEquals(SingleLessonWidgetKind.SIGNED_OUT, store(directories).read().singleLesson.kind)
     }
 
-    private fun isolatedContext(): Context {
-        val directory = temporaryFolder.newFolder()
-        return object : ContextWrapper(ApplicationProvider.getApplicationContext()) {
-            override fun getNoBackupFilesDir(): File = directory
-        }
-    }
+    private fun isolatedDirectories(): AppDirectories = Directories(temporaryFolder.newFolder().toOkioPath())
 
-    private fun store(context: Context) = ScheduleWidgetSnapshotStoreImpl(
-        Gson(), context, scheduleChecks, DefaultBackendGate(servicesOptIn, NoDemo), time, tokens, DeviceDispatchers
+    private fun store(directories: AppDirectories) = ScheduleWidgetSnapshotStoreImpl(
+        directories, scheduleChecks, DefaultBackendGate(servicesOptIn, NoDemo), time, tokens, DeviceDispatchers
     )
 
     private suspend fun enable() {
@@ -139,6 +135,11 @@ class ScheduleWidgetSnapshotStoreTest {
             officialFallback = official,
             pendingValidUntil = time.value.plusMinutes(7).toInstant().toString()
         )
+    }
+
+    private class Directories(override val noBackup: Path) : AppDirectories {
+        override val files: Path get() = error("The snapshot lives in noBackup")
+        override val cache: Path get() = error("The snapshot lives in noBackup")
     }
 
     private class MemoryPreferences : DataStore<Preferences> {
