@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.onboarding.reference
 
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -7,8 +8,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
+import dagger.hilt.android.testing.UninstallModules
+import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearance
@@ -16,15 +23,27 @@ import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
+import dev.alllexey.itmowidgets.core.time.AcademicClock
+import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
+import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideStore
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.DefaultAcademicTimeProvider
+import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.TimeModule
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingStep
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
+import java.time.Instant
+import java.time.ZoneOffset
+import javax.inject.Singleton
+import kotlin.time.Clock
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.datetime.TimeZone
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,9 +53,11 @@ import org.robolectric.annotation.Config
 /**
  * Today's first-run flow under the names of LA-4a's `OnboardingScreen` previews, in
  * `shared/feature-account/screenshots/`: the steps of `OnboardingVisualTest` on in-memory preferences, the opt-in
- * and the spoiler image, as `SettingsNavigationTestActivity` hosts them; no backend, no stored preferences.
+ * and the spoiler image, as `SettingsNavigationTestActivity` hosts them; no backend, no stored preferences. The wall
+ * clock is fixed ([FixedWallClock]): the QR spoiler's noise is seeded by the hour.
  */
 @HiltAndroidTest
+@UninstallModules(TimeModule::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = HiltTestApplication::class)
 class OnboardingReferenceScreenshotTest {
@@ -164,6 +185,44 @@ class OnboardingReferenceScreenshotTest {
         override suspend fun setQrSpoilerEnabled(enabled: Boolean) = Unit
     }
 
+    /** [TimeModule] with the wall clock at the epoch, so the spoiler noise of the QR step is the same at any hour. */
+    @Module
+    @InstallIn(SingletonComponent::class)
+    object FixedWallClock {
+        @Provides
+        @Singleton
+        fun clock(): Clock = TimeModule.provideClock()
+
+        @Provides
+        @Singleton
+        fun zone(): TimeZone = TimeModule.provideAcademicTimeZone()
+
+        @Provides
+        @Singleton
+        @AcademicClock
+        fun academicClock(zone: TimeZone): java.time.Clock = TimeModule.provideAcademicClock(zone)
+
+        @Provides
+        @Singleton
+        @WallClock
+        fun wallClock(): java.time.Clock = java.time.Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+
+        @Provides
+        @Singleton
+        fun overrideStore(@ApplicationContext context: Context): AcademicTimeOverrideStore =
+            TimeModule.provideAcademicTimeOverrideStore(context)
+
+        @Provides
+        @Singleton
+        fun defaultProvider(clock: Clock, zone: TimeZone, store: AcademicTimeOverrideStore): DefaultAcademicTimeProvider =
+            TimeModule.provideDefaultAcademicTimeProvider(clock, zone, store)
+
+        @Provides
+        fun provider(provider: DefaultAcademicTimeProvider): AcademicTimeProvider = provider
+
+        @Provides
+        fun overrideController(provider: DefaultAcademicTimeProvider): AcademicTimeOverrideController = provider
+    }
 }
 
 /** Hands [fragment] the view model [create] makes before Hilt could create one. */
