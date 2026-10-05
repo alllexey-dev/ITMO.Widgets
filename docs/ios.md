@@ -39,8 +39,10 @@ xcodegen --version
 | `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin) |
 | `iosApp/Extensions/NotificationService/` | the notification service extension `ITMOWidgetsNotificationService` (no Kotlin) |
 | `iosApp/Tests/UnitTests/` | `ITMOWidgetsTests`, hosted in the app |
+| `iosApp/Tests/SnapshotTests/` | `SnapshotTests`, hosted in the app: SwiftUI and widget entry view snapshots (swift-snapshot-testing), references in `__Snapshots__/` |
+| `iosApp/Tests/UITests/` | `UITests` (XCUITest): smoke tests and review screenshots |
 | `shared/ios/` | the umbrella framework `Shared` (static) over every shared module |
-| `scripts/ios/` | `env.sh` (pins), `test.sh` (build and test) |
+| `scripts/ios/` | `env.sh` (pins), `test.sh` (build and test), `screenshots.sh` (review screenshots) |
 
 Targets use directory globs: a new Swift file in a target directory needs no `project.yml` edit. Only the app links
 `Shared`; the extensions stay Swift-only (memory limits, ADR 0023).
@@ -76,15 +78,18 @@ Gradle and `xcodebuild` run only through `scripts/ios/test.sh` (or `scripts/veri
 `kn` build slot and pass the worktree's MyItmoApi pin.
 
 ```bash
-scripts/ios/test.sh                                          # checks, xcodegen, build and all tests
+scripts/ios/test.sh                                          # checks, xcodegen, build and all tests but UITests
 scripts/ios/test.sh --only ITMOWidgetsTests/StableIdentifiersTests
+scripts/ios/test.sh --record --only SnapshotTests/SampleSnapshotTests  # re-record snapshot references
+scripts/ios/test.sh ui SmokeUITests                          # XCUITest classes (all of UITests without a class)
 scripts/ios/test.sh kn core                                  # iosSimulatorArm64Test of shared/core
 scripts/ios/test.sh --cleanup                                # delete this worktree's simulator
 ```
 
 - `test.sh` runs every `scripts/ios/check-*.sh` first, then `xcodegen generate` and `xcodebuild build test` with
   DerivedData in `iosApp/build/` and the `.xcresult` in `iosApp/build/test-results/`. Its last line is
-  `VERIFY A ios|ios-only|ios-kn PASS|FAIL <secs>s <sha7>`.
+  `VERIFY A ios|ios-only|ios-ui|ios-kn PASS|FAIL <secs>s <sha7>`. The default run and `--only` skip `UITests`;
+  `ui` runs only them.
 - Each worktree gets one simulator, `itmo-<worktree directory>`, created on first use; delete it with `--cleanup`
   at the end of a card. `--ci` runs without slots, uses `itmo-ci` and deletes it afterwards.
 - The app target's Run Script "Build Kotlin framework" runs before Compile Sources:
@@ -118,9 +123,31 @@ and every push to `v2.3/next` and `master`, and on `workflow_dispatch`.
 - The step summary records the duration of `test.sh --ci` and the peak used memory (active, wired and compressed
   pages, sampled every 5 s).
 - `.github/workflows/ios-nightly.yml` runs on a schedule against `v2.3/next`: `test.sh --ci kn` over every shared
-  module with the testing convention, and `test.sh --ci ui` once `test.sh` has a `ui` mode. It is never a required
-  check.
+  module with the testing convention, and `test.sh --ci ui` (every class in `UITests`, `SmokeUITests` included). It
+  is never a required check.
 
 Measured on the first runs (no caches yet): the job takes 18.5 to 20 minutes, `test.sh --ci` 1076 to 1157 s, with
 a peak of 6.3 to 6.4 GB used of 7 GB. If the build runs out of memory, split it into a framework job and an
 `xcodebuild` job.
+
+## Visual verification
+
+SwiftUI screens, system surfaces and widget entry views are checked by snapshot tests; Compose Multiplatform
+content is not. CMP draws into a Metal layer that a view-hierarchy snapshot of a `ComposeUIViewController` misses
+(the image is blank), so CMP hosts are checked by XCUITest screenshots and their goldens stay Roborazzi's on the JVM.
+
+- `SnapshotTests` uses [swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing), pinned in
+  `iosApp/project.yml`. `assertAppearances(of:named:)` renders a view in four appearances (light and dark, each at
+  Dynamic Type L and AX1), 320 pt wide (narrower than any supported iPhone) at a fixed scale of 2, over the system
+  background. Precision is set once in `SnapshotMatrix`: every pixel must match within a CIE Delta E of 2.
+  `SampleSnapshotTests` proves that a one-pixel change fails.
+- References live in `__Snapshots__/<test file>/<test>.<name>-<appearance>.png` beside the test file and are
+  committed with the code behind them. A run without a reference records it and fails; `test.sh --record` re-records
+  every reference it runs (and fails, by design); `test.sh --ci` never records. Failure images go to
+  `iosApp/build/snapshot-artifacts/`.
+- Record with the pinned Xcode, runtime and device from `scripts/ios/env.sh`. When CI disagrees with a local
+  recording, the images from the CI artifact win.
+- `UITests` launch the app in English (`-AppleLanguages (en) -AppleLocale en_US`) through `XCUIApplication.itmo()`.
+  `scripts/ios/screenshots.sh [<Class>...]` runs them in light and dark under a fixed status bar (9:41, full battery)
+  and exports the screenshots attached with `attachScreenshot(named:)` to `iosApp/build/screenshots/<appearance>/`
+  for review; they are never committed.

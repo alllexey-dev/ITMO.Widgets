@@ -1,0 +1,3 @@
+// The XCUITest bundle UITests; XcodeGen sets TEST_TARGET_NAME = ITMOWidgets from its dependency.
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_ID).ui-tests
+GENERATE_INFOPLIST_FILE = YES

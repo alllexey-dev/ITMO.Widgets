@@ -10,6 +10,12 @@ configFiles:
   Debug: Config/Base.xcconfig
   Release: Config/Base.xcconfig
 
+# Swift packages, each at an exact version (lane L18 Pins).
+packages:
+  SnapshotTesting:
+    url: https://github.com/pointfreeco/swift-snapshot-testing
+    exactVersion: 1.19.6
+
 settingGroups:
   # Target presets set CODE_SIGN_IDENTITY at target level, above any xcconfig (SP-23); route it back to Base.xcconfig.
   signing:
@@ -79,6 +85,38 @@ targets:
     dependencies:
       - target: ITMOWidgets
 
+  # SwiftUI and widget entry view snapshots (swift-snapshot-testing), hosted in the app like ITMOWidgetsTests.
+  # References live in __Snapshots__ beside each test file and are read from the source tree, not the bundle.
+  SnapshotTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/SnapshotTests
+        excludes:
+          - "**/__Snapshots__/**"
+    configFiles:
+      Debug: Config/SnapshotTests.xcconfig
+      Release: Config/SnapshotTests.xcconfig
+    settings:
+      groups: [signing]
+    dependencies:
+      - target: ITMOWidgets
+      - package: SnapshotTesting
+
+  # XCUITest smoke and screenshot runs against the app (scripts/ios/test.sh ui, scripts/ios/screenshots.sh).
+  UITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: Tests/UITests
+    configFiles:
+      Debug: Config/UITests.xcconfig
+      Release: Config/UITests.xcconfig
+    settings:
+      groups: [signing]
+    dependencies:
+      - target: ITMOWidgets
+
 schemes:
   ITMOWidgets:
     build:
@@ -89,4 +127,9 @@ schemes:
       gatherCoverageData: false
       targets:
         - name: ITMOWidgetsTests
+          parallelizable: false
+        - name: SnapshotTests
+          parallelizable: false
+        # Run by `scripts/ios/test.sh ui`; the default `test.sh` run skips it.
+        - name: UITests
           parallelizable: false

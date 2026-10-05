@@ -1,0 +1,5 @@
+// The hosted snapshot-test bundle SnapshotTests (swift-snapshot-testing).
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_ID).snapshot-tests
+GENERATE_INFOPLIST_FILE = YES
+TEST_HOST = $(BUILT_PRODUCTS_DIR)/ITMOWidgets.app/ITMOWidgets
+BUNDLE_LOADER = $(TEST_HOST)
