@@ -30,4 +30,10 @@ sealed interface UiText {
     ) : UiText
 
     data class Dynamic(val value: String) : UiText
+
+    /** [parts] resolved and joined by [separator], a symbol rather than a word: "1506 · Кронва". */
+    data class Joined(val parts: List<UiText>, val separator: String) : UiText
+
+    /** [text] with its first character lowercased, so a capitalized phrase can continue a sentence. */
+    data class LowercaseFirst(val text: UiText) : UiText
 }
