@@ -84,6 +84,40 @@ copies and never holds Russian text in Swift.
 - `ITMOWidgetsTests/StringsTests` checks all of it on the English simulator: the tables and the Swift resolver with
   English preferred again, the CMP resolvers after the override, every `AppSymbol` image.
 
+## Design system
+
+SwiftUI-owned screens (the shell, settings, account, sign-in and other system screens) use native controls tinted
+with the shared design tokens; Material stays inside the CMP screens. The kit lives in `iosApp/Sources/DesignSystem/`.
+
+- Tokens. `scripts/ios/gen-tokens.py` turns `shared/designsystem/tokens/itmo-tokens.json` (written by
+  `:shared:designsystem:exportDesignTokens`) into `Tokens.generated.swift`: the static light and dark colour roles
+  and the extended colours (`ItmoColor.<role>` follows the environment's colour scheme), the corner scale and named
+  shapes, spacing (`ItmoSpacing`), the type roles and motion (`ItmoMotion`). dp and sp become points 1:1, durations
+  seconds. Run it after the tokens change and commit the result; never edit the file by hand.
+- The generator refuses (exit 2) an unknown `schemaVersion`, a colour that is not `#RRGGBB`, a font family other
+  than the system font, an unknown weight and a type role without a text style; a new schema needs a generator
+  change. `scripts/ios/check-tokens.sh`, run by `test.sh`, calls `gen-tokens.py --check`, which fails while the
+  committed file is stale.
+- Type. Each M3 type role maps onto the Dynamic Type text style nearest its size at the default text size
+  (`bodyLarge` is `body`, `titleLarge` `title2`, `labelLarge` `subheadline`; the display roles are `largeTitle`)
+  with the role's weight: `Font.itmo(.bodyLarge)`, `Font.itmo(.titleMedium, emphasized: true)`. No fixed sizes, so
+  every text scales with the user's text size.
+- Touch targets are at least `ItmoMetrics.touchTarget` (the token's 48 pt, above the platform's 44 pt).
+- Motion. `ItmoMotion.animation(_:reduceMotion:)` gives the kit's easing over a token duration, or none with
+  Reduce Motion on.
+
+| View | Use |
+|---|---|
+| `ItmoFormSection`, `ItmoToggleRow`, `ItmoValueRow`, `ItmoActionRow`, `ItmoRowLabel` | rows and sections of a `Form`; an `AppSymbol` in the primary role, titles that wrap, a destructive action in the error role |
+| `ItmoLoadingView`, `ItmoEmptyView`, `ItmoErrorView` | full-width states with the same padding, so swapping them does not move the screen; the error view has a retry button (`common_retry`) |
+| `ItmoProgressButton` | the prominent button of a screen; while in progress it shows a spinner, keeps its size and ignores taps |
+| `ItmoDemoBanner` | the demo strip with the sign-in button (`demo_banner_text`, `demo_banner_sign_in`); the button moves under the text at accessibility sizes |
+
+- Texts reach the kit resolved (`AppStrings`, `UiText.resolved`) and render verbatim; the kit's own defaults come
+  from the catalog. Icons come only from `AppSymbol`.
+- `SnapshotTests/DesignSystem/DesignSystemSnapshotTests` holds the references of every kit view in the four
+  appearances.
+
 ## Identifiers
 
 Frozen from the first TestFlight build; `iosApp/Tests/UnitTests/StableIdentifiersTests.swift` pins each one that
