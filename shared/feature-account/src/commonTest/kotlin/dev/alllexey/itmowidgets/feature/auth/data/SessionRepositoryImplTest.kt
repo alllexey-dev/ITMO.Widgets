@@ -37,7 +37,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import okio.IOException
+import kotlinx.io.IOException
 
 /** The session over an in-memory token file and the MyItmoApi 2.x client, with ITMO.ID answered by a MockEngine. */
 class SessionRepositoryImplTest {

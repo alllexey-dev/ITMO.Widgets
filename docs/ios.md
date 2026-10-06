@@ -2,9 +2,9 @@
 
 The iOS client is a SwiftUI shell around the shared Compose Multiplatform screens, with WidgetKit extensions and a
 notification service extension ([ADR 0023](decisions/0023-ios-client.md)). It lives in `iosApp/` and links one Kotlin
-umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell on fixtures (tabs, router,
-session gate, placeholder roots; see Shell and routes), the widget bundle is empty and the notification service
-passes notifications through unchanged.
+umbrella framework, `Shared`, built from `shared/ios/`. Today the app is the shell with placeholder roots and a
+fixture session gate (see Shell and routes) over the shared session, the QR pass is its first Compose screen, the
+widget bundle is empty and the notification service passes notifications through unchanged.
 
 ## Prerequisites
 
@@ -36,12 +36,12 @@ xcodegen --version
 | `iosApp/project.yml` | XcodeGen spec: targets, the Kotlin Run Script, the `ITMOWidgets` scheme. The generated `.xcodeproj` is ignored |
 | `iosApp/Config/` | `Base.xcconfig` (identifiers, versions, signing defaults) and one xcconfig per target |
 | `iosApp/Resources/` | `Info/` plists and the entitlements of each target, unsigned and `.signed` |
-| `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `Bridge/` holds the Kotlin side's Swift glue (Swift bridge) |
+| `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `Bridge/` holds the Kotlin side's Swift glue (Swift bridge), `Features/<Feature>/` the Swift screen of each route (the QR pass's host) |
 | `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin) |
 | `iosApp/Extensions/NotificationService/` | the notification service extension `ITMOWidgetsNotificationService` (no Kotlin) |
-| `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images |
+| `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images, `WidgetSnapshots/` (readers of the App Group snapshots) |
 | `iosApp/Strings/` | `strings_ios*.xml`: catalog files with copy only iOS shows |
-| `iosApp/Tests/UnitTests/` | `ITMOWidgetsTests`, hosted in the app |
+| `iosApp/Tests/UnitTests/` | `ITMOWidgetsTests`, hosted in the app; `Fixtures/` holds the App Group JSON the Kotlin writers' tests produce |
 | `iosApp/Tests/SnapshotTests/` | `SnapshotTests`, hosted in the app: SwiftUI and widget entry view snapshots (swift-snapshot-testing), references in `__Snapshots__/` |
 | `iosApp/Tests/UITests/` | `UITests` (XCUITest): smoke tests and review screenshots |
 | `shared/ios/` | the umbrella framework `Shared` (static, with SKIE) over every shared module; it exports `:shared:core`; the Koin start, `IosPlatform`, the ViewModel store and the Compose screen hosts |
@@ -106,6 +106,10 @@ with the shared design tokens; Material stays inside the CMP screens. The kit li
 - Touch targets are at least `ItmoMetrics.touchTarget` (the token's 48 pt, above the platform's 44 pt).
 - Motion. `ItmoMotion.animation(_:reduceMotion:)` gives the kit's easing over a token duration, or none with
   Reduce Motion on.
+- Compose screens follow the same settings through the Compose kit's iOS actuals (`shared/designsystem/src/iosMain`):
+  `rememberReducedMotion()` reads Reduce Motion (`UIAccessibility`) and follows its changes, the colour scheme is
+  the static one (iOS has no wallpaper colours, so `ColorSource.Platform` falls back), and the text size follows
+  Dynamic Type (`QrPassUITests` checks the QR pass at AX1).
 
 | View | Use |
 |---|---|
@@ -121,8 +125,10 @@ with the shared design tokens; Material stays inside the CMP screens. The kit li
 
 ## Shell and routes
 
-The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Until IO-21 binds the shared session it
-runs on fixtures: placeholder roots, the session gate and the demo banner, without Kotlin.
+The app's root is the SwiftUI shell in `iosApp/Sources/App/` (master A5). Until IO-07a gates it on the shared
+`SessionRepository` and the IO-09x cards host the tab roots, its roots are placeholders and its session gate and
+demo banner run on a fixture session; the Compose screens behind it (the QR pass) run on the shared session (see
+Core graph).
 
 - Tabs. `ShellTab` holds the roots of Android's `res/menu/bottom_nav.xml` in its order: recordbook, schedule, home,
   sport, me. The recordbook is declared but hidden until IO-09d2 (no placeholder reaches App Review); home is
@@ -131,7 +137,7 @@ runs on fixtures: placeholder roots, the session gate and the demo banner, witho
 - Stacks and sheets. Each tab has one `NavigationStack` whose path the router holds; sheets open at the medium
   detent and drag to large.
 - Session gate. No tab bar while the session is loading or signed out; the demo banner (`ItmoDemoBanner`) sits
-  above the tab bar while the demo session is open. The fixture session comes from the launch argument
+  above the tab bar, below the tab's stack, while the demo session is open. The fixture session comes from the launch argument
   `-itmoShellSession loading|signed-out|demo|signed-in` (signed in without it); UI tests pass it through
   `XCUIApplication.itmo(session:)`.
 - Chrome rule (the owner may veto at T12). A CMP route draws its own DS-03 top bar and hides the SwiftUI navigation
@@ -215,7 +221,8 @@ container, logs one warning per process and carries on; the extensions then see 
 | File | Written by | Read by | Notes |
 |---|---|---|---|
 | `locks/<name>.lock` | `FileCrossProcessLock` | app, notification service | `flock(2)`; empty files, never deleted; `myitmo-refresh` guards the token refresh |
-| session-v1.json | `SessionSnapshotWriter` | widget extension, notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool}`; missing means signed out; no token |
+| session-v1.json | `SessionSnapshotWriter`, kept on the session state by the account module's `SessionSnapshotSync` | widget extension, notification service | `{"isu": Int?, "demo": Bool, "alertsAllowed": Bool}`; written for every signed-in session, demo included; missing means signed out; no token; `alertsAllowed` false until IO-13a |
+| qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`, iosMain), on every new valid pass; reloads `dev.alllexey.itmowidgets.widget.qr` | widget extension (`QrPassSnapshot.swift` in `iosApp/Shared/WidgetSnapshots/`) | `{"generatedAt": ISO 8601, "expiresAt": ISO 8601, "demo": Bool, "matrix": [String]}`: one string per row from the top, `1` a dark module, from the shared `QrCodeGenerator` (version 1, ECC LOW), so the widget encodes nothing; no file while there is no valid pass; the fixture `iosApp/Tests/UnitTests/Fixtures/qr-pass-v1.json` is what the writer writes for the demo pass (`QrPassSnapshotWriterTest`, `QrPassSnapshotTests`) |
 | `<name>-v<N>.json` | `AppGroupSnapshotWriter` | widget extension, notification service | each card that adds a snapshot adds its row |
 
 - Snapshots hold `{"version": N, "value": ...}`. A write goes to a temporary file of its own and is renamed over
@@ -259,8 +266,17 @@ each core type once, what `:app`'s Hilt modules and `CoreBridge` give Android: `
 `SecureStore`, the `app_preferences` DataStore and the core preference stores, `BackendGate`, the session storage,
 the Darwin engine, `MyItmoClient`, Core 2.0's `BackendClient`, `PlatformActions` and the sign-out cleaners.
 
-- `DemoMode` and `SessionRepository` come from the account module; ports still in `:app` (`AppNotifier`,
-  `FcmTokenSync`) are bound by the card that needs them.
+- The session. `authDataModule` (KM-11h1: `SessionRepository`, `DemoMode`) runs on `accountIosModule`
+  (`shared/feature-account/src/iosMain/.../auth/di/`), the iOS side of Android's `CoreBridge` and
+  `AccountAuthBridge`: `DemoPreferences`, the current user from the ID token (`DemoMode`'s fictional user in the
+  demo), every `SessionDataCleaner` of the graph (`getAll()`, read on each transition), and `SessionSnapshotSync`,
+  which writes session-v1.json for every signed-in state. The lifecycle effects do nothing yet (no background
+  work, notifications or widgets to stop); push token sync and device registration are no-ops until IO-13a, the
+  Backend identity upload until an iOS card turns custom services on. `AppNotifier` is bound by the card that needs
+  it.
+- Launch. `App.init` calls `SessionRepository.initialize()` after the graph starts. A Debug build launched with
+  `-itmoDemo` then opens the demo session unless it is open (`startDemo()`); every UI test passes it through
+  `XCUIApplication.itmo()`, until IO-07b's five taps.
 - `IosCoreHost` is what the graph needs from Swift: `WidgetReloader`, `clearWebsiteData` and the top view
   controller for the share sheet.
 - Backend origin: `BackendBaseURL` in the app's Info.plist, from `BACKEND_BASE_URL` in `Base.xcconfig`; dev
@@ -305,11 +321,30 @@ suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFl
   `SavedStateHandle`: arguments are Koin parameters (`ScreenViewModelStore.resolve(type:parameters:)`).
 - Compose screens. Only `shared/ios` builds a `ComposeUIViewController`: `screens/ScreenControllers.kt` wraps the
   content in `ItmoTheme` and the host's `LocalPlatformActions`, and each feature's IO card adds
-  `screens/<Feature>Screens.kt` with the factories Swift calls. A CMP screen's `koinViewModel()` uses the store
-  Compose Multiplatform gives each controller.
+  `screens/<Feature>Screens.kt` with the factories Swift calls (`qrPassViewController(onBack:)`). A CMP screen's
+  `koinViewModel()` uses the store Compose Multiplatform gives each controller.
+- Hosting. `ComposeHost { factory() }` (`Sources/Bridge/ComposeHost.swift`) makes the controller once and ignores
+  the safe area, so the surface runs under the status bar and the tab bar and Compose's `WindowInsets` report them;
+  the factory pads its content by `WindowInsets.safeDrawing` (the kit's top bar draws no insets). A SwiftUI
+  `safeAreaInset` never reaches a hosted controller (nor a pushed screen), so the demo banner sits below each tab's
+  stack instead of in an inset. A route's Swift screen (`Sources/Features/<Feature>/`) wraps the host with what only UIKit can do:
+  the QR pass sets the screen to full brightness while it is visible and the scene is active and restores the
+  user's level otherwise (master P8). `onBack` and other callbacks are Swift closures (`dismiss()`). Compose maps
+  `testTag` to the accessibility identifier, so UI tests find a route's parts by its test tags.
 - `ITMOWidgetsTests/BridgeTests` checks the graph start, a `StateFlow` update re-rendering a hosted SwiftUI view,
   the ViewModel cleared when the view leaves the hierarchy, and events as Swift enums, over `BridgeProbeViewModel`, a
   probe in `shared/ios` that no screen uses.
+
+## Memory
+
+The app's physical footprint (`footprint -p <pid>`, `phys_footprint`) on the pinned simulator, Debug build, demo
+session, measured with the method in recipe `ios-cmp-host` when a route of a new kind arrives. The widget extension
+stays under its about 30 MB limit by linking no Kotlin; these figures are the app process only.
+
+| State | Footprint | Measured |
+|---|---|---|
+| Launch on home (fixture roots, Koin graph and the shared session started) | 72 MB | IO-21, 2026-10-07 |
+| After visiting the 4 tabs and opening the QR pass (the first Compose screen) | 79 to 87 MB | IO-21, 2026-10-07 |
 
 ## Build and test
 

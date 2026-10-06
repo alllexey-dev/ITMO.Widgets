@@ -3,7 +3,7 @@ import Shared
 import SwiftUI
 
 /// Fixture mode of the shell (IO-06b): placeholder roots, the session gate and the demo banner without Kotlin. The
-/// placeholders stand in for the CMP screens the feature cards host (IO-21 wires the QR pass, IO-09x the rest), so
+/// placeholders stand in for the CMP screens the feature cards host (IO-09x; the QR pass is CMP since IO-21), so
 /// they draw their own top bar under the compose chrome.
 enum ShellFixtures {
     /// The launch argument that picks the fixture session: `-itmoShellSession loading|signed-out|demo|signed-in`.
@@ -15,7 +15,7 @@ enum ShellFixtures {
     }
 }
 
-/// A tab root: the tab's title in its own top bar and the tab's empty state; home has the QR entry IO-21 wires.
+/// A tab root: the tab's title in its own top bar and the tab's empty state; home has the entry to the QR pass.
 struct FixtureRootScreen: View {
     let tab: ShellTab
     let router: AppRouter
@@ -38,23 +38,6 @@ struct FixtureRootScreen: View {
     }
 }
 
-/// The QR pass placeholder above home, with the back button of a CMP top bar.
-struct FixtureQrPassScreen: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        FixtureComposeScreen(title: AppStrings.string("qr_pass_title"), back: { dismiss() }) {
-            ItmoEmptyView(
-                symbol: .qrCode,
-                title: AppStrings.string("qr_pass_title"),
-                description: AppStrings.string("qr_pass_description")
-            )
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("qr.pass")
-    }
-}
-
 /// The signed-out gate: IO-07 replaces it with the sign-in screen.
 struct FixtureSignInGate: View {
     let signIn: () -> Void
@@ -74,33 +57,21 @@ struct FixtureSignInGate: View {
     }
 }
 
-/// A CMP screen's layout in SwiftUI: its own top bar (a back button above the root) over scrolling content.
+/// A CMP tab root's layout in SwiftUI: its own top bar over scrolling content.
 struct FixtureComposeScreen<Content: View>: View {
     let title: String
-    var back: (() -> Void)?
     @ViewBuilder let content: Content
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: ItmoSpacing.related) {
-                if let back {
-                    Button(action: back) {
-                        AppSymbol.arrowBack.image
-                            .frame(width: ItmoMetrics.touchTarget, height: ItmoMetrics.touchTarget)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text(verbatim: AppStrings.string("common_back")))
-                    .accessibilityIdentifier("topBar.back")
-                }
                 Text(verbatim: title)
-                    .font(.itmo(back == nil ? .headlineSmall : .titleLarge))
+                    .font(.itmo(.headlineSmall))
                     .lineLimit(2)
                     .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 0)
             }
-            .padding(.leading, back == nil ? ItmoSpacing.screenMargin : ItmoSpacing.related)
-            .padding(.trailing, ItmoSpacing.screenMargin)
+            .padding(.horizontal, ItmoSpacing.screenMargin)
             .frame(minHeight: 64)
             ScrollView {
                 VStack(spacing: ItmoSpacing.group) {

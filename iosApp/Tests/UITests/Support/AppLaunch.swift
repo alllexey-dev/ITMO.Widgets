@@ -2,11 +2,12 @@ import XCTest
 
 extension XCUIApplication {
     /// The app as every UI test launches it: English language and locale, so a test that reads a CMP or
-    /// `.xcstrings` text also proves the English fallback. Later cards append their fixture arguments (the demo
-    /// session) here, never per test.
+    /// `.xcstrings` text also proves the English fallback, and the shared demo session (`-itmoDemo`, IO-21), so the
+    /// Compose screens show fictional data and send nothing. Later cards append their fixture arguments here, never
+    /// per test.
     static func itmo(arguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + arguments
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-itmoDemo"] + arguments
         return app
     }
 
