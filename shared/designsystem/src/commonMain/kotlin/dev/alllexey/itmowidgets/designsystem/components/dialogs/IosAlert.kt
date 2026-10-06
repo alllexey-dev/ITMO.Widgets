@@ -70,12 +70,12 @@ internal data class IosAlertButton(
  * An iOS alert drawn in Compose over the kit's dialog window, at the pinned runtime's measures (iOS 27, DS-IOS-05):
  * [IosMetrics.alertWidth] wide with [IosMetrics.alertRadius] corners on the opaque overlay colour, the title in
  * semibold headline and the [message] in subheadline, both on the leading edge (a lone title is regular and centred,
- * as UIKit draws it), an optional [content] (the caller makes it scroll) and [buttons] as 48 pt capsules
- * ([IosAlertButtons]).
+ * as UIKit draws it; without a title the message starts at the top), an optional [content] (the caller makes it
+ * scroll) and [buttons] as 48 pt capsules ([IosAlertButtons]).
  */
 @Composable
 internal fun IosAlertSurface(
-    title: String,
+    title: String?,
     buttons: List<IosAlertButton>,
     modifier: Modifier = Modifier,
     message: String? = null,
@@ -87,26 +87,28 @@ internal fun IosAlertSurface(
         modifier
             .width(IosMetrics.alertWidth)
             .background(colors.overlay, RoundedCornerShape(IosMetrics.alertRadius))
-            .semantics { paneTitle = title }
+            .then(if (title != null) Modifier.semantics { paneTitle = title } else Modifier)
             .padding(top = IosMetrics.alertTextTop),
     ) {
-        Text(
-            title,
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = IosMetrics.alertTextInset)
-                .semantics { heading() },
-            color = colors.label,
-            style = if (lone) ItmoTheme.typography.bodyLarge else ItmoTheme.typography.titleMedium,
-            textAlign = if (lone) TextAlign.Center else TextAlign.Start,
-        )
+        if (title != null) {
+            Text(
+                title,
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = IosMetrics.alertTextInset)
+                    .semantics { heading() },
+                color = colors.label,
+                style = if (lone) ItmoTheme.typography.bodyLarge else ItmoTheme.typography.titleMedium,
+                textAlign = if (lone) TextAlign.Center else TextAlign.Start,
+            )
+        }
         if (message != null) {
             Text(
                 message,
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = IosMetrics.alertTextInset)
-                    .padding(top = IosMetrics.alertMessageGap),
+                    .padding(top = if (title != null) IosMetrics.alertMessageGap else 0.dp),
                 color = colors.secondaryLabel,
                 style = ItmoTheme.typography.bodyMedium,
             )

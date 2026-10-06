@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.designsystem.components.dialogs
 
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,6 +15,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -26,6 +29,7 @@ import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** Every behaviour holds in both platform styles: the iOS alerts keep the Material dialogs' contract. */
 @OptIn(ExperimentalTestApi::class)
@@ -93,6 +97,68 @@ class DialogsTest {
         assertEquals(2, confirms)
         assertEquals(emptyList(), heard.getValue(ItmoPlatformStyle.Material))
         assertEquals(listOf(ItmoHapticEvent.Warning), heard.getValue(ItmoPlatformStyle.Ios))
+    }
+
+    @Test
+    fun anUntitledConfirmShowsItsTextAndContentWithoutAHeading() = runComposeUiTest {
+        var style by mutableStateOf(ItmoPlatformStyle.Material)
+        val events = mutableListOf<String>()
+        setContent {
+            ItmoTheme(platformStyle = style) {
+                ConfirmDialog(
+                    title = null,
+                    text = TEXT,
+                    confirmLabel = CONFIRM,
+                    dismissLabel = CANCEL,
+                    onConfirm = { events += CONFIRM },
+                    onDismiss = { events += CANCEL },
+                ) {
+                    TextButton(onClick = { events += OPTION }) { Text(OPTION) }
+                }
+            }
+        }
+
+        ItmoPlatformStyle.entries.forEach {
+            style = it
+            onNodeWithText(TEXT).assertIsDisplayed()
+                .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Heading))
+            assertTrue(
+                onNodeWithText(TEXT).getBoundsInRoot().bottom <= onNodeWithText(OPTION).getBoundsInRoot().top,
+                "the content sits below the text",
+            )
+            onNodeWithText(OPTION).performClick()
+            onNodeWithText(CONFIRM).performClick()
+            assertTouchTargets(it.minTouchTarget)
+        }
+
+        assertEquals(listOf(OPTION, CONFIRM, OPTION, CONFIRM), events)
+    }
+
+    @Test
+    fun infoHasOneButtonThatOnlyReportsTheDismissal() = runComposeUiTest {
+        var style by mutableStateOf(ItmoPlatformStyle.Material)
+        var title by mutableStateOf<String?>(TITLE)
+        var dismissals = 0
+        setContent {
+            ItmoTheme(platformStyle = style) {
+                InfoDialog(title = title, text = TEXT, buttonLabel = OK, onDismiss = { dismissals++ })
+            }
+        }
+
+        ItmoPlatformStyle.entries.forEach {
+            style = it
+            title = TITLE
+            onNodeWithText(TITLE).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+            onNodeWithText(TEXT).assertIsDisplayed()
+            onNodeWithText(OK).performClick()
+            onNodeWithText(CANCEL).assertDoesNotExist()
+            assertTouchTargets(it.minTouchTarget)
+            title = null
+            onNodeWithText(TITLE).assertDoesNotExist()
+            onNodeWithText(TEXT).assertIsDisplayed()
+        }
+
+        assertEquals(2, dismissals)
     }
 
     @Test
@@ -241,6 +307,8 @@ class DialogsTest {
         const val SEND = "Отправить"
         const val COMMENT = "Комментарий"
         const val ERROR = "Нет связи"
+        const val OK = "Понятно"
+        const val OPTION = "Записать даже за час"
         val OPTIONS = listOf("Оскорбления", "Не о том преподавателе", "Спам")
     }
 }

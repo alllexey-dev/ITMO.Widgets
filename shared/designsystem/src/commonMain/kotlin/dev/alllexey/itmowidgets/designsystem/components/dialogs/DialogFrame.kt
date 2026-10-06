@@ -45,11 +45,12 @@ internal fun DialogWindow(
  * The surface of a material3 alert dialog (`AlertDialog`'s layout and colours, which `MaterialAlertDialogBuilder`
  * shares): 28 dp corners in `surfaceContainerHigh`, 24 dp padding, an optional centred hero [icon], the title in
  * `headlineSmall`, the content and the buttons at the end. With [fullBleedContent] the content spans the whole width
- * (choice rows whose ripple reaches the edges); otherwise it sits on the 24 dp margin like the title.
+ * (choice rows whose ripple reaches the edges); otherwise it sits on the 24 dp margin like the title. Without a
+ * [title] the content starts at the top padding, as `AlertDialog` draws a message-only dialog.
  */
 @Composable
 internal fun DialogSurface(
-    title: String,
+    title: String?,
     buttons: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     icon: Painter? = null,
@@ -60,7 +61,7 @@ internal fun DialogSurface(
     Surface(
         modifier
             .sizeIn(minWidth = MinWidth, maxWidth = MaxWidth)
-            .semantics { paneTitle = title },
+            .then(if (title != null) Modifier.semantics { paneTitle = title } else Modifier),
         shape = ItmoTheme.shapes.extraLarge,
         color = ItmoTheme.colorScheme.surfaceContainerHigh,
     ) {
@@ -76,21 +77,23 @@ internal fun DialogSurface(
                     tint = ItmoTheme.colorScheme.secondary,
                 )
             }
-            Text(
-                title,
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = padding)
-                    .semantics { heading() },
-                color = ItmoTheme.colorScheme.onSurface,
-                style = ItmoTheme.typography.headlineSmall,
-                textAlign = if (icon != null) TextAlign.Center else TextAlign.Start,
-            )
+            if (title != null) {
+                Text(
+                    title,
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = padding)
+                        .semantics { heading() },
+                    color = ItmoTheme.colorScheme.onSurface,
+                    style = ItmoTheme.typography.headlineSmall,
+                    textAlign = if (icon != null) TextAlign.Center else TextAlign.Start,
+                )
+            }
             if (content != null) {
                 Box(
                     Modifier
                         .weight(1f, fill = false)
-                        .padding(top = ItmoTheme.spacing.group)
+                        .padding(top = if (title != null) ItmoTheme.spacing.group else 0.dp)
                         .padding(horizontal = if (fullBleedContent) 0.dp else padding),
                 ) {
                     content()
