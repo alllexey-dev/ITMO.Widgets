@@ -1,12 +1,13 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
-import javax.inject.Inject
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_sport_teacher_filter_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_sport_time_filter_title
 
 /** The filters the sport screen shows; a switch on means the filter is shown. */
-class SportPageProvider @Inject constructor(
+class SportPageProvider(
     private val repository: SettingsRepository
 ) : SettingsPageProvider {
 
@@ -20,12 +21,12 @@ class SportPageProvider @Inject constructor(
             items = listOf(
                 SettingItem.Toggle(
                     id = SettingRowId.SPORT_TEACHER_FILTER,
-                    title = UiText.Resource(R.string.settings_sport_teacher_filter_title),
+                    title = UiText.Res(Res.string.settings_sport_teacher_filter_title),
                     checked = !state.local.sport.hideTeacherSelector
                 ),
                 SettingItem.Toggle(
                     id = SettingRowId.SPORT_TIME_FILTER,
-                    title = UiText.Resource(R.string.settings_sport_time_filter_title),
+                    title = UiText.Res(Res.string.settings_sport_time_filter_title),
                     checked = !state.local.sport.hideTimeSelector
                 )
             )

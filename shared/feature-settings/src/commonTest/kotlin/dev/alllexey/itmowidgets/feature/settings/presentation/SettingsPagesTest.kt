@@ -1,50 +1,56 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /** The registry of settings page providers: one builder per page, one handler per row. */
 class SettingsPagesTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
 
-    // Lazy: the fixture's ViewModel needs the main dispatcher the rule installs.
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
+
+    // Lazy: the fixture's ViewModel needs the main dispatcher setUp installs.
     private val pages by lazy { createFixture().pages }
     private val navigationRows = SettingsPage.entries.filter { it != SettingsPage.ROOT }.map(SettingRowId::navigation)
     /** Shown by the schedule and recordbook pages, handled by the schedule provider. */
     private val sharedRows = setOf(SettingRowId.BACKGROUND_WORK)
 
     @Test
-    fun `every settings page has exactly one provider`() {
+    fun everySettingsPageHasExactlyOneProvider() {
         SettingsPage.entries.forEach { page ->
-            assertEquals("providers of $page", 1, pages.providers.count { page in it.pages })
+            assertEquals(1, pages.providers.count { page in it.pages }, "providers of $page")
         }
     }
 
     @Test
-    fun `every row has exactly one handler and navigation rows are opened by the screen`() {
+    fun everyRowHasExactlyOneHandlerAndNavigationRowsAreOpenedByTheScreen() {
         SettingRowId.entries.forEach { id ->
             val handlers = pages.providers.count { id in it.rows }
             if (id in navigationRows) {
-                assertEquals("handlers of navigation row $id", 0, handlers)
+                assertEquals(0, handlers, "handlers of navigation row $id")
                 assertNull(pages.forRow(id))
             } else {
-                assertEquals("handlers of $id", 1, handlers)
+                assertEquals(1, handlers, "handlers of $id")
             }
         }
     }
 
     @Test
-    fun `a page shows only its provider's rows, navigation rows and shared rows`() {
+    fun aPageShowsOnlyItsProvidersRowsNavigationRowsAndSharedRows() {
         val states = listOf(
             SettingsPageState(
                 local = LocalSettings(customServicesEnabled = true, barsMarksEnabled = true),
@@ -69,7 +75,7 @@ class SettingsPagesTest {
             states.forEach { state ->
                 val ids = provider.sections(page, state).flatMap(SettingSection::items).map { it.id }
                 val foreign = ids.filter { it !in provider.rows && it !in navigationRows && it !in sharedRows }
-                assertTrue("$page shows rows of other providers: $foreign", foreign.isEmpty())
+                assertTrue(foreign.isEmpty(), "$page shows rows of other providers: $foreign")
             }
         }
     }

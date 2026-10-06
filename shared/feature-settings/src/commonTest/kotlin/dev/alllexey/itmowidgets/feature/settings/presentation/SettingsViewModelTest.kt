@@ -3,12 +3,18 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.SportDisplaySettings
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -18,22 +24,22 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 /** Cross-page state of [SettingsViewModel]: loading, page arguments, row dispatch, background work and privacy timing. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `local readiness waits for persisted values but never waits for privacy refresh`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun localReadinessWaitsForPersistedValuesButNeverWaitsForPrivacyRefresh() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.PRIVACY, local = LocalSettings(customServicesEnabled = true), localInitiallyAvailable = false)
             runCurrent()
             assertFalse(fixture.viewModel.uiState.value.loaded)
@@ -45,8 +51,8 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `each detail restores its argument and only privacy requests backend settings`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun eachDetailRestoresItsArgumentAndOnlyPrivacyRequestsBackendSettings() =
+        runTest(main.dispatcher) {
             SettingsPage.entries.forEach { page ->
                 val fixture = createFixture(
                     page = page,
@@ -63,15 +69,15 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `missing or obsolete page argument safely opens the catalogue`() {
+    fun missingOrObsoletePageArgumentSafelyOpensTheCatalogue() {
         assertEquals(SettingsPage.ROOT, SettingsPage.fromArgument(null))
         assertEquals(SettingsPage.ROOT, SettingsPage.fromArgument("obsolete"))
         assertEquals(SettingsPage.QR_WIDGET, SettingsPage.fromArgument("QR_WIDGET"))
     }
 
     @Test
-    fun `does not publish defaults before stored local settings arrive`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun doesNotPublishDefaultsBeforeStoredLocalSettingsArrive() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.FULL_SCHEDULE_WIDGET,
                 local = LocalSettings(
@@ -100,8 +106,8 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `preserves every existing control across settings pages without forbidden controls`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun preservesEveryExistingControlAcrossSettingsPagesWithoutForbiddenControls() =
+        runTest(main.dispatcher) {
             val fixture = createFixture()
 
             advanceUntilIdle()
@@ -164,8 +170,8 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `actions emit navigation events and refresh confirmation`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun actionsEmitNavigationEventsAndRefreshConfirmation() =
+        runTest(main.dispatcher) {
             val fixture = createFixture()
             advanceUntilIdle()
 
@@ -187,8 +193,8 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `the background work row leaves when the system saves the choice after the screen returns`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun theBackgroundWorkRowLeavesWhenTheSystemSavesTheChoiceAfterTheScreenReturns() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
             advanceUntilIdle()
             val keys = { fixture.viewModel.uiState.value.sections.single().items.map { it.id } }
@@ -208,8 +214,8 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `turning a background check on offers the hint once while restricted`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun turningABackgroundCheckOnOffersTheHintOnceWhileRestricted() =
+        runTest(main.dispatcher) {
             val switches = listOf(
                 SettingsPage.SCHEDULE to SettingRowId.SCHEDULE_CHANGES,
                 SettingsPage.RECORDBOOK to SettingRowId.MYITMO_MARKS,
@@ -228,23 +234,23 @@ class SettingsViewModelTest {
 
                 fixture.viewModel.onToggleChanged(id, false)
                 advanceUntilIdle()
-                assertEquals(id.key, emptyList<SettingsEvent>(), events)
+                assertEquals(emptyList<SettingsEvent>(), events, id.key)
 
                 fixture.viewModel.onToggleChanged(id, true)
                 advanceUntilIdle()
-                assertEquals(id.key, listOf(SettingsEvent.ShowBackgroundWorkHint), events)
-                assertEquals(id.key, 1, fixture.repository.hintShownCalls)
+                assertEquals(listOf(SettingsEvent.ShowBackgroundWorkHint), events, id.key)
+                assertEquals(1, fixture.repository.hintShownCalls, id.key)
 
                 fixture.viewModel.onToggleChanged(id, true)
                 advanceUntilIdle()
-                assertEquals(id.key, listOf(SettingsEvent.ShowBackgroundWorkHint), events)
-                assertEquals(id.key, 1, fixture.repository.hintShownCalls)
+                assertEquals(listOf(SettingsEvent.ShowBackgroundWorkHint), events, id.key)
+                assertEquals(1, fixture.repository.hintShownCalls, id.key)
             }
         }
 
     @Test
-    fun `an unrestricted app gets no hint and missing notifications are asked for first`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun anUnrestrictedAppGetsNoHintAndMissingNotificationsAreAskedForFirst() =
+        runTest(main.dispatcher) {
             val unrestricted = createFixture(page = SettingsPage.SCHEDULE)
             val quiet = recordEvents(unrestricted)
             unrestricted.viewModel.onNotificationPermissionChanged(granted = true)
@@ -266,7 +272,7 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `fast privacy responses stay in the bounded loading state for 300 ms`() = runTest(mainDispatcherRule.dispatcher) {
+    fun fastPrivacyResponsesStayInTheBoundedLoadingStateFor300Ms() = runTest(main.dispatcher) {
         val fixture = createFixture(
             page = SettingsPage.PRIVACY,
             local = LocalSettings(customServicesEnabled = true),
@@ -285,7 +291,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `slow privacy responses do not incur an extra delay`() = runTest(mainDispatcherRule.dispatcher) {
+    fun slowPrivacyResponsesDoNotIncurAnExtraDelay() = runTest(main.dispatcher) {
         val fixture = createFixture(
             page = SettingsPage.PRIVACY,
             local = LocalSettings(customServicesEnabled = true),
@@ -302,7 +308,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `fast privacy errors and retries use the same minimum loading duration`() = runTest(mainDispatcherRule.dispatcher) {
+    fun fastPrivacyErrorsAndRetriesUseTheSameMinimumLoadingDuration() = runTest(main.dispatcher) {
         val fixture = createFixture(
             page = SettingsPage.PRIVACY,
             local = LocalSettings(customServicesEnabled = true),
@@ -326,7 +332,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `disabling services bypasses the privacy loading delay immediately`() = runTest(mainDispatcherRule.dispatcher) {
+    fun disablingServicesBypassesThePrivacyLoadingDelayImmediately() = runTest(main.dispatcher) {
         val fixture = createFixture(
             page = SettingsPage.PRIVACY,
             local = LocalSettings(customServicesEnabled = true),
@@ -344,7 +350,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `privacy delay starts when stored settings arrive not when view model is created`() = runTest(mainDispatcherRule.dispatcher) {
+    fun privacyDelayStartsWhenStoredSettingsArriveNotWhenViewModelIsCreated() = runTest(main.dispatcher) {
         val fixture = createFixture(
             page = SettingsPage.PRIVACY,
             local = LocalSettings(customServicesEnabled = true),

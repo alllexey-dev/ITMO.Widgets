@@ -1,28 +1,40 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
+import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.core.me_group_app
+import dev.alllexey.itmowidgets.shared.core.title_recordbook
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_allowed
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_checking
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_enabled
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 /** The catalogue built by [RootPageProvider]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class RootPageProviderTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `root is a compact catalogue with no switches or arbitrary option summaries`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun rootIsACompactCatalogueWithNoSwitchesOrArbitraryOptionSummaries() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(local = LocalSettings(customServicesEnabled = true))
             advanceUntilIdle()
 
@@ -37,9 +49,9 @@ class RootPageProviderTest {
             )
             assertTrue(navigation.all { it.description == null })
             assertTrue(navigation.filter { it.page != SettingsPage.SERVICES }.all { it.value == null })
-            assertEquals(UiText.Resource(R.string.settings_services_enabled), navigation.first().value)
+            assertEquals(UiText.Res(Res.string.settings_services_enabled), navigation.first().value)
             val applicationSection = fixture.viewModel.uiState.value.sections.single {
-                it.title == UiText.Resource(R.string.me_group_app)
+                it.title == UiText.Res(CoreRes.string.me_group_app)
             }
             assertEquals(
                 listOf(SettingsPage.HOME, SettingsPage.SCHEDULE, SettingsPage.RECORDBOOK, SettingsPage.SPORT, SettingsPage.MAINTENANCE),
@@ -49,20 +61,20 @@ class RootPageProviderTest {
         }
 
     @Test
-    fun `exposes notification status and application version`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun exposesNotificationStatusAndApplicationVersion() =
+        runTest(main.dispatcher) {
             val fixture = createFixture()
             advanceUntilIdle()
 
             assertEquals(
-                UiText.Resource(R.string.settings_notifications_checking),
+                UiText.Res(Res.string.settings_notifications_checking),
                 fixture.viewModel.action(SettingRowId.NOTIFICATIONS).value
             )
             fixture.viewModel.onNotificationPermissionChanged(granted = true)
             advanceUntilIdle()
 
             assertEquals(
-                UiText.Resource(R.string.settings_notifications_allowed),
+                UiText.Res(Res.string.settings_notifications_allowed),
                 fixture.viewModel.action(SettingRowId.NOTIFICATIONS).value
             )
             val maintenance = createFixture(page = SettingsPage.MAINTENANCE)
@@ -74,8 +86,8 @@ class RootPageProviderTest {
         }
 
     @Test
-    fun `root lists the recordbook between schedule and sport`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun rootListsTheRecordbookBetweenScheduleAndSport() =
+        runTest(main.dispatcher) {
             val fixture = createFixture()
             advanceUntilIdle()
 
@@ -83,6 +95,6 @@ class RootPageProviderTest {
             val index = pages.indexOf(SettingsPage.RECORDBOOK)
             assertEquals(SettingsPage.SCHEDULE, pages[index - 1])
             assertEquals(SettingsPage.SPORT, pages[index + 1])
-            assertEquals(UiText.Resource(R.string.title_recordbook), SettingsPage.RECORDBOOK.title)
+            assertEquals(UiText.Res(CoreRes.string.title_recordbook), SettingsPage.RECORDBOOK.title)
         }
 }

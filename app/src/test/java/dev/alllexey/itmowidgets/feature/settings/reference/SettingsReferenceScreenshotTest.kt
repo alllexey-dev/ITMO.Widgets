@@ -25,7 +25,6 @@ import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
-import dev.alllexey.itmowidgets.feature.settings.presentation.createFixture
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsRenderer
 import java.time.Clock
 import java.time.Instant
@@ -45,7 +44,7 @@ import org.robolectric.annotation.Config
 /**
  * XML references of the 11 settings pages and the privacy loading, error and disabled states, under the names of
  * LT-4a's `SettingsScreen` previews. Each page is `fragment_settings` bound the way `SettingsFragment` binds it, with
- * the sections the real page providers build over the presentation test fakes (custom services on, notifications
+ * the sections the real page providers build over read-only fakes (custom services on, notifications
  * allowed, no background restriction) and, on the three widget pages, the real widget preview at a fixed clock.
  */
 @HiltAndroidTest
@@ -106,7 +105,7 @@ class SettingsReferenceScreenshotTest {
     ) {
         val name = listOfNotNull(page.name.lowercase().replace('_', '-'), state).joinToString("-")
         references.layout("SettingsScreen_$name", R.layout.fragment_settings) { view ->
-            val viewModel = createFixture(local = local, sharing = sharing, page = page).viewModel
+            val viewModel = referenceSettingsViewModel(local, sharing, page)
             viewModel.onNotificationPermissionChanged(true)
             viewModel.onBackgroundWorkChanged()
             // Privacy masks cached values for its minimum loading time before it shows the fresh ones.

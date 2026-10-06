@@ -1,13 +1,18 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
-import javax.inject.Inject
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_friends_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_marks_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_schedule_changes_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_schedule_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_sport_title
+import org.jetbrains.compose.resources.StringResource
 
 /** One switch per home feed card. */
-class HomePageProvider @Inject constructor(
+class HomePageProvider(
     private val repository: SettingsRepository
 ) : SettingsPageProvider {
 
@@ -21,7 +26,7 @@ class HomePageProvider @Inject constructor(
             items = HOME_CARDS.map { card ->
                 SettingItem.Toggle(
                     id = card.id,
-                    title = UiText.Resource(card.titleRes),
+                    title = UiText.Res(card.title),
                     checked = card.kind !in state.local.hiddenHomeCards
                 )
             }
@@ -33,23 +38,23 @@ class HomePageProvider @Inject constructor(
         scope.updateLocalSetting { repository.setHomeCardVisible(card.kind, checked) }
     }
 
-    private class HomeCardRow(val id: SettingRowId, val kind: HomeCardKind, val titleRes: Int)
+    private class HomeCardRow(val id: SettingRowId, val kind: HomeCardKind, val title: StringResource)
 
     private companion object {
         /** The feed order is the row order. */
         val HOME_CARDS = listOf(
-            HomeCardRow(SettingRowId.HOME_CARD_SCHEDULE, HomeCardKind.SCHEDULE, R.string.settings_home_card_schedule_title),
+            HomeCardRow(SettingRowId.HOME_CARD_SCHEDULE, HomeCardKind.SCHEDULE, Res.string.settings_home_card_schedule_title),
             HomeCardRow(
                 SettingRowId.HOME_CARD_SCHEDULE_CHANGES,
                 HomeCardKind.SCHEDULE_CHANGES,
-                R.string.settings_home_card_schedule_changes_title
+                Res.string.settings_home_card_schedule_changes_title
             ),
-            HomeCardRow(SettingRowId.HOME_CARD_MARKS, HomeCardKind.MARKS, R.string.settings_home_card_marks_title),
-            HomeCardRow(SettingRowId.HOME_CARD_SPORT, HomeCardKind.SPORT, R.string.settings_home_card_sport_title),
+            HomeCardRow(SettingRowId.HOME_CARD_MARKS, HomeCardKind.MARKS, Res.string.settings_home_card_marks_title),
+            HomeCardRow(SettingRowId.HOME_CARD_SPORT, HomeCardKind.SPORT, Res.string.settings_home_card_sport_title),
             HomeCardRow(
                 SettingRowId.HOME_CARD_FRIENDS,
                 HomeCardKind.FRIEND_REQUESTS,
-                R.string.settings_home_card_friends_title
+                Res.string.settings_home_card_friends_title
             )
         )
     }

@@ -3,8 +3,6 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
@@ -12,7 +10,13 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import javax.inject.Inject
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_custom
+import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_custom_caption
+import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_semester
+import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_two_weeks
+import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_until
+import dev.alllexey.itmowidgets.shared.feature.settings.ics_range_week
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -21,13 +25,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.StringResource
 
 /**
  * The «Выгрузить в .ics» sheet: a range is chosen, the file is written, then shared. The chosen range and a written
  * file are kept in [SavedStateHandle], so recreation shows the same state and a process death writes the file again.
  */
-@HiltViewModel
-class IcsExportViewModel @Inject constructor(
+class IcsExportViewModel(
     private val export: ScheduleIcsExport,
     private val time: AcademicTimeProvider,
     private val saved: SavedStateHandle
@@ -102,24 +106,24 @@ class IcsExportViewModel @Inject constructor(
 
     private fun choice(): IcsExportUiState.Choose {
         val today = time.today()
-        fun option(kind: IcsRangeKind, title: Int, range: ScheduleExportRange) =
-            IcsRangeOption(kind, UiText.Resource(title), IcsDateLabels.range(range.dates(today)))
+        fun option(kind: IcsRangeKind, title: StringResource, range: ScheduleExportRange) =
+            IcsRangeOption(kind, UiText.Res(title), IcsDateLabels.range(range.dates(today)))
         return IcsExportUiState.Choose(
             listOf(
-                option(IcsRangeKind.WEEK, R.string.ics_range_week, ScheduleExportRange.Week),
-                option(IcsRangeKind.TWO_WEEKS, R.string.ics_range_two_weeks, ScheduleExportRange.TwoWeeks),
+                option(IcsRangeKind.WEEK, Res.string.ics_range_week, ScheduleExportRange.Week),
+                option(IcsRangeKind.TWO_WEEKS, Res.string.ics_range_two_weeks, ScheduleExportRange.TwoWeeks),
                 IcsRangeOption(
                     IcsRangeKind.SEMESTER,
-                    UiText.Resource(R.string.ics_range_semester),
-                    UiText.Resource(
-                        R.string.ics_range_until,
+                    UiText.Res(Res.string.ics_range_semester),
+                    UiText.Res(
+                        Res.string.ics_range_until,
                         listOf(IcsDateLabels.day(ScheduleExportRange.Semester.dates(today).endInclusive))
                     )
                 ),
                 IcsRangeOption(
                     IcsRangeKind.CUSTOM,
-                    UiText.Resource(R.string.ics_range_custom),
-                    UiText.Resource(R.string.ics_range_custom_caption)
+                    UiText.Res(Res.string.ics_range_custom),
+                    UiText.Res(Res.string.ics_range_custom_caption)
                 )
             )
         )

@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.di.bridge.HomeDebugFixtures
 import dev.alllexey.itmowidgets.di.bridge.QrDebugFixtures
+import dev.alllexey.itmowidgets.di.bridge.SettingsDebugFixtures
 import org.koin.core.module.Module
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -90,7 +91,6 @@ import dev.alllexey.itmowidgets.feature.onboarding.ui.OnboardingFragment
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
 import dev.alllexey.itmowidgets.feature.settings.domain.*
 import dev.alllexey.itmowidgets.feature.settings.presentation.*
-import dev.alllexey.itmowidgets.feature.settings.ui.IcsExportBottomSheet
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -128,6 +128,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     private val onboardingAppearance = FixtureWidgetAppearance()
     private lateinit var qrFixture: Module
     private lateinit var homeKoinFixture: Module
+    private lateinit var settingsKoinFixture: Module
     private val customSpoiler = FixtureCustomSpoiler()
 
     /** The first-run flow with no stored preferences and no backend behind the opt-in. */
@@ -198,9 +199,11 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Before super.onCreate(): a restored QrCodeFragment or HomeFragment obtains its ViewModel from Koin.
+        // Before super.onCreate(): a restored QrCodeFragment, HomeFragment, SettingsFragment or IcsExportBottomSheet
+        // obtains its ViewModels from Koin.
         qrFixture = QrDebugFixtures.load(this, FixtureQrCodeRepository, FixtureWallClock)
         homeKoinFixture = HomeDebugFixtures.load(this, FixtureHomeFakes, FixtureWallClock)
+        settingsKoinFixture = SettingsDebugFixtures.load(this, settingsFakes)
         supportFragmentManager.fragmentFactory = object : FragmentFactory() {
             override fun instantiate(classLoader: ClassLoader, className: String): Fragment =
                 if (className == MyItmoWebFragment::class.java.name) MyItmoWebPreviewFragment()
@@ -262,39 +265,6 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
                     })[OnboardingViewModel::class.java]
                     return
                 }
-                if (f is IcsExportBottomSheet) {
-                    ViewModelProvider(f, object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            IcsExportViewModel(icsExport, IcsTime, SavedStateHandle()) as T
-                    })[IcsExportViewModel::class.java]
-                    return
-                }
-                if (f !is SettingsFragment) return
-                val page = SettingsPage.fromArgument(f.arguments?.getString(SettingsPage.ARGUMENT))
-                val factory = object : ViewModelProvider.Factory {
-                    @Suppress("UNCHECKED_CAST")
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                        SettingsViewModel::class.java -> SettingsViewModel(
-                            SettingsPages(
-                                RootPageProvider(),
-                                ServicesPageProvider(repository, Services, refresh),
-                                WidgetsPageProvider(repository, MemoryQuickSettingsTile),
-                                HomePageProvider(repository),
-                                SchedulePageProvider(repository, MemoryScheduleChangeTracking, calendarSync),
-                                RecordbookPageProvider(MemoryMarkTracking),
-                                SportPageProvider(repository),
-                                MaintenancePageProvider(refresh, Onboarding, AppVersion("test"), NoDiagnostics)
-                            ),
-                            repository, refresh, MemoryBackgroundWork,
-                            SavedStateHandle(mapOf(SettingsPage.ARGUMENT to page.name))
-                        )
-                        CustomSpoilerViewModel::class.java -> CustomSpoilerViewModel(customSpoiler)
-                        else -> error("Unexpected ViewModel")
-                    } as T
-                }
-                ViewModelProvider(f, factory)[SettingsViewModel::class.java]
-                ViewModelProvider(f, factory)[CustomSpoilerViewModel::class.java]
             }
 
             override fun onFragmentViewCreated(fm: FragmentManager, f: Fragment, v: View, state: Bundle?) {
@@ -400,6 +370,32 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
         super.onDestroy()
         QrDebugFixtures.unload(this, qrFixture)
         HomeDebugFixtures.unload(this, homeKoinFixture)
+        SettingsDebugFixtures.unload(this, settingsKoinFixture)
+    }
+
+    /**
+     * The settings screens over the in-memory fixtures; the page comes from the Fragment's arguments through the
+     * `SavedStateHandle` Koin hands over, as in release.
+     */
+    private val settingsFakes = object : SettingsDebugFixtures.Fakes {
+        override fun settingsViewModel(savedStateHandle: SavedStateHandle) = SettingsViewModel(
+            SettingsPages(
+                RootPageProvider(),
+                ServicesPageProvider(repository, Services, refresh),
+                WidgetsPageProvider(repository, MemoryQuickSettingsTile),
+                HomePageProvider(repository),
+                SchedulePageProvider(repository, MemoryScheduleChangeTracking, calendarSync),
+                RecordbookPageProvider(MemoryMarkTracking),
+                SportPageProvider(repository),
+                MaintenancePageProvider(refresh, Onboarding, AppVersion("test"), NoDiagnostics)
+            ),
+            repository, refresh, MemoryBackgroundWork, savedStateHandle
+        )
+
+        override fun customSpoilerViewModel() = CustomSpoilerViewModel(customSpoiler)
+
+        override fun icsExportViewModel(savedStateHandle: SavedStateHandle) =
+            IcsExportViewModel(icsExport, IcsTime, savedStateHandle)
     }
 
     /** A new feed for each new ViewModel from [homeFixture]; tests reach it through [homeSource] and its siblings. */

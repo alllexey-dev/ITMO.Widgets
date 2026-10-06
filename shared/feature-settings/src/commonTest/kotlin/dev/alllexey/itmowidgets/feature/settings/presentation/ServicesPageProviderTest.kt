@@ -1,35 +1,54 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_delete_account_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_delete_account_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_friends_sharing_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_all
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_footer
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_friends
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_load_error
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_nobody
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_services_required
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_unknown
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_sharing_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_footer
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_sport_sharing_title
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 /** Services and privacy pages built and handled by [ServicesPageProvider]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ServicesPageProviderTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `friends privacy starts all and edits only its own audience`() = runTest(mainDispatcherRule.dispatcher) {
+    fun friendsPrivacyStartsAllAndEditsOnlyItsOwnAudience() = runTest(main.dispatcher) {
         val fixture = createFixture(page = SettingsPage.PRIVACY,
             local = LocalSettings(customServicesEnabled = true),
             sharing = SharingSettingsState.Content(SharingSettings()))
@@ -44,8 +63,8 @@ class ServicesPageProviderTest {
     }
 
     @Test
-    fun `does not expose default privacy choices while backend settings are loading`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun doesNotExposeDefaultPrivacyChoicesWhileBackendSettingsAreLoading() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.PRIVACY,
                 local = LocalSettings(customServicesEnabled = true),
@@ -69,8 +88,8 @@ class ServicesPageProviderTest {
         }
 
     @Test
-    fun `custom services toggle refreshes widgets after applying the data gate`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun customServicesToggleRefreshesWidgetsAfterApplyingTheDataGate() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.SERVICES)
             advanceUntilIdle()
 
@@ -82,8 +101,8 @@ class ServicesPageProviderTest {
         }
 
     @Test
-    fun `sharing controls are disabled when custom services are disabled`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun sharingControlsAreDisabledWhenCustomServicesAreDisabled() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.PRIVACY,
                 local = LocalSettings(customServicesEnabled = false),
@@ -98,10 +117,10 @@ class ServicesPageProviderTest {
             assertEquals(null, schedule.selectedOptionKey)
             assertFalse(sport.enabled)
             assertEquals(null, sport.selectedOptionKey)
-            assertEquals(UiText.Resource(R.string.settings_privacy_unknown), schedule.value)
-            assertEquals(UiText.Resource(R.string.settings_privacy_unknown), sport.value)
+            assertEquals(UiText.Res(Res.string.settings_privacy_unknown), schedule.value)
+            assertEquals(UiText.Res(Res.string.settings_privacy_unknown), sport.value)
             assertEquals(
-                UiText.Resource(R.string.settings_privacy_services_required),
+                UiText.Res(Res.string.settings_privacy_services_required),
                 fixture.viewModel.uiState.value.sections.single().footer
             )
             assertEquals(1, fixture.repository.disableSharingCount)
@@ -109,8 +128,8 @@ class ServicesPageProviderTest {
         }
 
     @Test
-    fun `sharing content renders independently and locks while updating`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun sharingContentRendersIndependentlyAndLocksWhileUpdating() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.PRIVACY,
                 local = LocalSettings(customServicesEnabled = true),
@@ -141,8 +160,8 @@ class ServicesPageProviderTest {
         }
 
     @Test
-    fun `sharing update failure emits the repository error`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun sharingUpdateFailureEmitsTheRepositoryError() =
+        runTest(main.dispatcher) {
             for (key in listOf(SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING)) {
                 val fixture = createFixture(
                     page = SettingsPage.PRIVACY,
@@ -171,8 +190,8 @@ class ServicesPageProviderTest {
         }
 
     @Test
-    fun `privacy error exposes retry action`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun privacyErrorExposesRetryAction() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.PRIVACY,
                 local = LocalSettings(customServicesEnabled = true),
@@ -184,7 +203,7 @@ class ServicesPageProviderTest {
                 fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).enabled
             )
             assertEquals(
-                UiText.Resource(R.string.settings_privacy_load_error),
+                UiText.Res(Res.string.settings_privacy_load_error),
                 fixture.viewModel.uiState.value.sections.single().footer
             )
             fixture.viewModel.action(SettingRowId.RETRY_PRIVACY)
@@ -196,8 +215,8 @@ class ServicesPageProviderTest {
         }
 
     @Test
-    fun `account deletion follows the switch whether the connection is on or off`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun accountDeletionFollowsTheSwitchWhetherTheConnectionIsOnOrOff() =
+        runTest(main.dispatcher) {
             for (enabled in listOf(false, true)) {
                 val fixture = createFixture(page = SettingsPage.SERVICES, local = LocalSettings(customServicesEnabled = enabled))
                 advanceUntilIdle()
@@ -207,12 +226,12 @@ class ServicesPageProviderTest {
                     fixture.viewModel.allItems().map { it.id }
                 )
                 val delete = fixture.viewModel.action(SettingRowId.DELETE_ACCOUNT)
-                assertEquals(UiText.Resource(R.string.settings_delete_account_title), delete.title)
-                assertEquals(UiText.Resource(R.string.settings_delete_account_description), delete.description)
+                assertEquals(UiText.Res(Res.string.settings_delete_account_title), delete.title)
+                assertEquals(UiText.Res(Res.string.settings_delete_account_description), delete.description)
                 assertTrue(delete.enabled)
                 // The switch keeps its own footer; the deletion row is a group of its own below it.
                 assertEquals(
-                    UiText.Resource(R.string.settings_services_footer),
+                    UiText.Res(Res.string.settings_services_footer),
                     fixture.viewModel.uiState.value.sections.first().footer
                 )
 
@@ -222,8 +241,8 @@ class ServicesPageProviderTest {
         }
 
     @Test
-    fun `privacy offers all friends nobody in order with server defaults and current values`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun privacyOffersAllFriendsNobodyInOrderWithServerDefaultsAndCurrentValues() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.PRIVACY,
                 local = LocalSettings(customServicesEnabled = true),
@@ -232,30 +251,30 @@ class ServicesPageProviderTest {
             advanceUntilIdle()
             val choices = fixture.viewModel.allItems().filterIsInstance<SettingItem.Choice>()
             assertEquals(listOf(SettingRowId.SCHEDULE_SHARING, SettingRowId.SPORT_SHARING, SettingRowId.FRIENDS_SHARING), choices.map { it.id })
-            assertEquals(listOf(UiText.Resource(R.string.settings_schedule_sharing_title), UiText.Resource(R.string.settings_sport_sharing_title), UiText.Resource(R.string.settings_friends_sharing_title)), choices.map { it.title })
+            assertEquals(listOf(UiText.Res(Res.string.settings_schedule_sharing_title), UiText.Res(Res.string.settings_sport_sharing_title), UiText.Res(Res.string.settings_friends_sharing_title)), choices.map { it.title })
             choices.forEach { choice ->
                 assertEquals(listOf("ALL", "FRIENDS", "NOBODY"), choice.options.map { it.key })
-                assertEquals(listOf(R.string.settings_privacy_all, R.string.settings_privacy_friends, R.string.settings_privacy_nobody).map(UiText::Resource), choice.options.map { it.label })
+                assertEquals(listOf(Res.string.settings_privacy_all, Res.string.settings_privacy_friends, Res.string.settings_privacy_nobody).map(UiText::Res), choice.options.map { it.label })
                 val isFriends = choice.id == SettingRowId.FRIENDS_SHARING
                 assertEquals((if (isFriends) SharingVisibility.ALL else SharingVisibility.FRIENDS).name, choice.selectedOptionKey)
-                assertEquals(UiText.Resource(if (isFriends) R.string.settings_privacy_all else R.string.settings_privacy_friends), choice.value)
+                assertEquals(UiText.Res(if (isFriends) Res.string.settings_privacy_all else Res.string.settings_privacy_friends), choice.value)
                 assertTrue(choice.enabled)
             }
-            assertEquals(UiText.Resource(R.string.settings_privacy_footer), fixture.viewModel.uiState.value.sections.single().footer)
+            assertEquals(UiText.Res(Res.string.settings_privacy_footer), fixture.viewModel.uiState.value.sections.single().footer)
 
             fixture.repository.sharing.value = SharingSettingsState.Content(
                 SharingSettings(SharingVisibility.ALL, SharingVisibility.NOBODY)
             )
             advanceUntilIdle()
             assertEquals(SharingVisibility.ALL.name, fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).selectedOptionKey)
-            assertEquals(UiText.Resource(R.string.settings_privacy_all), fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).value)
+            assertEquals(UiText.Res(Res.string.settings_privacy_all), fixture.viewModel.choice(SettingRowId.SCHEDULE_SHARING).value)
             assertEquals(SharingVisibility.NOBODY.name, fixture.viewModel.choice(SettingRowId.SPORT_SHARING).selectedOptionKey)
-            assertEquals(UiText.Resource(R.string.settings_privacy_nobody), fixture.viewModel.choice(SettingRowId.SPORT_SHARING).value)
+            assertEquals(UiText.Res(Res.string.settings_privacy_nobody), fixture.viewModel.choice(SettingRowId.SPORT_SHARING).value)
         }
 
     @Test
-    fun `privacy choices independently send typed commands without changing other visibility`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun privacyChoicesIndependentlySendTypedCommandsWithoutChangingOtherVisibility() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.PRIVACY,
                 local = LocalSettings(customServicesEnabled = true),
@@ -279,8 +298,8 @@ class ServicesPageProviderTest {
         }
 
     @Test
-    fun `privacy rejects unknown keys and options unchanged values and obsolete toggles`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun privacyRejectsUnknownKeysAndOptionsUnchangedValuesAndObsoleteToggles() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.PRIVACY,
                 local = LocalSettings(customServicesEnabled = true),
@@ -300,8 +319,8 @@ class ServicesPageProviderTest {
         }
 
     @Test
-    fun `privacy rejects actions during loading unknown error disabled and updating states`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun privacyRejectsActionsDuringLoadingUnknownErrorDisabledAndUpdatingStates() =
+        runTest(main.dispatcher) {
             val states = listOf(
                 SharingSettingsState.Loading,
                 SharingSettingsState.Error,
@@ -327,15 +346,15 @@ class ServicesPageProviderTest {
                     fixture.viewModel.allItems().filterIsInstance<SettingItem.Choice>().forEach { choice ->
                         assertFalse(choice.enabled)
                         assertEquals(null, choice.selectedOptionKey)
-                        assertEquals(UiText.Resource(R.string.settings_privacy_unknown), choice.value)
+                        assertEquals(UiText.Res(Res.string.settings_privacy_unknown), choice.value)
                     }
                 }
             }
         }
 
     @Test
-    fun `privacy ignores choices on other pages and while fresh settings are masked`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun privacyIgnoresChoicesOnOtherPagesAndWhileFreshSettingsAreMasked() =
+        runTest(main.dispatcher) {
             for (page in listOf(SettingsPage.ROOT, SettingsPage.PRIVACY)) {
                 val fixture = createFixture(
                     page = page,
@@ -352,8 +371,8 @@ class ServicesPageProviderTest {
         }
 
     @Test
-    fun `pending privacy command locks both rows and rejects stale dialog callbacks until saved`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun pendingPrivacyCommandLocksBothRowsAndRejectsStaleDialogCallbacksUntilSaved() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.PRIVACY,
                 local = LocalSettings(customServicesEnabled = true),

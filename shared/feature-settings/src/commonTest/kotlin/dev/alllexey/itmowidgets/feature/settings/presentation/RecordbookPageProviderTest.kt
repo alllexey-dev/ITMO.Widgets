@@ -1,30 +1,41 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_bars_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_footer
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_myitmo_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_notifications_off
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_sheets_title
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 /** The recordbook page built and handled by [RecordbookPageProvider]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecordbookPageProviderTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `recordbook page shows the BARS switch only once BARS has answered`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun recordbookPageShowsTheBARSSwitchOnlyOnceBARSHasAnswered() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK, local = LocalSettings(myItmoMarksEnabled = false))
             advanceUntilIdle()
 
@@ -32,7 +43,7 @@ class RecordbookPageProviderTest {
             assertEquals(null, section.title)
             assertEquals(listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS), section.items.map { it.id })
             val myItmo = fixture.viewModel.toggle(SettingRowId.MYITMO_MARKS)
-            assertEquals(UiText.Resource(R.string.settings_marks_myitmo_title), myItmo.title)
+            assertEquals(UiText.Res(Res.string.settings_marks_myitmo_title), myItmo.title)
             assertFalse(myItmo.checked)
 
             for (bars in listOf(false, true)) {
@@ -43,21 +54,21 @@ class RecordbookPageProviderTest {
                     fixture.viewModel.uiState.value.sections.single().items.map { it.id }
                 )
                 val toggle = fixture.viewModel.toggle(SettingRowId.BARS_MARKS)
-                assertEquals(UiText.Resource(R.string.settings_marks_bars_title), toggle.title)
+                assertEquals(UiText.Res(Res.string.settings_marks_bars_title), toggle.title)
                 assertEquals(bars, toggle.checked)
             }
         }
 
     @Test
-    fun `recordbook page puts the sheets switch after My ITMO and BARS`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun recordbookPagePutsTheSheetsSwitchAfterMyITMOAndBARS() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK, local = LocalSettings(sheetMarksEnabled = false))
             advanceUntilIdle()
             val keys = { fixture.viewModel.uiState.value.sections.single().items.map { it.id } }
 
             assertEquals(listOf(SettingRowId.MYITMO_MARKS, SettingRowId.SHEET_MARKS), keys())
             val sheets = fixture.viewModel.toggle(SettingRowId.SHEET_MARKS)
-            assertEquals(UiText.Resource(R.string.settings_marks_sheets_title), sheets.title)
+            assertEquals(UiText.Res(Res.string.settings_marks_sheets_title), sheets.title)
             assertFalse(sheets.checked)
 
             fixture.repository.barsMarks.value = true
@@ -71,8 +82,8 @@ class RecordbookPageProviderTest {
         }
 
     @Test
-    fun `the sheets switch goes through tracking and asks for notifications, then offers the hint`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun theSheetsSwitchGoesThroughTrackingAndAsksForNotificationsThenOffersTheHint() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
             val events = recordEvents(fixture)
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
@@ -93,8 +104,8 @@ class RecordbookPageProviderTest {
         }
 
     @Test
-    fun `the background work row follows the sheets switch alone`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun theBackgroundWorkRowFollowsTheSheetsSwitchAlone() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.RECORDBOOK,
                 local = LocalSettings(myItmoMarksEnabled = false, barsMarksEnabled = false),
@@ -111,25 +122,25 @@ class RecordbookPageProviderTest {
         }
 
     @Test
-    fun `recordbook footer says when notifications are off`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun recordbookFooterSaysWhenNotificationsAreOff() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK)
             advanceUntilIdle()
             val footer = { fixture.viewModel.uiState.value.sections.single().footer }
-            assertEquals(UiText.Resource(R.string.settings_marks_footer), footer())
+            assertEquals(UiText.Res(Res.string.settings_marks_footer), footer())
 
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
             advanceUntilIdle()
-            assertEquals(UiText.Resource(R.string.settings_marks_notifications_off), footer())
+            assertEquals(UiText.Res(Res.string.settings_marks_notifications_off), footer())
 
             fixture.viewModel.onNotificationPermissionChanged(granted = true)
             advanceUntilIdle()
-            assertEquals(UiText.Resource(R.string.settings_marks_footer), footer())
+            assertEquals(UiText.Res(Res.string.settings_marks_footer), footer())
         }
 
     @Test
-    fun `mark switches go through tracking and turning one on asks for notifications only when they are off`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun markSwitchesGoThroughTrackingAndTurningOneOnAsksForNotificationsOnlyWhenTheyAreOff() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK, local = LocalSettings(barsMarksEnabled = false))
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
             advanceUntilIdle()
@@ -148,8 +159,8 @@ class RecordbookPageProviderTest {
         }
 
     @Test
-    fun `recordbook page shows the background work row while any mark check is on`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun recordbookPageShowsTheBackgroundWorkRowWhileAnyMarkCheckIsOn() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.RECORDBOOK, backgroundWork = FakeBackgroundWorkAccess(unrestricted = false))
             fixture.viewModel.onBackgroundWorkChanged()
             advanceUntilIdle()

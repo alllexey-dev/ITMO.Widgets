@@ -2,18 +2,15 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-@HiltViewModel
-class CustomSpoilerViewModel @Inject constructor(
+class CustomSpoilerViewModel(
     private val repository: CustomSpoilerRepository
 ) : ViewModel() {
 

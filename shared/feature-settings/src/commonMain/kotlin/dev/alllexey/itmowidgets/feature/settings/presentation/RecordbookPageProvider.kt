@@ -1,12 +1,16 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.text.UiText
-import javax.inject.Inject
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_bars_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_footer
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_myitmo_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_notifications_off
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_marks_sheets_title
 
 /** The mark checks of My ITMO, BARS and Google Sheets. */
-class RecordbookPageProvider @Inject constructor(
+class RecordbookPageProvider(
     private val markTracking: MarkTracking
 ) : SettingsPageProvider {
 
@@ -22,20 +26,20 @@ class RecordbookPageProvider @Inject constructor(
                 items = listOfNotNull(
                     SettingItem.Toggle(
                         id = SettingRowId.MYITMO_MARKS,
-                        title = UiText.Resource(R.string.settings_marks_myitmo_title),
+                        title = UiText.Res(Res.string.settings_marks_myitmo_title),
                         checked = local.myItmoMarksEnabled
                     ),
                     // BARS appears with the account's first BARS answer; before it there is nothing to check.
                     local.barsMarksEnabled?.let { enabled ->
                         SettingItem.Toggle(
                             id = SettingRowId.BARS_MARKS,
-                            title = UiText.Resource(R.string.settings_marks_bars_title),
+                            title = UiText.Res(Res.string.settings_marks_bars_title),
                             checked = enabled
                         )
                     },
                     SettingItem.Toggle(
                         id = SettingRowId.SHEET_MARKS,
-                        title = UiText.Resource(R.string.settings_marks_sheets_title),
+                        title = UiText.Res(Res.string.settings_marks_sheets_title),
                         checked = local.sheetMarksEnabled
                     ),
                     SettingRows.backgroundWork().takeIf {
@@ -43,9 +47,9 @@ class RecordbookPageProvider @Inject constructor(
                             (local.myItmoMarksEnabled || local.barsMarksEnabled == true || local.sheetMarksEnabled)
                     }
                 ),
-                footer = UiText.Resource(
-                    if (state.notificationsGranted == false) R.string.settings_marks_notifications_off
-                    else R.string.settings_marks_footer
+                footer = UiText.Res(
+                    if (state.notificationsGranted == false) Res.string.settings_marks_notifications_off
+                    else Res.string.settings_marks_footer
                 )
             )
         )

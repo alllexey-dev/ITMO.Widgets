@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.di.bridge
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
+import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
 import org.koin.core.module.Module
 
 /**
@@ -20,6 +21,7 @@ object KoinModules {
         resourcesBridgeModule,
         reviewsBridgeModule,
         homeBridgeModule,
+        settingsBridgeModule,
     )
 
     /** Definitions Koin constructs; the graph check verifies their constructors. */
@@ -27,6 +29,7 @@ object KoinModules {
         qrModule,
         homeModule,
         resourcesModule,
+        settingsModule,
     )
 
     val all: List<Module> get() = bridges + constructed

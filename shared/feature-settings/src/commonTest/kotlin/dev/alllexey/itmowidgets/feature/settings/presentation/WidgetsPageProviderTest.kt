@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
@@ -9,31 +8,44 @@ import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
+import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.core.settings_qr_custom_image_selected
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_already_added
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_failed
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_title
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 /** Widget pages built and handled by [WidgetsPageProvider]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class WidgetsPageProviderTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `widget pages expose only their own controls and independent teacher values`() = runTest(mainDispatcherRule.dispatcher) {
+    fun widgetPagesExposeOnlyTheirOwnControlsAndIndependentTeacherValues() = runTest(main.dispatcher) {
         val local = LocalSettings(scheduleWidget = ScheduleWidgetSettings(
             compact = CompactScheduleWidgetSettings(hideTeacher = true),
             full = FullScheduleWidgetSettings(hideTeacher = false)
@@ -69,8 +81,8 @@ class WidgetsPageProviderTest {
     }
 
     @Test
-    fun `preview exists only on widget settings pages and uses stored values`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun previewExistsOnlyOnWidgetSettingsPagesAndUsesStoredValues() =
+        runTest(main.dispatcher) {
             val local = LocalSettings(
                 qrWidget = QrWidgetSettings(dynamicColors = false, animationType = QrAnimationType.NONE),
                 scheduleWidget = ScheduleWidgetSettings(compact = CompactScheduleWidgetSettings(hideTeacher = true), full = FullScheduleWidgetSettings(hideTeacher = true))
@@ -91,8 +103,8 @@ class WidgetsPageProviderTest {
         }
 
     @Test
-    fun `preview waits for storage and follows persisted toggle and animation changes`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun previewWaitsForStorageAndFollowsPersistedToggleAndAnimationChanges() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.QR_WIDGET, localInitiallyAvailable = false)
             advanceUntilIdle()
             assertEquals(null, fixture.viewModel.uiState.value.previewSettings)
@@ -108,8 +120,8 @@ class WidgetsPageProviderTest {
         }
 
     @Test
-    fun `disabled spoiler keeps its dependent controls visible but unavailable`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun disabledSpoilerKeepsItsDependentControlsVisibleButUnavailable() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.QR_WIDGET,
                 local = LocalSettings(qrWidget = QrWidgetSettings(spoilerEnabled = false))
@@ -124,8 +136,8 @@ class WidgetsPageProviderTest {
         }
 
     @Test
-    fun `text size choice writes only its own widget format and refreshes widgets`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun textSizeChoiceWritesOnlyItsOwnWidgetFormatAndRefreshesWidgets() =
+        runTest(main.dispatcher) {
             val local = LocalSettings(
                 scheduleWidget = ScheduleWidgetSettings(
                     compact = CompactScheduleWidgetSettings(textSize = WidgetTextSize.LARGE)
@@ -161,8 +173,8 @@ class WidgetsPageProviderTest {
         }
 
     @Test
-    fun `qr animation choice persists known option and refreshes widgets`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun qrAnimationChoicePersistsKnownOptionAndRefreshesWidgets() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.QR_WIDGET,
                 local = LocalSettings(
@@ -194,8 +206,8 @@ class WidgetsPageProviderTest {
         }
 
     @Test
-    fun `custom spoiler state controls actions and optional widget refresh`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun customSpoilerStateControlsActionsAndOptionalWidgetRefresh() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.QR_WIDGET)
             advanceUntilIdle()
 
@@ -206,7 +218,7 @@ class WidgetsPageProviderTest {
 
             assertTrue(fixture.viewModel.action(SettingRowId.QR_RESET_IMAGE).enabled)
             assertEquals(
-                UiText.Resource(R.string.settings_qr_custom_image_selected),
+                UiText.Res(CoreRes.string.settings_qr_custom_image_selected),
                 fixture.viewModel.action(SettingRowId.QR_CUSTOM_IMAGE).value
             )
             assertEquals(0, fixture.widgetRefresher.refreshCount)
@@ -219,7 +231,7 @@ class WidgetsPageProviderTest {
         }
 
     @Test
-    fun `image actions are disabled while saving without disabling animation`() = runTest(mainDispatcherRule.dispatcher) {
+    fun imageActionsAreDisabledWhileSavingWithoutDisablingAnimation() = runTest(main.dispatcher) {
         val fixture = createFixture(page = SettingsPage.QR_WIDGET)
         advanceUntilIdle()
         fixture.viewModel.onCustomSpoilerChanged(configured = true, busy = true)
@@ -234,8 +246,8 @@ class WidgetsPageProviderTest {
     }
 
     @Test
-    fun `the QR page offers the tile only where it can be requested and until it is added`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun theQRPageOffersTheTileOnlyWhereItCanBeRequestedAndUntilItIsAdded() =
+        runTest(main.dispatcher) {
             val unsupported = createFixture(page = SettingsPage.QR_WIDGET)
             advanceUntilIdle()
             assertTrue(unsupported.viewModel.allItems().none { it.id == SettingRowId.QR_TILE })
@@ -248,8 +260,8 @@ class WidgetsPageProviderTest {
                 listOf(
                     SettingItem.Action(
                         id = SettingRowId.QR_TILE,
-                        title = UiText.Resource(R.string.settings_qr_tile_title),
-                        description = UiText.Resource(R.string.settings_qr_tile_description)
+                        title = UiText.Res(Res.string.settings_qr_tile_title),
+                        description = UiText.Res(Res.string.settings_qr_tile_description)
                     )
                 ),
                 first.items
@@ -261,8 +273,8 @@ class WidgetsPageProviderTest {
         }
 
     @Test
-    fun `tapping the tile row asks the system to add the tile`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun tappingTheTileRowAsksTheSystemToAddTheTile() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.QR_WIDGET, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
             val events = recordEvents(fixture)
             advanceUntilIdle()
@@ -274,8 +286,8 @@ class WidgetsPageProviderTest {
         }
 
     @Test
-    fun `the system answer remembers an added tile and explains only what the user should know`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun theSystemAnswerRemembersAnAddedTileAndExplainsOnlyWhatTheUserShouldKnow() =
+        runTest(main.dispatcher) {
             fun answer(result: QrTileAddResult): Pair<List<Boolean>, List<SettingsEvent>> {
                 val fixture = createFixture(page = SettingsPage.QR_WIDGET, tileAccess = FakeQuickSettingsTileAccess(canRequest = true))
                 val events = recordEvents(fixture)
@@ -287,13 +299,13 @@ class WidgetsPageProviderTest {
 
             assertEquals(listOf(true) to emptyList<SettingsEvent>(), answer(QrTileAddResult.ADDED))
             assertEquals(
-                listOf(true) to listOf(SettingsEvent.ShowMessage(UiText.Resource(R.string.settings_qr_tile_already_added))),
+                listOf(true) to listOf(SettingsEvent.ShowMessage(UiText.Res(Res.string.settings_qr_tile_already_added))),
                 answer(QrTileAddResult.ALREADY_ADDED)
             )
             assertEquals(emptyList<Boolean>() to emptyList<SettingsEvent>(), answer(QrTileAddResult.NOT_ADDED))
             assertEquals(emptyList<Boolean>() to emptyList<SettingsEvent>(), answer(QrTileAddResult.IN_PROGRESS))
             assertEquals(
-                emptyList<Boolean>() to listOf(SettingsEvent.ShowMessage(UiText.Resource(R.string.settings_qr_tile_failed))),
+                emptyList<Boolean>() to listOf(SettingsEvent.ShowMessage(UiText.Res(Res.string.settings_qr_tile_failed))),
                 answer(QrTileAddResult.FAILED)
             )
         }

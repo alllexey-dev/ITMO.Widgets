@@ -1,12 +1,22 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
-import javax.inject.Inject
+import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.core.me_group_app
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_access
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_widgets
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_allowed
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_blocked
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_checking
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_notifications_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_short_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_disabled
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_enabled
 
 /** The catalogue: one row per detail page, plus the notification permission. */
-class RootPageProvider @Inject constructor() : SettingsPageProvider {
+class RootPageProvider() : SettingsPageProvider {
 
     override val pages = setOf(SettingsPage.ROOT)
 
@@ -14,27 +24,27 @@ class RootPageProvider @Inject constructor() : SettingsPageProvider {
 
     override fun sections(page: SettingsPage, state: SettingsPageState) = listOf(
         SettingSection(
-            title = UiText.Resource(R.string.settings_group_access),
+            title = UiText.Res(Res.string.settings_group_access),
             items = listOf(
                 SettingRows.navigation(
                     SettingsPage.SERVICES,
-                    value = UiText.Resource(
+                    value = UiText.Res(
                         if (state.local.customServicesEnabled) {
-                            R.string.settings_services_enabled
+                            Res.string.settings_services_enabled
                         } else {
-                            R.string.settings_services_disabled
+                            Res.string.settings_services_disabled
                         }
                     )
                 ),
                 SettingRows.navigation(SettingsPage.PRIVACY),
                 SettingItem.Action(
                     id = SettingRowId.NOTIFICATIONS,
-                    title = UiText.Resource(R.string.settings_notifications_title),
-                    value = UiText.Resource(
+                    title = UiText.Res(Res.string.settings_notifications_title),
+                    value = UiText.Res(
                         when (state.notificationsGranted) {
-                            true -> R.string.settings_notifications_allowed
-                            false -> R.string.settings_notifications_blocked
-                            null -> R.string.settings_notifications_checking
+                            true -> Res.string.settings_notifications_allowed
+                            false -> Res.string.settings_notifications_blocked
+                            null -> Res.string.settings_notifications_checking
                         }
                     ),
                     trailingIcon = AppIcon.CHEVRON_RIGHT
@@ -42,18 +52,18 @@ class RootPageProvider @Inject constructor() : SettingsPageProvider {
             )
         ),
         SettingSection(
-            title = UiText.Resource(R.string.settings_group_widgets),
+            title = UiText.Res(Res.string.settings_group_widgets),
             items = listOf(
                 SettingRows.navigation(SettingsPage.COMPACT_SCHEDULE_WIDGET),
                 SettingRows.navigation(SettingsPage.FULL_SCHEDULE_WIDGET),
                 SettingRows.navigation(
                     SettingsPage.QR_WIDGET,
-                    title = UiText.Resource(R.string.settings_qr_short_title)
+                    title = UiText.Res(Res.string.settings_qr_short_title)
                 )
             )
         ),
         SettingSection(
-            title = UiText.Resource(R.string.me_group_app),
+            title = UiText.Res(CoreRes.string.me_group_app),
             items = listOf(
                 SettingRows.navigation(SettingsPage.HOME),
                 SettingRows.navigation(SettingsPage.SCHEDULE),

@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
@@ -12,11 +11,39 @@ import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
-import javax.inject.Inject
+import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.core.settings_qr_custom_image_default
+import dev.alllexey.itmowidgets.shared.core.settings_qr_custom_image_selected
+import dev.alllexey.itmowidgets.shared.core.settings_qr_custom_image_title
+import dev.alllexey.itmowidgets.shared.core.settings_qr_dynamic_colors_title
+import dev.alllexey.itmowidgets.shared.core.settings_qr_spoiler_description
+import dev.alllexey.itmowidgets.shared.core.settings_qr_spoiler_title
+import dev.alllexey.itmowidgets.shared.core.settings_widget_hide_past_title
+import dev.alllexey.itmowidgets.shared.core.settings_widget_hide_teacher_title
+import dev.alllexey.itmowidgets.shared.core.settings_widget_next_early_description
+import dev.alllexey.itmowidgets.shared.core.settings_widget_next_early_title
+import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_extra_large
+import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_large
+import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_normal
+import dev.alllexey.itmowidgets.shared.core.settings_widget_text_size_title
+import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_description
+import dev.alllexey.itmowidgets.shared.core.settings_widget_tomorrow_title
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_spoiler
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_circle
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_fade
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_none
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_reset_image_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_already_added
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_failed
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_tile_title
 import kotlinx.coroutines.CancellationException
+import org.jetbrains.compose.resources.StringResource
 
 /** The compact and full schedule widgets and the QR pass widget with its tile; each page draws its widget above. */
-class WidgetsPageProvider @Inject constructor(
+class WidgetsPageProvider(
     private val repository: SettingsRepository,
     private val tileAccess: QuickSettingsTileAccess
 ) : SettingsPageProvider {
@@ -118,14 +145,14 @@ class WidgetsPageProvider @Inject constructor(
     fun onQrTileResult(scope: SettingsPageScope, result: QrTileAddResult) {
         when (result) {
             QrTileAddResult.ADDED -> rememberQrTileAdded(scope)
-            QrTileAddResult.ALREADY_ADDED -> rememberQrTileAdded(scope, R.string.settings_qr_tile_already_added)
+            QrTileAddResult.ALREADY_ADDED -> rememberQrTileAdded(scope, Res.string.settings_qr_tile_already_added)
             QrTileAddResult.NOT_ADDED, QrTileAddResult.IN_PROGRESS -> Unit
             QrTileAddResult.FAILED ->
-                scope.send(SettingsEvent.ShowMessage(UiText.Resource(R.string.settings_qr_tile_failed)))
+                scope.send(SettingsEvent.ShowMessage(UiText.Res(Res.string.settings_qr_tile_failed)))
         }
     }
 
-    private fun rememberQrTileAdded(scope: SettingsPageScope, messageRes: Int? = null) {
+    private fun rememberQrTileAdded(scope: SettingsPageScope, message: StringResource? = null) {
         scope.launch {
             try {
                 repository.setQrTileAdded(true)
@@ -135,7 +162,7 @@ class WidgetsPageProvider @Inject constructor(
                 scope.emit(SettingsEvent.ShowError(AppError.Unknown(error)))
                 return@launch
             }
-            messageRes?.let { scope.emit(SettingsEvent.ShowMessage(UiText.Resource(it))) }
+            message?.let { scope.emit(SettingsEvent.ShowMessage(UiText.Res(it))) }
         }
     }
 
@@ -145,13 +172,13 @@ class WidgetsPageProvider @Inject constructor(
             items = listOf(
                 SettingItem.Toggle(
                     id = SettingRowId.COMPACT_WIDGET_NEXT_LESSON_EARLY,
-                    title = UiText.Resource(R.string.settings_widget_next_early_title),
-                    description = UiText.Resource(R.string.settings_widget_next_early_description),
+                    title = UiText.Res(CoreRes.string.settings_widget_next_early_title),
+                    description = UiText.Res(CoreRes.string.settings_widget_next_early_description),
                     checked = local.scheduleWidget.compact.showNextLessonEarly
                 ),
                 SettingItem.Toggle(
                     id = SettingRowId.COMPACT_WIDGET_HIDE_TEACHER,
-                    title = UiText.Resource(R.string.settings_widget_hide_teacher_title),
+                    title = UiText.Res(CoreRes.string.settings_widget_hide_teacher_title),
                     checked = local.scheduleWidget.compact.hideTeacher
                 ),
                 textSizeChoice(SettingRowId.COMPACT_WIDGET_TEXT_SIZE, local.scheduleWidget.compact.textSize)
@@ -165,18 +192,18 @@ class WidgetsPageProvider @Inject constructor(
             items = listOf(
                 SettingItem.Toggle(
                     id = SettingRowId.FULL_WIDGET_HIDE_TEACHER,
-                    title = UiText.Resource(R.string.settings_widget_hide_teacher_title),
+                    title = UiText.Res(CoreRes.string.settings_widget_hide_teacher_title),
                     checked = local.scheduleWidget.full.hideTeacher
                 ),
                 SettingItem.Toggle(
                     id = SettingRowId.FULL_WIDGET_HIDE_PAST,
-                    title = UiText.Resource(R.string.settings_widget_hide_past_title),
+                    title = UiText.Res(CoreRes.string.settings_widget_hide_past_title),
                     checked = local.scheduleWidget.full.hidePastLessons
                 ),
                 SettingItem.Toggle(
                     id = SettingRowId.FULL_WIDGET_SHOW_TOMORROW,
-                    title = UiText.Resource(R.string.settings_widget_tomorrow_title),
-                    description = UiText.Resource(R.string.settings_widget_tomorrow_description),
+                    title = UiText.Res(CoreRes.string.settings_widget_tomorrow_title),
+                    description = UiText.Res(CoreRes.string.settings_widget_tomorrow_description),
                     checked = local.scheduleWidget.full.showTomorrowWhenTodayIsOver
                 ),
                 textSizeChoice(SettingRowId.FULL_WIDGET_TEXT_SIZE, local.scheduleWidget.full.textSize)
@@ -193,23 +220,23 @@ class WidgetsPageProvider @Inject constructor(
                 items = listOf(
                     SettingItem.Toggle(
                         id = SettingRowId.QR_DYNAMIC_COLORS,
-                        title = UiText.Resource(R.string.settings_qr_dynamic_colors_title),
+                        title = UiText.Res(CoreRes.string.settings_qr_dynamic_colors_title),
                         checked = qr.dynamicColors
                     ),
                     SettingItem.Toggle(
                         id = SettingRowId.QR_SPOILER,
-                        title = UiText.Resource(R.string.settings_qr_spoiler_title),
-                        description = UiText.Resource(R.string.settings_qr_spoiler_description),
+                        title = UiText.Res(CoreRes.string.settings_qr_spoiler_title),
+                        description = UiText.Res(CoreRes.string.settings_qr_spoiler_description),
                         checked = qr.spoilerEnabled
                     )
                 )
             ),
             SettingSection(
-                title = UiText.Resource(R.string.settings_group_spoiler),
+                title = UiText.Res(Res.string.settings_group_spoiler),
                 items = listOf(
                     SettingItem.Choice(
                         id = SettingRowId.QR_ANIMATION,
-                        title = UiText.Resource(R.string.settings_qr_animation_title),
+                        title = UiText.Res(Res.string.settings_qr_animation_title),
                         value = qr.animationType.label(),
                         options = QrAnimationType.entries.map { animation ->
                             ChoiceOption(animation.name, animation.label())
@@ -219,12 +246,12 @@ class WidgetsPageProvider @Inject constructor(
                     ),
                     SettingItem.Action(
                         id = SettingRowId.QR_CUSTOM_IMAGE,
-                        title = UiText.Resource(R.string.settings_qr_custom_image_title),
-                        value = UiText.Resource(
+                        title = UiText.Res(CoreRes.string.settings_qr_custom_image_title),
+                        value = UiText.Res(
                             if (state.hasCustomSpoiler) {
-                                R.string.settings_qr_custom_image_selected
+                                CoreRes.string.settings_qr_custom_image_selected
                             } else {
-                                R.string.settings_qr_custom_image_default
+                                CoreRes.string.settings_qr_custom_image_default
                             }
                         ),
                         trailingIcon = AppIcon.CHEVRON_RIGHT,
@@ -232,7 +259,7 @@ class WidgetsPageProvider @Inject constructor(
                     ),
                     SettingItem.Action(
                         id = SettingRowId.QR_RESET_IMAGE,
-                        title = UiText.Resource(R.string.settings_qr_reset_image_title),
+                        title = UiText.Res(Res.string.settings_qr_reset_image_title),
                         enabled = qr.spoilerEnabled && state.hasCustomSpoiler && !state.imageBusy
                     )
                 )
@@ -248,8 +275,8 @@ class WidgetsPageProvider @Inject constructor(
             items = listOf(
                 SettingItem.Action(
                     id = SettingRowId.QR_TILE,
-                    title = UiText.Resource(R.string.settings_qr_tile_title),
-                    description = UiText.Resource(R.string.settings_qr_tile_description)
+                    title = UiText.Res(Res.string.settings_qr_tile_title),
+                    description = UiText.Res(Res.string.settings_qr_tile_description)
                 )
             )
         )
@@ -257,25 +284,25 @@ class WidgetsPageProvider @Inject constructor(
 
     private fun textSizeChoice(id: SettingRowId, size: WidgetTextSize) = SettingItem.Choice(
         id = id,
-        title = UiText.Resource(R.string.settings_widget_text_size_title),
+        title = UiText.Res(CoreRes.string.settings_widget_text_size_title),
         value = size.label(),
         options = WidgetTextSize.entries.map { ChoiceOption(it.name, it.label()) },
         selectedOptionKey = size.name
     )
 
-    private fun WidgetTextSize.label() = UiText.Resource(
+    private fun WidgetTextSize.label() = UiText.Res(
         when (this) {
-            WidgetTextSize.NORMAL -> R.string.settings_widget_text_size_normal
-            WidgetTextSize.LARGE -> R.string.settings_widget_text_size_large
-            WidgetTextSize.EXTRA_LARGE -> R.string.settings_widget_text_size_extra_large
+            WidgetTextSize.NORMAL -> CoreRes.string.settings_widget_text_size_normal
+            WidgetTextSize.LARGE -> CoreRes.string.settings_widget_text_size_large
+            WidgetTextSize.EXTRA_LARGE -> CoreRes.string.settings_widget_text_size_extra_large
         }
     )
 
-    private fun QrAnimationType.label() = UiText.Resource(
+    private fun QrAnimationType.label() = UiText.Res(
         when (this) {
-            QrAnimationType.CIRCLE -> R.string.settings_qr_animation_circle
-            QrAnimationType.FADE -> R.string.settings_qr_animation_fade
-            QrAnimationType.NONE -> R.string.settings_qr_animation_none
+            QrAnimationType.CIRCLE -> Res.string.settings_qr_animation_circle
+            QrAnimationType.FADE -> Res.string.settings_qr_animation_fade
+            QrAnimationType.NONE -> Res.string.settings_qr_animation_none
         }
     )
 }

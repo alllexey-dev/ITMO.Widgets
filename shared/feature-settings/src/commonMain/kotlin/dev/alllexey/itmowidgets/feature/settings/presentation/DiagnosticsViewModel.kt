@@ -2,20 +2,17 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticEntry
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-@HiltViewModel
-class DiagnosticsViewModel @Inject constructor(
+class DiagnosticsViewModel(
     private val diagnostics: AppDiagnostics,
     private val timeProvider: AcademicTimeProvider
 ) : ViewModel() {

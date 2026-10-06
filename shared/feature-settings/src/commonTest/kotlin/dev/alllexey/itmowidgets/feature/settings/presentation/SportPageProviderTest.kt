@@ -1,27 +1,33 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SportDisplaySettings
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 /** The sport page built and handled by [SportPageProvider], through the ViewModel. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SportPageProviderTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `maps local toggles to storage semantics and refreshes only widgets`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun mapsLocalTogglesToStorageSemanticsAndRefreshesOnlyWidgets() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(
                 page = SettingsPage.SPORT,
                 local = LocalSettings(

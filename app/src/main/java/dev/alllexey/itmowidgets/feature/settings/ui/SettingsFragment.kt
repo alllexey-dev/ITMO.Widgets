@@ -16,7 +16,6 @@ import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -59,6 +58,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
@@ -70,8 +70,8 @@ class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: SettingsViewModel by viewModels()
-    private val spoilerViewModel: CustomSpoilerViewModel by viewModels()
+    private val viewModel: SettingsViewModel by viewModel()
+    private val spoilerViewModel: CustomSpoilerViewModel by viewModel()
 
     private var renderer: SettingsRenderer? = null
 

@@ -1,12 +1,12 @@
 package dev.alllexey.itmowidgets.feature.settings.domain
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class BackgroundWorkScreensTest {
 
     @Test
-    fun `Xiaomi, Redmi and POCO open the activity control first`() {
+    fun xiaomiRedmiAndPOCOOpenTheActivityControlFirst() {
         val miui = listOf(
             BackgroundWorkScreen.MIUI_POWER_DETAIL,
             BackgroundWorkScreen.MIUI_POWER_KEEPER,
@@ -19,7 +19,7 @@ class BackgroundWorkScreensTest {
     }
 
     @Test
-    fun `other devices open the battery optimization list first`() {
+    fun otherDevicesOpenTheBatteryOptimizationListFirst() {
         val other = listOf(BackgroundWorkScreen.BATTERY_OPTIMIZATION_LIST, BackgroundWorkScreen.APP_DETAILS)
 
         assertEquals(other, BackgroundWorkScreens.forDevice("Google", "google"))

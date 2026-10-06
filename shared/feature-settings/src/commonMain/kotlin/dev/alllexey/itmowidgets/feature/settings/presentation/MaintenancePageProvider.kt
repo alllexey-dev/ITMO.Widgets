@@ -1,19 +1,27 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
-import javax.inject.Inject
+import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.core.app_unofficial_notice
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_diagnostics_count
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_diagnostics_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_policy_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_refresh_widgets_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_restart_onboarding_description
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_restart_onboarding_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_version_title
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
 /** Widget refresh, the onboarding replay, diagnostics, the privacy policy and the version. */
-class MaintenancePageProvider @Inject constructor(
+class MaintenancePageProvider(
     private val widgetRefreshRequester: WidgetRefreshRequester,
     private val onboardingRepository: OnboardingRepository,
     private val appVersion: AppVersion,
@@ -42,33 +50,33 @@ class MaintenancePageProvider @Inject constructor(
             items = listOf(
                 SettingItem.Action(
                     id = SettingRowId.REFRESH_WIDGETS,
-                    title = UiText.Resource(R.string.settings_refresh_widgets_title),
+                    title = UiText.Res(Res.string.settings_refresh_widgets_title),
                     trailingIcon = AppIcon.REFRESH
                 ),
                 SettingItem.Action(
                     id = SettingRowId.RESTART_ONBOARDING,
-                    title = UiText.Resource(R.string.settings_restart_onboarding_title),
-                    description = UiText.Resource(R.string.settings_restart_onboarding_description),
+                    title = UiText.Res(Res.string.settings_restart_onboarding_title),
+                    description = UiText.Res(Res.string.settings_restart_onboarding_description),
                     trailingIcon = AppIcon.REFRESH
                 ),
                 SettingItem.Action(
                     id = SettingRowId.DIAGNOSTICS,
-                    title = UiText.Resource(R.string.settings_diagnostics_title),
-                    value = UiText.Resource(R.string.settings_diagnostics_count, listOf(state.diagnosticsCount)),
+                    title = UiText.Res(Res.string.settings_diagnostics_title),
+                    value = UiText.Res(Res.string.settings_diagnostics_count, listOf(state.diagnosticsCount)),
                     trailingIcon = AppIcon.CHEVRON_RIGHT
                 ),
                 SettingItem.Action(
                     id = SettingRowId.PRIVACY_POLICY,
-                    title = UiText.Resource(R.string.settings_privacy_policy_title),
+                    title = UiText.Res(Res.string.settings_privacy_policy_title),
                     trailingIcon = AppIcon.OPEN_IN_NEW
                 ),
                 SettingItem.Info(
                     id = SettingRowId.VERSION,
-                    title = UiText.Resource(R.string.settings_version_title),
+                    title = UiText.Res(Res.string.settings_version_title),
                     value = UiText.Dynamic(appVersion.name)
                 )
             ),
-            footer = UiText.Resource(R.string.app_unofficial_notice)
+            footer = UiText.Res(CoreRes.string.app_unofficial_notice)
         )
     )
 

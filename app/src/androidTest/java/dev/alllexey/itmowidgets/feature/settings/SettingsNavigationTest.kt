@@ -35,7 +35,6 @@ import com.google.android.material.transition.MaterialSharedAxis
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
-import androidx.lifecycle.ViewModelProvider
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
@@ -60,6 +59,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.CopyOnWriteArrayList
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 
 @RunWith(AndroidJUnit4::class)
 class SettingsNavigationTest {
@@ -611,7 +611,7 @@ class SettingsNavigationTest {
 
     private fun settingsViewModel(activity: SettingsNavigationTestActivity): SettingsViewModel {
         val fragment = activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment as SettingsFragment
-        return ViewModelProvider(fragment)[SettingsViewModel::class.java]
+        return fragment.getViewModel<SettingsViewModel>()
     }
 
     /** My ITMO, BARS and the sheets in this order, each 48 dp, the background work row and the footer below them. */

@@ -1,9 +1,8 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import javax.inject.Inject
 
 /** Every settings page provider, listed once; the ViewModel finds a page's builder and a row's handler here. */
-class SettingsPages @Inject constructor(
+class SettingsPages(
     root: RootPageProvider,
     services: ServicesPageProvider,
     val widgets: WidgetsPageProvider,

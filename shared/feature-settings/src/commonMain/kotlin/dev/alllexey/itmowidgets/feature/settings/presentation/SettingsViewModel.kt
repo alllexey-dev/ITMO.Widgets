@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -13,7 +12,6 @@ import dev.alllexey.itmowidgets.feature.settings.domain.QrTileAddResult
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -39,8 +37,7 @@ import kotlinx.coroutines.sync.withLock
  * outlives a page's rows (notification and background work state, privacy loading, the event queue) and hands it
  * over as the [SettingsPageScope].
  */
-@HiltViewModel
-class SettingsViewModel @Inject constructor(
+class SettingsViewModel(
     private val pages: SettingsPages,
     private val repository: SettingsRepository,
     private val widgetRefreshRequester: WidgetRefreshRequester,

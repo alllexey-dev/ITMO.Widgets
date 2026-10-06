@@ -1,31 +1,41 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.core.app_unofficial_notice
+import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_policy_title
+import dev.alllexey.itmowidgets.shared.feature.settings.settings_restart_onboarding_title
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 /** The maintenance page built and handled by [MaintenancePageProvider]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MaintenancePageProviderTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `maintenance offers a replay that resets the flag and leaves the overlay`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun maintenanceOffersAReplayThatResetsTheFlagAndLeavesTheOverlay() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.MAINTENANCE)
             advanceUntilIdle()
             assertEquals(
-                UiText.Resource(R.string.settings_restart_onboarding_title),
+                UiText.Res(Res.string.settings_restart_onboarding_title),
                 fixture.viewModel.action(SettingRowId.RESTART_ONBOARDING).title
             )
 
@@ -38,8 +48,8 @@ class MaintenancePageProviderTest {
         }
 
     @Test
-    fun `maintenance links the privacy policy before the version and says the app is unofficial`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun maintenanceLinksThePrivacyPolicyBeforeTheVersionAndSaysTheAppIsUnofficial() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.MAINTENANCE)
             advanceUntilIdle()
 
@@ -49,11 +59,11 @@ class MaintenancePageProviderTest {
                 keys.takeLast(2)
             )
             assertEquals(
-                UiText.Resource(R.string.settings_privacy_policy_title),
+                UiText.Res(Res.string.settings_privacy_policy_title),
                 fixture.viewModel.action(SettingRowId.PRIVACY_POLICY).title
             )
             assertEquals(
-                UiText.Resource(R.string.app_unofficial_notice),
+                UiText.Res(CoreRes.string.app_unofficial_notice),
                 fixture.viewModel.uiState.value.sections.single().footer
             )
 
@@ -62,7 +72,7 @@ class MaintenancePageProviderTest {
         }
 
     @Test
-    fun `the replay action stays out of every other page`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theReplayActionStaysOutOfEveryOtherPage() = runTest(main.dispatcher) {
         val fixture = createFixture(page = SettingsPage.ROOT)
         advanceUntilIdle()
 

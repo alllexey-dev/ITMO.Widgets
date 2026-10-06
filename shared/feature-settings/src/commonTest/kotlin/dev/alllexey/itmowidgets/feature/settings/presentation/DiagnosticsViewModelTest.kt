@@ -3,29 +3,35 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticEntry
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticLevel
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
-import java.time.LocalDateTime
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlinx.datetime.LocalDateTime
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DiagnosticsViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
 
-    private val time = FixedAcademicTime(LocalDateTime.of(2026, 9, 16, 12, 0))
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
+
+    private val time = FixedAcademicTime(LocalDateTime(2026, 9, 16, 12, 0))
 
     @Test
-    fun `entries render in the academic zone and export as plain text`() = runTest(mainDispatcherRule.dispatcher) {
+    fun entriesRenderInTheAcademicZoneAndExportAsPlainText() = runTest(main.dispatcher) {
         val diagnostics = RecordingDiagnostics()
         diagnostics.entries.value = listOf(
             DiagnosticEntry(Instant.parse("2026-09-16T09:04:29Z"), DiagnosticLevel.ERROR, "Sync", "failed", "java.io.IOException: timeout")

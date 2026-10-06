@@ -1,22 +1,30 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CustomSpoilerViewModelTest {
-    @get:Rule val main = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `save updates state and writes exactly once even with repeated taps`() = runTest(main.dispatcher) {
+    fun saveUpdatesStateAndWritesExactlyOnceEvenWithRepeatedTaps() = runTest(main.dispatcher) {
         val repository = FakeCustomSpoilerRepository()
         val vm = CustomSpoilerViewModel(repository)
         advanceUntilIdle()
@@ -34,7 +42,7 @@ class CustomSpoilerViewModelTest {
     }
 
     @Test
-    fun `failed replacement preserves configured image`() = runTest(main.dispatcher) {
+    fun failedReplacementPreservesConfiguredImage() = runTest(main.dispatcher) {
         val repository = FakeCustomSpoilerRepository(hasImage = true)
         val vm = CustomSpoilerViewModel(repository)
         advanceUntilIdle()
@@ -46,7 +54,7 @@ class CustomSpoilerViewModelTest {
     }
 
     @Test
-    fun `reset clears custom image`() = runTest(main.dispatcher) {
+    fun resetClearsCustomImage() = runTest(main.dispatcher) {
         val repository = FakeCustomSpoilerRepository(hasImage = true)
         val vm = CustomSpoilerViewModel(repository)
         advanceUntilIdle()
