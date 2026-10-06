@@ -140,11 +140,26 @@
 
 ## Разработчикам
 
+Gradle запускается одной командой `scripts/verify.sh`. Она берёт слот сборки `scripts/slot.sh` (на macOS машина делится между параллельными сборками; на Linux и в CI команда идёт сразу), подставляет JDK, Android SDK и MyItmoApi и последней строкой печатает `VERIFY A <режим> PASS|FAIL <секунды>s <коммит>`.
+
 ```bash
-./gradlew :app:testGithubDebugUnitTest :app:lintGithubDebug :app:assembleGithubDebug
+scripts/verify.sh quick                       # check-docs, тесты всех модулей, Konsist, lintGithubDebug, debug-сборки github и play
+scripts/verify.sh full                        # quick, lintPlayDebug и iOS klibs
+scripts/verify.sh klibs [<module>]            # klibs iosSimulatorArm64 всех shared-модулей или одного, без Xcode
+scripts/verify.sh shots <module>|app|all      # скриншот-тесты Roborazzi на JVM; --record перезаписывает эталоны
+scripts/verify.sh ui <Class>[,<Class>...]|all # инструментальные тесты :app на эмуляторе пула
+scripts/verify.sh ui @platform                # платформенные тесты под Android Test Orchestrator
+scripts/verify.sh ship                        # проверка перед релизом через scripts/ship-check.sh
+scripts/verify.sh run -- <аргументы Gradle>   # отдельные задачи Gradle
 ```
 
-Нужен JDK 17+. Debug-сборка ходит на dev-сервер, release — на боевой. Сборка `github` выходит APK на GitHub, `play` — AAB для Google Play. Описание архитектуры, настроек и каждой фичи — в [docs/README.md](docs/README.md), правила для контрибьюторов и агентов — в [AGENTS.md](AGENTS.md), история изменений — в [CHANGELOG.md](CHANGELOG.md).
+- **JDK.** Для запуска Gradle нужен JDK 17+. На macOS `verify.sh` сам берёт JDK 21 и `~/Library/Android/sdk`, если `JAVA_HOME` и `ANDROID_HOME` не заданы. Демон Gradle работает на JetBrains JDK 21 из `gradle/gradle-daemon-jvm.properties` и скачивает его сам.
+- **CI.** [android-ci](.github/workflows/android-ci.yml) на каждом PR и push в `v2.3/next` и `master` запускает `verify.sh quick`, `verify.sh shots all` и iOS klibs; значок CI вверху страницы показывает `master`. Ночной [android-nightly](.github/workflows/android-nightly.yml) гоняет платформенные тесты на Gradle Managed Device.
+- **MyItmoApi.** Приложение собирается с MyItmoApi 2.x из исходников, коммит закреплён в `gradle/myitmoapi.ref`. Склонируйте [my-itmo-api](https://github.com/alllexey-dev/my-itmo-api), переключитесь на этот коммит и передайте путь: `MYITMOAPI_DIR=<checkout> scripts/verify.sh quick` или `scripts/verify.sh run -- -PmyItmoApiDir=<checkout> <задачи>`. Так же делает CI. `~/.m2` и `publishToMavenLocal` не нужны. Релизные сборки берут опубликованный артефакт с `-PmyItmoApiFromCentral=true`, когда MyItmoApi 2.x выйдет в Maven Central.
+- **Скриншоты.** `scripts/verify.sh shots <module>` сравнивает экраны с эталонами в `screenshots/` модуля, `shots all` проверяет все модули, как CI. После намеренного изменения эталоны перезаписывает `--record`; подробности в [docs/design.md](docs/design.md#running-the-visual-tests).
+- **Инструментальные тесты** запускаются только на эмуляторе пула, не на телефоне: `scripts/emulator.sh up --api 35` (или `--api 30`) печатает `ANDROID_SERIAL=emulator-<port>`, затем `ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui <Class>`, в конце `scripts/emulator.sh down`. `verify.sh ui` отказывается работать с чем угодно, кроме эмулятора. AVD пула создаются один раз командой `scripts/emulator.sh init`. Список платформенных тестов для `ui @platform` лежит в `app/src/androidTest/platform-tests.txt`.
+
+Debug-сборка ходит на dev-сервер, release — на боевой. Сборка `github` выходит APK на GitHub, `play` — AAB для Google Play. Описание архитектуры, настроек и каждой фичи — в [docs/README.md](docs/README.md), правила для контрибьюторов и агентов — в [AGENTS.md](AGENTS.md), история изменений — в [CHANGELOG.md](CHANGELOG.md).
 
 ## Обратная связь
 
