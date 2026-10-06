@@ -11,12 +11,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /**
  * A one-line label in a small container. Without [tone] it is the neutral badge of an own item (`моя`) or a count, on
  * `secondaryContainer`; with [tone] it is a status (`На проверке`, `Отклонён`) in that colour over a 12 % wash of it,
- * fully rounded, since content-based palettes make the tone's container too dark for the tone as text.
+ * fully rounded, since content-based palettes make the tone's container too dark for the tone as text. Under the iOS
+ * style both are capsules in the iOS type.
  */
 @Composable
 fun Pill(
@@ -24,7 +26,8 @@ fun Pill(
     modifier: Modifier = Modifier,
     tone: Color? = null,
 ) {
-    val shape = if (tone == null) ItmoTheme.shapes.small else ItmoTheme.shapes.full
+    val capsule = tone != null || ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
+    val shape = if (capsule) ItmoTheme.shapes.full else ItmoTheme.shapes.small
     val container = tone?.copy(alpha = STATUS_WASH_ALPHA) ?: ItmoTheme.colorScheme.secondaryContainer
     Text(
         text,

@@ -27,6 +27,10 @@ data class ItmoIosColors(
     val systemGreen: Color,
     /** `systemRed`: destructive actions. */
     val systemRed: Color,
+    /** `tertiarySystemFill`: the track of a segmented control (DS-IOS-02, read off its render). */
+    val tertiarySystemFill: Color,
+    /** The selected segment's thumb of a segmented control: read off its render (DS-IOS-02). */
+    val segmentedThumb: Color,
 ) {
     companion object {
         val Light = ItmoIosColors(
@@ -38,6 +42,8 @@ data class ItmoIosColors(
             systemFill = Color(0x33787880),
             systemGreen = Color(0xFF34C759),
             systemRed = Color(0xFFFF383C),
+            tertiarySystemFill = Color(0x1F767680),
+            segmentedThumb = Color(0xFFFFFFFF),
         )
 
         val Dark = ItmoIosColors(
@@ -49,6 +55,8 @@ data class ItmoIosColors(
             systemFill = Color(0x5C787880),
             systemGreen = Color(0xFF30D158),
             systemRed = Color(0xFFFF4245),
+            tertiarySystemFill = Color(0x3D767680),
+            segmentedThumb = Color(0xFF5A5A5E),
         )
 
         fun of(dark: Boolean): ItmoIosColors = if (dark) Dark else Light

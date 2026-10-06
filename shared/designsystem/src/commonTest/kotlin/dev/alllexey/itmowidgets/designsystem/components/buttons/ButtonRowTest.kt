@@ -13,6 +13,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
@@ -53,11 +54,33 @@ class ButtonRowTest {
         assertTouchTargets()
     }
 
+    @Test
+    fun iosButtonsStackByTheSameRule() = runComposeUiTest {
+        setContent { Answer(widthDp = 320, fontScale = 1.3f, style = ItmoPlatformStyle.Ios) }
+
+        val accept = onNodeWithText(ACCEPT).getBoundsInRoot()
+        val decline = onNodeWithText(DECLINE).getBoundsInRoot()
+
+        assertTrue(decline.top > accept.bottom, "stacked: $accept above $decline")
+        assertTouchTargets(ItmoPlatformStyle.Ios.minTouchTarget)
+    }
+
+    @Test
+    fun iosButtonsShareARowWhenTheyFit() = runComposeUiTest {
+        setContent { Answer(widthDp = 411, fontScale = 1f, style = ItmoPlatformStyle.Ios) }
+
+        val accept = onNodeWithText(ACCEPT).getBoundsInRoot()
+        val decline = onNodeWithText(DECLINE).getBoundsInRoot()
+
+        assertEquals(accept.top, decline.top)
+        assertTrue(accept.right < decline.left)
+    }
+
     @Composable
-    private fun Answer(widthDp: Int, fontScale: Float) {
+    private fun Answer(widthDp: Int, fontScale: Float, style: ItmoPlatformStyle = ItmoPlatformStyle.Material) {
         val density = LocalDensity.current
         CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
-            ItmoTheme {
+            ItmoTheme(platformStyle = style) {
                 ButtonRow(Modifier.width((widthDp - 2 * CARD_INSET_DP).dp)) {
                     ProgressButton(ACCEPT, onClick = {})
                     ProgressButton(DECLINE, onClick = {}, style = ProgressButtonStyle.Tonal)
