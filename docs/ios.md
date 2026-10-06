@@ -36,7 +36,7 @@ xcodegen --version
 | `iosApp/project.yml` | XcodeGen spec: targets, the Kotlin Run Script, the `ITMOWidgets` scheme. The generated `.xcodeproj` is ignored |
 | `iosApp/Config/` | `Base.xcconfig` (identifiers, versions, signing defaults) and one xcconfig per target |
 | `iosApp/Resources/` | `Info/` plists and the entitlements of each target, unsigned and `.signed` |
-| `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI) |
+| `iosApp/Sources/` | the app target `ITMOWidgets` (SwiftUI); `Bridge/` holds the Kotlin side's Swift glue (Swift bridge) |
 | `iosApp/Extensions/Widgets/` | the widget extension `ITMOWidgetsWidgets` (WidgetKit, Controls; no Kotlin) |
 | `iosApp/Extensions/NotificationService/` | the notification service extension `ITMOWidgetsNotificationService` (no Kotlin) |
 | `iosApp/Shared/` | sources of all three targets: the generated string tables and `AppSymbol.swift`, the custom symbol images |
@@ -44,7 +44,7 @@ xcodegen --version
 | `iosApp/Tests/UnitTests/` | `ITMOWidgetsTests`, hosted in the app |
 | `iosApp/Tests/SnapshotTests/` | `SnapshotTests`, hosted in the app: SwiftUI and widget entry view snapshots (swift-snapshot-testing), references in `__Snapshots__/` |
 | `iosApp/Tests/UITests/` | `UITests` (XCUITest): smoke tests and review screenshots |
-| `shared/ios/` | the umbrella framework `Shared` (static) over every shared module; it exports `:shared:core` |
+| `shared/ios/` | the umbrella framework `Shared` (static, with SKIE) over every shared module; it exports `:shared:core`; the Koin start, `IosPlatform`, the ViewModel store and the Compose screen hosts |
 | `scripts/ios/` | `env.sh` (pins), `test.sh` (build and test), `check-*.sh` (source checks), `screenshots.sh` (review screenshots) |
 
 Targets use directory globs: a new Swift file in a target directory needs no `project.yml` edit. Only the app links
@@ -263,6 +263,39 @@ Network and log. `darwinHttpEngine()` is the Ktor engine of every iOS client: no
 handling, no URL cache (SP-15a, SP-15b); clients read cookies with Ktor's `setCookie()` and set
 `followRedirects = false` where a redirect must surface. `OsLogAppLog` writes `AppLog` to unified logging, subsystem
 = the bundle ID, category = the tag.
+
+## Swift bridge
+
+Swift reaches Kotlin through the umbrella `Shared` and SKIE 0.10.15 (`shared/ios/build.gradle.kts`): a sealed class
+or interface switches as a Swift enum through `onEnum(of:)`, a Kotlin enum is a Swift enum (`AppIcon.allCases`), a
+suspend function is `async throws`, a `Flow` is an `AsyncSequence` (`SkieSwiftFlow`, `SkieSwiftStateFlow` with
+`value`). SKIE's analytics upload is off.
+
+- Exports. A type of an exported module has its own name in Swift (`UiText`, `AppIcon`); any other keeps a module
+  prefix (`Lifecycle_viewmodelViewModel`, typealiased as `SharedViewModel`). Only `:shared:core` is exported; the IO
+  card of a SwiftUI-owned ViewModel exports its feature module. Each export grows the header and the link.
+- Koin start. `App.init` calls `startKoinIos(platform: AppPlatform())` after the app locale: one global graph over
+  `IosKoinModules.all(platform)` (`shared/ios/src/iosMain/.../ios/di/`), `allowOverride(false)`. A second call keeps
+  the running graph and returns false. Each feature adds one line to `IosKoinModules`; its bindings live in
+  `shared/feature-<x>/src/iosMain/.../di/<Area>IosModule.kt`.
+- `IosPlatform` is the Kotlin interface Swift implements once, `iosApp/Sources/Bridge/AppPlatform.swift`: the core
+  graph's `IosCoreHost` (WidgetKit reloads, the top view controller, WebKit clearing) and `installedWidgetKinds`
+  (WidgetKit's current configurations).
+- Reading the graph. Koin's `get` is reified, so Swift names the type: `IosKoin.shared.get(protocol: X.self)` for an
+  interface, `get(type: X.self)` for a class. A missing definition crashes.
+- SwiftUI-owned ViewModels. `ObservableViewModel<Model, State>` (`iosApp/Sources/Bridge/`) is `@Observable` and owns
+  a `ScreenViewModelStore`. `ObservableViewModel(X.self, state: \.uiState)` resolves `X` from Koin on first use; a
+  view holds it in `@State`; `.observing(model)` follows `uiState` in the view's task;
+  `.onEvents(of: model, \.events) { event in ... }` delivers the one-shot events. Its `deinit` clears the store,
+  which runs `onCleared` and cancels `viewModelScope`; nothing else does on iOS. These ViewModels get no
+  `SavedStateHandle`: arguments are Koin parameters (`ScreenViewModelStore.resolve(type:parameters:)`).
+- Compose screens. Only `shared/ios` builds a `ComposeUIViewController`: `screens/ScreenControllers.kt` wraps the
+  content in `ItmoTheme` and the host's `LocalPlatformActions`, and each feature's IO card adds
+  `screens/<Feature>Screens.kt` with the factories Swift calls. A CMP screen's `koinViewModel()` uses the store
+  Compose Multiplatform gives each controller.
+- `ITMOWidgetsTests/BridgeTests` checks the graph start, a `StateFlow` update re-rendering a hosted SwiftUI view,
+  the ViewModel cleared when the view leaves the hierarchy, and events as Swift enums, over `BridgeProbeViewModel`, a
+  probe in `shared/ios` that no screen uses.
 
 ## Build and test
 
