@@ -20,7 +20,7 @@ class SchedulePreferencesRepositoryImplTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun `schedule preference defaults off and observes storage changes without custom services`() = runTest {
+    fun schedulePreferenceDefaultsOffAndObservesStorageChangesWithoutCustomServices() = runTest {
         val file = temporaryFolder.newFile("settings.preferences_pb").apply { delete() }
         val dataStore = PreferenceDataStoreFactory.create(scope = backgroundScope, produceFile = { file })
         val storage = ScheduleCheckPreferences(dataStore)

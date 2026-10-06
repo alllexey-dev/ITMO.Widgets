@@ -9,10 +9,9 @@ import kotlinx.coroutines.CancellationException
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
-class CustomServicesRepositoryImpl @Inject constructor(
+class CustomServicesRepositoryImpl(
     private val servicesOptIn: ServicesOptInPreferences,
     private val gate: BackendGate,
     private val identitySync: BackendIdentitySync,

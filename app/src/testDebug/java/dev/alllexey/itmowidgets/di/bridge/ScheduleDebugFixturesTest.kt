@@ -22,6 +22,8 @@ import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
+import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
@@ -65,11 +67,11 @@ class ScheduleDebugFixturesTest {
         assertSame(core.academicTimeProvider(), koin.get<AcademicTimeProvider>())
         assertSame(hilt.scheduleRepository(), koin.get<ScheduleRepository>())
         assertSame(hilt.scheduleChangesRepository(), koin.get<ScheduleChangesRepository>())
-        assertSame(core.schedulePreferencesRepository(), koin.get<SchedulePreferencesRepository>())
+        assertSame(koin.get<SchedulePreferencesRepositoryImpl>(), koin.get<SchedulePreferencesRepository>())
         assertSame(core.pendingSportBookingsRepository(), koin.get<PendingSportBookingsRepository>())
         assertSame(core.coreCalendarSync(), koin.get<CalendarSync>())
         assertSame(hilt.lessonFriendsRepository(), koin.get<LessonFriendsRepository>())
-        assertSame(core.customServicesRepository(), koin.get<CustomServicesRepository>())
+        assertSame(koin.get<CustomServicesRepositoryImpl>(), koin.get<CustomServicesRepository>())
         assertSame(
             ReviewsBridgeEntryPoint.from(application).teacherLevelsRepository(),
             koin.get<TeacherLevelsRepository>(),

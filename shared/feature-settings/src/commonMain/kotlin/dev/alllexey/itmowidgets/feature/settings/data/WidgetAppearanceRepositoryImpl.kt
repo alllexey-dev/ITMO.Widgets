@@ -7,11 +7,10 @@ import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
-class WidgetAppearanceRepositoryImpl @Inject constructor(
+class WidgetAppearanceRepositoryImpl(
     private val widgetSettings: WidgetSettingsPreferences,
     private val qrSettings: QrSettingsPreferences,
     private val widgetRefreshRequester: WidgetRefreshRequester

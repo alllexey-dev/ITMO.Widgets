@@ -11,24 +11,20 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.WidgetRefreshCoordinator
 import dev.alllexey.itmowidgets.app.DefaultWidgetPreviewFactory
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
-import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
-import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
 import dev.alllexey.itmowidgets.feature.settings.data.AndroidBackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.data.AndroidQuickSettingsTileAccess
-import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.data.CustomSpoilerRepositoryImpl
-import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
-import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
-import dev.alllexey.itmowidgets.feature.settings.data.WidgetAppearanceRepositoryImpl
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
-import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import javax.inject.Singleton
 
+/**
+ * The Android side of settings: the widget preview, the custom spoiler store, the platform accesses, the widget
+ * refresher and the version. The settings repositories are Koin's (`settingsDataModule`), bridged by `SettingsBridge`.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SettingsModule {
@@ -39,30 +35,6 @@ abstract class SettingsModule {
     @Binds
     @Singleton
     abstract fun bindCustomSpoilerRepository(impl: CustomSpoilerRepositoryImpl): CustomSpoilerRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindSettingsRepository(
-        impl: SettingsRepositoryImpl
-    ): SettingsRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindSchedulePreferencesRepository(
-        impl: SchedulePreferencesRepositoryImpl
-    ): SchedulePreferencesRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindWidgetAppearanceRepository(
-        impl: WidgetAppearanceRepositoryImpl
-    ): WidgetAppearanceRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindCustomServicesRepository(
-        impl: CustomServicesRepositoryImpl
-    ): CustomServicesRepository
 
     @Binds
     abstract fun bindBackgroundWorkAccess(impl: AndroidBackgroundWorkAccess): BackgroundWorkAccess
