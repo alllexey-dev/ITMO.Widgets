@@ -15,7 +15,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -42,6 +41,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 @AndroidEntryPoint
 class SportMyFragment : Fragment(), SportBookingListener {
@@ -71,7 +71,7 @@ class SportMyFragment : Fragment(), SportBookingListener {
     private var displayedBonus = 0
     private var displayedTotal = 0
 
-    private val viewModel: SportMyViewModel by activityViewModels()
+    private val viewModel: SportMyViewModel by activityViewModel()
 
     @Inject
     lateinit var timeProvider: AcademicTimeProvider

@@ -9,6 +9,7 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
@@ -19,6 +20,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
+import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -37,6 +39,7 @@ import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import kotlin.time.Clock
+import kotlinx.coroutines.CoroutineScope
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -98,6 +101,12 @@ interface CoreBridgeEntryPoint {
     fun schedulePreferencesRepository(): SchedulePreferencesRepository
     fun pendingSportBookingsRepository(): PendingSportBookingsRepository
     fun teacherLessonsGateway(): TeacherLessonsGateway
+    /** The scope that outlives screens, for work that must finish after the caller is gone. */
+    @ApplicationScope
+    fun applicationScope(): CoroutineScope
+
+    /** The schedule's widget refresh after a sport booking changes it; the refresh gateway is bridged above. */
+    fun scheduleWidgetRefreshRequester(): ScheduleWidgetRefreshRequester
 
     companion object {
         fun from(context: Context): CoreBridgeEntryPoint =
@@ -145,4 +154,10 @@ val coreBridgeModule = module {
         CoreBridgeEntryPoint.from(androidContext()).pendingSportBookingsRepository()
     }
     single<TeacherLessonsGateway> { CoreBridgeEntryPoint.from(androidContext()).teacherLessonsGateway() }
+    // Unqualified in Koin: the application scope is the only CoroutineScope of the graph; a second one fails the
+    // start under allowOverride(false).
+    single<CoroutineScope> { CoreBridgeEntryPoint.from(androidContext()).applicationScope() }
+    single<ScheduleWidgetRefreshRequester> {
+        CoreBridgeEntryPoint.from(androidContext()).scheduleWidgetRefreshRequester()
+    }
 }

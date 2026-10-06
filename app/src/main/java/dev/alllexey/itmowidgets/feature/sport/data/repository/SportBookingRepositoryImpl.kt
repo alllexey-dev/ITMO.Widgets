@@ -63,8 +63,9 @@ class SportBookingRepositoryImpl @Inject constructor(
         val queueEntries = queueState.valueOrNull().orEmpty()
         val friendsBookings = friendsState.valueOrNull().orEmpty()
         val friendsBookingsByLesson = friendsBookings.groupBy {
-            if (it.entry is SportAutoSignEntry) it.entry.realLesson?.id ?: -it.entry.targetLesson.id
-            else it.entry?.targetLesson?.id ?: it.lessonId
+            val entry = it.entry
+            if (entry is SportAutoSignEntry) entry.realLesson?.id ?: -entry.targetLesson.id
+            else entry?.targetLesson?.id ?: it.lessonId
         }
 
         val bookingsByLesson = bookings.valueOrNull().orEmpty()
