@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.reviews.data.demo
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -32,7 +32,7 @@ class ReviewsDemoGateTest {
         val demo = FakeDemoMode(active = true)
         // Without the stored opt-in the demo still reads as connected.
         val repository = TeacherReviewsRepositoryImpl(
-            FakeBackendGate(optedIn = false, demo), unreachable<ItmoWidgetsApi>(), backgroundScope, FixedAcademicTime(), demo,
+            FakeBackendGate(optedIn = false, demo), unreachable<TeacherReviewsApi>(), backgroundScope, FixedAcademicTime(), demo,
             dispatchers = dispatchers
         )
         val refused = AppResult.Failure(AppError.DemoUnavailable)

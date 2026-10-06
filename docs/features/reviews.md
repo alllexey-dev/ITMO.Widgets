@@ -38,6 +38,11 @@ and `openReviewReport`, so the two features never import each other.
 
 ## Connection and cache
 
+`TeacherReviewsRepositoryImpl` and `TeacherLevelsRepositoryImpl` call Core
+2.0's `TeacherReviewsApi` (`BackendClient.reviews`: `teacherReviews`,
+`saveMyTeacherReview`, `deleteMyTeacherReview`, `voteTeacherReview`,
+`reportTeacherReview`, `teacherSummaryLevels`). `DemoMode` is checked first and
+every call passes `BackendGate.mayCallBackend()`.
 `TeacherReviewsRepositoryImpl` checks the custom-services opt-in before every
 read and mutation. Without it the repository immediately returns
 `AppError.CustomServicesDisabled` and makes no request. Its per-ISU memory cache
@@ -58,8 +63,11 @@ updates without a reload. Input is checked before any request, as Backend
 checks it: text after `\r\n` → `\n` and `trim()` of 30–3000 characters, a
 subject up to 200, lengths in code points, at most 50 positive `flowIds`
 (sorted), a UUID review id, a vote of -1, 0 or 1 and a comment up to 500.
-Invalid input fails with `AppError.Unknown` without a request; a Backend
-`restricted` answer is `AppError.Restricted`.
+Invalid input fails with `AppError.Unknown` without a request. Backend errors
+map through `BackendException.asAppError()`: 401 -> `Unauthorized`, 403
+`restricted` -> `Restricted`, any other 403 -> `Forbidden`, 404 -> `NotFound`,
+no answer -> `Network`, anything else, including 409 and an answer that breaks
+the contract, -> `Unknown`.
 
 ## Mapping
 
@@ -83,6 +91,14 @@ Invalid input fails with `AppError.Unknown` without a request; a Backend
   are skipped and repeats dropped, blank pros, cons and reasons are dropped, and
   a summary with a blank description is no summary. `showsLevel` is true for
   confidence `MEDIUM` or `HIGH`.
+- Core 2.0 decodes a value a newer Backend adds as `UNKNOWN`; the app never
+  fails on one. A review of an unknown kind is not shown, an unknown own status
+  shows as `PENDING`, a scale of an unknown kind or value is left out (its row
+  reads `мало данных`), and an unknown tone or confidence keeps the summary with
+  its tone hidden (`LOW`). In the levels an unknown tone is stored as no level.
+- `TeacherReviewMappers.kt` is the one place that reads Core's reviews types;
+  authors map through `UserData.toUserSummary()`
+  (`core/model/ClientUserMapping.kt`), and `ReviewReportReason` maps by name.
 
 ## AI summary
 
@@ -139,7 +155,8 @@ implementation:
   `filesDir/teacher_levels/levels.json` (format 1, kotlinx JSON that 2.2 also
   reads, atomic writes, excluded from backup and device transfer) for a day, and asks Backend only for missing or
   older teachers, in sorted batches of 50
-  (`GET /api/teachers/summary-levels`). Only ISU numbers in
+  (`GET /api/teachers/summary-levels?isu=a&isu=b`, one repeated `isu`
+  parameter per teacher). Only ISU numbers in
   `100000..9999999` are sent; Backend would reject a whole batch with another
   one, and such a teacher has no summary anyway;
 - serializes calls with a mutex, so screens asking at once send one request;
@@ -268,9 +285,15 @@ Handing ITMO.Widgets reviews over to the Reviews project is separate work.
 
 ## Tests
 
+`TeacherReviewsRepositoryRemoteTest` runs both repositories over the real Core
+2.0 client and a MockEngine: both kinds with a summary, the routes and bodies of
+save, delete, vote and report with the updated reviews, 51 teachers in two
+batches with a repeated `isu`, an out-of-range ISU never sent, a failed batch
+writing nothing, 401, 403, 403 `restricted`, 404, 409 and 5xx, and zero
+requests without the opt-in or in the demo.
 `TeacherReviewsRepositoryImplTest` covers mapping of both kinds and of the
-summary (unknown tags, blank points, `LOW` confidence), opt-in and no-network
-behavior, input checks before the network, mutation routes, the cache and
+summary (unknown tags, blank points, `LOW` confidence, unknown values), opt-in
+and no-network behavior, input checks before the network, mutation routes, the cache and
 `observeUpdates()` after opt-out and session clear, errors and cancellation.
 `TeacherLevelsRepositoryImplTest` and `TeacherLevelsFileStoreTest` cover the
 levels: the opt-in, the day cache, batches, the ISU range, failures and answers

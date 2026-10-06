@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.reviews.data
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.feature.reviews.data.demo.DemoReviews
@@ -26,7 +26,7 @@ import kotlin.time.Duration.Companion.days
 @Singleton
 class TeacherLevelsRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val api: TeacherReviewsApi,
     private val store: TeacherLevelsFileStore,
     private val clock: Clock,
     private val demo: DemoMode,
@@ -78,8 +78,10 @@ class TeacherLevelsRepositoryImpl @Inject constructor(
     private suspend fun fetch(isus: Set<Int>, now: Long): Map<Int, StoredLevel> {
         val levels = mutableMapOf<Int, TeacherLevel>()
         isus.sorted().chunked(BATCH).forEach { batch ->
-            val answer = checkNotNull(widgetsApi.teacherSummaryLevels(batch).data) { "Backend returned no levels" }
-            answer.forEach { if (it.teacherIsu in batch) levels[it.teacherIsu] = it.level.toModel() }
+            api.teacherSummaryLevels(batch).forEach { answer ->
+                val level = answer.level.toModel()
+                if (answer.teacherIsu in batch && level != null) levels[answer.teacherIsu] = level
+            }
         }
         return isus.associateWith { isu -> StoredLevel(levels[isu]?.name, now) }
     }
