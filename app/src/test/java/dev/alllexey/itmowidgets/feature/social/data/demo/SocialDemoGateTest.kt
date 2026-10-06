@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.social.data.demo
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.friends.FriendsApi
+import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -31,13 +32,14 @@ class SocialDemoGateTest {
     private val dispatchers = mainDispatcherRule.appDispatchers
 
     private val demo = FakeDemoMode(active = true)
-    private val backend = unreachable<ItmoWidgetsApi>()
+    private val users = unreachable<UsersApi>()
+    private val friendships = unreachable<FriendsApi>()
     // Without the stored opt-in the demo still reads as connected.
     private val gate = FakeBackendGate(optedIn = false, demo)
 
     @Test
     fun `friends, requests and profiles come from the demo set and actions are refused`() = runTest {
-        val social = SocialRepositoryImpl(gate, backend, backgroundScope, demo, dispatchers)
+        val social = SocialRepositoryImpl(gate, users, friendships, backgroundScope, demo, dispatchers)
 
         social.refresh()
 
@@ -55,7 +57,7 @@ class SocialDemoGateTest {
 
     @Test
     fun `people and the directory search come from the demo set`() = runTest {
-        val social = SocialRepositoryImpl(gate, backend, backgroundScope, demo, dispatchers)
+        val social = SocialRepositoryImpl(gate, users, friendships, backgroundScope, demo, dispatchers)
         val persons = PersonRepositoryImpl(unreachablePersonalitiesClient(), demo, dispatchers)
         val search = PeopleSearchRepositoryImpl(unreachablePersonalitiesClient(), social, demo, dispatchers)
 
