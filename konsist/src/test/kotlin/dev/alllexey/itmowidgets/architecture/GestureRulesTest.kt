@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.architecture.ArchitectureScope.testFiles
 import org.junit.Test
 
 /**
- * The horizontal swipe between the bottom tabs (ADR 0020 amendment, design.md "Tab swipe"): inner horizontal content
+ * The horizontal swipe between the bottom tabs (design.md "Tab swipe"): inner horizontal content
  * hands the swipe over through the design system's gesture modifiers, and the system's back edges stay the system's.
  */
 class GestureRulesTest {

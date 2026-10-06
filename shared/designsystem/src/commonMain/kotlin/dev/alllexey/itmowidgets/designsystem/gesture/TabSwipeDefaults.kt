@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.designsystem.gesture
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** The one set of numbers both shells use for the horizontal swipe between the bottom tabs (design.md, Tab swipe). */
+/** The numbers of the Android shell's horizontal swipe between the bottom tabs (design.md, Tab swipe). */
 object TabSwipeDefaults {
 
     /**
@@ -19,8 +19,9 @@ object TabSwipeDefaults {
     const val pagesPerSwipe: Int = 1
 
     /**
-     * iOS only: the tab swipe never starts this close to the leading edge, which belongs to the back swipe. Android
-     * needs no dead zone, because its back edges are the system's and win over any app gesture.
+     * Unused: iOS has no tab swipe (design.md, Tab swipe). A shell whose own gestures own the leading edge would never
+     * start a tab swipe this close to it. Android needs no dead zone, because its back edges are the system's and win
+     * over any app gesture.
      */
     val edgeDeadZone: Dp = 24.dp
 }

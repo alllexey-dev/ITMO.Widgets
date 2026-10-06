@@ -70,7 +70,7 @@ class TabPagerTestActivity : ComponentActivity() {
     }
 }
 
-/** The tab pager of the Compose shell with fake tab roots (design.md "Tab swipe", ADR 0020 amendment). */
+/** The tab pager of the Compose shell with fake tab roots (design.md "Tab swipe"). */
 @RunWith(RobolectricTestRunner::class)
 @Config(application = PreviewHostApplication::class, qualifiers = "w360dp-h640dp")
 class TabPagerTest {

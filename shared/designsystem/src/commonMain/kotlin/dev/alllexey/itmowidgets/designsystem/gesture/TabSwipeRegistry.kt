@@ -6,9 +6,9 @@ import androidx.compose.ui.geometry.Rect
 
 /**
  * Where on a tab root a horizontal drag belongs to the content, for a shell whose tab swipe sits outside Compose's
- * nested scrolling (iOS asks it before its pan begins). [tabSwipeHandover] and [tabSwipeBlocked] keep their zones here
- * in root pixels while they are attached. Android's tab pager never reads it: nested scrolling already does the job.
- * Main thread only, like the composition that fills it.
+ * nested scrolling and would ask it before its pan begins; none does yet, since iOS has no tab swipe.
+ * [tabSwipeHandover] and [tabSwipeBlocked] keep their zones here in root pixels while they are attached. Android's tab
+ * pager never reads it: nested scrolling already does the job. Main thread only, like the composition that fills it.
  */
 class TabSwipeRegistry {
 
