@@ -34,6 +34,7 @@ import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
 import java.io.IOException
+import java.util.Collections
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -52,7 +53,8 @@ class SportGoldenHarness(
 ) {
     val myItmo = mutableMapOf<String, String>()
     val backend = mutableMapOf<String, String>()
-    val requests = mutableListOf<String>()
+    /** Synchronized: MockEngine answers concurrent requests on several threads. */
+    val requests: MutableList<String> = Collections.synchronizedList(mutableListOf())
     val notifications = mutableListOf<String>()
     val gate = FakeBackendGate(optedIn = true)
 
@@ -88,6 +90,13 @@ class SportGoldenHarness(
     val actions = SportActionRepositoryImpl(gate, clients.myItmo, sportApi, noDemo(), dispatchers)
 
     private val clock = FakeClock(wallClock)
+
+    /** The requests [step] sends, in arrival order. */
+    suspend fun requestsOf(step: suspend SportGoldenHarness.() -> Unit): List<String> {
+        val start = requests.size
+        step()
+        return synchronized(requests) { requests.drop(start) }
+    }
 
     fun pushHandler(auto: Boolean) = SportSignPushHandler(
         auto, actions, sportApi,
