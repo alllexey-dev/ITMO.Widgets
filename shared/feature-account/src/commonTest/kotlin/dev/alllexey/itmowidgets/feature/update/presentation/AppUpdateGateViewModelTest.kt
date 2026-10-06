@@ -1,29 +1,33 @@
 package dev.alllexey.itmowidgets.feature.update.presentation
 
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.update.FakeAppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Rule
-import org.junit.Test
-import kotlin.time.Clock
-import kotlin.time.Instant
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class AppUpdateGateViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `offers the pending update once per process`() = runTest(mainDispatcherRule.dispatcher) {
+    fun offersThePendingUpdateOncePerProcess() = runTest(main.dispatcher) {
         val repository = FakeAppUpdateRepository(update())
         val viewModel = createViewModel(repository)
 
@@ -32,7 +36,7 @@ class AppUpdateGateViewModelTest {
         viewModel.checkForUpdate()
         advanceUntilIdle()
 
-        assertEquals(update(), viewModel.offers.first())
+        assertEquals(update(), viewModel.events.first())
         assertEquals(1, repository.loads)
     }
 

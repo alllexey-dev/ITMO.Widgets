@@ -16,6 +16,9 @@ import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
+import dev.alllexey.itmowidgets.feature.update.di.updateModule
+import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
+import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -45,13 +48,23 @@ class AccountKoinGraphTest {
         assertSame(koin.get<OnboardingRepositoryImpl>(), koin.get<OnboardingRepository>())
     }
 
+    @Test
+    fun `the update repository resolves in Koin to the instance Hilt builds`() {
+        val application = bootApplication()
+
+        assertSame(
+            AccountUpdateBridgeEntryPoint.from(application).appUpdateRepository(),
+            GlobalContext.get().get<AppUpdateRepository>(),
+        )
+    }
+
     /**
      * Onboarding and Me read the services opt-in, which `settingsDataModule` constructs since KM-11e, and Me reads
      * `SocialRepository`, which `socialModule` constructs since KM-11d; the session, the demo switch and the first-run
      * flag come from `authDataModule` and `onboardingDataModule` since KM-11h1.
      */
     @Test
-    fun `the auth, onboarding and Me modules pass the graph check against the release bridges`() {
+    fun `the account modules pass the graph check against the release bridges`() {
         KoinGraphCheck.assertValid(
             KoinModules.bridges,
             listOf(
@@ -62,6 +75,8 @@ class AccountKoinGraphTest {
                 onboardingDataModule,
                 onboardingModule,
                 meModule,
+                webLoginModule,
+                updateModule,
             ),
         )
     }

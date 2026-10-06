@@ -1,11 +1,11 @@
 package dev.alllexey.itmowidgets.feature.weblogin.domain
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class BrowserDescriptionTest {
 
-    @Test fun `desktop browsers are told apart from the Chromium forks`() {
+    @Test fun desktopBrowsersAreToldApartFromTheChromiumForks() {
         assertEquals(BrowserDescription(Browser.CHROME, Platform.MACOS), describeUserAgent(
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"))
         assertEquals(BrowserDescription(Browser.EDGE, Platform.WINDOWS), describeUserAgent(
@@ -22,7 +22,7 @@ class BrowserDescriptionTest {
             "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"))
     }
 
-    @Test fun `mobile systems win over the desktop words inside their strings`() {
+    @Test fun mobileSystemsWinOverTheDesktopWordsInsideTheirStrings() {
         assertEquals(BrowserDescription(Browser.SAFARI, Platform.IOS), describeUserAgent(
             "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1"))
         assertEquals(BrowserDescription(Browser.CHROME, Platform.IPADOS), describeUserAgent(
@@ -33,7 +33,7 @@ class BrowserDescriptionTest {
             "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/130.0 Mobile/15E148 Safari/605.1.15"))
     }
 
-    @Test fun `unknown and missing agents stay unknown`() {
+    @Test fun unknownAndMissingAgentsStayUnknown() {
         assertEquals(BrowserDescription(null, null), describeUserAgent(null))
         assertEquals(BrowserDescription(null, null), describeUserAgent("  "))
         assertEquals(BrowserDescription(null, null), describeUserAgent("curl/8.7.1"))

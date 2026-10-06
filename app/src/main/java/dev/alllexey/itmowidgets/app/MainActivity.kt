@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.os.bundleOf
@@ -69,7 +68,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
     lateinit var installState: InstallStateWatcher
     private var updateDownloaded: Snackbar? = null
 
-    private val updateGate: AppUpdateGateViewModel by viewModels()
+    private val updateGate: AppUpdateGateViewModel by viewModel()
     private val onboardingGate: OnboardingGateViewModel by viewModel()
     private lateinit var binding: ActivityMainBinding
     private lateinit var navigation: MainNavigationCoordinator
@@ -118,7 +117,7 @@ class MainActivity : AppCompatActivity(), AppNavigator {
             .onEach { renderSession(sessionRepository.state.value) }
             .launchIn(lifecycleScope)
         // Only while resumed: opening the offer runs a Fragment transaction.
-        updateGate.offers
+        updateGate.events
             .flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
             .onEach { update -> openScreen(AppScreen.APP_UPDATE, update.toScreenArguments()) }
             .launchIn(lifecycleScope)

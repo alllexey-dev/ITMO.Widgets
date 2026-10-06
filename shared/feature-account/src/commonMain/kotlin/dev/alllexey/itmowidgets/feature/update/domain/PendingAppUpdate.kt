@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.update.domain
 
-import javax.inject.Inject
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
@@ -18,7 +17,7 @@ import kotlin.time.Duration.Companion.days
  * The interval runs on the wall [clock], not the academic time: a debug date
  * override must not hold back or release an offer.
  */
-class PendingAppUpdate @Inject constructor(
+class PendingAppUpdate(
     private val repository: AppUpdateRepository,
     private val clock: Clock
 ) {
