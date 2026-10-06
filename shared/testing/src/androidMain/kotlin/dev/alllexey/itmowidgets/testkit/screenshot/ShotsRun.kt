@@ -22,5 +22,21 @@ object ShotsRun {
     val gallery: File?
         get() = System.getProperty("shots.gallery")?.takeIf(String::isNotBlank)?.let(::File)
 
+    /**
+     * `-Pshots.variant=<name>[,<name>...]` with `-Pshots.out=<absolute dir>` (M3-02a): every preview renders in light
+     * and dark once per named M3E candidate into `<out>/captures/<name>/<module>/`, and the module's contact sheets
+     * into `<out>/<module>_<name>_<appearance>.png`, instead of being compared; the baselines stay untouched.
+     */
+    val variants: List<String>
+        get() = System.getProperty("shots.variant").orEmpty().split(',').map(String::trim).filter(String::isNotEmpty)
+
+    /** `-Pshots.out`: where [variants] render; required with them. */
+    val variantOut: File
+        get() {
+            val dir = System.getProperty("shots.out")?.takeIf(String::isNotBlank)?.let(::File)
+            check(dir != null && dir.isAbsolute) { "-Pshots.variant needs -Pshots.out=<absolute dir>" }
+            return dir
+        }
+
     private const val FULL = "full"
 }
