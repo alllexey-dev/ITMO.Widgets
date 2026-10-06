@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
@@ -50,6 +51,7 @@ interface CoreBridgeEntryPoint {
     fun backendGate(): BackendGate
     fun appDispatchers(): AppDispatchers
     fun sessionRepository(): SessionRepository
+    fun currentUserProvider(): CurrentUserProvider
     fun secureStore(): SecureStore
     fun crossProcessLock(): CrossProcessLock
     fun platformCapabilities(): PlatformCapabilities
@@ -105,6 +107,7 @@ val coreBridgeModule = module {
     single<BackendGate> { CoreBridgeEntryPoint.from(androidContext()).backendGate() }
     single<AppDispatchers> { CoreBridgeEntryPoint.from(androidContext()).appDispatchers() }
     single<SessionRepository> { CoreBridgeEntryPoint.from(androidContext()).sessionRepository() }
+    single<CurrentUserProvider> { CoreBridgeEntryPoint.from(androidContext()).currentUserProvider() }
     single<SecureStore> { CoreBridgeEntryPoint.from(androidContext()).secureStore() }
     single<CrossProcessLock> { CoreBridgeEntryPoint.from(androidContext()).crossProcessLock() }
     single<PlatformCapabilities> { CoreBridgeEntryPoint.from(androidContext()).platformCapabilities() }

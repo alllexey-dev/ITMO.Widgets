@@ -9,7 +9,7 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.viewModels
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -38,7 +38,7 @@ class FriendSelectorDialogFragment : BottomSheetDialogFragment() {
     private var _binding: DialogFriendSelectorBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: FriendSelectorViewModel by viewModels()
+    private val viewModel: FriendSelectorViewModel by viewModel()
 
     private lateinit var friendsAdapter: FriendSelectorAdapter
     private lateinit var recentAdapter: RecentFriendAdapter

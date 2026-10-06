@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
@@ -40,11 +41,13 @@ import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
+import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonRoom
-import dev.alllexey.itmowidgets.feature.social.presentation.FakePersonRepository
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import dev.alllexey.itmowidgets.feature.social.ui.UserProfileFragment
 import dev.alllexey.itmowidgets.testkit.screenshot.CaptureSize
@@ -72,6 +75,10 @@ class UserProfileReferenceScreenshotTest {
 
     @get:Rule
     val shots = AppScreenshotRule(this)
+
+    /** The Fragment's `by viewModel()` asks Koin, which the test application does not start. */
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val references = XmlReferenceCapture(shots, module = "feature-social")
     private val tallReferences =
@@ -144,9 +151,14 @@ class UserProfileReferenceScreenshotTest {
 
         fun viewModel(): UserProfileViewModel {
             val wait: suspend () -> Unit = { if (pending) awaitCancellation() }
-            val people = FakePersonRepository().apply {
-                person?.let { people = mapOf(ISU to it) }
-                gate = wait
+            val answer = person
+            val people = object : PersonRepository {
+                override fun cachedPerson(isu: Int): Person? = null
+
+                override suspend fun person(isu: Int): AppResult<Person> {
+                    wait()
+                    return answer?.takeIf { isu == ISU } ?: AppResult.Failure(AppError.NotFound)
+                }
             }
             val socialRepository = FakeSocialRepository().apply {
                 social?.let { profiles = mapOf(ISU to it) }
@@ -258,12 +270,13 @@ class UserProfileReferenceScreenshotTest {
     }
 }
 
-/** Hands [fragment] the view model [create] makes before Hilt could create one. */
+/** Hands [fragment] the view model [create] makes before Koin could create one, under the key Koin reads. */
 private fun FragmentManager.preset(fragment: Fragment, create: () -> ViewModel) =
     registerFragmentLifecycleCallbacks(
         object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
                 if (f !== fragment) return
+                KoinStarter.ensureStarted(f.requireContext())
                 val model = create()
                 ViewModelProvider(
                     f,

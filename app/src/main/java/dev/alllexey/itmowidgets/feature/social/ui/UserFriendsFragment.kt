@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
-import androidx.fragment.app.viewModels
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.onEach
 class UserFriendsFragment : Fragment() {
     private var _binding: FragmentUserFriendsBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: UserFriendsViewModel by viewModels()
+    private val viewModel: UserFriendsViewModel by viewModel()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentUserFriendsBinding.inflate(inflater, container, false)

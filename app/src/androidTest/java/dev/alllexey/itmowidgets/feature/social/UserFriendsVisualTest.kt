@@ -5,7 +5,7 @@ import android.view.View
 import android.widget.TextView
 import androidx.core.os.bundleOf
 import androidx.core.view.descendants
-import androidx.lifecycle.ViewModelProvider
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
@@ -79,7 +79,7 @@ class UserFriendsVisualTest {
                         SettingsNavigationTestActivity.friendsResult = result
                         scenario.onActivity {
                             val fragment = it.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment!!
-                            ViewModelProvider(fragment)[UserFriendsViewModel::class.java].refresh(RefreshMode.Force)
+                            fragment.getViewModel<UserFriendsViewModel>().refresh(RefreshMode.Force)
                         }
                         settle()
                         capture("friends-$name-$index")
@@ -92,7 +92,7 @@ class UserFriendsVisualTest {
                     SettingsNavigationTestActivity.friendsDelayMs = 60_000
                     scenario.onActivity {
                         val fragment = it.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment!!
-                        ViewModelProvider(fragment)[UserFriendsViewModel::class.java].refresh(RefreshMode.Force)
+                        fragment.getViewModel<UserFriendsViewModel>().refresh(RefreshMode.Force)
                     }
                     SystemClock.sleep(150)
                     capture("friends-loading-$index")

@@ -13,6 +13,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.R as MaterialR
 import com.google.android.material.button.MaterialButtonToggleGroup
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -32,6 +33,8 @@ import dev.alllexey.itmowidgets.core.social.PersonSearchResult
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
 import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorViewModel
 import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment
@@ -41,7 +44,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import com.google.android.material.R as MaterialR
 
 /**
  * Today's friend picker under the names of LC-5's `FriendSelectorSheetContent` previews, in
@@ -56,6 +58,10 @@ class FriendSelectorReferenceScreenshotTest {
 
     @get:Rule
     val shots = AppScreenshotRule(this)
+
+    /** The Fragment's `by viewModel()` asks Koin, which the test application does not start. */
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val references = XmlReferenceCapture(shots, module = "feature-social")
 
@@ -188,12 +194,13 @@ class FriendSelectorReferenceScreenshotTest {
     }
 }
 
-/** Hands [fragment] the view model [create] makes before Hilt could create one. */
+/** Hands [fragment] the view model [create] makes before Koin could create one, under the key Koin reads. */
 private fun FragmentManager.preset(fragment: Fragment, create: () -> ViewModel) =
     registerFragmentLifecycleCallbacks(
         object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
                 if (f !== fragment) return
+                KoinStarter.ensureStarted(f.requireContext())
                 val model = create()
                 ViewModelProvider(
                     f,

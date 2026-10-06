@@ -22,6 +22,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.social.presentation.FriendsViewModel
 import dev.alllexey.itmowidgets.feature.social.ui.FriendsFragment
 import org.junit.Rule
@@ -33,7 +35,7 @@ import org.robolectric.annotation.Config
 /**
  * Today's friends screen under the names of LC-3b's `FriendsScreen` previews, in `shared/feature-social/screenshots/`.
  * The screen has no debug host (only the nav graph), so the Fragment gets a [FriendsViewModel] over an in-memory
- * [FakeSocialRepository] before Hilt could create one.
+ * [FakeSocialRepository] before Koin could create one.
  */
 @HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
@@ -42,6 +44,10 @@ class FriendsReferenceScreenshotTest {
 
     @get:Rule
     val shots = AppScreenshotRule(this)
+
+    /** The Fragment's `by viewModel()` asks Koin, which the test application does not start. */
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val references = XmlReferenceCapture(shots, module = "feature-social")
 
@@ -132,12 +138,13 @@ class FriendsReferenceScreenshotTest {
     }
 }
 
-/** Hands [fragment] the view model [create] makes before Hilt could create one. */
+/** Hands [fragment] the view model [create] makes before Koin could create one, under the key Koin reads. */
 private fun FragmentManager.preset(fragment: Fragment, create: () -> ViewModel) =
     registerFragmentLifecycleCallbacks(
         object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
                 if (f !== fragment) return
+                KoinStarter.ensureStarted(f.requireContext())
                 val model = create()
                 ViewModelProvider(
                     f,

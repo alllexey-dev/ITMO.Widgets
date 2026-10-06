@@ -26,6 +26,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.designsystem.AppScreenshotRule
 import dev.alllexey.itmowidgets.designsystem.ReferenceHostActivity
 import dev.alllexey.itmowidgets.designsystem.XmlReferenceCapture
+import dev.alllexey.itmowidgets.di.bridge.KoinStarter
+import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.social.presentation.UserSearchViewModel
 import dev.alllexey.itmowidgets.feature.social.ui.UserSearchFragment
 import org.junit.Rule
@@ -37,7 +39,7 @@ import org.robolectric.annotation.Config
 /**
  * Today's people search under the names of LC-3c's `UserSearchScreen` previews, in
  * `shared/feature-social/screenshots/`. The screen has no debug host (only the nav graph), so the Fragment gets a
- * [UserSearchViewModel] over a synthetic [PeopleSearchRepository] before Hilt could create one, and the query is
+ * [UserSearchViewModel] over a synthetic [PeopleSearchRepository] before Koin could create one, and the query is
  * typed into the real field. The cursor is hidden: its blink would make two runs differ.
  */
 @HiltAndroidTest
@@ -47,6 +49,10 @@ class UserSearchReferenceScreenshotTest {
 
     @get:Rule
     val shots = AppScreenshotRule(this)
+
+    /** The Fragment's `by viewModel()` asks Koin, which the test application does not start. */
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val references = XmlReferenceCapture(shots, module = "feature-social")
 
@@ -135,12 +141,13 @@ class UserSearchReferenceScreenshotTest {
     }
 }
 
-/** Hands [fragment] the view model [create] makes before Hilt could create one. */
+/** Hands [fragment] the view model [create] makes before Koin could create one, under the key Koin reads. */
 private fun FragmentManager.preset(fragment: Fragment, create: () -> ViewModel) =
     registerFragmentLifecycleCallbacks(
         object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
                 if (f !== fragment) return
+                KoinStarter.ensureStarted(f.requireContext())
                 val model = create()
                 ViewModelProvider(
                     f,
