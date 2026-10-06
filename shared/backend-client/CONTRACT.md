@@ -18,6 +18,31 @@ Backend owns every wire DTO. The client mirrors it and never invents a field, ro
 - The client never enforces privacy and never checks `DemoMode` or the custom-services opt-in: its holders in the
   apps do.
 
+The whole change, from the privacy boundary to a screen, is the
+[endpoint end to end](../../docs/recipes/endpoint-end-to-end.md) recipe.
+
+## Areas
+
+`BackendClient(baseUrl, tokens, engine)` exposes one API per Backend area. Each lives in its own package under
+`dev.alllexey.itmowidgets.client`, and its `*Api` KDoc holds the status codes and `error.code`s an app handles. The
+push decoder needs no client instance.
+
+| Property | Package, API | Routes | Backend contract |
+|---|---|---|---|
+| `users` | `users`, `UsersApi` | `GET /api/users/{isu}`, `GET /api/users/{isu}/friends`, `POST /api/users/lookup`, `GET` and `PUT /api/users/me/privacy`, `PUT /api/users/me/id-token`, `GET /api/users/me/data`, `GET /api/users/me/web-login/{code}`, `POST /api/users/me/web-login/{challengeId}/approve` | `B/docs/contracts/privacy.md`, `B/docs/contracts/friendships.md`, `B/docs/contracts/web.md` |
+| `friends` | `friends`, `FriendsApi` | `GET /api/friends`, `GET /api/friends/requests/incoming` and `outgoing`, `POST /api/friends/{isu}/request`, `accept`, `reject` and `cancel`, `DELETE /api/friends/{isu}` | `B/docs/contracts/friendships.md` |
+| `sport` | `sport`, `SportApi` | `POST /api/sport/sign/sync`, `GET /api/sport/friends/sport-bookings`, `GET /api/sport/users/{isu}/bookings`, `GET /api/sport/auto-sign/limits`; under `/api/sport/free-sign` and `/api/sport/auto-sign` each: `GET entry/my`, `POST entry/create`, `entry/{id}/cancel`, `lesson/{lessonId}/cancel` and `lesson/{lessonId}/mark-satisfied`, `queue/current` (`GET` for free-sign, `POST` for auto-sign) | `B/docs/contracts/sport-automation.md`, `B/docs/contracts/privacy.md` |
+| `links` | `links`, `SubjectLinksApi` | `GET /api/subjects/{subjectId}/links`, `PUT /api/subjects/{subjectId}/links/pin`, `PUT` and `DELETE /api/links/{id}`, `PUT /api/links/{id}/vote`, `POST /api/links/{id}/report`, `GET /api/users/me/restrictions` | `B/docs/contracts/subject-links.md` |
+| `reviews` | `reviews`, `TeacherReviewsApi` | `GET /api/teachers/{isu}/reviews`, `PUT` and `DELETE /api/teachers/{isu}/reviews/mine`, `GET /api/teachers/summary-levels`, `PUT /api/reviews/{id}/vote`, `POST /api/reviews/{id}/report` | `B/docs/contracts/teacher-reviews.md` |
+| `device` | `device`, `DeviceApi` | `POST /api/device/register-device`, `DELETE /api/device/current` with a JSON body | `B/docs/contracts/notifications.md` |
+| `app` | `app`, `AppApi` | `GET /api/app/version-info` with the optional `platform` query | `B/docs/contracts/app-version.md` |
+| `schedule` | `schedule`, `ScheduleApi` | `POST /api/schedule/lessons/sync`, `GET /api/schedule/lessons/user/{isu}`, `GET /api/schedule/lessons/{pairId}/friends` | `B/docs/contracts/schedule.md`, `B/docs/contracts/privacy.md` |
+| none | `push`, `FcmDecoder` | FCM data messages `FRIENDSHIP_EVENT_PAYLOAD`, `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD` | `B/docs/contracts/notifications.md` |
+
+Wire types that two areas share (`UserProfile`, `UserData`, the vote and report requests) live in `common`; the
+transport (`http`), the `Json` and its serializers (`json`) and `BackendException` (`error`) are shared by every
+area. The Backend operations without a client function are listed under [Not mirrored](#not-mirrored).
+
 ## Json
 
 One `Json` for every call (`BackendJson`):
@@ -89,11 +114,22 @@ internal. The status is mapped before the body is decoded, so an HTML 502 or an 
 `invalid_request`, `unauthorized`, `csrf`) or `null` when the error body is empty or not Backend's envelope. The
 server `message` is never kept: user-visible text belongs to the apps. Tokens, headers and bodies are never logged.
 
-## Swift
+## Engines and iOS
 
-Every public suspend function, interface members included, is
-`@Throws(BackendException::class, CancellationException::class)`. The public API has no `ApiResponse<T>`, no
-generics and does not rely on default arguments.
+The module has no `androidMain` or `iosMain` code and no Ktor engine artifact: the caller passes the engine, builds
+the one `BackendClient` of the process through `BackendClientFactory` in `:shared:core` and closes the engine itself.
+
+- Android passes MyItmoApi's OkHttp `defaultEngine()` (`app/src/main/java/dev/alllexey/itmowidgets/di/NetworkModule.kt`).
+- iOS passes `darwinHttpEngine()`
+  (`shared/core/src/iosMain/kotlin/dev/alllexey/itmowidgets/core/network/DarwinHttpEngine.kt`): a URLSession without
+  cookie storage, cookie handling or URL cache, never `usePreconfiguredSession`. Darwin sends the JSON body of
+  `DELETE /api/device/current` as OkHttp does (SP-15a).
+- Swift sees `BackendException` through `@Throws`: every public suspend function, interface members included, is
+  `@Throws(BackendException::class, CancellationException::class)`, and `FcmDecoder`'s functions throw
+  `BackendException`. The public API has no `ApiResponse<T>`, no generics and does not rely on default arguments,
+  so every nullable parameter is passed explicitly.
+- `commonTest` runs on the iOS simulator with `scripts/ios/test.sh kn :shared:backend-client`; Linux CI compiles the
+  iOS klibs with `scripts/verify.sh klibs`.
 
 ## Tests
 
@@ -127,6 +163,17 @@ and an OpenAPI snapshot (`B/docs/openapi.json`). This module tests against a ven
   `index.json` lists every fixture and every file under `contract/` is claimed exactly once: by an area, by
   `NotMirrored`, or by the test itself (`BACKEND_COMMIT`, `README.md`, `index.json`, `openapi.json` and the error
   bodies under `errors/`, which it maps through the client). An unclaimed file fails.
+
+### Sync procedure
+
+1. Pick a Backend commit merged into Backend's `v2.3/next` whose pull request named a `Contract change:`.
+2. Run `scripts/sync-backend-contract.sh <backend-sha>`, then `scripts/sync-backend-contract.sh --check`. The script
+   only reads Backend's clone; a commit the clone lacks exits 2 with the fetch command to run.
+3. Run the module's tests. A new route or field fails conformance until it is mirrored in its area (or listed in
+   `NotMirrored` with its reason); a new fixture fails `VendoredContractTest` until an area claims it.
+4. When the snapshot ships a field from `PendingBackendFields`, its entry fails: delete it in the same change.
+5. Commit the vendored directory, the claims and the client change together, so `BACKEND_COMMIT` always names the
+   contract the tests ran against.
 
 ### Conformance
 
