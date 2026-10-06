@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/lesson_widget_root"
+    android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background_rounded"
+    android:clipToOutline="true"
     android:gravity="center_vertical"
     android:minHeight="56dp"
     android:orientation="vertical"
     android:paddingHorizontal="12dp"
     android:paddingVertical="8dp"
-    tools:ignore="UseAppTint">
+    tools:ignore="UnusedAttribute,UseAppTint">
 
     <LinearLayout
         android:id="@+id/lesson_content"
