@@ -20,13 +20,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoExtendedColors
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import kotlin.math.roundToInt
 
 // Goldens of the token sets beside ColorRolesPreview: a token change (the M3E values) shows here first. Labels are
 // token names, not user-visible text. Windows are as tall as the lists at 1.3, so no row is cut off.
@@ -51,12 +55,16 @@ private fun TokenTypographyPreview() = ItmoPreview {
     val sample = "Аб"
     val emphasized = ItmoTheme.emphasizedTypography
     val roles = materialRoles(ItmoTheme.typography).zip(emphasizedRoles(emphasized))
+    val ios = ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
     TokenColumn {
         roles.forEach { (role, twin) ->
             val (name, style) = role
-            val token = TypeScaleTokens.roles.getValue(name).first
+            val token = (if (ios) IosTypeScaleTokens.roles else TypeScaleTokens.roles).getValue(name).first
+            // Under iOS the label names the text style the role takes.
+            val textStyle = IosTypeScaleTokens.styles.getValue(name).first.name.takeIf { ios }
             Column {
-                TokenLabel("$name ${token.size.toInt()}/${token.lineHeight.toInt()} ${token.weight}")
+                val metrics = "${token.size.toInt()}/${token.lineHeight.toInt()} ${token.weight}"
+                TokenLabel(listOfNotNull(name, textStyle, metrics).joinToString(" "))
                 Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.group)) {
                     Text(sample, color = ItmoTheme.colorScheme.onSurface, style = style)
                     Text(sample, color = ItmoTheme.colorScheme.onSurface, style = twin.second)
@@ -223,21 +231,27 @@ private fun emphasizedRoles(typography: ItmoEmphasizedTypography): List<Pair<Str
 
 private fun shapeScale(shapes: ItmoShapes): List<Pair<String, CornerBasedShape>> = with(shapes) {
     listOf(
-        "extraSmall ${ShapeTokens.ExtraSmall.value.toInt()}" to extraSmall,
-        "small ${ShapeTokens.Small.value.toInt()}" to small,
-        "medium ${ShapeTokens.Medium.value.toInt()}" to medium,
-        "large ${ShapeTokens.Large.value.toInt()}" to large,
-        "largeIncreased ${ShapeTokens.LargeIncreased.value.toInt()}" to largeIncreased,
-        "extraLarge ${ShapeTokens.ExtraLarge.value.toInt()}" to extraLarge,
-        "extraLargeIncreased ${ShapeTokens.ExtraLargeIncreased.value.toInt()}" to extraLargeIncreased,
-        "extraExtraLarge ${ShapeTokens.ExtraExtraLarge.value.toInt()}" to extraExtraLarge,
+        "extraSmall" to extraSmall,
+        "small" to small,
+        "medium" to medium,
+        "large" to large,
+        "largeIncreased" to largeIncreased,
+        "extraLarge" to extraLarge,
+        "extraLargeIncreased" to extraLargeIncreased,
+        "extraExtraLarge" to extraExtraLarge,
         "full" to full,
-        "cardContent ${ShapeTokens.CardContent.value.toInt()}" to cardContent,
-        "cardSummary ${ShapeTokens.CardSummary.value.toInt()}" to cardSummary,
-        "cardHero ${ShapeTokens.CardHero.value.toInt()}" to cardHero,
-        "scheduleDay ${ShapeTokens.ScheduleDay.value.toInt()}" to scheduleDay,
-    )
+        "cardContent" to cardContent,
+        "cardSummary" to cardSummary,
+        "cardHero" to cardHero,
+        "scheduleDay" to scheduleDay,
+    ).map { (name, shape) -> (if (shape == full) name else "$name ${shape.radiusDp()}") to shape }
 }
+
+/** The top-start radius of a fixed-size corner in dp, for the label: the same at any size and density 1. */
+private fun CornerBasedShape.radiusDp(): Int =
+    topStart.toPx(Size(LABEL_SHAPE_PX, LABEL_SHAPE_PX), Density(1f)).roundToInt()
+
+private const val LABEL_SHAPE_PX = 1000f
 
 private val SwatchWidth = 72.dp
 private val SwatchHeight = 32.dp

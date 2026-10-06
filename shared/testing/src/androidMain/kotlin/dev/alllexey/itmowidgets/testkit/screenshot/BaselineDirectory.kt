@@ -13,11 +13,13 @@ class BaselineDirectory(val dir: File) {
     fun file(base: String, appearance: PreviewAppearance): File = File(dir, fileName(base, appearance))
 
     /**
-     * The appearances [base] is captured in: light and dark, all four when [full], and every appearance it already
-     * has a baseline in, so a recorded baseline is never skipped by a narrower run.
+     * The appearances [base] is captured in: light and dark, all four Material ones when [full], the three iOS ones
+     * when [ios], and every appearance it already has a baseline in, so a recorded baseline is never skipped by a
+     * narrower run.
      */
-    fun appearances(base: String, full: Boolean): List<PreviewAppearance> =
-        PreviewAppearance.All.filter { full || it in PreviewAppearance.Default || file(base, it).isFile }
+    fun appearances(base: String, full: Boolean, ios: Boolean = false): List<PreviewAppearance> =
+        PreviewAppearance.All.filter { full || it in PreviewAppearance.Default || file(base, it).isFile } +
+            PreviewAppearance.IosAll.filter { ios || file(base, it).isFile }
 
     /** Every PNG here with its base and appearance; both null for a name outside the scheme. */
     fun baselines(): List<Baseline> = dir.listFiles { file -> file.isFile && file.extension == PNG }
@@ -61,7 +63,7 @@ class BaselineDirectory(val dir: File) {
             BaselineDirectory(File(root, "shared/$module/screenshots"))
 
         fun parse(fileName: String): Baseline {
-            val appearance = PreviewAppearance.All
+            val appearance = PreviewAppearance.Known
                 .sortedByDescending { it.name.length }
                 .firstOrNull { fileName.endsWith("_${it.name}.$PNG") }
             val base = appearance?.let { fileName.removeSuffix("_${it.name}.$PNG") }?.takeIf(String::isNotEmpty)

@@ -20,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
@@ -33,7 +34,8 @@ class SettingsRowTest {
     @Test
     fun compactRowsAreOneTouchTargetHigh() = runComposeUiTest {
         setContent {
-            ItmoTheme {
+            // Material's 48 dp rows; the iOS rows and switch come with DS-IOS-02 and DS-IOS-03.
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
                 SettingsGroup {
                     row { SettingsNavigationRow(NAVIGATION, onClick = {}) }
                     row { SettingsToggleRow(TOGGLE, checked = true, onCheckedChange = {}) }

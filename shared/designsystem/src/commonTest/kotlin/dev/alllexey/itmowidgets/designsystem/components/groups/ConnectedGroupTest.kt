@@ -20,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
@@ -33,7 +34,8 @@ class ConnectedGroupTest {
     @Test
     fun rowsAfterTheFirstStandTheGroupGapApart() = runComposeUiTest {
         setContent {
-            ItmoTheme {
+            // Material's 2 dp gap; under the iOS style the rows of a group touch (DS-IOS-03).
+            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
                 Column {
                     GroupPosition.entries.forEach { position ->
                         Box(Modifier.fillMaxWidth().connectedGroupItem(position).height(ROW_HEIGHT).testTag(position.name))

@@ -60,7 +60,8 @@ class PreviewSuite private constructor(testClass: Class<*>) {
         val variants = ShotsRun.variants
         if (variants.isEmpty()) {
             val full = settings?.allAppearances == true || ShotsRun.fullMatrix
-            directory.appearances(base, full).map { PreviewCase(base, it, preview, window) }
+            val ios = settings?.iosAppearances == true || ShotsRun.iosMatrix
+            directory.appearances(base, full, ios).map { PreviewCase(base, it, preview, window) }
         } else {
             variants.flatMap { variant ->
                 PreviewAppearance.Default.map { PreviewCase(base, it, preview, window, variant) }

@@ -37,6 +37,8 @@ class AppRefreshBoxTest {
         }
 
         onNodeWithTag(TAG).performTouchInput { swipeDown() }
+        // The release settles in a coroutine; on iOS the callback lands only after the frame.
+        waitForIdle()
 
         assertEquals(1, refreshes)
     }

@@ -13,8 +13,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.testkit.MinTouchTarget
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
@@ -48,7 +48,7 @@ class DetailsHeaderTest {
         }
 
         onNodeWithText(TEACHER)
-            .assertHeightIsAtLeast(48.dp)
+            .assertHeightIsAtLeast(MinTouchTarget)
             .assert(SemanticsMatcher("click label") { it.config[SemanticsActions.OnClick].label == OPEN_PROFILE })
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf(TEACHER_LABEL, TONE)))
             .performClick()

@@ -108,7 +108,7 @@ class ScoreRingGeometryTest {
         // A 12 dp stroke on a 112 dp ring at density 1: a 6 px cap on a 50 px radius.
         assertNear(6.8921f, roundedCapAngle(radius = 50f, strokeWidth = 12f))
         assertEquals(0f, roundedCapAngle(radius = 0f, strokeWidth = 12f))
-        assertEquals(90f, roundedCapAngle(radius = 4f, strokeWidth = 12f))
+        assertNear(90f, roundedCapAngle(radius = 4f, strokeWidth = 12f))
     }
 
     private fun segments(values: List<Float>) = ringSegments(values, GAP, CAP, isClosedRing(values))

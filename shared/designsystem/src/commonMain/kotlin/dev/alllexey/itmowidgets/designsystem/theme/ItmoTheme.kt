@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Typography
@@ -12,7 +13,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
+import dev.alllexey.itmowidgets.designsystem.platform.LocalItmoPlatformStyle
+import dev.alllexey.itmowidgets.designsystem.platform.defaultPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.tokens.ItmoEmphasizedTypography
+import dev.alllexey.itmowidgets.designsystem.tokens.ItmoIosTypography
 import dev.alllexey.itmowidgets.designsystem.tokens.ItmoMaterialTypography
 import dev.alllexey.itmowidgets.designsystem.tokens.ItmoMotion
 import dev.alllexey.itmowidgets.designsystem.tokens.ItmoShapes
@@ -32,25 +37,34 @@ import dev.alllexey.itmowidgets.designsystem.tokens.toMaterialShapes
  * [expressive] is the one switch of the kit's Material 3 Expressive variants ([ItmoTheme.expressive]): the loading
  * indicator, the pull-to-refresh indicator, the connected button group, wavy progress, the hero avatar mask and
  * [ItmoTheme.heroMotionScheme]. It stays off until the M3E token change turns it on for every screen at once.
+ *
+ * [platformStyle] is the look of the kit ([ItmoPlatformStyle]): Material on Android, iOS on iOS. The iOS style brings
+ * Apple's type scale, UIKit's spacing, radii and touch target and the iOS colour slot, and ignores [expressive]: the
+ * M3E look is Material's only.
  */
 @Composable
 fun ItmoTheme(
     dark: Boolean = isSystemInDarkTheme(),
     colorSource: ColorSource = ColorSource.Platform,
     expressive: Boolean = false,
+    platformStyle: ItmoPlatformStyle = defaultPlatformStyle(),
     content: @Composable () -> Unit,
 ) {
     val platform = if (colorSource == ColorSource.Platform) platformColorScheme(dark) else null
     val scheme = platform ?: remember(colorSource, dark) { generatedColorScheme(colorSource, dark) }
     val extended = remember(scheme, dark) { ExtendedColorTokens.of(dark).resolve(scheme) }
+    val tokens = StyleTokens.of(platformStyle)
     CompositionLocalProvider(
+        LocalItmoPlatformStyle provides platformStyle,
         LocalItmoExtendedColors provides extended,
-        LocalItmoShapes provides ItmoShapes.Default,
-        LocalItmoSpacing provides ItmoSpacing.Default,
-        LocalItmoEmphasizedTypography provides EmphasizedTypography,
+        LocalItmoIosColors provides ItmoIosColors.of(dark),
+        LocalItmoShapes provides tokens.shapes,
+        LocalItmoSpacing provides tokens.spacing,
+        LocalItmoEmphasizedTypography provides tokens.emphasized,
         LocalItmoMotion provides ItmoMotion.Default,
+        LocalMinimumInteractiveComponentSize provides platformStyle.minTouchTarget,
     ) {
-        ItmoMaterialTheme(scheme, expressive, content)
+        ItmoMaterialTheme(scheme, expressive && platformStyle == ItmoPlatformStyle.Material, content)
     }
 }
 
@@ -60,7 +74,8 @@ fun ItmoTheme(
  */
 @Composable
 internal fun ProvideItmoExpressive(expressive: Boolean, content: @Composable () -> Unit) {
-    ItmoMaterialTheme(MaterialTheme.colorScheme, expressive, content)
+    val material = LocalItmoPlatformStyle.current == ItmoPlatformStyle.Material
+    ItmoMaterialTheme(MaterialTheme.colorScheme, expressive && material, content)
 }
 
 /**
@@ -70,21 +85,22 @@ internal fun ProvideItmoExpressive(expressive: Boolean, content: @Composable () 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ItmoMaterialTheme(scheme: ColorScheme, expressive: Boolean, content: @Composable () -> Unit) {
+    val tokens = StyleTokens.of(LocalItmoPlatformStyle.current)
     CompositionLocalProvider(LocalItmoExpressive provides expressive) {
         if (expressive) {
             MaterialExpressiveTheme(
                 colorScheme = scheme,
                 motionScheme = ItmoMotion.Default.scheme,
-                shapes = MaterialShapes,
-                typography = ItmoMaterialTypography,
+                shapes = tokens.materialShapes,
+                typography = tokens.typography,
                 content = content,
             )
         } else {
             MaterialTheme(
                 colorScheme = scheme,
                 motionScheme = ItmoMotion.Default.scheme,
-                shapes = MaterialShapes,
-                typography = ItmoMaterialTypography,
+                shapes = tokens.materialShapes,
+                typography = tokens.typography,
                 content = content,
             )
         }
@@ -132,6 +148,18 @@ object ItmoTheme {
         @ReadOnlyComposable
         get() = LocalItmoMotion.current
 
+    /** The look the kit draws in; read only inside the kit, never in feature code (Konsist, KN-02b). */
+    internal val platformStyle: ItmoPlatformStyle
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalItmoPlatformStyle.current
+
+    /** UIKit's system colours for the iOS variants, light or dark like the scheme. */
+    internal val iosColors: ItmoIosColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalItmoIosColors.current
+
     /** True when the kit's expressive variants are on (`ItmoTheme(expressive = true)`); false until the M3E change. */
     val expressive: Boolean
         @Composable
@@ -154,8 +182,21 @@ private val ExpressiveMotionScheme = MotionScheme.expressive()
 
 internal val LocalItmoExpressive = staticCompositionLocalOf { false }
 
-private val MaterialShapes = ItmoShapes.Default.toMaterialShapes()
-private val EmphasizedTypography = emphasizedTypographyOf(ItmoMaterialTypography)
+/** The tokens of one platform style, built once. */
+private class StyleTokens(val shapes: ItmoShapes, val spacing: ItmoSpacing, val typography: Typography) {
+    val materialShapes = shapes.toMaterialShapes()
+    val emphasized = emphasizedTypographyOf(typography)
+
+    companion object {
+        private val Material = StyleTokens(ItmoShapes.Default, ItmoSpacing.Default, ItmoMaterialTypography)
+        private val Ios = StyleTokens(ItmoShapes.Ios, ItmoSpacing.Ios, ItmoIosTypography)
+
+        fun of(style: ItmoPlatformStyle) = when (style) {
+            ItmoPlatformStyle.Material -> Material
+            ItmoPlatformStyle.Ios -> Ios
+        }
+    }
+}
 
 private fun generatedColorScheme(colorSource: ColorSource, dark: Boolean): ColorScheme = when (colorSource) {
     is ColorSource.Seed -> seededColorScheme(colorSource.argb, dark)
