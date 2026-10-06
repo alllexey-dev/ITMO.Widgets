@@ -22,7 +22,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
 import dev.alllexey.itmowidgets.feature.schedule.plusMinutes
 import dev.alllexey.itmowidgets.feature.schedule.ui.ScheduleLifecycleTestActivity
-import dev.alllexey.itmowidgets.feature.schedule.ui.changes.ScheduleChangesPreviewActivity
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -139,32 +138,6 @@ internal object ScheduleReferenceFixtures {
         after = slot(CHANGED_PAIR_ID, today, LocalTime(10, 0), room = "2202", building = "ул. Ломоносова, 9"),
     )
 
-    /** The history screen: today, yesterday and an earlier day, read and unread rows, every kind of change. */
-    fun history(): List<ScheduleChange> = listOf(
-        change("added", ScheduleChangeKind.ADDED, emptySet(), "2026-09-07T08:00:00Z",
-            before = null, after = slot(1, LocalDate(2026, 9, 9), LocalTime(10, 0))),
-        change("cancelled", ScheduleChangeKind.CANCELLED, emptySet(), "2026-09-07T06:00:00Z", subject = "Физика",
-            typeId = 3, flowName = "ФИЗ ПИИКТ 3.2", before = slot(2, LocalDate(2026, 9, 8)), after = null,
-            read = true),
-        change("same-day", ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.TIME), "2026-09-06T12:00:00Z",
-            subject = "Программирование", typeId = 2, before = slot(3, LocalDate(2026, 9, 10)),
-            after = slot(3, LocalDate(2026, 9, 10), LocalTime(10, 0))),
-        change("moved", ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.TIME, ScheduleChangeField.PLACE),
-            "2026-09-06T09:00:00Z", subject = "Физика", typeId = 1,
-            before = slot(4, LocalDate(2026, 9, 8), LocalTime(13, 30)),
-            after = slot(4, LocalDate(2026, 9, 11), LocalTime(15, 20), room = "2202",
-                building = "ул. Ломоносова, 9")),
-        change("format", ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.FORMAT, ScheduleChangeField.PLACE),
-            "2026-09-03T10:00:00Z", subject = "Английский язык", typeId = 3, flowName = null,
-            before = slot(5, LocalDate(2026, 9, 9), LocalTime(11, 40)),
-            after = slot(5, LocalDate(2026, 9, 9), LocalTime(11, 40), room = null, building = null,
-                formatId = 3, format = "Дистанционный"),
-            read = true),
-        change("teacher", ScheduleChangeKind.UPDATED, setOf(ScheduleChangeField.TEACHER), "2026-09-03T09:00:00Z",
-            subject = "Математический анализ", typeId = 3, before = slot(6, LocalDate(2026, 9, 14)),
-            after = slot(6, LocalDate(2026, 9, 14), teacherIsu = 300002, teacherName = "Новый преподаватель")),
-    )
-
     /** Friends on the lesson: one with a group, one without a name (the ISU placeholder). */
     fun friends(): List<UserSummary> = listOf(
         UserSummary(
@@ -190,11 +163,6 @@ internal object ScheduleReferenceFixtures {
         ScheduleLifecycleTestActivity.friendsOutcome = { AppResult.Success(emptyList()) }
         ScheduleLifecycleTestActivity.teacherLevelsByIsu = emptyMap()
         ScheduleLifecycleTestActivity.changes.value = emptyList()
-    }
-
-    fun resetChangesHost() {
-        ScheduleChangesPreviewActivity.changes.value = emptyList()
-        ScheduleChangesPreviewActivity.readCalls = 0
     }
 
     /**
