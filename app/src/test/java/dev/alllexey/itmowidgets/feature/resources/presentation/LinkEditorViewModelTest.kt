@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.resources.presentation
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
@@ -14,8 +13,6 @@ import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.linksSnapshot
 import dev.alllexey.itmowidgets.core.testing.subjectLink
-import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.core.text.toUiText
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -54,11 +51,11 @@ class LinkEditorViewModelTest {
         vm.onCategorySelected(LinkCategory.OTHER)
 
         vm.onUrlChanged("http://example.org"); vm.save(); runCurrent()
-        assertEquals(UiText.Resource(R.string.links_invalid_url), vm.uiState.value.urlError)
+        assertEquals(LinkFieldError.URL_NOT_HTTPS, vm.uiState.value.urlError)
 
         vm.onUrlChanged("https://example.org"); vm.onTitleChanged("а".repeat(121)); vm.save(); runCurrent()
         assertNull(vm.uiState.value.urlError)
-        assertEquals(UiText.Resource(R.string.links_title_too_long), vm.uiState.value.titleError)
+        assertEquals(LinkFieldError.TITLE_TOO_LONG, vm.uiState.value.titleError)
         assertTrue(repository.actions.isEmpty())
     }
 
@@ -143,7 +140,7 @@ class LinkEditorViewModelTest {
 
         vm.save(); runCurrent()
 
-        assertEquals(LinkEvent.Failed(AppError.Network.toUiText()), vm.events.first())
+        assertEquals(LinkEvent.Failed(AppError.Network), vm.events.first())
         assertEquals("https://github.com/itmo/labs", vm.uiState.value.url)
         assertTrue(vm.uiState.value.canSave)
     }
@@ -165,13 +162,32 @@ class LinkEditorViewModelTest {
         assertEquals(7103L, repository.lastSave!!.flowId)
     }
 
+    @Test fun `a save retried after process death reaches the same new link`() = runTest(main.dispatcher) {
+        repository.result = AppResult.Failure(AppError.Network)
+        val handle = handle()
+        model(handle = handle).apply { onUrlChanged("https://github.com/itmo/labs"); save() }
+        runCurrent()
+        val firstId = repository.lastSave!!.id
+        repository.result = AppResult.Success(Unit)
+
+        val restored = model(handle = SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }))
+        restored.onUrlChanged("https://github.com/itmo/labs")
+        restored.save(); runCurrent()
+
+        assertEquals(LinkEvent.Saved, restored.events.first())
+        assertEquals(firstId, repository.lastSave!!.id)
+        assertEquals(listOf("save", "save"), repository.actions)
+    }
+
     private fun show(snapshot: SubjectLinksSnapshot) { repository.state.value = SubjectLinksState.Content(snapshot) }
 
-    private fun TestScope.model(linkId: String? = null): LinkEditorViewModel {
-        val vm = LinkEditorViewModel(SavedStateHandle(buildMap {
-            put(SubjectLinksArgs.SUBJECT_ID, 42L); put(SubjectLinksArgs.SUBJECT_NAME, "Предмет"); put(SubjectLinksArgs.PERIOD_KEY, "2026-1")
-            linkId?.let { put(SubjectLinksArgs.LINK_ID, it) }
-        }), repository)
+    private fun handle(linkId: String? = null) = SavedStateHandle(buildMap {
+        put(SubjectLinksArgs.SUBJECT_ID, 42L); put(SubjectLinksArgs.SUBJECT_NAME, "Предмет"); put(SubjectLinksArgs.PERIOD_KEY, "2026-1")
+        linkId?.let { put(SubjectLinksArgs.LINK_ID, it) }
+    })
+
+    private fun TestScope.model(linkId: String? = null, handle: SavedStateHandle = handle(linkId)): LinkEditorViewModel {
+        val vm = LinkEditorViewModel(handle, repository)
         runCurrent()
         return vm
     }

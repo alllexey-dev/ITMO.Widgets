@@ -2,10 +2,13 @@ package dev.alllexey.itmowidgets.feature.resources.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
+import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.RestrictionCapability
+import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
@@ -16,7 +19,6 @@ import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.linkTime
 import dev.alllexey.itmowidgets.core.testing.linksSnapshot
 import dev.alllexey.itmowidgets.core.testing.subjectLink
-import dev.alllexey.itmowidgets.core.text.toUiText
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
@@ -90,7 +92,7 @@ class SubjectLinksViewModelTest {
         runCurrent()
         assertEquals(listOf("a", "b", "c", "new"), vm.uiState.value.scores())
 
-        vm.refresh()
+        vm.refresh(RefreshMode.Pull)
         runCurrent()
         repository.state.value = SubjectLinksState.Content(linksSnapshot(shared = listOf(a, b, c.copy(score = 9), added)))
         runCurrent()
@@ -128,7 +130,7 @@ class SubjectLinksViewModelTest {
 
         vm.vote("shared", up = true); runCurrent()
 
-        assertEquals(LinkEvent.Failed(AppError.Network.toUiText()), vm.events.first())
+        assertEquals(LinkEvent.Failed(AppError.Network), vm.events.first())
         assertEquals(before, vm.uiState.value)
     }
 
@@ -190,22 +192,96 @@ class SubjectLinksViewModelTest {
         assertEquals(1, repository.refreshes)
         assertTrue(events.isEmpty())
 
-        vm.refresh(); runCurrent()
+        vm.refresh(RefreshMode.Pull); runCurrent()
 
-        assertEquals(listOf(LinkEvent.Failed(AppError.Network.toUiText())), events)
+        assertEquals(listOf(LinkEvent.Failed(AppError.Network)), events)
         assertEquals(2, repository.restrictionRefreshes)
         assertFalse(vm.uiState.value.refreshing)
+    }
+
+    @Test fun `the silent load on entry shows no indicator and a pull joining it does until it ends`() = runTest(main.dispatcher) {
+        val gated = GatedRefreshes(repository)
+        val vm = model(gated)
+        assertFalse(vm.uiState.value.refreshing)
+
+        vm.refresh(RefreshMode.Pull); runCurrent()
+        assertTrue(vm.uiState.value.refreshing)
+
+        gated.gate.complete(Unit); runCurrent()
+        assertFalse(vm.uiState.value.refreshing)
+        assertEquals(1, repository.refreshes)
+    }
+
+    @Test fun `a forced retry replaces the silent load in flight`() = runTest(main.dispatcher) {
+        val gated = GatedRefreshes(repository)
+        val vm = model(gated)
+
+        vm.refresh(RefreshMode.Force); runCurrent()
+        assertTrue(vm.uiState.value.refreshing)
+        assertEquals(2, gated.started)
+
+        gated.gate.complete(Unit); runCurrent()
+        assertFalse(vm.uiState.value.refreshing)
+        assertEquals(1, repository.refreshes)
+    }
+
+    @Test fun `a failure sent while no view collects reaches the next collector once`() = runTest(main.dispatcher) {
+        show(linksSnapshot(shared = listOf(shared)))
+        val vm = model()
+        val first = mutableListOf<LinkEvent>()
+        val view = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.events.collect { first += it } }
+        view.cancel()
+        repository.result = AppResult.Failure(AppError.Forbidden)
+
+        vm.vote("shared", up = true); runCurrent()
+        val second = mutableListOf<LinkEvent>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.events.collect { second += it } }
+        runCurrent()
+
+        assertTrue(first.isEmpty())
+        assertEquals(listOf<LinkEvent>(LinkEvent.Failed(AppError.Forbidden)), second)
+    }
+
+    @Test fun `a failed action frees the sheet and a successful one keeps it busy until it closes`() = runTest(main.dispatcher) {
+        show(linksSnapshot(shared = listOf(shared)))
+        val gate = CompletableDeferred<Unit>()
+        repository.gate = { gate.await() }
+        repository.result = AppResult.Failure(AppError.Network)
+        val vm = model()
+
+        vm.pin("shared"); runCurrent()
+        assertTrue(vm.uiState.value.busy)
+        gate.complete(Unit); runCurrent()
+        assertFalse(vm.uiState.value.busy)
+
+        repository.result = AppResult.Success(Unit)
+        vm.delete("shared"); runCurrent()
+
+        assertEquals(listOf("pin:shared", "delete:shared"), repository.actions)
+        assertTrue(vm.uiState.value.busy)
     }
 
     private fun show(snapshot: SubjectLinksSnapshot) { repository.state.value = SubjectLinksState.Content(snapshot) }
 
     private fun restriction(capability: RestrictionCapability) = UserRestriction("r", capability, "Правила", null)
 
-    private fun TestScope.model(): SubjectLinksViewModel {
+    private fun TestScope.model(links: SubjectLinksRepository = repository): SubjectLinksViewModel {
         val vm = SubjectLinksViewModel(SavedStateHandle(mapOf(SubjectLinksArgs.SUBJECT_ID to 42L,
-            SubjectLinksArgs.SUBJECT_NAME to "Предмет", SubjectLinksArgs.PERIOD_KEY to "2026-1")), repository)
+            SubjectLinksArgs.SUBJECT_NAME to "Предмет", SubjectLinksArgs.PERIOD_KEY to "2026-1")), links)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect() }
         runCurrent()
         return vm
+    }
+
+    /** Every refresh waits for [gate]; [started] counts the refreshes that began. */
+    private class GatedRefreshes(private val fake: FakeSubjectLinksRepository) : SubjectLinksRepository by fake {
+        val gate = CompletableDeferred<Unit>()
+        var started = 0
+
+        override suspend fun refresh(scope: ResourceScope): AppResult<Unit> {
+            started++
+            gate.await()
+            return fake.refresh(scope)
+        }
     }
 }

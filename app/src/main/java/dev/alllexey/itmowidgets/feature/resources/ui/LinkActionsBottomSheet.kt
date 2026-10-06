@@ -27,7 +27,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.openSheetScores
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
 import dev.alllexey.itmowidgets.core.ui.bind
 import dev.alllexey.itmowidgets.core.ui.displayTitle
-import dev.alllexey.itmowidgets.core.ui.resolve
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.databinding.SheetLinkActionsBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
@@ -48,8 +48,6 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
     private val binding get() = _binding!!
     private val viewModel: SubjectLinksViewModel by viewModels()
     private val linkId: String by lazy { checkNotNull(requireArguments().getString(SubjectLinksArgs.LINK_ID)) }
-    /** A sent action closes the sheet on success; until then the rows ignore taps. */
-    private var pending = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = SheetLinkActionsBinding.inflate(inflater, container, false)
@@ -67,10 +65,7 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
         viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
             when (event) {
                 LinkEvent.Done, LinkEvent.Saved -> dismiss()
-                is LinkEvent.Failed -> {
-                    pending = false
-                    Snackbar.make(binding.root, event.text.resolve(requireContext()), Snackbar.LENGTH_SHORT).show()
-                }
+                is LinkEvent.Failed -> Snackbar.make(binding.root, event.error.messageRes(), Snackbar.LENGTH_SHORT).show()
             }
         }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
@@ -88,7 +83,7 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
         val link = (snapshot.mine + snapshot.shared + snapshot.previous).firstOrNull { it.id == linkId }
         if (link == null) {
             // Deleted here or elsewhere; nothing is left to act on.
-            if (!pending) dismiss()
+            if (!state.busy) dismiss()
             return@with
         }
         val pinned = snapshot.pinnedId == link.id
@@ -110,7 +105,7 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
         actionPin.isVisible = link.isMine || online
         actionPin.setText(if (pinned) R.string.links_unpin else R.string.links_pin)
         actionPin.setCompoundDrawablesRelativeWithIntrinsicBounds(if (pinned) R.drawable.ic_keep_off else R.drawable.ic_keep, 0, 0, 0)
-        actionPin.setOnClickListener { send { viewModel.pin(link.id) } }
+        actionPin.setOnClickListener { if (!busy()) viewModel.pin(link.id) }
         actionEdit.isVisible = link.isMine
         actionEdit.setOnClickListener { edit(link) }
         actionDelete.isVisible = link.isMine
@@ -133,42 +128,39 @@ class LinkActionsBottomSheet : BottomSheetDialogFragment() {
     private fun bindVotes(link: SubjectLink, canVote: Boolean) = with(binding) {
         val visible = !link.isMine || link.visibility != LinkVisibility.PRIVATE
         votePill.root.isVisible = visible
-        if (visible) votePill.bind(link, canVote = !link.isMine && canVote) { up -> if (!pending) viewModel.vote(link.id, up) }
+        if (visible) votePill.bind(link, canVote = !link.isMine && canVote) { up -> if (!busy()) viewModel.vote(link.id, up) }
         heading.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             marginEnd = if (visible) 0 else resources.getDimensionPixelSize(R.dimen.design_screen_margin)
         }
     }
 
-    private fun send(action: () -> Unit) {
-        if (pending) return
-        pending = true
-        action()
-    }
+    /** A sent action closes the sheet on success; until then, or until it fails, the rows ignore taps. */
+    private fun busy(): Boolean = viewModel.uiState.value.busy
 
     private fun edit(link: SubjectLink) {
-        if (pending) return
+        if (busy()) return
         openLinkEditor(viewModel.scope.toArgs(), link.id)
         dismiss()
     }
 
     private fun openScores(link: SubjectLink) {
-        if (pending) return
+        if (busy()) return
         val scope = viewModel.scope
         openSheetScores(SheetScoresArgs(scope.subjectId, scope.subjectName, scope.periodKey, link.url, SheetScoresArgs.Step.CONNECT))
         dismiss()
     }
 
     private fun confirmDelete(link: SubjectLink) {
-        if (pending) return
+        if (busy()) return
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.links_delete_confirm)
             .setNegativeButton(R.string.common_cancel, null)
-            .setPositiveButton(R.string.links_delete) { _, _ -> send { viewModel.delete(link.id) } }
+            .setPositiveButton(R.string.links_delete) { _, _ -> viewModel.delete(link.id) }
             .show()
     }
 
     private fun report(link: SubjectLink) {
-        if (pending) return
+        if (busy()) return
         ReportLinkDialogFragment.newInstance(viewModel.scope.toArgs(), link.id).show(parentFragmentManager, ReportLinkDialogFragment.TAG)
         dismiss()
     }

@@ -15,7 +15,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
-import dev.alllexey.itmowidgets.core.ui.resolve
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.databinding.DialogReportReviewBinding
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewEvent
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewViewModel
@@ -31,11 +31,11 @@ class ReportReviewDialogFragment : DialogFragment() {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch { viewModel.sending.collect { updateSendButton() } }
+                launch { viewModel.uiState.collect { updateSendButton() } }
                 viewModel.events.collect { event ->
                     when (event) {
                         ReportReviewEvent.Done -> dismiss()
-                        is ReportReviewEvent.Failed -> form.commentLayout.error = event.text.resolve(requireContext())
+                        is ReportReviewEvent.Failed -> form.commentLayout.error = getString(event.error.messageRes())
                     }
                 }
             }
@@ -76,7 +76,7 @@ class ReportReviewDialogFragment : DialogFragment() {
     private fun updateSendButton() {
         if (!::form.isInitialized) return
         (dialog as? AlertDialog)?.getButton(DialogInterface.BUTTON_POSITIVE)?.isEnabled =
-            !viewModel.sending.value && selectedReason() != null
+            !viewModel.uiState.value.sending && selectedReason() != null
     }
 
     companion object {

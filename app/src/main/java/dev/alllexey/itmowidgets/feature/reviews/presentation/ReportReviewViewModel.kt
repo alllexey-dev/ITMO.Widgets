@@ -5,24 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
+import dev.alllexey.itmowidgets.core.presentation.BusyKeys
+import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
-import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.core.text.toUiText
 import javax.inject.Inject
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
-
-sealed interface ReportReviewEvent {
-    data object Done : ReportReviewEvent
-    data class Failed(val text: UiText) : ReportReviewEvent
-}
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 /** Reports another viewer's review; a blank comment is sent as none. */
 @HiltViewModel
@@ -32,20 +25,22 @@ class ReportReviewViewModel @Inject constructor(
 ) : ViewModel() {
     private val teacherIsu: Int = checkNotNull(handle[TeacherReviewArgs.TEACHER_ISU])
     private val reviewId: String = checkNotNull(handle[TeacherReviewArgs.REVIEW_ID])
-    private val _sending = MutableStateFlow(false)
-    val sending: StateFlow<Boolean> = _sending.asStateFlow()
-    private val channel = Channel<ReportReviewEvent>(Channel.BUFFERED)
-    val events: Flow<ReportReviewEvent> = channel.receiveAsFlow()
+    /** One report at a time: the only key is [Unit]. */
+    private val sending = BusyKeys<Unit>(viewModelScope)
+    private val eventQueue = EventQueue<ReportReviewEvent>()
+
+    val uiState: StateFlow<ReportReviewUiState> = sending.busy
+        .map { ReportReviewUiState(sending = it.isNotEmpty()) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ReportReviewUiState())
+
+    val events: Flow<ReportReviewEvent> = eventQueue.events
 
     fun send(reason: ReviewReportReason, comment: String?) {
-        if (_sending.value) return
-        _sending.value = true
-        viewModelScope.launch {
+        sending.launch(Unit) {
             val result = repository.report(teacherIsu, reviewId, reason, comment?.trim()?.ifEmpty { null })
-            _sending.value = false
-            channel.send(when (result) {
+            eventQueue.send(when (result) {
                 is AppResult.Success -> ReportReviewEvent.Done
-                is AppResult.Failure -> ReportReviewEvent.Failed(result.error.toUiText())
+                is AppResult.Failure -> ReportReviewEvent.Failed(result.error)
             })
         }
     }

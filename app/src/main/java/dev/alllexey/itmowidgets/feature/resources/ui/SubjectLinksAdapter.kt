@@ -25,7 +25,6 @@ import dev.alllexey.itmowidgets.databinding.ItemSectionHeadingBinding
 import dev.alllexey.itmowidgets.databinding.ItemSubjectLinkBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkSection
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
-import dev.alllexey.itmowidgets.feature.resources.presentation.badge
 
 internal sealed interface LinkRow {
     val key: String

@@ -25,6 +25,7 @@ import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.ui.clipboardText
 import dev.alllexey.itmowidgets.core.ui.lessonTypeNameRes
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
 import dev.alllexey.itmowidgets.databinding.ItemLinkAudienceOptionBinding
@@ -33,6 +34,7 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.LinkAudienceOptio
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
+import dev.alllexey.itmowidgets.feature.resources.presentation.LinkFieldError
 import dev.alllexey.itmowidgets.core.ui.linkIconRes
 import dev.alllexey.itmowidgets.core.ui.title
 import kotlinx.coroutines.flow.launchIn
@@ -88,7 +90,7 @@ class LinkEditorBottomSheet : BottomSheetDialogFragment() {
         viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
             when (event) {
                 LinkEvent.Saved, LinkEvent.Done -> dismiss()
-                is LinkEvent.Failed -> Snackbar.make(root, event.text.resolve(requireContext()), Snackbar.LENGTH_SHORT).show()
+                is LinkEvent.Failed -> Snackbar.make(root, event.error.messageRes(), Snackbar.LENGTH_SHORT).show()
             }
         }.launchIn(viewLifecycleOwner.lifecycleScope)
         if (savedInstanceState == null && !viewModel.uiState.value.editing) pasteOnFirstFocus(view)
@@ -103,19 +105,24 @@ class LinkEditorBottomSheet : BottomSheetDialogFragment() {
                 url.setSelection(state.url.length)
             }
             urlLayout.isEndIconVisible = state.url.isNotEmpty()
-            urlLayout.error = state.urlError?.resolve(requireContext())
+            urlLayout.error = state.urlError?.let(::message)
             bindCategory(state.category)
             root.findViewById<com.google.android.material.chip.Chip>(chipIdOf(LinkCategory.CHAT))
                 .setChipIconResource(linkIconRes(LinkCategory.CHAT, state.url))
             nameLayout.hint = state.category?.title()?.resolve(requireContext()) ?: getString(R.string.links_name_hint)
             if (name.text?.toString() != state.title) name.setText(state.title)
-            nameLayout.error = state.titleError?.resolve(requireContext())
+            nameLayout.error = state.titleError?.let(::message)
             bindAudiences(state)
             saveButton.isEnabled = state.canSave
         } finally {
             rendering = false
         }
     }
+
+    private fun message(error: LinkFieldError): String = getString(when (error) {
+        LinkFieldError.URL_NOT_HTTPS -> R.string.links_invalid_url
+        LinkFieldError.TITLE_TOO_LONG -> R.string.links_title_too_long
+    })
 
     private fun bindCategory(category: LinkCategory?) = with(binding) {
         if (category == null) categories.clearCheck() else categories.check(chipIdOf(category))

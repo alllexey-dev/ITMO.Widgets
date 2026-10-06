@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.resources.presentation
+package dev.alllexey.itmowidgets.feature.resources.ui
 
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus

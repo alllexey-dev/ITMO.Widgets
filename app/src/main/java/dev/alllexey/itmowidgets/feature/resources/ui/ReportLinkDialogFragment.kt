@@ -14,7 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
-import dev.alllexey.itmowidgets.core.ui.resolve
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.databinding.DialogReportLinkBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewModel
@@ -26,20 +26,16 @@ class ReportLinkDialogFragment : DialogFragment() {
     private val viewModel: SubjectLinksViewModel by viewModels()
     private val linkId: String by lazy { checkNotNull(requireArguments().getString(SubjectLinksArgs.LINK_ID)) }
     private lateinit var form: DialogReportLinkBinding
-    private var sending = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch { viewModel.uiState.collect { updateSendButton() } }
                 viewModel.events.collect { event ->
                     when (event) {
                         LinkEvent.Done, LinkEvent.Saved -> dismiss()
-                        is LinkEvent.Failed -> {
-                            sending = false
-                            updateSendButton()
-                            form.commentLayout.error = event.text.resolve(requireContext())
-                        }
+                        is LinkEvent.Failed -> form.commentLayout.error = getString(event.error.messageRes())
                     }
                 }
             }
@@ -73,15 +69,15 @@ class ReportLinkDialogFragment : DialogFragment() {
 
     private fun send() {
         val reason = selectedReason() ?: return
-        if (sending) return
-        sending = true
+        if (viewModel.uiState.value.busy) return
         form.commentLayout.error = null
-        updateSendButton()
         viewModel.report(linkId, reason, form.comment.text?.toString()?.trim()?.ifEmpty { null })
     }
 
     private fun updateSendButton() {
-        (dialog as? AlertDialog)?.getButton(DialogInterface.BUTTON_POSITIVE)?.isEnabled = !sending && selectedReason() != null
+        if (!::form.isInitialized) return
+        (dialog as? AlertDialog)?.getButton(DialogInterface.BUTTON_POSITIVE)?.isEnabled =
+            !viewModel.uiState.value.busy && selectedReason() != null
     }
 
     companion object {

@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.reviews.presentation
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -10,11 +9,9 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.testing.ownReview
 import dev.alllexey.itmowidgets.core.testing.teacherReviews
-import dev.alllexey.itmowidgets.core.text.toUiText
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -73,6 +70,18 @@ class ReviewEditorViewModelTest {
         assertFalse(restored.uiState.value.anonymous)
         assertTrue(restored.uiState.value.editing)
         assertTrue(restored.hasChanges())
+    }
+
+    @Test fun `an untouched editor restored after process death keeps its opening values`() = runTest(main.dispatcher) {
+        val handle = handle()
+        model(handle)
+        repository.cached = mapOf(TEACHER to teacherReviews(TEACHER, mine = ownReview()))
+
+        val restored = model(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }))
+
+        assertEquals("", restored.uiState.value.text)
+        assertFalse(restored.uiState.value.editing)
+        assertFalse(restored.hasChanges())
     }
 
     @Test fun `subjects of own lessons become suggestions and a failed history stays silent`() = runTest(main.dispatcher) {
@@ -147,16 +156,16 @@ class ReviewEditorViewModelTest {
         val vm = model()
 
         vm.onTextChanged("а".repeat(29)); vm.save(); runCurrent()
-        assertEquals(UiText.Resource(R.string.review_text_too_short, listOf(30)), vm.uiState.value.textError)
+        assertEquals(ReviewFieldError.TEXT_TOO_SHORT, vm.uiState.value.textError)
         assertFalse(vm.uiState.value.showsMinimumHint)
 
         vm.onTextChanged("а".repeat(3001)); vm.save(); runCurrent()
-        assertEquals(UiText.Resource(R.string.review_text_too_long, listOf(3000)), vm.uiState.value.textError)
+        assertEquals(ReviewFieldError.TEXT_TOO_LONG, vm.uiState.value.textError)
 
         vm.onTextChanged(VALID_TEXT)
         assertNull(vm.uiState.value.textError)
         vm.onSubjectChanged("п".repeat(201)); vm.save(); runCurrent()
-        assertEquals(UiText.Resource(R.string.review_subject_too_long, listOf(200)), vm.uiState.value.subjectError)
+        assertEquals(ReviewFieldError.SUBJECT_TOO_LONG, vm.uiState.value.subjectError)
         assertNull(vm.uiState.value.textError)
 
         assertTrue(repository.actions.isEmpty())
@@ -175,7 +184,7 @@ class ReviewEditorViewModelTest {
         vm.save(); runCurrent()
         gate.complete(Unit); runCurrent()
 
-        assertEquals(ReviewEditorEvent.Failed(AppError.Restricted.toUiText()), vm.events.first())
+        assertEquals(ReviewEditorEvent.Failed(AppError.Restricted), vm.events.first())
         assertFalse(vm.uiState.value.saving)
         assertEquals(1, repository.actions.size)
     }

@@ -13,9 +13,11 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkActions
 import dev.alllexey.itmowidgets.core.ui.navigation.openLinkEditor
+import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.databinding.SheetSubjectLinksBinding
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
@@ -57,11 +59,11 @@ class SubjectLinksBottomSheet : BottomSheetDialogFragment() {
         binding.recyclerView.adapter = adapter
         binding.recyclerView.itemAnimator = null
         binding.state.stateAction.setText(R.string.common_retry)
-        binding.state.stateAction.setOnClickListener { viewModel.refresh() }
+        binding.state.stateAction.setOnClickListener { viewModel.refresh(RefreshMode.Force) }
         viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(::render)
             .launchIn(viewLifecycleOwner.lifecycleScope)
         viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
-            if (event is LinkEvent.Failed) Snackbar.make(binding.root, event.text.resolve(requireContext()), Snackbar.LENGTH_SHORT).show()
+            if (event is LinkEvent.Failed) Snackbar.make(binding.root, event.error.messageRes(), Snackbar.LENGTH_SHORT).show()
         }.launchIn(viewLifecycleOwner.lifecycleScope)
     }
 

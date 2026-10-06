@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.testing.teacherReviews
-import dev.alllexey.itmowidgets.core.text.toUiText
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -49,8 +48,8 @@ class ReportReviewViewModelTest {
         val vm = model()
 
         vm.send(ReviewReportReason.SPAM, null); runCurrent()
-        assertEquals(ReportReviewEvent.Failed(AppError.Network.toUiText()), vm.events.first())
-        assertFalse(vm.sending.value)
+        assertEquals(ReportReviewEvent.Failed(AppError.Network), vm.events.first())
+        assertFalse(vm.uiState.value.sending)
 
         repository.reportResult = AppResult.Success(teacherReviews(TEACHER))
         vm.send(ReviewReportReason.SPAM, null); runCurrent()
@@ -65,12 +64,12 @@ class ReportReviewViewModelTest {
         val vm = model()
 
         vm.send(ReviewReportReason.OFFENSIVE, null); runCurrent()
-        assertTrue(vm.sending.value)
+        assertTrue(vm.uiState.value.sending)
         vm.send(ReviewReportReason.OFFENSIVE, null); runCurrent()
         gate.complete(Unit); runCurrent()
 
         assertEquals(1, repository.actions.size)
-        assertFalse(vm.sending.value)
+        assertFalse(vm.uiState.value.sending)
     }
 
     private fun model() = ReportReviewViewModel(SavedStateHandle(mapOf(
