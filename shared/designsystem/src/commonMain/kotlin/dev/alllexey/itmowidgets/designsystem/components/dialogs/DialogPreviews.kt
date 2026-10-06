@@ -1,10 +1,18 @@
 package dev.alllexey.itmowidgets.designsystem.components.dialogs
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
+import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoSwitch
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -39,6 +47,81 @@ private fun ConfirmDialogIconPreview() = ItmoPreview {
             confirmLabel = "Разрешить",
             dismissLabel = "Не сейчас",
             onConfirm = {},
+            onDismiss = {},
+        )
+    }
+}
+
+/** A message-only confirmation, as a dialog without a title draws it. */
+@Preview
+@Composable
+private fun ConfirmDialogUntitledPreview() = ItmoPreview {
+    DialogPreviewFrame {
+        ConfirmDialogSurface(
+            title = null,
+            text = "Автозапись на это занятие уже есть. Место в очереди: 2 из 5",
+            confirmLabel = "Отписаться",
+            dismissLabel = "Назад",
+            onConfirm = {},
+            onDismiss = {},
+        )
+    }
+}
+
+/** An option of the action below the text. */
+@Preview
+@Composable
+private fun ConfirmDialogOptionPreview() = ItmoPreview {
+    DialogPreviewFrame {
+        ConfirmDialogSurface(
+            title = "Автозапись",
+            text = "Приложение попробует записать вас, когда освободится место.",
+            confirmLabel = "Автозапись",
+            dismissLabel = "Назад",
+            onConfirm = {},
+            onDismiss = {},
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = ItmoTheme.spacing.group)
+                    .heightIn(min = ItmoTheme.spacing.touchTarget)
+                    .toggleable(value = true, role = Role.Switch, onValueChange = {}),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Записать даже если до начала занятия остался всего час",
+                    Modifier.weight(1f).padding(end = ItmoTheme.spacing.content),
+                    style = ItmoTheme.typography.bodySmall,
+                )
+                ItmoSwitch(checked = true, onCheckedChange = null)
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun InfoDialogPreview() = ItmoPreview {
+    DialogPreviewFrame {
+        InfoDialogSurface(
+            title = "Занятие недоступно",
+            text = "Занятие уже прошло или его нет в расписании на ближайшие три недели.",
+            buttonLabel = "Понятно",
+            onDismiss = {},
+        )
+    }
+}
+
+/** Without a title the text starts at the top. */
+@Preview
+@Composable
+private fun InfoDialogUntitledPreview() = ItmoPreview {
+    DialogPreviewFrame {
+        InfoDialogSurface(
+            title = null,
+            text = "Месячный лимит автозаписи исчерпан.\n\nСледующая попытка будет доступна 1 ноября",
+            buttonLabel = "Хорошо",
             onDismiss = {},
         )
     }
