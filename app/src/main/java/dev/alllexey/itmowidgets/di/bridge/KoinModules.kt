@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.feature.qr.di.qrModule
 import dev.alllexey.itmowidgets.feature.recordbook.di.recordbookModule
 import dev.alllexey.itmowidgets.feature.resources.di.resourcesModule
 import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleDataModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
@@ -52,6 +53,7 @@ object KoinModules {
         socialModule,
         friendSelectorModule,
         scheduleModule,
+        scheduleDataModule,
         sportModule,
         authDataModule,
         authModule,

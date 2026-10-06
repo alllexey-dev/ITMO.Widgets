@@ -54,7 +54,7 @@ class ReviewsBridgeTest {
 
     @Test
     fun `the review editor's and report's module resolves over the bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(reviewsModule))
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(reviewsModule) + scheduleDataGraph)
     }
 
     class NeedsReviews(

@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
+import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -35,13 +36,16 @@ object ReviewsDebugFixtures {
     /**
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
      * overrode, so the bridges load again; their singles forward Hilt's instances, the ones the session cleaners
-     * hold. A fixture that a newer host already replaced is left to that host.
+     * hold. The lessons gateway is Koin's own (`scheduleDataModule`): loading that module again would build a second
+     * gateway beside the session cleaner's, so the contract points back at its single. A fixture that a newer host
+     * already replaced is left to that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
         val koin = KoinStarter.ensureStarted(context)
         koin.unloadModules(listOf(fixture))
         koin.loadModules(releaseModules, allowOverride = true)
+        koin.declare<TeacherLessonsGateway>(koin.get<TeacherLessonsGatewayImpl>(), allowOverride = true)
         current = null
     }
 }

@@ -8,10 +8,9 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.unreachable
+import dev.alllexey.itmowidgets.feature.schedule.data.MainDispatcherRule
+import dev.alllexey.itmowidgets.feature.schedule.data.unreachable
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
-import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.unreachableScheduleMyItmoClient
 import kotlinx.coroutines.test.runTest
@@ -24,7 +23,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
-/** The demo schedule is read from the demo set; My ITMO and Backend are never asked. */
+/** The demo schedule is read from the demo set; My ITMO and Backend are never asked (the export source: `:app`). */
 class ScheduleDemoGateTest {
 
     @get:Rule
@@ -63,15 +62,5 @@ class ScheduleDemoGateTest {
 
         assertTrue(ivan.all { it.weekNumber == -1 })
         assertTrue(onLecture.map { it.isu }.containsAll(listOf(DemoPeople.IVAN.isu, DemoPeople.MARIA.isu)))
-    }
-
-    @Test
-    fun `the export source reads the demo schedule`() = runTest {
-        val source = MyItmoOwnScheduleSource(myItmo, time, demo, dispatchers)
-
-        val days = source.read(week.start, week.start.plus(40, DateTimeUnit.DAY))
-
-        assertEquals(41, days.size)
-        assertTrue(days.sumOf { it.lessons.size } > 20)
     }
 }

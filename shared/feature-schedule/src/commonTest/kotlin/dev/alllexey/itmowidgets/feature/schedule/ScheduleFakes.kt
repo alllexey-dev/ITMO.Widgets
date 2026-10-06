@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule
 
-// The data tests that stay in :app keep their own copy of this file until the schedule data moves here (KM-11a).
+// :app's debug fixture tests keep their own copy of this file (`app/src/test/.../feature/schedule/`).
 
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository

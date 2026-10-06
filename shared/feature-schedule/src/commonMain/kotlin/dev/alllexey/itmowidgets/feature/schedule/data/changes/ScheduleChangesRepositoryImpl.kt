@@ -4,7 +4,6 @@ import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -12,8 +11,8 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.core.time.WallClock
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
+import dev.alllexey.itmowidgets.feature.schedule.data.toAppError
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.DetectedChange
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigests
@@ -23,12 +22,12 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleDiff
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.academicSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import java.time.Clock
-import java.time.Duration
-import java.util.concurrent.atomic.AtomicLong
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlin.time.toKotlinInstant
+import kotlin.concurrent.atomics.AtomicLong
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.incrementAndFetch
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,12 +48,12 @@ import kotlinx.datetime.plus
  *
  * Checks run one at a time; the state has its own lock, so marking changes read never waits for the network.
  */
-@Singleton
-class ScheduleChangesRepositoryImpl @Inject constructor(
+@OptIn(ExperimentalAtomicApi::class)
+class ScheduleChangesRepositoryImpl(
     private val myItmo: MyItmoClient,
     private val store: ScheduleChangesFileStore,
     private val time: AcademicTimeProvider,
-    @param:WallClock private val clock: Clock,
+    private val clock: Clock,
     private val notifier: AppNotifier,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers,
@@ -62,15 +61,15 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
 
     private val checks = Mutex()
     private val lock = Mutex()
-    private val generation = AtomicLong()
+    private val generation = AtomicLong(0L)
     /** Moves with every snapshot reset, so a check that was already asking cannot bring the snapshot back. */
-    private val snapshotEpoch = AtomicLong()
+    private val snapshotEpoch = AtomicLong(0L)
     /** The file's state, read once; null until the first reader. */
     private val state = MutableStateFlow<StoredScheduleChanges?>(null)
 
     override fun observeChanges(): Flow<List<ScheduleChange>> = flow {
         if (demo.isActive()) {
-            emit(DemoSchedule.changes(time.today(), clock.instant().toKotlinInstant()))
+            emit(DemoSchedule.changes(time.today(), clock.now()))
             return@flow
         }
         lock.withLock { loaded() }
@@ -79,8 +78,8 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
 
     override suspend fun check(): AppResult<ScheduleCheckResult> = checks.withLock {
         if (demo.isActive()) return@withLock AppResult.Success(ScheduleCheckResult.Compared(0))
-        val started = generation.get()
-        val epoch = snapshotEpoch.get()
+        val started = generation.load()
+        val epoch = snapshotEpoch.load()
         val today = time.today()
         val end = today.plus(WINDOW_DAYS, DateTimeUnit.DAY)
         val current = try {
@@ -93,8 +92,8 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
 
         lock.withLock {
             // A sign-out during the request must not leave the previous account's schedule behind.
-            if (generation.get() != started) return@withLock AppResult.Failure(AppError.Unauthorized)
-            if (snapshotEpoch.get() != epoch) return@withLock AppResult.Success(ScheduleCheckResult.Baseline)
+            if (generation.load() != started) return@withLock AppResult.Failure(AppError.Unauthorized)
+            if (snapshotEpoch.load() != epoch) return@withLock AppResult.Success(ScheduleCheckResult.Baseline)
             val stored = loaded()
             val (next, result) = compared(stored, current)
             try {
@@ -119,12 +118,12 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     }
 
     override suspend fun resetSnapshot() {
-        snapshotEpoch.incrementAndGet()
+        snapshotEpoch.incrementAndFetch()
         update { stored -> stored.copy(snapshot = null, emptyHeld = false) }
     }
 
     override suspend fun clearSessionData() {
-        generation.incrementAndGet()
+        generation.incrementAndFetch()
         lock.withLock {
             withContext(dispatchers.io) { store.clear() }
             state.value = StoredScheduleChanges()
@@ -148,7 +147,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
             return stored.copy(snapshot = current.toStored(), emptyHeld = false) to ScheduleCheckResult.Baseline
         }
         val found = ScheduleDiff.compare(previous, current, time.localNow())
-        val detectedAt = clock.millis()
+        val detectedAt = clock.now().toEpochMilliseconds()
         val next = stored.copy(
             snapshot = current.toStored(),
             emptyHeld = false,
@@ -179,7 +178,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     }
 
     private fun pruned(next: StoredScheduleChanges): StoredScheduleChanges {
-        val oldest = clock.millis() - RETENTION.toMillis()
+        val oldest = clock.now().toEpochMilliseconds() - RETENTION.inWholeMilliseconds
         val changes = next.changes.filter { it.detectedAt >= oldest }.sortedBy { it.detectedAt }.takeLast(MAX_CHANGES)
         return next.copy(changes = changes)
     }
@@ -195,7 +194,7 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     }.also { state.value = it }
 
     private fun visible(changes: List<StoredChange>): List<ScheduleChange> {
-        val oldest = clock.millis() - RETENTION.toMillis()
+        val oldest = clock.now().toEpochMilliseconds() - RETENTION.inWholeMilliseconds
         return changes.filter { it.detectedAt >= oldest }
             .sortedByDescending { it.detectedAt }
             .map { it.toModel() }
@@ -226,6 +225,6 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
         const val WINDOW_DAYS = 7
         const val PUBLICATION_THRESHOLD = 5
         const val MAX_CHANGES = 500
-        val RETENTION: Duration = Duration.ofDays(30)
+        val RETENTION: Duration = 30.days
     }
 }

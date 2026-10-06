@@ -15,6 +15,8 @@ import dev.alllexey.itmowidgets.feature.home.domain.HomeHintStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.home.MarksHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleChangesHomeCardSource
 import dev.alllexey.itmowidgets.feature.schedule.data.home.ScheduleHomeCardSource
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleCardsQualifier
+import dev.alllexey.itmowidgets.feature.schedule.di.scheduleChangesCardsQualifier
 import dev.alllexey.itmowidgets.feature.social.data.home.SocialHomeCardSource
 import dev.alllexey.itmowidgets.feature.social.di.socialCardsQualifier
 import dev.alllexey.itmowidgets.feature.sport.data.home.SportHomeCardSource
@@ -33,7 +35,7 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 /**
  * The home feed sees every feature's source exactly once while the sources sit in two graphs: Hilt's `@IntoSet`
  * set behind the composite, and the qualified sources a lane has already moved to Koin (home's hints, social's
- * friend requests).
+ * friend requests, the schedule's two cards).
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -94,6 +96,21 @@ class HomeSourcesGraphTest {
         assertSame(social, koin.get<HomeCardSource>(socialCardsQualifier))
         assertEquals(1, koin.getAll<HomeCardSource>().count { it === social })
         assertTrue(HomeBridgeEntryPoint.from(application).homeCardSources().none { it is SocialHomeCardSource })
+    }
+
+    @Test
+    fun `the schedule sources are Koin singles outside the Hilt set`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+        val hilt = HomeBridgeEntryPoint.from(application).homeCardSources()
+
+        val schedule = koin.get<ScheduleHomeCardSource>()
+        val changes = koin.get<ScheduleChangesHomeCardSource>()
+        assertSame(schedule, koin.get<HomeCardSource>(scheduleCardsQualifier))
+        assertSame(changes, koin.get<HomeCardSource>(scheduleChangesCardsQualifier))
+        assertEquals(1, koin.getAll<HomeCardSource>().count { it === schedule })
+        assertEquals(1, koin.getAll<HomeCardSource>().count { it === changes })
+        assertTrue(hilt.none { it is ScheduleHomeCardSource || it is ScheduleChangesHomeCardSource })
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */

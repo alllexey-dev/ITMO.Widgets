@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule
 
-// The data tests that stay in :app keep their own copy of this file until the schedule data moves here (KM-11a).
+// :app's calendar and widget tests keep their own copy of this file (`app/src/test/.../feature/schedule/`).
 
 import kotlinx.datetime.LocalTime
 

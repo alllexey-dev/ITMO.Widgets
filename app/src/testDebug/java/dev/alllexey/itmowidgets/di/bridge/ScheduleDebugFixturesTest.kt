@@ -19,6 +19,9 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
@@ -49,7 +52,6 @@ class ScheduleDebugFixturesTest {
     fun `a fixture replaces what the schedule screens read until its host unloads it`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
-        val hilt = ScheduleBridgeEntryPoint.from(application)
         val core = CoreBridgeEntryPoint.from(application)
 
         val fixture = ScheduleDebugFixtures.load(application, Fakes)
@@ -65,12 +67,13 @@ class ScheduleDebugFixturesTest {
 
         ScheduleDebugFixtures.unload(application, fixture)
         assertSame(core.academicTimeProvider(), koin.get<AcademicTimeProvider>())
-        assertSame(hilt.scheduleRepository(), koin.get<ScheduleRepository>())
-        assertSame(hilt.scheduleChangesRepository(), koin.get<ScheduleChangesRepository>())
+        // The data module's own singles again, not second repositories beside the ones sign-out and the widget hold.
+        assertSame(koin.get<ScheduleRepositoryImpl>(), koin.get<ScheduleRepository>())
+        assertSame(koin.get<ScheduleChangesRepositoryImpl>(), koin.get<ScheduleChangesRepository>())
         assertSame(koin.get<SchedulePreferencesRepositoryImpl>(), koin.get<SchedulePreferencesRepository>())
         assertSame(core.pendingSportBookingsRepository(), koin.get<PendingSportBookingsRepository>())
         assertSame(core.coreCalendarSync(), koin.get<CalendarSync>())
-        assertSame(hilt.lessonFriendsRepository(), koin.get<LessonFriendsRepository>())
+        assertSame(koin.get<LessonFriendsRepositoryImpl>(), koin.get<LessonFriendsRepository>())
         assertSame(koin.get<CustomServicesRepositoryImpl>(), koin.get<CustomServicesRepository>())
         assertSame(
             ReviewsBridgeEntryPoint.from(application).teacherLevelsRepository(),
@@ -90,8 +93,7 @@ class ScheduleDebugFixturesTest {
         assertSame(release, koin.get<ScheduleRepository>())
 
         ScheduleDebugFixtures.unload(application, fixture)
-        val hilt = ScheduleBridgeEntryPoint.from(application)
-        assertSame(hilt.scheduleChangesRepository(), koin.get<ScheduleChangesRepository>())
+        assertSame(koin.get<ScheduleChangesRepositoryImpl>(), koin.get<ScheduleChangesRepository>())
     }
 
     @Test

@@ -1,10 +1,13 @@
 package dev.alllexey.itmowidgets.feature.schedule
 
-// The data tests that stay in :app keep their own copy of this file until the schedule data moves here (KM-11a).
+// :app's debug fixture tests keep their own copy of the repository fake (`app/src/test/.../feature/schedule/`).
 
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,5 +40,31 @@ class FakeScheduleChangesRepository(vararg initial: ScheduleChange) : ScheduleCh
 
     override suspend fun resetSnapshot() {
         resets++
+    }
+}
+
+class FakeScheduleChangesScheduler : ScheduleChangesScheduler {
+    var ensureCalls = 0
+    var runOnceCalls = 0
+    var cancelCalls = 0
+
+    override fun ensurePeriodic() {
+        ensureCalls++
+    }
+
+    override fun runOnce() {
+        runOnceCalls++
+    }
+
+    override fun cancel() {
+        cancelCalls++
+    }
+}
+
+class RecordingScheduleChangeNotifier : ScheduleChangeNotifier {
+    val shown = mutableListOf<ScheduleChangeDigest>()
+
+    override fun show(digest: ScheduleChangeDigest) {
+        shown += digest
     }
 }

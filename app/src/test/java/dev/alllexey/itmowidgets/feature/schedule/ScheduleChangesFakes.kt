@@ -2,11 +2,8 @@ package dev.alllexey.itmowidgets.feature.schedule
 
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
-import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeDigest
-import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
-import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -38,31 +35,5 @@ class FakeScheduleChangesRepository(vararg initial: ScheduleChange) : ScheduleCh
 
     override suspend fun resetSnapshot() {
         resets++
-    }
-}
-
-class FakeScheduleChangesScheduler : ScheduleChangesScheduler {
-    var ensureCalls = 0
-    var runOnceCalls = 0
-    var cancelCalls = 0
-
-    override fun ensurePeriodic() {
-        ensureCalls++
-    }
-
-    override fun runOnce() {
-        runOnceCalls++
-    }
-
-    override fun cancel() {
-        cancelCalls++
-    }
-}
-
-class RecordingScheduleChangeNotifier : ScheduleChangeNotifier {
-    val shown = mutableListOf<ScheduleChangeDigest>()
-
-    override fun show(digest: ScheduleChangeDigest) {
-        shown += digest
     }
 }

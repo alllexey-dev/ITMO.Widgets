@@ -10,8 +10,6 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.home.HomeScheduleSelector
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -27,8 +25,7 @@ import kotlinx.datetime.plus
 
 /** Today and tomorrow from the schedule cache, re-evaluated every minute so the current lesson moves. */
 @OptIn(ExperimentalCoroutinesApi::class)
-@Singleton
-class ScheduleHomeCardSource @Inject constructor(
+class ScheduleHomeCardSource(
     private val repository: ScheduleRepository,
     private val pending: PendingSportBookingsRepository,
     private val preferences: SchedulePreferencesRepository,

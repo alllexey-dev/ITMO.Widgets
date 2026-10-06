@@ -13,7 +13,6 @@ import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toSyncDto
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
@@ -23,7 +22,7 @@ import kotlinx.datetime.isoDayNumber
  * The own schedule comes from MyITMO and, with the opt-in, is uploaded to Backend best-effort; another user's
  * schedule exists only on Backend, and `ScheduleRepositoryImpl` refuses it without the opt-in.
  */
-class ScheduleRemoteDataSourceImpl @Inject constructor(
+class ScheduleRemoteDataSourceImpl(
     private val backend: BackendGate,
     private val myItmo: MyItmoClient,
     private val backendSchedule: ScheduleApi,

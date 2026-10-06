@@ -5,12 +5,11 @@ import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 
-class SubjectLessonsGatewayImpl @Inject constructor(
+class SubjectLessonsGatewayImpl(
     private val repository: ScheduleRepository
 ) : SubjectLessonsGateway {
 

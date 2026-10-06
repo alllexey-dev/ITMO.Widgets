@@ -23,6 +23,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
+import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -88,7 +90,8 @@ object RecordbookDebugFixtures {
      * overrode, so the bridge modules load again; their singles forward Hilt's instances, so readers get the same
      * objects as before. Reloading `recordbookModule` would build a second recordbook cache, BARS client and session
      * store beside the ones Hilt-built code already holds, so the overridden repository keys point at its instances
-     * again. A fixture that a newer host already replaced is left to that host.
+     * again; the schedule gateways point back at `scheduleDataModule`'s singles the same way. A fixture that a newer
+     * host already replaced is left to that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
@@ -98,6 +101,8 @@ object RecordbookDebugFixtures {
         koin.declare<RecordbookRepository>(koin.get<RecordbookRepositoryImpl>(), allowOverride = true)
         koin.declare<BarsRecordbookRepository>(koin.get<BarsRecordbookRepositoryImpl>(), allowOverride = true)
         koin.declare<BarsPreferenceRepository>(koin.get<BarsPreferenceRepositoryImpl>(), allowOverride = true)
+        koin.declare<SubjectLessonsGateway>(koin.get<SubjectLessonsGatewayImpl>(), allowOverride = true)
+        koin.declare<ScheduleRefreshGateway>(koin.get<ScheduleRepositoryImpl>(), allowOverride = true)
         current = null
     }
 }

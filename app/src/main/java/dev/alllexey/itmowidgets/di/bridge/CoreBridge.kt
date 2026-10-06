@@ -13,16 +13,13 @@ import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
-import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
-import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
-import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
-import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
@@ -97,6 +94,9 @@ interface CoreBridgeEntryPoint {
     fun backendDeviceSession(): BackendDeviceSession
     fun fcmTokenSync(): FcmTokenSync
 
+    /** The Android notifications (`@Singleton` in Hilt); the schedule changes post and cancel theirs here. */
+    fun appNotifier(): AppNotifier
+
     /** The session's ports (L16 KM-11h1): the Keystore token file, the widget and work effects, the two flags. */
     fun sessionTokenStore(): SessionTokenStore
     fun sessionLifecycleEffects(): SessionLifecycleEffects
@@ -104,24 +104,19 @@ interface CoreBridgeEntryPoint {
     fun utilityStorage(): UtilityStorage
 
     fun customSpoilerRepository(): CustomSpoilerRepository
-    fun scheduleChangeTracking(): ScheduleChangeTracking
     fun markTracking(): MarkTracking
     /** Not `calendarSync()`: `CalendarSyncEntryPoint` declares that name for the implementation type. */
     fun coreCalendarSync(): CalendarSync
 
     /** Unscoped in Hilt: the export keeps no state, so every reader gets a new one. */
     fun scheduleIcsExport(): ScheduleIcsExport
-    /** The own schedule's lessons and its refresh, as other features read them (`@Singleton` in Hilt). */
-    fun subjectLessonsGateway(): SubjectLessonsGateway
-    fun scheduleRefreshGateway(): ScheduleRefreshGateway
 
     /** Sport scores as other features read them; unscoped in Hilt but stateless, so one instance serves Koin. */
     fun sportScoreRepository(): SportScoreRepository
-    // The schedule contracts other features read (L10 LS-2a): pending sport rows and the teacher lessons gateway;
-    // calendar sync and the refresh and subject lessons gateways are bridged above, the schedule preferences come
-    // from Koin's `settingsDataModule`. Schedule's own data stays on Hilt.
+    // The schedule contracts Koin reads from Hilt (L10 LS-2a): the pending sport rows; calendar sync is bridged
+    // above, the schedule preferences come from Koin's `settingsDataModule`, the schedule data from Koin's
+    // `scheduleDataModule` (KM-11a2).
     fun pendingSportBookingsRepository(): PendingSportBookingsRepository
-    fun teacherLessonsGateway(): TeacherLessonsGateway
     /** The scope that outlives screens, for work that must finish after the caller is gone. */
     @ApplicationScope
     fun applicationScope(): CoroutineScope
@@ -166,22 +161,19 @@ val coreBridgeModule = module {
     single<BackendIdentitySync> { CoreBridgeEntryPoint.from(androidContext()).backendIdentitySync() }
     single<BackendDeviceSession> { CoreBridgeEntryPoint.from(androidContext()).backendDeviceSession() }
     single<FcmTokenSync> { CoreBridgeEntryPoint.from(androidContext()).fcmTokenSync() }
+    single<AppNotifier> { CoreBridgeEntryPoint.from(androidContext()).appNotifier() }
     single<SessionTokenStore> { CoreBridgeEntryPoint.from(androidContext()).sessionTokenStore() }
     single<SessionLifecycleEffects> { CoreBridgeEntryPoint.from(androidContext()).sessionLifecycleEffects() }
     single<DemoPreferences> { CoreBridgeEntryPoint.from(androidContext()).demoPreferences() }
     single<UtilityStorage> { CoreBridgeEntryPoint.from(androidContext()).utilityStorage() }
     single<CustomSpoilerRepository> { CoreBridgeEntryPoint.from(androidContext()).customSpoilerRepository() }
-    single<ScheduleChangeTracking> { CoreBridgeEntryPoint.from(androidContext()).scheduleChangeTracking() }
     single<MarkTracking> { CoreBridgeEntryPoint.from(androidContext()).markTracking() }
     single<CalendarSync> { CoreBridgeEntryPoint.from(androidContext()).coreCalendarSync() }
     factory<ScheduleIcsExport> { CoreBridgeEntryPoint.from(androidContext()).scheduleIcsExport() }
-    single<SubjectLessonsGateway> { CoreBridgeEntryPoint.from(androidContext()).subjectLessonsGateway() }
-    single<ScheduleRefreshGateway> { CoreBridgeEntryPoint.from(androidContext()).scheduleRefreshGateway() }
     single<SportScoreRepository> { CoreBridgeEntryPoint.from(androidContext()).sportScoreRepository() }
     single<PendingSportBookingsRepository> {
         CoreBridgeEntryPoint.from(androidContext()).pendingSportBookingsRepository()
     }
-    single<TeacherLessonsGateway> { CoreBridgeEntryPoint.from(androidContext()).teacherLessonsGateway() }
     // Unqualified in Koin: the application scope is the only CoroutineScope of the graph; a second one fails the
     // start under allowOverride(false).
     single<CoroutineScope> { CoreBridgeEntryPoint.from(androidContext()).applicationScope() }
