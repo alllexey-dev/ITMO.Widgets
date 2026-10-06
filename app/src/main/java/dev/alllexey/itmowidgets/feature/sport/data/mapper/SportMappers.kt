@@ -1,15 +1,15 @@
 package dev.alllexey.itmowidgets.feature.sport.data.mapper
 
-import api.myitmo.model.sport.ChosenSportSection
-import dev.alllexey.itmowidgets.core.model.QueueEntryStatus as QueueEntryStatusDto
-import dev.alllexey.itmowidgets.core.model.SportAutoSignEntry as SportAutoSignEntryDto
-import dev.alllexey.itmowidgets.core.model.SportAutoSignLimits as SportAutoSignLimitsDto
-import dev.alllexey.itmowidgets.core.model.SportAutoSignQueue as SportAutoSignQueueDto
-import dev.alllexey.itmowidgets.core.model.SportFreeSignEntry as SportFreeSignEntryDto
-import dev.alllexey.itmowidgets.core.model.SportFreeSignQueue as SportFreeSignQueueDto
-import dev.alllexey.itmowidgets.core.model.SportLessonDto
-import dev.alllexey.itmowidgets.core.model.SportQueue as SportQueueDto
-import dev.alllexey.itmowidgets.core.model.SportQueueEntry as SportQueueEntryDto
+import dev.alllexey.itmoapi.myitmo.sport.ChosenSportSection
+import dev.alllexey.itmowidgets.client.sport.model.QueueEntryStatus as QueueEntryStatusDto
+import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignEntry as SportAutoSignEntryDto
+import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignLimits as SportAutoSignLimitsDto
+import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignQueue as SportAutoSignQueueDto
+import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignEntry as SportFreeSignEntryDto
+import dev.alllexey.itmowidgets.client.sport.model.SportFreeSignQueue as SportFreeSignQueueDto
+import dev.alllexey.itmowidgets.client.sport.model.SportLessonDto
+import dev.alllexey.itmowidgets.client.sport.model.SportQueue as SportQueueDto
+import dev.alllexey.itmowidgets.client.sport.model.SportQueueEntry as SportQueueEntryDto
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttempts
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAttendance
@@ -29,12 +29,10 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
-import java.time.OffsetDateTime
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
-import kotlin.time.toKotlinInstant
 
-fun api.myitmo.model.sport.SportScore.toModel(): SportScore {
+fun dev.alllexey.itmoapi.myitmo.sport.SportScore.toModel(): SportScore {
     return SportScore(
         attendances = sum.attendances.toInt(),
         other = sum.other.toInt(),
@@ -42,41 +40,42 @@ fun api.myitmo.model.sport.SportScore.toModel(): SportScore {
     )
 }
 
-fun api.myitmo.model.sport.SportAttendance.toModel(): SportAttendance {
+/** An absent name or evaluation decodes as blank in 2.x; the domain keeps them absent, as 1.x did. */
+fun dev.alllexey.itmoapi.myitmo.sport.SportAttendance.toModel(): SportAttendance {
     return SportAttendance(
         type = type.trim(),
-        name = name?.trim()?.let(::SectionName),
+        name = name.trim().takeIf { it.isNotEmpty() }?.let(::SectionName),
         evaluationId = evaluationId,
-        evaluationName = evaluationName?.trim(),
+        evaluationName = evaluationName.trim().takeIf { it.isNotEmpty() },
         sectionLevel = sectionLevel,
         score = score,
-        dateTime = date.toKotlin(),
+        dateTime = date,
         isCompetition = isCompetition
     )
 }
 
-fun api.myitmo.model.sport.SportAttempts.toModel(): SportAttempts {
+fun dev.alllexey.itmoapi.myitmo.sport.SportAttempts.toModel(): SportAttempts {
     return SportAttempts(
         total = totalAttempts,
         used = usedAttempts,
         free = freeAttempts,
-        canSignIn = isCanSignIn
+        canSignIn = canSignIn
     )
 }
 
-fun api.myitmo.model.sport.SportLesson.toModel(now: Instant): SportLesson {
+fun dev.alllexey.itmoapi.myitmo.sport.SportLesson.toModel(now: Instant): SportLesson {
     val unavailableReasons = UnavailableReason.getSortedUnavailableReasons(
-        signed = signed == true,
-        startsAt = date.toKotlin(),
-        available = available?.toInt() ?: 0,
-        serverReasons = canSignIn?.unavailableReasons.orEmpty(),
+        signed = signed,
+        startsAt = date,
+        available = available.toInt(),
+        serverReasons = canSignIn.unavailableReasons,
         now = now
     )
     return SportLesson(
         isLessonReal = true,
         lessonId = id,
-        start = date.toKotlin(),
-        end = dateEnd.toKotlin(),
+        start = date,
+        end = dateEnd,
         sectionId = sectionId,
         sectionName = SectionName(sectionName.trim()),
         sectionLevel = sectionLevel.toInt(),
@@ -93,7 +92,7 @@ fun api.myitmo.model.sport.SportLesson.toModel(now: Instant): SportLesson {
         timeSlotStart = timeSlotStart.trim(),
         timeSlotEnd = timeSlotEnd.trim(),
         intersection = intersection,
-        canSignIn = canSignIn.isCanSignIn,
+        canSignIn = canSignIn.canSignIn,
         unavailableReasons = unavailableReasons,
         signed = signed,
         teacherIsu = teacherIsu.toInt(),
@@ -105,15 +104,18 @@ fun api.myitmo.model.sport.SportLesson.toModel(now: Instant): SportLesson {
 }
 
 
+/** A lesson without dates cannot be placed on a day; 1.x failed the whole list on one, 2.x skips it. */
 fun ChosenSportSection.toBookings(): List<SportBooking> {
     return lessonGroups.flatMap { group ->
-        group.lessons.map { lesson ->
+        group.lessons.mapNotNull { lesson ->
+            val start = lesson.dateStart ?: return@mapNotNull null
+            val end = lesson.dateEnd ?: return@mapNotNull null
             SportBooking(
                 isLessonReal = true,
                 lessonId = lesson.id,
                 sectionName = SectionName(sectionName.trim()),
-                start = lesson.dateStart.toKotlin(),
-                end = lesson.dateEnd.toKotlin(),
+                start = start,
+                end = end,
                 roomName = lesson.roomName.trim(),
                 teacherFio = lesson.teacherFio.trim(),
                 teacherIsu = lesson.teacherIsu.toInt(),
@@ -150,16 +152,16 @@ fun SportQueueEntry.toBooking(): SportBooking {
     )
 }
 
-fun api.myitmo.model.sport.SportFilters.toModel(): SportFilterCatalog {
+fun dev.alllexey.itmoapi.myitmo.sport.SportFilters.toModel(): SportFilterCatalog {
     return SportFilterCatalog(
-        buildings = buildingId.orEmpty().map { SportFilterOption(it.id, it.value.trim()) },
-        sections = sectionId.orEmpty().map { SportFilterOption(it.id, it.value.trim()) },
-        sportTypes = sportTypeId.orEmpty().map { SportFilterOption(it.id, it.value.trim()) },
-        teachers = teacherIsu.orEmpty().map { SportFilterOption(it.id, it.value.trim()) }
+        buildings = buildingId.map { SportFilterOption(it.id, it.value.trim()) },
+        sections = sectionId.map { SportFilterOption(it.id, it.value.trim()) },
+        sportTypes = sportTypeId.map { SportFilterOption(it.id, it.value.trim()) },
+        teachers = teacherIsu.map { SportFilterOption(it.id, it.value.trim()) }
     )
 }
 
-fun api.myitmo.model.sport.TimeSlot.toModel(): SportTimeSlot {
+fun dev.alllexey.itmoapi.myitmo.sport.TimeSlot.toModel(): SportTimeSlot {
     return SportTimeSlot(
         id = id,
         start = timeStart.trim(),
@@ -171,7 +173,7 @@ fun SportAutoSignLimitsDto.toModel(): SportAutoSignLimits {
     return SportAutoSignLimits(
         limit = limit,
         available = available,
-        nextAvailableAt = nextAvailableAt.toKotlin()
+        nextAvailableAt = nextAvailableAt
     )
 }
 
@@ -184,12 +186,12 @@ fun SportQueueEntryDto.toModel(): SportQueueEntry {
             total = total,
             isCancelled = isCancelled,
             status = status.toModel(),
-            createdAt = createdAt.toKotlin(),
-            firstNotifiedAt = firstNotifiedAt?.toKotlin(),
-            lastNotifiedAt = lastNotifiedAt?.toKotlin(),
-            cancelledAt = cancelledAt?.toKotlin(),
-            satisfiedAt = satisfiedAt?.toKotlin(),
-            expiredAt = expiredAt?.toKotlin(),
+            createdAt = createdAt,
+            firstNotifiedAt = firstNotifiedAt,
+            lastNotifiedAt = lastNotifiedAt,
+            cancelledAt = cancelledAt,
+            satisfiedAt = satisfiedAt,
+            expiredAt = expiredAt,
             notificationAttempts = notificationAttempts,
             maxNotificationAttempts = maxNotificationAttempts,
             targetLesson = targetLesson.toModel(),
@@ -204,12 +206,12 @@ fun SportQueueEntryDto.toModel(): SportQueueEntry {
             total = total,
             isCancelled = isCancelled,
             status = status.toModel(),
-            createdAt = createdAt.toKotlin(),
-            firstNotifiedAt = firstNotifiedAt?.toKotlin(),
-            lastNotifiedAt = lastNotifiedAt?.toKotlin(),
-            cancelledAt = cancelledAt?.toKotlin(),
-            satisfiedAt = satisfiedAt?.toKotlin(),
-            expiredAt = expiredAt?.toKotlin(),
+            createdAt = createdAt,
+            firstNotifiedAt = firstNotifiedAt,
+            lastNotifiedAt = lastNotifiedAt,
+            cancelledAt = cancelledAt,
+            satisfiedAt = satisfiedAt,
+            expiredAt = expiredAt,
             notificationAttempts = notificationAttempts,
             maxNotificationAttempts = maxNotificationAttempts,
             targetLesson = targetLesson.toModel(),
@@ -233,8 +235,17 @@ fun SportQueueDto.toModel(): SportQueue {
     }
 }
 
-private fun QueueEntryStatusDto.toModel(): SportQueueEntryStatus {
-    return SportQueueEntryStatus.valueOf(name)
+/**
+ * A status this client does not know fails the whole load, as 1.x did (its Gson left the status null and this
+ * mapping threw). Backend sends no new status while `app.minimum` is 2.2 or lower.
+ */
+private fun QueueEntryStatusDto.toModel(): SportQueueEntryStatus = when (this) {
+    QueueEntryStatusDto.WAITING -> SportQueueEntryStatus.WAITING
+    QueueEntryStatusDto.NOTIFIED -> SportQueueEntryStatus.NOTIFIED
+    QueueEntryStatusDto.GAVE_UP_NOTIFYING -> SportQueueEntryStatus.GAVE_UP_NOTIFYING
+    QueueEntryStatusDto.SATISFIED -> SportQueueEntryStatus.SATISFIED
+    QueueEntryStatusDto.EXPIRED -> SportQueueEntryStatus.EXPIRED
+    QueueEntryStatusDto.UNKNOWN -> throw IllegalStateException("Unknown sport queue entry status")
 }
 
 private fun SportLessonDto.toModel(): SportQueueLesson {
@@ -247,13 +258,10 @@ private fun SportLessonDto.toModel(): SportQueueLesson {
         typeId = typeId,
         buildingId = buildingId,
         roomName = roomName.trim(),
-        start = start.toKotlin(),
-        end = end.toKotlin(),
+        start = start,
+        end = end,
         timeSlotId = timeSlotId,
         teacherIsu = teacherIsu,
         teacherFio = teacherFio.trim()
     )
 }
-
-/** MyItmoApi 1.x and Core 1.x DTOs keep java.time until KM-10c. */
-private fun OffsetDateTime.toKotlin(): Instant = toInstant().toKotlinInstant()

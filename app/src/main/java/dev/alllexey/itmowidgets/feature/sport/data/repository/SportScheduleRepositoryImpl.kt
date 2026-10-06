@@ -1,13 +1,13 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import api.myitmo.MyItmoApi
+import dev.alllexey.itmoapi.core.requireResult
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.result.errorOrNull
 import dev.alllexey.itmowidgets.core.result.valueOrNull
-import dev.alllexey.itmowidgets.core.time.javaToday
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -33,12 +33,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import java.time.LocalDate
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import javax.inject.Inject
 
 class SportScheduleRepositoryImpl @Inject constructor(
     sportDataRepository: SportDataRepository,
-    private val myItmoApi: MyItmoApi,
+    private val myItmo: MyItmoClient,
     private val timeProvider: AcademicTimeProvider,
     private val sportLessonTemplateProvider: SportLessonTemplateProvider,
     private val demo: DemoMode,
@@ -177,27 +179,13 @@ class SportScheduleRepositoryImpl @Inject constructor(
 
         try {
             val result = withContext(dispatchers.io) {
-                val from = timeProvider.javaToday()
-                val to = from.plusDays(21)
-
-                val response = myItmoApi
-                    .getSportSchedule(from, to, null, null, null)
-                    .execute()
+                val from = timeProvider.today()
+                val to = from.plus(DatePeriod(days = SCHEDULE_DAYS))
+                val days = myItmo.sport.getSportSchedule(from, to).requireResult()
                 val now = timeProvider.now()
-
-                response.body()?.result?.associate {
-                    it.date to it.lessons.orEmpty().map { lesson ->
-                        lesson.toModel(now)
-                    }
-                }
+                days.associate { day -> day.date to day.lessons.orEmpty().map { lesson -> lesson.toModel(now) } }
             }
-
-            if (result != null) {
-                scheduleFlow.emit(AppResult.Success(result))
-            } else {
-                throw RuntimeException("SportSchedule response is null")
-            }
-
+            scheduleFlow.emit(AppResult.Success(result))
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
@@ -211,20 +199,8 @@ class SportScheduleRepositoryImpl @Inject constructor(
             return
         }
         try {
-            val result = withContext(dispatchers.io) {
-                val response = myItmoApi
-                    .sportFilters
-                    .execute()
-
-                response.body()?.result?.toModel()
-            }
-
-            if (result != null) {
-                filtersFlow.emit(AppResult.Success(result))
-            } else {
-                throw RuntimeException("SportFilters response is null")
-            }
-
+            val result = withContext(dispatchers.io) { myItmo.sport.getSportFilters().requireResult().toModel() }
+            filtersFlow.emit(AppResult.Success(result))
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
@@ -238,24 +214,17 @@ class SportScheduleRepositoryImpl @Inject constructor(
             return
         }
         try {
-            val result = withContext(dispatchers.io) {
-                val response = myItmoApi
-                    .sportTimeSlots
-                    .execute()
-
-                response.body()?.result?.map { it.toModel() }
-            }
-
-            if (result != null) {
-                timeSlotsFlow.emit(AppResult.Success(result))
-            } else {
-                throw RuntimeException("SportTimeSlots response is null")
-            }
-
+            val result = withContext(dispatchers.io) { myItmo.sport.getSportTimeSlots().requireResult().map { it.toModel() } }
+            timeSlotsFlow.emit(AppResult.Success(result))
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
             timeSlotsFlow.emit(AppResult.Failure(error.toAppError()))
         }
+    }
+
+    private companion object {
+        /** Today and the three weeks after it, both ends inclusive. */
+        const val SCHEDULE_DAYS = 21
     }
 }

@@ -1,14 +1,13 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
-import dev.alllexey.itmowidgets.core.model.ApiResponse
+import dev.alllexey.itmowidgets.core.network.Core2Harness
+import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.contractFixture
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
-import dev.alllexey.itmowidgets.core.testing.myItmoStub
 import dev.alllexey.itmowidgets.core.testing.noDemo
-import java.lang.reflect.Proxy
+import dev.alllexey.itmowidgets.testkit.respondJson
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -23,13 +22,12 @@ class SportActionRepositoryImplTest {
 
     private val dispatchers = mainDispatcherRule.appDispatchers
 
-    private val calls = mutableListOf<String>()
-    private val backend = Proxy.newProxyInstance(ItmoWidgetsApi::class.java.classLoader, arrayOf(ItmoWidgetsApi::class.java)) { _, method, _ ->
-        calls += method.name
-        ApiResponse.success("OK")
-    } as ItmoWidgetsApi
+    private val clients = Core2Harness(Core2Harness.session()) { request ->
+        check(request.url.host != "my.itmo.ru") { "My ITMO is not asked here" }
+        respondJson(contractFixture(ROUTES.getValue(request.url.encodedPath)))
+    }
     private val gate = FakeBackendGate(optedIn = false)
-    private val actions = SportActionRepositoryImpl(gate, myItmoStub { error("My ITMO is not asked here") }.api, backend, noDemo(), dispatchers)
+    private val actions = SportActionRepositoryImpl(gate, clients.myItmo, clients.client.sport, noDemo(), dispatchers)
 
     @Test
     fun `without the opt-in the queues are off and never reach Backend`() = runTest {
@@ -40,7 +38,7 @@ class SportActionRepositoryImplTest {
         assertEquals(disabled, actions.cancelFreeSignEntry(1))
         assertEquals(disabled, actions.createAutoSignEntry(1))
         assertEquals(disabled, actions.cancelAutoSignEntry(1))
-        assertTrue(calls.isEmpty())
+        assertTrue(clients.requests.isEmpty())
     }
 
     @Test
@@ -52,9 +50,26 @@ class SportActionRepositoryImplTest {
         assertEquals(AppResult.Success(Unit), actions.cancelFreeSignEntry(1))
         assertEquals(AppResult.Success(Unit), actions.createAutoSignEntry(1))
         assertEquals(AppResult.Success(Unit), actions.cancelAutoSignEntry(1))
-        assertEquals(
-            listOf("createSportFreeSignEntry", "cancelSportFreeSignEntry", "createSportAutoSignEntry", "cancelSportAutoSignEntry"),
-            calls
+        assertEquals(ROUTES.keys.toList(), clients.backendRequests.map { it.url.encodedPath })
+    }
+
+    @Test
+    fun `a rejected queue action is a failure, not a success`() = runTest {
+        gate.optedIn.value = true
+        val rejecting = Core2Harness(Core2Harness.session()) {
+            respondJson(Core2Harness.errorEnvelope("invalid_request"), io.ktor.http.HttpStatusCode.BadRequest)
+        }
+        val actions = SportActionRepositoryImpl(gate, rejecting.myItmo, rejecting.client.sport, noDemo(), dispatchers)
+
+        assertTrue(actions.createFreeSignEntry(1, forceSign = true) is AppResult.Failure)
+    }
+
+    private companion object {
+        val ROUTES = linkedMapOf(
+            "/api/sport/free-sign/entry/create" to "http/sport-free-sign/createSportFreeSignEntry.json",
+            "/api/sport/free-sign/entry/1/cancel" to "http/sport-free-sign/cancelSportFreeSignEntry.json",
+            "/api/sport/auto-sign/entry/create" to "http/sport-auto-sign/createSportAutoSignEntry.json",
+            "/api/sport/auto-sign/entry/1/cancel" to "http/sport-auto-sign/cancelSportAutoSignEntry.json"
         )
     }
 }
