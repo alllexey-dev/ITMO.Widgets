@@ -22,7 +22,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.designsystem.tokens.IosMetrics
 import dev.alllexey.itmowidgets.designsystem.tokens.ShapeTokens
 import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 
@@ -39,6 +41,9 @@ enum class SkeletonStyle(internal val defaultRows: Int, internal val defaultRowH
  * Placeholder rows for a first load without a cache (`core/ui/SkeletonView`): the shape of the coming content in
  * the area it will take, pulsing between `pulseMinAlpha` and opaque every `pulseMillis`, static under reduced
  * motion. Rows that do not fit the bounds are not drawn; TalkBack skips it.
+ *
+ * Under the iOS style the shapes and bars are UIKit's `systemFill` (a bar over a card is the fill twice, as a
+ * placeholder over a filled cell) and a card has the inset group's corners; the geometry and the pulse stay.
  */
 @Composable
 fun Skeleton(
@@ -48,8 +53,10 @@ fun Skeleton(
     rowHeight: Dp = style.defaultRowHeight,
 ) {
     val padding = ItmoTheme.spacing.screenMargin
-    val surface = ItmoTheme.colorScheme.surfaceVariant
-    val bar = ItmoTheme.colorScheme.onSurfaceVariant.copy(alpha = BAR_ALPHA)
+    val ios = ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
+    val surface = if (ios) ItmoTheme.iosColors.systemFill else ItmoTheme.colorScheme.surfaceVariant
+    val bar = if (ios) surface else ItmoTheme.colorScheme.onSurfaceVariant.copy(alpha = BAR_ALPHA)
+    val cardRadius = if (ios) IosMetrics.insetGroupRadius else CardRadius
     val alpha = rememberPulseAlpha()
     Canvas(
         modifier
@@ -66,7 +73,7 @@ fun Skeleton(
             val area = RowArea(left = inset, top = top, width = size.width - 2 * inset, height = height)
             when (style) {
                 SkeletonStyle.List -> drawListRow(area, surface, bar)
-                SkeletonStyle.Cards -> drawCard(area, surface, bar, CardRadius.toPx())
+                SkeletonStyle.Cards -> drawCard(area, surface, bar, cardRadius.toPx())
             }
             top += height + RowGap.toPx()
         }
