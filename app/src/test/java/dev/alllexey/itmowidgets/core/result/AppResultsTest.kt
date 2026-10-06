@@ -1,15 +1,12 @@
 package dev.alllexey.itmowidgets.core.result
 
-import api.myitmo.utils.ApiException
-import api.myitmo.utils.TokenRefreshException
+import dev.alllexey.itmoapi.core.MyItmoException
+import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.core.network.appResultOf
-import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
 import org.junit.Test
-import retrofit2.HttpException
-import retrofit2.Response
 import java.io.IOException
 import java.net.UnknownHostException
 import kotlin.coroutines.cancellation.CancellationException
@@ -45,43 +42,39 @@ class AppResultsTest {
 
     @Test
     fun `an IOException deep in the chain is a network error`() {
-        val deep = RuntimeException(ApiException("Request failed", RuntimeException(UnknownHostException())))
+        val deep = RuntimeException(IllegalStateException(RuntimeException(UnknownHostException())))
 
         assertEquals(AppResult.Failure(AppError.Network), failureOf(deep))
     }
 
     @Test
     fun `an IOException inside a token refresh is a network error, not an ended session`() {
-        val refresh = TokenRefreshException("Refresh failed", RuntimeException(IOException()))
+        val refresh = MyItmoException.Network(RuntimeException(IOException()))
 
         assertEquals(AppResult.Failure(AppError.Network), failureOf(refresh))
     }
 
     @Test
     fun `401 is unauthorized`() {
-        assertEquals(AppResult.Failure(AppError.Unauthorized), failureOf(httpException(401)))
+        assertEquals(AppResult.Failure(AppError.Unauthorized), failureOf(BackendException.Unauthorized()))
+        assertEquals(AppResult.Failure(AppError.Unauthorized), failureOf(MyItmoException.Auth(401)))
     }
 
     @Test
     fun `403 with the restricted code is restricted`() {
-        val restricted = httpException(403, """{"error":{"code":"restricted"}}""")
-
-        assertEquals(AppResult.Failure(AppError.Restricted), failureOf(restricted))
+        assertEquals(AppResult.Failure(AppError.Restricted), failureOf(BackendException.Forbidden("restricted")))
     }
 
     @Test
     fun `other 403 is forbidden`() {
-        assertEquals(AppResult.Failure(AppError.Forbidden), failureOf(httpException(403, """{"error":{"code":"permission_denied"}}""")))
-        assertEquals(AppResult.Failure(AppError.Forbidden), failureOf(httpException(403)))
+        assertEquals(AppResult.Failure(AppError.Forbidden), failureOf(BackendException.Forbidden("permission_denied")))
+        assertEquals(AppResult.Failure(AppError.Forbidden), failureOf(BackendException.Forbidden(null)))
     }
 
     @Test
     fun `404 is not found`() {
-        assertEquals(AppResult.Failure(AppError.NotFound), failureOf(httpException(404)))
+        assertEquals(AppResult.Failure(AppError.NotFound), failureOf(BackendException.NotFound(null)))
     }
 
     private fun failureOf(failure: Exception): AppResult<Unit> = appResultOf { throw failure }
-
-    private fun httpException(statusCode: Int, body: String = ""): HttpException =
-        HttpException(Response.error<Unit>(statusCode, body.toResponseBody()))
 }

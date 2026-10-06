@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.di
 
 import android.content.Context
-import api.myitmo.MyItmo
 import dagger.Module
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -9,6 +8,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.debug.DebugBuild
 import dev.alllexey.itmowidgets.core.debug.DefaultSportLessonTemplateController
@@ -83,7 +83,7 @@ object DebugModule {
     @Singleton
     fun provideDebugRefreshTokenController(
         tokenStore: SessionTokenStore,
-        myItmo: MyItmo,
+        myItmo: MyItmoClient,
         dataCleaners: Set<@JvmSuppressWildcards SessionDataCleaner>,
         demo: DemoMode,
         dispatchers: AppDispatchers

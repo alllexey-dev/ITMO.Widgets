@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.repository
 
+import dev.alllexey.itmoapi.core.MyItmoException
+import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
@@ -13,9 +15,6 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
-import okhttp3.ResponseBody.Companion.toResponseBody
-import retrofit2.HttpException
-import retrofit2.Response
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -124,8 +123,13 @@ class ScheduleRepositoryImplTest {
     @Test
     fun `access denial discards all dates of only the foreign user`() = runTest {
         val repository = createRepository(true)
-        for ((status, expected) in listOf(401 to AppError.Unauthorized, 403 to AppError.Forbidden, 404 to AppError.NotFound)) {
-            remote.error = HttpException(Response.error<Unit>(status, "".toResponseBody()))
+        val denials = listOf(
+            BackendException.Unauthorized() to AppError.Unauthorized,
+            BackendException.Forbidden(null) to AppError.Forbidden,
+            BackendException.NotFound(null) to AppError.NotFound
+        )
+        for ((denial, expected) in denials) {
+            remote.error = denial
             assertEquals(AppResult.Failure(expected), repository.refreshSchedule(123456, DATE, DATE))
         }
         assertEquals(listOf(123456, 123456, 123456), local.clearedUsers)
@@ -136,7 +140,7 @@ class ScheduleRepositoryImplTest {
     @Test
     fun `own authorization failure and foreign network failure preserve caches`() = runTest {
         val repository = createRepository(true)
-        remote.error = HttpException(Response.error<Unit>(403, "".toResponseBody()))
+        remote.error = MyItmoException.Http(403)
         repository.refreshSchedule(null, DATE, DATE)
         remote.error = IOException("offline")
         repository.refreshSchedule(123456, DATE, DATE)
@@ -150,7 +154,7 @@ class ScheduleRepositoryImplTest {
         val oldResponse = CompletableDeferred<List<DaySchedule>>()
         remote.response = { start ->
             if (start == DATE) oldResponse.await()
-            else throw HttpException(Response.error<Unit>(403, "".toResponseBody()))
+            else throw BackendException.Forbidden(null)
         }
         val old = async { repository.refreshSchedule(123456, DATE, DATE) }
         runCurrent()
@@ -170,7 +174,7 @@ class ScheduleRepositoryImplTest {
     fun `cancelling after a known denial cannot interrupt private cache removal`() = runTest {
         val gate = CompletableDeferred<Unit>()
         local.clearGate = gate
-        remote.error = HttpException(Response.error<Unit>(403, "".toResponseBody()))
+        remote.error = BackendException.Forbidden(null)
         val request = async { createRepository(true).refreshSchedule(123456, DATE, DATE) }
         local.clearStarted.await()
         request.cancel()
