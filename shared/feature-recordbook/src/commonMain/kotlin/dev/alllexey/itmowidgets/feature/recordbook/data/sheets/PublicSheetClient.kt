@@ -20,6 +20,8 @@ import io.ktor.http.charset
 import io.ktor.http.contentLength
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.cancel
 import io.ktor.utils.io.charsets.Charsets
 import io.ktor.utils.io.charsets.decode
 import io.ktor.utils.io.readBuffer
@@ -158,14 +160,23 @@ class PublicSheetClient internal constructor(
     private fun failure(code: Int): SheetFetch<Nothing> =
         SheetFetch.Failed(if (code >= 500 || code == 429) AppError.Network else AppError.Unknown())
 
-    /** The body as text, or [SheetFetch.TooLarge] without reading past [MAX_BYTES]. */
+    /**
+     * The body as text, or [SheetFetch.TooLarge] without reading past [MAX_BYTES]: an oversize body is cancelled, so
+     * the end of [exchange] does not drain the rest of it (or wait for bytes a server announced but never sends).
+     */
     private suspend fun text(response: HttpResponse): SheetFetch<String> {
+        val channel = response.bodyAsChannel()
         val declared = response.contentLength()
-        if (declared != null && declared > MAX_BYTES) return SheetFetch.TooLarge
-        val body = response.bodyAsChannel().readBuffer(MAX_BYTES + 1L)
-        if (body.size > MAX_BYTES) return SheetFetch.TooLarge
+        if (declared != null && declared > MAX_BYTES) return tooLarge(channel)
+        val body = channel.readBuffer(MAX_BYTES + 1L)
+        if (body.size > MAX_BYTES) return tooLarge(channel)
         val charset = response.charset() ?: Charsets.UTF_8
         return SheetFetch.Loaded(charset.newDecoder().decode(body))
+    }
+
+    private fun tooLarge(channel: ByteReadChannel): SheetFetch<Nothing> {
+        channel.cancel()
+        return SheetFetch.TooLarge
     }
 
     private inline fun <T, R> SheetFetch<T>.map(transform: (T) -> R): SheetFetch<R> = when (this) {
