@@ -10,32 +10,33 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import api.bars.Bars
-import api.bars.utils.BarsApiException
-import api.bars.utils.BarsAuthHelper
-import api.bars.utils.BarsSessionCode
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dev.alllexey.itmoapi.bars.RuntimeBarsStorage
+import dev.alllexey.itmoapi.bars.auth.BarsLogin
+import dev.alllexey.itmoapi.bars.auth.BarsSessionCode
+import dev.alllexey.itmoapi.core.MyItmoException
 import dev.alllexey.itmowidgets.BuildConfig
-import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
+import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsHttp
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import io.ktor.client.engine.HttpClientEngine
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
+import dev.alllexey.itmoapi.bars.BarsClient as LibraryBarsClient
 
 /** Workers are built by WorkManager; see `QrWidgetEntryPoint` for why this is not `@HiltWorker`. */
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface BarsCookieProbeEntryPoint {
     fun probeCookies(): ItmoIdCookies
-    fun probeBars(): Bars
-    fun probeDispatchers(): AppDispatchers
+    fun probeLogin(): BarsLogin
+    @BarsHttp fun probeEngine(): HttpClientEngine
     fun probeLog(): AppLog
 }
 
@@ -49,11 +50,15 @@ class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : Corout
         if (!BuildConfig.DEBUG) return Result.success()
         val dependencies = EntryPointAccessors.fromApplication(applicationContext, BarsCookieProbeEntryPoint::class.java)
         val line = try {
-            probe(dependencies.probeBars(), dependencies.probeCookies(), dependencies.probeDispatchers())
+            probe(dependencies.probeLogin(), dependencies.probeEngine(), dependencies.probeCookies())
         } catch (cancel: CancellationException) {
             throw cancel
         } catch (failure: Exception) {
-            val http = (failure as? BarsApiException)?.httpCode
+            val http = when (failure) {
+                is MyItmoException.Http -> failure.status
+                is MyItmoException.Auth -> failure.status
+                else -> null
+            }
             "outcome=ERROR step=$step type=${failure.javaClass.simpleName} http=$http cause=${failure.cause?.javaClass?.simpleName}"
         }
         dependencies.probeLog().info(TAG, line)
@@ -63,24 +68,18 @@ class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : Corout
     /** The last step started, so an error line says where the probe stopped without echoing any value. */
     private var step = "start"
 
-    private suspend fun probe(bars: Bars, cookies: ItmoIdCookies, dispatchers: AppDispatchers): String {
-        val state = BarsAuthHelper.newState()
+    private suspend fun probe(login: BarsLogin, engine: HttpClientEngine, cookies: ItmoIdCookies): String {
+        val state = login.newState()
         step = "loginUrl"
-        val url = bars.authHelper.getLoginUrl(state)
+        val url = login.loginUrl(state)
         step = "cookies"
         val cookie = cookies.cookieHeader(url)
         step = "request"
-        val answer = withContext(dispatchers.io) { bars.authHelper.requestCodeWithCookies(state, cookie) }
+        val answer = login.requestCodeWithCookies(state, cookie)
         step = "exchange"
-        val exchange = if (answer.outcome == BarsSessionCode.Outcome.CODE) {
-            val valid = try {
-                Bars.isValidAuthorization(withContext(dispatchers.io) { bars.authHelper.exchange(answer.code) })
-            } catch (cancel: CancellationException) {
-                throw cancel
-            } catch (_: Exception) {
-                false
-            }
-            if (valid) "OK" else "FAIL"
+        val code = answer.code
+        val exchange = if (answer.outcome == BarsSessionCode.Outcome.CODE && code != null) {
+            if (exchanges(engine, code)) "OK" else "FAIL"
         } else {
             "SKIP"
         }
@@ -88,6 +87,22 @@ class BarsCookieProbeWorker(context: Context, params: WorkerParameters) : Corout
         val processAgeSec = (SystemClock.elapsedRealtime() - Process.getStartElapsedRealtime()) / 1000
         return "outcome=${answer.outcome} http=${answer.httpCode} exchange=$exchange cookies=$pairs " +
             "setCookies=${answer.setCookies.size} processAgeSec=$processAgeSec"
+    }
+
+    /** Exchanges [code] into a throwaway in-memory session, so the app's saved BARS header stays untouched. */
+    private suspend fun exchanges(engine: HttpClientEngine, code: String): Boolean {
+        val storage = RuntimeBarsStorage()
+        val client = LibraryBarsClient(engine, storage = storage)
+        return try {
+            client.login(code)
+            LibraryBarsClient.isValidAuthorization(storage.getAuthorization())
+        } catch (cancel: CancellationException) {
+            throw cancel
+        } catch (_: Exception) {
+            false
+        } finally {
+            client.close()
+        }
     }
 
     private companion object {

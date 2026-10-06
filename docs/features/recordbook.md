@@ -228,16 +228,31 @@ teachers, PE and sport stay MyITMO.
   as well: it is a server-side setting with no stateless read.
 
 Session: the BARS token lives 30 minutes, has no refresh and cannot be exchanged
-from a MyITMO token. The ITMO.ID session in the app's WebView lives about 90
-days, so `BarsWebSilentLogin` renews the token by loading the official OIDC URL
-in a hidden WebView and intercepting only the exact callback with a checked
-`state`; the library's `Bars` retries once on 401 through `BarsCodeSupplier`. No
-JavaScript bridge, no localStorage reads. `BarsClient` binds the encrypted
-session file to the current ISU, verifies `login` against it, serialises period
-selection and maps `BarsApiException` to `AppError`. `BarsPreferenceRepositoryImpl`
-is the session cleaner for both the token and the chip. `BarsRecordbookRepositoryImpl`
-keeps the controls of every journal it has read in memory (`cachedControls`, the
-source of `Требуют внимания` while the chip is on) and is a session cleaner too.
+from a MyITMO token. BARS goes through MyItmoApi 2.x: the library's
+`dev.alllexey.itmoapi.bars.BarsClient` (one per process, built in
+`di/RecordbookModule.kt` over `OwnerBoundBarsStorage` and `BarsRenewal`) and
+`BarsLogin` for the ITMO.ID side (`loginUrl`, `isCallback`, `isAllowedPage`,
+`extractCode`, `requestCodeWithCookies`). Both run on a Ktor OkHttp engine of
+their own (`@BarsHttp`: connect 20 s, read 30 s, no cookie jar, cache or
+redirects), never MyITMO's. The ITMO.ID session in the app's WebView lives
+about 90 days, so `BarsWebSilentLogin` renews the token by loading the official
+OIDC URL in a hidden WebView and intercepting only the exact callback with a
+checked `state`; the library retries once on 401 through the suspend
+`BarsCodeSupplier`, which is `BarsRenewal`. No JavaScript bridge, no
+localStorage reads. The app's `BarsClient` binds the encrypted session file to
+the current ISU, verifies `login` against it, serialises period selection and
+maps `MyItmoException` to `AppError` (`Auth` 401 `Unauthorized`, `Auth` 403 and
+`Http` 423 `Forbidden`, `Http` 404 `NotFound`, `Network` `Network`, anything
+else a retriable `Unknown`). `OwnerBoundBarsStorage` is the library's suspend
+`BarsStorage` and the only writer of `bars_tokens.enc`, whose content
+(`<isu>\n<header>` through `TokenCipher`, checked with
+`BarsClient.isValidAuthorization`) is the one 2.2 wrote. The library's locks are not reentrant, so a block never nests
+period changes. `BarsSessionRepositoryImpl` serves the interactive sign-in
+from `BarsLogin` and exchanges the code through `BarsClient.login`.
+`BarsPreferenceRepositoryImpl` is the session cleaner for both the token and
+the chip. `BarsRecordbookRepositoryImpl` keeps the controls of every journal it
+has read in memory (`cachedControls`, the source of `Требуют внимания` while the
+chip is on) and is a session cleaner too.
 
 Screens keep renewing through the WebView (`BarsClient.account`). The
 background mark check has no WebView and renews through the ITMO.ID cookies
@@ -246,17 +261,21 @@ instead (`BarsClient.backgroundAccount`, decision
 
 - `BarsCookieSilentLogin` reads the `Cookie` header the WebView would send to
   the `bars` authorization URL (`ItmoIdCookies`, `CookieManager` on the main
-  thread) and asks MyItmoApi's `BarsAuthHelper.requestCodeWithCookies` for a
-  code: one request with redirects off, only the exact callback with the
-  checked `state` gives a code. `Set-Cookie` of the answer goes back to
+  thread) and asks MyItmoApi's `BarsLogin.requestCodeWithCookies` for a
+  code (`BarsSessionCode`: `CODE`, `LOGIN_REQUIRED`, `REJECTED`,
+  `HTTP_ERROR`): one HTTPS request with redirects off and no cookie jar or
+  cache, only the exact callback with the checked `state` gives a code. `Set-Cookie` of the answer goes back to
   `CookieManager` for that URL only, as the WebView would store it.
 - No cookies or ITMO.ID's sign-in page (`LOGIN_REQUIRED`) is an ended session;
   a rejected callback or an HTTP error is `Unknown`, a network failure
   `Network`. Neither of the last two ends the session, and the saved BARS
   header stays.
-- For the duration of one `backgroundAccount` block the library's
-  `BarsCodeSupplier` asks the cookie renewal, afterwards the WebView again; the
-  client's mutex makes the mode belong to the block that holds it. Without a
+- For the duration of one `backgroundAccount` block `BarsRenewal` (the
+  library's `BarsCodeSupplier`) asks the cookie renewal, afterwards the WebView
+  again; the client's mutex makes the mode belong to the block that holds it.
+  An ended session leaves the supplier as `BarsSessionEnded`, a failed renewal
+  as `BarsFailure` with its `AppError`, past the library's renewal, which
+  keeps the saved header. Without a
   saved session for the current ISU nothing is requested (`NoSession`).
 - Codes, cookies and tokens never reach the log, exceptions or `toString()`.
 - Every successful answer of `account`, `login` or `backgroundAccount` is
@@ -268,13 +287,13 @@ instead (`BarsClient.backgroundAccount`, decision
 
 ```text
 RecordbookFragment → RecordbookViewModel ─┬─ RecordbookRepository (MyItmoApi)
-                                          ├─ BarsRecordbookRepository → BarsClient → api.bars.Bars
+                                          ├─ BarsRecordbookRepository → BarsClient → itmoapi.bars.BarsClient
                                           └─ BarsPreferenceRepository (DataStore)
 RecordbookBarsMerge.apply(myItmo, bars)   pure merge by title
 ```
 
 Mapper rules: server `marks.total`; the last unambiguous active approval
-(`Approval#getGradeCode()` turns `Удвл., E` into `3/E`, credits stay words);
+(`Approval.gradeCode` turns `Удвл., E` into `3/E`, credits stay words);
 works by `checkpoint_id`; extra points as a separate row; absence is not a pass;
 plans with `has_course_project` are rejected for now.
 
@@ -440,7 +459,8 @@ the first check of that source is a baseline again.
 ### BARS in the background
 
 `BarsMarkReader.read(half)` runs inside `BarsClient.backgroundAccount`
-([session](#bars-overlay)):
+([session](#bars-overlay)) on the MyItmoApi 2.x models (`User`, `Term`,
+`StudentJournal`):
 
 - Without a saved BARS session for the current ISU it is `NoSession` and asks
   nothing.

@@ -9,8 +9,8 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import api.bars.utils.BarsAuthHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +27,7 @@ interface BarsSilentLogin {
 /** Headless copy of the interactive flow: same official URLs, no JavaScript bridge, no token reading. */
 class BarsWebSilentLogin @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val auth: BarsAuthHelper
+    private val auth: BarsLogin
 ) : BarsSilentLogin {
     @Suppress("SetJavaScriptEnabled")
     override suspend fun authorizationCode(state: String): String? = withContext(Dispatchers.Main.immediate) {
@@ -68,7 +68,7 @@ class BarsWebSilentLogin @Inject constructor(
                             if (request.isForMainFrame) finish(null)
                         }
                     }
-                    web.loadUrl(auth.getLoginUrl(state))
+                    web.loadUrl(auth.loginUrl(state))
                 }
             }
         } finally {
