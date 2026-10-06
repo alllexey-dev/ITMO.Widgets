@@ -12,7 +12,8 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
-import dev.alllexey.itmowidgets.core.testing.myItmoResponses
+import dev.alllexey.itmowidgets.feature.schedule.data.remote.requestedRange
+import dev.alllexey.itmowidgets.feature.schedule.data.remote.scheduleMyItmoClient
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleCheckResult
 import java.io.File
 import java.io.IOException
@@ -56,12 +57,12 @@ class ScheduleChangesRepositoryImplTest {
     @Volatile private var gate: CountDownLatch? = null
     /** Thrown instead of any answer, as when a backgrounded app has no network. */
     @Volatile private var failure: IOException? = null
-    private val api = myItmoResponses { request ->
-        requests += "${request.url.encodedPath}?${request.url.queryParameter("date_start")}..${request.url.queryParameter("date_end")}"
+    private val myItmo = scheduleMyItmoClient { request ->
+        requests += "${request.url.encodedPath}?${request.requestedRange()}"
         gate?.let { check(it.await(WAIT_SECONDS, TimeUnit.SECONDS)) { "The answer was never released" } }
         failure?.let { throw it }
         status to (body ?: """{"code":0,"data":[${days.joinToString(",")}],"message":null}""")
-    }.api
+    }
     private val clock = MutableClock(Instant.parse("2026-09-07T09:00:00Z"))
     private val notifier = RecordingAppNotifier()
     private val store get() = ScheduleChangesFileStore(folder.toOkioPath())
@@ -338,7 +339,7 @@ class ScheduleChangesRepositoryImplTest {
         assertFalse(file.exists())
     }
 
-    private fun repository(demo: DemoMode = noDemo()) = ScheduleChangesRepositoryImpl(api, store, ClockAcademicTime(clock), clock, notifier, demo, dispatchers)
+    private fun repository(demo: DemoMode = noDemo()) = ScheduleChangesRepositoryImpl(myItmo, store, ClockAcademicTime(clock), clock, notifier, demo, dispatchers)
 
     private fun awaitRequests(count: Int) {
         repeat(WAIT_SECONDS.toInt() * 100) { if (requests.size >= count) return; Thread.sleep(10) }

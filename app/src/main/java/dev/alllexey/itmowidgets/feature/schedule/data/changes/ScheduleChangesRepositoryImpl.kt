@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
-import api.myitmo.MyItmoApi
+import dev.alllexey.itmoapi.core.requireResult
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.network.toAppError
@@ -41,9 +42,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinLocalDate
-import retrofit2.HttpException
 
 /**
  * Compares the own personal schedule of today..today+7 with the last snapshot on the device. The check reads My ITMO
@@ -53,7 +51,7 @@ import retrofit2.HttpException
  */
 @Singleton
 class ScheduleChangesRepositoryImpl @Inject constructor(
-    private val api: MyItmoApi,
+    private val myItmo: MyItmoClient,
     private val store: ScheduleChangesFileStore,
     private val time: AcademicTimeProvider,
     @param:WallClock private val clock: Clock,
@@ -86,12 +84,12 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
         val today = time.today()
         val end = today.plus(WINDOW_DAYS, DateTimeUnit.DAY)
         val current = try {
-            withContext(dispatchers.io) { request(today, end) }?.academicSnapshot(today, end)
+            withContext(dispatchers.io) { request(today, end) }.academicSnapshot(today, end)
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
             return@withLock AppResult.Failure(error.toAppError())
-        } ?: return@withLock AppResult.Failure(AppError.Unknown())
+        }
 
         lock.withLock {
             // A sign-out during the request must not leave the previous account's schedule behind.
@@ -204,19 +202,8 @@ class ScheduleChangesRepositoryImpl @Inject constructor(
     }
 
     /** `null` when My ITMO answered without data. */
-    private fun request(start: LocalDate, end: LocalDate): List<DaySchedule>? {
-        val response = api.getPersonalSchedule(start.toJavaLocalDate(), end.toJavaLocalDate()).execute()
-        if (!response.isSuccessful) throw HttpException(response)
-        return response.body()?.data?.map { day ->
-            DaySchedule(
-                dayNumber = day.dayNumber,
-                weekNumber = day.weekNumber,
-                date = day.date.toKotlinLocalDate(),
-                note = day.note,
-                lessons = day.lessons.orEmpty().map { it.toModel() }
-            )
-        }
-    }
+    private suspend fun request(start: LocalDate, end: LocalDate): List<DaySchedule> =
+        myItmo.schedule.getPersonalSchedule(start, end).requireResult().map { it.toModel() }
 
     private fun DetectedChange.toStored(id: String, detectedAt: Long): StoredChange {
         val subject = after ?: before

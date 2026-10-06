@@ -1,9 +1,8 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.model.toUserSummary
 import dev.alllexey.itmowidgets.core.network.appResultOf
@@ -15,11 +14,10 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import javax.inject.Inject
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toJavaLocalDate
 
 class LessonFriendsRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val schedule: ScheduleApi,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
 ) : LessonFriendsRepository {
@@ -28,17 +26,8 @@ class LessonFriendsRepositoryImpl @Inject constructor(
         if (demo.isActive()) return AppResult.Success(DemoSchedule.friendsOnLesson(pairId, date))
         // Without the opt-in the access token never leaves the device.
         if (!backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
-        return call { widgetsApi.friendsOnLesson(pairId, date.toJavaLocalDate()) }.map { profiles ->
-            profiles.map { it.user.toUserSummary() }
+        return appResultOf {
+            withContext(dispatchers.io) { schedule.friendsOnLesson(pairId, date) }.map { it.user.toUserSummary() }
         }
-    }
-
-    private suspend fun <T> call(request: suspend () -> ApiResponse<T>): AppResult<T> = appResultOf {
-        checkNotNull(withContext(dispatchers.io) { request().data }) { "Backend returned no data" }
-    }
-
-    private inline fun <T, R> AppResult<T>.map(transform: (T) -> R): AppResult<R> = when (this) {
-        is AppResult.Success -> AppResult.Success(transform(value))
-        is AppResult.Failure -> AppResult.Failure(error)
     }
 }

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
-import api.myitmo.MyItmoApi
+import dev.alllexey.itmoapi.core.requireResult
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -13,43 +14,33 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
-import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinLocalDate
-import retrofit2.HttpException
 
 /**
  * The personal schedule asked from My ITMO in pieces of at most [CHUNK_DAYS] days, one after another. Like the change
  * check, it neither fills the schedule cache nor uploads lessons to Backend.
  */
 class MyItmoOwnScheduleSource @Inject constructor(
-    private val api: MyItmoApi,
+    private val myItmo: MyItmoClient,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
 ) : OwnScheduleSource {
 
-    override suspend fun read(start: LocalDate, end: LocalDate): List<DaySchedule> = withContext(dispatchers.io) {
-        if (demo.isActive()) return@withContext DemoSchedule.ownDays(start, end, time.today())
-        generateSequence(start) { it.plus(CHUNK_DAYS, DateTimeUnit.DAY) }
-            .takeWhile { it <= end }
-            .flatMap { from -> request(from, minOf(end, from.plus(CHUNK_DAYS - 1, DateTimeUnit.DAY))) }
-            .toList()
-    }
-
-    private fun request(start: LocalDate, end: LocalDate): List<DaySchedule> {
-        val response = api.getPersonalSchedule(start.toJavaLocalDate(), end.toJavaLocalDate()).execute()
-        if (!response.isSuccessful) throw HttpException(response)
-        val days = checkNotNull(response.body()?.data) { "My ITMO answered without a schedule" }
-        return days.map { day ->
-            DaySchedule(
-                dayNumber = day.dayNumber,
-                weekNumber = day.weekNumber,
-                date = day.date.toKotlinLocalDate(),
-                note = day.note,
-                lessons = day.lessons.orEmpty().map { it.toModel() }
-            )
+    override suspend fun read(start: LocalDate, end: LocalDate): List<DaySchedule> {
+        if (demo.isActive()) return DemoSchedule.ownDays(start, end, time.today())
+        return withContext(dispatchers.io) {
+            val days = mutableListOf<DaySchedule>()
+            var from = start
+            while (from <= end) {
+                days += request(from, minOf(end, from.plus(CHUNK_DAYS - 1, DateTimeUnit.DAY)))
+                from = from.plus(CHUNK_DAYS, DateTimeUnit.DAY)
+            }
+            days
         }
     }
+
+    private suspend fun request(start: LocalDate, end: LocalDate): List<DaySchedule> =
+        myItmo.schedule.getPersonalSchedule(start, end).requireResult().map { it.toModel() }
 
     private companion object {
         const val CHUNK_DAYS = 31
