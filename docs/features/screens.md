@@ -163,8 +163,8 @@ Feature doc: [Social](social.md).
 |---|---|---|---|---|---|
 | `feature/social/ui/FriendsFragment.kt` | Fragment | `FriendsViewModel` | `friends`, `AppScreen.FRIENDS` | — | — |
 | `feature/social/ui/UserSearchFragment.kt` | Fragment | `UserSearchViewModel` | `user_search`, `AppScreen.USER_SEARCH` | — | — |
-| `feature/social/ui/UserProfileFragment.kt` | Fragment | `UserProfileViewModel` | `user_profile`, `AppScreen.USER_PROFILE` | `feature/social/ui/UserProfilePreviewActivity.kt`, `app/SettingsNavigationTestActivity.kt` | `feature/social/UserProfileVisualTest.kt`, `feature/social/UserFriendsVisualTest.kt` |
-| `feature/social/ui/UserFriendsFragment.kt` | Fragment | `UserFriendsViewModel` | `user_friends`, `AppScreen.USER_FRIENDS` | `app/SettingsNavigationTestActivity.kt` | `feature/social/UserFriendsVisualTest.kt` |
+| `feature/social/ui/UserProfileFragment.kt` | Fragment | `UserProfileViewModel` | `user_profile`, `AppScreen.USER_PROFILE` | `feature/social/ui/UserProfilePreviewActivity.kt`, `app/SettingsNavigationTestActivity.kt` | `feature/social/UserProfileVisualTest.kt` |
+| `feature/social/ui/UserFriendsFragment.kt` hosting `UserFriendsRoute` (`:shared:feature-social`) | Fragment | `UserFriendsViewModel` (Koin) | `user_friends`, `AppScreen.USER_FRIENDS` | `app/SettingsNavigationTestActivity.kt` | `SocialScreenshotTest` (`:shared:feature-social`) |
 
 ## Profile tab
 

@@ -5,58 +5,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
-import org.koin.androidx.viewmodel.ext.android.viewModel
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.presentation.RefreshMode
-import dev.alllexey.itmowidgets.core.ui.applyAppRefreshColors
-import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.closeScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.openScreen
-import dev.alllexey.itmowidgets.databinding.FragmentUserFriendsBinding
-import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsEvent
-import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
+import dev.alllexey.itmowidgets.designsystem.host.itmoComposeView
+import dev.alllexey.itmowidgets.feature.social.ui.userfriends.UserFriendsRoute
 
+/**
+ * Another user's friends (`@id/user_friends`), kept by name for the overlay graph. The screen is `UserFriendsRoute`
+ * from `:shared:feature-social`; its Koin ViewModel reads the owner from this Fragment's arguments.
+ */
 @AndroidEntryPoint
 class UserFriendsFragment : Fragment() {
-    private var _binding: FragmentUserFriendsBinding? = null
-    private val binding get() = _binding!!
-    private val viewModel: UserFriendsViewModel by viewModel()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentUserFriendsBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.title.text = if (viewModel.name.isBlank()) getString(R.string.friends_title)
-            else getString(R.string.user_friends_owner, viewModel.name)
-        binding.backButton.setOnClickListener { closeScreen() }
-        val adapter = UserListAdapter(onAction = { _, _ -> }, onOpen = { openUserProfile(it.isu) })
-        binding.recyclerView.adapter = adapter
-        binding.swipeRefreshLayout.applyAppRefreshColors()
-        binding.swipeRefreshLayout.setOnRefreshListener({ viewModel.refresh(RefreshMode.Pull) })
-        val renderer = UserFriendsRenderer(binding, adapter, { viewModel.refresh(RefreshMode.Force) }) { openScreen(AppScreen.SETTINGS) }
-        viewModel.uiState.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach(renderer::render)
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-        viewModel.events.flowWithLifecycle(viewLifecycleOwner.lifecycle).onEach { event ->
-            when (event) {
-                is UserFriendsEvent.RefreshFailed -> Snackbar.make(binding.root, event.error.messageRes(), Snackbar.LENGTH_LONG)
-                    .setAction(R.string.common_retry) { viewModel.refresh(RefreshMode.Force) }.show()
-            }
-        }.launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    override fun onDestroyView() {
-        binding.recyclerView.adapter = null
-        _binding = null
-        super.onDestroyView()
-    }
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        itmoComposeView {
+            UserFriendsRoute(
+                onOpenProfile = { openUserProfile(it) },
+                onOpenSettings = { openScreen(AppScreen.SETTINGS) },
+                onBack = { closeScreen() },
+            )
+        }
 }

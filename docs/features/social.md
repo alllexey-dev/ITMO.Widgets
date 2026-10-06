@@ -221,7 +221,11 @@ The person profile has a `Друзья` row controlled by Backend’s `canViewFr
 The screen shows only accepted friends, with every row and capability relative
 to the signed-in viewer. Rows open person profiles; the list has no mutation
 buttons or request tabs. First loading, empty, denied, disabled services and
-retryable errors are distinct. Refresh retains content on network failure,
+retryable errors are distinct: list placeholders, `Пока нет друзей` with
+`Обновить`, the hidden list without an action, the settings action and a retry.
+A failed refresh of a shown list keeps it and offers `Повторить` in a snackbar.
+The screen is `UserFriendsRoute` from `:shared:feature-social`, hosted by
+`UserFriendsFragment` on Android. Refresh retains content on network failure,
 but discards it if authorization is revoked; returning to the screen rechecks
 access. No target list is stored in the viewer’s own friends cache, but the
 repository keeps the last answer per ISU (`cachedUserFriends`) and the last
@@ -236,10 +240,13 @@ reading the list and never exposes pending requests or the owner’s raw audienc
 
 ## Shared list row
 
-`item_user_row.xml` with `UserListAdapter` renders every social list: avatar,
-name, `ISU • group` subtitle, optional status line, up to two action buttons or a
-chevron, section headers and a load-more row. Presentation builds `UserRowUi`
-values with `UiText` labels; the adapter maps `UserAction` to strings.
+Every social list renders the same row: avatar, name, `ISU • group` subtitle,
+optional status line, up to two action buttons or a chevron, section headers and
+a load-more row. Presentation builds `UserRowUi` values with `UiText` labels.
+In Compose, `ui/list/UserList` in `:shared:feature-social` renders them with the
+kit's `UserRow` and maps `UserAction` to its label (`UserAction.label()`);
+another user's friends uses it. The friends screen and people search still use
+`item_user_row.xml` with `UserListAdapter` until their ports.
 
 ## Verification
 
@@ -250,7 +257,11 @@ headline, the facts, the reviews section and deterministic
 loading/deadline/action behavior. `UserProfileVisualTest` exercises all
 profile states, the hero with the copied ISU number, the grouped facts, every
 friendship state, delayed parts, recycling, accessibility, photo failure and
-scroll restoration in the full appearance matrix; `UserFriendsVisualTest` checks the existing friends navigation.
+scroll restoration in the full appearance matrix. Another user's friends is
+`UserFriendsScreen` in `:shared:feature-social`: `SocialScreenshotTest` records
+every state (`UserFriendsScreen_<state>`) and `UserList`, and
+`UserFriendsScreenTest` and `UserListTest` cover the states, row taps, actions,
+load-more and 48 dp targets.
 See [visual test commands](../design.md#running-the-visual-tests).
 
 ## Not implemented yet

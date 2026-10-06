@@ -15,6 +15,10 @@ kotlin {
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
+            // The screens' routes (L13 LC-3a on): koinViewModel() and lifecycle-aware collection; the iOS shell hosts
+            // the same routes.
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.jetbrains.lifecycle.runtime.compose)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
