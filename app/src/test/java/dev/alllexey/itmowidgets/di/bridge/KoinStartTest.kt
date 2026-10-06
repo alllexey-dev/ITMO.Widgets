@@ -5,22 +5,24 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
-import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
+import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
@@ -30,7 +32,12 @@ import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
+import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
+import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
+import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
@@ -93,7 +100,15 @@ class KoinStartTest {
         assertSame(hilt.qrSettingsPreferences(), koin.get<QrSettingsPreferences>())
         assertSame(hilt.deviceHintPreferences(), koin.get<DeviceHintPreferences>())
         assertSame(hilt.homeLayoutPreferences(), koin.get<HomeLayoutPreferences>())
-        assertSame(hilt.customServicesRepository(), koin.get<CustomServicesRepository>())
+        assertSame(hilt.servicesOptInPreferences(), koin.get<ServicesOptInPreferences>())
+        assertSame(hilt.scheduleCheckPreferences(), koin.get<ScheduleCheckPreferences>())
+        assertSame(hilt.widgetSettingsPreferences(), koin.get<WidgetSettingsPreferences>())
+        assertSame(hilt.sportSignSelectorPreferences(), koin.get<SportSignSelectorPreferences>())
+        assertSame(hilt.markSourcePreferences(), koin.get<MarkSourcePreferences>())
+        assertSame(hilt.usersApi(), koin.get<UsersApi>())
+        assertSame(hilt.backendIdentitySync(), koin.get<BackendIdentitySync>())
+        assertSame(hilt.backendDeviceSession(), koin.get<BackendDeviceSession>())
+        assertSame(hilt.fcmTokenSync(), koin.get<FcmTokenSync>())
         assertSame(hilt.customSpoilerRepository(), koin.get<CustomSpoilerRepository>())
         assertSame(hilt.onboardingRepository(), koin.get<OnboardingRepository>())
         assertSame(hilt.scheduleChangeTracking(), koin.get<ScheduleChangeTracking>())
@@ -105,7 +120,6 @@ class KoinStartTest {
         assertSame(hilt.scheduleRefreshGateway(), koin.get<ScheduleRefreshGateway>())
         // Unscoped in Hilt: Koin keeps the first instance it gets and hands out that one.
         assertSame(koin.get<SportScoreRepository>(), koin.get<SportScoreRepository>())
-        assertSame(hilt.schedulePreferencesRepository(), koin.get<SchedulePreferencesRepository>())
         assertSame(hilt.pendingSportBookingsRepository(), koin.get<PendingSportBookingsRepository>())
         assertSame(hilt.teacherLessonsGateway(), koin.get<TeacherLessonsGateway>())
         assertSame(hilt.applicationScope(), koin.get<CoroutineScope>())

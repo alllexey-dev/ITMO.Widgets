@@ -8,23 +8,25 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleIcsExport
-import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
-import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
+import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
@@ -36,8 +38,13 @@ import dev.alllexey.itmowidgets.core.storage.AppPreferences
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.HomeLayoutPreferences
+import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
+import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
+import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
+import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
+import dev.alllexey.itmowidgets.core.storage.WidgetSettingsPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
@@ -77,9 +84,18 @@ interface CoreBridgeEntryPoint {
     fun qrSettingsPreferences(): QrSettingsPreferences
     fun deviceHintPreferences(): DeviceHintPreferences
     fun homeLayoutPreferences(): HomeLayoutPreferences
+    fun servicesOptInPreferences(): ServicesOptInPreferences
+    fun scheduleCheckPreferences(): ScheduleCheckPreferences
+    fun widgetSettingsPreferences(): WidgetSettingsPreferences
+    fun sportSignSelectorPreferences(): SportSignSelectorPreferences
+    fun markSourcePreferences(): MarkSourcePreferences
 
-    /** The custom-services opt-in; reading it is local and never calls Backend. */
-    fun customServicesRepository(): CustomServicesRepository
+    /** Core 2.0's users area; unscoped in Hilt over the one `BackendClient`, so every call returns the same API. */
+    fun usersApi(): UsersApi
+
+    fun backendIdentitySync(): BackendIdentitySync
+    fun backendDeviceSession(): BackendDeviceSession
+    fun fcmTokenSync(): FcmTokenSync
 
     fun customSpoilerRepository(): CustomSpoilerRepository
     fun onboardingRepository(): OnboardingRepository
@@ -96,10 +112,9 @@ interface CoreBridgeEntryPoint {
 
     /** Sport scores as other features read them; unscoped in Hilt but stateless, so one instance serves Koin. */
     fun sportScoreRepository(): SportScoreRepository
-    // The schedule contracts other features read (L10 LS-2a): the screens' preferences, pending sport rows and the
-    // teacher lessons gateway; calendar sync and the refresh and subject lessons gateways are bridged above.
-    // Schedule's own data stays on Hilt.
-    fun schedulePreferencesRepository(): SchedulePreferencesRepository
+    // The schedule contracts other features read (L10 LS-2a): pending sport rows and the teacher lessons gateway;
+    // calendar sync and the refresh and subject lessons gateways are bridged above, the schedule preferences come
+    // from Koin's `settingsDataModule`. Schedule's own data stays on Hilt.
     fun pendingSportBookingsRepository(): PendingSportBookingsRepository
     fun teacherLessonsGateway(): TeacherLessonsGateway
     /** The scope that outlives screens, for work that must finish after the caller is gone. */
@@ -140,7 +155,15 @@ val coreBridgeModule = module {
     single<QrSettingsPreferences> { CoreBridgeEntryPoint.from(androidContext()).qrSettingsPreferences() }
     single<DeviceHintPreferences> { CoreBridgeEntryPoint.from(androidContext()).deviceHintPreferences() }
     single<HomeLayoutPreferences> { CoreBridgeEntryPoint.from(androidContext()).homeLayoutPreferences() }
-    single<CustomServicesRepository> { CoreBridgeEntryPoint.from(androidContext()).customServicesRepository() }
+    single<ServicesOptInPreferences> { CoreBridgeEntryPoint.from(androidContext()).servicesOptInPreferences() }
+    single<ScheduleCheckPreferences> { CoreBridgeEntryPoint.from(androidContext()).scheduleCheckPreferences() }
+    single<WidgetSettingsPreferences> { CoreBridgeEntryPoint.from(androidContext()).widgetSettingsPreferences() }
+    single<SportSignSelectorPreferences> { CoreBridgeEntryPoint.from(androidContext()).sportSignSelectorPreferences() }
+    single<MarkSourcePreferences> { CoreBridgeEntryPoint.from(androidContext()).markSourcePreferences() }
+    single<UsersApi> { CoreBridgeEntryPoint.from(androidContext()).usersApi() }
+    single<BackendIdentitySync> { CoreBridgeEntryPoint.from(androidContext()).backendIdentitySync() }
+    single<BackendDeviceSession> { CoreBridgeEntryPoint.from(androidContext()).backendDeviceSession() }
+    single<FcmTokenSync> { CoreBridgeEntryPoint.from(androidContext()).fcmTokenSync() }
     single<CustomSpoilerRepository> { CoreBridgeEntryPoint.from(androidContext()).customSpoilerRepository() }
     single<OnboardingRepository> { CoreBridgeEntryPoint.from(androidContext()).onboardingRepository() }
     single<ScheduleChangeTracking> { CoreBridgeEntryPoint.from(androidContext()).scheduleChangeTracking() }
@@ -150,9 +173,6 @@ val coreBridgeModule = module {
     single<SubjectLessonsGateway> { CoreBridgeEntryPoint.from(androidContext()).subjectLessonsGateway() }
     single<ScheduleRefreshGateway> { CoreBridgeEntryPoint.from(androidContext()).scheduleRefreshGateway() }
     single<SportScoreRepository> { CoreBridgeEntryPoint.from(androidContext()).sportScoreRepository() }
-    single<SchedulePreferencesRepository> {
-        CoreBridgeEntryPoint.from(androidContext()).schedulePreferencesRepository()
-    }
     single<PendingSportBookingsRepository> {
         CoreBridgeEntryPoint.from(androidContext()).pendingSportBookingsRepository()
     }

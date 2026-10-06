@@ -10,6 +10,8 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
+import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -50,14 +52,18 @@ object ScheduleDebugFixtures {
 
     /**
      * Restores the release bindings. Unloading a Koin module drops its keys instead of bringing back what it
-     * overrode, so the bridge modules load again; their singles forward Hilt's instances, as before. A fixture that a
-     * newer host already replaced is left to that host.
+     * overrode, so the bridge modules load again; their singles forward Hilt's instances, as before. Koin owns the
+     * opt-in and the schedule preferences (`settingsDataModule`): loading that module again would build second
+     * repositories, so the two contracts point back at its singles, which the fixture never overrode. A fixture that
+     * a newer host already replaced is left to that host.
      */
     fun unload(context: Context, fixture: Module) {
         if (current !== fixture) return
         val koin = KoinStarter.ensureStarted(context)
         koin.unloadModules(listOf(fixture))
         koin.loadModules(bridgeModules, allowOverride = true)
+        koin.declare<CustomServicesRepository>(koin.get<CustomServicesRepositoryImpl>(), allowOverride = true)
+        koin.declare<SchedulePreferencesRepository>(koin.get<SchedulePreferencesRepositoryImpl>(), allowOverride = true)
         current = null
     }
 

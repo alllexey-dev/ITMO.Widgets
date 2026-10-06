@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetEntryPoint
+import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -46,9 +47,10 @@ class ScheduleBridgeTest {
         assertNotNull(ScheduleWidgetEntryPoint.from(application).scheduleWidgetDataProvider())
     }
 
+    /** The screens read the opt-in and the schedule preferences, which `settingsDataModule` constructs since KM-11e. */
     @Test
     fun `the schedule module passes the graph check against the release bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(scheduleModule))
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(settingsDataModule, scheduleModule))
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */

@@ -3,13 +3,23 @@ package dev.alllexey.itmowidgets.di.bridge
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
+import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
+import dev.alllexey.itmowidgets.feature.settings.data.CustomServicesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.settings.data.SchedulePreferencesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.settings.data.SettingsRepositoryImpl
+import dev.alllexey.itmowidgets.feature.settings.data.WidgetAppearanceRepositoryImpl
+import dev.alllexey.itmowidgets.feature.settings.di.settingsDataModule
 import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
+import javax.inject.Inject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -30,12 +40,11 @@ class SettingsBridgeTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the settings data resolves in Koin to what Hilt builds`() {
+    fun `the Android side of settings resolves in Koin to what Hilt builds`() {
         val application = bootApplication()
         val hilt = SettingsBridgeEntryPoint.from(application)
         val koin = GlobalContext.get()
 
-        assertSame(hilt.settingsRepository(), koin.get<SettingsRepository>())
         assertSame(hilt.widgetRefreshRequester(), koin.get<WidgetRefreshRequester>())
         assertEquals(hilt.appVersion(), koin.get<AppVersion>())
         assertEquals(hilt.backgroundWorkAccess()::class, koin.get<BackgroundWorkAccess>()::class)
@@ -43,8 +52,36 @@ class SettingsBridgeTest {
     }
 
     @Test
-    fun `the settings module passes the graph check against the release bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(settingsModule))
+    fun `each settings repository is one Koin single that Hilt readers share`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+
+        assertSame(koin.get<SettingsRepositoryImpl>(), koin.get<SettingsRepository>())
+        assertSame(koin.get<CustomServicesRepositoryImpl>(), koin.get<CustomServicesRepository>())
+        assertSame(koin.get<WidgetAppearanceRepositoryImpl>(), koin.get<WidgetAppearanceRepository>())
+        assertSame(koin.get<SchedulePreferencesRepositoryImpl>(), koin.get<SchedulePreferencesRepository>())
+
+        assertSame(koin.get<CustomServicesRepository>(), SettingsBridge.customServicesRepository(application))
+        assertSame(koin.get<WidgetAppearanceRepository>(), SettingsBridge.widgetAppearanceRepository(application))
+        assertSame(koin.get<SchedulePreferencesRepository>(), SettingsBridge.schedulePreferencesRepository(application))
+    }
+
+    /** Without an `@Inject` constructor Hilt cannot build a second instance beside Koin's: one graph per binding. */
+    @Test
+    fun `Hilt cannot construct the moved repositories`() {
+        listOf(
+            SettingsRepositoryImpl::class.java,
+            CustomServicesRepositoryImpl::class.java,
+            WidgetAppearanceRepositoryImpl::class.java,
+            SchedulePreferencesRepositoryImpl::class.java,
+        ).forEach { type ->
+            assertFalse(type.name, type.constructors.any { it.isAnnotationPresent(Inject::class.java) })
+        }
+    }
+
+    @Test
+    fun `the settings modules pass the graph check against the release bridges`() {
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(settingsDataModule, settingsModule))
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */

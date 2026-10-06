@@ -1,12 +1,15 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
+import dev.alllexey.itmoapi.core.MyItmoException
+import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.users.UserPrivacySettings
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.client.users.SharingVisibility as ApiSharingVisibility
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.home.HomeCardKind
-import dev.alllexey.itmowidgets.core.network.toAppError
+import dev.alllexey.itmowidgets.core.network.asAppError
+import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -28,7 +31,6 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SportDisplaySettings
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +40,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-class SettingsRepositoryImpl @Inject constructor(
+class SettingsRepositoryImpl(
     private val servicesOptIn: ServicesOptInPreferences,
     private val scheduleChecks: ScheduleCheckPreferences,
     private val widgetSettings: WidgetSettingsPreferences,
@@ -269,8 +271,27 @@ class SettingsRepositoryImpl @Inject constructor(
             throw cancellation
         } catch (error: Exception) {
             sharingState.value = SharingSettingsState.Content(current)
-            AppResult.Failure(error.toAppError())
+            AppResult.Failure(toAppError(error))
         }
+    }
+
+    /**
+     * The app's released mapping for a Core 2.0 call: a failure before any answer is [AppError.Network], then the
+     * first [BackendException] (or a [MyItmoException] of the token refresh) in the cause chain maps in common code,
+     * anything else is a retriable unknown.
+     */
+    private fun toAppError(error: Exception): AppError {
+        if (error.isCausedByNetworkFailure()) return AppError.Network
+        val seen = mutableSetOf<Throwable>()
+        var current: Throwable? = error
+        while (current != null && seen.add(current)) {
+            when (current) {
+                is BackendException -> return current.asAppError()
+                is MyItmoException -> return current.asAppError()
+            }
+            current = current.cause
+        }
+        return AppError.Unknown(error)
     }
 
     private suspend fun fetchSharingSettings(): SharingSettings {
