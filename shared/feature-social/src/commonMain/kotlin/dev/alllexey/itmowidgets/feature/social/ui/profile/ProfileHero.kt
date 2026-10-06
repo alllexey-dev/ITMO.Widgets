@@ -208,7 +208,7 @@ private fun SocialBlock.badge(): StringResource? = when {
     else -> null
 }
 
-/** «Преподаватель» or «M3234, 2 курс»; null when there is nothing to say. */
+/** The position title, or the group and course ("M3234, year 2"); null when there is nothing to say. */
 @Composable
 private fun ProfileHeadline.text(): String? = when (this) {
     is ProfileHeadline.Position -> role
