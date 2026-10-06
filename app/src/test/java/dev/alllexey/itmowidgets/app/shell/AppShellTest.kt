@@ -1,0 +1,344 @@
+package dev.alllexey.itmowidgets.app.shell
+
+import android.app.Dialog
+import androidx.activity.ComponentActivity
+import androidx.activity.ComponentDialog
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.junit4.StateRestorationTester
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
+import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.navigation.AppTab
+import dev.alllexey.itmowidgets.core.navigation.OpenDecision
+import dev.alllexey.itmowidgets.core.navigation.ShellSurface
+import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowDialog
+
+/** The Compose shell with fake entries: layers, Back, tab state, sheets, arguments and gates (v2.2 parity). */
+@RunWith(RobolectricTestRunner::class)
+@Config(application = PreviewHostApplication::class)
+class AppShellTest {
+
+    @get:Rule
+    val compose = createAndroidComposeRule<ComponentActivity>()
+
+    private val probe = ShellProbe()
+    private val registry = fakeEntries(probe)
+    private val navigator = Nav3AppNavigator()
+
+    private fun show(surface: ShellSurface = ShellSurface.Tabs(demoBanner = false), onDemoSignIn: () -> Unit = {}) {
+        compose.setContent { ItmoTheme { ShellContent(navigator, registry, surface, onDemoSignIn) } }
+        compose.waitForIdle()
+    }
+
+    private fun act(block: Nav3AppNavigator.() -> Unit) {
+        compose.runOnIdle { navigator.block() }
+        compose.waitForIdle()
+    }
+
+    private fun pressBack() {
+        compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+    }
+
+    private fun shownDialogs(): List<Dialog> = ShadowDialog.getShownDialogs().filter { it.isShowing }
+
+    /** Back on the window of the top sheet or dialog, where the system delivers it. */
+    private fun pressBackOnTopWindow() {
+        compose.runOnIdle { (shownDialogs().last() as ComponentDialog).onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+    }
+
+    private fun sheet(route: AppRoute) = compose.onNodeWithTag(BottomSheetSceneStrategy.tag(route.toString()))
+
+    @Test
+    fun anOverlayCoversTheBarWhileTheTabContentKeepsItsBounds() {
+        show()
+        val before = probe.tabBounds.getValue(AppTab.HOME)
+        val settings = AppRoutes.Settings()
+
+        act { open(settings) }
+
+        compose.onNodeWithTag("screen:settings:ROOT").assertIsDisplayed()
+        assertEquals(
+            compose.onRoot().getBoundsInRoot(),
+            compose.onNodeWithTag(ShellTags.overlay(settings.toString())).getBoundsInRoot(),
+        )
+        assertEquals(before, probe.tabBounds.getValue(AppTab.HOME))
+        assertTrue(AppTab.HOME in probe.composedTabs)
+
+        compose.onNodeWithTag(ShellTags.overlay(settings.toString())).performClick()
+        assertEquals("a tap on the overlay never reaches the covered tab", 0, probe.tabClicks)
+
+        pressBack()
+        compose.onNodeWithTag(ShellTags.BAR).assertIsDisplayed()
+        assertEquals(before, probe.tabBounds.getValue(AppTab.HOME))
+    }
+
+    @Test
+    fun coveredTabContentAndBarAreHiddenFromTalkBack() {
+        show()
+        compose.onNodeWithTag(ShellTags.BAR).assertExists()
+        compose.onNodeWithTag(ShellTags.TAB_CONTENT).assertExists()
+
+        act { open(AppRoutes.Friends) }
+
+        compose.onNodeWithTag(ShellTags.BAR).assertDoesNotExist()
+        compose.onNodeWithTag(ShellTags.TAB_CONTENT).assertDoesNotExist()
+        compose.onNodeWithTag("sub:HOME").assertDoesNotExist()
+        compose.onNodeWithTag(ShellTags.TAB_LAYER, useUnmergedTree = true)
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility))
+        compose.onNodeWithTag("screen:friends").assertIsDisplayed()
+    }
+
+    @Test
+    fun selectingAndReselectingATabClosesOverlaysSheetsAndDialogs() {
+        show()
+        act { open(AppRoutes.SubjectLinks(ShellSamples.links)) }
+        assertEquals(1, shownDialogs().size)
+
+        compose.onNodeWithTag(ShellTags.tab(AppTab.HOME)).performClick()
+        compose.waitForIdle()
+        assertTrue(navigator.state.floating.isEmpty())
+        assertEquals(0, shownDialogs().size)
+
+        act {
+            open(AppRoutes.Settings())
+            open(AppRoutes.LinkUnavailable)
+        }
+        assertEquals(1, shownDialogs().size)
+
+        act { select(AppTab.SCHEDULE) }
+        assertEquals(AppTab.SCHEDULE, navigator.tab)
+        assertTrue(navigator.state.overlays.isEmpty() && navigator.state.floating.isEmpty())
+        assertEquals(0, shownDialogs().size)
+        compose.onNodeWithTag(ShellTags.BAR).assertIsDisplayed()
+        compose.onNodeWithTag("sub:SCHEDULE").assertIsDisplayed()
+    }
+
+    @Test
+    fun eachTabKeepsScrollSubTabAndViewModelAcrossSwitches() {
+        show()
+        compose.onNodeWithTag("list:HOME").performScrollToIndex(30)
+        repeat(2) { compose.onNodeWithTag("nextSub:HOME").performClick() }
+        val model = compose.onNodeWithTag("vm:HOME").fetchText()
+
+        compose.onNodeWithTag(ShellTags.tab(AppTab.SPORT)).performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("sub:SPORT").assertTextEquals("sub:0")
+        assertFalse(AppTab.HOME in probe.composedTabs)
+
+        compose.onNodeWithTag(ShellTags.tab(AppTab.HOME)).performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("item:HOME:30").assertIsDisplayed()
+        compose.onNodeWithTag("sub:HOME").assertTextEquals("sub:2")
+        compose.onNodeWithTag("vm:HOME").assertTextEquals(model)
+    }
+
+    @Test
+    fun tabsOverlaysAndTabStateSurviveASavedStateRestore() {
+        val restoration = StateRestorationTester(compose)
+        lateinit var restored: Nav3AppNavigator
+        restoration.setContent {
+            restored = rememberNav3AppNavigator()
+            ItmoTheme { ShellContent(restored, registry, ShellSurface.Tabs(demoBanner = false), onDemoSignIn = {}) }
+        }
+        compose.onNodeWithTag("list:HOME").performScrollToIndex(30)
+        compose.onNodeWithTag("nextSub:HOME").performClick()
+        compose.onNodeWithTag(ShellTags.tab(AppTab.SCHEDULE)).performClick()
+        compose.runOnIdle { restored.open(AppRoutes.Settings("PRIVACY")) }
+
+        restoration.emulateSavedInstanceStateRestore()
+
+        compose.runOnIdle {
+            assertEquals(AppTab.SCHEDULE, restored.tab)
+            assertEquals(listOf<AppRoute>(AppRoutes.Settings("PRIVACY")), restored.state.overlays)
+        }
+        compose.onNodeWithTag("screen:settings:PRIVACY").assertIsDisplayed()
+        compose.runOnIdle { restored.select(AppTab.HOME) }
+        compose.onNodeWithTag("item:HOME:30").assertIsDisplayed()
+        compose.onNodeWithTag("sub:HOME").assertTextEquals("sub:1")
+    }
+
+    @Test
+    fun backClosesTheSheetThenEachOverlayThenGoesToTheStartTabThenLeaves() {
+        show()
+        act {
+            select(AppTab.SPORT)
+            open(AppRoutes.Settings())
+            open(AppRoutes.Friends)
+            open(AppRoutes.SubjectLinks(ShellSamples.links))
+        }
+        sheet(AppRoutes.SubjectLinks(ShellSamples.links)).assertExists()
+
+        pressBackOnTopWindow()
+        assertTrue(navigator.state.floating.isEmpty())
+        assertEquals(0, shownDialogs().size)
+        compose.onNodeWithTag("screen:friends").assertIsDisplayed()
+
+        pressBack()
+        compose.onNodeWithTag("screen:friends").assertDoesNotExist()
+        compose.onNodeWithTag("screen:settings:ROOT").assertIsDisplayed()
+
+        pressBack()
+        compose.onNodeWithTag("screen:settings:ROOT").assertDoesNotExist()
+        compose.onNodeWithTag("sub:SPORT").assertIsDisplayed()
+
+        pressBack()
+        assertEquals(AppTab.START, navigator.tab)
+        assertFalse(compose.activity.isFinishing)
+
+        pressBack()
+        assertTrue("Back on the start tab leaves the app", compose.activity.isFinishing)
+    }
+
+    @Test
+    fun aFormSheetIgnoresBackAndDragAndHandsBackToItsEntry() {
+        show()
+        val editor = AppRoutes.ReviewEditor(ShellSamples.teacher)
+        act { open(editor) }
+
+        pressBackOnTopWindow()
+        assertEquals(1, probe.formBacks)
+        sheet(editor).performTouchInput { swipeDown() }
+        compose.waitForIdle()
+
+        sheet(editor).assertExists()
+        assertEquals(listOf<AppRoute>(editor), navigator.state.floating)
+    }
+
+    @Test
+    fun aFreeSheetClosesOnDrag() {
+        show()
+        act { open(AppRoutes.IcsExport) }
+
+        sheet(AppRoutes.IcsExport).performTouchInput { swipeDown() }
+        compose.waitForIdle()
+
+        assertTrue(navigator.state.floating.isEmpty())
+        assertEquals(0, shownDialogs().size)
+    }
+
+    @Test
+    fun aSecondOpenOfTheSameScreenOrSheetOpensNothing() {
+        show()
+        act {
+            open(AppRoutes.Settings())
+            open(AppRoutes.Settings())
+        }
+        assertEquals(1, navigator.state.overlays.size)
+
+        act {
+            open(AppRoutes.IcsExport)
+            open(AppRoutes.IcsExport)
+        }
+        assertEquals(1, navigator.state.floating.size)
+        assertEquals(1, shownDialogs().size)
+    }
+
+    @Test
+    fun theSameProfileTwiceInTheOverlayStackGetsTwoEntries() {
+        show()
+        act {
+            open(AppRoutes.UserProfile(ShellSamples.ISU))
+            open(AppRoutes.Friends)
+            open(AppRoutes.UserProfile(ShellSamples.ISU))
+        }
+        compose.onNodeWithTag("args").assertTextEquals("isu:${ShellSamples.ISU}")
+
+        pressBack()
+        pressBack()
+        compose.onNodeWithTag("args").assertTextEquals("isu:${ShellSamples.ISU}")
+    }
+
+    @Test
+    fun routeArgumentsReachTheEntrysSavedStateHandle() {
+        show()
+        act { open(AppRoutes.UserProfile(ShellSamples.ISU)) }
+
+        compose.onNodeWithTag("args").assertTextEquals("isu:${ShellSamples.ISU}")
+    }
+
+    @Test
+    fun anUnregisteredKeyShowsAnEmptyPlaceholder() {
+        show()
+        act { open(AppRoutes.Diagnostics) }
+
+        compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.Diagnostics)).assertIsDisplayed()
+    }
+
+    @Test
+    fun theGateRefusesInDemoWithoutOpening() {
+        var refusals = 0
+        navigator.guard = { if (it == AppRoutes.MyItmoWeb) OpenDecision.REFUSE_IN_DEMO else OpenDecision.OPEN }
+        navigator.onRefusedInDemo = { refusals++ }
+        show()
+
+        act { assertEquals(OpenDecision.REFUSE_IN_DEMO, open(AppRoutes.MyItmoWeb)) }
+
+        assertEquals(1, refusals)
+        assertTrue(navigator.state.overlays.isEmpty())
+    }
+
+    @Test
+    fun progressSurfaceSaysTheSessionIsBeingChecked() {
+        show(ShellSurface.Progress)
+
+        compose.onNodeWithTag(ShellTags.PROGRESS).assert(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.ContentDescription,
+                listOf(compose.activity.getString(R.string.auth_initializing)),
+            ),
+        )
+        compose.onNodeWithTag(ShellTags.BAR).assertDoesNotExist()
+    }
+
+    @Test
+    fun authSurfaceHasNoBarAndClosesTheOverlays() {
+        act { open(AppRoutes.Settings()) }
+        show(ShellSurface.Auth)
+
+        compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.Auth)).assertIsDisplayed()
+        compose.onNodeWithTag(ShellTags.BAR).assertDoesNotExist()
+        assertTrue(navigator.state.overlays.isEmpty())
+    }
+
+    @Test
+    fun theDemoBannerSitsAboveTheBarAndSignsIn() {
+        var signIns = 0
+        show(ShellSurface.Tabs(demoBanner = true)) { signIns++ }
+
+        val banner = compose.onNodeWithTag(ShellTags.DEMO_BANNER).getBoundsInRoot()
+        val bar = compose.onNodeWithTag(ShellTags.BAR).getBoundsInRoot()
+        assertEquals(bar.top, banner.bottom)
+        compose.onNodeWithText(compose.activity.getString(R.string.demo_banner_sign_in)).performClick()
+
+        assertEquals(1, signIns)
+    }
+
+    private fun SemanticsNodeInteraction.fetchText(): String =
+        fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
+}
