@@ -17,7 +17,12 @@ enum class HomeCardKind {
 enum class HomeHint(val kind: HomeCardKind) {
     WIDGETS(HomeCardKind.HINT_WIDGETS),
     NOTIFICATIONS(HomeCardKind.HINT_NOTIFICATIONS),
-    SERVICES(HomeCardKind.HINT_SERVICES)
+    SERVICES(HomeCardKind.HINT_SERVICES);
+
+    companion object {
+        /** The hint whose card is of [kind]; null for a kind that is not a hint. */
+        fun of(kind: HomeCardKind): HomeHint? = entries.firstOrNull { it.kind == kind }
+    }
 }
 
 enum class HomeLessonState { CURRENT, NEXT, UPCOMING }

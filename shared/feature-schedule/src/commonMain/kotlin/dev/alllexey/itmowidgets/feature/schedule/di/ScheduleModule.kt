@@ -1,13 +1,17 @@
 package dev.alllexey.itmowidgets.feature.schedule.di
 
+import dev.alllexey.itmowidgets.core.home.HomeCardRenderer
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.home.HomeScheduleSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.schedule.presentation.ScheduleViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.changes.ScheduleChangesViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.details.LessonDetailsViewModel
+import dev.alllexey.itmowidgets.feature.schedule.ui.home.ScheduleHomeCardRenderer
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
@@ -25,4 +29,5 @@ val scheduleModule = module {
     viewModelOf(::ScheduleViewModel)
     viewModelOf(::ScheduleChangesViewModel)
     viewModelOf(::LessonDetailsViewModel)
+    single<HomeCardRenderer>(named("schedule")) { ScheduleHomeCardRenderer(get<AcademicTimeProvider>().timeZone) }
 }

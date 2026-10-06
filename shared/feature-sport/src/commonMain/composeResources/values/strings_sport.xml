@@ -137,4 +137,14 @@
     <string name="sport_link_unavailable_text">Занятие уже прошло или его нет в расписании на ближайшие три недели.</string>
     <string name="share_sport_title">Занятие по спорту в ITMO.Widgets</string>
     <string name="share_sport_text">%1$s, %2$s — ITMO.Widgets: %3$s</string>
+
+    <!-- Home card: sport -->
+    <string name="home_sport_title">Спорт</string>
+    <string name="home_sport_score">%1$d из 100</string>
+    <plurals name="home_sport_more">
+        <item quantity="one">ещё %1$d запись</item>
+        <item quantity="few">ещё %1$d записи</item>
+        <item quantity="many">ещё %1$d записей</item>
+        <item quantity="other">ещё %1$d записи</item>
+    </plurals>
 </resources>

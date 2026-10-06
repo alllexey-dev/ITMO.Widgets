@@ -73,6 +73,66 @@
         }
       }
     },
+    "home_sport_more" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld записи"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld записей"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld запись"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld записи"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "home_sport_score" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld из 100"
+          }
+        }
+      }
+    },
+    "home_sport_title" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спорт"
+          }
+        }
+      }
+    },
     "share_sport_text" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",

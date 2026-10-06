@@ -654,7 +654,7 @@ settings, and restore them if a separate test explicitly changes them.
   guards the posted Glide fallback against a newer binding or successful load.
 - Friend picker: `res/layout/dialog_friend_selector.xml`.
 - Home feed: Compose in `:shared:feature-home`
-  (`feature/home/ui/HomeScreen.kt`, `feature/home/ui/HomeCards.kt`), see
+  (`feature/home/ui/HomeScreen.kt`, each card in its feature's `ui/home`), see
   [Home and quick actions](features/home.md#feed). The schedule changes and
   new marks cards are `Card.Content` cards that close: a header with
   `ic_edit_calendar` (`ic_menu_book`) in `primary`, the title, the count

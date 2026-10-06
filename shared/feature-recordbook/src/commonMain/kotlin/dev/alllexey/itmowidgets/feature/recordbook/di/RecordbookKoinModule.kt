@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.di
 
+import dev.alllexey.itmowidgets.core.home.HomeCardRenderer
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsSessionRepositoryImpl
@@ -27,6 +28,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLinksLoad
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetLoader
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacherLevelsLoader
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.ui.home.MarksHomeCardRenderer
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -68,6 +70,7 @@ val recordbookModule = module {
     viewModelOf(::RecordbookSubjectViewModel)
     viewModelOf(::SheetScoresViewModel)
     viewModelOf(::BarsLoginViewModel)
+    single<HomeCardRenderer>(named("recordbook")) { MarksHomeCardRenderer }
 
     // MyITMO: one memory cache for the screens, the marks check and sign-out. Cleaner contributions are qualified
     // (an open set the app merges into Hilt's sign-out set).

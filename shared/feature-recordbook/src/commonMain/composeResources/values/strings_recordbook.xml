@@ -97,4 +97,8 @@
     <string name="subject_controls_title">Контрольные точки</string>
     <string name="subject_lessons_all">Все пары, %1$d</string>
     <string name="subject_link_lms">LMS</string>
+
+    <!-- Home card: new marks -->
+    <string name="home_marks_dismiss">Прочитано</string>
+    <string name="home_marks_description">%1$s, %2$d. %3$s</string>
 </resources>

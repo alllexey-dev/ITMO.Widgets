@@ -45,4 +45,19 @@
 
     <!-- Another user's schedule and sport -->
     <string name="user_schedule_title">Расписание: %1$s</string>
+
+    <!-- Home cards: the schedule and its changes -->
+    <string name="home_schedule_tomorrow">Завтра</string>
+    <string name="home_schedule_now">сейчас</string>
+    <string name="home_schedule_next">далее</string>
+    <string name="home_schedule_empty">Пар сегодня нет</string>
+    <string name="home_schedule_done">На сегодня всё</string>
+    <plurals name="home_schedule_completed">
+        <item quantity="one">%1$d пара прошла</item>
+        <item quantity="few">%1$d пары прошли</item>
+        <item quantity="many">%1$d пар прошло</item>
+        <item quantity="other">%1$d пары прошли</item>
+    </plurals>
+    <string name="home_schedule_changes_dismiss">Прочитано</string>
+    <string name="home_schedule_changes_description">%1$s, %2$d. %3$s</string>
 </resources>

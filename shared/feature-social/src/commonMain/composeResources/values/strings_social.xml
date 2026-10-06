@@ -169,4 +169,8 @@
     <string name="teacher_summary_value_high">высокая</string>
     <string name="teacher_summary_value_not_enough_data">мало данных</string>
     <string name="teacher_summary_scale_description">%1$s: %2$s</string>
+
+    <!-- Home card: friend requests -->
+    <string name="home_friends_title">Заявки в друзья</string>
+    <string name="home_friends_all">Все заявки</string>
 </resources>
