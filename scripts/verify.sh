@@ -165,6 +165,13 @@ run_quick() {
     note "scripts/check-docs.sh (outside any slot)"
     "$root/scripts/check-docs.sh" || return 1
   fi
+  # The feature-module generator against the QR pilot: about a second, no Gradle (DC-04).
+  if [ -e "$root/scripts/test-new-feature-module.sh" ]; then
+    local out
+    note "scripts/test-new-feature-module.sh (outside any slot)"
+    out=$("$root/scripts/test-new-feature-module.sh" 2>&1) || { printf '%s\n' "$out" >&2; return 1; }
+    printf '%s\n' "$out" | tail -n 1 >&2
+  fi
   gradle_part android verifyQuick
 }
 

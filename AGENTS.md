@@ -64,8 +64,8 @@ scripts/verify.sh quick | full | shots <module>|app [--record] | klibs | ship | 
 ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui <Class>   # serial from scripts/emulator.sh up, then down
 ```
 
-`quick` (per card, CI): `scripts/check-docs.sh`, tests, Konsist, lint, assembles; `full` adds both lints and iOS
-klibs; `ship` adds `scripts/check-play-policy.sh`. PRs quote the last line,
+`quick` (per card, CI): `scripts/check-docs.sh`, `scripts/test-new-feature-module.sh`, tests, Konsist, lint,
+assembles; `full` adds both lints and iOS klibs; `ship` adds `scripts/check-play-policy.sh`. PRs quote the last line,
 `VERIFY A <mode> PASS|FAIL <secs>s <sha7>`. Never the owner's phone or `emulator-5554`; only L02 edits the shrinking
 `scripts/check-docs.known`. B, M and W run their own `scripts/verify.sh`; C is frozen.
 

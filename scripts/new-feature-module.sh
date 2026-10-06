@@ -151,7 +151,8 @@ next:
 - app: a Fragment host returning itmoComposeView { ${Name}Route(onBack = ...) }, the ${Name}Repository bridge in
   di/bridge/${Name}Bridge.kt and its KoinModules lines (L07 review), the module in app/build.gradle.kts (L04)
 - strings: scripts/verify.sh run -- :app:exportAppleStrings
-- goldens: scripts/verify.sh shots feature-$name --record, then look at every PNG
+- goldens: scripts/verify.sh shots feature-$name --record -Pshots.appearance=full (all four appearances, as the
+  pilot; once recorded, every shots run checks them), then look at every PNG
 - check: scripts/verify.sh quick; scripts/verify.sh klibs feature-$name
 EOF
 fi

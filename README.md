@@ -143,7 +143,7 @@
 Gradle запускается одной командой `scripts/verify.sh`. Она берёт слот сборки `scripts/slot.sh` (на macOS машина делится между параллельными сборками; на Linux и в CI команда идёт сразу), подставляет JDK, Android SDK и MyItmoApi и последней строкой печатает `VERIFY A <режим> PASS|FAIL <секунды>s <коммит>`.
 
 ```bash
-scripts/verify.sh quick                       # check-docs, тесты всех модулей, Konsist, lintGithubDebug, debug-сборки github и play
+scripts/verify.sh quick                       # check-docs, самопроверка генератора модулей, тесты всех модулей, Konsist, lintGithubDebug, debug-сборки github и play
 scripts/verify.sh full                        # quick, lintPlayDebug и iOS klibs
 scripts/verify.sh klibs [<module>]            # klibs iosSimulatorArm64 всех shared-модулей или одного, без Xcode
 scripts/verify.sh shots <module>|app|all      # скриншот-тесты Roborazzi на JVM; --record перезаписывает эталоны

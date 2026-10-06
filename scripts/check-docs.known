@@ -37,7 +37,6 @@ docs/settings.md:path:docs/ops/account-deletion.md  # Backend doc without the B/
 
 shared/backend-client/src/commonTest/resources/contract/README.md  # Backend README vendored verbatim by scripts/sync-backend-contract.sh; its paths are Backend paths
 
-shared/backend-client/AGENTS.md:missing  # L19 CO-10 writes it
 shared/feature-qr/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
 shared/feature-home/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
 shared/feature-schedule/AGENTS.md:missing  # DC-05b writes the feature modules' AGENTS.md
