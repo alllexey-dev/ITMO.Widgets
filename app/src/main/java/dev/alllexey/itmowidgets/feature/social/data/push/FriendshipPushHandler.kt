@@ -1,10 +1,11 @@
 package dev.alllexey.itmowidgets.feature.social.data.push
 
-import com.google.gson.Gson
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.client.error.BackendException
+import dev.alllexey.itmowidgets.client.push.FcmDecoder
+import dev.alllexey.itmowidgets.client.push.FriendshipEvent
+import dev.alllexey.itmowidgets.client.push.FriendshipEventPayload
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
-import dev.alllexey.itmowidgets.core.model.fcm.impl.FriendshipEvent
-import dev.alllexey.itmowidgets.core.model.fcm.impl.FriendshipEventPayload
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
@@ -18,7 +19,6 @@ import kotlinx.serialization.json.JsonElement
 import javax.inject.Inject
 
 class FriendshipPushHandler @Inject constructor(
-    private val gson: Gson,
     private val notifier: AppNotifier,
     private val social: SocialRepository,
     private val services: CustomServicesRepository,
@@ -29,9 +29,10 @@ class FriendshipPushHandler @Inject constructor(
     override suspend fun handle(payload: JsonElement) {
         if (!services.isEnabled()) return
         val event = try {
-            gson.fromJson(payload.toString(), FriendshipEventPayload::class.java) ?: return
-        } catch (error: Exception) {
-            diagnostics.warn(TAG, "Invalid friendship push", error)
+            FcmDecoder.friendshipEvent(payload)
+        } catch (_: BackendException) {
+            // An unknown event fails strictly; the decoder's cause may quote the payload, which names people.
+            diagnostics.warn(TAG, "Invalid friendship push")
             return
         }
         val actor = event.user
