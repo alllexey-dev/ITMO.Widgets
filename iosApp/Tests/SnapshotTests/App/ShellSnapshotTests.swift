@@ -1,3 +1,4 @@
+import Shared
 import SnapshotTesting
 import SwiftUI
 import XCTest
@@ -21,7 +22,7 @@ final class ShellSnapshotTests: XCTestCase {
 
     func testQrPassOverHome() {
         let router = mountedRouter()
-        router.open(.qrPass)
+        router.open(AppRoutes.QrPass.shared)
         assertAppearances(of: stack(.home, router, isDemo: false), named: "qr-pass", height: screenHeight)
     }
 
@@ -40,7 +41,7 @@ final class ShellSnapshotTests: XCTestCase {
 
     private func mountedRouter() -> AppRouter {
         let router = AppRouter()
-        router.sessionChanged(ready: true)
+        router.sessionChanged(ShellSessionState.signedIn.sessionState, onboarding: .passed)
         router.shellMounted(true)
         return router
     }

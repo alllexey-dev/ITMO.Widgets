@@ -8,8 +8,8 @@ struct ShellView: View {
 
     var body: some View {
         content
-            .onChange(of: session.state.isReady, initial: true) { _, ready in
-                router.sessionChanged(ready: ready)
+            .onChange(of: session.state, initial: true) { _, state in
+                router.sessionChanged(state.sessionState, onboarding: state.onboarding)
             }
             .sheet(item: $router.sheet) { sheet in
                 ShellSheetView(sheet: sheet)
@@ -47,7 +47,7 @@ struct ShellStack: View {
             FixtureRootScreen(tab: tab, router: router)
                 .shellChrome(.compose)
                 .navigationDestination(for: ShellDestination.self) { destination in
-                    ShellDestinationView(destination: destination)
+                    Routes.view(for: destination)
                         .shellChrome(destination.chrome)
                 }
         }
@@ -60,16 +60,6 @@ struct ShellStack: View {
 
     private var path: Binding<[ShellDestination]> {
         Binding(get: { router.path(of: tab) }, set: { router.setPath($0, of: tab) })
-    }
-}
-
-private struct ShellDestinationView: View {
-    let destination: ShellDestination
-
-    var body: some View {
-        switch destination {
-        case .qrPass: FixtureQrPassScreen()
-        }
     }
 }
 

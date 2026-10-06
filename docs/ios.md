@@ -138,10 +138,23 @@ runs on fixtures: placeholder roots, the session gate and the demo banner, witho
   bar (`shellChrome(.compose)`); a SwiftUI screen keeps the native bar (`.native`). Hiding the bar turns UIKit's
   edge swipe back off, so the compose chrome turns it on again for the stack above its root;
   `ShellUITests.testEdgeSwipeGoesBackFromComposeChrome` fails without it.
-- Router. Every input (an `itmowidgets://route/<id>` URL, an App Intent, a tap, a link) calls `AppRouter.open`.
-  `RouteQueue` mirrors Android's `MainRouteQueue`: a route runs once, only when the session is ready and its root
-  could be selected (the tab bar is on screen); a newer route replaces a waiting one. Leaving the session clears the
-  stacks and the sheet. IO-06c moves the routes, the queue and the gate onto the shared route model.
+- Router (`Sources/App/Router/`) on the shared route model of `:shared:core` (SH-1a2). Every URL, App Intent,
+  link and notification becomes an `EntryRoute` (`RouteURL`, which uses `EntryRouteParser` and `AppLinks`) and goes
+  to `AppRouter.open(entry:)`; a tap opens an `AppRoute` key with `AppRouter.open(_:)`. Entry routes wait in the
+  shared `RouteQueue`: a route runs once, only when `ShellGate` reports the tabs (a ready session, the first-run flow
+  passed or the demo) and its tab could be selected (the tab bar is on screen); a newer route replaces a waiting
+  one, and a route to a hidden tab is dropped. A tap passes `ShellGate.check` first (keys that need a real account
+  are refused in the demo). Leaving the tabs clears the stacks, the sheet, the tab requests and the result
+  callbacks.
+- Route map. `Routes.target(for:)` switches exhaustively over `RouteFeature` (`shared/ios`, `IosRoutes`) and
+  delegates each key to its feature's `Routes+<Feature>.swift`, which returns a Compose screen, a SwiftUI screen, a
+  sheet, a tab, the gate, or "not on iOS". A feature card changes only its own file; a key no feature claims fails
+  `RouterTests.testEveryRegisteredRouteHasAFeature`, and `testEveryRouteKindHasItsTarget` pins the target of every
+  key. "Not on iOS" keys (recordbook, reviews, resources, calendar until IO-09d2, IO-09f and IO-15b map them, the
+  debug tools for good, and every screen of a feature whose IO card has not merged) have no entry point and open
+  nothing.
+- Route results. A screen that answers its opener (the friend picker answers the schedule) is opened with
+  `open(_:onResult:)` and answers with `deliver(_:from:)`; the router holds the callback until then.
 
 | Route id | URL | Opens |
 |---|---|---|

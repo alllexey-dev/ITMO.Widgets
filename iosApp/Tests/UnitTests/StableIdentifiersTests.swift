@@ -44,9 +44,9 @@ final class StableIdentifiersTests: XCTestCase {
         let urlTypes = try XCTUnwrap(Bundle.main.infoDictionary?["CFBundleURLTypes"] as? [[String: Any]])
         let schemes = urlTypes.flatMap { $0["CFBundleURLSchemes"] as? [String] ?? [] }
         XCTAssertEqual(schemes, ["itmowidgets"])
-        XCTAssertEqual(AppRoute.urlScheme, "itmowidgets")
+        XCTAssertEqual(RouteURL.scheme, "itmowidgets")
         XCTAssertEqual(
-            AppRoute.routable.compactMap(\.url?.absoluteString),
+            RouteURL.ids.compactMap { RouteURL.url(id: $0)?.absoluteString },
             ["schedule", "home", "sport", "me", "qr_pass", "today"].map { "itmowidgets://route/\($0)" }
         )
     }
