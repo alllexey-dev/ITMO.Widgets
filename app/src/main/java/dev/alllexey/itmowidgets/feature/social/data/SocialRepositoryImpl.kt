@@ -1,15 +1,15 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
-import dev.alllexey.itmowidgets.core.ItmoWidgetsApi
+import dev.alllexey.itmowidgets.client.friends.FriendsApi
+import dev.alllexey.itmowidgets.client.users.UserLookupRequest
+import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.ApplicationScope
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.model.ApiResponse
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.model.toUserSummary
-import dev.alllexey.itmowidgets.core.model.social.UserLookupRequest
 import dev.alllexey.itmowidgets.core.network.appResultOf
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -20,7 +20,7 @@ import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
-import dev.alllexey.itmowidgets.core.model.social.UserProfile as CoreUserProfile
+import dev.alllexey.itmowidgets.client.common.UserProfile as ClientUserProfile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -36,7 +36,8 @@ import javax.inject.Singleton
 @Singleton
 class SocialRepositoryImpl @Inject constructor(
     private val backend: BackendGate,
-    private val widgetsApi: ItmoWidgetsApi,
+    private val users: UsersApi,
+    private val friendships: FriendsApi,
     @param:ApplicationScope private val scope: CoroutineScope,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers
@@ -98,12 +99,12 @@ class SocialRepositoryImpl @Inject constructor(
 
         coroutineScope {
             // The own profile only decorates screens: its failure must not hide the lists.
-            val profile = async { call(generation) { widgetsApi.myUserData() }.valueOrNull()?.toUserSummary() }
-            val incoming = async { call(generation) { widgetsApi.incomingFriendRequests() } }
-            val outgoing = async { call(generation) { widgetsApi.outgoingFriendRequests() } }
-            val friendList = call(generation) { widgetsApi.friends() }
+            val profile = async { call(generation) { users.myUserData() }.valueOrNull()?.toUserSummary() }
+            val incoming = async { call(generation) { friendships.incomingFriendRequests() } }
+            val outgoing = async { call(generation) { friendships.outgoingFriendRequests() } }
+            val friendList = call(generation) { friendships.friends() }
 
-            val friendState = friendList.toState { list -> list.map(CoreUserProfile::toModel) }
+            val friendState = friendList.toState { list -> list.map(ClientUserProfile::toModel) }
             publish(generation) { friends.value = friendState }
             val requestState = combineRequests(incoming.await(), outgoing.await())
             publish(generation) { requests.value = requestState }
@@ -114,12 +115,12 @@ class SocialRepositoryImpl @Inject constructor(
 
     override suspend fun userFriends(isu: Int): AppResult<List<UserProfile>> =
         if (demo.isActive()) demoAnswer(DemoSocial.userFriends(isu)) { userFriendsCache[isu] = it } else gated(onSuccess = { userFriendsCache[isu] = it }) { generation ->
-            call(generation) { widgetsApi.userFriends(isu) }.map { list -> list.map(CoreUserProfile::toModel) }
+            call(generation) { users.userFriends(isu) }.map { list -> list.map(ClientUserProfile::toModel) }
         }
 
     override suspend fun profile(isu: Int): AppResult<UserProfile> =
         if (demo.isActive()) demoAnswer(DemoSocial.profile(isu)) { profiles[isu] = it } else gated(onSuccess = { profiles[isu] = it }) { generation ->
-            call(generation) { widgetsApi.userProfile(isu) }.map(CoreUserProfile::toModel)
+            call(generation) { users.userProfile(isu) }.map(ClientUserProfile::toModel)
         }
 
     override suspend fun lookup(isus: List<Int>): AppResult<List<UserProfile>> {
@@ -129,8 +130,8 @@ class SocialRepositoryImpl @Inject constructor(
         return gated { generation ->
             val found = mutableListOf<UserProfile>()
             for (chunk in distinct.chunked(LOOKUP_CHUNK)) {
-                when (val page = call(generation) { widgetsApi.lookupUsers(UserLookupRequest(chunk)) }) {
-                    is AppResult.Success -> found += page.value.users.map(CoreUserProfile::toModel)
+                when (val page = call(generation) { users.lookupUsers(UserLookupRequest(chunk)) }) {
+                    is AppResult.Success -> found += page.value.users.map(ClientUserProfile::toModel)
                     is AppResult.Failure -> return@gated page
                 }
             }
@@ -138,15 +139,15 @@ class SocialRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendRequest(isu: Int) = act { widgetsApi.sendFriendRequest(isu) }
+    override suspend fun sendRequest(isu: Int) = act { friendships.sendFriendRequest(isu) }
 
-    override suspend fun acceptRequest(isu: Int) = act { widgetsApi.acceptFriendRequest(isu) }
+    override suspend fun acceptRequest(isu: Int) = act { friendships.acceptFriendRequest(isu) }
 
-    override suspend fun rejectRequest(isu: Int) = act { widgetsApi.rejectFriendRequest(isu) }
+    override suspend fun rejectRequest(isu: Int) = act { friendships.rejectFriendRequest(isu) }
 
-    override suspend fun cancelRequest(isu: Int) = act { widgetsApi.cancelFriendRequest(isu) }
+    override suspend fun cancelRequest(isu: Int) = act { friendships.cancelFriendRequest(isu) }
 
-    override suspend fun removeFriend(isu: Int) = act { widgetsApi.removeFriend(isu) }
+    override suspend fun removeFriend(isu: Int) = act { friendships.removeFriend(isu) }
 
     override suspend fun clearSessionData() {
         synchronized(cacheLock) {
@@ -156,9 +157,9 @@ class SocialRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun act(request: suspend () -> ApiResponse<CoreUserProfile>): AppResult<UserProfile> =
+    private suspend fun act(request: suspend () -> ClientUserProfile): AppResult<UserProfile> =
         if (demo.isActive()) AppResult.Failure(AppError.DemoUnavailable) else gated(onSuccess = ::applyRelationship) { generation ->
-            call(generation, request).map(CoreUserProfile::toModel)
+            call(generation, request).map(ClientUserProfile::toModel)
         }
 
     /** Moves [profile] into the list its relationship belongs to; other lists drop it. */
@@ -236,22 +237,23 @@ class SocialRepositoryImpl @Inject constructor(
         currentUser.value = null
     }
 
-    private suspend fun <T> call(generation: Long, request: suspend () -> ApiResponse<T>): AppResult<T> =
+    /** Core 2.0 fails an answer without data as a broken contract, which maps to [AppError.Unknown]. */
+    private suspend fun <T> call(generation: Long, request: suspend () -> T): AppResult<T> =
         withContext(dispatchers.io) {
             if (!isCurrent(generation)) return@withContext AppResult.Failure(AppError.CustomServicesDisabled)
-            appResultOf { checkNotNull(request().data) { "Backend returned no data" } }
+            appResultOf { request() }
         }
 
     private fun combineRequests(
-        incoming: AppResult<List<CoreUserProfile>>,
-        outgoing: AppResult<List<CoreUserProfile>>
+        incoming: AppResult<List<ClientUserProfile>>,
+        outgoing: AppResult<List<ClientUserProfile>>
     ): LoadState<FriendRequests> {
         val error = (incoming as? AppResult.Failure)?.error ?: (outgoing as? AppResult.Failure)?.error
         if (error != null) return LoadState.Error(error)
         return LoadState.Content(
             FriendRequests(
-                incoming = (incoming as AppResult.Success).value.map(CoreUserProfile::toModel),
-                outgoing = (outgoing as AppResult.Success).value.map(CoreUserProfile::toModel)
+                incoming = (incoming as AppResult.Success).value.map(ClientUserProfile::toModel),
+                outgoing = (outgoing as AppResult.Success).value.map(ClientUserProfile::toModel)
             )
         )
     }
