@@ -5,7 +5,6 @@ import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import javax.inject.Inject
 import kotlin.time.Instant
 
 sealed interface RecordbookSportState {
@@ -19,7 +18,7 @@ sealed interface RecordbookSportState {
     data object Error : RecordbookSportState
 }
 
-class RecordbookSportResolver @Inject constructor(private val repository: SportScoreRepository) {
+class RecordbookSportResolver(private val repository: SportScoreRepository) {
     suspend fun resolve(period: RecordbookPeriod, subjects: List<RecordbookSubject>): RecordbookSportState? {
         if (subjects.none { it.isPhysicalEducation }) return null
         val periods = when (val result = repository.getScorePeriods()) {

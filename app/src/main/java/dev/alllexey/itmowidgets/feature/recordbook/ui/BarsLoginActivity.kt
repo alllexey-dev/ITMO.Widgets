@@ -12,7 +12,6 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -28,12 +27,13 @@ import dev.alllexey.itmowidgets.databinding.ActivityLoginBinding
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.BarsLoginViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /** No JavaScript bridge or token interception: only the exact HTTPS OAuth callback is consumed. */
 @AndroidEntryPoint
 class BarsLoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
-    private val viewModel: BarsLoginViewModel by viewModels()
+    private val viewModel: BarsLoginViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

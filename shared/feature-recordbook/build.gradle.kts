@@ -10,9 +10,16 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared:core"))
             implementation(project(":shared:designsystem"))
+            // The recordbook ViewModels are KMP ViewModels that :app obtains through Koin (L12 LR-2a, recipe koin-module).
+            api(libs.jetbrains.lifecycle.viewmodel)
+            api(libs.koin.core)
+            api(libs.koin.core.viewmodel)
         }
         commonTest.dependencies {
             implementation(project(":shared:testing"))
+        }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.koin.test)
         }
     }
 }

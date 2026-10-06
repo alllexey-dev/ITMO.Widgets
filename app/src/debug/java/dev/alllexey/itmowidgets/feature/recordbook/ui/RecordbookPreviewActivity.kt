@@ -14,9 +14,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import dagger.hilt.android.AndroidEntryPoint
@@ -41,11 +38,11 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
+import dev.alllexey.itmowidgets.di.bridge.RecordbookDebugFixtures
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
-import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkCheckResult
@@ -59,14 +56,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonsLoader
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLinksLoader
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetLoader
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacherLevelsLoader
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
@@ -85,6 +74,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toKotlinLocalDate
+import org.koin.core.module.Module
 
 /** Real production Fragments with test-supplied in-memory repositories; never reads a session. */
 @AndroidEntryPoint
@@ -102,54 +92,13 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNa
         super.attachBaseContext(newBase.createConfigurationContext(config))
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
-                if (fragment is SheetScoresBottomSheet) {
-                    val arguments = fragment.requireArguments()
-                    @Suppress("DEPRECATION")
-                    val handle = SavedStateHandle(arguments.keySet().associateWith { arguments.get(it) })
-                    val factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            SheetScoresViewModel(handle, MemorySheetScores) as T
-                    }
-                    ViewModelProvider(fragment, factory)[SheetScoresViewModel::class.java]
-                    return
-                }
-                if (fragment !is RecordbookFragment && fragment !is RecordbookSubjectFragment) return
-                val factory = object : ViewModelProvider.Factory {
-                    @Suppress("UNCHECKED_CAST")
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        val resolver = RecordbookSportResolver(checkNotNull(sportRepository))
-                        return if (fragment is RecordbookFragment) {
-                            RecordbookViewModel(checkNotNull(repository), bars ?: NoBars, preference, SavedStateHandle(), resolver, FixedTime,
-                                MemoryMarkTracking, MemorySheetScores) as T
-                        } else {
-                            val args = fragment.requireArguments()
-                            val values = mutableMapOf<String, Any>(
-                                "entry_id" to args.getLong("entry_id"), "program_id" to args.getLong("program_id"),
-                                "semester" to args.getInt("semester"), "study_year" to checkNotNull(args.getString("study_year"))
-                            )
-                            @Suppress("DEPRECATION")
-                            (args.get("bars_plan") as? Long)?.let { plan ->
-                                values["bars_plan"] = plan
-                                values["bars_type"] = checkNotNull(args.getString("bars_type"))
-                                values["bars_identifier"] = checkNotNull(args.getString("bars_identifier"))
-                            }
-                            val handle = SavedStateHandle(values)
-                            RecordbookSubjectViewModel(checkNotNull(repository), bars ?: NoBars, handle, resolver, FixedTime,
-                                MemoryMarkTracking,
-                                SubjectLessonsLoader(lessonsGateway, scheduleRefresh, bindingStore, SubjectContextResolver(), FixedTime),
-                                SubjectLinksLoader(resourceRepository), SubjectSheetLoader(MemorySheetScores, FixedTime),
-                                SubjectTeacherLevelsLoader(levelsRepository)) as T
-                        }
-                    }
-                }
-                if (fragment is RecordbookFragment) ViewModelProvider(fragment, factory)[RecordbookViewModel::class.java]
-                else ViewModelProvider(fragment, factory)[RecordbookSubjectViewModel::class.java]
-            }
+    /** The Koin fixture this host loaded; [onDestroy] hands it back. */
+    private lateinit var koinFixture: Module
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // Before super.onCreate(): a restored Fragment resolves its Koin ViewModel there.
+        koinFixture = RecordbookDebugFixtures.load(this, fakes)
+        supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             /** A sheet takes the host's narrow width too. */
             override fun onFragmentStarted(fm: FragmentManager, fragment: Fragment) {
                 val width = appearance.widthDp.takeIf { it > 0 } ?: return
@@ -179,6 +128,11 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNa
         }
         if (savedInstanceState == null) supportFragmentManager.beginTransaction()
             .replace(R.id.recordbook_test_container, RecordbookFragment(), ROOT_TAG).commitNow()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        RecordbookDebugFixtures.unload(this, koinFixture)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -229,6 +183,22 @@ class RecordbookPreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppNa
         private var enabled = barsEnabled
         override suspend fun isEnabled() = enabled
         override suspend fun setEnabled(enabled: Boolean): AppResult<Unit> { this.enabled = enabled; return AppResult.Success(Unit) }
+    }
+
+    /** The static fixture below, read when each ViewModel is created; the BARS toggle is this host's own. */
+    private val fakes = object : RecordbookDebugFixtures.Fakes {
+        override fun recordbook() = checkNotNull(repository)
+        override fun bars() = Companion.bars ?: NoBars
+        override fun barsPreference(): BarsPreferenceRepository = preference
+        override fun marks(): MarkTrackingRepository = MemoryMarkTracking
+        override fun sheets(): SheetScoresRepository = MemorySheetScores
+        override fun bindings() = bindingStore
+        override fun sport() = checkNotNull(sportRepository)
+        override fun lessons() = lessonsGateway
+        override fun scheduleRefresh() = scheduleRefresh
+        override fun links() = resourceRepository
+        override fun levels() = levelsRepository
+        override fun time(): AcademicTimeProvider = FixedTime
     }
 
     companion object {

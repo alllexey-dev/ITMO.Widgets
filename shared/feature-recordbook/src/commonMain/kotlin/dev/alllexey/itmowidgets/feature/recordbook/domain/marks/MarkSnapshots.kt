@@ -59,10 +59,10 @@ fun BarsPlanMarks.Companion.of(journal: RecordbookSubject, controls: List<Record
 }
 
 /** No score and zero are the same; closer than half a hundredth is equal. */
-internal fun sameScore(a: Double?, b: Double?): Boolean = abs((a ?: 0.0) - (b ?: 0.0)) < SCORE_EPSILON
+fun sameScore(a: Double?, b: Double?): Boolean = abs((a ?: 0.0) - (b ?: 0.0)) < SCORE_EPSILON
 
 /** `4/C` and ` 4C ` are one grade, `Зачёт` and `зачет` too; an empty grade is none. */
-internal fun rateKey(rate: String?): String? =
+fun rateKey(rate: String?): String? =
     rate?.trim()?.lowercase()?.replace('ё', 'е')?.replace(Regex("""[\s/]"""), "")?.takeIf { it.isNotEmpty() }
 
 private const val SCORE_EPSILON = 0.005

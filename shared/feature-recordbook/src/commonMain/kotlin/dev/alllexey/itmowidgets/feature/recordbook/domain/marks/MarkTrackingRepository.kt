@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.marks
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import kotlin.jvm.JvmInline
 import kotlinx.coroutines.flow.Flow
 
 /** How a check of one source ended once it had an answer. */

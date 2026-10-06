@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs
 import dev.alllexey.itmowidgets.core.navigation.SheetScoresArgs.Step
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
@@ -24,7 +23,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTabGrid
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotals
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,8 +35,7 @@ import kotlinx.coroutines.launch
  * Connects the own total of a public Google Sheet, or picks another total of the connected one. The downloaded
  * workbook lives only here, never in the saved state: after process death the sheet is downloaded again.
  */
-@HiltViewModel
-class SheetScoresViewModel @Inject constructor(
+class SheetScoresViewModel(
     handle: SavedStateHandle,
     private val repository: SheetScoresRepository,
 ) : ViewModel() {

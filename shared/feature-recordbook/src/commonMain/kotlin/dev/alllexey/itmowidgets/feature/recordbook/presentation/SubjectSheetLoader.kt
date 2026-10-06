@@ -9,14 +9,13 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.toLocalDateTime
 
 /** The own total from a sheet on the subject page: the connected one, or the sheet links to connect. */
-class SubjectSheetLoader @Inject constructor(
+class SubjectSheetLoader(
     private val sheets: SheetScoresRepository,
     private val time: AcademicTimeProvider,
 ) {

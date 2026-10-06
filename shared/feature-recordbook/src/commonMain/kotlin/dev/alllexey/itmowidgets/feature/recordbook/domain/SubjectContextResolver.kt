@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain
 
 import dev.alllexey.itmowidgets.core.schedule.ScheduleSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import javax.inject.Inject
 
 /** How a recordbook discipline maps onto the schedule; only exact ids and confirmed links bind silently. */
 sealed interface SubjectContext {
@@ -21,7 +20,7 @@ sealed interface SubjectContext {
     data object NotApplicable : SubjectContext
 }
 
-class SubjectContextResolver @Inject constructor() {
+class SubjectContextResolver {
 
     fun resolve(subject: RecordbookSubject, candidates: List<ScheduleSubject>, confirmed: Long?): SubjectContext {
         if (subject.isPhysicalEducation) return SubjectContext.NotApplicable
