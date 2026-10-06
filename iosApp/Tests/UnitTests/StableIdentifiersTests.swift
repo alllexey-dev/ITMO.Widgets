@@ -1,3 +1,4 @@
+@testable import ITMOWidgets
 import XCTest
 
 /// Pins every iOS identifier that is frozen from the first TestFlight build (lane L18 Invariants, ADR 0023), read
@@ -36,6 +37,18 @@ final class StableIdentifiersTests: XCTestCase {
         for name in ["ITMOWidgetsWidgets", "ITMOWidgetsNotificationService"] {
             XCTAssertEqual(try extensionInfo(name)["CFBundleShortVersionString"] as? String, appVersion, name)
         }
+    }
+
+    /// Widgets, Controls and shortcuts hold `itmowidgets://route/<id>` URLs (IO-06b).
+    func testRouteUrls() throws {
+        let urlTypes = try XCTUnwrap(Bundle.main.infoDictionary?["CFBundleURLTypes"] as? [[String: Any]])
+        let schemes = urlTypes.flatMap { $0["CFBundleURLSchemes"] as? [String] ?? [] }
+        XCTAssertEqual(schemes, ["itmowidgets"])
+        XCTAssertEqual(AppRoute.urlScheme, "itmowidgets")
+        XCTAssertEqual(
+            AppRoute.routable.compactMap(\.url?.absoluteString),
+            ["schedule", "home", "sport", "me", "qr_pass", "today"].map { "itmowidgets://route/\($0)" }
+        )
     }
 
     /// `$(AppIdentifierPrefix)` is the team ID plus a dot on a device, `FAKETEAMID.` on the simulator and empty for

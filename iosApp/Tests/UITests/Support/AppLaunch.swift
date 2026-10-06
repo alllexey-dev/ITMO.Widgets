@@ -9,6 +9,19 @@ extension XCUIApplication {
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + arguments
         return app
     }
+
+    /// The app on a fixture session of the shell (`ShellFixtures.sessionArgument`, IO-06b).
+    static func itmo(session: ShellFixtureSession, arguments: [String] = []) -> XCUIApplication {
+        itmo(arguments: ["-itmoShellSession", session.rawValue] + arguments)
+    }
+}
+
+/// The fixture sessions of the shell, as `ShellSessionState` spells them.
+enum ShellFixtureSession: String {
+    case loading
+    case signedOut = "signed-out"
+    case demo
+    case signedIn = "signed-in"
 }
 
 extension XCTestCase {

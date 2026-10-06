@@ -1,19 +1,18 @@
 import XCTest
 
-/// Launches the app and checks the first screen (IO-17). Runs with `scripts/ios/test.sh ui SmokeUITests` and in
-/// scripts/ios/screenshots.sh; the shell cards (IO-05, IO-06) replace the root assertion with the tab bar.
+/// Launches the app and checks the first screen (IO-17): the shell on home (IO-06b). Runs with
+/// `scripts/ios/test.sh ui SmokeUITests` and in scripts/ios/screenshots.sh.
 final class SmokeUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
     }
 
-    func testLaunchShowsTheRootScreen() {
+    func testLaunchShowsTheShellOnHome() {
         let app = XCUIApplication.itmo()
         app.launch()
 
-        let productName = app.staticTexts["root.productName"]
-        XCTAssertTrue(productName.waitForExistence(timeout: 30), "the root screen did not appear")
-        XCTAssertEqual(productName.label, "ITMO.Widgets")
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 30), "the tab bar did not appear")
+        XCTAssertTrue(app.descendants(matching: .any)["shell.root.home"].exists, "home is not selected at launch")
         attachScreenshot(named: "launch")
     }
 }

@@ -37,6 +37,17 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER).route</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(APP_URL_SCHEME)</string>
+			</array>
+		</dict>
+	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 </dict>
