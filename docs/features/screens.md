@@ -202,8 +202,8 @@ Feature doc: [Update offer](update.md).
 
 ## Debug tools
 
-Feature doc: none.
+Feature doc: [Debug tools](debug.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/debug/ui/DebugToolsFragment.kt` | Fragment | `DebugToolsViewModel` | `debug_tools`, `AppScreen.DEBUG_TOOLS` | — | — |
+| `feature/debug/ui/DebugToolsFragment.kt` hosting `DebugToolsScreen` (`:app`) | Fragment | `DebugToolsViewModel` (Hilt) | `debug_tools`, `AppScreen.DEBUG_TOOLS` | — | `DebugToolsScreenshotTest` (`:app`) |

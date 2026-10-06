@@ -24,8 +24,7 @@
     <fragment
         android:id="@+id/debug_tools"
         android:name="dev.alllexey.itmowidgets.feature.debug.ui.DebugToolsFragment"
-        android:label="Debug tools"
-        tools:layout="@layout/fragment_debug_tools" />
+        android:label="Debug tools" />
 
     <fragment
         android:id="@+id/app_update"

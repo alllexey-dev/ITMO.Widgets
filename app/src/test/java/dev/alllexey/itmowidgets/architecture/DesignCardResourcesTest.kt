@@ -108,18 +108,13 @@ class DesignCardResourcesTest {
     }
 
     @Test
-    fun `settings stay unoutlined and debug cards declare their quiet surface`() {
+    fun `settings stay unoutlined`() {
         val settingsCard = "Widget.ItmoWidgets.CompactSettingsCard"
         assertEquals("?attr/colorSurfaceContainerLow", property(settingsCard, "cardBackgroundColor"))
         assertEquals("0dp", property(settingsCard, "strokeWidth"))
         assertEquals("0dp", property(settingsCard, "cardElevation"))
         assertEquals("false", property(settingsCard, "cardUseCompatPadding"))
         assertEquals("false", property(settingsCard, "cardPreventCornerOverlap"))
-        val debugCards = elements("layout/fragment_debug_tools.xml", MATERIAL_CARD)
-        assertFalse(debugCards.isEmpty())
-        debugCards.forEach { card ->
-            assertEquals("@style/${cardStyle("Content.Outlined")}", card.getAttribute("style"))
-        }
     }
 
     private fun document(path: String): Element = DocumentBuilderFactory.newInstance()

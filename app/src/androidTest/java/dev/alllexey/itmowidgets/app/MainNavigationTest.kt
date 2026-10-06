@@ -6,7 +6,12 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ScrollView
+import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,6 +24,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
+import dev.alllexey.itmowidgets.feature.debug.ui.DebugToolsTestTags
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -153,7 +159,7 @@ class MainNavigationTest {
                 assertNotNull(it.navigation.overlayHost)
                 assertEquals(View.VISIBLE, it.binding.bottomNavView.visibility)
             }
-            onView(withId(R.id.back_button)).perform(click())
+            scenario.onActivity { clickDebugToolsBack(it) }
             settle()
             scenario.onActivity {
                 assertNull(it.navigation.overlayHost)
@@ -339,6 +345,16 @@ class MainNavigationTest {
     }
 
     private fun bounds(view: View) = Rect(view.left, view.top, view.right, view.bottom)
+
+    /** Taps the Compose back button of the debug tools through its test tag (no compose test rule on this classpath). */
+    private fun clickDebugToolsBack(activity: SettingsNavigationTestActivity) {
+        val root = activity.navigation.overlayHost!!.childFragmentManager.primaryNavigationFragment!!.requireView()
+        val owner = ((root as ViewGroup).getChildAt(0) as ViewRootForTest).semanticsOwner
+        val back = generateSequence(listOf(owner.unmergedRootSemanticsNode)) { level ->
+            level.flatMap { it.children }.ifEmpty { null }
+        }.flatten().first { it.config.getOrNull(SemanticsProperties.TestTag) == DebugToolsTestTags.BACK }
+        assertTrue(back.config.getOrNull(SemanticsActions.OnClick)?.action?.invoke() == true)
+    }
 
     private fun settle() = TestUi.settle(500)
 

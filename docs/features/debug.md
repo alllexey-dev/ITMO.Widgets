@@ -9,7 +9,8 @@ counterparts live in [Settings](../settings.md#debug-only-controls).
 `DebugToolsFragment` is the overlay destination `debug_tools`
 (`AppScreen.DEBUG_TOOLS`), opened by «Инструменты разработчика» on the
 [profile tab](me.md), a row shown only when `BuildConfig.DEBUG` is true. The
-fragment checks `BuildConfig.DEBUG` again and hides every section without it.
+fragment checks `BuildConfig.DEBUG` again before any UI: without it,
+`onCreateView` returns an empty view and the ViewModel is never created.
 The Konsist rule `debug code is gated` (`DebugRulesTest`) requires that check
 in every `File*` store, `*Fragment` and `*RefreshTokenController` of
 `core/debug` and `feature/debug` and in `FileAcademicTimeOverrideStore`; the
@@ -17,19 +18,31 @@ rest only delegates to them.
 
 ## Screen
 
-The toolbar «Инструменты разработчика» with «Назад». Sections, top to bottom:
+`DebugToolsScreen(state, actions)` in `feature/debug/ui/DebugToolsScreen.kt` is
+a stateless Compose screen built from the kit (`AppTopBar`, `ProgressButton`,
+`ItmoSwitch`) that stays in `:app`: debug tools never move to `shared/` or
+reach iOS. `DebugToolsFragment` hosts it in `itmoComposeView`, takes
+`DebugToolsViewModel` from Hilt and implements `DebugToolsActions` with it;
+toasts and activity recreation stay in the fragment. Strings stay in
+`strings_debug.xml`.
+
+The top bar «Инструменты разработчика» with «Назад» (test tag
+`DebugToolsTestTags.BACK`). Outlined content cards, top to bottom:
 
 - «Тестовый вход по Refresh token»: «Refresh token настроен» or «Refresh token
   не настроен», then «Добавить» or «Заменить» («Проверяем…» while it runs). The
-  dialog «Ввести Refresh token» with the field «Refresh token» and «Проверить и
-  сохранить»; an empty field shows «Вставьте Refresh token».
+  dialog «Ввести Refresh token» with the password field «Refresh token» (with a
+  show/hide toggle) and «Проверить и сохранить»; an empty field shows «Вставьте
+  Refresh token». The token lives only in the dialog's memory state, never in
+  saved state.
   `DebugRefreshTokenController` stores the token, runs every
   `SessionDataCleaner` and forces a token refresh through MyItmoApi. Success
   shows «Токен проверен и сохранён» and recreates the activity; a failure
   clears the tokens and the data and shows «Токен не подошёл: <ошибка>». The
   demo session refuses with `AppError.DemoUnavailable`.
 - «Тестовое академическое время»: «Системная дата» or «Тестовая дата: <дата>»,
-  «Выбрать дату» (a `DatePickerDialog` on the current override or today) and
+  «Выбрать дату» (material3's date picker on the current override or the
+  effective date, as a kotlinx `LocalDate`) and
   «Сбросить», enabled only with an override. The override moves
   `AcademicTimeProvider` for the schedule and sport only; sign-in, caches and
   the QR pass keep system time.
@@ -45,8 +58,9 @@ The toolbar «Инструменты разработчика» with «Наза�
   «Проверить продление БАРС» (`BarsSessionProbe.start()`, a read-only probe of
   the BARS cookie renewal that writes only its outcome to logcat).
 
-The section «Подключение к ITMO.Widgets» stays in the layout but is always
-hidden: the opt-in lives in the settings.
+The section «Подключение к ITMO.Widgets» stays in the screen but is always
+hidden: the opt-in lives in the settings. Which dialog is open survives
+recreation; what was typed into it does not.
 
 Every override change (date, scores, templates) recreates the activity, so
 every screen reads the new value from the start.
@@ -68,5 +82,8 @@ names `schedule-changes-now` and `marks-check-now`.
 ## Tests
 
 JVM: `DebugToolsViewModelTest`, `DebugRulesTest`,
-`DefaultDebugRefreshTokenControllerTest`. The screen has no debug host and no
-visual test.
+`DefaultDebugRefreshTokenControllerTest`. `DebugToolsScreenshotTest` renders the
+previews `DebugToolsScreen_{content,refresh-token-dialog,sport-score-dialog}`
+(the dialogs without their window) into `app/screenshots/` in light and dark.
+`MainNavigationTest` opens the screen in the overlay and leaves it through the
+back button's test tag. The screen has no debug host.
