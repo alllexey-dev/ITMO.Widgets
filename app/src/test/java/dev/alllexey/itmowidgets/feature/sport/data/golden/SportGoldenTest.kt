@@ -114,10 +114,16 @@ class SportGoldenTest {
             backend["GET /api/sport/users/100002/bookings"] = contractFixture("http/sport/userSportBookings.json")
         }
 
-        harness.data.refreshSportQueueEntries()
-        harness.data.refreshSportQueues()
-        harness.data.refreshSportAutoSignLimits()
-        harness.data.refreshFriendsBookings()
+        var user: Any? = null
+        val requests = buildList {
+            // The free-sign and auto-sign requests of one refresh run concurrently (KM-10c): order them by path, each
+            // refresh after the previous one.
+            addAll(harness.requestsOf { data.refreshSportQueueEntries() }.sorted())
+            addAll(harness.requestsOf { data.refreshSportQueues() }.sorted())
+            addAll(harness.requestsOf { data.refreshSportAutoSignLimits() })
+            addAll(harness.requestsOf { data.refreshFriendsBookings() })
+            addAll(harness.requestsOf { user = users.getUserBookings(100002) })
+        }
 
         assertGolden(
             "backend-queues",
@@ -125,8 +131,8 @@ class SportGoldenTest {
             "queues" to harness.data.observeSportQueues().first(),
             "limits" to harness.data.observeSportAutoSignLimits().first(),
             "friends" to harness.data.observeFriendsBookings().first(),
-            "user 100002" to harness.users.getUserBookings(100002),
-            "requests" to harness.requests
+            "user 100002" to user,
+            "requests" to requests
         )
     }
 
