@@ -1,16 +1,15 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.local
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.feature.schedule.data.copyStored22
+import dev.alllexey.itmowidgets.feature.schedule.data.directoriesAt
 import dev.alllexey.itmowidgets.feature.schedule.data.stored22
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Building
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Lesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.Room
+import dev.alllexey.itmowidgets.testkit.FakeClock
 import java.io.File
-import java.time.Clock
-import java.time.ZoneOffset
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 import kotlinx.coroutines.Dispatchers
@@ -24,13 +23,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.time.Instant
+import kotlin.time.Instant
 
 /** 2.2's gzip cache entries, `data` a JSON document in a string, read into the same days and are rewritten unchanged. */
 class ScheduleCache22GoldenTest {
@@ -74,16 +72,11 @@ class ScheduleCache22GoldenTest {
         assertNull(cache.get(null, DATE))
     }
 
-    private fun cache(at: Long): ScheduleLocalDataSourceImpl {
-        val root = temporary.root.toOkioPath()
-        val directories = object : AppDirectories {
-            override val files = root / "files"
-            override val cache = root / "cache"
-            override val noBackup = root / "no_backup"
-        }
-        val clock = Clock.fixed(Instant.ofEpochMilli(at), ZoneOffset.UTC)
-        return ScheduleLocalDataSourceImpl(clock, directories, AppDispatchers(Dispatchers.IO, Dispatchers.Default, Dispatchers.Unconfined))
-    }
+    private fun cache(at: Long): ScheduleLocalDataSourceImpl = ScheduleLocalDataSourceImpl(
+        FakeClock(Instant.fromEpochMilliseconds(at)),
+        directoriesAt(temporary.root),
+        AppDispatchers(Dispatchers.IO, Dispatchers.Default, Dispatchers.Unconfined)
+    )
 
     /** The outer entries and their `data` documents are equal as JSON trees. */
     private fun assertSameEntry(expected: ByteArray, actual: ByteArray) {

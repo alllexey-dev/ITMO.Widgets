@@ -1,7 +1,9 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
+import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import java.io.File
 import kotlinx.serialization.json.Json
+import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 
 /** A file 2.2 wrote, from `src/test/resources/stores/` (see its README). */
@@ -18,3 +20,10 @@ internal fun copyStored22(path: String, directory: File, name: String = File(pat
  */
 internal fun assertSameJson(expected: String, actual: String) =
     assertEquals(Json.parseToJsonElement(expected), Json.parseToJsonElement(actual))
+
+/** The app's directories under [root] (`files`, `cache`, `no_backup`), for the stores moved to `:shared:feature-schedule`. */
+internal fun directoriesAt(root: File): AppDirectories = object : AppDirectories {
+    override val files = root.toOkioPath() / "files"
+    override val cache = root.toOkioPath() / "cache"
+    override val noBackup = root.toOkioPath() / "no_backup"
+}

@@ -1,41 +1,48 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.local
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
-import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import java.io.File
-import java.time.Clock
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.util.zip.GZIPInputStream
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import dev.alllexey.itmowidgets.testkit.FakeClock
+import dev.alllexey.itmowidgets.testkit.fakeFileSystemOf
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
-import okio.Path
-import okio.Path.Companion.toOkioPath
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import java.time.Instant
+import okio.Path.Companion.toPath
+import okio.buffer
+import okio.fakefilesystem.FakeFileSystem
+import okio.gzip
+import okio.use
 
+/** `cache/schedule_cache` on okio's fake file system; the 2.2 goldens are `ScheduleCache22GoldenTest` in `:app`. */
 class ScheduleLocalDataSourceTest {
 
-    @get:Rule val temporary = TemporaryFolder()
+    private val clock = FakeClock(Instant.parse("2026-09-08T08:00:00Z"))
+    private val fileSystem: FakeFileSystem = fakeFileSystemOf(clock = clock)
+
+    @AfterTest
+    fun tearDown() {
+        fileSystem.checkNoOpenFiles()
+    }
 
     @Test
     fun replacementPublishesOnlyTheCompleteRangeSnapshot() = withCache { fixture ->
@@ -51,7 +58,8 @@ class ScheduleLocalDataSourceTest {
             assertEquals(old, withTimeout(5_000) { snapshots.receive() })
             local.replaceRange(null, DATE, old.last().date, refreshed)
             assertEquals(refreshed, withTimeout(5_000) { snapshots.receive() })
-            assertTrue("No empty or partial intermediate snapshots", snapshots.tryReceive().isFailure)
+            runCurrent()
+            assertTrue(snapshots.tryReceive().isFailure, "No empty or partial intermediate snapshots")
         } finally {
             collector.cancelAndJoin()
         }
@@ -92,12 +100,11 @@ class ScheduleLocalDataSourceTest {
             val schedule = day(DATE, "saved")
             local.save(schedule, null)
             assertEquals(listOf(schedule), withTimeout(5_000) { snapshots.receive() })
-            val diskEntry = GZIPInputStream(File(local.cacheDir, "default_$DATE.json").inputStream()).use {
-                ScheduleStoreJson.decodeFromString<StoredCacheEntry>(String(it.readBytes()))
-            }
+            val json = fileSystem.source(local.cacheDir / "default_$DATE.json").gzip().buffer().use { it.readUtf8() }
+            val diskEntry = ScheduleStoreJson.decodeFromString<StoredCacheEntry>(json)
             assertNull(diskEntry.userIsu)
             assertEquals(DATE.toString(), diskEntry.date)
-            assertEquals(fixture.clock.millis(), diskEntry.timestamp)
+            assertEquals(clock.now().toEpochMilliseconds(), diskEntry.timestamp)
             assertEquals(schedule, ScheduleStoreJson.decodeFromString<StoredDaySchedule>(diskEntry.data).toModel())
             assertEquals(diskEntry.toEntry(), local.get(null, DATE))
 
@@ -116,11 +123,11 @@ class ScheduleLocalDataSourceTest {
         val local = fixture.local()
         val schedule = day(DATE)
         local.save(schedule, null)
-        fixture.clock.now = fixture.clock.now.plusSeconds(24 * 60 * 60L)
+        clock.advanceBy(24.hours)
         assertNotNull(local.get(null, DATE))
         assertEquals(listOf(schedule), local.observeRange(null, DATE, DATE).first())
 
-        fixture.clock.now = fixture.clock.now.plusMillis(1)
+        clock.advanceBy(1.milliseconds)
         assertNull(local.get(null, DATE))
         assertEquals(emptyList<DaySchedule>(), local.observeRange(null, DATE, DATE).first())
         assertEquals(emptyList<DaySchedule>(), fixture.local().observeRange(null, DATE, DATE).first())
@@ -166,33 +173,33 @@ class ScheduleLocalDataSourceTest {
         }
     }
 
-    private fun withCache(block: suspend CoroutineScope.(Fixture) -> Unit) = runBlocking {
-        block(Fixture(temporary.root.toOkioPath()))
+    @Test
+    fun anEntryThatIsNotGzipOrDoesNotDecodeIsAMissNotACrash() = withCache { fixture ->
+        val next = DATE.plus(1, DateTimeUnit.DAY)
+        fileSystem.createDirectories(CACHE_DIR)
+        fileSystem.write(CACHE_DIR / "default_$DATE.json") { writeUtf8("not gzip") }
+        val entry = """{"date":"$next","timestamp":${clock.now().toEpochMilliseconds()},"data":"{\"dayNumber\":1}"}"""
+        fileSystem.sink(CACHE_DIR / "default_$next.json").gzip().buffer().use { it.writeUtf8(entry) }
+        val local = fixture.local()
+
+        assertEquals(emptyList<DaySchedule>(), local.observeRange(null, DATE, next).first())
+        assertNull(local.get(null, DATE))
+        assertNull(local.get(null, next))
     }
 
-    private class Fixture(root: Path) {
-        val clock = MutableClock()
-        val directories = object : AppDirectories {
-            override val files = root / "files"
-            override val cache = root / "cache"
-            override val noBackup = root / "no_backup"
-        }
-        fun local() = ScheduleLocalDataSourceImpl(clock, directories, RealDispatchers)
+    private fun withCache(block: suspend TestScope.(Fixture) -> Unit) = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        block(Fixture(AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher)))
     }
 
-    private class MutableClock : Clock() {
-        var now: Instant = Instant.parse("2026-09-08T08:00:00Z")
-        override fun instant(): Instant = now
-        override fun getZone(): ZoneId = ZoneOffset.UTC
-        override fun withZone(zone: ZoneId): Clock = fixed(now, zone)
+    private inner class Fixture(private val dispatchers: AppDispatchers) {
+        fun local() = ScheduleLocalDataSourceImpl(clock, CACHE_DIR, dispatchers, fileSystem)
     }
 
     private fun day(date: LocalDate, note: String? = null) = DaySchedule(date.dayOfWeek.isoDayNumber, 1, date, note, emptyList())
 
     private companion object {
         val DATE: LocalDate = LocalDate(2026, 9, 7)
-
-        /** Real threads, as on a device: the cache's mutex and flows are what is under test. */
-        val RealDispatchers = AppDispatchers(io = Dispatchers.IO, default = Dispatchers.Default, main = Dispatchers.Unconfined)
+        val CACHE_DIR = "/cache/schedule_cache".toPath()
     }
 }

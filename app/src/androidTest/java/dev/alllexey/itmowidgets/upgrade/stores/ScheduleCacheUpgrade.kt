@@ -15,6 +15,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import kotlin.time.Clock
+import kotlin.time.toKotlinInstant
 
 /**
  * Cache `cache/schedule_cache/123456_2026-10-05.json` (gzip, Gson): read or ignored, never a crash. kotlinx writes the
@@ -58,12 +60,13 @@ object ScheduleCacheUpgrade {
         )
 
         val directories = AndroidAppDirectories(fixture.context)
-        val cache = ScheduleLocalDataSourceImpl(fixture.clock, directories, DeviceDispatchers)
+        val clock = object : Clock { override fun now() = fixture.clock.instant().toKotlinInstant() }
+        val cache = ScheduleLocalDataSourceImpl(clock, directories, DeviceDispatchers)
         val days = cache.observeRange(Captured22.ISU, date, date).first()
         assertTrue("schedule_cache read as $days", days.isEmpty() || days == listOf(expected))
 
         cache.save(expected, Captured22.ISU)
-        val reopened = ScheduleLocalDataSourceImpl(fixture.clock, directories, DeviceDispatchers)
+        val reopened = ScheduleLocalDataSourceImpl(clock, directories, DeviceDispatchers)
         assertEquals(listOf(expected), reopened.observeRange(Captured22.ISU, date, date).first())
     }
 }
