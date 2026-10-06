@@ -1,10 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.reference
 
 import android.animation.ValueAnimator
-import android.app.Activity
 import android.content.Context
-import android.view.View
-import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
 import dagger.Module
 import dagger.Provides
@@ -27,10 +24,6 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toJavaZoneId
-import org.robolectric.shadow.api.Shadow
-import org.robolectric.shadows.ShadowViewRootImpl
-import org.robolectric.util.ReflectionHelpers
-import com.google.android.material.R as MaterialR
 
 /**
  * What the sport references share: the demo session (`DemoSport`) on a fixed clock, so the real Fragments show the
@@ -60,22 +53,6 @@ internal object SportReferenceFixtures {
     /** Laid out with rows and no pending update. */
     fun RecyclerView.showsRows(): Boolean =
         isShown && childCount > 0 && !hasPendingAdapterUpdates() && !isAnimating
-
-    /**
-     * The surface of the bottom sheet [sheet] shows, its window focused. A sheet is a dialog window and Roborazzi
-     * finds a view through Espresso in the focused window, which Robolectric leaves on the activity.
-     */
-    fun sheetSurface(activity: Activity, sheet: DialogFragment): View {
-        val dialog = checkNotNull(sheet.dialog) { "The sheet is not shown" }
-        focus(activity.window.decorView, false)
-        focus(checkNotNull(dialog.window).decorView, true)
-        return checkNotNull(dialog.findViewById(MaterialR.id.design_bottom_sheet)) { "No bottom sheet in the dialog" }
-    }
-
-    private fun focus(decor: View, hasFocus: Boolean) {
-        val root = ReflectionHelpers.callInstanceMethod<Any>(decor, "getViewRootImpl")
-        Shadow.extract<ShadowViewRootImpl>(root).callWindowFocusChanged(hasFocus)
-    }
 
     /** `ValueAnimator.setDurationScale` is hidden; android-all has it. */
     private fun setDurationScale(scale: Float) {
