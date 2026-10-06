@@ -2,17 +2,25 @@
 
 `feature/me` is the last bottom-bar tab: the own identity, the entries to the
 social screens, the application rows and sign-out. It owns no data;
-`MeViewModel` combines the session, the custom-services opt-in and
-`SocialRepository`. The social screens it opens are in [Social](social.md),
+`MeViewModel` (`:shared:feature-account`, Koin) combines the session, the
+custom-services opt-in and `SocialRepository`. The social screens it opens are in [Social](social.md),
 «Вход на сайт» in [Web sign-in](web-login.md), the settings in
 [Settings](../settings.md).
 
 ## Screen
 
-`MeFragment` is `navigation_me` (`AppRoot.ME`). `MeRenderer.render(binding,
-state)` binds every view from `MeUiState`; the fragment renders the current
-state before the first frame, so a recreated tab never shows a blank card.
-Every row is one screen-reader focus stop.
+The screen is Compose in `:shared:feature-account`:
+`feature/me/ui/MeScreen.kt` is the stateless `MeScreen(state, showDebugTools,
+actions)` and `feature/me/ui/MeRoute.kt` obtains `MeViewModel` from Koin and
+wires sign-out and the link snackbar. `MeFragment` (`app/`) is
+`navigation_me` (`AppRoot.ME`); it hosts `MeRoute` through `itmoComposeView`,
+passes `showDebugTools = BuildConfig.DEBUG` and performs the platform
+`MeActions`: `openScreen`/`openWebLogin`, the share sheet with
+`ShareLinkFactory` and the project links. iOS hosts the same `MeRoute` in a
+`ComposeUIViewController`. The first frame already shows the cached state, so
+a recreated tab never shows a blank card. Every row is one target, at least
+48 dp high, and one screen-reader focus stop; the root stays one transition
+group under an overlay's back gesture.
 
 Header:
 
@@ -51,24 +59,33 @@ Group «Приложение»:
 Below the groups two tonal buttons open GitHub
 (`https://github.com/alllexey-dev/ITMO.Widgets`) and Telegram
 (`tg://resolve?domain=itmowidgets`, then `https://t.me/itmowidgets`). When no
-app can open any of the links a Snackbar says «Нет приложения, чтобы открыть
+app can open any of the links a snackbar says «Нет приложения, чтобы открыть
 ссылку».
 
 ## Sign-out
 
-«Выйти» asks «Выйти из аккаунта?» with «С устройства удалятся данные аккаунта и
+«Выйти» asks in a `ConfirmDialog` «Выйти из аккаунта?» with «С устройства удалятся данные аккаунта и
 содержимое виджетов. Настройки приложения останутся.» and «Отмена» / «Выйти».
 `MeViewModel.signOut()` runs `SessionRepository.signOut()` once and disables
-the row until it ends; the session then returns the app to the sign-in screen
+the button until it ends; the session then returns the app to the sign-in screen
 ([Sign-in](auth.md#session)).
 
 ## Refresh
 
-`onStart` calls `SocialRepository.refresh()`, so a return from the friends or
-search screens shows new counts. Every change of the opt-in refreshes again, so
+Every start of `MeRoute` (`LifecycleStartEffect`) calls
+`MeViewModel.refresh(RefreshMode.Silent)` and so `SocialRepository.refresh()`,
+so a return from the friends or search screens shows new counts. Every change of the opt-in refreshes again, so
 switching it on in settings fills the card without reopening the tab.
 
 ## Tests
 
-JVM: `MeViewModelTest`. The tab renders in `SettingsNavigationTestActivity`
-(debug) and is captured by `WebLoginVisualTest`.
+JVM: `MeViewModelTest`, `MeModuleTest` and the host test `MeScreenTest` (48 dp
+rows, one target per row, the badge's description, the web sign-in row and
+its divider only with the connection, the confirmation and the disabled
+sign-out). Goldens: the five `MeScreen` previews in
+`feature/me/ui/MeScreenPreviews.kt`, in four appearances, through
+`AccountScreenshotTest`. Instrumented: `ProfileBackMotionTest` and
+`MainNavigationTest` open the tab in `SettingsNavigationTestActivity` (debug)
+and click `MeTestTags.SETTINGS_ROW` through its semantics. The store frame
+`10-me` sets `MeFragment.releaseLook`, so a debug build shows the release
+screen without the developer tools row. `MeRulesTest` keeps the row debug only.

@@ -28,6 +28,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppRoot
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.home.HomeSemantics
 import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
+import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestSession
@@ -55,10 +56,13 @@ class StoreScreenshotCapture {
     @Before
     fun startSignedOut() {
         TestSession.signOut()
+        // Release builds hide the developer tools row on Me; the store shows the release screen.
+        MeFragment.releaseLook = true
     }
 
     @After
     fun leaveTheDemo() {
+        MeFragment.releaseLook = false
         TestSession.signOut()
     }
 
@@ -119,11 +123,6 @@ class StoreScreenshotCapture {
             frame(activity, "09-friends")
 
             open(scenario) { it.openRoot(AppRoot.ME) }
-            open(scenario) { main ->
-                // Release builds hide the developer tools row; the store shows the release screen.
-                main.findViewById<View>(R.id.debug_tools_row).visibility = View.GONE
-                main.findViewById<View>(R.id.debug_divider).visibility = View.GONE
-            }
             frame(activity, "10-me")
 
             // Not one of the ten Play frames: the landing's «QR-пропуск» section.

@@ -52,8 +52,7 @@ class SettingsPreviewActivity : AppCompatActivity() {
             )
         }
         val frame = FrameLayout(this)
-        val profile = intent.getBooleanExtra(EXTRA_PROFILE, false)
-        val content = layoutInflater.inflate(if (profile) R.layout.fragment_me else R.layout.fragment_settings, frame, false)
+        val content = layoutInflater.inflate(R.layout.fragment_settings, frame, false)
         val widthDp = intent.getIntExtra(EXTRA_WIDTH_DP, 0)
         frame.addView(
             content,
@@ -73,7 +72,6 @@ class SettingsPreviewActivity : AppCompatActivity() {
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        if (profile) return
         sectionsContainer = content.findViewById(R.id.sections_container)
         // Match the production Fragment while asynchronous settings have not arrived.
         content.findViewById<View>(R.id.settings_scroll).visibility = View.GONE
@@ -84,7 +82,6 @@ class SettingsPreviewActivity : AppCompatActivity() {
         @Volatile
         var appearance = PreviewAppearance()
 
-        const val EXTRA_PROFILE = "preview_profile"
         const val EXTRA_COLOR_SEED = "preview_color_seed"
         const val EXTRA_WIDTH_DP = "preview_width_dp"
     }

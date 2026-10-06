@@ -2,17 +2,19 @@ package dev.alllexey.itmowidgets.feature.settings
 
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.activity.BackEventCompat
 import androidx.core.view.descendants
 import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
+import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.feature.me.ui.MeFragment
+import dev.alllexey.itmowidgets.feature.me.ui.MeTestTags
 import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -36,7 +38,7 @@ class ProfileBackMotionTest {
                 originalFragment = profile(it)
                 originalView = originalFragment.requireView()
             }
-            onView(withId(R.id.settings_row)).perform(click())
+            scenario.onActivity { openSettings(it) }
             settle()
             scenario.onActivity { assertSame(originalView, originalFragment.requireView()) }
 
@@ -73,7 +75,7 @@ class ProfileBackMotionTest {
                 capture(it, "completed")
             }
             // Re-creation must preserve the same invariant, not only a click-time flag.
-            onView(withId(R.id.settings_row)).perform(click())
+            scenario.onActivity { openSettings(it) }
             settle()
             scenario.recreate()
             settle()
@@ -96,8 +98,25 @@ class ProfileBackMotionTest {
             assertEquals("Profile children must not slide inside their clipping parents", 0f, it.translationX, 0.01f)
             assertEquals(0f, it.translationY, 0.01f)
         }
-        assertEquals("Александрова Мария Александровна", root.findViewById<TextView>(R.id.profile_name).text)
-        assertTrue(root.findViewById<TextView>(R.id.profile_meta).text.contains("123456"))
+        assertEquals("Александрова Мария Александровна", text(root, MeTestTags.PROFILE_NAME))
+        assertTrue(text(root, MeTestTags.PROFILE_META).contains("123456"))
+    }
+
+    /** Clicks the Me settings row through the tab's Compose semantics. Main thread only. */
+    private fun openSettings(activity: SettingsNavigationTestActivity) {
+        val onClick = node(profile(activity).requireView(), MeTestTags.SETTINGS_ROW).config[SemanticsActions.OnClick]
+        assertTrue("The settings row has no click action", onClick.action?.invoke() == true)
+    }
+
+    private fun text(root: View, tag: String): String =
+        node(root, tag).config[SemanticsProperties.Text].joinToString()
+
+    /** The node tagged [tag] in the unmerged semantics of the Fragment's `ComposeView` [root]. */
+    private fun node(root: View, tag: String): SemanticsNode {
+        val owner = ((root as ViewGroup).getChildAt(0) as ViewRootForTest).semanticsOwner
+        return generateSequence(listOf(owner.unmergedRootSemanticsNode)) { level ->
+            level.flatMap { it.children }.ifEmpty { null }
+        }.flatten().first { it.config.getOrNull(SemanticsProperties.TestTag) == tag }
     }
 
     private fun event(progress: Float, edge: Int) = BackEventCompat(

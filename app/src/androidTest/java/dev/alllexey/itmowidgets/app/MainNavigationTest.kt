@@ -25,6 +25,7 @@ import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.feature.debug.ui.DebugToolsTestTags
 import dev.alllexey.itmowidgets.feature.home.HomeSemantics
 import dev.alllexey.itmowidgets.feature.home.ui.HomeTestTags
+import dev.alllexey.itmowidgets.feature.me.ui.MeTestTags
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.testing.Screenshots
 import dev.alllexey.itmowidgets.testing.TestUi
@@ -48,7 +49,7 @@ class MainNavigationTest {
                 barBounds = bounds(it.binding.bottomNavView)
                 capture(it, "profile")
             }
-            onView(withId(R.id.settings_row)).perform(click())
+            scenario.onActivity { openMeSettings(it) }
             settle()
             scenario.onActivity { capture(it, "settings") }
             onView(withText(R.string.settings_qr_short_title)).perform(click())
@@ -86,7 +87,7 @@ class MainNavigationTest {
             for (destination in MainNavigationCoordinator.ROOTS) {
                 scenario.onActivity { it.navigation.selectRoot(R.id.navigation_me) }
                 settle()
-                onView(withId(R.id.settings_row)).perform(click())
+                scenario.onActivity { openMeSettings(it) }
                 settle()
                 onView(withText(R.string.settings_qr_short_title)).perform(click())
                 settle()
@@ -102,7 +103,8 @@ class MainNavigationTest {
                 scenario.onActivity {
                     assertEquals(R.id.navigation_me, it.host.navController.currentDestination?.id)
                     assertNull(it.navigation.overlayHost)
-                    assertNotNull(it.host.requireView().findViewById<View>(R.id.settings_row))
+                    val me = it.host.childFragmentManager.primaryNavigationFragment!!.requireView()
+                    assertNotNull(HomeSemantics.node(me, MeTestTags.SETTINGS_ROW))
                 }
             }
         }
@@ -113,7 +115,7 @@ class MainNavigationTest {
         ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
             scenario.onActivity { it.navigation.selectRoot(R.id.navigation_me) }
             settle()
-            onView(withId(R.id.settings_row)).perform(click())
+            scenario.onActivity { openMeSettings(it) }
             settle()
             onView(withText(R.string.settings_qr_short_title)).perform(click())
             settle()
@@ -349,6 +351,12 @@ class MainNavigationTest {
             level.flatMap { it.children }.ifEmpty { null }
         }.flatten().first { it.config.getOrNull(SemanticsProperties.TestTag) == DebugToolsTestTags.BACK }
         assertTrue(back.config.getOrNull(SemanticsActions.OnClick)?.action?.invoke() == true)
+    }
+
+    /** Clicks the Me tab's settings row through its Compose semantics. Main thread only. */
+    private fun openMeSettings(activity: SettingsNavigationTestActivity) {
+        val me = activity.host.childFragmentManager.primaryNavigationFragment!!.requireView()
+        HomeSemantics.click(me, MeTestTags.SETTINGS_ROW)
     }
 
     private fun settle() = TestUi.settle(500)

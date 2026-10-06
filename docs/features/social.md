@@ -70,7 +70,8 @@ prefers its direct My ITMO identity when available.
 
 ## Profile tab (`feature/me`)
 
-Header with avatar, name, study group from Backend and ISU. A `Друзья` card
+A Compose screen in `:shared:feature-account` hosted by `MeFragment`
+([me.md](me.md)). Header with avatar, name, study group from Backend and ISU. A `Друзья` card
 with the friends count and an incoming-requests badge, `Найти людей` and
 `Приватность` rows (the latter opens the settings privacy page); when services
 are off, one row explains it and opens settings. An `Приложение` card holds

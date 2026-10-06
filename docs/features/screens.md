@@ -168,11 +168,11 @@ Feature doc: [Social](social.md).
 
 ## Profile tab
 
-Feature doc: [Settings](../settings.md).
+Feature doc: [Profile tab](me.md).
 
 | Host | Kind | ViewModel | Entry | Debug host | Visual test |
 |---|---|---|---|---|---|
-| `feature/me/ui/MeFragment.kt` | Fragment | `MeViewModel` | `navigation_me`, `AppRoot.ME` | `app/SettingsNavigationTestActivity.kt`, `feature/settings/ui/SettingsPreviewActivity.kt` (layout) | `feature/weblogin/WebLoginVisualTest.kt` |
+| `feature/me/ui/MeFragment.kt` hosting `MeRoute` (`:shared:feature-account`) | Fragment | `MeViewModel` (Koin) | `navigation_me`, `AppRoot.ME` | `app/SettingsNavigationTestActivity.kt` (`AccountDebugFixtures`) | `AccountScreenshotTest` (`:shared:feature-account`), `feature/settings/ProfileBackMotionTest.kt`, `app/MainNavigationTest.kt` |
 
 ## Web sign-in
 

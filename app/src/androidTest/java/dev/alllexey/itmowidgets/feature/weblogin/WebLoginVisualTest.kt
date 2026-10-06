@@ -10,7 +10,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.IndeterminateDrawable
 import com.google.android.material.textfield.TextInputLayout
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.app.SettingsNavigationTestActivity
 import dev.alllexey.itmowidgets.core.debug.PreviewAppearance
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -182,32 +181,6 @@ class WebLoginVisualTest {
                 }
                 screenshot("large-confirm-${spec.name}")
             }
-        }
-    }
-
-    @Test fun profileOffersWebSignInOnlyWithTheConnection() {
-        try {
-            for (enabled in listOf(false, true)) {
-                SettingsNavigationTestActivity.profileServicesEnabled = enabled
-                ActivityScenario.launch(SettingsNavigationTestActivity::class.java).use { scenario ->
-                    scenario.onActivity { it.host.navController.navigate(R.id.navigation_me) }
-                    settle()
-                    scenario.onActivity { activity ->
-                        val row = activity.findViewById<View>(R.id.web_login_row)
-                        assertEquals(enabled, row.isShown)
-                        assertEquals(enabled, activity.findViewById<View>(R.id.web_login_divider).isShown)
-                        if (enabled) {
-                            assertTouchTargets(row, requireWidth = false)
-                            assertTextFits(row)
-                            row.performClick()
-                            assertEquals(1, activity.webLoginOpened.size)
-                        }
-                    }
-                    screenshot("profile-${if (enabled) "connected" else "offline"}")
-                }
-            }
-        } finally {
-            SettingsNavigationTestActivity.profileServicesEnabled = true
         }
     }
 

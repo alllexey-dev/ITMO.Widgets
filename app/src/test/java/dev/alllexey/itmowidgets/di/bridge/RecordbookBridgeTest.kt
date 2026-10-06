@@ -4,6 +4,7 @@ import android.content.Context
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
@@ -53,7 +54,8 @@ class RecordbookBridgeTest {
 
     @Test
     fun `the recordbook module passes the graph check against the release bridges`() {
-        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(recordbookModule))
+        // `DemoMode` is defined in the account data module, not in a bridge.
+        KoinGraphCheck.assertValid(KoinModules.bridges, listOf(authDataModule, recordbookModule))
     }
 
     /** As in `KoinStartTest`: Robolectric's `onCreate()` stops at `FcmWork.syncToken` after Koin and Hilt are up. */
