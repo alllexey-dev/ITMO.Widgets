@@ -1,20 +1,20 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
-import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
+import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.feature.schedule.FakeCalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeCalendarSyncScheduler
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
-import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class DefaultCalendarSyncTest {
 
@@ -24,7 +24,7 @@ class DefaultCalendarSyncTest {
     private val sync = DefaultCalendarSync(repository, scheduler, tokens, noDemo())
 
     @Test
-    fun `turning on starts the periodic work and syncs at once`() = runTest {
+    fun turningOnStartsThePeriodicWorkAndSyncsAtOnce() = runTest {
         assertEquals(CalendarSyncResult.DONE, sync.enable())
 
         assertEquals(1, repository.enables)
@@ -33,7 +33,7 @@ class DefaultCalendarSyncTest {
     }
 
     @Test
-    fun `the demo cannot turn synchronization on`() = runTest {
+    fun theDemoCannotTurnSynchronizationOn() = runTest {
         val demo = DefaultCalendarSync(repository, scheduler, tokens, FakeDemoMode(active = true))
 
         assertEquals(CalendarSyncResult.DEMO_UNAVAILABLE, demo.enable())
@@ -43,7 +43,7 @@ class DefaultCalendarSyncTest {
     }
 
     @Test
-    fun `a refused turn on schedules nothing`() = runTest {
+    fun aRefusedTurnOnSchedulesNothing() = runTest {
         repository.enableResult = CalendarSyncResult.NO_PERMISSION
 
         assertEquals(CalendarSyncResult.NO_PERMISSION, sync.enable())
@@ -53,7 +53,7 @@ class DefaultCalendarSyncTest {
     }
 
     @Test
-    fun `turning off stops the work and removes the events`() = runTest {
+    fun turningOffStopsTheWorkAndRemovesTheEvents() = runTest {
         sync.disable()
 
         assertEquals(0, scheduler.ensureCalls)
@@ -62,7 +62,7 @@ class DefaultCalendarSyncTest {
     }
 
     @Test
-    fun `a calendar still to sweep keeps the work after turning off and runs it`() = runTest {
+    fun aCalendarStillToSweepKeepsTheWorkAfterTurningOffAndRunsIt() = runTest {
         repository.pendingCleanup = true
 
         sync.disable()
@@ -77,7 +77,7 @@ class DefaultCalendarSyncTest {
     }
 
     @Test
-    fun `the work follows both the session and the switch`() = runTest {
+    fun theWorkFollowsBothTheSessionAndTheSwitch() = runTest {
         for ((signedIn, enabled) in listOf(true to true, true to false, false to true, false to false)) {
             val scheduler = FakeCalendarSyncScheduler()
             val sync = DefaultCalendarSync(FakeCalendarSyncRepository(enabled), scheduler, FakeSessionTokenStore(signedIn), noDemo())
@@ -86,14 +86,14 @@ class DefaultCalendarSyncTest {
             sync.requestSync()
 
             val running = signedIn && enabled
-            assertEquals("$signedIn/$enabled", if (running) 1 else 0, scheduler.ensureCalls)
-            assertEquals("$signedIn/$enabled", if (running) 0 else 1, scheduler.cancelCalls)
-            assertEquals("$signedIn/$enabled", if (running) 1 else 0, scheduler.runOnceCalls)
+            assertEquals(if (running) 1 else 0, scheduler.ensureCalls, "$signedIn/$enabled")
+            assertEquals(if (running) 0 else 1, scheduler.cancelCalls, "$signedIn/$enabled")
+            assertEquals(if (running) 1 else 0, scheduler.runOnceCalls, "$signedIn/$enabled")
         }
     }
 
     @Test
-    fun `a run is skipped without a session or with the switch off`() = runTest {
+    fun aRunIsSkippedWithoutASessionOrWithTheSwitchOff() = runTest {
         assertEquals(CheckOutcome.SKIPPED, sync.run())
         repository.state.value = CalendarSyncState(enabled = true)
         tokens.signedIn = false
@@ -102,7 +102,7 @@ class DefaultCalendarSyncTest {
     }
 
     @Test
-    fun `a failed run asks for a retry and a signed-out one does not`() = runTest {
+    fun aFailedRunAsksForARetryAndASignedOutOneDoesNot() = runTest {
         repository.state.value = CalendarSyncState(enabled = true)
 
         assertEquals(CheckOutcome.DONE, sync.run())
@@ -114,7 +114,7 @@ class DefaultCalendarSyncTest {
     }
 
     @Test
-    fun `a run that turned sync off cancels the work`() = runTest {
+    fun aRunThatTurnedSyncOffCancelsTheWork() = runTest {
         repository.state.value = CalendarSyncState(enabled = true)
         repository.onSync = { repository.state.value = CalendarSyncState(problem = CalendarSyncProblem.NO_PERMISSION) }
 
@@ -124,7 +124,7 @@ class DefaultCalendarSyncTest {
     }
 
     @Test
-    fun `stop cancels`() {
+    fun stopCancels() {
         sync.stopWork()
 
         assertEquals(1, scheduler.cancelCalls)

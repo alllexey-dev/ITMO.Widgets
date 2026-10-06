@@ -4,9 +4,9 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.feature.schedule.data.assertSameJson
 import dev.alllexey.itmowidgets.feature.schedule.data.copyStored22
+import dev.alllexey.itmowidgets.feature.schedule.data.directoriesAt
 import dev.alllexey.itmowidgets.feature.schedule.data.stored22
 import java.io.File
-import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
@@ -17,8 +17,8 @@ import org.junit.rules.TemporaryFolder
 class CalendarSync22GoldenTest {
     @get:Rule val temporary = TemporaryFolder()
 
-    private val directory get() = File(temporary.root, "calendar_sync")
-    private val store get() = CalendarSyncFileStore(directory.toOkioPath())
+    private val directory get() = File(temporary.root, "files/calendar_sync")
+    private val store get() = CalendarSyncFileStore(directoriesAt(temporary.root))
 
     @Test
     fun `the 2_2 state reads with its event and sweep and is rewritten unchanged`() {

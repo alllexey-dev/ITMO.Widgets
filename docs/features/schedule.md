@@ -38,11 +38,16 @@ or a `.ics` file ([calendar](#calendar)).
   (`ScheduleChangesScheduler`) and `AppNotifier`; on Android they are Hilt's and
   reach Koin through `di/bridge/ScheduleBridge.kt` and `CoreBridge`, and the
   same bridge hands Koin's change tracking, change check, widget data provider
-  and preview scenario to the Hilt-built workers, widget and debug tools. Only
-  the phone calendar sync, the `.ics` export and the widget snapshot file
-  (`ScheduleWidgetSnapshotStoreImpl`) stay in `:app`. The three Koin cleaners
-  (the cache, the change history, the teacher weeks) join sign-out's set
-  through `SessionCleanersBridge`.
+  and preview scenario to the Hilt-built workers, widget and debug tools. The
+  phone calendar sync lives there too (`CalendarSyncRepositoryImpl`,
+  `DefaultCalendarSync`, `CalendarSyncFileStore`, `MyItmoOwnScheduleSource`);
+  the platform supplies the `PhoneCalendars` port and the
+  `CalendarSyncScheduler`, and the bridge hands the sync to
+  `CalendarSyncWorker` and the background check set and the source to
+  `IcsFileExport`. Only `AndroidPhoneCalendars`, the `.ics` export and the
+  widget snapshot file (`ScheduleWidgetSnapshotStoreImpl`) stay in `:app`. The
+  four Koin cleaners (the cache, the change history, the teacher weeks, the
+  calendar sync) join sign-out's set through `SessionCleanersBridge`.
 
 ## Lessons with a teacher
 
@@ -553,8 +558,10 @@ through; failed ones stay in the file with their calendar and are retried.
   every 2 hours with `NetworkType.CONNECTED`, backoff from 15 minutes,
   `ExistingPeriodicWorkPolicy.UPDATE`, tag `calendar-sync`, through
   `CalendarSyncEntryPoint`; `WorkManagerCalendarSyncScheduler` enqueues and
-  cancels it. Both live in `feature/schedule/work`, the rest of the
-  synchronization in `domain/calendar` and `data/calendar`. The work does not
+  cancels it. Both live in `:app`'s `feature/schedule/work`; the rest of the
+  synchronization, the `PhoneCalendars` port included, lives in `domain/calendar`
+  and `data/calendar` of `:shared:feature-schedule` `commonMain`, except
+  `AndroidPhoneCalendars` and `IcsFileExport` in `:app`. The work does not
   depend on `Изменения расписания` and has no quiet hours, since it notifies nothing. Failures are retried through
   `outcomeOf` and `workResultOf` like the background checks.
 - The one-off work `calendar-sync-now` (`ExistingWorkPolicy.REPLACE`, network)
@@ -606,8 +613,9 @@ written again; the date picker is listened to again by its tag.
 
 `CalendarEventsTest`, `CalendarSyncPlannerTest`, `IcsWriterTest` and
 `ScheduleExportRangeTest` cover the domain; `CalendarSyncFileStoreTest`,
-`CalendarSyncRepositoryImplTest` (fake calendars), `DefaultCalendarSyncTest`
-and `IcsFileExportTest` the data and the work; `SettingsViewModelTest` and
+`CalendarSyncRepositoryImplTest` (fake calendars, fake file system) and
+`DefaultCalendarSyncTest` in `commonTest`, `MyItmoOwnScheduleSourceTest`,
+`CalendarSync22GoldenTest` and `IcsFileExportTest` the data and the work; `SettingsViewModelTest` and
 `ScheduleViewModelTest` the rows and the sync after a pull, `IcsExportViewModelTest`
 the sheet's states, saved state and date labels. Instrumented:
 `CalendarSyncProviderTest` against the emulator's CalendarProvider (the local

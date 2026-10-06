@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
@@ -9,17 +10,14 @@ import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.outcomeOf
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncScheduler
-import dev.alllexey.itmowidgets.core.demo.DemoMode
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 
 /**
  * The switch and the session decide whether the periodic sync exists. It does not depend on the schedule change
- * check: the two have their own work.
+ * check: the two have their own work. One per process (Koin's `scheduleDataModule`); Android's `CalendarSyncWorker`
+ * runs [run].
  */
-@Singleton
-class DefaultCalendarSync @Inject constructor(
+class DefaultCalendarSync(
     private val repository: CalendarSyncRepository,
     private val scheduler: CalendarSyncScheduler,
     private val sessionTokens: SessionTokenStore,

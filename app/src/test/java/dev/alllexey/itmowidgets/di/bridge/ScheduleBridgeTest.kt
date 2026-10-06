@@ -16,7 +16,10 @@ import dev.alllexey.itmowidgets.feature.reviews.di.reviewsModule
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.SubjectLessonsGatewayImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.TeacherLessonsGatewayImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.AndroidPhoneCalendars
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.CalendarSyncRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.MyItmoOwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.DefaultScheduleChangeTracking
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesCheck
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
@@ -26,6 +29,9 @@ import dev.alllexey.itmowidgets.feature.schedule.di.scheduleDataModule
 import dev.alllexey.itmowidgets.feature.schedule.di.scheduleModule
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncScheduler
+import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangeNotifier
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesScheduler
@@ -50,9 +56,10 @@ import org.robolectric.annotation.experimental.LazyApplication
 import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
- * The schedule data on the real graph (KM-11a2): Koin constructs it once, Hilt's remaining readers (the debug tools,
- * the background check set, the session effects) get Koin's instances through `ScheduleBridge`, and Koin gets the
- * Android notifier, the WorkManager scheduler, the calendar sync and Core 2.0's schedule area from Hilt.
+ * The schedule data on the real graph (KM-11a2, IO-15a): Koin constructs it and the calendar sync once, Hilt's
+ * remaining readers (the `.ics` export, the debug tools, the background check set, the session effects) get Koin's
+ * instances through `ScheduleBridge`, and Koin gets the Android notifier, the phone's calendars, the WorkManager
+ * schedulers and Core 2.0's schedule area from Hilt.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -74,6 +81,18 @@ class ScheduleBridgeTest {
         assertSame(koin.get<SubjectLessonsGatewayImpl>(), koin.get<SubjectLessonsGateway>())
         assertSame(koin.get<TeacherLessonsGatewayImpl>(), koin.get<TeacherLessonsGateway>())
         assertSame(koin.get<DefaultScheduleChangeTracking>(), koin.get<ScheduleChangeTracking>())
+        assertSame(koin.get<CalendarSyncRepositoryImpl>(), koin.get<CalendarSyncRepository>())
+        assertSame(koin.get<DefaultCalendarSync>(), koin.get<CalendarSync>())
+    }
+
+    @Test
+    fun `Hilt's readers get Koin's calendar sync and own schedule source`() {
+        val application = bootApplication()
+        val koin = GlobalContext.get()
+        val sync = koin.get<DefaultCalendarSync>()
+
+        assertEquals(1, application.backgroundChecks.count { it === sync })
+        assertTrue(ScheduleBridge.ownScheduleSource(application) is MyItmoOwnScheduleSource)
     }
 
     @Test
@@ -94,18 +113,17 @@ class ScheduleBridgeTest {
 
     @Test
     fun `the workers get the change check and the calendar sync from Koin`() {
-        val application = bootApplication()
+        bootApplication()
         val koin = GlobalContext.get()
 
         // Stateless and unscoped: every run of the worker gets a new check.
         assertNotSame(koin.get<ScheduleChangesCheck>(), koin.get<ScheduleChangesCheck>())
-        // Hilt's `@Singleton`, read by its contract and by its implementation type.
-        assertSame(ScheduleBridgeEntryPoint.from(application).defaultCalendarSync(), koin.get<DefaultCalendarSync>())
+        // Koin's one single, read by its contract and by its implementation type.
         assertSame(koin.get<CalendarSync>(), koin.get<DefaultCalendarSync>())
     }
 
     @Test
-    fun `Koin gets the Android notifier, the scheduler and the schedule area from Hilt`() {
+    fun `Koin gets the Android notifier, the calendars, the schedulers and the schedule area from Hilt`() {
         val application = bootApplication()
         val koin = GlobalContext.get()
         val hilt = ScheduleBridgeEntryPoint.from(application)
@@ -113,6 +131,8 @@ class ScheduleBridgeTest {
         assertSame(hilt.backendScheduleApi(), koin.get<ScheduleApi>())
         assertTrue(koin.get<ScheduleChangeNotifier>() is AndroidScheduleChangeNotifier)
         assertNotNull(koin.get<ScheduleChangesScheduler>())
+        assertTrue(koin.get<PhoneCalendars>() is AndroidPhoneCalendars)
+        assertNotNull(koin.get<CalendarSyncScheduler>())
     }
 
     /**

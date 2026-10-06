@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.feature.reviews.data.TeacherLevelsRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleChangesRepository
 import dev.alllexey.itmowidgets.feature.schedule.FakeScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.data.LessonFriendsRepositoryImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.calendar.DefaultCalendarSync
 import dev.alllexey.itmowidgets.feature.schedule.data.changes.ScheduleChangesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
@@ -55,6 +56,7 @@ class ScheduleDebugFixturesTest {
         val application = bootApplication()
         val koin = GlobalContext.get()
         val core = CoreBridgeEntryPoint.from(application)
+        val calendarSync = koin.get<CalendarSync>()
 
         val fixture = ScheduleDebugFixtures.load(application, Fakes)
         assertSame(Fakes.time, koin.get<AcademicTimeProvider>())
@@ -74,7 +76,8 @@ class ScheduleDebugFixturesTest {
         assertSame(koin.get<ScheduleChangesRepositoryImpl>(), koin.get<ScheduleChangesRepository>())
         assertSame(koin.get<SchedulePreferencesRepositoryImpl>(), koin.get<SchedulePreferencesRepository>())
         assertSame(koin.get<PendingSportBookingsRepositoryImpl>(), koin.get<PendingSportBookingsRepository>())
-        assertSame(core.coreCalendarSync(), koin.get<CalendarSync>())
+        assertSame(calendarSync, koin.get<CalendarSync>())
+        assertSame(koin.get<DefaultCalendarSync>(), calendarSync)
         assertSame(koin.get<LessonFriendsRepositoryImpl>(), koin.get<LessonFriendsRepository>())
         assertSame(koin.get<CustomServicesRepositoryImpl>(), koin.get<CustomServicesRepository>())
         assertSame(koin.get<TeacherLevelsRepositoryImpl>(), koin.get<TeacherLevelsRepository>())

@@ -9,7 +9,6 @@ import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import javax.inject.Inject
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -19,7 +18,7 @@ import kotlinx.datetime.plus
  * The personal schedule asked from My ITMO in pieces of at most [CHUNK_DAYS] days, one after another. Like the change
  * check, it neither fills the schedule cache nor uploads lessons to Backend.
  */
-class MyItmoOwnScheduleSource @Inject constructor(
+class MyItmoOwnScheduleSource(
     private val myItmo: MyItmoClient,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,

@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
-import dev.alllexey.itmowidgets.core.network.toAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncProblem
@@ -10,6 +9,7 @@ import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.schedule.data.toAppError
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarEvents
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncPlanner
@@ -18,9 +18,9 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSour
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.PhoneCalendars
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.SyncedEvent
 import dev.alllexey.itmowidgets.feature.schedule.domain.model.DaySchedule
-import java.util.concurrent.atomic.AtomicLong
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlin.concurrent.atomics.AtomicLong
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.incrementAndFetch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CancellationException
@@ -55,8 +55,8 @@ import kotlinx.datetime.plus
  * the provider's local `CUSTOM_APP_*` columns. A calendar the app leaves is therefore swept again by its tag on later
  * runs ([StoredCleanup]) until it stays clean for [CLEANUP_PERIOD].
  */
-@Singleton
-class CalendarSyncRepositoryImpl @Inject constructor(
+@OptIn(ExperimentalAtomicApi::class)
+class CalendarSyncRepositoryImpl(
     private val calendars: PhoneCalendars,
     private val schedule: OwnScheduleSource,
     private val store: CalendarSyncFileStore,
@@ -66,7 +66,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
 ) : CalendarSyncRepository, SessionDataCleaner {
 
     private val mutex = Mutex()
-    private val generation = AtomicLong()
+    private val generation = AtomicLong(0L)
     private val state = MutableStateFlow<StoredCalendarSync?>(null)
 
     override fun observeState(): Flow<CalendarSyncState> = flow {
@@ -136,7 +136,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
     }
 
     override suspend fun clearSessionData() {
-        generation.incrementAndGet()
+        generation.incrementAndFetch()
         mutex.withLock {
             writing {
                 val stored = loaded()
@@ -149,7 +149,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
 
     /** Holds [mutex]. Only the request to My ITMO can be cancelled; what follows runs to its end. */
     private suspend fun syncOnce(): AppResult<Unit> {
-        val started = generation.get()
+        val started = generation.load()
         val swept = writing { sweepLeftCalendars() }
         writing { leaveGoogleCalendar() }
         val calendarId = writing { usableCalendar() }
@@ -159,7 +159,7 @@ class CalendarSyncRepositoryImpl @Inject constructor(
         return writing {
             val stored = loaded()
             when {
-                generation.get() != started -> AppResult.Failure(AppError.Unauthorized)
+                generation.load() != started -> AppResult.Failure(AppError.Unauthorized)
                 !stored.enabled || stored.calendarId != calendarId -> AppResult.Success(Unit)
                 else -> apply(stored, calendarId, days, today)
             }
