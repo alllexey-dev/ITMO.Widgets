@@ -1,80 +1,144 @@
 package dev.alllexey.itmowidgets.feature.social.data.push
 
-import api.myitmo.MyItmo
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.core.ItmoWidgetsImpl
-import dev.alllexey.itmowidgets.core.model.UserCapabilities
-import dev.alllexey.itmowidgets.core.model.UserData
-import dev.alllexey.itmowidgets.core.model.fcm.impl.FriendshipEvent
-import dev.alllexey.itmowidgets.core.model.fcm.impl.FriendshipEventPayload
+import dev.alllexey.itmowidgets.client.push.FriendshipEvent
 import dev.alllexey.itmowidgets.core.notification.*
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
+import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.core.text.UiText
 import java.lang.reflect.Proxy
-import java.time.OffsetDateTime
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.JsonElement
 import org.junit.Assert.*
 import org.junit.Test
-import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 
 class FriendshipPushHandlerTest {
-    private val gson = ItmoWidgetsImpl(MyItmo()).gson
-    private val actor = UserData(100001, "  Тестовый пользователь  ", null, emptyList(), UserCapabilities(false, false))
+
+    @Test fun `handles the stable friendship payload type`() {
+        assertEquals("FRIENDSHIP_EVENT_PAYLOAD", Fixture().handler.type)
+    }
 
     @Test fun `both events notify even in foreground and route to the actor with stable id`() = runTest {
         for (event in FriendshipEvent.entries) {
             val fixture = Fixture()
             fixture.loaded = true
-            fixture.handler.handle(payload(event))
-            val notification = fixture.notifications.single()
+            fixture.handler.handle(payload(event.name))
+            val notification = fixture.notifier.shown.single()
             assertEquals(AppNotificationChannels.FRIENDS, notification.channel)
             assertEquals(100001, notification.id)
             assertEquals(NotificationDestination.UserProfile(100001), notification.destination)
+            assertEquals(UiText.Resource(R.string.notification_channel_friends), notification.title)
             assertEquals(UiText.Resource(
                 if (event == FriendshipEvent.REQUEST_RECEIVED) R.string.notification_friend_request else R.string.notification_friend_accepted,
                 listOf("Тестовый пользователь")
             ), notification.text)
             assertEquals(1, fixture.refreshes)
+            assertTrue(fixture.diagnostics.messages.isEmpty())
         }
+    }
+
+    @Test fun `blank name falls back to the isu`() = runTest {
+        val fixture = Fixture()
+        fixture.handler.handle(payload("REQUEST_ACCEPTED", name = "   "))
+        assertEquals(listOf("100001"), (fixture.notifier.shown.single().text as UiText.Resource).arguments)
     }
 
     @Test fun `cold repository is not refreshed while loaded repository refreshes without notification permission`() = runTest {
         val fixture = Fixture()
-        fixture.handler.handle(payload(FriendshipEvent.REQUEST_RECEIVED))
+        fixture.handler.handle(payload("REQUEST_RECEIVED"))
+        assertEquals(1, fixture.notifier.shown.size)
         assertEquals(0, fixture.refreshes)
         fixture.loaded = true
-        fixture.failNotifier = true
-        fixture.handler.handle(payload(FriendshipEvent.REQUEST_ACCEPTED))
+        fixture.notifier.fail = true
+        fixture.handler.handle(payload("REQUEST_ACCEPTED"))
         assertEquals(1, fixture.refreshes)
+        assertEquals(listOf("WARNING:FriendshipPush:Friendship push operation failed"), fixture.diagnostics.messages)
     }
 
-    @Test fun `unknown malformed and disabled events cannot notify or refresh`() = runTest {
+    @Test fun `unknown event is dropped with a warning`() = runTest {
         val fixture = Fixture()
         fixture.loaded = true
-        for (wire in listOf("{}", "null", """{"event":"UNKNOWN"}""")) fixture.handler.handle(Json.parseToJsonElement(wire))
-        val unknown = JsonObject(payload(FriendshipEvent.REQUEST_RECEIVED).jsonObject + ("event" to JsonPrimitive("UNKNOWN")))
-        fixture.handler.handle(unknown)
+        fixture.handler.handle(payload("UNKNOWN"))
+        assertNothingHappened(fixture)
+        assertEquals(listOf(INVALID), fixture.diagnostics.messages)
+    }
+
+    @Test fun `malformed payloads are dropped with a warning that does not quote them`() = runTest {
+        val fixture = Fixture()
+        fixture.loaded = true
+        val valid = payload("REQUEST_RECEIVED").toString()
+        val malformed = listOf(
+            "{}",
+            "null",
+            "[]",
+            """{"event":"REQUEST_RECEIVED"}""",
+            valid.replace("\"occurredAt\":\"2026-10-05T12:00+03:00\"", "\"occurredAt\":null"),
+            valid.replace("\"canViewFriends\":true", "\"canViewFriends\":null"),
+        )
+        for (wire in malformed) fixture.handler.handle(Json.parseToJsonElement(wire))
+        assertNothingHappened(fixture)
+        assertEquals(List(malformed.size) { INVALID }, fixture.diagnostics.messages)
+        assertTrue(fixture.diagnostics.entries.value.all { it.stackTrace == null })
+    }
+
+    @Test fun `non-positive isu is dropped`() = runTest {
+        val fixture = Fixture()
+        fixture.loaded = true
+        fixture.handler.handle(payload("REQUEST_RECEIVED", isu = 0))
+        fixture.handler.handle(payload("REQUEST_ACCEPTED", isu = -5))
+        assertNothingHappened(fixture)
+    }
+
+    @Test fun `opt-in off skips every payload before decoding`() = runTest {
+        val fixture = Fixture()
+        fixture.loaded = true
         fixture.enabled = false
-        fixture.handler.handle(payload(FriendshipEvent.REQUEST_ACCEPTED))
-        assertTrue(fixture.notifications.isEmpty())
+        fixture.handler.handle(payload("REQUEST_ACCEPTED"))
+        fixture.handler.handle(payload("UNKNOWN"))
+        assertNothingHappened(fixture)
+        assertTrue(fixture.diagnostics.messages.isEmpty())
+    }
+
+    private fun assertNothingHappened(fixture: Fixture) {
+        assertTrue(fixture.notifier.shown.isEmpty())
         assertEquals(0, fixture.refreshes)
     }
 
-    private fun payload(event: FriendshipEvent) = Json.parseToJsonElement(gson.toJson(
-        FriendshipEventPayload(event, actor, OffsetDateTime.parse("2026-09-15T10:00:00+03:00"))))
+    private fun payload(event: String, isu: Int = 100001, name: String = "  Тестовый пользователь  "): JsonElement =
+        Json.parseToJsonElement("""
+            {
+              "event": "$event",
+              "user": {
+                "isu": $isu,
+                "name": "$name",
+                "pictureUrl": null,
+                "groups": [{"name": "К3240", "course": 2, "facultyShortName": "ФИТИП"}],
+                "capabilities": {"canViewSchedule": false, "canViewSport": false, "canViewFriends": true}
+              },
+              "occurredAt": "2026-10-05T12:00+03:00"
+            }
+        """.trimIndent())
+
+    private class RecordingNotifier : AppNotifier {
+        var fail = false
+        val shown = mutableListOf<AppNotification>()
+        override fun show(notification: AppNotification) {
+            if (fail) error("Synthetic permission race")
+            shown += notification
+        }
+        override fun cancel(channel: String, id: Int) = Unit
+        override fun clear() = Unit
+    }
 
     private inner class Fixture {
         var loaded = false
         var enabled = true
         var refreshes = 0
-        var failNotifier = false
-        val notifications = mutableListOf<AppNotification>()
+        val notifier = RecordingNotifier()
+        val diagnostics = RecordingDiagnostics()
         private val social = Proxy.newProxyInstance(SocialRepository::class.java.classLoader,
             arrayOf(SocialRepository::class.java)) { _, method, _ ->
             when (method.name) {
@@ -83,17 +147,15 @@ class FriendshipPushHandlerTest {
                 else -> error("Unexpected social call")
             }
         } as SocialRepository
-        val handler = FriendshipPushHandler(gson, object : AppNotifier {
-            override fun show(notification: AppNotification) {
-                if (failNotifier) error("Synthetic permission race")
-                notifications += notification
-            }
-            override fun cancel(channel: String, id: Int) = Unit
-            override fun clear() = Unit
-        }, social, object : CustomServicesRepository {
+        private val services = object : CustomServicesRepository {
             override fun observeEnabled() = flowOf(enabled)
             override suspend fun isEnabled() = enabled
             override suspend fun setEnabled(enabled: Boolean) { this@Fixture.enabled = enabled }
-        }, RecordingDiagnostics())
+        }
+        val handler = FriendshipPushHandler(notifier, social, services, diagnostics)
+    }
+
+    private companion object {
+        const val INVALID = "WARNING:FriendshipPush:Invalid friendship push"
     }
 }
