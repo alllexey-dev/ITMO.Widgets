@@ -10,18 +10,18 @@ import dev.alllexey.itmowidgets.core.testing.teacherReviews
 import dev.alllexey.itmowidgets.core.testing.teacherSummary
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ProfileReviewsTest {
     private val student = samplePerson(5)
     private val lecturer = samplePerson(5).copy(positions = listOf(PersonPosition("Доцент", "Кафедра")))
 
     @Test
-    fun `the section and writing follow Backend and the person`() {
+    fun theSectionAndWritingFollowBackendAndThePerson() {
         val cases = listOf(
             Case("no reviews, a known teacher", teacherReviews(5, knownTeacher = true), student, section(canWrite = true)),
             Case("no reviews, a person with a position", teacherReviews(5, knownTeacher = false), lecturer, section(canWrite = true)),
@@ -34,11 +34,11 @@ class ProfileReviewsTest {
             Case("no reviews at all", null, lecturer, null),
         )
 
-        cases.forEach { case -> assertEquals(case.name, case.expected, profileReviews(case.reviews, case.person, busyId = null)) }
+        cases.forEach { case -> assertEquals(case.expected, profileReviews(case.reviews, case.person, busyId = null), case.name) }
     }
 
     @Test
-    fun `the count includes the own review`() {
+    fun theCountIncludesTheOwnReview() {
         val reviews = teacherReviews(5, listOf(copiedReview("r1"), communityReview("r2")), mine = ownReview())
 
         assertEquals(3, profileReviews(reviews, null, busyId = "r2")?.count)
@@ -46,7 +46,7 @@ class ProfileReviewsTest {
     }
 
     @Test
-    fun `the summary comes with the section and never makes one on its own`() {
+    fun theSummaryComesWithTheSectionAndNeverMakesOneOnItsOwn() {
         val summary = teacherSummary()
         val withReviews = teacherReviews(5, listOf(copiedReview("r1")), canWrite = false, summary = summary)
         val withoutReviews = teacherReviews(5, canWrite = false, knownTeacher = false, summary = summary)
@@ -58,7 +58,7 @@ class ProfileReviewsTest {
     }
 
     @Test
-    fun `the summary scales are folded unless the screen expanded them`() {
+    fun theSummaryScalesAreFoldedUnlessTheScreenExpandedThem() {
         val reviews = teacherReviews(5, listOf(copiedReview("r1")), summary = teacherSummary())
 
         assertFalse(checkNotNull(profileReviews(reviews, null, busyId = null)).summaryExpanded)

@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -47,7 +47,7 @@ class UserProfileFragment : Fragment() {
     private lateinit var adapter: UserProfileAdapter
     private var renderRevision = 0L
 
-    private val viewModel: UserProfileViewModel by viewModels()
+    private val viewModel: UserProfileViewModel by viewModel()
 
     @Inject lateinit var shareLinks: ShareLinkFactory
 

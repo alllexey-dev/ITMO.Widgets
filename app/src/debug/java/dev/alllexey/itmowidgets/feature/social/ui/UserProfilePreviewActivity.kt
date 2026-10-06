@@ -13,9 +13,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
@@ -53,6 +50,7 @@ import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.ui.navigation.AppNavigator
 import dev.alllexey.itmowidgets.core.ui.navigation.AppScreen
 import dev.alllexey.itmowidgets.core.ui.navigation.NoOpAppNavigator
+import dev.alllexey.itmowidgets.di.bridge.SocialDebugFixtures
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
@@ -65,6 +63,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.getViewModel
+import org.koin.core.module.Module
 
 /** The real profile Fragment with synthetic repositories; never reads a session or calls a service. */
 @AndroidEntryPoint
@@ -80,18 +80,21 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppN
         super.attachBaseContext(newBase.createConfigurationContext(config))
     }
 
+    private lateinit var socialFixture: Module
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Before super.onCreate(): a restored UserProfileFragment obtains its ViewModel from Koin.
+        socialFixture = SocialDebugFixtures.load(this, SocialDebugFixtures.Fakes(
+            social = { PreviewSocial },
+            people = { PreviewPeople },
+            reviews = { PreviewReviews },
+            currentUser = { PreviewCurrentUser },
+        ))
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, fragment: Fragment, savedInstanceState: Bundle?) {
                 if (fragment !is UserProfileFragment) return
-                val factory = object : ViewModelProvider.Factory {
-                    @Suppress("UNCHECKED_CAST")
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T = UserProfileViewModel(
-                        SavedStateHandle(mapOf(UserScreenArgs.ISU to fragment.requireArguments().getInt(UserScreenArgs.ISU))),
-                        PreviewSocial, PreviewPeople, PreviewReviews, PreviewCurrentUser
-                    ) as T
-                }
-                val viewModel = ViewModelProvider(fragment, factory)[UserProfileViewModel::class.java]
+                // The instance the Fragment's `by viewModel()` returns later: same store, same key.
+                val viewModel = fragment.getViewModel<UserProfileViewModel>()
                 fragment.lifecycleScope.launch(start = CoroutineStart.UNDISPATCHED) {
                     viewModel.uiState.collect { states.add(it) }
                 }
@@ -122,6 +125,11 @@ class UserProfilePreviewActivity : AppCompatActivity(), AppNavigator by NoOpAppN
             UserProfileFragment().apply { arguments = bundleOf(UserScreenArgs.ISU to ISU) },
             ROOT_TAG
         ).commitNow()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        SocialDebugFixtures.unload(this, socialFixture)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

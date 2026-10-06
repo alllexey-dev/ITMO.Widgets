@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.social.presentation
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -8,11 +7,20 @@ import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.core.Res
+import dev.alllexey.itmowidgets.shared.core.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
+import dev.alllexey.itmowidgets.shared.feature.social.Res
+import dev.alllexey.itmowidgets.shared.feature.social.friends_section_incoming
+import dev.alllexey.itmowidgets.shared.feature.social.friends_section_outgoing
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -21,21 +29,21 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FriendsViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `friends tab lists friends with a remove action and requests tab groups by direction`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun friendsTabListsFriendsWithARemoveActionAndRequestsTabGroupsByDirection() =
+        runTest(main.dispatcher) {
             val repository = FakeSocialRepository().apply {
                 friends.value = LoadState.Content(listOf(profile(1, RelationshipState.FRIENDS)))
                 requests.value = LoadState.Content(
@@ -62,9 +70,9 @@ class FriendsViewModelTest {
             val requestsTab = viewModel.uiState.value as FriendsUiState.Content
             assertEquals(
                 listOf(
-                    UserListItem.Header(UiText.Resource(R.string.friends_section_incoming)),
+                    UserListItem.Header(UiText.Res(Res.string.friends_section_incoming)),
                     "user:2",
-                    UserListItem.Header(UiText.Resource(R.string.friends_section_outgoing)),
+                    UserListItem.Header(UiText.Res(Res.string.friends_section_outgoing)),
                     "user:3"
                 ),
                 requestsTab.items.map { if (it is UserListItem.User) "user:${it.row.isu}" else it }
@@ -77,8 +85,8 @@ class FriendsViewModelTest {
         }
 
     @Test
-    fun `accepting moves the person to friends and removal asks for confirmation first`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun acceptingMovesThePersonToFriendsAndRemovalAsksForConfirmationFirst() =
+        runTest(main.dispatcher) {
             val repository = FakeSocialRepository().apply {
                 friends.value = LoadState.Content(emptyList())
                 requests.value = LoadState.Content(
@@ -110,7 +118,7 @@ class FriendsViewModelTest {
         }
 
     @Test
-    fun `a failed action surfaces an event and keeps the row`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedActionSurfacesAnEventAndKeepsTheRow() = runTest(main.dispatcher) {
         val repository = FakeSocialRepository().apply {
             friends.value = LoadState.Content(emptyList())
             requests.value = LoadState.Content(
@@ -131,8 +139,8 @@ class FriendsViewModelTest {
     }
 
     @Test
-    fun `disabled services and errors map to their states while a refresh keeps progress`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun disabledServicesAndErrorsMapToTheirStatesWhileARefreshKeepsProgress() =
+        runTest(main.dispatcher) {
             val repository = FakeSocialRepository()
             val viewModel = FriendsViewModel(repository)
             advanceUntilIdle()
@@ -150,7 +158,7 @@ class FriendsViewModelTest {
         }
 
     @Test
-    fun `an empty tab says which kind of empty it is`() = runTest(mainDispatcherRule.dispatcher) {
+    fun anEmptyTabSaysWhichKindOfEmptyItIs() = runTest(main.dispatcher) {
         val repository = FakeSocialRepository().apply {
             friends.value = LoadState.Content(emptyList())
             requests.value = LoadState.Content(FriendRequests.EMPTY)
@@ -171,7 +179,7 @@ class FriendsViewModelTest {
     }
 
     @Test
-    fun `an empty name confirms the removal with the placeholder`() = runTest(mainDispatcherRule.dispatcher) {
+    fun anEmptyNameConfirmsTheRemovalWithThePlaceholder() = runTest(main.dispatcher) {
         val unnamed = profile(7, RelationshipState.FRIENDS).let { it.copy(user = it.user.copy(name = " ")) }
         val repository = FakeSocialRepository().apply {
             friends.value = LoadState.Content(listOf(unnamed))
@@ -180,7 +188,7 @@ class FriendsViewModelTest {
         val viewModel = FriendsViewModel(repository)
         advanceUntilIdle()
         val row = ((viewModel.uiState.value as FriendsUiState.Content).items.single() as UserListItem.User).row
-        val placeholder = UiText.Res(Res.string.user_name_placeholder, listOf(7))
+        val placeholder = UiText.Res(CoreRes.string.user_name_placeholder, listOf(7))
         assertEquals(placeholder, row.displayName)
 
         viewModel.onAction(row, UserAction.REMOVE)
@@ -189,8 +197,8 @@ class FriendsViewModelTest {
     }
 
     @Test
-    fun `entry refreshes silently, a pull joins it with the indicator and a retry forces a new refresh`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun entryRefreshesSilentlyAPullJoinsItWithTheIndicatorAndARetryForcesANewRefresh() =
+        runTest(main.dispatcher) {
             val gate = CompletableDeferred<Unit>()
             val repository = GatedSocialRepository(gate).apply {
                 friends.value = LoadState.Content(emptyList())
@@ -216,7 +224,7 @@ class FriendsViewModelTest {
         }
 
     @Test
-    fun `an error shows progress while a retry may replace it`() = runTest(mainDispatcherRule.dispatcher) {
+    fun anErrorShowsProgressWhileARetryMayReplaceIt() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val repository = GatedSocialRepository(gate).apply {
             friends.value = LoadState.Error(AppError.Network)
@@ -236,8 +244,8 @@ class FriendsViewModelTest {
     }
 
     @Test
-    fun `a second tap on a busy row is ignored and an event waits for the next collector`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun aSecondTapOnABusyRowIsIgnoredAndAnEventWaitsForTheNextCollector() =
+        runTest(main.dispatcher) {
             val repository = FakeSocialRepository().apply {
                 friends.value = LoadState.Content(emptyList())
                 requests.value = LoadState.Content(

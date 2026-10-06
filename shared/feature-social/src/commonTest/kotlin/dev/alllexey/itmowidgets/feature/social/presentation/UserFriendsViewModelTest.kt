@@ -7,28 +7,39 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.Res
 import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserFriendsViewModelTest {
-    @get:Rule val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
 
-    @Test fun `target list retains viewer relationships without exposing mutation controls`() = runTest {
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
+
+    @Test fun targetListRetainsViewerRelationshipsWithoutExposingMutationControls() = runTest {
         val repository = FakeSocialRepository().apply {
             userFriendsResult = AppResult.Success(listOf(profile(12, RelationshipState.INCOMING)))
         }
@@ -45,7 +56,7 @@ class UserFriendsViewModelTest {
         assertTrue(row.opensProfile)
     }
 
-    @Test fun `a list seen before opens with content while the network refreshes it`() = runTest {
+    @Test fun aListSeenBeforeOpensWithContentWhileTheNetworkRefreshesIt() = runTest {
         val gate = CompletableDeferred<Unit>()
         val repository = FakeSocialRepository().apply {
             cachedUserFriends = mapOf(42 to listOf(profile(12, RelationshipState.NONE)))
@@ -65,7 +76,7 @@ class UserFriendsViewModelTest {
         assertEquals(listOf(42), repository.userFriendsCalls)
     }
 
-    @Test fun `empty first failure and retry remain distinct`() = runTest {
+    @Test fun emptyFirstFailureAndRetryRemainDistinct() = runTest {
         val repository = FakeSocialRepository().apply { userFriendsResult = AppResult.Failure(AppError.Network) }
         val vm = create(repository)
         advanceUntilIdle()
@@ -76,7 +87,7 @@ class UserFriendsViewModelTest {
         assertEquals(UserFriendsUiState.Content(emptyList()), vm.uiState.value)
     }
 
-    @Test fun `network refresh preserves content but revoked access removes it`() = runTest {
+    @Test fun networkRefreshPreservesContentButRevokedAccessRemovesIt() = runTest {
         val revokedStates = mapOf(
             AppError.Forbidden to UserFriendsUiState.Hidden,
             AppError.CustomServicesDisabled to UserFriendsUiState.Disabled,
@@ -107,7 +118,7 @@ class UserFriendsViewModelTest {
         }
     }
 
-    @Test fun `denied and disabled lists are their own states and a retry over them shows progress`() = runTest {
+    @Test fun deniedAndDisabledListsAreTheirOwnStatesAndARetryOverThemShowsProgress() = runTest {
         for ((error, state) in listOf(
             AppError.Forbidden to UserFriendsUiState.Hidden,
             AppError.CustomServicesDisabled to UserFriendsUiState.Disabled
@@ -128,7 +139,7 @@ class UserFriendsViewModelTest {
         }
     }
 
-    @Test fun `an empty name in the list falls back to the placeholder`() = runTest {
+    @Test fun anEmptyNameInTheListFallsBackToThePlaceholder() = runTest {
         val unnamed = profile(12, RelationshipState.NONE).let { it.copy(user = it.user.copy(name = "")) }
         val repository = FakeSocialRepository().apply { userFriendsResult = AppResult.Success(listOf(unnamed)) }
         val vm = create(repository)

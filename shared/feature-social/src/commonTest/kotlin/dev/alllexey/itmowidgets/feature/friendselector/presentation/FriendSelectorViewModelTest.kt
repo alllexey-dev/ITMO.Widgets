@@ -16,8 +16,15 @@ import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.social.PeopleSearchPage
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.PersonSearchResult
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.friendselector.domain.FriendSelectionHistory
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -26,24 +33,23 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FriendSelectorViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     private val first = user(1, "Первый")
     private val second = user(2, "Второй")
 
     @Test
-    fun `renders content and keeps history order`() = runTest(mainDispatcherRule.dispatcher) {
+    fun rendersContentAndKeepsHistoryOrder() = runTest(main.dispatcher) {
         val repository = FakeFriendRepository(LoadState.Content(listOf(first, second)))
         val viewModel = viewModel(repository, FakeHistory(listOf(2, 1)))
 
@@ -60,7 +66,7 @@ class FriendSelectorViewModelTest {
     }
 
     @Test
-    fun `renders the no-friends body for an empty friend list`() = runTest(mainDispatcherRule.dispatcher) {
+    fun rendersTheNoFriendsBodyForAnEmptyFriendList() = runTest(main.dispatcher) {
         val viewModel = viewModel(FakeFriendRepository(LoadState.Content(emptyList())))
 
         advanceUntilIdle()
@@ -71,7 +77,7 @@ class FriendSelectorViewModelTest {
     }
 
     @Test
-    fun `preserves typed errors and disabled state`() = runTest(mainDispatcherRule.dispatcher) {
+    fun preservesTypedErrorsAndDisabledState() = runTest(main.dispatcher) {
         val repository = FakeFriendRepository(LoadState.Error(AppError.Unauthorized))
         val viewModel = viewModel(repository)
         advanceUntilIdle()
@@ -86,8 +92,8 @@ class FriendSelectorViewModelTest {
     }
 
     @Test
-    fun `settles on a terminal state when a repeated refresh does not change the repository`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun settlesOnATerminalStateWhenARepeatedRefreshDoesNotChangeTheRepository() =
+        runTest(main.dispatcher) {
             val repository = FakeFriendRepository(LoadState.Disabled)
             val viewModel = viewModel(repository)
             advanceUntilIdle()
@@ -102,8 +108,8 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `entry refreshes silently and a forced retry shows progress over an error`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun entryRefreshesSilentlyAndAForcedRetryShowsProgressOverAnError() =
+        runTest(main.dispatcher) {
             val repository = FakeFriendRepository(LoadState.Error(AppError.Network), gated = true)
             val viewModel = viewModel(repository)
             runCurrent()
@@ -122,7 +128,7 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `keeps the loaded list visible while refreshing`() = runTest(mainDispatcherRule.dispatcher) {
+    fun keepsTheLoadedListVisibleWhileRefreshing() = runTest(main.dispatcher) {
         val repository = FakeFriendRepository(LoadState.Content(listOf(first)), gated = true)
         val viewModel = viewModel(repository)
         runCurrent()
@@ -137,8 +143,8 @@ class FriendSelectorViewModelTest {
     }
 
     @Test
-    fun `filters friends by trimmed lowercased name, ISU, group, faculty and course`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun filtersFriendsByTrimmedLowercasedNameISUGroupFacultyAndCourse() =
+        runTest(main.dispatcher) {
             val physicist = user(556677, "Анна Физикова", UserGroup("P3112", 1, "ФТФ"))
             val programmer = user(112233, "Борис Кодов", UserGroup("M3207", 4, "ПИиКТ"))
             val viewModel = viewModel(FakeFriendRepository(LoadState.Content(listOf(physicist, programmer))))
@@ -154,7 +160,7 @@ class FriendSelectorViewModelTest {
             )) {
                 viewModel.onQueryChanged(query)
                 advanceUntilIdle()
-                assertEquals(query, FriendSelectorBody.Users(expected), viewModel.uiState.value.body)
+                assertEquals(FriendSelectorBody.Users(expected), viewModel.uiState.value.body, query)
             }
 
             viewModel.onQueryChanged("нет такого")
@@ -163,8 +169,8 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `a preselection counts only for a listed friend whose schedule is open`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun aPreselectionCountsOnlyForAListedFriendWhoseScheduleIsOpen() =
+        runTest(main.dispatcher) {
             val closed = user(3, "Закрытый", schedule = false)
             val viewModel = viewModel(
                 FakeFriendRepository(LoadState.Content(listOf(first, closed))),
@@ -182,7 +188,7 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `an open preselection is chosen and leads the recent chips`() = runTest(mainDispatcherRule.dispatcher) {
+    fun anOpenPreselectionIsChosenAndLeadsTheRecentChips() = runTest(main.dispatcher) {
         val viewModel = viewModel(
             FakeFriendRepository(LoadState.Content(listOf(first, second))),
             FakeHistory(listOf(1)),
@@ -198,8 +204,8 @@ class FriendSelectorViewModelTest {
     }
 
     @Test
-    fun `a pending selection survives refreshes and recent chips never reorder`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun aPendingSelectionSurvivesRefreshesAndRecentChipsNeverReorder() =
+        runTest(main.dispatcher) {
             val repository = FakeFriendRepository(LoadState.Content(listOf(first, second)))
             val history = FakeHistory(listOf(1, 2))
             val viewModel = viewModel(repository, history)
@@ -223,8 +229,8 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `a friend list that loads empty resets the choice to the own schedule`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun aFriendListThatLoadsEmptyResetsTheChoiceToTheOwnSchedule() =
+        runTest(main.dispatcher) {
             val repository = FakeFriendRepository(LoadState.Content(listOf(first, second)))
             val viewModel = viewModel(repository)
             advanceUntilIdle()
@@ -240,7 +246,7 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `a closed schedule cannot be chosen`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aClosedScheduleCannotBeChosen() = runTest(main.dispatcher) {
         val closed = user(3, "Закрытый", schedule = false)
         val viewModel = viewModel(FakeFriendRepository(LoadState.Content(listOf(first, closed))))
         advanceUntilIdle()
@@ -252,8 +258,8 @@ class FriendSelectorViewModelTest {
     }
 
     @Test
-    fun `the pending selection and the recent order are restored from saved state`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun thePendingSelectionAndTheRecentOrderAreRestoredFromSavedState() =
+        runTest(main.dispatcher) {
             val third = user(3, "Третий")
             val friends = listOf(first, second, third)
             val savedState = SavedStateHandle(mapOf(FriendSelectionContract.ARG_SELECTED_ISU to first.isu))
@@ -278,8 +284,8 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `the own schedule chosen before process death stays chosen after restore`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun theOwnScheduleChosenBeforeProcessDeathStaysChosenAfterRestore() =
+        runTest(main.dispatcher) {
             val savedState = SavedStateHandle(mapOf(FriendSelectionContract.ARG_SELECTED_ISU to first.isu))
             val before = viewModel(FakeFriendRepository(LoadState.Content(listOf(first))), savedState = savedState)
             advanceUntilIdle()
@@ -292,8 +298,8 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `folds the signed-in user into state, also when it arrives late or the list failed`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun foldsTheSignedInUserIntoStateAlsoWhenItArrivesLateOrTheListFailed() =
+        runTest(main.dispatcher) {
             val me = user(7, "Я Сам")
             val repository = FakeFriendRepository(LoadState.Content(listOf(first)))
             val viewModel = viewModel(repository)
@@ -311,8 +317,8 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `wide scope searches registered people after the debounce and narrow scope does not`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun wideScopeSearchesRegisteredPeopleAfterTheDebounceAndNarrowScopeDoesNot() =
+        runTest(main.dispatcher) {
             val stranger = user(2, "Чужой")
             val search = RegisteredPeopleSearch(registered = listOf(stranger))
             val viewModel = viewModel(FakeFriendRepository(LoadState.Content(listOf(first))), search = search)
@@ -339,8 +345,8 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `wide scope stays available without friends, reports failures and retries the search`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun wideScopeStaysAvailableWithoutFriendsReportsFailuresAndRetriesTheSearch() =
+        runTest(main.dispatcher) {
             val search = RegisteredPeopleSearch(error = AppError.Network)
             val repository = FakeFriendRepository(LoadState.Content(emptyList()))
             val viewModel = viewModel(repository, search = search)
@@ -367,7 +373,7 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `the people search shows progress while it runs`() = runTest(mainDispatcherRule.dispatcher) {
+    fun thePeopleSearchShowsProgressWhileItRuns() = runTest(main.dispatcher) {
         val search = RegisteredPeopleSearch(gate = CompletableDeferred())
         val viewModel = viewModel(FakeFriendRepository(LoadState.Content(listOf(first))), search = search)
         advanceUntilIdle()
@@ -382,8 +388,8 @@ class FriendSelectorViewModelTest {
     }
 
     @Test
-    fun `apply for a friend records the history once and delivers the friend`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun applyForAFriendRecordsTheHistoryOnceAndDeliversTheFriend() =
+        runTest(main.dispatcher) {
             val history = FakeHistory()
             val viewModel = viewModel(FakeFriendRepository(LoadState.Content(listOf(first, second))), history)
             advanceUntilIdle()
@@ -402,8 +408,8 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `apply for the own schedule records nothing and delivers no friend`() =
-        runTest(mainDispatcherRule.dispatcher) {
+    fun applyForTheOwnScheduleRecordsNothingAndDeliversNoFriend() =
+        runTest(main.dispatcher) {
             val history = FakeHistory()
             val viewModel = viewModel(
                 FakeFriendRepository(LoadState.Content(listOf(first))),
@@ -424,7 +430,7 @@ class FriendSelectorViewModelTest {
         }
 
     @Test
-    fun `apply is ignored until the friend list has loaded`() = runTest(mainDispatcherRule.dispatcher) {
+    fun applyIsIgnoredUntilTheFriendListHasLoaded() = runTest(main.dispatcher) {
         val history = FakeHistory()
         val repository = FakeFriendRepository(LoadState.Loading)
         val viewModel = viewModel(repository, history)

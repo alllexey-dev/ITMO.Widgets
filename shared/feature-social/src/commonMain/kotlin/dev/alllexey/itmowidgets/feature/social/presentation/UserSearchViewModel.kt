@@ -2,8 +2,6 @@ package dev.alllexey.itmowidgets.feature.social.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.presentation.BusyKeys
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
@@ -15,7 +13,11 @@ import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.PersonSearchResult
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.text.UiText
-import javax.inject.Inject
+import dev.alllexey.itmowidgets.shared.feature.social.Res
+import dev.alllexey.itmowidgets.shared.feature.social.user_search_section_others
+import dev.alllexey.itmowidgets.shared.feature.social.user_search_section_registered
+import dev.alllexey.itmowidgets.shared.feature.social.user_status_not_registered
+import dev.alllexey.itmowidgets.shared.feature.social.user_subtitle_isu
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -31,8 +33,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
-@HiltViewModel
-class UserSearchViewModel @Inject constructor(
+class UserSearchViewModel(
     private val search: PeopleSearchRepository,
     private val social: SocialRepository
 ) : ViewModel() {
@@ -165,11 +166,11 @@ class UserSearchViewModel @Inject constructor(
         val others = people.filter { it.registered == null }
         return buildList {
             if (registered.isNotEmpty()) {
-                add(UserListItem.Header(UiText.Resource(R.string.user_search_section_registered)))
+                add(UserListItem.Header(UiText.Res(Res.string.user_search_section_registered)))
                 registered.forEach { add(UserListItem.User(it.toRow(busy))) }
             }
             if (others.isNotEmpty()) {
-                add(UserListItem.Header(UiText.Resource(R.string.user_search_section_others)))
+                add(UserListItem.Header(UiText.Res(Res.string.user_search_section_others)))
                 others.forEach { add(UserListItem.User(it.toRow(busy))) }
             }
             if (offersMore) add(UserListItem.LoadMore)
@@ -194,8 +195,8 @@ class UserSearchViewModel @Inject constructor(
                 isu = isu,
                 name = name,
                 pictureUrl = pictureUrl,
-                subtitle = UiText.Resource(R.string.user_subtitle_isu, listOf(isu)),
-                status = UiText.Resource(R.string.user_status_not_registered),
+                subtitle = UiText.Res(Res.string.user_subtitle_isu, listOf(isu)),
+                status = UiText.Res(Res.string.user_status_not_registered),
                 primary = UserAction.INVITE,
                 busy = false,
                 opensProfile = true

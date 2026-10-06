@@ -3,13 +3,13 @@ package dev.alllexey.itmowidgets.feature.social.presentation
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ProfileFactsTest {
 
     @Test
-    fun `a position without a title uses its department without repeating the detail`() {
+    fun aPositionWithoutATitleUsesItsDepartmentWithoutRepeatingTheDetail() {
         val person = samplePerson(5).copy(positions = listOf(PersonPosition(null, "Подразделение")))
 
         val facts = profileFacts(person, null)
@@ -18,7 +18,7 @@ class ProfileFactsTest {
     }
 
     @Test
-    fun `a named position retains its department as the detail`() {
+    fun aNamedPositionRetainsItsDepartmentAsTheDetail() {
         val person = samplePerson(5).copy(positions = listOf(PersonPosition("Преподаватель", "Подразделение")))
 
         val facts = profileFacts(person, null)
@@ -27,7 +27,7 @@ class ProfileFactsTest {
     }
 
     @Test
-    fun `education without a group uses its faculty without repeating the detail`() {
+    fun educationWithoutAGroupUsesItsFacultyWithoutRepeatingTheDetail() {
         val person = samplePerson(5).copy(education = listOf(PersonEducation(null, null, "Факультет")))
 
         val facts = profileFacts(person, null)
@@ -36,7 +36,7 @@ class ProfileFactsTest {
     }
 
     @Test
-    fun `education with a group retains its faculty and course`() {
+    fun educationWithAGroupRetainsItsFacultyAndCourse() {
         val person = samplePerson(5).copy(education = listOf(PersonEducation("M3200", 2, "Факультет")))
 
         val facts = profileFacts(person, null)
@@ -45,7 +45,7 @@ class ProfileFactsTest {
     }
 
     @Test
-    fun `a missing person uses one education fact from the backend group`() {
+    fun aMissingPersonUsesOneEducationFactFromTheBackendGroup() {
         val group = UserGroup("M3100", 1, "ФИТиП")
 
         val facts = profileFacts(null, group)
@@ -54,14 +54,14 @@ class ProfileFactsTest {
     }
 
     @Test
-    fun `a missing person and group have no facts`() {
+    fun aMissingPersonAndGroupHaveNoFacts() {
         val facts = profileFacts(null, null)
 
         assertEquals(emptyList<ProfileFact>(), facts)
     }
 
     @Test
-    fun `the headline is the short role of the first position`() {
+    fun theHeadlineIsTheShortRoleOfTheFirstPosition() {
         val person = samplePerson(5).copy(positions = listOf(
             PersonPosition("преподаватель (квалификационная категория \"преподаватель иностранного языка\")",
                 "Центр изучения иностранных языков"),
@@ -72,7 +72,7 @@ class ProfileFactsTest {
     }
 
     @Test
-    fun `a position without a title is headed by its short department`() {
+    fun aPositionWithoutATitleIsHeadedByItsShortDepartment() {
         val person = samplePerson(5).copy(positions = listOf(
             PersonPosition(null, "Факультет информационных технологий и программирования, кафедра прикладной математики"),
         ))
@@ -81,14 +81,14 @@ class ProfileFactsTest {
     }
 
     @Test
-    fun `roles drop their qualifications and start with a capital`() {
+    fun rolesDropTheirQualificationsAndStartWithACapital() {
         assertEquals("Доцент", shortRole("доцент"))
         assertEquals("Старший преподаватель", shortRole("старший преподаватель, кафедра физики"))
         assertEquals("Преподаватель", shortRole("преподаватель (квалификационная категория)"))
     }
 
     @Test
-    fun `without positions the headline is the student group`() {
+    fun withoutPositionsTheHeadlineIsTheStudentGroup() {
         val person = samplePerson(5).copy(education = listOf(PersonEducation(null, null, "Факультет"), PersonEducation("M3200", 2, null)))
 
         assertEquals(ProfileHeadline.Group("M3200", 2), profileHeadline(person, null))
@@ -97,7 +97,7 @@ class ProfileFactsTest {
     }
 
     @Test
-    fun `departments are shortened to their initials or a given abbreviation`() {
+    fun departmentsAreShortenedToTheirInitialsOrAGivenAbbreviation() {
         assertEquals("ФИТиП", shortDepartment("Факультет информационных технологий и программирования"))
         assertEquals("ИМРиП", shortDepartment("Институт международного развития и партнёрства"))
         assertEquals("НОЦИКТ", shortDepartment("Научно-образовательный центр ИКТ"))

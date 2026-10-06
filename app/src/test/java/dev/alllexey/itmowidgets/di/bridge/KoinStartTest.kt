@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
@@ -78,6 +79,7 @@ class KoinStartTest {
         assertSame(hilt.backendGate(), koin.get<BackendGate>())
         assertSame(hilt.appDispatchers(), koin.get<AppDispatchers>())
         assertSame(hilt.sessionRepository(), koin.get<SessionRepository>())
+        assertSame(hilt.currentUserProvider(), koin.get<CurrentUserProvider>())
         assertSame(hilt.clock(), koin.get<Clock>())
         assertSame(hilt.myItmoClient(), koin.get<MyItmoClient>())
         assertSame(hilt.appPreferences(), koin.get<DataStore<Preferences>>())

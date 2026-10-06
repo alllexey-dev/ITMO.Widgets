@@ -7,13 +7,12 @@ import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.navigation.PendingSportDetailsArgs
 import dev.alllexey.itmowidgets.core.result.LoadState
-import dev.alllexey.itmowidgets.feature.friendselector.presentation.FriendSelectorViewModel
-import dev.alllexey.itmowidgets.feature.friendselector.ui.FriendSelectorDialogFragment
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeRepository
 import dev.alllexey.itmowidgets.feature.qr.domain.QrCodeSnapshot
 import dev.alllexey.itmowidgets.di.bridge.HomeDebugFixtures
 import dev.alllexey.itmowidgets.di.bridge.QrDebugFixtures
 import dev.alllexey.itmowidgets.di.bridge.SettingsDebugFixtures
+import dev.alllexey.itmowidgets.di.bridge.SocialDebugFixtures
 import org.koin.core.module.Module
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -23,7 +22,6 @@ import com.google.android.material.color.DynamicColorsOptions
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.primaryGroup
-import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
@@ -32,10 +30,6 @@ import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
-import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsViewModel
-import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
-import dev.alllexey.itmowidgets.feature.social.ui.UserFriendsFragment
-import dev.alllexey.itmowidgets.feature.social.ui.UserProfileFragment
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -54,8 +48,6 @@ import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebPreviewFragment
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.transition.Transition
@@ -129,6 +121,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     private lateinit var qrFixture: Module
     private lateinit var homeKoinFixture: Module
     private lateinit var settingsKoinFixture: Module
+    private lateinit var socialKoinFixture: Module
     private val customSpoiler = FixtureCustomSpoiler()
 
     /** The first-run flow with no stored preferences and no backend behind the opt-in. */
@@ -199,11 +192,12 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Before super.onCreate(): a restored QrCodeFragment, HomeFragment, SettingsFragment or IcsExportBottomSheet
-        // obtains its ViewModels from Koin.
+        // Before super.onCreate(): a restored QrCodeFragment, HomeFragment, SettingsFragment, IcsExportBottomSheet,
+        // profile or picker obtains its ViewModels from Koin.
         qrFixture = QrDebugFixtures.load(this, FixtureQrCodeRepository, FixtureWallClock)
         homeKoinFixture = HomeDebugFixtures.load(this, FixtureHomeFakes, FixtureWallClock)
         settingsKoinFixture = SettingsDebugFixtures.load(this, settingsFakes)
+        socialKoinFixture = SocialDebugFixtures.load(this, socialFakes)
         supportFragmentManager.fragmentFactory = object : FragmentFactory() {
             override fun instantiate(classLoader: ClassLoader, className: String): Fragment =
                 if (className == MyItmoWebFragment::class.java.name) MyItmoWebPreviewFragment()
@@ -212,38 +206,6 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
         delegate.localNightMode = if (appearance.dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentPreCreated(fm: FragmentManager, f: Fragment, state: Bundle?) {
-                if (f is FriendSelectorDialogFragment) {
-                    ViewModelProvider(f, object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
-                            friendSelectorFixture.let {
-                                FriendSelectorViewModel(it.repository, it.history, it.search, extras.createSavedStateHandle()) as T
-                            }
-                    })[FriendSelectorViewModel::class.java]
-                    return
-                }
-                if (f is UserProfileFragment || f is UserFriendsFragment) {
-                    val arguments = SavedStateHandle(mapOf(
-                        UserScreenArgs.ISU to f.requireArguments().getInt(UserScreenArgs.ISU),
-                        UserScreenArgs.NAME to f.requireArguments().getString(UserScreenArgs.NAME)
-                    ))
-                    val factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-                            UserFriendsViewModel::class.java -> UserFriendsViewModel(arguments, ProfileSocial)
-                            UserProfileViewModel::class.java -> UserProfileViewModel(
-                                arguments, ProfileSocial, ProfilePeople, ProfileReviews,
-                                object : CurrentUserProvider {
-                                    override suspend fun getCurrentUser() = CurrentUser(100001, "Тестовый пользователь", null)
-                                }
-                            )
-                            else -> error("Unexpected social ViewModel")
-                        } as T
-                    }
-                    if (f is UserFriendsFragment) ViewModelProvider(f, factory)[UserFriendsViewModel::class.java]
-                    else ViewModelProvider(f, factory)[UserProfileViewModel::class.java]
-                    return
-                }
                 if (f is MeFragment) {
                     ViewModelProvider(f, object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
@@ -374,6 +336,7 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
         QrDebugFixtures.unload(this, qrFixture)
         HomeDebugFixtures.unload(this, homeKoinFixture)
         SettingsDebugFixtures.unload(this, settingsKoinFixture)
+        SocialDebugFixtures.unload(this, socialKoinFixture)
     }
 
     /**
@@ -399,6 +362,24 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
 
         override fun icsExportViewModel(savedStateHandle: SavedStateHandle) =
             IcsExportViewModel(icsExport, IcsTime, savedStateHandle)
+    }
+
+    /**
+     * The profile screens read the profile tab's in-memory social, people and reviews; the picker reads
+     * [friendSelectorFixture] as it is when the sheet opens.
+     */
+    private val socialFakes = SocialDebugFixtures.Fakes(
+        social = { ProfileSocial },
+        people = { ProfilePeople },
+        reviews = { ProfileReviews },
+        currentUser = { ProfileCurrentUser },
+        friends = { friendSelectorFixture.repository },
+        history = { friendSelectorFixture.history },
+        search = { friendSelectorFixture.search },
+    )
+
+    private object ProfileCurrentUser : CurrentUserProvider {
+        override suspend fun getCurrentUser() = CurrentUser(100001, "Тестовый пользователь", null)
     }
 
     /** A new feed for each new ViewModel from [homeFixture]; tests reach it through [homeSource] and its siblings. */

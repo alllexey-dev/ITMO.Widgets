@@ -3,7 +3,6 @@ package dev.alllexey.itmowidgets.feature.friendselector.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
@@ -27,11 +26,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
-@HiltViewModel
-class FriendSelectorViewModel @Inject constructor(
+class FriendSelectorViewModel(
     private val repository: FriendRepository,
     private val history: FriendSelectionHistory,
     private val peopleSearch: PeopleSearchRepository,

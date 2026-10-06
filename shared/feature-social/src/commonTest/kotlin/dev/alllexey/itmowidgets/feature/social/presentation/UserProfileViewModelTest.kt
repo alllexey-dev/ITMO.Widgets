@@ -12,6 +12,8 @@ import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
+import dev.alllexey.itmowidgets.core.session.CurrentUser
+import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
@@ -20,13 +22,16 @@ import dev.alllexey.itmowidgets.core.testing.ownReview
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.testing.teacherReviews
 import dev.alllexey.itmowidgets.core.testing.teacherSummary
-import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
-import dev.alllexey.itmowidgets.core.session.CurrentUser
-import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
-import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.social.domain.PersonRepository
 import dev.alllexey.itmowidgets.shared.core.Res
 import dev.alllexey.itmowidgets.shared.core.user_name_placeholder
+import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
@@ -37,19 +42,20 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserProfileViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    private val main = TestMainDispatcher()
+
+    @BeforeTest
+    fun setUp() = main.install()
+
+    @AfterTest
+    fun tearDown() = main.reset()
 
     @Test
-    fun `loads the profile and marks the signed-in user's own page`() = runTest(mainDispatcherRule.dispatcher) {
+    fun loadsTheProfileAndMarksTheSignedInUsersOwnPage() = runTest(main.dispatcher) {
         val repository = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.NONE)) }
         val other = viewModel(repository)
         val otherEvents = events(other)
@@ -64,7 +70,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `a person seen in a list opens with content and the network only updates it`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aPersonSeenInAListOpensWithContentAndTheNetworkOnlyUpdatesIt() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val repository = FakeSocialRepository().apply {
             cachedProfiles = mapOf(5 to profile(5, RelationshipState.FRIENDS))
@@ -82,7 +88,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `a failed refresh keeps the seeded page unless access was revoked`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFailedRefreshKeepsTheSeededPageUnlessAccessWasRevoked() = runTest(main.dispatcher) {
         val repository = FakeSocialRepository().apply { cachedProfiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)) }
         val revoked = viewModel(repository)
         val revokedEvents = events(revoked)
@@ -95,11 +101,11 @@ class UserProfileViewModelTest {
         val offlineEvents = events(offline)
         runCurrent()
         assertEquals(backendContent(RelationshipState.FRIENDS), offline.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), offlineEvents)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), offlineEvents)
     }
 
     @Test
-    fun `primary action follows the relationship state`() = runTest(mainDispatcherRule.dispatcher) {
+    fun primaryActionFollowsTheRelationshipState() = runTest(main.dispatcher) {
         val repository = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.NONE)) }
         val viewModel = viewModel(repository)
         val events = events(viewModel)
@@ -121,7 +127,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `removing a friend requires confirmation and failures restore the profile`() = runTest(mainDispatcherRule.dispatcher) {
+    fun removingAFriendRequiresConfirmationAndFailuresRestoreTheProfile() = runTest(main.dispatcher) {
         val repository = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)) }
         val viewModel = viewModel(repository)
         val events = events(viewModel)
@@ -138,7 +144,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `unknown users are reported as not found`() = runTest(mainDispatcherRule.dispatcher) {
+    fun unknownUsersAreReportedAsNotFound() = runTest(main.dispatcher) {
         val viewModel = viewModel()
         val events = events(viewModel)
         advanceUntilIdle()
@@ -147,7 +153,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `teacher profile combines My ITMO identity and reviews without a social account`() = runTest(mainDispatcherRule.dispatcher) {
+    fun teacherProfileCombinesMyITMOIdentityAndReviewsWithoutASocialAccount() = runTest(main.dispatcher) {
         val viewModel = viewModel(people = personRepository(), reviews = reviewsRepository())
         val events = events(viewModel)
         runCurrent()
@@ -156,7 +162,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `missing My ITMO identity quietly falls back to the Backend including after retry`() = runTest(mainDispatcherRule.dispatcher) {
+    fun missingMyITMOIdentityQuietlyFallsBackToTheBackendIncludingAfterRetry() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.NONE)) }
         val viewModel = viewModel(social)
         val events = events(viewModel)
@@ -169,7 +175,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `My ITMO not found replaces its cached identity with Backend identity quietly`() = runTest(mainDispatcherRule.dispatcher) {
+    fun myITMONotFoundReplacesItsCachedIdentityWithBackendIdentityQuietly() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.NONE)) }
         val people = FakePersonRepository().apply { cached = mapOf(5 to samplePerson(5)) }
         val viewModel = viewModel(social, people)
@@ -180,7 +186,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `lost cached identity keeps visible content until the final reviews response`() = runTest(mainDispatcherRule.dispatcher) {
+    fun lostCachedIdentityKeepsVisibleContentUntilTheFinalReviewsResponse() = runTest(main.dispatcher) {
         val personGate = CompletableDeferred<Unit>()
         val reviewsGate = CompletableDeferred<Unit>()
         val people = FakePersonRepository().apply { cached = mapOf(5 to samplePerson(5)); gate = { personGate.await() } }
@@ -200,7 +206,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `disabled services produce one complete person-only page without a snackbar`() = runTest(mainDispatcherRule.dispatcher) {
+    fun disabledServicesProduceOneCompletePersonOnlyPageWithoutASnackbar() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { profileError = AppError.CustomServicesDisabled }
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
@@ -212,7 +218,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `a friends profile retains its relationship and identifies the current user`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aFriendsProfileRetainsItsRelationshipAndIdentifiesTheCurrentUser() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)) }
         val viewModel = viewModel(social, personRepository(), currentIsu = 5)
         val events = events(viewModel)
@@ -222,7 +228,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `cached own profile waits for current identity before its first content`() = runTest(mainDispatcherRule.dispatcher) {
+    fun cachedOwnProfileWaitsForCurrentIdentityBeforeItsFirstContent() = runTest(main.dispatcher) {
         val currentGate = CompletableDeferred<Unit>()
         val profileGate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply {
@@ -247,18 +253,18 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `My ITMO network failure keeps Backend content and reports one partial failure`() = runTest(mainDispatcherRule.dispatcher) {
+    fun myITMONetworkFailureKeepsBackendContentAndReportsOnePartialFailure() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.NONE)) }
         val people = FakePersonRepository().apply { this.people = mapOf(5 to AppResult.Failure(AppError.Network)) }
         val viewModel = viewModel(social, people)
         val events = events(viewModel)
         runCurrent()
         assertEquals(backendContent(), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `My ITMO network error without identity can be retried from full-screen error`() = runTest(mainDispatcherRule.dispatcher) {
+    fun myITMONetworkErrorWithoutIdentityCanBeRetriedFromFullScreenError() = runTest(main.dispatcher) {
         val people = FakePersonRepository().apply { this.people = mapOf(5 to AppResult.Failure(AppError.Network)) }
         val viewModel = viewModel(people = people)
         val events = events(viewModel)
@@ -272,7 +278,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `Backend network error without My ITMO identity can be retried`() = runTest(mainDispatcherRule.dispatcher) {
+    fun backendNetworkErrorWithoutMyITMOIdentityCanBeRetried() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { profileError = AppError.Network }
         val viewModel = viewModel(social)
         val events = events(viewModel)
@@ -287,7 +293,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `three cached parts show content while all requests are pending`() = runTest(mainDispatcherRule.dispatcher) {
+    fun threeCachedPartsShowContentWhileAllRequestsArePending() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply {
             cachedProfiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)); profiles = cachedProfiles; profileGate = { gate.await() }
@@ -306,7 +312,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `social response before deadline is included in the only initial content`() = runTest(mainDispatcherRule.dispatcher) {
+    fun socialResponseBeforeDeadlineIsIncludedInTheOnlyInitialContent() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)); profileGate = { gate.await() } }
         val viewModel = viewModel(social, personRepository(), reviewsRepository())
@@ -323,7 +329,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `person response before deadline overrides cached Backend name in first content`() = runTest(mainDispatcherRule.dispatcher) {
+    fun personResponseBeforeDeadlineOverridesCachedBackendNameInFirstContent() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply { cachedProfiles = mapOf(5 to profile(5, RelationshipState.NONE)); profiles = cachedProfiles }
         val people = personRepository().apply { this.gate = { gate.await() } }
@@ -340,7 +346,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `reviews arriving after the exact deadline only append the last section`() = runTest(mainDispatcherRule.dispatcher) {
+    fun reviewsArrivingAfterTheExactDeadlineOnlyAppendTheLastSection() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val reviews = reviewsRepository().apply { this.gate = { gate.await() } }
         val viewModel = viewModel(people = personRepository(), reviews = reviews)
@@ -360,7 +366,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `late reviews failure keeps content and emits exactly one partial failure`() = runTest(mainDispatcherRule.dispatcher) {
+    fun lateReviewsFailureKeepsContentAndEmitsExactlyOnePartialFailure() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val reviews = FakeTeacherReviewsRepository().apply { results = mapOf(5 to AppResult.Failure(AppError.Network)); this.gate = { gate.await() } }
         val viewModel = viewModel(people = personRepository(), reviews = reviews)
@@ -372,11 +378,11 @@ class UserProfileViewModelTest {
         gate.complete(Unit)
         runCurrent()
         assertEquals(listOf(UserProfileUiState.Loading, personContent()), states)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `late social success stays hidden until a silent retry uses its cache`() = runTest(mainDispatcherRule.dispatcher) {
+    fun lateSocialSuccessStaysHiddenUntilASilentRetryUsesItsCache() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)); profileGate = { gate.await() } }
         val viewModel = viewModel(social, personRepository())
@@ -388,21 +394,21 @@ class UserProfileViewModelTest {
         gate.complete(Unit)
         runCurrent()
         assertEquals(personContent(), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
         val retryGate = CompletableDeferred<Unit>()
         social.cachedProfiles = social.profiles
         social.profileGate = { retryGate.await() }
         states.clear()
         viewModel.refresh(RefreshMode.Force)
         runCurrent()
-        assertEquals(listOf(personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false))), states)
+        assertEquals(listOf<UserProfileUiState>(personContent().copy(social = SocialBlock(profile(5, RelationshipState.FRIENDS), false, false))), states)
         retryGate.complete(Unit)
         runCurrent()
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `late social not found is quiet and never inserts a section`() = runTest(mainDispatcherRule.dispatcher) {
+    fun lateSocialNotFoundIsQuietAndNeverInsertsASection() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply { profileGate = { gate.await() } }
         val viewModel = viewModel(social, personRepository())
@@ -418,7 +424,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `late social forbidden is reported once without changing visible content`() = runTest(mainDispatcherRule.dispatcher) {
+    fun lateSocialForbiddenIsReportedOnceWithoutChangingVisibleContent() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)); profileGate = { gate.await() } }
         val viewModel = viewModel(social, personRepository())
@@ -431,11 +437,11 @@ class UserProfileViewModelTest {
         gate.complete(Unit)
         runCurrent()
         assertEquals(listOf(UserProfileUiState.Loading, personContent()), states)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `late person success preserves Backend header and retry immediately applies its cache`() = runTest(mainDispatcherRule.dispatcher) {
+    fun latePersonSuccessPreservesBackendHeaderAndRetryImmediatelyAppliesItsCache() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply { cachedProfiles = mapOf(5 to profile(5, RelationshipState.NONE)); profiles = cachedProfiles }
         val people = personRepository().apply { this.gate = { gate.await() } }
@@ -448,18 +454,18 @@ class UserProfileViewModelTest {
         gate.complete(Unit)
         runCurrent()
         assertEquals(backendContent(), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
         people.cached = mapOf(5 to samplePerson(5))
         people.people = mapOf(5 to AppResult.Failure(AppError.Network))
         states.clear()
         viewModel.refresh(RefreshMode.Force)
         runCurrent()
-        assertEquals(listOf(personContent().copy(social = SocialBlock(profile(5), false, false))), states)
-        assertEquals(listOf(UserProfileEvent.LoadFailed, UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileUiState>(personContent().copy(social = SocialBlock(profile(5), false, false))), states)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed, UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `late person applies when Backend identity disappears before the person response`() = runTest(mainDispatcherRule.dispatcher) {
+    fun latePersonAppliesWhenBackendIdentityDisappearsBeforeThePersonResponse() = runTest(main.dispatcher) {
         val personGate = CompletableDeferred<Unit>()
         val socialGate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply { cachedProfiles = mapOf(5 to profile(5, RelationshipState.NONE)); profileGate = { socialGate.await() } }
@@ -480,7 +486,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `deferred person replays when Backend identity disappears after the person response`() = runTest(mainDispatcherRule.dispatcher) {
+    fun deferredPersonReplaysWhenBackendIdentityDisappearsAfterThePersonResponse() = runTest(main.dispatcher) {
         val personGate = CompletableDeferred<Unit>()
         val socialGate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply { cachedProfiles = mapOf(5 to profile(5, RelationshipState.NONE)); profileGate = { socialGate.await() } }
@@ -500,7 +506,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `no ready identity means no deadline even after ten seconds`() = runTest(mainDispatcherRule.dispatcher) {
+    fun noReadyIdentityMeansNoDeadlineEvenAfterTenSeconds() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val social = FakeSocialRepository().apply { profileGate = { gate.await() } }
         val viewModel = viewModel(social)
@@ -509,7 +515,7 @@ class UserProfileViewModelTest {
         runCurrent()
         advanceTimeBy(10_000)
         runCurrent()
-        assertEquals(listOf(UserProfileUiState.Loading), states)
+        assertEquals(listOf<UserProfileUiState>(UserProfileUiState.Loading), states)
         gate.complete(Unit)
         runCurrent()
         assertEquals(UserProfileUiState.Error(AppError.NotFound), viewModel.uiState.value)
@@ -517,7 +523,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `deadline starts at the first ready identity rather than screen opening`() = runTest(mainDispatcherRule.dispatcher) {
+    fun deadlineStartsAtTheFirstReadyIdentityRatherThanScreenOpening() = runTest(main.dispatcher) {
         val personGate = CompletableDeferred<Unit>()
         val reviewsGate = CompletableDeferred<Unit>()
         val people = personRepository().apply { gate = { personGate.await() } }
@@ -542,7 +548,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `losing last ready identity cancels the deadline and a new identity restarts it`() = runTest(mainDispatcherRule.dispatcher) {
+    fun losingLastReadyIdentityCancelsTheDeadlineAndANewIdentityRestartsIt() = runTest(main.dispatcher) {
         val personGate = CompletableDeferred<Unit>()
         val socialGate = CompletableDeferred<Unit>()
         val reviewsGate = CompletableDeferred<Unit>()
@@ -558,7 +564,7 @@ class UserProfileViewModelTest {
         runCurrent()
         advanceTimeBy(10_000)
         runCurrent()
-        assertEquals(listOf(UserProfileUiState.Loading), states)
+        assertEquals(listOf<UserProfileUiState>(UserProfileUiState.Loading), states)
         socialGate.complete(Unit)
         runCurrent()
         advanceTimeBy(2_999)
@@ -573,7 +579,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `retry after full-screen error never resurrects the obsolete friends page`() = runTest(mainDispatcherRule.dispatcher) {
+    fun retryAfterFullScreenErrorNeverResurrectsTheObsoleteFriendsPage() = runTest(main.dispatcher) {
         val people = FakePersonRepository().apply { this.people = mapOf(5 to AppResult.Failure(AppError.Network)) }
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)) }
         val viewModel = viewModel(social, people)
@@ -581,12 +587,12 @@ class UserProfileViewModelTest {
         val states = states(viewModel)
         runCurrent()
         assertEquals(backendContent(RelationshipState.FRIENDS), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
         social.profiles = emptyMap()
         viewModel.refresh(RefreshMode.Force)
         runCurrent()
         assertEquals(UserProfileUiState.Error(AppError.Network), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
         val gate = CompletableDeferred<Unit>()
         people.people = mapOf(5 to AppResult.Success(samplePerson(5)))
         people.gate = { gate.await() }
@@ -596,68 +602,68 @@ class UserProfileViewModelTest {
         runCurrent()
         advanceTimeBy(2_999)
         runCurrent()
-        assertEquals(listOf(UserProfileUiState.Loading), states)
+        assertEquals(listOf<UserProfileUiState>(UserProfileUiState.Loading), states)
         advanceTimeBy(1)
         runCurrent()
         assertEquals(backendContent(), viewModel.uiState.value)
         gate.complete(Unit)
         runCurrent()
         assertEquals(listOf(UserProfileUiState.Loading, backendContent()), states)
-        assertEquals(listOf(UserProfileEvent.LoadFailed, UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed, UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `reviews failure without cached reviews shows identity and one partial failure`() = runTest(mainDispatcherRule.dispatcher) {
+    fun reviewsFailureWithoutCachedReviewsShowsIdentityAndOnePartialFailure() = runTest(main.dispatcher) {
         val reviews = FakeTeacherReviewsRepository().apply { results = mapOf(5 to AppResult.Failure(AppError.Network)) }
         val viewModel = viewModel(people = personRepository(), reviews = reviews)
         val events = events(viewModel)
         runCurrent()
         assertEquals(personContent(), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `reviews failure preserves cached reviews and reports one partial failure`() = runTest(mainDispatcherRule.dispatcher) {
+    fun reviewsFailurePreservesCachedReviewsAndReportsOnePartialFailure() = runTest(main.dispatcher) {
         val reviews = FakeTeacherReviewsRepository().apply { cached = mapOf(5 to sampleReviews()); results = mapOf(5 to AppResult.Failure(AppError.Network)) }
         val viewModel = viewModel(people = personRepository(), reviews = reviews)
         val events = events(viewModel)
         runCurrent()
         assertEquals(personContent().copy(reviews = section()), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `Backend network failure without cache keeps person-only content and reports once`() = runTest(mainDispatcherRule.dispatcher) {
+    fun backendNetworkFailureWithoutCacheKeepsPersonOnlyContentAndReportsOnce() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { profileError = AppError.Network }
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
         runCurrent()
         assertEquals(personContent(), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `forbidden Backend response removes cached private section but retains My ITMO identity`() = runTest(mainDispatcherRule.dispatcher) {
+    fun forbiddenBackendResponseRemovesCachedPrivateSectionButRetainsMyITMOIdentity() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { cachedProfiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)); profileError = AppError.Forbidden }
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
         runCurrent()
         assertEquals(personContent(), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `unauthorized Backend response removes cached private section but retains My ITMO identity`() = runTest(mainDispatcherRule.dispatcher) {
+    fun unauthorizedBackendResponseRemovesCachedPrivateSectionButRetainsMyITMOIdentity() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { cachedProfiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)); profileError = AppError.Unauthorized }
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
         runCurrent()
         assertEquals(personContent(), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `simultaneous partial failures produce only one load event and preserve cached identity`() = runTest(mainDispatcherRule.dispatcher) {
+    fun simultaneousPartialFailuresProduceOnlyOneLoadEventAndPreserveCachedIdentity() = runTest(main.dispatcher) {
         val people = FakePersonRepository().apply { cached = mapOf(5 to samplePerson(5)); this.people = mapOf(5 to AppResult.Failure(AppError.Network)) }
         val social = FakeSocialRepository().apply { profileError = AppError.Network }
         val reviews = FakeTeacherReviewsRepository().apply { results = mapOf(5 to AppResult.Failure(AppError.Network)) }
@@ -665,11 +671,11 @@ class UserProfileViewModelTest {
         val events = events(viewModel)
         runCurrent()
         assertEquals(personContent(), viewModel.uiState.value)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `visible retry stays silent without loading or deadline while fresh sections arrive`() = runTest(mainDispatcherRule.dispatcher) {
+    fun visibleRetryStaysSilentWithoutLoadingOrDeadlineWhileFreshSectionsArrive() = runTest(main.dispatcher) {
         val people = personRepository()
         val reviews = FakeTeacherReviewsRepository()
         val viewModel = viewModel(people = people, reviews = reviews)
@@ -695,14 +701,14 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `visible retry retains last Backend page until replacement My ITMO identity arrives`() = runTest(mainDispatcherRule.dispatcher) {
+    fun visibleRetryRetainsLastBackendPageUntilReplacementMyITMOIdentityArrives() = runTest(main.dispatcher) {
         val people = FakePersonRepository().apply { this.people = mapOf(5 to AppResult.Failure(AppError.Network)) }
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.NONE)) }
         val viewModel = viewModel(social, people)
         val events = events(viewModel)
         val states = states(viewModel)
         runCurrent()
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
         val gate = CompletableDeferred<Unit>()
         people.people = mapOf(5 to AppResult.Success(samplePerson(5)))
         people.gate = { gate.await() }
@@ -714,12 +720,12 @@ class UserProfileViewModelTest {
         assertEquals(emptyList<UserProfileUiState>(), states)
         gate.complete(Unit)
         runCurrent()
-        assertEquals(listOf(personContent()), states)
-        assertEquals(listOf(UserProfileEvent.LoadFailed), events)
+        assertEquals(listOf<UserProfileUiState>(personContent()), states)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.LoadFailed), events)
     }
 
     @Test
-    fun `retry cancels previous requests without accepting their result or emitting their failure`() = runTest(mainDispatcherRule.dispatcher) {
+    fun retryCancelsPreviousRequestsWithoutAcceptingTheirResultOrEmittingTheirFailure() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         var cancelled = false
         val people = personRepository().apply { this.gate = { try { gate.await() } finally { cancelled = true } } }
@@ -739,7 +745,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `relationship busy state rejects rapid primary and secondary taps until action finishes`() = runTest(mainDispatcherRule.dispatcher) {
+    fun relationshipBusyStateRejectsRapidPrimaryAndSecondaryTapsUntilActionFinishes() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         var calls = 0
         val base = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.INCOMING)) }
@@ -768,24 +774,24 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `remove confirmation uses My ITMO header name and successful removal updates relationship`() = runTest(mainDispatcherRule.dispatcher) {
+    fun removeConfirmationUsesMyITMOHeaderNameAndSuccessfulRemovalUpdatesRelationship() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.FRIENDS)) }
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
         runCurrent()
         viewModel.onPrimaryAction()
         runCurrent()
-        assertEquals(listOf(UserProfileEvent.ConfirmRemove(UiText.Dynamic("Персона 5"))), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.ConfirmRemove(UiText.Dynamic("Персона 5"))), events)
         assertEquals(emptyList<String>(), social.actions)
         viewModel.removeFriend()
         runCurrent()
         assertEquals(listOf("remove:5"), social.actions)
         assertEquals(RelationshipState.NONE, viewModel.relationship())
-        assertEquals(listOf(UserProfileEvent.ConfirmRemove(UiText.Dynamic("Персона 5"))), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.ConfirmRemove(UiText.Dynamic("Персона 5"))), events)
     }
 
     @Test
-    fun `an empty Backend name confirms the removal and heads the page with the placeholder`() = runTest(mainDispatcherRule.dispatcher) {
+    fun anEmptyBackendNameConfirmsTheRemovalAndHeadsThePageWithThePlaceholder() = runTest(main.dispatcher) {
         val unnamed = profile(5, RelationshipState.FRIENDS).let { it.copy(user = it.user.copy(name = "")) }
         val viewModel = viewModel(FakeSocialRepository().apply { profiles = mapOf(5 to unnamed) })
         val events = events(viewModel)
@@ -800,7 +806,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `a retry while a retry runs joins it`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aRetryWhileARetryRunsJoinsIt() = runTest(main.dispatcher) {
         val people = personRepository()
         val viewModel = viewModel(people = people)
         runCurrent()
@@ -819,7 +825,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `blocked relationship ignores primary and secondary actions`() = runTest(mainDispatcherRule.dispatcher) {
+    fun blockedRelationshipIgnoresPrimaryAndSecondaryActions() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { profiles = mapOf(5 to profile(5, RelationshipState.BLOCKED)) }
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
@@ -832,7 +838,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `person-only profile ignores all relationship actions`() = runTest(mainDispatcherRule.dispatcher) {
+    fun personOnlyProfileIgnoresAllRelationshipActions() = runTest(main.dispatcher) {
         val social = FakeSocialRepository()
         val viewModel = viewModel(social, personRepository())
         val events = events(viewModel)
@@ -846,7 +852,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `an update for this teacher replaces the reviews on the page and others are ignored`() = runTest(mainDispatcherRule.dispatcher) {
+    fun anUpdateForThisTeacherReplacesTheReviewsOnThePageAndOthersAreIgnored() = runTest(main.dispatcher) {
         val reviews = reviewsRepository()
         val viewModel = viewModel(people = personRepository(), reviews = reviews)
         runCurrent()
@@ -863,7 +869,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `the summary from the reviews reply reaches the section and survives a vote`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theSummaryFromTheReviewsReplyReachesTheSectionAndSurvivesAVote() = runTest(main.dispatcher) {
         val summary = teacherSummary()
         val loaded = teacherReviews(5, listOf(communityReview("r1")), summary = summary)
         val reviews = FakeTeacherReviewsRepository().apply {
@@ -882,7 +888,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `the summary scales start folded, toggle and keep their state across updates`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theSummaryScalesStartFoldedToggleAndKeepTheirStateAcrossUpdates() = runTest(main.dispatcher) {
         val summary = teacherSummary()
         val reviews = FakeTeacherReviewsRepository().apply {
             results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1")), summary = summary)))
@@ -908,7 +914,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `the expanded summary is restored from the saved state`() = runTest(mainDispatcherRule.dispatcher) {
+    fun theExpandedSummaryIsRestoredFromTheSavedState() = runTest(main.dispatcher) {
         val reviews = FakeTeacherReviewsRepository().apply {
             results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1")), summary = teacherSummary())))
         }
@@ -920,7 +926,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `late reviews that arrive as an update are appended without a snackbar`() = runTest(mainDispatcherRule.dispatcher) {
+    fun lateReviewsThatArriveAsAnUpdateAreAppendedWithoutASnackbar() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val reviews = reviewsRepository().apply { this.gate = { gate.await() } }
         val viewModel = viewModel(people = personRepository(), reviews = reviews)
@@ -937,7 +943,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `a vote keeps every review in its place until a retry ranks them afresh`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aVoteKeepsEveryReviewInItsPlaceUntilARetryRanksThemAfresh() = runTest(main.dispatcher) {
         val first = teacherReviews(5, listOf(communityReview("a").copy(score = 3), communityReview("b").copy(score = 2),
             communityReview("c").copy(score = 1)))
         // Backend answers a vote with its own ranking: «c» jumps to the top.
@@ -967,7 +973,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `an arrow votes, the arrow of the current vote takes it back and the other arrow switches`() = runTest(mainDispatcherRule.dispatcher) {
+    fun anArrowVotesTheArrowOfTheCurrentVoteTakesItBackAndTheOtherArrowSwitches() = runTest(main.dispatcher) {
         val voted = teacherReviews(5, listOf(communityReview("r1").copy(score = 1, myVote = 1)))
         val reviews = FakeTeacherReviewsRepository().apply {
             results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1")))))
@@ -988,7 +994,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `a vote in flight marks the review busy and ignores more taps`() = runTest(mainDispatcherRule.dispatcher) {
+    fun aVoteInFlightMarksTheReviewBusyAndIgnoresMoreTaps() = runTest(main.dispatcher) {
         val gate = CompletableDeferred<Unit>()
         val reviews = FakeTeacherReviewsRepository().apply {
             results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1"), communityReview("r2")))))
@@ -1009,12 +1015,12 @@ class UserProfileViewModelTest {
         runCurrent()
 
         assertEquals(listOf("vote:5:r1:-1"), reviews.actions)
-        assertEquals(listOf(UserProfileEvent.ActionFailed(AppError.Restricted)), events)
+        assertEquals(listOf<UserProfileEvent>(UserProfileEvent.ActionFailed(AppError.Restricted)), events)
         assertEquals(null, viewModel.content().reviews?.busyId)
     }
 
     @Test
-    fun `deleting the own review asks first and then brings back writing`() = runTest(mainDispatcherRule.dispatcher) {
+    fun deletingTheOwnReviewAsksFirstAndThenBringsBackWriting() = runTest(main.dispatcher) {
         val reviews = FakeTeacherReviewsRepository().apply {
             results = mapOf(5 to AppResult.Success(teacherReviews(5, mine = ownReview())))
             deleteResult = AppResult.Success(teacherReviews(5))

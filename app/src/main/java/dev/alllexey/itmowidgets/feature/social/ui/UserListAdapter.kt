@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.social.ui
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
@@ -105,6 +106,9 @@ class UserListAdapter(
             else -> oldItem == newItem
         }
 
+        // Every UserListItem is a data class or an object; lint cannot see that since it comes from
+        // :shared:feature-social.
+        @SuppressLint("DiffUtilEquals")
         override fun areContentsTheSame(oldItem: UserListItem, newItem: UserListItem): Boolean =
             oldItem == newItem
     }

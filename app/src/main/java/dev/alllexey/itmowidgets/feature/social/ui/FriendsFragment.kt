@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import dev.alllexey.itmowidgets.core.ui.navigation.openUserProfile
-import androidx.fragment.app.viewModels
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -38,7 +38,7 @@ class FriendsFragment : Fragment() {
     private var _binding: FragmentFriendsBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: FriendsViewModel by viewModels()
+    private val viewModel: FriendsViewModel by viewModel()
 
     private lateinit var adapter: UserListAdapter
 

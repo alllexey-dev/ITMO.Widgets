@@ -8,8 +8,8 @@ import dev.alllexey.itmowidgets.core.testing.ownReview
 import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.testing.teacherReviews
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class UserProfileStateTest {
 
@@ -38,7 +38,7 @@ class UserProfileStateTest {
     )
 
     @Test
-    fun `profile parts resolve loading identity fallback and error precedence`() {
+    fun profilePartsResolveLoadingIdentityFallbackAndErrorPrecedence() {
         val readyPerson = ProfilePart.Ready(person)
         val readySocial = ProfilePart.Ready(social)
         val readyReviews = ProfilePart.Ready(reviews)
@@ -116,12 +116,12 @@ class UserProfileStateTest {
         for (case in cases) {
             val state = userProfileUiState(5, case.person, case.social, case.reviews)
 
-            assertEquals(case.description, case.expected, state)
+            assertEquals(case.expected, state, case.description)
         }
     }
 
     @Test
-    fun `a ready directory person without a photo does not inherit the backend photo`() {
+    fun aReadyDirectoryPersonWithoutAPhotoDoesNotInheritTheBackendPhoto() {
         val state = userProfileUiState(
             5,
             ProfilePart.Ready(person.copy(photoUrl = null)),
@@ -133,7 +133,7 @@ class UserProfileStateTest {
     }
 
     @Test
-    fun `the reviews section carries the own review and the busy review`() {
+    fun theReviewsSectionCarriesTheOwnReviewAndTheBusyReview() {
         val section = teacherReviews(5, reviews.reviews, mine = ownReview(), canVote = false)
 
         val state = userProfileUiState(5, ProfilePart.Ready(person), ProfilePart.Absent, ProfilePart.Ready(section), busyId = "own")
