@@ -106,6 +106,36 @@ object IosMetrics {
      */
     val activityIndicatorSpokeAlphas: List<Float> = listOf(0.85f, 0.71f, 0.56f, 0.42f, 0.27f, 0.27f, 0.27f, 0.27f)
 
+    /**
+     * The band a `UIRefreshControl` takes above the content while it refreshes: `_refreshControlHeight` and the
+     * `_additionalTopInset` it adds to the scroll view after `beginRefreshing()` (DS-IOS-04).
+     */
+    val refreshControlHeight: Dp = 60.dp
+
+    /**
+     * How far the content must be pulled for a `UIRefreshControl` to start, as a fraction of the scroll view's height:
+     * its `_snappingHeight`, 173.1 pt in an 874 pt table and 99.0 pt in a 500 pt one.
+     */
+    const val refreshTriggerFraction: Float = 0.198f
+
+    /**
+     * The refresh control's spinner: eight `_UIRefreshControlSeedView` spokes 3.67 pt wide from 5 to 15 pt off the
+     * centre of a `CAReplicatorLayer`, so 30 pt across, centred in [refreshControlHeight].
+     */
+    val refreshSpinnerSize: Dp = 30.dp
+
+    /**
+     * A `UIProgressView` of the default style: its intrinsic height; the track and the progress are capsule images
+     * (`_UIResizableImage` 9 x 4), the track in `systemFill` and the progress in the tint.
+     */
+    val progressBarHeight: Dp = 4.dp
+
+    /** One dot of a `UIPageControl`: `_UIPageIndicatorView`'s frame, 29 px at 3x. */
+    val pageIndicatorDotSize: Dp = 9.67.dp
+
+    /** The gap between two dots of a `UIPageControl`: `size(forNumberOfPages:)` grows 17.67 pt per page. */
+    val pageIndicatorGap: Dp = 8.dp
+
     /** A button's leading and trailing content inset: `UIButton.Configuration.contentInsets` at `.medium`. */
     val buttonHorizontalPadding: Dp = 12.dp
 
