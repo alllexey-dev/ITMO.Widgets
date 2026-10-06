@@ -307,6 +307,9 @@ class SettingsNavigationTestActivity : AppCompatActivity(), AppNavigator by NoOp
                 if (f is AppOverlayHostFragment) {
                     (f.enterTransition as? Transition)?.addListener(object : TransitionListenerAdapter() {
                         override fun onTransitionStart(transition: Transition) {
+                            // A root change during a postponed enter pops the host first; fragment 1.7+ then
+                            // starts the enter on the next frame with the host already destroyed and detached.
+                            if (!f.isAdded) return
                             val content = f.childFragmentManager.primaryNavigationFragment?.view
                             overlayEnteredReady += content?.findViewById<View>(R.id.settings_scroll)?.visibility == View.VISIBLE
                         }
